@@ -183,5 +183,5 @@ is the first release carrying this slice.
 
 - Corner screen row and a speed `setting_changed` on a device (the flows do not open them).
 - iOS simulator (none on this machine) and the `DidEnterBackground` flush.
-- Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path). The package build was fixed by Slice 353 (PR #1024), so this can run now.
+- Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path). The package build was fixed by Slice 353 (PR #1024), so this can run now. Harness gap (2026-11-13 VM run, all 10 Dino checks passed): no VM check closes the window and reads the usage events.
 - `tools/usage-sessions` against live data after release.

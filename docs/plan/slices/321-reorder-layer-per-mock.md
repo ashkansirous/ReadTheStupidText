@@ -75,9 +75,9 @@ Review files read: `reviews/s321-high.md` 8/8, `s321-medium.md` 8/8, `s321-check
 
 - The tablet AVD (`dino-tablet-upright-shelf`): the layer uses the shelf's grid, hint aligned with its left edge, also beside the grown-ups' rail.
 - Phone portrait: 3 across, 14 dp sides, 27 dp row gap (no flow asserts the measurements).
-- Windows VM with 6 or more books (only 2 books were used), and a window resize while the layer is open (columns change, no layout cycle).
+- Windows VM with 6 or more books (only 2 books were used; 2026-11-13 VM run: `dino-reorder` passed, the VM still has 2 books and no 6-book + resize check exists), and a window resize while the layer is open (columns change, no layout cycle).
 - A narrow Windows window after recheck fix 1.
-- The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot).
+- The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot). 2026-11-13 VM run: `dino-reorder` logged 30 px against the mock's 40, with 0 layout-cycle lines, but no assertion.
 - The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
 - iOS phone/tablet: the same shared MAUI code; no Mac, not run.
 

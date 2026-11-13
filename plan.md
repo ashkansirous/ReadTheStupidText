@@ -18,6 +18,7 @@ Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 361 | RTST `sentence-highlight` Maestro flow fails on the emulator ("Missing log marker(s) under tag RTST-TEST: SENTENCE 0 1"; passes on the S21): tell an app bug from a flow bug | planned | | | [361-sentence-highlight-fails-on-emulator.md](docs/plan/slices/361-sentence-highlight-fails-on-emulator.md) |
 | 360 | Dino: book audio missing and "Waiting for Wi-Fi…" on Play: retry every hour and on opening the book (never weekly), mobile data for all book audio, keep old packs on the server, say what is wrong, log it; plus the VIBRATE crash on the grown-ups' hold | planned | | | [360-dino-play-waits-for-wifi.md](docs/plan/slices/360-dino-play-waits-for-wifi.md) |
 | 357 | Server errors the user can see: standard translated messages per status (402 "buy this book first", 5xx "problem connecting"), the server's English text only on 400, shop and voice packs in both apps | planned | | | [357-server-error-messages.md](docs/plan/slices/357-server-error-messages.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | planned | | | [358-dino-android-no-buy-button.md](docs/plan/slices/358-dino-android-no-buy-button.md) |
@@ -79,7 +80,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 310 checks across 134 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 305 checks across 133 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Fix (release failed):** the final batched release run 43293064848 (dispatch on 8eeade93, 2026-11-12 19:43Z) ended `failure`: `testflight-submit-dino` failed its upload check after altool reported a 500 then "UPLOAD SUCCEEDED" for Dino 1.124.0, and `build-ios` (RTST) was cancelled with no Mac runner, so the RTST release, Store, TestFlight and Play jobs were skipped. The next release carries the same commits; the fixes are [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) items 1 and 2.
 - **Not checked before handing over (2026-11-12):** Slices 351 and 352 add usage fields; the Play Data safety and App Store privacy answers were not read live against them. Read both before those builds go public ([Slice 351](docs/plan/slices/351-dino-usage-context-and-audio-causes.md), [Slice 352](docs/plan/slices/352-dino-screen-and-tap-events.md)).
 - **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
