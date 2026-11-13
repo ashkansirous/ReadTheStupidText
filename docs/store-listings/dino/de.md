@@ -1,6 +1,6 @@
 # Store listing: German (`de`), Dino Book Reader
 
-**Machine-written by Claude (Slice 193, 2026-10-30; Kauf-Zeilen Slice 346 Teil D, 2026-11-13, nicht gepusht, erst wenn der Schalter fuer bezahlte Buecher an geht). Needs a native German read before it goes live.** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing.
+**Machine-written by Claude (Slice 193, 2026-10-30; Kauf-Zeilen Slice 346 Teil D, 2026-11-13). Pushed 2026-11-13 by the user's order (they don't read German, so no native read holds it): Google Play de-DE and App Store de-DE (version 1.81.1) read back identical; Microsoft `de` purchase lines in submission 1152921505702395457 (listing only).** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing.
 
 ## Microsoft Store (live in German; Slice 346 changes only the purchase lines, see below)
 
