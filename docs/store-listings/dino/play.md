@@ -1,6 +1,6 @@
 # Google Play listing: Dino Book Reader (en-GB, `uk.sirous.dinoreader`)
 
-Corrected from the live en-GB text read through the Play API on 2026-11-07 (draft only, not pushed). Changes against live, nothing else: "3 to 8" became "3 to 9"; "NINE LANGUAGES" with its nine-language list became the fifteen UI languages (the `AppResources.*.resx` files under `src/DinoReader.App/Resources/Strings/`: en, ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh); "starter stories" became "illustrated starter stories" (as on the other stores); the last "Made for kids" bullet about optional anonymous usage counts was added (`site/dino/privacy.html`, `PRIVACY.md`).
+**Slice 346 Part D (2026-11-13): paid-books wording drafted, not pushed; push after the user approves and when the paid-books switch goes on (live Play en-GB read through the API on 2026-11-07 still has the old lines).** Earlier: corrected from the live en-GB text read through the Play API on 2026-11-07 (draft only, not pushed). Changes against live, nothing else: "3 to 8" became "3 to 9"; "NINE LANGUAGES" with its nine-language list became the fifteen UI languages (the `AppResources.*.resx` files under `src/DinoReader.App/Resources/Strings/`: en, ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh); "starter stories" became "illustrated starter stories" (as on the other stores); the last "Made for kids" bullet about optional anonymous usage counts was added (`site/dino/privacy.html`, `PRIVACY.md`).
 
 ## Title (<= 30)
 
@@ -22,15 +22,15 @@ READ TOGETHER
 - Picture pages stay as they are, with the words read over them.
 - A night theme for bedtime stories.
 
-STORIES INCLUDED
-The app comes with illustrated starter stories, and grown-ups can get more free stories from the built-in story shelf.
+STORIES AND PRICES
+Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the built-in story shelf is $0.99 each (the store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, through Google Play, and can restore past purchases at any time. Stories you already have stay on your device.
 
 FIFTEEN LANGUAGES
 English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish. Stories can be translated into the grown-up's language right on the phone.
 
 MADE FOR KIDS
-- No ads and no in-app purchases.
-- No accounts.
+- No ads.
+- Stories are bought through Google Play, by a grown-up behind the grown-ups gate. There is no account to create, and we store nothing about you or your purchase; the store's proof is checked and forgotten.
 - Settings, adding and deleting stories sit behind a grown-ups gate.
 - Voices are generated on the phone. Once the voice for your language is downloaded, reading works offline.
 - Your stories, photos and scans stay on your device.

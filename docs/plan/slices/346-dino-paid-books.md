@@ -257,6 +257,12 @@ through `library-docs` or `web-research` before building that part.
 - Skipped #9 (`reviews/pr-1016-check7.md`): "StorePage constructor subscribes to singleton Purchases.Changed and never unsubscribes." - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
 - Skipped #10 (`reviews/pr-1016-check7.md`): "copied in three places (products.ts, Books.cs, publish-store-books.mjs)" - duplication, low.
 
+*From review:* s346l high (`reviews/s346l-high.md`)
+
+- Skipped #1 (`reviews/s346l-high.md`): "Site goes live on merge while the paid switch is off." - timing, not a text fix: the main thread merges this branch only right before the switch goes on.
+- Skipped #7 (`reviews/s346l-high.md`): "Kids Category note still says 'it fits the product' while purchases and the new Redeem-code link out are unchecked against guidelines 1.3 / 5.1.4." - noted, not applied in this pass.
+- Skipped #9 (`reviews/s346l-high.md`): "It claims the live strings were read from the public pages on 2026-11-12 and tells the pusher to replace them verbatim; I could not confirm those live strings." - noted; re-read the live page and diff at push time.
+
 ## Device run (emulator-5554, build 886c981061c6)
 
 Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
@@ -268,6 +274,12 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 
 ## Waiting on the user (switch-on steps; each blocks turning the switch on)
 
+**Night of 2026-11-13 (the user: "I expect to see the stores live in the morning with the 4 product as free and the rest as 0.99 ... dont fucking stop on anything"), state read live:**
+- Done: #1033 merged and deployed by Workers Builds (04:11Z); the 7 Worker store secrets set (APPLE_IAP_*, PLAY_SERVICE_ACCOUNT_JSON, MS_STORE_*); `store-products.mjs --apply` (fixed in #1036) created the 11 paid products in Google Play (created and activated) and App Store Connect (created), and the 11 Partner Center add-on shells; the 11 add-ons were then priced (USD 0.99, all markets, in-app only), listed (en-US) and submitted in Partner Center by a Chrome agent: 4 live, 2 in certification, 5 waiting to be released at the time. Windows users already have Dino 1.124.0 (store-submit 2026-11-12 19:43Z), which carries the purchase code.
+- Blocked by the auto-mode classifier ("Feature Flag Writes"): `npx --yes wrangler@4 r2 object put readthestupidtext-downloads/dinoreader/config.json --file <config with "paidBooks":{"enabled":true}> --content-type application/json --remote`. Allow line for the user's settings `permissions.allow`: `Bash(npx --yes wrangler@4 r2 object put readthestupidtext-downloads/dinoreader/config.json*)`.
+- Held behind the switch (merge only together with it): this branch's listing, privacy and home-page texts (PR open, reviewed: reviews/s346l-high.md, s346l-medium.md); then a `dino-store.yml` dispatch to republish every meta with the store product ids; then pushing the listings with the `store-listing` agent (apply).
+- Apple: the products still need a review screenshot each and submission with an app version (App Store is the user's button); Dino is not public on the App Store or Google Play yet (lookup 0 results; Play page 404), so Windows is the only public store.
+
 - [ ] Before switch-on: fix review findings check7 #1 (Windows ticket audience and anonymous exposure), #4, #5, #6, #7, #8 (recordings of an unlisted book on restore), #9 (reviews/pr-1016-check7.md). Blocks: turning the switch on.
 - Create the products and $0.99 prices in App Store Connect, Play Console and Partner Center. Blocks: any purchase.
 - Paid apps agreement, bank and tax details. Blocks: selling on Apple, Google and Microsoft. State read live on 2026-11-13:
@@ -278,6 +290,7 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - Republish every book's `meta.json` with `access` through `publish-store-books.mjs`. Blocks: paid books actually being sold.
 - `Platforms/iOS/Info.plist` purchase comment. Blocks: the iOS switch-on.
 - Part D: privacy page and store listings. Blocks: switch-on honesty of the listings.
+- Store privacy declarations to decide (not decided; review `reviews/s346l-high.md` #5): Play Data safety and Apple App Privacy may need "Purchase history" (the proof is sent to our server for validation and processed ephemerally), plus the Families / Kids notes (Play "contains in-app purchases" and purchase gate, Apple Kids Category and parental gate).
 - Then set `paidBooks.enabled: true` in R2 `dinoreader/config.json`.
 - Known limits: Sonos and Alexa serve paid listening tracks (user ruled them out); a store proof can be shared (no accounts).
 
@@ -294,3 +307,4 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - Windows Store add-on on the VM.
 - The switch-on store page with the real Worker.
 - Microsoft Store ID flow against a live store.
+- A native German read of the `de` store listing text (`docs/store-listings/dino/de.md`).
