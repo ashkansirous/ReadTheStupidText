@@ -782,6 +782,10 @@ $script:DeviceRestoreSeconds = 240
 # Slice 225 item 15: the detached restore writes its shell's pid here, so the run that started it can cancel it (a heal left to fire could undo a slower run's or a rerun's settings).
 $script:DeviceRestorePidDir = '/data/local/tmp'
 
+# The cancel command waits up to DeviceRestoreCancelWaitSeconds for a heal that is mid-undo; its adb call gets 25 s more than that, never the default 30 s (Slice 372 item 2, review 6).
+$script:DeviceRestoreCancelWaitSeconds = 10
+$script:DeviceRestoreCancelAdbSeconds = $script:DeviceRestoreCancelWaitSeconds + 25
+
 function Get-DeviceRestorePidFile([string]$Package) { return "$($script:DeviceRestorePidDir)/rtst-heal-$Package.pid" }
 
 # The shell text that undoes an app network cut and a lowered dataSync timeout, run ON the phone by a detached `sh`. Pure: unit-tested.
@@ -790,25 +794,28 @@ function Get-DeviceRestoreScript([string]$Package, [int]$Uid, [int]$Seconds) {
     $pidFile = Get-DeviceRestorePidFile $Package
     $undo = "cmd netpolicy remove restrict-background-blacklist $Uid; device_config delete activity_manager data_sync_fgs_timeout_duration; am compat reset FGS_INTRODUCE_TIME_LIMITS $Package"
     # Review (check 2, finding 7): once the sleep is over the heal ignores TERM (`trap :`), so a cancel that lands while the undo runs cannot leave the phone half-restored; a cancel before that kills the heal while it sleeps.
-    return "echo `$`$ > $pidFile; sleep $Seconds; trap : TERM HUP INT; $undo; rm -f $pidFile"
+    # Slice 372 item 2: the heal also checks, after its sleep, that the pid file still holds ITS pid. A cancel removes the file, so a heal that survived the kill (the S21 run of 2026-11-13 still saw it alive 20 s after the TERM, 58 s into a 240 s sleep, so it was not mid-undo) wakes up disarmed and exits without touching the phone; a newer run's heal has its own pid in the file.
+    return "echo `$`$ > $pidFile; sleep $Seconds; [ `$(cat $pidFile 2>/dev/null) = `$`$ ] || exit 0; trap : TERM HUP INT; $undo; rm -f $pidFile"
 }
 
 # The shell text that stops a pending detached restore (its pid file names the `sh`). Pure: unit-tested.
-# Says: cancelled (killed while asleep; the pid file is still there), finished (the undo was already running, so it was waited for up to 30 s and ran whole), stuck (still alive after 30 s), stale or none.
+# Says: cancelled (killed while asleep; the pid file is still there), finished (the undo was already running, so it was waited for up to 10 s and ran whole), stuck (still alive after that; harmless, see the heal script), stale or none.
 function Get-DeviceRestoreCancelCommand([string]$Package) {
     $pidFile = Get-DeviceRestorePidFile $Package
     # The pid is killed only when its command line holds the pid file's own path (the heal's `sh -c` text does): a file that outlived its shell (reboot) names an unrelated process by now, so it is removed and nothing is killed ("stale").
-    $wait = "i=0; while kill -0 `$p 2>/dev/null && [ `$i -lt 30 ]; do sleep 1; i=`$((i+1)); done"
-    $verdict = "if kill -0 `$p 2>/dev/null; then echo stuck; elif [ -f $pidFile ]; then echo cancelled; else echo finished; fi"
+    # Slice 372 item 2: "alive" is the same cmdline test, never `kill -0`: a killed `sh` that nobody reaped (a zombie) passes `kill -0` but has an empty cmdline, and the 30 s wait then ran into adb's own 30 s limit ("Phone not responding"). Likely cause, not yet shown on the S21.
+    $alive = "tr '\0' ' ' < /proc/`$p/cmdline 2>/dev/null | grep -qF $pidFile"
+    $wait = "i=0; while $alive && [ `$i -lt $($script:DeviceRestoreCancelWaitSeconds) ]; do sleep 1; i=`$((i+1)); done"
+    $verdict = "if $alive; then echo stuck; elif [ -f $pidFile ]; then echo cancelled; else echo finished; fi"
     return "if [ -f $pidFile ]; then p=`$(cat $pidFile); if tr '\0' ' ' < /proc/`$p/cmdline 2>/dev/null | grep -qF $pidFile; then kill `$p 2>/dev/null; $wait; $verdict; else echo stale; fi; rm -f $pidFile; else echo none; fi"
 }
 
 # Stops a pending detached restore; returns $true when one was cancelled. Never throws (it runs in finally blocks).
 function Stop-DeviceRestore([string]$Serial, [string]$Package) {
     try {
-        $said = "$(Invoke-Adb $Serial @('shell', (Get-DeviceRestoreCancelCommand $Package)))"
+        $said = "$(Invoke-Adb $Serial @('shell', (Get-DeviceRestoreCancelCommand $Package)) $script:DeviceRestoreCancelAdbSeconds)"
         if ($said -match 'stale') { Write-Host "   WARNING: a stale heal pid file for $Package was removed; its pid belongs to another process, so nothing was killed." }
-        if ($said -match 'stuck') { Write-Host "   WARNING: the device-side restore for $Package was still running 30 s after the cancel; look at the phone's dataSync timeout and network block." }
+        if ($said -match 'stuck') { Write-Host "   note: the device-side restore for $Package was still alive $($script:DeviceRestoreCancelWaitSeconds) s after the cancel; its pid file is removed, so it exits at wake-up without undoing anything (a heal already mid-undo finishes on its own)." }
         if ($said -match 'finished') { Write-Host "   the device-side restore for $Package had already started and ran to the end (it was waited for, not killed)." }
         return ($said -match 'cancelled')
     }

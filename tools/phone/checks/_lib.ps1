@@ -371,15 +371,50 @@ function Get-NotificationTitleProblem([string]$Title) {
 # ---- Slice 320 item 3: the notification flags of a `dumpsys notification` record (paused-notification-repost).
 # Only the text of the notification itself carries its flags: other parts of a record (sound, audio attributes, actions) print their own flags=0x..., so the search starts at "Notification(" and stops at
 # the next record. Tried in order: (1) the stock form `defaults=0x<hex> flags=0x<hex>` (the pair is what Notification.toString prints, on one line or wrapped over several, as a Samsung
-# dump can print it); (2) the first `flags=0x<hex>` after "Notification(". $null when the record shows none. The Samsung (S21, Android 15) dump of 2026-11-08 was not saved, so the fixtures in
-# fixtures/notification-record-*.txt are the stock form and the wrapped form written by hand: the first S21 run that still reads $null prints the start of the record (Format-NotificationRecordExcerpt).
+# dump can print it); (2) the first `flags=0x<hex>` after "Notification(". $null when the record shows none. The fixtures in fixtures/notification-record-stock*.txt / -wrapped*.txt are written by hand,
+# fixtures/notification-record-samsung-*.txt are the S21's own records of 2026-11-13: a run that still reads $null prints the start of the record (Format-NotificationRecordExcerpt).
+# Slice 372 item 1: the S21 (Samsung, 2026-11-13) prints the flags by name, `defaults=0 flags=ONLY_ALERT_ONCE|AUTO_CANCEL color=...`, and its Notification( text has `semFlags=0x0` and no
+# `defaults=0x..`, so the old search fell through to the first `flags=0x..` of the record, the audio attributes' 0x800. The named form is tried first and only within the Notification( text itself.
+$script:NotificationFlagValues = @{
+    SHOW_LIGHTS = 0x1; ONGOING_EVENT = 0x2; INSISTENT = 0x4; ONLY_ALERT_ONCE = 0x8; AUTO_CANCEL = 0x10; NO_CLEAR = 0x20; FOREGROUND_SERVICE = 0x40
+    HIGH_PRIORITY = 0x80; LOCAL_ONLY = 0x100; GROUP_SUMMARY = 0x200; BUBBLE = 0x1000
+}   # the Notification.FLAG_* constants whose values developer.android.com/reference/android/app/Notification documents (checked 2026-11-13, context7 /websites/developer_android), by the name after FLAG_. The @hide ones (AUTOGROUP_SUMMARY, CAN_COLORIZE, NO_DISMISS, ...) are left out on purpose: a name not in this table reads as unknown ($null or the hex form), never as an unchecked number (Slice 372 review #8).
+
+# `ONLY_ALERT_ONCE|AUTO_CANCEL` (or the word `0` / `NONE`) to the flag bits; $null when a name is unknown, so a changed format is an error and never a wrong number.
+function ConvertFrom-NotificationFlagNames([string]$Names) {
+    $total = [int64]0
+    foreach ($name in ($Names -split '\|')) {
+        if ($name -in @('0', 'NONE', '')) { continue }
+        if (-not $script:NotificationFlagValues.ContainsKey($name)) { return $null }
+        $total = $total -bor [int64]$script:NotificationFlagValues[$name]
+    }
+    return $total
+}
+
+# $Text starts at "Notification(": returns exactly up to its balanced closing parenthesis, so a record-level `flags=AUTO_CANCEL` after it is never read. $null when the parentheses never balance (cut off, or an unmatched one in a text): the flags are then unread, never taken from the rest of the record (Slice 372 review #1, check #4).
+function Get-NotificationTextSpan([string]$Text) {
+    $depth = 0
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        if ($Text[$i] -eq '(') { $depth++ }
+        elseif ($Text[$i] -eq ')') {
+            $depth--
+            if ($depth -eq 0) { return $Text.Substring(0, $i + 1) }
+        }
+    }
+    return $null
+}
+
 function Get-NotificationFlagsFromText([string]$Raw) {
     $opening = [regex]::Match($Raw, '(?<![A-Za-z])Notification\(')   # not the "Notification(" inside "StatusBarNotification(", which starts before the notification's own text
     if (-not $opening.Success) { return $null }
-    $span = $Raw.Substring($opening.Index)
-    $next = $span.IndexOf('NotificationRecord(', 1, [StringComparison]::Ordinal)
-    if ($next -gt 0) { $span = $span.Substring(0, $next) }
-    foreach ($pattern in @('\bdefaults=0x[0-9a-fA-F]+\s+flags=0x([0-9a-fA-F]+)', '\bflags=0x([0-9a-fA-F]+)')) {
+    $span = Get-NotificationTextSpan $Raw.Substring($opening.Index)
+    if ($null -eq $span) { return $null }   # never fall back to the whole record
+    $named = [regex]::Match($span, '(?<![A-Za-z])flags=((?:[A-Z_]+|0)(?:\|[A-Z_]+)*)(?=\s|\)|$)')   # case-sensitive on purpose: not `semFlags`, not `flags=0x..`
+    if ($named.Success) {
+        $fromNames = ConvertFrom-NotificationFlagNames $named.Groups[1].Value
+        if ($null -ne $fromNames) { return $fromNames }   # an unknown name falls through to the hex forms below (Slice 372 review #6), never straight to $null
+    }
+    foreach ($pattern in @('\bdefaults=0x[0-9a-fA-F]+\s+flags=0x([0-9a-fA-F]+)', '(?<![A-Za-z])flags=0x([0-9a-fA-F]+)')) {
         if ($span -match $pattern) { return [Convert]::ToInt64($Matches[1], 16) }
     }
     return $null
@@ -631,17 +666,22 @@ function Get-LogCursor([string[]]$Lines, [double]$Current) {
 $script:BookOpenedPattern = 'HOOK open-book opened'
 $script:MinimumBookChunks = 2
 $script:PremadeClipPattern = '\[AudioPack\] premade clip plays'
+$script:SilentPiecePattern = '\[AudioPack\] silent piece shown'
+$script:BookFinishedPattern = '\[Usage\] (seq=\d+ )?book_finished\b'
 function Resolve-BookPlayProof([string[]]$Lines) {
     $events = @(ConvertFrom-TimingLog $Lines)
     # Slice 320 item 4: Dino plays pre-made clips (`[AudioPack] premade clip plays (sentence N)`) and the device voice, not neural chunks: a clip counts like a chunk.
     $clips = @($Lines | Where-Object { "$_" -match $script:PremadeClipPattern }).Count
     $chunks = @($events | Where-Object Kind -eq 'chunk').Count + $clips
     $opened = [bool]($Lines | Where-Object { "$_" -match $script:BookOpenedPattern })
-    $ended = [bool]($events | Where-Object Kind -eq 'end')
+    # Slice 372 item 1: Dino never writes READ_END (TestMarkers listens to the shared speech reader, which Dino's clip player bypasses); the end of a Dino book is its `[Usage] book_finished` line (RecordLogged, and the stamped `[Usage] seq=n book_finished`).
+    $ended = [bool]($events | Where-Object Kind -eq 'end') -or [bool]($Lines | Where-Object { "$_" -match $script:BookFinishedPattern })
+    $silent = @($Lines | Where-Object { "$_" -match $script:SilentPiecePattern }).Count
     $problem = $null
     if (-not $opened) { $problem = "no '$($script:BookOpenedPattern)' line (the book did not open)" }
+    elseif ($chunks -lt $script:MinimumBookChunks -and $silent -gt 0) { $problem = "no voice pack for the language the book was read in: $silent '[AudioPack] silent piece shown' line(s) and only $chunks clip(s) (the fixture pack is for one language; the app must run in it)" }
     elseif ($chunks -lt $script:MinimumBookChunks) { $problem = "only $chunks CHUNK line(s), need $($script:MinimumBookChunks): the book did not play" }
-    elseif (-not $ended) { $problem = 'no READ_END line' }
+    elseif (-not $ended) { $problem = 'no book_finished (or READ_END) line' }
     return [pscustomobject]@{ Played = ($null -eq $problem); Chunks = $chunks; Problem = $problem }
 }
 

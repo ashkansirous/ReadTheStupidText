@@ -12,6 +12,13 @@ public static class ReadingSpeedPreference
 {
 	private const string Key = "dino.reading.speed";
 
+	/// <summary>Slice 372: a speed the Debug test hook sets for this app run only (never saved, gone at the next start). It may go up to 2x, past Dino's 1.2x range, so a check can play a book quickly without touching the grown-up's saved speed.</summary>
+	internal static PlaybackRate? TestOverride { get; set; }
+
+	/// <summary>The speed the reader plays clips at: the run-only test override when one is set, else the saved speed. Only playback reads this; Settings, the slider and the backup export use <see cref="Load"/> (the saved value).</summary>
+	public static PlaybackRate LoadForPlayback() => TestOverride ?? Load();
+
+	/// <summary>The saved speed (never the run-only test override).</summary>
 	public static PlaybackRate Load()
 	{
 		try
