@@ -19,6 +19,7 @@ Open slices only. Finished slices (174 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | planned | | | [373-rtst-voice-rows-rt1-rt2.md](docs/plan/slices/373-rtst-voice-rows-rt1-rt2.md) |
+| 374 | Store listings in the other 13 app languages for both apps on Play, App Store and Microsoft Store (machine-translated, pushed at once; native reads go to unverified) | planned | | | [374-store-listings-13-languages.md](docs/plan/slices/374-store-listings-13-languages.md) |
 | 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | planned | | | [366-plan-split-by-product.md](docs/plan/slices/366-plan-split-by-product.md) |
 | 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (approved by the user 2026-11-13) | planned | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
 | 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | planned | | | [369-release-workflow-per-product.md](docs/plan/slices/369-release-workflow-per-product.md) |
