@@ -14,8 +14,8 @@
 
 - [x] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
 - [x] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] ~~When the user has answered, write every answer into this file~~ (dropped 2026-11-09: the page was withdrawn unanswered).
+- [x] ~~Each "something is wrong" becomes a fix item~~ (dropped 2026-11-09: timing is measured by `tools/phone/audio-timing.ps1`; its Device line is in `docs/plan/unverified.md`).
 
 ## Verification
 

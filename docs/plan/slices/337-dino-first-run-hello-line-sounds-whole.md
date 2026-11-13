@@ -10,10 +10,10 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] ~~Make the audio exactly as the app plays it~~ (dropped 2026-11-08, see the status line: Dino has no speech engine, no hello line to render).
+- [x] Publish one private listening page: made (https://claude.ai/artifact/992axYddYaAGWkFuPePHUM) and withdrawn unanswered.
+- [x] ~~When the user has answered, write every answer into this file~~ (dropped 2026-11-08; nothing to answer).
+- [x] ~~Each "something is wrong" becomes a fix item~~ (dropped 2026-11-08; no check left).
 
 ## Verification
 
