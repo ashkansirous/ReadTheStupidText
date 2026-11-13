@@ -4,7 +4,7 @@ name: site-checks
 # `test-downloads`): typecheck the Worker and its configs, check the site
 # files' line endings, test the Worker. The R2 publisher's tests live in
 # release-scripts.yml with every other .github/scripts test. Runs on every PR
-# (no path filter, as before), by hand, and from release.yml on main as a
+# (no path filter, as before), by hand, and from release-rtst.yml on main as a
 # standalone job that nothing needs, so it can never block a release.
 # Node 24 strips the types of worker/downloads.ts and worker/appconfig.ts.
 

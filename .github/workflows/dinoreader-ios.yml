@@ -4,10 +4,10 @@ name: dinoreader-ios
 # `src/DinoReader.App` (bundle id uk.sirous.dinoreader, Apple team J4TBWA5379, App Store
 # Connect app 6825053435). `dotnet publish`, not xcodebuild. Entry points:
 #   * pull_request (own paths) / workflow_dispatch: the unsigned simulator compile check.
-#   * workflow_call from release.yml with `sign` = true (release-draft reports that the five
+#   * workflow_call from release-dino.yml with `sign` = true (release-draft reports that the five
 #     team-wide iOS secrets AND DINOREADER_IOS_PROVISIONING_PROFILE_BASE64 exist): builds the
 #     signed App Store .ipa (profile "Dino Reader App Store") and uploads it to the draft
-#     release as DinoReader-<version>.ipa; release.yml's testflight-submit-dino sends it to
+#     release as DinoReader-<version>.ipa; release-dino.yml's testflight-submit-dino sends it to
 #     App Store Connect after the publish. With the profile secret empty nothing is signed
 #     and nothing is uploaded.
 # Signing material lives in a temp keychain removed in an `always()` step.
@@ -26,7 +26,8 @@ on:
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-dino.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'

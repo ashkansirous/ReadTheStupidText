@@ -1,0 +1,360 @@
+name: release-rtst
+
+# Read The Stupid Text's release (Slice 369: the RTST half of the old `release.yml`; Dino Reader's is `release-dino.yml`, the
+# shared first half is `release-shared.yml`). A push to main that changes a file the RTST targets read, or a manual run,
+# cuts `rtst-v<x.y.z>` (GitVersion.yml) with the Windows MSIX, the Android .aab/.apk and the signed iOS .ipa, and submits them.
+# Pull requests are covered by each platform workflow's own `pull_request` paths: windows.yml, android.yml, ios.yml, tests.yml,
+# site-checks.yml, release-scripts.yml (which also lints every workflow with actionlint).
+#
+# Manual run: `workflow_dispatch` behaves exactly like a push to main (same version, same release, same submits) and is
+# refused on any other ref. The `force_all` input builds every RTST target regardless of what changed (and, with the secrets
+# set, signs and submits them); it never touches Dino Reader's targets: use release-dino.yml for those. A wave's batched
+# release (run-wave `batch-release.mjs`) dispatches each release workflow whose push `paths` match the batch, so a batch that
+# changed both products starts both of them.
+#
+# Push `paths`: everything except what only Dino Reader reads (its app, Core, tests, book builder, GitVersion.dino.yml,
+# its workflows and scripts) and the store books (Slice 265: a book folder only ever runs `dino-store.yml`). A shared code
+# path (the engine, global.json, ...) is in both products' filters, so it starts both. ship-targets.test.mjs checks the
+# two filters against ship-targets.mjs (a Dino-only file starts no RTST run, an RTST-only file no Dino run).
+#
+# Store submission: `store-submit` runs when a Windows-specific change (the `windowsstore` ship-targets output:
+# App/Infrastructure/store-submit.yml/windows.yml, or force_all, a major bump or no base tag) has not been submitted yet. A
+# core-only change (Domain/Application/Documents) still rebuilds the MSIX for the GitHub release but does not by itself start a
+# Store submission. Slice 218: the flag is measured from the last successful Store submission (marker tag `rtst-store-v<x.y.z>`,
+# made by `store-submit-mark`), not from the last release; so an unsubmitted Windows change is submitted by the next RTST
+# release, even a core-only or Android-only one (which then also builds the MSIX). Since Slice 369 a Dino-only push starts no
+# RTST run, so it no longer carries that backlog; the next RTST release does. Docs-only merges cut no release.
+#
+# Rules carried over from build.yml (Batch 8, Decisions 52-58):
+#   * ZERO Actions artifacts. The account's Actions+Packages storage quota is 500 MB, shared by every repo and billed as
+#     monthly GB-hours; one run's MSIX x64 + ARM64 + AAB + APK is ~1 GB. GitHub Release assets don't count toward it, so every
+#     build output goes straight to a draft Release. Don't add actions/upload-artifact for build outputs.
+#   * Only build what changed (`.github/scripts/ship-targets.mjs`, run by release-shared.yml's `version` job and unit-tested by
+#     ship-targets.test.mjs on every PR): core code builds all three RTST platforms, App/Infrastructure only Windows, Mobile
+#     splits by folder (Decision 69: Platforms/Android -> Android, Platforms/iOS -> iOS, the rest of Mobile -> both), Mobile.Shared
+#     (Slice 58) rebuilds Android and iOS, docs build nothing. A major version bump (or force_all) builds everything. Each
+#     platform workflow's `pull_request.paths` mirrors that mapping; the test parses them and fails on drift.
+#   * iOS (Slice 48, Decision 70): compiles unsigned until the six iOS signing secrets exist (release-shared's `release-draft`
+#     reports whether they do as `ios_signed`). With them, a release run signs an App Store .ipa, attaches it to the draft and
+#     `testflight-submit` uploads it after the release publishes. An unsigned iOS build can't ship, so an iOS-only change with no
+#     secrets cuts no release (release-draft skips it).
+#
+# Flow: shared (release-shared.yml: version + ship-targets, the tests, the draft release) -> build-windows / build-android /
+# build-ios (reusable workflows; they upload into the draft) -> release-publish-rtst (only if every affected build succeeded;
+# the tag is created here, so a failed run leaves no tag) -> store-submit / play-submit / testflight-submit.
+# `site-checks` is advisory: no build or release job needs it, so an outage there can never block a build or a release.
+
+on:
+  push:
+    branches: [main]
+    # Later patterns override earlier ones: everything, minus what only Dino Reader (or the store upload) reads.
+    paths:
+      - '**'
+      - '!content/dino/**'
+      - '!src/DinoReader.App/**'
+      - '!src/DinoReader.Core/**'
+      - '!tests/DinoReader.Tests/**'
+      - '!tools/DinoReader.BookBuilder/**'
+      - '!tools/upload-store-story.ps1'
+      - '!GitVersion.dino.yml'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - '!.github/workflows/release-dino.yml'
+      - '!.github/workflows/dinoreader.yml'
+      - '!.github/workflows/dinoreader-*.yml'
+      - '!.github/workflows/dino-store.yml'
+      - '!.github/scripts/check-ios-bundle.sh'
+      - '!.github/scripts/publish-store-books.mjs'
+      - '!.github/scripts/r2-wrangler.mjs'
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: 'Build every Read The Stupid Text target (Windows, Android, iOS) whatever changed.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never cancel an in-progress run (two runs would race on the same draft Release). GitHub keeps only ONE pending run per
+# group and drops older pending ones, which is safe only because `version` diffs against the last release tag, so the
+# surviving run still sees the dropped run's changes.
+# Slice 221 item 4: a workflow_dispatch run has its own group, so a later merge's push run cannot replace it while it is pending
+# (a force_all run was cancelled that way). Two groups no longer exclude each other, so the first step of release-shared's
+# `version` job makes a run wait for every older run of the other event type.
+# Slice 267 (Bug E): a merge from a `fix/` branch runs in a group of its own (`release-rtst-fix-<sha>`), so a later merge can
+# never replace it while it is pending. It waits in `version` instead: the wait step holds every run behind every older run of a
+# different group, and a run of the ordinary push group also waits for an older fix run, so no two runs ever ship at once. The test
+# is `/fix/` anywhere in the merge commit's message, read the same way on both sides (the group from
+# `github.event.head_commit.message`, the wait step from each run's commit through `gh api`).
+# Slice 369: the group names carry the product (`release-rtst-...`; Dino Reader's are `release-dino-...`), so one product's run
+# never replaces or waits for the other's. Never reuse a group name inside release-shared.yml (the caller would be cancelled).
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('release-rtst-dispatch-{0}', github.ref) || (contains(github.event.head_commit.message, '/fix/') && format('release-rtst-fix-{0}', github.sha)) || format('release-rtst-{0}', github.ref) }}
+  cancel-in-progress: false
+
+jobs:
+  # Version, tests and the draft release (release-shared.yml). Its permissions are what the called jobs ask for: a called
+  # workflow can only lower them (check-called-workflow-permissions.mjs fails a PR otherwise).
+  shared:
+    permissions:
+      contents: write   # push the baseline tag, create the draft release
+      actions: read     # gh run list, the wait on older runs
+    uses: ./.github/workflows/release-shared.yml
+    with:
+      product: rtst
+      workflow_file: release-rtst.yml
+      force_all: ${{ inputs.force_all == true }}
+    secrets: inherit
+
+  # Slice 239: a push that only changes Dino book content (content/dino/**) starts no test, so the Worker's site checks skip it.
+  # The decision is a step of release-shared.yml's `version` job (its `site_checks` output). Advisory: no build needs this job,
+  # and `!cancelled()` lets it run when a test in `shared` failed, as the separate job it replaces did.
+  site-checks:
+    needs: shared
+    if: >-
+      !cancelled()
+      && github.ref == 'refs/heads/main'
+      && needs.shared.outputs.site_checks == 'true'
+    uses: ./.github/workflows/site-checks.yml
+
+  build-windows:
+    needs: shared
+    # !cancelled() + explicit results: the draft is skipped when nothing ships, and a bare `needs` would cascade that skip into this job.
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.windows == 'true'
+      && needs.shared.outputs.proceed == 'true'
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/windows.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      upload: ${{ needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # CI signs with an upload key; Google Play App Signing re-signs for
+  # distribution, so no release-signing secret leaves CI (Decisions 18/42).
+  # The unsigned Debug build always runs; the signed .aab/.apk build only when
+  # cutting a release and once ANDROID_SIGNING_KEYSTORE_BASE64 exists.
+  build-android:
+    needs: shared
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.android == 'true'
+      && needs.shared.outputs.proceed == 'true'
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/android.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      version_code: ${{ needs.shared.outputs.version_code }}
+      release: ${{ needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # iOS (Slice 48, Decision 70). The unsigned simulator compile runs whenever
+  # there is no signed publish to prove the same thing; the signed App Store
+  # .ipa is built only when cutting a release and once all six iOS secrets exist.
+  build-ios:
+    needs: shared
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.ios == 'true'
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/ios.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      sign: ${{ needs.shared.outputs.ios_signed == 'true' && needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # Publishes the RTST draft (creating the rtst-v<x.y.z> tag at the merge commit) only
+  # when every platform this change touched built successfully. iOS counts only when
+  # signed: an unsigned compile check gates nothing (it can't ship). Only this product's
+  # release is marked "latest": the README badge and releases/latest follow Read The Stupid Text.
+  release-publish-rtst:
+    needs: [shared, build-windows, build-android, build-ios]
+    if: >-
+      !cancelled()
+      && needs.shared.outputs.proceed == 'true'
+      && (needs.shared.outputs.windows != 'true' || needs.build-windows.result == 'success')
+      && (needs.shared.outputs.android != 'true' || needs.build-android.result == 'success')
+      && (needs.shared.outputs.ios != 'true' || (needs.shared.outputs.ios_signed != 'true' || needs.build-ios.result == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.publish.outputs.released }}
+    steps:
+      - name: Publish rtst-v${{ needs.shared.outputs.version }}
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ needs.shared.outputs.version }}
+          WINDOWS: ${{ needs.shared.outputs.windows }}
+          IOS: ${{ needs.shared.outputs.ios }}
+          IOS_SIGNED: ${{ needs.shared.outputs.ios_signed }}
+        run: |
+          set -euo pipefail
+          # A re-run of an old failed run must not publish its stale draft over
+          # a newer release (it would become "latest" and hit the Store with a
+          # lower version) — discard it instead. Only this product's tags
+          # (rtst-v<x.y.z>) count: dino-v and packs-<n> releases must never be
+          # compared as RTST versions.
+          newest=$(gh release list --repo "$REPO" --limit 100 --exclude-drafts --json tagName --jq '.[].tagName' |
+            grep -E '^rtst-v[0-9]+[.][0-9]+[.][0-9]+$' | sed 's/^rtst-v//' | sort -V | tail -n 1 || true)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            echo "::warning::rtst-v${newest} is already published, newer than rtst-v${VERSION} — deleting this stale draft instead of publishing it."
+            gh release delete "rtst-v${VERSION}" --repo "$REPO" --yes
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          names=$(gh release view "rtst-v${VERSION}" --repo "$REPO" --json assets --jq '.assets[].name')
+          echo "Assets on rtst-v${VERSION}:"; echo "$names"
+          if [ "$WINDOWS" = "true" ]; then
+            built=$(grep -cE "^ReadTheStupidText[.]App_${VERSION//./[.]}[.]0_.*[.]msix$" <<< "$names" || true)
+            if [ "$built" -ne 2 ]; then
+              echo "::error::Expected 2 freshly built MSIX (x64 + ARM64) for ${VERSION}, found ${built}"; exit 1
+            fi
+          fi
+          if [ "$IOS" = "true" ] && [ "$IOS_SIGNED" = "true" ]; then
+            if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
+              echo "::error::Expected the freshly built ReadTheStupidText-${VERSION}.ipa on the draft"; exit 1
+            fi
+          fi
+          gh release edit "rtst-v${VERSION}" --repo "$REPO" --draft=false --latest
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+  # Microsoft Store submission (Decision 44) — when a Windows-specific change has not been submitted
+  # yet (`windows_store`, measured from the last `rtst-store-v` marker, Slice 218); a core-only change alone does not start one.
+  # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
+  # release never starts another workflow run (GitHub's recursion guard).
+  store-submit:
+    needs: [shared, release-publish-rtst]
+    if: >-
+      !cancelled()
+      && needs.release-publish-rtst.outputs.released == 'true'
+      && needs.shared.outputs.windows_store == 'true'
+    uses: ./.github/workflows/store-submit.yml
+    with:
+      tag: rtst-v${{ needs.shared.outputs.version }}
+      product_id: ${{ vars.STORE_PRODUCT_ID }}
+    secrets: inherit
+
+  # Slice 218: after a successful Store submission, mark the released commit with an `rtst-store-v<x.y.z>`
+  # tag. ship-targets measures `windowsstore` from the newest such tag, not from the last release, so a
+  # Windows change in a release whose submission was skipped, failed or cancelled is submitted by the
+  # next release. The first run on main has no marker tag and falls back to the release diff; the first
+  # successful submission (e.g. a force_all run) creates it.
+  store-submit-mark:
+    needs: [shared, store-submit]
+    if: needs.store-submit.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the marker tag
+    steps:
+      - name: Tag the submitted release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: rtst-v${{ needs.shared.outputs.version }}
+          MARKER_TAG: rtst-store-v${{ needs.shared.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Idempotent: a re-run of this job (or of the whole run) finds its tag already there.
+          sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq .object.sha)
+          # Only a 404 means "no such tag"; any other API failure (rate limit, 5xx, auth) fails the job.
+          marker_sha() {
+            local out
+            if out=$(gh api "repos/${{ github.repository }}/git/ref/tags/${MARKER_TAG}" --jq .object.sha 2>&1); then printf '%s' "$out"; return 0; fi
+            case "$out" in *"Not Found"*|*"HTTP 404"*) return 0 ;; esac
+            echo "$out" >&2; return 1
+          }
+          existing=$(marker_sha)
+          if [ "$existing" = "$sha" ]; then echo "${MARKER_TAG} already marks ${sha}"; exit 0; fi
+          # Slice 222: a marker only ever moves forward. One per version, never moved: a rerun of an old release finds its
+          # marker (or a newer one) already there and leaves it, so the store base never goes back to an older commit.
+          if [ -n "$existing" ]; then echo "::warning::${MARKER_TAG} already marks ${existing}, not ${sha}; leaving it where it is."; exit 0; fi
+          newest=$(gh api --paginate "repos/${{ github.repository }}/git/matching-refs/tags/rtst-store-v" --jq '.[].ref' | sed 's#^refs/tags/rtst-store-v##' | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "${MARKER_TAG#rtst-store-v}" | sort -V | tail -n 1)" != "${MARKER_TAG#rtst-store-v}" ]; then
+            echo "::warning::rtst-store-v${newest} is newer than ${MARKER_TAG}; not adding an older marker."; exit 0
+          fi
+          if ! gh api "repos/${{ github.repository }}/git/refs" -f "ref=refs/tags/${MARKER_TAG}" -f "sha=${sha}"; then
+            # A concurrent run may have created it (422 "Reference already exists"): fine if it marks the same commit.
+            [ "$(marker_sha)" = "$sha" ] || { echo "::error::could not create ${MARKER_TAG}"; exit 1; }
+          fi
+          echo "Marked ${MARKER_TAG} at ${sha}"
+
+  # Google Play internal-testing upload — only when Android was rebuilt. A
+  # no-op until both the signing and PLAY_SERVICE_ACCOUNT_JSON secrets exist;
+  # Play Console also needs the very first release on a track uploaded by hand
+  # once (an API limitation).
+  play-submit:
+    needs: [shared, release-publish-rtst]
+    if: >-
+      !cancelled()
+      && needs.release-publish-rtst.outputs.released == 'true'
+      && needs.shared.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CAN_PUBLISH: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Download the .aab from the release
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.shared.outputs.version }}
+        run: gh release download "rtst-v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.aab" --dir play
+
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.readthestupidtext
+          releaseFiles: play/*.aab
+          track: internal
+          status: completed
+
+  # TestFlight upload (Decision 70) — only when iOS was rebuilt AND signed. The
+  # .ipa comes from the published release, so a build for a release that never
+  # went out is never uploaded. macOS because altool ships with Xcode. Apple takes
+  # up to ~30 minutes to process a build; this job does not wait for that, and
+  # adding the build to a tester group stays a manual step in App Store Connect.
+  testflight-submit:
+    needs: [shared, release-publish-rtst]
+    if: >-
+      !cancelled()
+      && needs.release-publish-rtst.outputs.released == 'true'
+      && needs.shared.outputs.ios == 'true'
+      && needs.shared.outputs.ios_signed == 'true'
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.shared.outputs.version }}
+    steps:
+      - name: Checkout (scripts only)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Download the .ipa from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Capture first: `gh | grep -q` under pipefail fails on grep's early exit (SIGPIPE), reading as "asset missing".
+          names=$(gh release view "rtst-v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
+            echo "::error::Release rtst-v${VERSION} was published as signed iOS but carries no ReadTheStupidText-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
+          fi
+          gh release download "rtst-v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.ipa" --dir testflight
+
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: bash .github/scripts/testflight-upload.sh "testflight/ReadTheStupidText-${VERSION}.ipa"

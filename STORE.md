@@ -8,8 +8,8 @@ build/packaging pipeline. The app is **published and live in the Store**
 the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set).
 
 > **Google Play (Android/MAUI, Batch 6, Slice 34).** The Android app builds in
-> the same release pipeline (`release.yml` orchestrates; `android.yml` builds the
-> AAB/APK and `release.yml`'s `play-submit` job ships it, Batch 8), mirroring this
+> the same release pipeline (`release-rtst.yml` orchestrates; `android.yml` builds the
+> AAB/APK and `release-rtst.yml`'s `play-submit` job ships it, Batch 8), mirroring this
 > document's trust model (CI-held upload key; Google Play App Signing re-signs
 > for distribution — same shape as this file's [Signing](#signing) section).
 > App id `uk.sirous.readthestupidtext`. The signed `.aab` build already works
@@ -23,7 +23,7 @@ the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set)
 
 Verified end-to-end and **live**:
 
-- ✅ **Versioning → build → release** runs in `release.yml` (GitVersion →
+- ✅ **Versioning → build → release** runs in `release-rtst.yml` (GitVersion, in `release-shared.yml` →
   `windows.yml` per-arch MSIX → `rtst-v<x.y.z>` tag + GitHub Release). It cut `v0.1.0` … `v0.4.0` as the
   one shared version; since Slice 130 RTST and Dino Reader each have their own tag and release.
 - ✅ **Tests gate the release** — a `test` job runs the unit suite and blocks
@@ -35,7 +35,7 @@ Verified end-to-end and **live**:
 - ✅ **`store-submit.yml`** submits **one** update carrying both architectures
   (x64 + ARM64 combined into a single `.msixbundle`). It fails fast until the
   four Partner Center secrets are set. Since Decision 44 it runs
-  **automatically** — called from `release.yml`'s `store-submit` job right after
+  **automatically** — called from `release-rtst.yml`'s `store-submit` job right after
   every new release — with `workflow_dispatch` kept only for a manual re-run.
 - ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
   variables.
@@ -96,7 +96,7 @@ Store listing references:
 
 ## Build artifact (CI)
 
-`.github/workflows/windows.yml` (called by `release.yml`) builds the single-project MSIX on `windows-latest`
+`.github/workflows/windows.yml` (called by `release-rtst.yml`) builds the single-project MSIX on `windows-latest`
 for **x64** and **ARM64**. On `main` it uploads each **unsigned** `.msix` directly
 to that merge's draft GitHub Release. PRs build without uploading anything, and
 there are no Actions artifacts at all (Batch 8, Decision 52: the account's
@@ -527,8 +527,8 @@ app build that never asks for one, behaves as before. (docs/plan/slices/246-dino
 
 ## Versioning (GitVersion → tag → release)
 
-Versioning is fully automatic and lives **entirely inside `release.yml`** — one
-workflow run does version → build → release, with no PAT and no commit-back
+Versioning is fully automatic and lives **entirely inside the release workflows** (`release-rtst.yml` and `release-dino.yml`, sharing `release-shared.yml`; Slice 369) — one
+workflow run per product does version → build → release, with no PAT and no commit-back
 (Decision 17 / Slice 14). **Git tags are the source of truth.**
 
 1. The `version` job runs **GitVersion** once per product (Slice 130, Decision 137):
@@ -583,13 +583,13 @@ One submission must carry both architectures, so the workflow bundles rather
 than calling `msstore publish` once per `.msix` (which would open competing
 submissions).
 
-**Automatic since Decision 44.** `release.yml`'s `store-submit` job calls this
+**Automatic since Decision 44.** `release-rtst.yml`'s `store-submit` job calls this
 workflow (`workflow_call`) right after cutting a release that changed the Windows app
 (see line 51), so it reaches the Store with no manual step — this closed a real gap
 where the workflow was manual-only and simply wasn't re-run for 15 days
 (`v0.7.8` … `v0.14.0` piled up, unshipped). It's called as a job in the *same*
 run rather than via an `on: release: published` trigger on this file, because
-`release.yml` creates the release with the default `GITHUB_TOKEN`, and GitHub's
+`release-shared.yml` creates the release with the default `GITHUB_TOKEN`, and GitHub's
 recursion guard means a `GITHUB_TOKEN`-authored event never starts another
 workflow run — that trigger would have looked correct and never fired.
 `workflow_dispatch` still works standalone for a manual re-submit (e.g.
@@ -764,7 +764,7 @@ rejected.
 ## iOS / TestFlight (Slice 48, Decision 70)
 
 The iOS app is the same MAUI project (`net10.0-ios`), built on a macOS runner by
-`release.yml`'s `build-ios` job (`ios.yml`). Every merge that touches iOS (or shared Mobile/core
+`release-rtst.yml`'s `build-ios` job (`ios.yml`). Every merge that touches iOS (or shared Mobile/core
 code) lands a build in TestFlight; the App Store release itself stays a manual
 step in App Store Connect. No `actions/upload-artifact`: the signed `.ipa` goes to
 the GitHub Release as `ReadTheStupidText-<version>.ipa`, and `testflight-submit`
@@ -816,7 +816,7 @@ needed (Decision 60); the packs folder is excluded from iCloud backup.
 
 Dino Book Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
 package identity, the same developer account. The package is `src/DinoReader.App` (a MAUI WinUI head,
-`net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release.yml`'s `build-dinowin` job
+`net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release-dino.yml`'s `build-dinowin` job
 as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
 `DinoReader.App_<x.y.z.0>_<arch>.msix`. Like Read The Stupid Text's, the Release package is built .NET
 **self-contained** (Store certification 10.2.4.1); the Windows App SDK stays framework-dependent. There is no
@@ -847,7 +847,7 @@ capability). Pictures are read on the device with `Windows.Media.Ocr`; PDFs are 
 Fredoka, Andika and Vazirmatn fonts (SIL OFL 1.1, texts in `src/DinoReader.App/Licenses/`). No GPL/LGPL
 component ships in the package.
 
-**Store submission.** `store-submit-dino` in `release.yml` calls `store-submit.yml` with
+**Store submission.** `store-submit-dino` in `release-dino.yml` calls `store-submit.yml` with
 `package: DinoReader.App` and the product id from the repository variable **`DINOREADER_STORE_APP_ID`**
 (the Store id of the reserved listing). The job runs only when that variable is non-empty, so until the
 listing exists a release builds and publishes the MSIX and skips the submission. It uses the same

@@ -1,8 +1,8 @@
 # Dino store books (Slice 158, Decision 163; own workflow again since 2026-11-01, Slice 239 "Changed after merge").
 # Uploads the Dino store books that are behind the live store and delists the ones whose content folder is gone. It is
-# separate from release.yml so a story merge starts at once and never waits in release.yml's concurrency group behind an
+# separate from release-dino.yml so a story merge starts at once and never waits in its concurrency group behind an
 # app build (an iOS build can hold that group for an hour). Its own group queues uploads only behind each other.
-# release.yml ignores the whole content/dino folder (its push `paths`); the starter list is checked here, in the first step below, and no longer builds the app (Slice 265).
+# release-rtst.yml and release-dino.yml ignore the whole content/dino folder (their push `paths`); the starter list is checked here, in the first step below, and no longer builds the app (Slice 265).
 # Mixed pushes (story + code) match both workflows. No Actions artifacts: the books stay on the runner.
 name: Dino store books
 

@@ -27,7 +27,7 @@
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
  * so the MSIX is rebuilt for the GitHub release, but is not submitted to the Store). Slice 218: that flag
- * is measured from the newest marker tag `rtst-store-v<x.y.z>` that release.yml pushes after a successful submission, not from the last release; so an unsubmitted
+ * is measured from the newest marker tag `rtst-store-v<x.y.z>` that release-rtst.yml pushes after a successful submission, not from the last release; so an unsubmitted
  * Windows change is submitted by the next release even when that release is core-only, docs-only or
  * Android-only, and a pending submission also turns `windows` on (the MSIX must be built). With no marker
  * tag, or when the diff against it fails, the flag follows the release diff.
@@ -38,7 +38,7 @@
  * product merged into HEAD (rtst-v<x.y.z> for the RTST targets, dino-v<x.y.z> for the Dino ones;
  * the old shared v<x.y.z> tags are history and ignored), not from the push's own `before`: a failed
  * run, or a pending run dropped by the concurrency queue, is still built next time. Failing safe
- * means building more, never less. A product with no tag builds everything (release.yml's version
+ * means building more, never less. A product with no tag builds everything (release-shared.yml's version
  * job creates the baseline tags first, so this only happens if that is skipped).
  *
  * Local mode (Slice 180): `node .github/scripts/ship-targets.mjs --local [--base origin/main] [--files]` prints the same flags for
@@ -72,7 +72,7 @@ const DEFAULT_REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
 
 /**
- * Marker tag release.yml pushes after a Microsoft Store submission succeeds (Slice 218); the literal in release.yml's
+ * Marker tag release-rtst.yml pushes after a Microsoft Store submission succeeds (Slice 218); the literal in release-rtst.yml's
  * `store-submit-mark` job must match. Not an `rtst-v` tag (so GitVersion and the release scan ignore
  * it); the store flag is measured from the newest one.
  */
@@ -105,7 +105,8 @@ export const CORE_PATHS = [
     'src/SherpaOnnxVersion.props',
     'GitVersion.yml',
     '.gitattributes',
-    '.github/workflows/release.yml',
+    // Slice 369: the shared half of both release workflows; each product's own release-<product>.yml is in its own group below.
+    '.github/workflows/release-shared.yml',
     '.github/workflows/tests.yml',
     '.github/scripts/find-release.sh',
     '.github/scripts/ship-targets.mjs',
@@ -221,6 +222,11 @@ export const GROUPS = {
     dinoreader: {
         include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', 'tools/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
     },
+    // Slice 369: each product's own release workflow. Editing one rebuilds that product's targets only (the shared half,
+    // release-shared.yml, is in `core` and rebuilds both). release-<product>.yml's push paths and the PR paths of the
+    // product's build workflows are derived from these groups.
+    rtstrelease: { include: ['.github/workflows/release-rtst.yml'] },
+    dinorelease: { include: ['.github/workflows/release-dino.yml'] },
 };
 
 function patternToRegExp(pattern) {
@@ -252,19 +258,19 @@ function touchedGroups(changedFiles) {
 /**
  * `changedFiles` is everything since the last release tag (`null`: unknown,
  * which builds everything). `bump` is the pending SemVer bump kind.
- * Returns one boolean per target. Whether anything ships is release.yml's call
+ * Returns one boolean per target. Whether anything ships is release-shared.yml's call
  * (windows || android || dinowin || signed ios || signed dinoapp || signed dinoios); dinoreader alone never ships.
  */
 export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const everything = forceAll || bump === MAJOR_BUMP || changedFiles === null;
     const g = everything ? null : touchedGroups(changedFiles);
-    const windows = everything || g.core || g.windows;
-    const android = everything || g.core || g.android || g.mobileshared || g.sharedroot;
-    const ios = everything || g.core || g.ios || g.mobileshared || g.sharedroot;
+    const windows = everything || g.core || g.windows || g.rtstrelease;
+    const android = everything || g.core || g.android || g.mobileshared || g.sharedroot || g.rtstrelease;
+    const ios = everything || g.core || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease;
     const dinoreader = everything || g.dinoreader;
-    const dinoapp = everything || g.core || g.dinoapp || g.sharedroot;
-    const dinoios = everything || g.core || g.dinoios || g.sharedroot;
-    const dinowin = everything || g.core || g.dinowin || g.sharedroot;
+    const dinoapp = everything || g.core || g.dinoapp || g.sharedroot || g.dinorelease;
+    const dinoios = everything || g.core || g.dinoios || g.sharedroot || g.dinorelease;
+    const dinowin = everything || g.core || g.dinowin || g.sharedroot || g.dinorelease;
     const dinostore = everything || g.dinostore;
     // The Microsoft Store only gets a submission for Windows-specific changes: a core-only change
     // rebuilds the MSIX (windows) for the GitHub release but is not worth a Store review.
@@ -291,10 +297,10 @@ export function testSuites(changedFiles) {
     if (changedFiles === null) return { shared: true, rtst: true };
     const g = touchedGroups(changedFiles);
     // FallbackGuardTests and SherpaVersionPinTests (in Shared.Tests) scan all of src/, so every code group selects the shared suite too.
-    const code = g.core || g.infrastructure || g.sharedroot || g.windows || g.android || g.ios || g.mobileshared || g.dinoapp || g.dinoios || g.dinowin;
+    const code = g.core || g.infrastructure || g.sharedroot || g.windows || g.android || g.ios || g.mobileshared || g.dinoapp || g.dinoios || g.dinowin || g.rtstrelease || g.dinorelease;
     const linked = changedFiles.some((file) => LINKED_TEST_FILES.includes(file));
     const shared = code || g.sharedtests || g.sherpapins || linked;
-    const rtst = g.core || g.unittests || g.windows || g.android || g.ios || g.mobileshared || g.sharedroot || linked;
+    const rtst = g.core || g.unittests || g.windows || g.android || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease || linked;
     return { shared, rtst };
 }
 
@@ -416,12 +422,25 @@ function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag }) {
  */
 export function shipTargetsPerProduct({ plans, forceAll = false }) {
     const merged = {};
-    for (const [name, product] of Object.entries(PRODUCTS)) {
+    // Slice 369: a release workflow plans only its own product, so a product with no plan is left out (its targets stay unset).
+    for (const [name, product] of Object.entries(PRODUCTS).filter(([name]) => plans[name])) {
         const all = shipTargets({ ...plans[name], forceAll });
         product.targets.forEach((target) => { merged[target] = all[target]; });
         if (product.store && plans[name].storeChangedFiles) applySinceLastStore(merged, plans[name], forceAll, product.store);
     }
     return merged;
+}
+
+/**
+ * Slice 369: which release workflows a change set starts work in: `rtst` (release-rtst.yml) when an RTST platform target
+ * builds, `dino` (release-dino.yml) when a Dino target does (`dinoreader` alone runs Dino's suite and never ships, but
+ * the workflow still starts). `dinostore` is not a release: dino-store.yml publishes books on its own. Unknown (`null`) is both.
+ * A docs-only change is neither. (The workflows' own `push.paths` are tested against this, ship-targets.test.mjs.)
+ */
+export function releaseWorkflows(changedFiles) {
+    const hit = shipTargets({ changedFiles, bump: 'other' });
+    const started = (name) => PRODUCTS[name].targets.filter((target) => !CONTENT_ONLY_TARGETS.includes(target)).some((target) => hit[target]);
+    return { rtst: started('rtst'), dino: started('dino') };
 }
 
 /** The files changed since the product's last store marker tag, or undefined (no marker, or the diff failed: the flag then follows the release diff). */
@@ -500,8 +519,17 @@ function mainLocal({ base, files, stdin, repoRoot, tests }) {
 function main() {
     const local = parseLocalArgs(process.argv.slice(2));
     if (local.local) return mainLocal(local);
-    const plans = { rtst: planFor('rtst', 'RTST_VERSION'), dino: planFor('dino', 'DINO_VERSION') };
-    writeOutputs(shipTargetsPerProduct({ plans, forceAll: process.env.FORCE_ALL === 'true' }));
+    writeOutputs(shipTargetsPerProduct({ plans: plansFromEnv(process.env), forceAll: process.env.FORCE_ALL === 'true' }));
+}
+
+/**
+ * Slice 369: each release workflow plans its own product only (`PRODUCT=rtst|dino`, version in `VERSION`), so the other
+ * product's targets stay unset and its tag is never read. Without PRODUCT both are planned (RTST_VERSION / DINO_VERSION).
+ */
+export function plansFromEnv(env, plan = planFor) {
+    if (!env.PRODUCT) return { rtst: plan('rtst', 'RTST_VERSION'), dino: plan('dino', 'DINO_VERSION') };
+    if (!PRODUCTS[env.PRODUCT]) throw new Error(`ship-targets: unknown PRODUCT '${env.PRODUCT}' (expected ${Object.keys(PRODUCTS).join(' or ')})`);
+    return { [env.PRODUCT]: plan(env.PRODUCT, 'VERSION') };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

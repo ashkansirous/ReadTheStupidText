@@ -1,12 +1,12 @@
 name: release-scripts
 
-# Guards the release pipeline itself. release.yml only runs on main, so
+# Guards the release pipeline itself. the release workflows (release-rtst.yml, release-dino.yml) only run on main, so
 # without this a PR that breaks a script or a workflow would look green and
 # then stop every release after merge.
 #   * test: every .github/scripts/*.test.mjs (ship-targets decides what a
 #     release builds and its test also checks each platform workflow's PR
 #     paths; r2-wrangler is the R2 helper publish-store-books uses). Node's own runner, no
-#     dependencies. This workflow is the only place these tests run; release.yml
+#     dependencies. This workflow is the only place these tests run; the release workflows
 #     relies on it having passed on the PR.
 #   * ios-review-cadence.test.mjs guards the daily TestFlight / manual App Store review
 #     script (Slice 147); it runs with the others and its paths are covered by the filter.
