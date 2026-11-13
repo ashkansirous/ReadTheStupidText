@@ -122,6 +122,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi。连上 Wi-Fi 后会自动继续。点按可立即下载。</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>需要登录才能下载。</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>你无权下载此内容。</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>找不到该下载内容。</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>尝试次数过多。请等一分钟再试。</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>连接服务器出现问题，请稍后重试</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点按可下载。</value></data>

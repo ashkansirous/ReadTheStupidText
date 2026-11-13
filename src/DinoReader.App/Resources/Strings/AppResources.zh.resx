@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>以 {1} 购买 {0}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>请连接互联网后购买</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>等待批准</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>需要登录才能获取这本书。</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>你无权获取这本书。</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>找不到这本书。</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>你需要先购买这本书</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>尝试次数过多。请等一分钟再试。</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>连接服务器出现问题，请稍后重试</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>商店出了点问题</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>恢复购买</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>兑换代码</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>购买没有成功，请重试。</value></data>

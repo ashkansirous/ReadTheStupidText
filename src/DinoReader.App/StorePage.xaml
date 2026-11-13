@@ -14,6 +14,7 @@
         <Color x:Key="StoreGreen">#2E7D32</Color>
         <Color x:Key="CoverPlaceholder">#efe6d2</Color>
         <x:String x:Key="WifiOffGlyph">M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18</x:String>
+        <x:String x:Key="ServerErrorGlyph">M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20M12 7v6M12 16.5v0.5</x:String>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
             <Border BackgroundColor="White" StrokeThickness="0" Padding="14">
@@ -33,6 +34,8 @@
                         <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
                         <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12.5" TextColor="{StaticResource Muted}" />
                         <Label Text="{Binding Meta}" IsVisible="{Binding HasMeta}" FontSize="13" TextColor="{StaticResource Body}" />
+                        <!-- Slice 357: why the last Get failed (the server's answer in the app's language), under the row while the pill offers Try again or Buy. -->
+                        <Label AutomationId="StoreRowError" Text="{Binding ErrorText}" IsVisible="{Binding HasError}" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
                     </VerticalStackLayout>
 
                     <!-- Get: the brand pill, 44 high, words only (frame T2). -->
@@ -126,12 +129,12 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="48" />
                 </Border.StrokeShape>
-                <shapes:Path Data="{StaticResource WifiOffGlyph}" Stroke="{StaticResource Muted}" StrokeThickness="2" StrokeLineCap="Round"
+                <shapes:Path x:Name="OfflineIcon" Data="{StaticResource WifiOffGlyph}" Stroke="{StaticResource Muted}" StrokeThickness="2" StrokeLineCap="Round"
                              StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="44" HeightRequest="44" HorizontalOptions="Center" VerticalOptions="Center" />
             </Border>
-            <Label Text="{x:Static res:AppResources.Store_OfflineTitle}" FontSize="21" FontAttributes="Bold" HorizontalTextAlignment="Center"
+            <Label x:Name="OfflineTitleLabel" AutomationId="StoreOfflineTitle" Text="{x:Static res:AppResources.Store_OfflineTitle}" FontSize="21" FontAttributes="Bold" HorizontalTextAlignment="Center"
                    SemanticProperties.HeadingLevel="Level2" />
-            <Label Text="{x:Static res:AppResources.Store_OfflineBody}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
+            <Label x:Name="OfflineBodyLabel" Text="{x:Static res:AppResources.Store_OfflineBody}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
                    HorizontalTextAlignment="Center" />
             <Button Text="{x:Static res:AppResources.Store_TryAgain}" HeightRequest="48" CornerRadius="24" Padding="28,0" FontSize="15" FontAttributes="Bold"
                     BackgroundColor="{StaticResource Brand}" TextColor="White" HorizontalOptions="Center" Margin="0,4,0,0" Clicked="OnTryAgainClicked" />

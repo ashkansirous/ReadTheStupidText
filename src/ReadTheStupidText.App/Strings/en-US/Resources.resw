@@ -290,6 +290,21 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>This voice pack cannot be used. The {0} reads.</value>
   </data>
+  <data name="Pack_Error_Unauthorized" xml:space="preserve">
+    <value>Signing in is needed to download this.</value>
+  </data>
+  <data name="Pack_Error_Forbidden" xml:space="preserve">
+    <value>You’re not allowed to download this.</value>
+  </data>
+  <data name="Pack_Error_NotFound" xml:space="preserve">
+    <value>The download wasn’t found.</value>
+  </data>
+  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
+    <value>Too many tries. Wait a minute, then try again.</value>
+  </data>
+  <data name="Pack_Error_Server" xml:space="preserve">
+    <value>Problem connecting to the server, please retry later</value>
+  </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>The download failed. Retry to try again.</value>
   </data>

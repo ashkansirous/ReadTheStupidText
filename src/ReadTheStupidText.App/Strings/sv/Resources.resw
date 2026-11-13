@@ -297,6 +297,21 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Det går inte att använda det här röstpaketet. {0} läser.</value>
   </data>
+  <data name="Pack_Error_Unauthorized" xml:space="preserve">
+    <value>Du måste logga in för att ladda ner detta.</value>
+  </data>
+  <data name="Pack_Error_Forbidden" xml:space="preserve">
+    <value>Du har inte behörighet att ladda ner detta.</value>
+  </data>
+  <data name="Pack_Error_NotFound" xml:space="preserve">
+    <value>Nedladdningen hittades inte.</value>
+  </data>
+  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
+    <value>För många försök. Vänta en minut och försök igen.</value>
+  </data>
+  <data name="Pack_Error_Server" xml:space="preserve">
+    <value>Problem med att ansluta till servern, försök igen senare</value>
+  </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Nedladdningen misslyckades. Försök igen.</value>
   </data>

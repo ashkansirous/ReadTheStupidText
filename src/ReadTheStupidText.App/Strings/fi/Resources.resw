@@ -297,6 +297,21 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Tätä ääntä ei voi käyttää. {0} lukee.</value>
   </data>
+  <data name="Pack_Error_Unauthorized" xml:space="preserve">
+    <value>Lataus vaatii kirjautumisen.</value>
+  </data>
+  <data name="Pack_Error_Forbidden" xml:space="preserve">
+    <value>Sinulla ei ole lupaa ladata tätä.</value>
+  </data>
+  <data name="Pack_Error_NotFound" xml:space="preserve">
+    <value>Latausta ei löytynyt.</value>
+  </data>
+  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
+    <value>Liian monta yritystä. Odota minuutti ja yritä uudelleen.</value>
+  </data>
+  <data name="Pack_Error_Server" xml:space="preserve">
+    <value>Palvelimeen ei saatu yhteyttä, yritä myöhemmin uudelleen</value>
+  </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Lataus epäonnistui. Yritä uudelleen.</value>
   </data>

@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>شراء {0} مقابل {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>اتصل بالإنترنت للشراء</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>في انتظار الموافقة</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>تسجيل الدخول مطلوب للحصول على هذا الكتاب.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>غير مسموح لك بالحصول على هذا الكتاب.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>لم يتم العثور على هذا الكتاب.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>عليك شراء هذا الكتاب أولاً</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>حدثت مشكلة في الاتصال بالخادم، يرجى المحاولة لاحقًا</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>المتجر يواجه مشكلة</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>استعادة المشتريات</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>استبدال رمز</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>لم تتم عملية الشراء. حاول مرة أخرى.</value></data>

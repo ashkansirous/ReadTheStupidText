@@ -122,6 +122,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています。Wi-Fiにつながると自動で再開します。タップで今すぐダウンロードします。</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>ダウンロードにはログインが必要です。</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>このダウンロードを行う権限がありません。</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>ダウンロードが見つかりませんでした。</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>試行回数が多すぎます。1分待ってからもう一度お試しください。</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>サーバーに接続できません。しばらくしてからもう一度お試しください</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。タップしてダウンロードします。</value></data>

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Usage;
 
@@ -13,7 +14,8 @@ public enum StoreLoadStatus
 	Offline,
 }
 
-public sealed record StoreListing(StoreLoadStatus Status, IReadOnlyList<StoreItem> Items);
+/// <summary>The listing; <see cref="Error"/> (Slice 357) says what the server answered when the list could not be had (offline is <see cref="HttpErrorKind.Offline"/>), null when it was not an HTTP failure.</summary>
+public sealed record StoreListing(StoreLoadStatus Status, IReadOnlyList<StoreItem> Items, HttpError? Error = null);
 
 public enum DownloadOutcome
 {
@@ -162,7 +164,9 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			Debug.WriteLine($"Dino Reader could not load the free stories: {ex.Message}");
 			ReportFallback(ex);
-			return new StoreListing(StoreLoadStatus.Offline, []);
+			HttpErrorKind? kind = HttpErrorClassifier.Classify(ex);
+			Debug.WriteLine($"Dino Reader store list error kind: {kind?.ToString() ?? "none"}"); // Slice 357: which text the page shows
+			return new StoreListing(StoreLoadStatus.Offline, [], kind is { } k ? new HttpError(k, null) : null);
 		}
 	}
 
@@ -232,9 +236,29 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 	}
 
+	// Slice 357: what the server answered the last time a user-started download of this book failed (cleared when the next one starts); the store page reads it to say why.
+	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, HttpError> _downloadErrors = new(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>Why the last download of this book failed, or null when it did not fail, or failed for a reason that is not the server's answer (a disk error, a bad package).</summary>
+	public HttpError? DownloadErrorFor(string itemId) => _downloadErrors.TryGetValue(itemId, out HttpError? error) ? error : null;
+
+	private void RecordDownloadError(string itemId, Exception ex)
+	{
+		HttpErrorKind? kind = HttpErrorClassifier.Classify(ex);
+		if (kind is not { } known)
+		{
+			return;
+		}
+
+		string? message = ex is StoreRefusedException refused ? refused.ServerMessage : null;
+		_downloadErrors[itemId] = new HttpError(known, message);
+		Debug.WriteLine($"Dino Reader store download error kind for {itemId}: {known}");
+	}
+
 	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel)
 	{
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"{item.Id}-{Guid.NewGuid():N}{PartExtension}");
+		_downloadErrors.TryRemove(item.Id, out _);
 		try
 		{
 			if ((await InstalledIdsAsync()).Contains(item.Id))
@@ -265,6 +289,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			Debug.WriteLine($"Dino Reader could not get the story {item.Id}: {ex}");
 			ReportFallback(ex);
+			RecordDownloadError(item.Id, ex);
 			return DownloadOutcome.Failed;
 		}
 		finally
@@ -298,8 +323,8 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			// Slice 346 (check7 #7): only the store's own "this purchase is not valid" skips this book for good (the copy on the shelf stays). Anything else (no proof yet, a purchase the store has not synced,
 			// an unreadable code, "cannot verify" when the store or the Worker's keys are down) is not permanent: the run stops and the next scheduled check tries again.
-			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, {ex.Code}): {downloadUrl}");
-			Fallbacks.Report(FallbackArea.Store, ex.IsOutage ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
+			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, definitive={ex.IsDefinitive}): {downloadUrl}");
+			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // a refusal (400/402/403) is the store answering; a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_unreachable
 			TryDelete(part);
 			return new PackageFetch(null, ex.IsDefinitive);
 		}
@@ -448,48 +473,59 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		stall.CancelAfter(StallTimeout);
 		using GuardedResponse response = await GetGuardedAsync(url, stall.Token);
-		if (refusalCodes)
-		{
-			await EnsureSuccessOrRefusalAsync(response, stall.Token, cancel);
-		}
-		else
-		{
-			response.Message.EnsureSuccessStatusCode(); // switch off or unknown: the status check of before Slice 346's switch
-		}
+		await EnsureSuccessOrRefusalAsync(response, refusalCodes, stall.Token, cancel); // switch off or unknown: the plain status check of before Slice 346's switch, plus a 400's message
 
 		Directory.CreateDirectory(Path.GetDirectoryName(part)!);
 		await using FileStream file = CreateLocalFile(part);
 		await CopyCappedAsync(response, file, cap > 0 ? cap : StoryPackageReader.MaxTotalBytes, progress, stall, stall.Token, bytes);
 	}
 
-	private const int RefusalBodyBytes = 512;
+	private const int RefusalBodyBytes = 2048;
+	private const string JsonMediaType = "application/json"; // the Worker's JSON_CONTENT_TYPE media type
 
-	// Slice 346: a 402/403 on a book's files carries the Worker's error code in a tiny JSON body; it is read (capped) so a refusal can be told from "cannot verify". Everything else is the plain status check.
-	private static async Task EnsureSuccessOrRefusalAsync(GuardedResponse response, CancellationToken cancel, CancellationToken callerCancel)
+	// Slice 357 (was Slice 346's error code body): the Worker's errors are the status alone, so 402/403 need no body, and only a 400 has one, its English message, read capped. With the switch on (refusals), 402/403 become a StoreRefusedException
+	// (403 = the store says the purchase is not valid, permanent; everything else is retried later). Any other failing status is the plain status check, and the caller classifies it by its status.
+	private static async Task EnsureSuccessOrRefusalAsync(GuardedResponse response, bool refusals, CancellationToken cancel, CancellationToken callerCancel)
 	{
 		System.Net.HttpStatusCode status = response.Message.StatusCode;
-		if (status is not (System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden))
+		if (status == System.Net.HttpStatusCode.BadRequest)
 		{
-			response.Message.EnsureSuccessStatusCode();
-			return;
+			string? message = await ReadMessageAsync(response, cancel, callerCancel);
+			if (message is not null)
+			{
+				throw new StoreRefusedException(status, message); // the Worker's own 400; any other 400 (a proxy page) falls to the plain status check below
+			}
 		}
 
-		string? code = null;
+		if (refusals && status is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden)
+		{
+			throw new StoreRefusedException(status, null);
+		}
+
+		response.Message.EnsureSuccessStatusCode();
+	}
+
+	private static async Task<string?> ReadMessageAsync(GuardedResponse response, CancellationToken cancel, CancellationToken callerCancel)
+	{
+		if (response.Message.Content.Headers.ContentType?.MediaType != JsonMediaType)
+		{
+			return null; // not the Worker's own JSON answer (a proxy or CDN page): the general text shows, never third-party words
+		}
+
 		try
 		{
 			await using Stream body = await response.Message.Content.ReadAsStreamAsync(cancel);
-			code = StoreRefusal.CodeFrom(await ReadBodyToEndAsync(body, cancel));
+			return HttpErrorClassifier.MessageFrom(await ReadBodyToEndAsync(body, cancel));
 		}
 		catch (Exception ex) when (ex is IOException or HttpRequestException || (ex is OperationCanceledException && !callerCancel.IsCancellationRequested))
 		{
-			// no-fallback: an unreadable or stalled refusal body only means the code is unknown (the outage path, retryable below); the caller reports the refusal. A cancel by the caller still escapes.
-			Debug.WriteLine($"Dino Reader could not read the store's refusal code: {ex.Message}");
+			// no-fallback: an unreadable or stalled 400 body only means there is no server sentence (the general text shows); the caller reports the failure. A cancel by the caller still escapes.
+			Debug.WriteLine($"Dino Reader could not read the store's 400 message: {ex.Message}");
+			return null;
 		}
-
-		throw new StoreRefusedException(status, code);
 	}
 
-	// One read can return part of a body, so it is read to its end or to the cap (a refusal body is tiny; a longer one is cut and its code is then unknown).
+	// One read can return part of a body, so it is read to its end or to the cap (a 400 body is tiny; a longer one is cut and its message is then unknown).
 	private static async Task<ReadOnlyMemory<byte>> ReadBodyToEndAsync(Stream body, CancellationToken cancel)
 	{
 		byte[] buffer = new byte[RefusalBodyBytes];
@@ -691,16 +727,17 @@ public sealed class StoreAudioPackFetcher : IAudioPackFetcher
 	public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel) => StoreClient.FetchPackAsync(url, toPath, bytesSoFar, cancel);
 }
 
-/// <summary>The Worker refused a sold book's files (Slice 346): 402 no proof, 403 <c>purchase-not-valid</c> or 403 <c>cannot-verify</c>. Still an <see cref="HttpRequestException"/> with its status, so older catches keep working.</summary>
-public sealed class StoreRefusedException(System.Net.HttpStatusCode status, string? code) : HttpRequestException($"The store refused the book's files ({(int)status} {code}).", null, status)
+/// <summary>
+/// The Worker refused a book's files (Slice 346, reworked in Slice 357): 402 no proof, 403 the purchase is not valid, or a 400 with its message. The Worker sends the status alone for all but the 400, so a store that
+/// cannot be asked is a plain 503 and never reaches here. Still an <see cref="HttpRequestException"/> with its status, so older catches keep working.
+/// </summary>
+public sealed class StoreRefusedException(System.Net.HttpStatusCode status, string? serverMessage) : HttpRequestException($"The store refused the book's files ({(int)status}).", null, status)
 {
-	public string? Code { get; } = code;
+	/// <summary>The server's English sentence, only for a 400 and only when it sent one.</summary>
+	public string? ServerMessage { get; } = serverMessage;
 
-	/// <summary>True when the Worker could not ask the store (an outage, worth trying again).</summary>
-	public bool IsOutage => Code == StoreRefusal.CannotVerifyCode;
-
-	/// <summary>True only when the store says the purchase is not valid: permanent for this book. Every other refusal is tried again later.</summary>
-	public bool IsDefinitive => StoreRefusal.IsDefinitive(Code);
+	/// <summary>True only when the store says the purchase is not valid (403): permanent for this book. Every other refusal is tried again later.</summary>
+	public bool IsDefinitive => StatusCode == System.Net.HttpStatusCode.Forbidden;
 }
 
 /// <summary>A failure writing the store's own temp files, not reaching the server.</summary>

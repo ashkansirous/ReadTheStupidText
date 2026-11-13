@@ -360,6 +360,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Kjøp {0} for {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Koble til internett for å kjøpe</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Venter på godkjenning</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Du må logge inn for å hente denne boka.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Du har ikke lov til å hente denne boka.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>Fant ikke boka.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Du må kjøpe denne boka først</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>For mange forsøk. Vent ett minutt og prøv igjen.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Problem med å koble til serveren, prøv igjen senere</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Butikken har et problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Gjenopprett kjøp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Løs inn en kode</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Kjøpet gikk ikke gjennom. Prøv igjen.</value></data>

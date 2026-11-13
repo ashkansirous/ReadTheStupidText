@@ -187,32 +187,3 @@ public static class PurchaseProofs
     /// <summary>Windows' Store ID key covers every product, so its proof names none; the others name the product the token was issued for.</summary>
     public static string ProductPart(string store, string productId) => store == WindowsStore ? string.Empty : productId;
 }
-
-/// <summary>What the Worker's 402/403 answer for a sold book's files means (Slice 346, review): only a definitive refusal is permanent; anything else is tried again at the next check.</summary>
-public static class StoreRefusal
-{
-    public const string PurchaseNotValidCode = "purchase-not-valid";
-    public const string CannotVerifyCode = "cannot-verify";
-
-    /// <summary>True only for the store's own "this purchase is not valid": the book is skipped for good. No proof yet, an unknown or unreadable code, or "cannot verify" all stay retryable.</summary>
-    public static bool IsDefinitive(string? code) => code == PurchaseNotValidCode;
-
-    /// <summary>The <c>code</c> of the Worker's JSON error body, or null when the body is not JSON, has no string <c>code</c>, or is empty. Never throws.</summary>
-    public static string? CodeFrom(ReadOnlyMemory<byte> body)
-    {
-        try
-        {
-            using var document = System.Text.Json.JsonDocument.Parse(body);
-            return document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object
-                && document.RootElement.TryGetProperty("code", out System.Text.Json.JsonElement code)
-                && code.ValueKind == System.Text.Json.JsonValueKind.String
-                    ? code.GetString()
-                    : null;
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            // no-fallback: an unreadable refusal body only means the code is unknown, which stays retryable; the caller reports the refusal
-            return null;
-        }
-    }
-}

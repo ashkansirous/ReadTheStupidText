@@ -122,6 +122,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä. Lataus jatkuu itsestään Wi-Fillä. Lataa nyt napauttamalla.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>Lataus vaatii kirjautumisen.</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>Sinulla ei ole lupaa ladata tätä.</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>Latausta ei löytynyt.</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>Liian monta yritystä. Odota minuutti ja yritä uudelleen.</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>Palvelimeen ei saatu yhteyttä, yritä myöhemmin uudelleen</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napauttamalla.</value></data>

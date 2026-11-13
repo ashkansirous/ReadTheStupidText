@@ -1,0 +1,70 @@
+# Slice 357: a Get the server refuses with 402 says "You need to buy this book first" under the book's row and the row goes back to its plan. The Debug test store (mode status402) refuses every book download with that
+# HTTP status and no body, as the Worker does; the pretend store (fake-purchases) makes one test book owned but not on the shelf, so its row shows the Get pill.
+# Split from store-server-errors.yaml: the test store answers ok through first run and the shelf (a 402 from the first launch leaves the shelf with no book), and switches to status402 only once the Get pill is visible.
+# Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it.
+# expect-log: HOOK test-store ok status402
+# expect-log: HOOK fake-purchases ok on paid=1 owned=1
+# expect-log: HOOK skip-first-run ok
+# expect-log: [StoreError] row kind=PaymentRequired
+appId: uk.sirous.dinoreader.dbg
+name: A 402 on Get tells the family to buy the book first
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so the owned book is not on the shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+# One test book is sold and owned: skip-first-run leaves it off the shelf, so its Store row offers Get.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man"
+      owned: "gingerbread-man"
+      price: "$0.99"
+      buy: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Get"
+    timeout: 30000
+# Only now does the test store start refusing: the row is already on screen.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: status402
+- tapOn:
+    text: "Get"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "You need to buy this book first"
+    timeout: 30000

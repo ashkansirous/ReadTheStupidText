@@ -123,6 +123,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN. Der Download geht von selbst weiter, sobald WLAN da ist. Tippe, um jetzt zu laden.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>Zum Herunterladen ist eine Anmeldung nötig.</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>Du darfst das nicht herunterladen.</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>Der Download wurde nicht gefunden.</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>Problem bei der Verbindung zum Server, bitte versuche es später noch einmal</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestoppt. Es liest die Handy-Stimme. Tippe zum Herunterladen.</value></data>

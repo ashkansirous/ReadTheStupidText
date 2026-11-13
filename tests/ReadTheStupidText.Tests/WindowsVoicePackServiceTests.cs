@@ -186,6 +186,32 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_server_error_on_an_earlier_attempt_is_not_in_the_outcome_of_a_later_install_failure()
+    {
+        byte[] notAZip = [1, 2, 3, 4, 5, 6, 7, 8]; // hash matches the catalog, so attempt 2 downloads fine and fails in the install step
+        var server = new FakeServer(CatalogJson(notAZip), notAZip) { FailFirstPackRequests = 1 };
+        var service = Service(server);
+
+        PackDownloadOutcome outcome = await service.DownloadWithAnswerAsync(PackId, null, CancellationToken.None);
+
+        Assert.NotEqual(PackDownloadResult.Ok, outcome.Status);
+        Assert.Equal(2, server.PackRequests);
+        Assert.Null(outcome.ServerAnswer);
+    }
+
+    [Fact]
+    public async Task A_server_error_on_every_attempt_comes_back_in_the_outcome_of_that_call()
+    {
+        byte[] zip = BuildZip();
+        var server = new FakeServer(CatalogJson(zip), zip) { FailFirstPackRequests = 100 };
+
+        PackDownloadOutcome outcome = await Service(server).DownloadWithAnswerAsync(PackId, null, CancellationToken.None);
+
+        Assert.Equal(PackDownloadResult.Failed, outcome.Status);
+        Assert.Equal(ReadTheStupidText.Application.Net.HttpErrorKind.ServerError, outcome.ServerAnswer);
+    }
+
+    [Fact]
     public async Task An_installed_pack_needs_no_network_request()
     {
         byte[] zip = BuildZip();

@@ -121,26 +121,6 @@ public class BookAccessTests
     public void ABookTheListingDoesNotName_CountsAsFree_SoItsFileRestoresIt(bool listed, bool soldPerListing, BookSale expected) =>
         Assert.Equal(expected, BookAccess.LegacyAccess(listed, soldPerListing));
 
-    [Theory]
-    [InlineData("purchase-not-valid", true)]
-    [InlineData("cannot-verify", false)]
-    [InlineData("payment-required", false)]
-    [InlineData("rate-limited", false)]
-    [InlineData(null, false)]
-    public void OnlyThePurchaseNotValidCode_IsAPermanentRefusal(string? code, bool expected) =>
-        Assert.Equal(expected, StoreRefusal.IsDefinitive(code));
-
-    [Theory]
-    [InlineData("{\"code\":\"purchase-not-valid\"}", "purchase-not-valid")]
-    [InlineData("{\"code\":\"cannot-verify\",\"x\":1}", "cannot-verify")]
-    [InlineData("{\"code\":5}", null)]
-    [InlineData("[1]", null)]
-    [InlineData("not json", null)]
-    [InlineData("{\"code\":\"purchase-no", null)] // a cut body
-    [InlineData("", null)]
-    public void TheRefusalCode_IsReadFromTheBody_AndAnythingUnreadableIsUnknown(string body, string? expected) =>
-        Assert.Equal(expected, StoreRefusal.CodeFrom(System.Text.Encoding.UTF8.GetBytes(body)));
-
     [Fact]
     public void AnUnlistedBooksBackupFile_RestoresIt_WhenTheStoreCannotSupplyIt() =>
         Assert.Equal(LegacyBookSource.File, BookAccess.LegacyBookChoice(BookAccess.LegacyAccess(listed: false, soldPerListing: false), owned: false, storeCanSupply: false));

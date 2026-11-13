@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using ReadTheStupidText.Application.Net;
 
 namespace ReadTheStupidText.Application.Reading;
 
@@ -32,6 +33,15 @@ public static class PackErrorClassifier
         }
 
         return PackDownloadResult.Failed;
+    }
+
+    /// <summary>
+    /// What the server's answer to a pack download means for the person (Slice 357): the kind of the HTTP status found anywhere in the exception chain,
+    /// or null when the failure is not an HTTP answer (a connection failure is <see cref="Classify"/>'s Offline; a bad zip is neither). Data only.
+    /// </summary>
+    public static HttpErrorKind? ClassifyHttp(Exception exception)
+    {
+        return HttpErrorClassifier.ClassifyStatus(exception);
     }
 
     /// <summary>

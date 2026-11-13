@@ -34,6 +34,10 @@ public sealed class VoicePackSetup
     private readonly ISettingsStore _settings;
     private int _running;
     private string? _failedUpdateKey;
+    private Net.HttpErrorKind? _failureKind; // Slice 357: read from the service when the failing step ended, set with the Failed state, cleared when the state leaves Failed (guarded by _stateLock)
+
+    // A failed step's state with what the server answered, read at that moment (a later download rewrites the service's per-key entry).
+    private readonly record struct PackFailure(PackSetupState State, Net.HttpErrorKind? Kind);
 
     // One pack update at a time, cancellable (a run for another language stops it). The update runs in the
     // background, so a Retry or a language change never waits behind the catalog fetch or the download.
@@ -56,6 +60,9 @@ public sealed class VoicePackSetup
 
     public PackSetupState State { get; private set; } = PackSetupState.Idle;
 
+    /// <summary>Slice 357: while <see cref="State"/> is Failed, what the server answered (404, 429, 5xx ...), so the status line can say it; null for any other failure.</summary>
+    public Net.HttpErrorKind? FailureKind => State == PackSetupState.Failed ? _failureKind : null;
+
     /// <summary>Download progress 0..1 while <see cref="State"/> is Downloading.</summary>
     public double Progress { get; private set; }
 
@@ -76,11 +83,11 @@ public sealed class VoicePackSetup
     {
         if (Interlocked.Exchange(ref _running, 1) == 1)
         {
-            Publish(State, Progress);
+            Publish(State, Progress, FailureKind);
             return;
         }
 
-        PackSetupState? failure;
+        PackFailure? failure;
         string served;
         try
         {
@@ -93,9 +100,9 @@ public sealed class VoicePackSetup
 
         // Published after _running is cleared, so a Retry tapped the moment a failure shows
         // can never be swallowed by the run that just ended.
-        if (failure is { } state)
+        if (failure is { } failed)
         {
-            Publish(state);
+            Publish(failed.State, 0, failed.Kind);
         }
 
         // A language chosen between the last check and the flag reset would otherwise be lost.
@@ -117,13 +124,13 @@ public sealed class VoicePackSetup
 
     private static bool SameLanguage(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
-    private async Task<(PackSetupState? Failure, string Language)> RunUntilCurrentAsync()
+    private async Task<(PackFailure? Failure, string Language)> RunUntilCurrentAsync()
     {
         while (true)
         {
             string language = CurrentLanguage;
             CancelUpdateForOtherLanguage(language);
-            PackSetupState? failure = await RunAsync(language);
+            PackFailure? failure = await RunAsync(language);
             if (SameLanguage(language, CurrentLanguage))
             {
                 return (failure, language);
@@ -131,7 +138,7 @@ public sealed class VoicePackSetup
         }
     }
 
-    private async Task<PackSetupState?> RunAsync(string language)
+    private async Task<PackFailure?> RunAsync(string language)
     {
         if (_model.Paths is { } ready && string.Equals(ready.Language, language, StringComparison.OrdinalIgnoreCase))
         {
@@ -151,16 +158,16 @@ public sealed class VoicePackSetup
         }
 
         Publish(PackSetupState.Resolving);
-        (PackInfo? pack, PackSetupState? resolveFailure) = await ResolvePackAsync(language);
+        (PackInfo? pack, PackFailure? resolveFailure) = await ResolvePackAsync(language);
         if (pack is null)
         {
             return resolveFailure;
         }
 
-        PackDownloadResult downloaded = await DownloadPackAsync(pack, CancellationToken.None);
-        if (downloaded != PackDownloadResult.Ok)
+        PackDownloadOutcome downloaded = await DownloadPackAsync(pack, CancellationToken.None);
+        if (downloaded.Status != PackDownloadResult.Ok)
         {
-            return ToState(downloaded);
+            return FailureOf(downloaded.Status, downloaded.ServerAnswer);
         }
 
         await ActivateInstalledAsync();
@@ -297,7 +304,7 @@ public sealed class VoicePackSetup
             return;
         }
 
-        PackDownloadResult result = await DownloadPackAsync(pack, cancellationToken, background: true);
+        PackDownloadResult result = (await DownloadPackAsync(pack, cancellationToken, background: true)).Status;
         if (result == PackDownloadResult.Ok)
         {
             await ActivateInstalledAsync(background: true);
@@ -329,23 +336,25 @@ public sealed class VoicePackSetup
             return listed is not null && PackVersions.IsNewer(listed.Version, installed!.Manifest.Version) ? listed : null;
         });
 
-    private async Task<(PackInfo? Pack, PackSetupState? Failure)> ResolvePackAsync(string language)
+    private async Task<(PackInfo? Pack, PackFailure? Failure)> ResolvePackAsync(string language)
     {
         PackCatalogResult catalog = await _packs.GetCatalogAsync(CancellationToken.None);
         if (catalog.Status != PackDownloadResult.Ok)
         {
-            return (null, ToState(catalog.Status));
+            return (null, FailureOf(catalog.Status, catalog.ServerAnswer));
         }
 
         PackInfo? pack = VoicePackSelector.Select(catalog.Packs, language);
-        return pack is null ? (null, PackSetupState.Unavailable) : (pack, null);
+        return pack is null ? (null, new PackFailure(PackSetupState.Unavailable, null)) : (pack, null);
     }
 
-    private async Task<PackDownloadResult> DownloadPackAsync(PackInfo pack, CancellationToken cancellationToken, bool background = false)
+    private static PackFailure FailureOf(PackDownloadResult result, Net.HttpErrorKind? serverAnswer) => new(ToState(result), serverAnswer);
+
+    private async Task<PackDownloadOutcome> DownloadPackAsync(PackInfo pack, CancellationToken cancellationToken, bool background = false)
     {
         PublishFor(background, PackSetupState.Downloading);
         var progress = new InlineProgress(value => PublishProgress(value, cancellationToken, background));
-        return await _packs.DownloadAsync(pack.Id, progress, cancellationToken);
+        return await _packs.DownloadWithAnswerAsync(pack.Id, progress, cancellationToken);
     }
 
     private async Task ActivateInstalledAsync(bool background = false)
@@ -401,12 +410,13 @@ public sealed class VoicePackSetup
         }
     }
 
-    private void Publish(PackSetupState state, double progress = 0)
+    private void Publish(PackSetupState state, double progress = 0, Net.HttpErrorKind? failureKind = null)
     {
         lock (_stateLock)
         {
             State = state;
             Progress = progress;
+            _failureKind = state == PackSetupState.Failed ? failureKind : null;
         }
 
         Changed?.Invoke(this, EventArgs.Empty);

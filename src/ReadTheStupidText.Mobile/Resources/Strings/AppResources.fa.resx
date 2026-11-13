@@ -122,6 +122,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>در انتظار Wi-Fi. با Wi-Fi خودش ادامه می‌یابد. برای دانلود اکنون ضربه بزنید.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>دانلود صدا خراب شد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>بستهٔ صداهای طبیعی قابل استفاده نیست. با صدای گوشی خوانده می‌شود.</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>برای دانلود این مورد باید وارد شوید.</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>اجازهٔ دانلود این مورد را ندارید.</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>دانلود پیدا نشد.</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>تلاش‌های بیش از حد. یک دقیقه صبر کنید و دوباره امتحان کنید.</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>مشکل در اتصال به سرور، لطفاً بعداً دوباره امتحان کنید</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>دانلود متوقف شد. با صدای گوشی خوانده می‌شود. برای دانلود ضربه بزنید.</value></data>

@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>خرید {0} به قیمت {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>برای خرید به اینترنت وصل شوید</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>در انتظار تأیید</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>برای گرفتن این کتاب باید وارد شوید.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>اجازهٔ گرفتن این کتاب را ندارید.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>این کتاب پیدا نشد.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>ابتدا باید این کتاب را بخرید</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>تلاش‌های بیش از حد. یک دقیقه صبر کنید و دوباره امتحان کنید.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>مشکل در اتصال به سرور، لطفاً بعداً دوباره امتحان کنید</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>فروشگاه مشکلی دارد</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>بازیابی خریدها</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>وارد کردن کد</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>خرید انجام نشد. دوباره تلاش کنید.</value></data>

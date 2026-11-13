@@ -128,7 +128,7 @@ public sealed partial class LanguageWindow : Window
     private void ShowSetupState()
     {
         PackSetupState state = _setup.State;
-        TextFlow.ForUi(StatusText, PackSetupText.For(state, _setup.Progress));
+        TextFlow.ForUi(StatusText, PackSetupText.For(state, _setup.Progress, _setup.FailureKind));
         DownloadBar.Value = _setup.Progress;
         DownloadBar.Visibility = state == PackSetupState.Downloading ? Visibility.Visible : Visibility.Collapsed;
         RetryButton.Visibility = _setup.CanRetry ? Visibility.Visible : Visibility.Collapsed;

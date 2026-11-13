@@ -131,7 +131,7 @@ public partial class VoicePickerPage : ContentPage
     }
 
     private string StatusText() =>
-        LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? AppResources.VoicePicker_ReasonPackNotInstalled;
+        LocalizedPackStatus.Compose(_installer.State, _installer.Progress, _installer.FailureKind) ?? AppResources.VoicePicker_ReasonPackNotInstalled;
 
     // The voices on offer are the installed pack's for the user's language (Slice 51);
     // with none, only the phone voice reads and the page says why.
