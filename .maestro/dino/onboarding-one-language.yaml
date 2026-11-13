@@ -1,0 +1,77 @@
+# Slice 362 (onboarding mock frame N4d): a family with one language. The listen step has no language bar, only the round flag pill; Continue stays dim while the page plays and wakes when it ends; replay plays the page again.
+# Shots: shot-N4d-one-language. The flow stops at the voice step (the full path is onboarding-phone.yaml).
+# Against a build with a language bar the OnboardingLanguage-en id would show, so the assertNotVisible fails there.
+# layout-check
+# expect-log: HOOK test-store ok ok
+# expect-log: [Onboarding] listen enter kind=Listen page=13 languages=en
+# expect-log: [Onboarding] listen page-ended stage=First continue=True
+# expect-log: [Onboarding] listen replay
+appId: uk.sirous.dinoreader.dbg
+name: First run with one language, no language bar and Continue waking at the page end
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- assertNotVisible:
+    id: OnboardingLanguage-en
+- assertNotVisible:
+    id: OnboardingBubble
+- takeScreenshot: shot-N4d-one-language
+# The page has been read when the speaker chip is gone and the log line above is written; replay plays it again.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingNeverShown
+    timeout: 25000
+    optional: true
+- tapOn:
+    id: OnboardingReplay
+    waitToSettleTimeoutMs: 800
+- assertVisible: "Listen to Dino read"
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: OnboardingVoice
+    commands:
+      - tapOn:
+          id: OnboardingContinue
+          optional: true
+          waitToSettleTimeoutMs: 1500
+- assertVisible: "Be the voice of a character"

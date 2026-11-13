@@ -1,8 +1,10 @@
-# Slice 261: a real first run on a fresh install with the Debug test store (no live store): language, then the book picker (tagged books first), Continue is dead until two books are ticked,
-# two ticks download on the getting page (Slice 325 part D: its own page, no longer a veil over the picker; its line keeps the id WaitLine and its Cancel the id WaitCancel), then the first run goes on to "Ready to read"
-# (Slice 278 part B: there is no voice download). Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
+# Slice 261: a real first run on a fresh install with the Debug test store (no live store): language, the story languages (Slice 362), then the book picker (tagged books first), Continue is dead until two books are ticked,
+# two ticks download on the getting page (Slice 325 part D: its own page, no longer a veil over the picker; its line keeps the id WaitLine and its Cancel the id WaitCancel), then the first run goes on to the listen step
+# (Slice 362; "Ready to read" before it; Slice 278 part B: there is no voice download). Slice 362: The Three Little Pigs (card 0) is ticked at the start, so one more tick is the second and unticking it brings the count back to one.
+# Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
 # expect-log: HOOK test-store ok slow
-# expect-log: [FirstBooks] list listed=4 ticked=0 onShelf=0
+# expect-log: [FirstBooks] list listed=4 ticked=1 onShelf=0
+# expect-log: [FirstBooks] picked listed=4 ticked=0
 # expect-log: [FirstBooks] picked listed=4 ticked=1
 # expect-log: [FirstBooks] picked listed=4 ticked=2
 # expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=1
@@ -29,6 +31,14 @@ name: First run asks for two books from the store
     id: android:id/button2
     optional: true
     waitToSettleTimeoutMs: 300
+# Slice 362: the story-languages step sits between the language and the books.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
       id: FirstBooksPicker
@@ -37,7 +47,8 @@ name: First run asks for two books from the store
     id: FirstBookCard-0
 - assertVisible:
     id: FirstBookCard-1
-# Continue does nothing with no ticks: the picker stays and no wait shows.
+- assertVisible: "Get these books"
+# The Three Little Pigs is ticked at the start: one tick is not enough, Continue does nothing and no wait shows.
 - tapOn:
     id: FirstBooksContinue
     waitToSettleTimeoutMs: 300
@@ -45,15 +56,18 @@ name: First run asks for two books from the store
     id: FirstBooksPicker
 - assertNotVisible:
     id: WaitLine
+# Unticking it (card 0) is allowed: no ticks, Continue still does nothing.
 - tapOn:
     id: FirstBookCard-0
     waitToSettleTimeoutMs: 300
-# One tick is still not enough.
 - tapOn:
     id: FirstBooksContinue
     waitToSettleTimeoutMs: 300
 - assertNotVisible:
     id: WaitLine
+- tapOn:
+    id: FirstBookCard-0
+    waitToSettleTimeoutMs: 300
 - tapOn:
     id: FirstBookCard-1
     waitToSettleTimeoutMs: 300
@@ -73,7 +87,7 @@ name: First run asks for two books from the store
     optional: true
 - extendedWaitUntil:
     visible:
-      id: FirstRunReady
-    timeout: 30000
+      id: OnboardingListen
+    timeout: 60000
 - assertNotVisible:
     id: FirstBooksPicker

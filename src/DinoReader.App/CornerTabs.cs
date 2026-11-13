@@ -52,6 +52,9 @@ internal sealed class CornerTabs : Grid
 	/// <summary>A tab was tapped (or clicked, or Enter on it).</summary>
 	public event Action<CornerTab>? TabRequested;
 
+	/// <summary>The view of one tab (its icon, label and hit area), so the corner tour (Slice 362) can read where it is on screen and lift a copy of it out of its scrim.</summary>
+	public View TabView(CornerTab tab) => _roots[Array.IndexOf(Tabs, tab)];
+
 	public CornerTab Selected
 	{
 		get => _selected;

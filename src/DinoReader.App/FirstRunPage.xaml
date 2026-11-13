@@ -7,11 +7,9 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- First run (onboarding mock 2026-11-08, Slice 325 part D: frames O1, O5 and their size variants), shown once on a fresh install before the gallery: pick the language, pick the first books,
-         then hand over to grown-up mode. Both panels are OnboardingShell views built in code (FirstRunPage.xaml.cs) so one skeleton serves every window size; the ready texts are set after the pick,
-         so they speak the language just chosen. -->
+    <!-- First run (onboarding mock 2026-11-13, Slice 362: frame N1 and its size variants), step 1 of 6 on a fresh install: pick the language. The panel is an OnboardingShell view built in code
+         (FirstRunPage.xaml.cs) so one skeleton serves every window size. The story languages, the books, the listen and voice steps and the corner tour follow (OnboardingSteps*.cs). -->
     <Grid>
         <Grid x:Name="LanguagePanel" AutomationId="FirstRunLanguage" />
-        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" IsVisible="False" />
     </Grid>
 </ContentPage>

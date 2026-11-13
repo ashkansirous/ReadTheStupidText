@@ -172,8 +172,7 @@ internal sealed class DinoKeyboard
 
 	private bool IsOneShotKey(DinoKey key) =>
 		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape
-		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is GalleryPage { InCorner: true }) // the Settings tab's Right arrow opens a row once per press
-		|| (key is DinoKey.Left or DinoKey.Right && DinoKeyTargets.TopPage(_window) is IntroWizardPage); // Slice 325 part E: an arrow steps the intro once per press, never twice from a held key
+		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is GalleryPage { InCorner: true }); // the Settings tab's Right arrow opens a row once per press
 
 	private static bool HasShortcutModifier(DinoKey key) =>
 		IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || (DinoKeyMap.DigitOf(key) is not null && IsDown(VirtualKey.Shift));

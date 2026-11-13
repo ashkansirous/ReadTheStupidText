@@ -30,7 +30,7 @@ public partial class FirstBooksPage
 	private readonly Label _heading = new() { FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center };
 	private readonly Label _body = new() { LineHeight = 1.4, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly Label _count = new() { FontSize = CountSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, AutomationId = "FirstBooksCount" };
-	private readonly CoralButton _continue = new() { AutomationId = "FirstBooksContinue", Text = AppResources.FirstRun_Continue };
+	private readonly CoralButton _continue = new() { AutomationId = "FirstBooksContinue", Text = AppResources.FirstBooks_GetThese }; // Slice 362 (mock N3): "Get these books"
 	private readonly Border _headerIcon = new() { WidthRequest = HeaderIconSize, HeightRequest = HeaderIconSize, StrokeThickness = 0, HorizontalOptions = LayoutOptions.Start, IsVisible = false, StrokeShape = new RoundRectangle { CornerRadius = HeaderIconRadius }, Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill } };
 	private readonly VerticalStackLayout _titleBlock = new() { Spacing = 4, VerticalOptions = LayoutOptions.Center };
 	private Grid _header = null!;
@@ -64,7 +64,7 @@ public partial class FirstBooksPage
 		_header = new Grid { RowSpacing = 8, ColumnSpacing = 4, Children = { _headerBack, _headerIcon, _titleBlock } };
 		_bar = BuildBar();
 		_cardsGrid.Margin = new Thickness(0, 3, 0, 8);
-		_listShell = new OnboardingShell(_header, new ScrollView { Content = _cardsGrid }, _bar);
+		_listShell = new OnboardingShell(_header, new ScrollView { Content = _cardsGrid }, _bar, stepBar: new OnboardingStepBar(OnboardingStep.Books)); // Slice 362: step 3 of 6
 		return new Grid { AutomationId = "FirstBooksPicker", Children = { _listShell } };
 	}
 

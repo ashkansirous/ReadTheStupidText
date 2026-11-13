@@ -21,6 +21,12 @@ public sealed class StoryLanguagePicker : ContentView
 	private const double NoteSize = 12.5;
 	private const double CardCorner = 18;
 	private const double DisabledOpacity = 0.45;
+	private const double OnboardingNameSize = 16;
+	private const double OnboardingBoxSize = 28;
+	private const double OnboardingFlagSize = 28;
+	private const double OnboardingRowHeight = 56;
+	private const string RowIdPrefix = "StoryLanguageRow-";
+	private readonly Dictionary<string, Button> _rowButtons = [];
 
 	private static readonly Color LockedGrey = Color.FromArgb("#C9C3D6");
 
@@ -57,6 +63,25 @@ public sealed class StoryLanguagePicker : ContentView
 		}
 	}
 
+	/// <summary>
+	/// True draws the rows of the onboarding's second step (Slice 362, mock N2): a round flag first, the name, and the tick box at the end; the app language's row says "App language · always on" under its name.
+	/// Settings and the old wizard keep the box first.
+	/// </summary>
+	public bool OnboardingLook
+	{
+		get => _onboardingLook;
+		set
+		{
+			if (value != _onboardingLook)
+			{
+				_onboardingLook = value;
+				Rebuild();
+			}
+		}
+	}
+
+	private bool _onboardingLook;
+
 	/// <summary>Builds the rows again from the current ticks.</summary>
 	public void Rebuild()
 	{
@@ -67,6 +92,7 @@ public sealed class StoryLanguagePicker : ContentView
 
 		_shelfHosts.Clear();
 		_shelfCards.Clear();
+		_rowButtons.Clear();
 		var rows = new VerticalStackLayout();
 		foreach ((string code, _) in LanguageNames.All.OrderBy(l => l.Code == Set.Main ? 0 : 1))
 		{
@@ -100,22 +126,87 @@ public sealed class StoryLanguagePicker : ContentView
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
 			Opacity = disabled ? DisabledOpacity : 1,
 		};
-		grid.Add(Check(ticked, main), 0);
-		grid.Add(NameAndCard(code, ticked && !main), 1);
-		View? end = EndView(main);
-		if (end is not null)
+		if (_onboardingLook)
 		{
-			grid.Add(end, 2);
+			FillOnboardingRow(grid, code, main, ticked);
+		}
+		else
+		{
+			grid.Add(Check(ticked, main), 0);
+			grid.Add(NameAndCard(code, ticked && !main), 1);
+			View? end = EndView(main);
+			if (end is not null)
+			{
+				grid.Add(end, 2);
+			}
 		}
 
 		string name = LanguageNames.NativeName(code);
 		SemanticProperties.SetDescription(grid, main ? OwnScript.Pair(name, AppResources.StoryLanguages_AppLanguage) : name);
-		if (!main && !disabled)
+		if (!main && !disabled && _onboardingLook)
+		{
+			AddRowButton(grid, code, name); // Slice 362: a keyboard can reach the row (Tab) and toggle it (Space) on the Windows head
+		}
+		else if (!main && !disabled)
 		{
 			Taps.AddTap(grid, () => ToggleAsync(code), UiControls.Pick);
 		}
 
 		return grid;
+	}
+
+	// A transparent Button over the whole row gives it focus, a ring, and Space/Enter activation (the same trick as the grown-up header's Done); the tap is counted as a pick.
+	private void AddRowButton(Grid grid, string code, string name)
+	{
+		var hit = new Button { AutomationId = RowIdPrefix + code, Text = name, BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0 };
+		UiUsage.Press(hit, UiControls.Pick, () => _ = ToggleAsync(code));
+		Grid.SetColumnSpan(hit, 3);
+		grid.Children.Add(hit);
+		_rowButtons[code] = hit;
+	}
+
+	/// <summary>Toggles the row that has the keyboard focus (Space on the Windows head); false when none has it.</summary>
+	public bool ToggleFocusedRow()
+	{
+		string? code = _rowButtons.FirstOrDefault(pair => pair.Value.IsFocused).Key;
+		if (code is null)
+		{
+			return false;
+		}
+
+		_ = ToggleAsync(code);
+		return true;
+	}
+
+	// Mock N2: flag 28, the name 16 semibold (the app language's second line 12.5 grey), the 28 box at the end (grey with a white check for the locked app language, brand when ticked, a 2 px ring when not).
+	private void FillOnboardingRow(Grid grid, string code, bool main, bool ticked)
+	{
+		grid.MinimumHeightRequest = OnboardingRowHeight;
+		grid.Padding = new Thickness(14, 0);
+		bool rtl = DinoFonts.IsRightToLeft(code);
+		var name = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Spacing = 1 };
+		name.Children.Add(new Label
+		{
+			Text = LanguageNames.NativeName(code),
+			FontSize = OnboardingNameSize,
+			FontAttributes = FontAttributes.Bold,
+			FontFamily = rtl ? DinoFonts.Persian : DinoFonts.Ui,
+			FlowDirection = rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
+		});
+		if (main)
+		{
+			name.Children.Add(Note(AppResources.StoryLanguages_AppLanguageAlwaysOn, DinoTokens.Get(DinoTokens.Body)));
+		}
+
+		Border box = Check(ticked || main, main);
+		box.WidthRequest = OnboardingBoxSize;
+		box.HeightRequest = OnboardingBoxSize;
+		box.StrokeThickness = ticked || main ? 0 : 2;
+		grid.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)];
+		grid.FlowDirection = FlowDirection.LeftToRight; // the layout never mirrors; only the Farsi and Arabic names run right to left
+		grid.Add(new FlagRing(code, OnboardingFlagSize, 1.5, Color.FromRgba(43 / 255.0, 37 / 255.0, 64 / 255.0, 0.12)), 0);
+		grid.Add(name, 1);
+		grid.Add(box, 2);
 	}
 
 	private static Border Check(bool ticked, bool main)

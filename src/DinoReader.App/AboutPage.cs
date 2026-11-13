@@ -3,8 +3,8 @@ using DinoReader.Resources.Strings;
 namespace DinoReader;
 
 /// <summary>
-/// The About &amp; updates sub-page of Settings (Slice 172, mock frame 84): <see cref="VersionCard"/> with the "Show the intro again" row
-/// (Slice 155), which now ends back on this page. The card is built again whenever the page appears or a fetched config changes
+/// The About &amp; updates sub-page of Settings (Slice 172, mock frame 84): <see cref="VersionCard"/> (the "Show the intro again" row of Slice 155 went with the old
+/// intro, Slice 362). The card is built again whenever the page appears or a fetched config changes
 /// (Slice 132), so the "A new version is ready" row follows the config while the page is open.
 /// </summary>
 public sealed class AboutPage : SettingsSubPage
@@ -43,8 +43,7 @@ public sealed class AboutPage : SettingsSubPage
 			Body.Children.Remove(_card);
 		}
 
-		View introRow = SettingsRows.IntroReplayRow(Nav, _services, Busy);
-		_card = VersionCard.Build(_config, Busy, introRow);
+		_card = VersionCard.Build(_config, Busy); // Slice 362, Decision 5: "Show the intro again" is gone, there is no replay of the onboarding
 		Body.Children.Add(_card);
 	}
 }

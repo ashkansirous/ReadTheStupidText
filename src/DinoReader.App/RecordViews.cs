@@ -27,7 +27,7 @@ internal sealed record RecordCardView(string? Says, string Words, string Languag
 /// <summary>What the button row shows and does. <see cref="Clock"/> is the running time, drawn under the stop square while recording.</summary>
 internal sealed record RecordButtons(
 	RecordStep Step, bool Playing, bool IsLast, bool Listening, bool Windows, Label? Clock,
-	Func<Task> Skip, Func<Task> Record, Func<Task> Stop, Func<Task> Redo, Func<Task> Play, Func<Task> Next);
+	Func<Task> Skip, Func<Task> Record, Func<Task> Stop, Func<Task> Redo, Func<Task> Play, Func<Task> Next, bool NoSkip = false);
 
 /// <summary>The parts of the Record screen (Slice 111, redrawn by Slice 279 from the Batch 48 mock, frames 180 to 191), built as plain views so <see cref="RecordPage"/> only decides which to show.</summary>
 internal static class RecordViews
@@ -268,8 +268,10 @@ internal static class RecordViews
 		return row;
 	}
 
+	// Slice 362 (mock N6a): the onboarding's recording has no Skip, so Record is the only way on; an empty slot keeps Record in the middle.
 	private static View LeftButton(RecordButtons b) => b.Step == RecordStep.Recorded
 		? Labelled(RoundIcon(RedoId, IconKind.Mic, SmallButton, DinoTokens.Get(DinoTokens.BrandTint), DinoTokens.Get(DinoTokens.Brand), AppResources.Rec_Redo, b.Redo, enabled: true), Caption(AppResources.Rec_Redo), SmallButton)
+		: b.NoSkip ? new BoxView { WidthRequest = SmallButton, HeightRequest = SmallButton, Color = Colors.Transparent }
 		: Labelled(RoundIcon(SkipId, IconKind.SkipForward, SmallButton, DinoTokens.Get(DinoTokens.BrandTint), DinoTokens.Get(DinoTokens.Brand), AppResources.Record_Skip, b.Skip, enabled: b.Step == RecordStep.Ready && !b.Listening),
 			Caption(b.Windows ? AppResources.Record_SkipKey : AppResources.Record_Skip), SmallButton);
 

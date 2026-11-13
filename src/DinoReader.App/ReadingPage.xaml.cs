@@ -388,7 +388,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	// remember = false is the "Read in {0}" button of the sound card (Slice 360): this reading only, the child's stored pick is left alone.
 	private async Task SwitchLanguageAsync(Story story, string language, bool restart, bool remember = true)
 	{
-		int sentence = Math.Max(0, _session.CurrentSentence);
+		int sentence = DemoFirstSentence() ?? Math.Max(0, _session.CurrentSentence); // Slice 362: the demo page always restarts at its first sentence
 		if (remember)
 		{
 			StoryLanguages.SetPick(language);
@@ -567,6 +567,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		TitleLabel.Text = title;
 		SideTitle.Text = title;
+		_onboarding?.SetBookTitle(title, language); // Slice 362: the onboarding's own title line
 		if (!TitleLabel.IsVisible)
 		{
 			SemanticProperties.SetDescription(Header, title);
@@ -584,13 +585,18 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	internal string? BookTitle => TitleLabel.Text;
 
 	// Slice 235 part B (mock Batch 46 frame 160): the reading screen answers the Windows window's keyboard. The back cover is the silent last page, where Space reads the book again.
-	DinoScreen IDinoKeyTarget.Screen => _hasBackCover && Surface.PageCount > 0 && Surface.CurrentPage == Surface.PageCount - 1 ? DinoScreen.ReadingBackCover : DinoScreen.Reading;
+	DinoScreen IDinoKeyTarget.Screen => _onboarding is not null ? DinoScreen.FirstBooks : _hasBackCover && Surface.PageCount > 0 && Surface.CurrentPage == Surface.PageCount - 1 ? DinoScreen.ReadingBackCover : DinoScreen.Reading;
 
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
 	{
 		if (!_onStack || !_visible)
 		{
 			return false;
+		}
+
+		if (_onboarding is not null)
+		{
+			return OnboardingKey(action); // Slice 362: Enter is Continue, Space plays or pauses, Esc does nothing (the step has no way back)
 		}
 
 		// Esc goes back even while the book is still loading or failed to load; only the playback keys wait for the pages to be on screen.
@@ -972,8 +978,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		ApplyLanguageChrome();
 	}
 
-	// Back closes the language list first; only then does it leave the book.
-	protected override bool OnBackButtonPressed() => StoryLanguageMenu.DismissOpen(Root) || base.OnBackButtonPressed();
+	// Back closes the language list first; only then does it leave the book. In the onboarding's listen step it does nothing (Slice 362: the step has no way back, as on Windows and iOS).
+	protected override bool OnBackButtonPressed() => StoryLanguageMenu.DismissOpen(Root) || _onboarding is not null || base.OnBackButtonPressed();
 
 	protected override void OnAppearing()
 	{
@@ -1093,6 +1099,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private void OnSentenceChanged(object? sender, int sentence)
 	{
+		if (DemoSentenceChanged(sentence))
+		{
+			return; // Slice 362: the onboarding's demo page ended; the surface stays on the page
+		}
+
 		MarkSentence(sentence);
 		FollowRecordedPages(sentence);
 		int page = Surface.PageOfSentence(sentence, DisplayedPosition);
@@ -1173,6 +1184,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private void OnSessionStateChanged(object? sender, EventArgs e)
 	{
+		DemoStateChanged();
 		CountFinish();
 		LeaveWhenIntroReadEnds();
 		RenderChrome();
@@ -1572,6 +1584,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	// After a finished read a swipe also means "from here": Play then starts at the shown page.
 	private void OnPageSwiped(object? sender, int page)
 	{
+		if (DemoHoldsThePage())
+		{
+			return; // Slice 362: the onboarding shows one set page; a swipe changes nothing
+		}
+
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.PagePrefix} {page}");
 #endif
@@ -1627,6 +1644,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private void OnSentenceTapped(object? sender, int sentence)
 	{
+		if (_onboarding is not null)
+		{
+			return; // Slice 362: the demo page plays from its replay button, not from a tapped sentence
+		}
+
 		UiUsage.Tap(UiControls.Sentence); // Slice 352: a tap on a sentence starts the read there
 
 		CancelIntroRead(); // the grown-up took over: no auto-leave

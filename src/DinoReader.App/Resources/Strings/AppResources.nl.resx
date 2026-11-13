@@ -100,11 +100,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>De back-up is niet gelukt. Probeer het opnieuw.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Te groot om terug te zetten</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kon niet aan de back-up worden toegevoegd.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! In welke taal lezen we?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Je kunt de taal later wijzigen in de hoek voor volwassenen.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! Welke taal moet Dino gebruiken?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Voor de knoppen en woorden van de app. Je kunt de taal later wijzigen in de hoek voor volwassenen.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Doorgaan</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Je boeken staan op de plank.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Kies je eerste boeken</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Kies er minstens twee. Je kunt altijd meer boeken in de winkel halen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Kies er minstens twee. Meer in de winkel, altijd.</value><comment>Machine draft: needs native review</comment></data>
@@ -115,23 +113,61 @@
   <data name="FirstBooks_Getting" xml:space="preserve"><value>Je boeken worden opgehaald…</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Boek {0} van {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Maak verbinding met internet om je eerste boeken te kiezen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>Stap {0} van {1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>Taal</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>Boeken</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Luisteren</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>In welke talen leest je gezin?</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} staat altijd aan. Voeg andere talen toe die je kind hoort.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Waarom meer dan één?</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Veel kinderen horen thuis de ene taal en op school of bij opa en oma een andere. Elk boek wordt voorgelezen in elke taal die je kiest, en je kind kan op elke pagina wisselen. Kies er maximaal drie.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App-taal · altijd aan</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>Haal deze boeken</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Luister naar Dino</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>Elk personage heeft een eigen stem, en Dino leest met gevoel voor.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Dat was {0}. Hoor nu dezelfde pagina in je andere taal.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Tik nu op {0} om dezelfde pagina te horen.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Dezelfde stemmen, nu in {0}. Je kind kan op elke pagina van taal wisselen.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Elk personage heeft een eigen stem, en Dino leest met gevoel voor. Dat was {0}; nu lezen dezelfde stemmen het in {1}. Je kind kan op elke pagina van taal wisselen.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Wees de stem van een personage</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Neem de regels van {0} op deze pagina op en hoor dan de pagina met **jou** als {0}.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Je stem blijft op deze telefoon</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Je stem blijft op deze tablet</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Je stem blijft op deze computer</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>Hij wordt nooit geüpload, niet naar ons en niet naar de cloud. Deze proef wordt gewist als de installatie klaar is.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>Dino vraagt om de microfoon.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>Neem de regels van {0} op</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>Dino heeft de microfoon nodig om op te nemen. Je kunt hem toestaan in Instellingen.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>Instellingen openen</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Doorgaan zonder opnemen</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Regels van {0}</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Dat ben jij!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Dat is {0} met jouw stem. Dit was maar een proef, dus hij wordt gewist als de installatie klaar is. Later kun je elk personage opnemen in de hoek voor volwassenen.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · jouw stem</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Nog een keer afspelen</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Dit is de hoek voor volwassenen</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Alleen volwassenen komen hier. Hier kun je:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>Boeken halen in de winkel</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis en betaalde verhalen, in alle talen van je gezin.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>Je boeken beheren</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>De volgorde van de plank veranderen, een boek verwijderen of je stem opnemen voor elk personage.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>De instellingen wijzigen</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>Talen, leessnelheid, geluiden en back-up, voor de hele app.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Laat maar zien</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>Je boeken. Tik op ••• bij een boek om je stem op te nemen of het te verwijderen. Met herschikken verander je de volgorde van de plank.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>De winkel</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Nieuwe verhalen, gratis en betaald. Elk boek komt in alle talen van je gezin. Eerder gekocht? Herstel je boeken hier.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>Talen, leessnelheid, geluiden en back-up, voor de hele app.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Bekijk de kast van je kind</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>Tik op **Kinderkast** om te zien wat je kind ziet.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>Laatste stap</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>Laat zien</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Dit is de kast van je kind</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Dit ziet je kind elke keer als het Dino opent: alleen zijn of haar boeken, zonder dat er per ongeluk iets te wijzigen valt.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Om terug te gaan naar de hoek voor volwassenen tik je op **Volwassenen** en houd je 3 seconden ingedrukt.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>Begin met lezen</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino heeft twee boeken nodig voordat je begint. Zet wifi of mobiele data aan en probeer het opnieuw.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>Alles overslaan</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>Proberen</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>Overslaan</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} van {1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino heeft twee plekken</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kinderkast</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tik op een boek en luister.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Klik op een boek en luister.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot: je boeken, de winkel en de instellingen.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>Samen een verhaal lezen</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>Tik op een boek en dan op afspelen. Dino leest voor en laat elke zin oplichten.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino sloeg het boek open. ‘Er was eens…’</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Neem één personage tegelijk op, of hele pagina’s. Je kind kan het altijd afspelen.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>Introductie opnieuw bekijken</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Taal</value></data>
@@ -326,10 +362,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”, in elk boek</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Vertaalpakket voor {0} ophalen…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>In welke talen moeten de verhalen zijn?</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Kies er maximaal twee extra. Je kind kan tijdens het lezen wisselen.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-taal</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Overslaan, alleen {0}</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Drie gekozen. Haal er één weg om een andere te kiezen.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Verhaaltalen</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Je kind kan tijdens het lezen tussen deze talen wisselen. Maximaal drie.</value></data>

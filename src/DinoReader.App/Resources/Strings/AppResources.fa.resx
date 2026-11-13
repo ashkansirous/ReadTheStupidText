@@ -99,11 +99,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>پشتیبان‌گیری انجام نشد. دوباره امتحان کنید.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>برای بازیابی بسیار بزرگ است</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>افزودن {0} به پشتیبان ممکن نبود.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>سلام! به چه زبانی بخوانیم؟</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>بعداً می‌توانید آن را در گوشهٔ بزرگ‌ترها عوض کنید.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>سلام! دینو از چه زبانی استفاده کند؟</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>برای دکمه‌ها و واژه‌های برنامه. بعداً می‌توانید آن را در گوشهٔ بزرگ‌ترها عوض کنید.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>ادامه</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>آماده‌ی خواندن!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. کتاب‌هایتان روی قفسه است.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>اولین کتاب‌هایتان را انتخاب کنید</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>دست‌کم دو کتاب انتخاب کنید. هر وقت خواستید می‌توانید کتاب‌های بیشتری از فروشگاه بگیرید.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>دست‌کم دو کتاب انتخاب کنید. بیشتر در فروشگاه، هر وقت خواستید.</value><comment>Machine draft: needs native review</comment></data>
@@ -114,23 +112,61 @@
   <data name="FirstBooks_Getting" xml:space="preserve"><value>در حال گرفتن کتاب‌هایتان…</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>کتاب {0} از {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>برای انتخاب اولین کتاب‌هایتان به اینترنت وصل شوید</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>مرحلهٔ {0} از {1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>زبان</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>کتاب‌ها</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>گوش دادن</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>خانوادهٔ شما به چه زبان‌هایی می‌خواند؟</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} همیشه روشن است. زبان‌های دیگری را که فرزندتان می‌شنود اضافه کنید.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>چرا بیش از یکی؟</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>بسیاری از کودکان در خانه یک زبان می‌شنوند و در مدرسه یا پیش پدربزرگ و مادربزرگ زبانی دیگر. هر کتاب به هر زبانی که انتخاب کنید خوانده می‌شود و فرزندتان می‌تواند در هر صفحه زبان را عوض کند. تا سه زبان انتخاب کنید.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>زبان برنامه · همیشه روشن</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>این کتاب‌ها را بگیرید</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>به خواندن دینو گوش دهید</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد و دینو با احساس می‌خواند.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>این {0} بود. حالا همین صفحه را به زبان دیگرتان بشنوید.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>حالا روی {0} بزنید تا همین صفحه را بشنوید.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>همان صداها، این بار به {0}. فرزندتان می‌تواند در هر صفحه زبان را عوض کند.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد و دینو با احساس می‌خواند. آن {0} بود؛ حالا همان صداها آن را به {1} می‌خوانند. فرزندتان می‌تواند در هر صفحه زبان را عوض کند.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>صدای یک شخصیت باشید</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>جمله‌های {0} را در این صفحه ضبط کنید، بعد صفحه را با **صدای خودتان** در نقش {0} بشنوید.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>صدای شما روی این گوشی می‌ماند</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>صدای شما روی این تبلت می‌ماند</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>صدای شما روی این رایانه می‌ماند</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>هرگز بارگذاری نمی‌شود، نه برای ما و نه در فضای ابری. این آزمایش وقتی راه‌اندازی تمام شود پاک می‌شود.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>دینو اجازهٔ میکروفون را می‌خواهد.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>ضبط جمله‌های {0}</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>دینو برای ضبط به میکروفون نیاز دارد. می‌توانید در تنظیمات اجازه بدهید.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>باز کردن تنظیمات</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>ادامه بدون ضبط</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>جمله‌های {0}</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>این خودِ شمایید!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>این {0} با صدای شماست. این فقط یک آزمایش بود، پس وقتی راه‌اندازی تمام شود پاک می‌شود. بعداً می‌توانید هر شخصیتی را در گوشهٔ بزرگ‌ترها ضبط کنید.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · صدای شما</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>دوباره پخش کن</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>اینجا گوشهٔ بزرگ‌ترهاست</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>فقط بزرگ‌ترها به اینجا می‌آیند. اینجا می‌توانید:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>از فروشگاه کتاب بگیرید</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>داستان‌های رایگان و پولی، به همهٔ زبان‌های خانواده‌تان.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>کتاب‌هایتان را مدیریت کنید</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>ترتیب قفسه را عوض کنید، کتابی را حذف کنید یا صدای خودتان را برای هر شخصیتی ضبط کنید.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>تنظیمات را عوض کنید</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>زبان‌ها، سرعت خواندن، صداها و پشتیبان‌گیری، برای کل برنامه.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>دورِ آن را نشانم بده</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>کتاب‌های شما. روی ••• کتاب بزنید تا صدای خودتان را ضبط کنید یا آن را حذف کنید. «تغییر ترتیب» ترتیب قفسه را عوض می‌کند.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>فروشگاه</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>داستان‌های تازه، رایگان و پولی. هر کتاب به همهٔ زبان‌های خانواده‌تان هست. قبلاً خریده‌اید؟ کتاب‌هایتان را از اینجا بازیابی کنید.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>زبان‌ها، سرعت خواندن، صداها و پشتیبان‌گیری، برای کل برنامه.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>قفسهٔ فرزندتان را ببینید</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>روی **قفسهٔ کودک** بزنید تا ببینید فرزندتان چه می‌بیند.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>آخرین مرحله</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>نشانم بده</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>این قفسهٔ فرزند شماست</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>فرزندتان هر بار که دینو را باز می‌کند این را می‌بیند: فقط کتاب‌های خودش، بدون چیزی که بشود اشتباهی عوضش کرد.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>برای برگشتن به گوشهٔ بزرگ‌ترها روی **بزرگ‌ترها** بزنید و ۳ ثانیه نگه دارید.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>شروع خواندن</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino پیش از شروع به دو کتاب نیاز دارد. وای‌فای یا داده همراه را روشن کنید و دوباره تلاش کنید.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>ببینید دینو چه کارهایی می‌کند</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>رد کردن همه</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>امتحان کنید</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>رد کردن</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} از {1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>دینو دو جا دارد</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>قفسهٔ بچه‌ها</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>فقط روی یک کتاب بزنید و گوش کنید.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>فقط روی یک کتاب کلیک کنید و گوش کنید.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>پشت یک قفل: کتاب‌ها، فروشگاه و تنظیمات شما.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>با هم یک قصه بخوانیم</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>روی یک کتاب بزنید و پخش را بزنید. دینو با صدای بلند می‌خواند و هر جمله را روشن می‌کند.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>دینو کتاب را باز کرد. «یکی بود، یکی نبود…»</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>هر بار یک شخصیت را ضبط کنید، یا صفحه‌های کامل را. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>نمایش دوبارهٔ معرفی</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>آماده برای فرزندم</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
   <data name="Language_Title" xml:space="preserve"><value>زبان</value></data>
@@ -327,10 +363,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند، در همهٔ کتاب‌ها</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>در حال گرفتن بسته‌ی ترجمه به {0}…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>قصه‌ها به چه زبان‌هایی باشند؟</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>تا دو زبان دیگر انتخاب کنید. فرزندتان می‌تواند هنگام خواندن زبان را عوض کند.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>زبان برنامه</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>رد شدن، فقط {0}</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>سه زبان انتخاب شده است. برای انتخاب زبانی دیگر، یکی را بردارید.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>زبان‌های قصه</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>فرزندتان می‌تواند هنگام خواندن میان این زبان‌ها جابه‌جا شود. حداکثر سه زبان.</value></data>

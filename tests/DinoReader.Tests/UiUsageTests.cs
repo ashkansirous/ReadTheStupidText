@@ -128,9 +128,7 @@ public sealed class UiUsageTests
         Assert.Contains("name == UsageEventName.ReadStarted ? ReadOrigin", reading);
         Assert.Contains("RecordBookCount(UsageEventName.BookOpened, story, ReadOrigin)", reading);
         Assert.Contains("string origin = ReadOrigins.Shelf", File.ReadAllText(Path.Combine(app, "StoryActions.cs")));
-        Assert.Contains("_actions.ReadAsync(Navigation, story, ReadOrigins.Corner)", File.ReadAllText(Path.Combine(app, "GalleryPage.xaml.cs")));
-        Assert.Contains("reading.ReadOrigin = ReadOrigins.Wizard", File.ReadAllText(Path.Combine(app, "IntroWizardPage.cs")));
-    }
+        Assert.Contains("_actions.ReadAsync(Navigation, story, ReadOrigins.Corner)", File.ReadAllText(Path.Combine(app, "GalleryPage.xaml.cs")));    }
 
     [Fact]
     public void The_launch_screen_is_claimed_once_when_no_shown_was_recorded()

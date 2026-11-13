@@ -99,11 +99,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>لم تنجح النسخة الاحتياطية. حاول مرة أخرى.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>كبيرة جدًا للاستعادة</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>تعذّرت إضافة {0} إلى النسخة الاحتياطية.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>مرحبًا! بأي لغة نقرأ؟</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>يمكنك تغييرها لاحقًا في ركن الكبار.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>مرحبًا! أي لغة يستخدمها دينو؟</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>لأزرار التطبيق وكلماته. يمكنك تغييرها لاحقًا في ركن الكبار.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>متابعة</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>جاهز للقراءة!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. كتبك على الرف.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>اختر كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>اختر كتابين على الأقل. يمكنك الحصول على المزيد من المتجر في أي وقت.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>اختر كتابين على الأقل. المزيد في المتجر في أي وقت.</value><comment>Machine draft: needs native review</comment></data>
@@ -114,23 +112,61 @@
   <data name="FirstBooks_Getting" xml:space="preserve"><value>جارٍ إحضار كتبك…</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>الكتاب {0} من {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>اتصل بالإنترنت لاختيار كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>الخطوة {0} من {1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>الكتب</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>الاستماع</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>بأي لغات تقرأ عائلتك؟</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} مفعّلة دائمًا. أضف أي لغات أخرى يسمعها طفلك.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>لماذا أكثر من لغة؟</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>يسمع كثير من الأطفال لغة في البيت ولغة أخرى في المدرسة أو عند الأجداد. يُقرأ كل كتاب بكل لغة تختارها، ويستطيع طفلك التبديل في أي صفحة. اختر حتى ثلاث لغات.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>لغة التطبيق · مفعّلة دائمًا</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>احصل على هذه الكتب</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>استمع إلى قراءة دينو</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص، ويقرأ دينو بإحساس.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>كانت تلك {0}. الآن استمع إلى الصفحة نفسها بلغتك الأخرى.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>المس الآن {0} لتسمع الصفحة نفسها.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>الأصوات نفسها، الآن بـ{0}. يستطيع طفلك تبديل اللغة في أي صفحة.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>لكل شخصية صوتها الخاص، ويقرأ دينو بإحساس. كانت تلك {0}؛ والآن تقرؤها الأصوات نفسها بـ{1}. يستطيع طفلك تبديل اللغة في أي صفحة.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>كن صوت إحدى الشخصيات</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>سجّل جمل {0} في هذه الصفحة، ثم استمع إلى الصفحة وقد صار **صوتك** هو صوت {0}.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>يبقى صوتك على هذا الهاتف</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>يبقى صوتك على هذا الجهاز اللوحي</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>يبقى صوتك على هذا الحاسوب</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>لا يُرفع أبدًا، لا إلينا ولا إلى السحابة. تُحذف هذه التجربة عند انتهاء الإعداد.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>سيطلب دينو إذن الميكروفون.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>سجّل جمل {0}</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>يحتاج دينو إلى الميكروفون ليسجّل. يمكنك السماح به من الإعدادات.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>افتح الإعدادات</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>المتابعة بدون تسجيل</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>جمل {0}</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>هذا أنت!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>هذا صوتك في دور {0}. كانت مجرد تجربة، لذلك تُحذف عند انتهاء الإعداد. يمكنك تسجيل أي شخصية لاحقًا في ركن الكبار.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · بصوتك</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>شغّل مرة أخرى</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>هذا هو ركن الكبار</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>لا يدخل هنا إلا الكبار. يمكنك هنا:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>الحصول على كتب من المتجر</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>قصص مجانية ومدفوعة بكل لغات عائلتك.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>إدارة كتبك</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>تغيير ترتيب الرف، أو إزالة كتاب، أو تسجيل صوتك لأي شخصية.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>تغيير الإعدادات</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>اللغات وسرعة القراءة والأصوات والنسخ الاحتياطي، للتطبيق كله.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>أرني المكان</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>كتبك. المس ••• على أي كتاب لتسجّل صوتك أو لتزيله. تغيير الترتيب يغيّر ترتيب الرف.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>المتجر</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>قصص جديدة، مجانية ومدفوعة. يتوفر كل كتاب بكل لغات عائلتك. اشتريت من قبل؟ استعد كتبك من هنا.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>اللغات وسرعة القراءة والأصوات والنسخ الاحتياطي، للتطبيق كله.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>شاهد رف طفلك</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>المس **رف الطفل** لترى ما يراه طفلك.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>الخطوة الأخيرة</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>أرني</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>هذا هو رف طفلك</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>هذا ما يراه طفلك في كل مرة يفتح فيها دينو: كتبه فقط، بلا شيء يمكن تغييره بالخطأ.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>للعودة إلى ركن الكبار، المس **للكبار** ثم اضغط مطولًا لمدة 3 ثوانٍ.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>يحتاج دينو إلى كتابين قبل أن تبدأ. شغّل الواي فاي أو بيانات الجوال ثم حاول مرة أخرى.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>اكتشف ما يستطيع دينو فعله</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>تخطي الكل</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>جرّبه</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>تخطي</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} من {1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>لدى دينو مكانان</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>رف الأطفال</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>المس كتابًا واستمع.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>انقر على كتاب واستمع.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>خلف قفل: كتبك والمتجر والإعدادات.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>لنقرأ قصة معًا</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>المس كتابًا ثم اضغط تشغيل. يقرأ دينو بصوت عالٍ ويضيء كل جملة.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>فتح دينو الكتاب. «كان يا ما كان…»</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>سجّل شخصية واحدة في كل مرة، أو صفحات كاملة. يمكن لطفلك تشغيلها في أي وقت.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>عرض المقدمة مرة أخرى</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>جاهز لطفلي</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>وضع البالغين</value></data>
   <data name="Language_Title" xml:space="preserve"><value>اللغة</value></data>
@@ -327,10 +363,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>أصوات الحيوانات</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>الحيوانات تقول أحيانًا «غرغر!» أو «ماع!» في كل كتاب</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>جارٍ تنزيل حزمة الترجمة إلى {0}…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>بأي لغات تريد أن تكون القصص؟</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>اختر لغتين إضافيتين على الأكثر. يمكن لطفلك التبديل أثناء القراءة.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>لغة التطبيق</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>تخطَّ، {0} فقط</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>تم اختيار ثلاث لغات. ألغِ اختيار لغة لتختار أخرى.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>لغات القصص</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>يمكن لطفلك التبديل بينها أثناء القراءة. حتى ثلاث لغات.</value></data>

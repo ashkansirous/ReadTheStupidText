@@ -40,7 +40,8 @@ const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
 const WAIT_DETAIL_SEPARATOR = ":";
 // The first-run intro (Slice 155; Slice 173 added the story languages step; Slice 228 the two places and the read step): six steps, each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
-const INTRO_STEPS = ["places", "read", "store", "record", "add", "languages"] as const;
+// Slice 362: the new first run's six steps (language, story_languages, books, listen, voice, corner) count as intro steps too.
+const INTRO_STEPS = ["places", "read", "store", "record", "add", "languages", "language", "story_languages", "books", "listen", "voice", "corner"] as const;
 const INTRO_ACTIONS = ["tried", "skipped"] as const;
 const INTRO_STARTS = ["first_run", "replay"] as const;
 const INTRO_ENDS = ["finished", "skipped_all"] as const;
@@ -86,7 +87,7 @@ export const FALLBACK_REASONS = [
   // Slice 359: a book's drawn back cover is named but its picture file is missing
   "back_cover_missing",
   // Slice 360: a read had no sound for a missing pack (the Wi-Fi wait is gone; its reason stays so old rows parse)
-  "waiting_wifi", "pack_missing_on_play",
+  "waiting_wifi", "pack_missing_on_play", "onboarding_try_not_deleted",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;

@@ -266,6 +266,10 @@ public static class FallbackReason
     /// <summary>Slice 360 (area "premade_audio"): a piece had no sound because its book's pack for the reading language is missing on the phone while the child played.</summary>
     public const string PackMissingOnPlay = "pack_missing_on_play";
 
+    // Slice 362.
+    /// <summary>Slice 362 (area "library"): the grown-up's recorded try of the onboarding could not be deleted from a book; the next start retries.</summary>
+    public const string OnboardingTryNotDeleted = "onboarding_try_not_deleted";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -279,7 +283,7 @@ public static class FallbackReason
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
-        BackCoverMissing, WaitingWifi, PackMissingOnPlay,
+        BackCoverMissing, WaitingWifi, PackMissingOnPlay, OnboardingTryNotDeleted,
     ];
 }
 

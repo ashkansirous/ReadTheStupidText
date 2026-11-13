@@ -100,11 +100,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>Varmuuskopiointi ei onnistunut. Yritä uudelleen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Liian suuri palautettavaksi</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Kohdetta {0} ei voitu lisätä varmuuskopioon.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Millä kielellä luemme?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Voit vaihtaa sen myöhemmin aikuisten nurkassa.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Mitä kieltä Dinon pitää käyttää?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Sovelluksen painikkeille ja sanoille. Voit vaihtaa sen myöhemmin aikuisten nurkassa.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Jatka</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>Valmista luettavaksi!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Kirjasi ovat hyllyssä.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Valitse ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Valitse vähintään kaksi. Lisää saat kaupasta milloin tahansa.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Valitse vähintään kaksi. Lisää kaupasta milloin tahansa.</value><comment>Machine draft: needs native review</comment></data>
@@ -115,23 +113,61 @@
   <data name="FirstBooks_Getting" xml:space="preserve"><value>Haetaan kirjojasi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Kirja {0}/{1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Yhdistä internetiin valitaksesi ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>Vaihe {0}/{1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>Kieli</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>Kirjat</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Kuuntele</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Millä kielillä perheesi lukee?</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} on aina käytössä. Lisää muut kielet, joita lapsesi kuulee.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Miksi useampi kuin yksi?</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Monet lapset kuulevat kotona yhtä kieltä ja koulussa tai isovanhempien luona toista. Jokainen kirja luetaan jokaisella valitsemallasi kielellä, ja lapsesi voi vaihtaa kieltä millä tahansa sivulla. Valitse enintään kolme.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Sovelluksen kieli · aina käytössä</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>Hae nämä kirjat</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Kuuntele, kun Dino lukee</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>Jokaisella hahmolla on oma äänensä, ja Dino lukee tunteella.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Se oli {0}. Kuuntele nyt sama sivu toisella kielelläsi.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Napauta nyt {0}, niin kuulet saman sivun.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Samat äänet, nyt kielellä {0}. Lapsesi voi vaihtaa kieltä millä tahansa sivulla.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Jokaisella hahmolla on oma äänensä, ja Dino lukee tunteella. Se oli {0}; nyt samat äänet lukevat sen kielellä {1}. Lapsesi voi vaihtaa kieltä millä tahansa sivulla.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Ole hahmon ääni</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Nauhoita hahmon {0} repliikit tältä sivulta ja kuuntele sitten sivu **omalla äänelläsi** hahmona {0}.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Äänesi pysyy tässä puhelimessa</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Äänesi pysyy tässä tabletissa</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Äänesi pysyy tässä tietokoneessa</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>Sitä ei koskaan lähetetä minnekään, ei meille eikä pilveen. Tämä kokeilu poistetaan, kun käyttöönotto päättyy.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>Dino pyytää lupaa mikrofoniin.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>Nauhoita hahmon {0} repliikit</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>Dino tarvitsee mikrofonia nauhoittamiseen. Voit sallia sen asetuksissa.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>Avaa asetukset</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Jatka ilman nauhoitusta</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Hahmon {0} repliikit</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Se olet sinä!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Tämä on {0} sinun äänelläsi. Tämä oli vain kokeilu, joten se poistetaan, kun käyttöönotto päättyy. Voit nauhoittaa minkä tahansa hahmon myöhemmin aikuisten nurkassa.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · sinun äänesi</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Toista uudelleen</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Tämä on aikuisten nurkka</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Tänne tulevat vain aikuiset. Täällä voit:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>Hakea kirjoja kaupasta</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Ilmaisia ja maksullisia tarinoita kaikilla perheesi kielillä.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>Hallita kirjojasi</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>Muuttaa hyllyn järjestystä, poistaa kirjan tai nauhoittaa oman äänesi mille tahansa hahmolle.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Muuttaa asetuksia</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>Kielet, lukunopeus, äänet ja varmuuskopio koko sovellukselle.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Näytä, mitä täällä on</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>Kirjasi. Napauta kirjan kohdalla •••, niin voit nauhoittaa äänesi tai poistaa kirjan. Järjestä uudelleen muuttaa hyllyn järjestystä.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Kauppa</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Uusia tarinoita, ilmaisia ja maksullisia. Jokainen kirja on kaikilla perheesi kielillä. Ostitko aiemmin? Palauta kirjasi täältä.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>Kielet, lukunopeus, äänet ja varmuuskopio koko sovellukselle.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Katso lapsesi hylly</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>Napauta **Lapsen hylly**, niin näet, mitä lapsesi näkee.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>Viimeinen vaihe</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>Näytä</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Tämä on lapsesi hylly</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Tämän lapsesi näkee aina avatessaan Dinon: vain omat kirjansa, ilman mitään, mitä voisi vahingossa muuttaa.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Päästäksesi takaisin aikuisten nurkkaan napauta **Aikuisille** ja pidä pohjassa 3 sekuntia.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>Ohita kaikki</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>Kokeile</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>Ohita</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dinolla on kaksi paikkaa</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Lasten hylly</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Napauta kirjaa ja kuuntele.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Napsauta kirjaa ja kuuntele.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Lukon takana: kirjasi, kauppa ja asetukset.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>Lue tarina yhdessä</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>Napauta kirjaa ja paina toista. Dino lukee ääneen ja korostaa jokaisen lauseen.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino avasi kirjan. ”Olipa kerran…”</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä yksi hahmo kerrallaan tai kokonaisia sivuja. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>Näytä esittely uudelleen</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>
@@ -326,10 +362,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Ladataan {0}-käännöspakettia…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Millä kielillä tarinoiden pitäisi olla?</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Valitse enintään kaksi lisää. Lapsesi voi vaihtaa kieltä lukiessaan.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Sovelluksen kieli</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Ohita, vain {0}</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Kolme valittu. Poista yksi valinta, jos haluat valita toisen.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Tarinoiden kielet</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Lapsesi voi vaihtaa näiden välillä lukiessaan. Enintään kolme.</value></data>

@@ -79,18 +79,4 @@ public class VoiceCountTimingTests
 		Assert.True(count.ClaimBook("rex", "fa")); // another language is another count
 		Assert.True(count.ClaimBook("zed", "fa"));
 	}
-
-	[Fact]
-	public void PlaceButtons_sets_row_column_and_span_on_every_view_it_places_so_a_second_call_leaves_nothing_stale()
-	{
-		string place = Body(Source("IntroWizardPage.cs"), "private static void PlaceButtons(");
-
-		Assert.Equal(4, place.Split("SetCell(").Length - 1); // main and Skip in both layouts, each with row, column and span through SetCell
-		Assert.Contains("buttons.RowDefinitions = ", place);
-		Assert.Contains("buttons.ColumnDefinitions = ", place); // both definition lists are replaced, never added to
-		string cell = Body(Source("IntroWizardPage.cs"), "private static void SetCell(");
-		Assert.Contains("Grid.SetRow(view, row);", cell);
-		Assert.Contains("Grid.SetColumn(view, column);", cell);
-		Assert.Contains("Grid.SetRowSpan(view, rowSpan);", cell);
-	}
 }

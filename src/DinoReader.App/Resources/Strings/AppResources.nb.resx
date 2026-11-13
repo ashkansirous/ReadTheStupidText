@@ -100,11 +100,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>Sikkerhetskopieringen fungerte ikke. Prøv igjen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>For stor til å gjenopprettes</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunne ikke legges til i sikkerhetskopien.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Hvilket språk skal vi lese på?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Du kan endre det senere i Voksenhjørnet.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Hvilket språk skal Dino bruke?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Til knappene og ordene i appen. Du kan endre det senere i Voksenhjørnet.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsett</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til å lese!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Bøkene dine står i hyllen.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Velg de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Velg minst to. Du kan hente flere fra butikken når som helst.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Velg minst to. Flere i butikken når som helst.</value><comment>Machine draft: needs native review</comment></data>
@@ -115,23 +113,61 @@
   <data name="FirstBooks_Getting" xml:space="preserve"><value>Henter bøkene dine …</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Bok {0} av {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Koble til internett for å velge de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>Steg {0} av {1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>Språk</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>Bøker</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Lytt</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Hvilke språk leser familien din på?</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} er alltid på. Legg til andre språk barnet ditt hører.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Hvorfor mer enn ett?</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Mange barn hører ett språk hjemme og et annet på skolen eller hos besteforeldrene. Hver bok blir lest opp på hvert språk du velger, og barnet ditt kan bytte på hver side. Velg opptil tre.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Appspråk · alltid på</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>Hent disse bøkene</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Hør Dino lese</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>Hver figur har sin egen stemme, og Dino leser med følelse.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Det var {0}. Hør nå den samme siden på det andre språket ditt.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Trykk nå på {0} for å høre den samme siden.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>De samme stemmene, nå på {0}. Barnet ditt kan bytte språk på hver side.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Hver figur har sin egen stemme, og Dino leser med følelse. Det var {0}; nå leser de samme stemmene den på {1}. Barnet ditt kan bytte språk på hver side.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Vær stemmen til en figur</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Ta opp {0} sine replikker på denne siden, og hør så siden med **deg** som {0}.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Stemmen din blir på denne telefonen</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Stemmen din blir på dette nettbrettet</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Stemmen din blir på denne datamaskinen</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>Den blir aldri lastet opp, verken til oss eller til skyen. Denne prøven slettes når oppsettet er ferdig.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>Dino ber om mikrofonen.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>Ta opp {0} sine replikker</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>Dino trenger mikrofonen for å ta opp. Du kan tillate den i Innstillinger.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>Åpne innstillinger</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Fortsett uten opptak</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0} sine replikker</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Det er deg!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Det er {0} med stemmen din. Dette var bare en prøve, så den slettes når oppsettet er ferdig. Du kan ta opp en figur senere i Voksenhjørnet.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · stemmen din</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Spill av igjen</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Dette er Voksenhjørnet</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Bare voksne kommer hit. Her kan du:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>Hente bøker i butikken</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis og betalte historier på alle språkene i familien din.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>Styre bøkene dine</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>Endre rekkefølgen på hyllen, fjerne en bok eller ta opp stemmen din for en hvilken som helst figur.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Endre innstillingene</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>Språk, lesehastighet, lyder og sikkerhetskopi for hele appen.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Vis meg rundt</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>Bøkene dine. Trykk på ••• ved en bok for å ta opp stemmen din eller fjerne den. Med omsortering endrer du rekkefølgen på hyllen.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Butikken</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Nye historier, gratis og betalte. Hver bok finnes på alle språkene i familien din. Kjøpt før? Gjenopprett bøkene dine her.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>Språk, lesehastighet, lyder og sikkerhetskopi for hele appen.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Se hyllen til barnet ditt</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>Trykk på **Barnets hylle** for å se hva barnet ditt ser.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>Siste steg</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>Vis meg</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Dette er hyllen til barnet ditt</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Dette ser barnet ditt hver gang det åpner Dino: bare bøkene sine, uten noe som kan endres ved en feil.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>For å komme tilbake til Voksenhjørnet trykker du på **Voksne** og holder inne i 3 sekunder.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>Begynn å lese</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino trenger to bøker før du starter. Slå på Wi-Fi eller mobildata og prøv igjen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>Se hva Dino kan</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>Hopp over alt</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>Prøv</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>Hopp over</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} av {1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino har to steder</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Barnas hylle</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Trykk på en bok og lytt.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Klikk på en bok og lytt.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bak en lås: bøkene dine, butikken og innstillingene.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>Les en historie sammen</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>Trykk på en bok og deretter på spill av. Dino leser høyt og lyser opp hver setning.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino åpnet boken. «Det var en gang…»</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>Les den med din stemme</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Ta opp én figur om gangen, eller hele sider. Barnet ditt kan spille den av når som helst.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>Vis introduksjonen igjen</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klar for barnet mitt</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Voksenmodus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
@@ -326,10 +362,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyder</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene sier av og til «Nøff!» eller «Bæ!», i alle bøker</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversettelsespakken for {0}…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Hvilke språk skal historiene være på?</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Velg opptil to til. Barnet ditt kan bytte mens det leser.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Appspråk</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Hopp over, bare {0}</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Tre valgt. Fjern en hake for å velge en annen.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Historiespråk</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Barnet ditt kan bytte mellom disse mens det leser. Opptil tre.</value></data>

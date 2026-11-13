@@ -1,0 +1,97 @@
+# Slice 362 (onboarding mock frames N2, N4a, N4b, N4c): a family with two story languages. Step 2 ticks Swedish; the grown-up unticks The Three Little Pigs and picks The Gingerbread Man, so the demo page is Gingerbread page 3.
+# The listen step then plays the page in English, the language bar shows both languages, the bubble and the amber pulse point at Swedish once English ends (Continue still dim), and tapping Swedish plays the same page again and wakes Continue.
+# Shots: shot-N4a-two-languages, shot-N4b-bubble, shot-N4c-second-language. The flow stops at the voice step (the full path is onboarding-phone.yaml).
+# Against a build with no language bar the OnboardingLanguage-sv id never shows, so this flow fails there.
+# layout-check
+# expect-log: HOOK test-store ok ok
+# expect-log: [Onboarding] listen enter kind=Listen page=3 languages=en,sv
+# expect-log: [Onboarding] listen page-ended stage=PointAtSecond continue=False
+# expect-log: [Onboarding] listen language=sv stage=Other continue=True
+appId: uk.sirous.dinoreader.dbg
+name: First run with two story languages, the language bar and the bubble
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+# Swedish is the language the test store lists a pre-made audio pack in (for The Gingerbread Man).
+- tapOn:
+    id: StoryLanguageRow-sv
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+# Pigs is card 0 (ticked at the start): unticked; Gingerbread (card 2) and card 3 are ticked.
+- tapOn:
+    id: FirstBookCard-0
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBookCard-2
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBookCard-3
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+# N4a: the page plays in English; the bar holds both languages and Continue is dim.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- assertVisible:
+    id: OnboardingLanguage-en
+- assertVisible:
+    id: OnboardingLanguage-sv
+- assertVisible: "Every character has its own voice, and Dino reads with feeling."
+- takeScreenshot: shot-N4a-two-languages
+# N4b: English ended: the bubble points at Swedish.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingBubble
+    timeout: 90000
+- assertVisible: "Now tap .* to hear the same page."
+- assertVisible: "That was English. Now hear the same page in your other language."
+- takeScreenshot: shot-N4b-bubble
+# N4c: Swedish plays the same page, the bubble goes, Continue wakes.
+- tapOn:
+    id: OnboardingLanguage-sv
+    waitToSettleTimeoutMs: 800
+- assertNotVisible:
+    id: OnboardingBubble
+- assertVisible: "The same voices, now in .*"
+- takeScreenshot: shot-N4c-second-language
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: OnboardingVoice
+    commands:
+      - tapOn:
+          id: OnboardingContinue
+          optional: true
+          waitToSettleTimeoutMs: 1500
+- assertVisible: "Record Granny’s lines"

@@ -264,6 +264,8 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 			_tickOrder.Add(id);
 		}
 
+		TickTheDefault();
+
 		_loaded = true;
 		_offline = false;
 		BuildCards();
@@ -274,6 +276,28 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	}
 
 	private int _shelfCount;
+	private bool _defaultTicked;
+
+	// Slice 362, Decision 3 (mock N3): The Three Little Pigs starts ticked, once; the grown-up can untick it, and a reload of the list (the offline retry) never ticks it again.
+	private void TickTheDefault()
+	{
+		if (_defaultTicked)
+		{
+			return;
+		}
+
+		if (!_items.Any(item => string.Equals(item.Id, OnboardingDemo.ThreeLittlePigsId, StringComparison.OrdinalIgnoreCase)))
+		{
+			return; // a partial first load: the Pigs are not listed yet, so the flag stays and a later load ticks them
+		}
+
+		_defaultTicked = true;
+		if (_ticked.Count == 0)
+		{
+			_ticked.Add(OnboardingDemo.ThreeLittlePigsId);
+			_tickOrder.Add(OnboardingDemo.ThreeLittlePigsId);
+		}
+	}
 
 	private async Task ReadShelfAsync()
 	{
@@ -492,6 +516,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 
 		_finished = true;
+		OnboardingState.Begin(OnboardingStep.Listen); // the next step is saved before the gate clears: a kill in between resumes on the listen step, never the plain gallery
 		FirstBooksGate.Pending = false;
 		LogState("done");
 		try

@@ -38,8 +38,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
-	private bool _introOpening;
-	private bool _introGateDeclined;
 	private readonly GrownUpMode _mode;
 	private readonly StoryActions _actions;
 	private readonly StarterStories _starters;
@@ -409,12 +407,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ApplyMode();
 		SyncTabViews();
 		ShowScreen();
-		if (Window is { } window)
-		{
-			window.Resumed -= OnWindowResumed;
-			window.Resumed += OnWindowResumed;
-		}
-
+		_ = OnboardingRoute.DeleteAbandonedTryAsync(_services); // Slice 362: a recorded try left behind (setup abandoned, or an earlier delete failed) is deleted now, under the store's one lock
 		_ = CleanOwnBooksAsync(); // started on its own, so a failing starter install or refresh never keeps it from running
 		try
 		{
@@ -422,7 +415,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			await _starters.InstallOnceAsync();
 			_pageAppeared = true; // only now may a check-only trigger build a first shelf
 			await RequestShelfRefresh(true); // forced on every appearing, so a stale shelf heals here
-			await ResumeIntroAsync();
+			await ResumeTourAsync();
 			await ReopenSheetAfterRecordAsync(reopenSheetFor);
 		}
 		catch (Exception ex)
@@ -457,59 +450,71 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// The first-run intro (Slice 155) opens on top of the gallery: right after "See what Dino can do", after a restart mid-intro (its step is
-	// saved), and after leaving the app popped it. It is not pushed twice.
-	private async Task ResumeIntroAsync()
+	// Slice 362 (mock N8a to N10): the last step of the first run is the corner tour, a layer over this page. It starts when onboarding's saved step is the corner (after the voice step, or after a restart on the tour);
+	// the corner is open behind it (the grown-up is the one setting up). A tour that already shows is not started twice.
+	private async Task ResumeTourAsync()
 	{
-		if (!IntroState.InProgress || _introOpening || _introGateDeclined || Navigation.ModalStack.Any(p => p is NavigationPage { RootPage: IntroWizardPage }))
+		if (OnboardingState.Step != OnboardingStep.Corner || _tour is not null || _tourStarting || _tourGateDeclined)
 		{
 			return;
 		}
 
-		_introOpening = true;
+		_tourStarting = true; // a second appearing while the gate or the delay is open must not start a second tour
 		try
 		{
-			// A fresh start comes from the first-run page, which already entered grown-up mode. Kids' mode here means the app was
-			// left mid-intro and reopened, so a child may be holding it: the gate comes first.
+			// A fresh start from the voice step has entered grown-up mode already. Kids' mode here means the app was left on the tour and relaunched, so a child may be holding it: the gate comes first.
 			if (!_mode.IsGrownUp && !await _gate.RequestAsync(Navigation))
 			{
-				_introGateDeclined = true;
+				_tourGateDeclined = true; // asked again when a grown-up enters through the pill
 				return;
 			}
 
-			var intro = _services.GetRequiredService<IntroWizardPage>();
-			await intro.PresentAsync(Navigation, firstRun: true);
-		}
-		catch (Exception ex)
-		{
-			// A bad saved step must never crash-loop the app: drop it and carry on with the gallery.
-			Debug.WriteLine($"Dino Reader could not resume the intro: {ex}");
-			DinoFallbacks.Report(FallbackArea.Config, FallbackReason.IntroStateReset); // Slice 273 part D: the saved intro step is cleared and progress is lost
-			IntroState.Clear();
+			_mode.Enter();
+			await Task.Delay(TourStartDelay); // the corner's chrome is laid out first: the tour reads where the tabs are
+			if (_tour is null)
+			{
+				BeginTour();
+			}
 		}
 		finally
 		{
-			_introOpening = false;
+			_tourStarting = false;
 		}
 	}
 
-	// A declined gate asks again only after the app comes back (not when the gate's own modal closes, which re-fires OnAppearing).
-	private void OnWindowResumed(object? sender, EventArgs e)
+	private bool _tourStarting;
+	private bool _tourGateDeclined;
+
+	private void BeginTour()
 	{
-		_introGateDeclined = false;
-		_ = ResumeIntroAsync();
+		var tour = new CornerTour(tab => _tabs.TabView(tab), () => _corner.Pill, () => _shelfHeader.GrownUps, tab => _mode.SelectTab(tab), () => _mode.Leave(), FinishTour);
+		Grid.SetRowSpan(tour, GalleryRoot.RowDefinitions.Count);
+		Grid.SetColumnSpan(tour, GalleryRoot.ColumnDefinitions.Count);
+		GalleryRoot.Children.Add(tour);
+		_tour = tour;
+		tour.Begin();
 	}
+
+	// Start reading: onboarding is over, every later launch opens on the shelf.
+	private void FinishTour()
+	{
+		if (_tour is { } tour)
+		{
+			GalleryRoot.Children.Remove(tour);
+			_tour = null;
+		}
+
+		OnboardingRoute.Finish(_services);
+	}
+
+	private CornerTour? _tour;
+	private static readonly TimeSpan TourStartDelay = TimeSpan.FromMilliseconds(400);
 
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
 		_appeared = false;
 		SyncTabViews();
-		if (Window is { } window)
-		{
-			window.Resumed -= OnWindowResumed;
-		}
-
 		CancelSheetCount();
 		_mode.PropertyChanged -= OnModeChanged;
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
@@ -590,13 +595,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			_settingsTab?.Reset(); // the next visit to the corner starts at the Settings list
 			CloseReorder("left grown-up mode"); // Slice 264: leaving grown-up mode cancels the reorder mode; nothing was saved
 			BookInfo.Dismiss(); // also refreshes the tiles when a switch was saved
-		}
-
-		if (_mode.IsGrownUp)
-		{
-			// A grown-up got in (settings gate): the saved intro may be offered again.
-			_introGateDeclined = false;
-			_ = ResumeIntroAsync();
 		}
 	});
 
@@ -1122,10 +1120,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 	// Slice 235 part B: the shelf answers the Windows window's keyboard. Esc closes the book's options sheet while it is open; on the corner it goes back to the child's shelf (Slice 325 part A); on the shelf it asks
 	// "Close Dino Book Reader?" (part C4).
-	DinoScreen IDinoKeyTarget.Screen => _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : _mode.IsGrownUp ? DinoScreen.Corner : DinoScreen.Shelf;
+	DinoScreen IDinoKeyTarget.Screen => _tour is { IsActive: true } ? DinoScreen.FirstBooks : _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : _mode.IsGrownUp ? DinoScreen.Corner : DinoScreen.Shelf;
 
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
 	{
+		if (_tour is { IsActive: true })
+		{
+			// Slice 362 (Windows): Enter is the card's main button; Esc and Space do nothing while the tour shows (it reports DinoScreen.FirstBooks, so Enter is PickContinue)
+			return action == DinoKeyAction.PickContinue ? _tour.Advance() : action is DinoKeyAction.Back or DinoKeyAction.PickToggle;
+		}
+
 		if (_reorder.IsVisible)
 		{
 			return HandleReorderKey(action); // Slice 264: Esc cancels the reorder mode, Enter is Done (Space lifts and drops a book)
@@ -1800,12 +1804,19 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		if (await _gate.RequestAsync(Navigation))
 		{
 			_mode.Enter();
+			_tourGateDeclined = false;
+			await ResumeTourAsync(); // a tour left unfinished by a relaunch opens now that a grown-up is here
 		}
 	}
 
 	// Back from grown-up mode lands on the kids' shelf, not out of the app (Slice 172, Decision 169, mock 94). Slice 325 part B: Back on a Settings sub-page goes up to the list first; on any tab it is the coral pill.
 	protected override bool OnBackButtonPressed()
 	{
+		if (_tour is { IsActive: true })
+		{
+			return true; // Slice 362: Back does nothing during the corner tour
+		}
+
 		if (StoryLanguageMenu.DismissOpen(GalleryRoot))
 		{
 			return true; // the open language list closes first

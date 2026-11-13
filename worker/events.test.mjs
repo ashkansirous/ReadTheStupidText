@@ -320,7 +320,7 @@ test("Dino takes the intro counts about no book, with a closed detail (Slice 155
   assert.notEqual(parseEvent({ ...intro, name: "intro_ended", detail: "finished" }), null);
   assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "places:tried" }), null);
   assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "read:skipped" }), null);
-  for (const detail of ["", "listen:tried", "store", "store:done", "store:tried:x", ":tried"]) {
+  for (const detail of ["", "watch:tried", "store","store:done", "store:tried:x", ":tried"]) {
     assert.equal(parseEvent({ ...intro, name: "intro_step", detail }), null, detail);
   }
   assert.equal(parseEvent({ ...intro, name: "intro_started", detail: "finished" }), null);
@@ -358,6 +358,16 @@ test("the intro counts take the story-languages step (Slice 173)", () => {
   const intro = { ...shelfEvent, book: "none", source: "none", language: "en", name: "intro_step" };
   assert.notEqual(parseEvent({ ...intro, detail: "languages:tried" }), null);
   assert.notEqual(parseEvent({ ...intro, detail: "languages:skipped" }), null);
+});
+
+test("the intro counts take the six steps of the new first run (Slice 362)", () => {
+  const intro = { ...shelfEvent, book: "none", source: "none", language: "en", name: "intro_step" };
+  for (const step of ["language", "story_languages", "books", "listen", "voice", "corner"]) {
+    assert.notEqual(parseEvent({ ...intro, detail: `${step}:tried` }), null, step);
+  }
+  assert.notEqual(parseEvent({ ...intro, detail: "voice:skipped" }), null); // Continue without recording
+  assert.equal(parseEvent({ ...intro, detail: "story:tried" }), null);
+  assert.equal(parseEvent({ ...intro, detail: "voice:done" }), null);
 });
 
 test("the Windows translate switch count needs no source language, but a source outside the list drops a read", () => {
@@ -905,6 +915,7 @@ test("the part D fallbacks (windows, fonts, library, swallowed catches) are acce
     ["window", "dpi_defaulted"], ["font", "font_fallback"], ["config", "intro_state_reset"],
     ["library", "shelf_order_unreadable"], ["library", "story_unreadable"], ["translation", "language_detect_failed"], ["ocr", "page_read_failed"], ["ocr", "ocr_crop_degraded"], ["input", "uia_unavailable"], ["store", "store_failed"], ["config", "preference_unsaved"], ["library", "back_cover_missing"],
     ["premade_audio", "waiting_wifi"], ["premade_audio", "pack_missing_on_play"], // Slice 360
+    ["library", "onboarding_try_not_deleted"], // Slice 362
   ];
   for (const [area, reason] of partD) {
     assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `${area}:${reason}` })?.detail, `${area}:${reason}`, `${area}:${reason}`);

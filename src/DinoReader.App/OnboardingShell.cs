@@ -31,6 +31,7 @@ internal sealed class OnboardingShell : Grid
 	private const double WindowsRightTop = 28;
 	private const double WindowsRightBottom = 28;
 	private const double FootGap = 12;
+	private const double StepBarGap = 14;
 
 	private readonly Border _wash = new() { StrokeThickness = 0, InputTransparent = true, IsVisible = false };
 	private readonly Grid _leftHost = new();
@@ -41,12 +42,12 @@ internal sealed class OnboardingShell : Grid
 	/// <summary>Height of a bar the page floats over the top of the right pane when split (the intro bar, frame OW6); added to the right pane's top padding.</summary>
 	public double RightTopInset { get; set; }
 
-	/// <summary>Builds the shell. <paramref name="centred"/> shells (waits, offline, ready) always show one centred column; <paramref name="right"/> and <paramref name="foot"/> may be null.</summary>
-	public OnboardingShell(View left, View? right, View? foot, bool centred = false)
+	/// <summary>Builds the shell. <paramref name="centred"/> shells (waits, offline) always show one centred column; <paramref name="right"/> and <paramref name="foot"/> may be null; <paramref name="stepBar"/> (Slice 362) goes above the left view.</summary>
+	public OnboardingShell(View left, View? right, View? foot, bool centred = false, OnboardingStepBar? stepBar = null)
 	{
 		_centred = centred;
 		_wash.BackgroundColor = Color.FromRgba(43 / 255.0, 37 / 255.0, 64 / 255.0, WashOpacity);
-		_leftHost.Children.Add(left);
+		_leftHost.Children.Add(stepBar is null ? left : new VerticalStackLayout { Spacing = StepBarGap, Children = { stepBar, left } }); // Slice 362: the step bar leads the left view (a pane's top when split)
 		if (right is not null)
 		{
 			_rightHost.Children.Add(right);
