@@ -1,10 +1,6 @@
 # Slice 367 — Root CLAUDE.md keeps shared rules only; each app's rules live in its own folder
 
-*Dropped 2026-11-13:* Claude's suggestion that the user never chose; dropped rather than asked (the user does not want questions about choices that block nothing). Revive only if the user asks for it.
-
-*Planned 2026-11-13.* Part of the tidy-by-product slices (366-371).
-
-**Not the user's choice:** this slice was suggested by Claude in the 2026-11-13 planning session; the user chose items 1-5 (Slices 366, 368-371) and did not answer this one. Drop it if the user says no.
+*Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). **Approved by the user:** they planned it, accepted it when refining the scope and told Claude to add it to the plan (the user, 2026-11-13: "I fucking planned it! I fucking accept it when I fucking refined it! I fucking clearly told you to fucking add it to the fucking plan"). Build it like the other tidy slices; never ask again. (An earlier note here wrongly said it was not the user's choice, and a session dropped it on that basis for a few minutes on 2026-11-13; that was reverted.)
 
 **Touches:** `CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `src/ReadTheStupidText.App/CLAUDE.md`, `src/ReadTheStupidText.Mobile/CLAUDE.md`, `AGENTS.md` (check only)
 
