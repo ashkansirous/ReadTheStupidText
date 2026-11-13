@@ -341,6 +341,24 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - Listings: Play en-GB and de-DE, App Store en-US and de-DE (version 1.81.1, not submitted) read back identical; Microsoft en-us published (submission 82), `de` committed (submission 1152921505702395457).
 - Microsoft: all 11 add-ons Published (Partner Center API). 2 single-use promo codes for Goldilocks ordered for a free real purchase test.
 
+## First real Windows purchase failed (2026-11-13)
+
+The user bought Good Enough for real (£0.99) in Store-installed Dino 1.124.1 on Windows; the row then showed "Try again".
+- Worker logs (Workers Observability, read with `CF_OBSERVABILITY_READ_TOKEN`, dinoreader secrets): 10:26:53 `GET /api/stories/windows-ticket` 200, 10:26:54 `GET /api/stories/<good-enough>/download?v=8` **403**; again 10:58:01 ticket 200, 10:58:10 download 403 (30 minutes later, so not a Store delay).
+- **Fixed, confirmed 2026-11-13 11:09 UTC:** after the Partner Center change below, the same purchase downloaded: ticket 200, `download?v=8` **200** and its English audio 200 (Worker logs); the user confirmed it in the app and got Microsoft's receipt email. Cause: the Worker's Entra app (client 7b5aa851-6403-4397-9e7e-7e240fb79884) was never added under Partner Center > Dino Book Reader > Services > **Product collections and purchases** (learn.microsoft.com/windows/uwp/monetize/view-and-grant-products-from-a-service, step 2). The user saved it as Client ID 1 on 2026-11-13 ~11:15 UTC; Microsoft says up to 16 hours to take effect.
+- Also found: the user's PC first ran Dino **1.123.3** (no purchase code), so Good Enough showed a free "Get", the download got 402 and the row "Try again"; after the Store update to 1.124.1 the Buy flow appeared. Any Windows user still on 1.123.x or older sees the same. The user said yes (2026-11-13): the live config now has `windows.minVersion` and `latestVersion` 1.124.1 (read back from `/api/app-config`), so older Windows installs show the must-update screen.
+
+### Part E — make purchase failures visible (2026-11-13)
+
+- [x] E1. Worker `worker/entitlements/microsoft.ts`: log (console.warn, shows in Workers Logs) every non-200 Microsoft answer with its status and Microsoft's error `code`/`innererror.code` (never the key, token or any customer id), and on a 200 the item count plus each Active item's `productType`, `status` and `inAppOfferToken`. A 400 is no longer silently "owns nothing" without a log line. Same for a failed token mint in `accessToken` (status and `error` only) and the catch blocks. The gate (`gate.ts`) logs which answer it gave (Allowed / BadProof / CannotVerify / NoProof) with the store name and product id. Unit tests cover that nothing secret is logged.
+- [ ] E2. App (Android, iOS, Windows): a refused paid download (402/403 with its refusal code) and a price lookup that returns no products report a fallback event (`FallbackArea.Store`, new reasons), so analytics shows it; today neither leaves a trace.
+- [ ] E3. App: after a purchase completes, a 403 `purchase-not-valid` within the first minutes is retried (the Store can lag) instead of turning the row into "Try again" at once.
+
+E1 built 2026-11-13 (branch fix/s346-mslog): gate logs one line per fresh store check; Microsoft error codes pass only as short words (id-like values logged as `redacted`); offer tokens outside `uk.sirous.dinoreader.` log as `other`. Review `reviews/s346ml-high.md`: #1-#3 fixed; #4 (no timeout on error-body read), #5 (400 still "owns nothing", outside E1), #6 (failed mints not cached), #9 (style) skipped; #8 skipped (the purchase was the developer's own). Review `reviews/s346ml-medium.md`: all 8 low or nit, skipped (#1-#3 repeat high #4-#6; #4 item lists are at most 100 by `maxPageSize`; #5 one line per fresh check is the point; #6, #7 style and test hygiene); #8 added below.
+- Not yet verified: E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
+
+#### Not yet verified (more, from before Part E)
+
 - The store tab replanning a book to owned after a purchase made while the tab was hidden (no flow exists; add one to `.maestro/dino/`).
 - A plain store download with the switch off has no dedicated flow.
 - `store-products.mjs --apply` against each real store (Apple read routes marked UNVERIFIED).
