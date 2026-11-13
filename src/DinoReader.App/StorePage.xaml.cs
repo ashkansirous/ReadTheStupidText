@@ -33,7 +33,6 @@ public enum StoreRowState
 /// <summary>What one store row binds to (mock frame T2): the entry's labels and its Get / progress / On the shelf state.</summary>
 public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChanged
 {
-	private const double PillWidth = 88;
 	private const int PercentScale = 100;
 
 	private StoreRowState _state = onShelf ? StoreRowState.Downloaded : StoreRowState.Get;
@@ -72,15 +71,21 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public string ProgressHint => StoreText.ProgressHint(Title, ProgressText);
 
-	/// <summary>The Get pill also stands for a failed download, labelled "Try again", and (Slice 346) for a sold book, labelled Buy with the store's own price.</summary>
-	public bool IsGet => _state is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Buy;
+	/// <summary>Slice 364 (mock S1): the brand Get pill, for a book that can be fetched now.</summary>
+	public bool IsGet => _state == StoreRowState.Get;
 
-	public string GetLabel => _state switch
-	{
-		StoreRowState.Failed => AppResources.Store_TryAgain,
-		StoreRowState.Buy => AppResources.Format(AppResources.Store_BuyFor, _price),
-		_ => AppResources.Store_Get,
-	};
+	/// <summary>The sold book's button: the store's own price with a cart glyph (mock S1b); it stays under a 402 strip.</summary>
+	public bool IsBuy => _state == StoreRowState.Buy;
+
+	/// <summary>The tinted Try again button at the end of a failed row (mock S2); a book the store no longer has gets none (mock S3).</summary>
+	public bool IsTryAgain => _state == StoreRowState.Failed && _error?.Kind != HttpErrorKind.NotFound;
+
+	/// <summary>The green Free tag after the length (mock S1): a book that is not sold, whether or not it is on the shelf yet.</summary>
+	public bool IsFree => Item.Sale == BookSale.Free;
+
+	public string GetLabel => AppResources.Store_Get;
+
+	public string TryAgainLabel => AppResources.Store_TryAgain;
 
 	/// <summary>A sold book with nothing to press: the price is unknown (connect to buy) or the purchase waits for approval.</summary>
 	public bool HasNote => _state is StoreRowState.ConnectToBuy or StoreRowState.Waiting;
@@ -91,7 +96,8 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public bool IsOnShelf => _state == StoreRowState.Downloaded;
 
-	public double FillWidth => PillWidth * _progress;
+	/// <summary>0 to 1, for the ring (mock S1c).</summary>
+	public double Progress => _progress;
 
 	public string ProgressText => string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
 
@@ -110,6 +116,11 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public string ErrorText => _error is null ? string.Empty : StoreText.ErrorMessage(_error);
 
+	/// <summary>Mock S3: no answer at all is the calm sand strip; every server answer is the red one.</summary>
+	public bool HasCalmError => HasError && _error?.Kind == HttpErrorKind.Offline;
+
+	public bool HasRedError => HasError && _error?.Kind != HttpErrorKind.Offline;
+
 	/// <summary>The error is part of the state: a call that ends the row in a failed or error-carrying state passes it, every other call passes none and so clears it (Slice 357 review).</summary>
 	public void SetState(StoreRowState state, HttpError? error = null)
 	{
@@ -117,7 +128,37 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 		_progress = 0;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(ErrorText), nameof(IsGet), nameof(GetLabel), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
+	}
+
+	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
+	public Task WhenNotDownloadingAsync(CancellationToken cancel)
+	{
+		if (!IsDownloading || cancel.IsCancellationRequested)
+		{
+			return Task.CompletedTask;
+		}
+
+		var done = new TaskCompletionSource();
+		PropertyChangedEventHandler? handler = null;
+		CancellationTokenRegistration registration = cancel.Register(() =>
+		{
+			PropertyChanged -= handler;
+			done.TrySetResult();
+		});
+		handler = (_, _) =>
+		{
+			if (IsDownloading)
+			{
+				return;
+			}
+
+			PropertyChanged -= handler;
+			registration.Dispose();
+			done.TrySetResult();
+		};
+		PropertyChanged += handler;
+		return done.Task;
 	}
 
 	/// <summary>The store's own formatted price for a sold book (Slice 346); empty otherwise.</summary>
@@ -145,7 +186,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public void SetProgress(double progress)
 	{
 		_progress = Math.Clamp(progress, 0, 1);
-		Raise(nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
 	}
 
 	private void Set<T>(ref T field, T value, string name)
@@ -202,16 +243,31 @@ public static class StoreText
 	public static string ErrorMessage(HttpError error) => error.Kind switch
 	{
 		HttpErrorKind.Offline => AppResources.Store_OfflineTitle,
-		HttpErrorKind.BadRequest => error.Message ?? AppResources.Store_Error_Server,
-		HttpErrorKind.Unauthorized => AppResources.Store_Error_Unauthorized,
-		HttpErrorKind.Forbidden => AppResources.Store_Error_Forbidden,
-		HttpErrorKind.NotFound => AppResources.Store_Error_NotFound,
-		HttpErrorKind.PaymentRequired => AppResources.Store_Error_PaymentRequired,
-		HttpErrorKind.TooManyRequests => AppResources.Store_Error_TooManyRequests,
-		_ => AppResources.Store_Error_Server,
+		HttpErrorKind.BadRequest => error.Message ?? AppResources.Error_Server,
+		HttpErrorKind.NotFound => AppResources.Error_BookGone,
+		HttpErrorKind.PaymentRequired => AppResources.Error_PaymentRequired,
+		HttpErrorKind.TooManyRequests => AppResources.Error_TooManyTries,
+		_ => AppResources.Error_Server, // Slice 364 (mock S2): every 5xx and any other 4xx (401, 403 too) say the server had a problem
 	};
 
 	public static string ProgressHint(string title, string percent) => title + " " + percent;
+
+	/// <summary>The "Bought books before?" card's account line (Slice 364, mock S3): which account brings the books back, in the words for a phone, a tablet or a computer.</summary>
+	public static string BoughtBeforeLine(DevicePlatform platform, DeviceIdiom idiom)
+	{
+		bool phone = idiom == DeviceIdiom.Phone;
+		if (platform == DevicePlatform.iOS || platform == DevicePlatform.MacCatalyst)
+		{
+			return phone ? AppResources.Store_BoughtBefore_Apple : AppResources.Store_BoughtBefore_Apple_Tablet;
+		}
+
+		if (platform == DevicePlatform.WinUI)
+		{
+			return AppResources.Store_BoughtBefore_Microsoft;
+		}
+
+		return phone ? AppResources.Store_BoughtBefore_Google : AppResources.Store_BoughtBefore_Google_Tablet;
+	}
 }
 
 /// <summary>
@@ -242,6 +298,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	private string? _author;
 	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
+	private CancellationTokenSource? _restoreRun; // the one restore run of this visit: a new run or Disappearing cancels it, and a cancelled run never shows a result line (Slice 364 review)
+	private bool _purchaseAreaInFooter;
 	private bool _loaded;
 	private bool _loading;
 
@@ -315,8 +373,11 @@ public partial class StorePage : ContentView, ICornerTabView
 	private void ApplyPurchaseChrome()
 	{
 		bool sold = _client.Sales.SwitchKnownOn;
-		PurchaseActions.IsVisible = sold;
+		BoughtBeforeCard.IsVisible = sold;
+		BoughtBeforeTitle.Text = AppResources.Store_BoughtBeforeTitle;
+		BoughtBeforeLine.Text = StoreText.BoughtBeforeLine(DeviceInfo.Platform, DeviceInfo.Idiom);
 		FooterLabel.Text = sold ? AppResources.Store_FooterPaid : AppResources.Store_Footer;
+		PlacePurchaseArea();
 	}
 
 	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
@@ -402,6 +463,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	/// <summary>The tab went off screen (another tab, the shelf): cover fetches stop. A download keeps running into the library and only a real failure ends it.</summary>
 	public void Disappearing()
 	{
+		RestoreResultView.IsVisible = false; // a restore line is for the visit it ran in
+		_restoreRun?.Cancel(); // a running restore stops fetching and shows no line (its downloads may still finish, as a row's do)
 		_onScreen = false; // the subscription stays: a change while hidden is remembered (check8 #7)
 		_lifetime.Cancel();
 	}
@@ -459,6 +522,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	// Slice 357: the offline panel for no answer, or for no known reason; when the server did answer with an error, the same panel carries that error's own text instead of "You're offline" (Try again stays).
 	private void ShowOffline(HttpError? error)
 	{
+		ApplyPurchaseChrome(); // Restore and Redeem stay reachable on the offline screen too
 		bool serverAnswered = error is { Kind: not HttpErrorKind.Offline };
 		// A server answer is not "you're offline": it has its own icon and title, and the error's text (the translated line, or a 400's own sentence) is the body.
 		OfflineTitleLabel.Text = serverAnswered ? AppResources.Store_ServerErrorTitle : AppResources.Store_OfflineTitle;
@@ -511,6 +575,7 @@ public partial class StorePage : ContentView, ICornerTabView
 
 		// A filter that matches nothing says so, rather than leaving a blank list.
 		NoMatchLabel.IsVisible = _allRows.Count > 0 && _rows.Count == 0;
+		PlacePurchaseArea();
 	}
 
 	// The four chips are built once; a tap only recolours them, so the tapped chip is never torn down inside its own handler.
@@ -659,6 +724,32 @@ public partial class StorePage : ContentView, ICornerTabView
 		{
 			view.IsVisible = view == visible;
 		}
+
+		PlacePurchaseArea();
+	}
+
+	// Slice 364 review: the "Bought books before?" card is the foot of the list while the list shows books, and sits at the bottom of the page in every other state (empty, filtered to nothing, offline),
+	// so Restore and Redeem are always reachable; it stays out of the way while the first load runs.
+	private void PlacePurchaseArea()
+	{
+		bool inList = ListPanel.IsVisible && _rows.Count > 0;
+		PurchaseArea.IsVisible = _client.Sales.SwitchKnownOn && !LoadingView.IsVisible;
+		if (inList == _purchaseAreaInFooter)
+		{
+			return;
+		}
+
+		_purchaseAreaInFooter = inList;
+		if (inList)
+		{
+			StoreRoot.Children.Remove(PurchaseArea);
+			StoryList.Footer = PurchaseArea;
+		}
+		else
+		{
+			StoryList.Footer = null;
+			StoreRoot.Add(PurchaseArea, column: 0, row: 1);
+		}
 	}
 
 	private async void OnGetTapped(object? sender, TappedEventArgs e)
@@ -688,6 +779,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			return;
 		}
 
+		RestoreResultView.IsVisible = false; // a buy changes what the last restore line counted
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
 			_ => _client.Sales.Purchases.BuyAsync(product, _allRows.Select(r => r.Item), CancellationToken.None));
 		await ReplanRowsAsync();
@@ -712,23 +804,95 @@ public partial class StorePage : ContentView, ICornerTabView
 	private async void OnRestorePurchasesClicked(object? sender, EventArgs e)
 	{
 		UiUsage.Tap(UiControls.Restore); // Slice 352
+		RestoreResultView.IsVisible = false; // the last restore's line never outlives the next try, even when the grown-up gate ends it early
 		await _busy.RunAsync(RestorePurchasesAsync);
 	}
 
+	// One owner of a restore: the run's token is linked to this visit, a new run cancels the old one and Disappearing cancels it. The line appears only when the run finishes un-cancelled.
 	private async Task RestorePurchasesAsync()
 	{
-		await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false,
+		_restoreRun?.Cancel();
+		_restoreRun?.Dispose();
+		_restoreRun = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+		CancellationToken cancel = _restoreRun.Token;
+		PurchaseSnapshot snapshot = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false,
 			_ => _client.Sales.Purchases.RestoreAsync(_allRows.Select(r => r.Item), CancellationToken.None));
 		await ReplanRowsAsync();
-		if (_mode.IsGrownUp)
+		if (!_mode.IsGrownUp || cancel.IsCancellationRequested)
 		{
-			await AlertAsync(AppResources.Store_Restored);
+			return;
 		}
+
+		if (!snapshot.Reachable)
+		{
+			ShowRestoreText(AppResources.Store_OfflineTitle, found: false); // the store could not be asked: the sand strip says so rather than "nothing found"
+			return;
+		}
+
+		await PutRestoredBooksOnShelfAsync(cancel);
+	}
+
+	// Slice 364 (mock S3, "They're on the shelf"): every bought book that is not on the shelf is fetched, one at a time with its own progress (a Failed row too); a bought book already arriving is awaited
+	// and counted like the fetched ones. A Get tap that lands while the run is going is awaited, never started twice.
+	private async Task PutRestoredBooksOnShelfAsync(CancellationToken cancel)
+	{
+		List<StoreRow> bought = _allRows.Where(r => StoreRowRestore.NeedsFetch(_client.Sales.PlanFor(r.Item, onShelf: false))).ToList();
+		List<StoreRow> arriving = bought.Where(r => r.State is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Downloading).ToList();
+		int alreadyDownloading = arriving.Count(r => r.IsDownloading);
+		foreach (StoreRow row in arriving)
+		{
+			if (row.IsDownloading)
+			{
+				await row.WhenNotDownloadingAsync(cancel);
+			}
+			else if (row.State is StoreRowState.Get or StoreRowState.Failed)
+			{
+				await GetAsync(row); // re-checked now: a row fetched by hand meanwhile (Downloaded) is not fetched again
+			}
+
+			if (cancel.IsCancellationRequested || !_mode.IsGrownUp)
+			{
+				return; // the grown-up left the tab or the corner: no line for a run nobody is watching
+			}
+		}
+
+		int arrived = arriving.Count(r => r.State == StoreRowState.Downloaded);
+		RestoreLine line = StoreRowRestore.LineFor(arriving.Count - alreadyDownloading, arrived, alreadyDownloading);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
+#endif
+		ShowRestoreLine(line, arrived);
+	}
+
+	private void ShowRestoreLine(RestoreLine line, int arrived)
+	{
+		if (line == RestoreLine.None)
+		{
+			RestoreResultView.IsVisible = false; // every book failed: the rows' own strips say why
+			return;
+		}
+
+		string text = line switch
+		{
+			RestoreLine.RestoredOne => AppResources.Store_Restored_One,
+			RestoreLine.RestoredMany => AppResources.Format(AppResources.Store_Restored_Other, arrived),
+			_ => AppResources.Store_NothingToRestore,
+		};
+		ShowRestoreText(text, found: line is RestoreLine.RestoredOne or RestoreLine.RestoredMany);
+	}
+
+	private void ShowRestoreText(string text, bool found)
+	{
+		RestoreResultLabel.Text = text;
+		RestoreResultView.BackgroundColor = (Color)Resources[found ? "ResultGreenFill" : "StripSandFill"];
+		RestoreResultLabel.TextColor = (Color)Resources[found ? "ResultGreenText" : "StripSandText"];
+		RestoreResultView.IsVisible = true;
 	}
 
 	private async void OnRedeemCodeClicked(object? sender, EventArgs e) => await _busy.RunAsync(async () =>
 	{
 		UiUsage.Tap(UiControls.Pick); // Slice 352: the redeem-code button (the code itself is typed on the store's own screen, never seen here)
+		RestoreResultView.IsVisible = false; // a redeemed code changes what the last restore line counted
 		await _external.RunAsync(_client.Sales.Purchases.RedeemCodeAsync); // the store's own redeem screen
 		await RefreshPurchasesAsync(CancellationToken.None); // a code redeemed there shows as owned without pressing Restore
 		await ReplanRowsAsync();

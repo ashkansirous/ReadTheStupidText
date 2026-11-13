@@ -64,8 +64,11 @@ onFlowComplete:
       text: 'Buy .*\$0\.99.*'
       index: 1
     timeout: 30000
-- assertVisible:
-    id: StoreRestorePurchases
+# The "Bought books before?" card sits in the list's footer (Slice 364), behind the scroll on a long list.
+- scrollUntilVisible:
+    element:
+      id: StoreRestorePurchases
+    timeout: 20000
 - assertVisible:
     id: StoreRedeemCode
 # Buy: the store's sheet is pretended (about 1 s, so the wait overlay shows), then the book downloads like any other and its Buy pill goes away: only the other sold book keeps one.
@@ -80,13 +83,18 @@ onFlowComplete:
     timeout: 60000
 - assertVisible:
     text: 'Buy .*\$0\.99.*'
-# Restore purchases re-reads the store and says so.
+# Restore purchases re-reads the store and says so in the result line under the card (no alert any more, Slice 364): the bought book is already on the shelf, so the sand line says nothing is missing.
+- scrollUntilVisible:
+    element:
+      id: StoreRestorePurchases
+    timeout: 20000
 - tapOn:
     id: StoreRestorePurchases
-- extendedWaitUntil:
-    visible: "Your purchases were checked. Books you own can now be got from the Store."
-    timeout: 15000
-- tapOn: "OK"
+- scrollUntilVisible:
+    element:
+      id: StoreRestoreResult
+    timeout: 30000
+- assertVisible: "No bought books found on this account."
 # Redeem a code opens the store's own screen (pretended: the log line "[Purchases] redeem opened", checked by expect-log above) and the Store tab stays put.
 - tapOn:
     id: StoreRedeemCode
@@ -95,6 +103,11 @@ onFlowComplete:
     visible:
       id: StoreRedeemCode
     timeout: 10000
-# The second sold book is still for sale: one Buy pill remains.
+# The second sold book is still for sale: one Buy pill remains (the list is scrolled to its foot, so scroll back up to it).
+- scrollUntilVisible:
+    element:
+      text: 'Buy .*\$0\.99.*'
+    direction: UP
+    timeout: 20000
 - assertVisible:
     text: 'Buy .*\$0\.99.*'

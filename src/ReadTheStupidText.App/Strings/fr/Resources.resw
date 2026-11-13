@@ -297,20 +297,11 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Ce pack de voix est inutilisable. {0} lit.</value>
   </data>
-  <data name="Pack_Error_Unauthorized" xml:space="preserve">
-    <value>Il faut se connecter pour télécharger ceci.</value>
+  <data name="Error_Server" xml:space="preserve">
+    <value>Un problème est survenu sur le serveur. Veuillez réessayer plus tard.</value>
   </data>
-  <data name="Pack_Error_Forbidden" xml:space="preserve">
-    <value>Vous n’avez pas le droit de télécharger ceci.</value>
-  </data>
-  <data name="Pack_Error_NotFound" xml:space="preserve">
-    <value>Le téléchargement est introuvable.</value>
-  </data>
-  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
-    <value>Trop d’essais. Attendez une minute, puis réessayez.</value>
-  </data>
-  <data name="Pack_Error_Server" xml:space="preserve">
-    <value>Problème de connexion au serveur, veuillez réessayer plus tard</value>
+  <data name="Error_VoiceGone" xml:space="preserve">
+    <value>Cette voix n’est plus disponible.</value>
   </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Le téléchargement a échoué. Réessayez.</value>

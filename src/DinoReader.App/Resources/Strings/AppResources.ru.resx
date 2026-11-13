@@ -182,7 +182,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>Стереть</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Мышью или удерживайте клавишу «Пробел».</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Введите ответ и нажмите Enter</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>Введите ответ и нажмите Enter или щёлкните по ответу</value></data>
   <data name="Key_Space" xml:space="preserve"><value>Пробел</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>Стрелка влево</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Стрелка вправо</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
@@ -361,18 +363,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Купить «{0}» за {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Подключитесь к интернету, чтобы купить</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Ожидает подтверждения</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Чтобы получить эту книгу, нужно войти в аккаунт.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>У вас нет доступа к этой книге.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>Эта книга не найдена.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Сначала нужно купить эту книгу</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Слишком много попыток. Подождите минуту и попробуйте снова.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>Не удаётся подключиться к серверу, повторите попытку позже</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>Сначала нужно купить эту книгу.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>На сервере что-то пошло не так. Повторите попытку позже.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>Слишком много попыток. Подождите минуту и попробуйте снова.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>Этой книги больше нет в магазине.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>Бесплатно</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Уже покупали книги?</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Google, вернутся и на этот телефон.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Google, вернутся и на этот планшет.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Книги, купленные с этим Apple ID, вернутся и на этот телефон.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Книги, купленные с этим Apple ID, вернутся и на этот планшет.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Microsoft, вернутся и на этот компьютер.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>Восстановлена 1 книга. Она на полке.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>Восстановлено книг: {0}. Они на полке.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>В этом аккаунте не найдено купленных книг.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>В магазине возникла проблема</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Восстановить покупки</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Ввести код</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Покупка не удалась. Попробуйте ещё раз.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Некоторые книги стоят немного. Их покупают через аккаунт магазина, и ничего о вас или вашем ребёнке нам не отправляется.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>Ваши покупки проверены. Книги, которые у вас есть, теперь можно получить в магазине.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Ждём ответа магазина…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Проверяем ваши покупки…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>

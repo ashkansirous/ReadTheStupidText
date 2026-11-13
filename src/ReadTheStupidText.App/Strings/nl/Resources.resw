@@ -297,20 +297,11 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Dit stempakket kan niet worden gebruikt. De {0} leest voor.</value>
   </data>
-  <data name="Pack_Error_Unauthorized" xml:space="preserve">
-    <value>Inloggen is nodig om dit te downloaden.</value>
+  <data name="Error_Server" xml:space="preserve">
+    <value>Er ging iets mis op de server. Probeer het later opnieuw.</value>
   </data>
-  <data name="Pack_Error_Forbidden" xml:space="preserve">
-    <value>Je mag dit niet downloaden.</value>
-  </data>
-  <data name="Pack_Error_NotFound" xml:space="preserve">
-    <value>De download is niet gevonden.</value>
-  </data>
-  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
-    <value>Te veel pogingen. Wacht een minuut en probeer het opnieuw.</value>
-  </data>
-  <data name="Pack_Error_Server" xml:space="preserve">
-    <value>Probleem met verbinden met de server, probeer het later opnieuw</value>
+  <data name="Error_VoiceGone" xml:space="preserve">
+    <value>Deze stem is niet meer beschikbaar.</value>
   </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>De download is mislukt. Probeer het opnieuw.</value>

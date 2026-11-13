@@ -184,7 +184,9 @@
   <!-- Slice 235 part B: the Windows window (mouse and keyboard). The "...Click" strings are the "Tap" strings worded for a desktop window. -->
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>With the mouse, or hold the Space bar.</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Type it, then Enter</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>Type it, then Enter, or click the answer</value></data>
   <data name="Key_Space" xml:space="preserve"><value>Space bar</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>Left arrow</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Right arrow</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
@@ -364,18 +366,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Buy {0} for {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connect to the internet to buy</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Waiting for approval</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Signing in is needed to get this book.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>You’re not allowed to get this book.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>This book wasn’t found.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>You need to buy this book first</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Too many tries. Wait a minute, then try again.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>Problem connecting to the server, please retry later</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>You need to buy this book first.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Something went wrong on the server. Please try again later.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>Too many tries. Wait a minute, then try again.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>This book isn’t in the Store any more.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>Free</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Bought books before?</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Books bought with this Google account come back on this phone too.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Books bought with this Google account come back on this tablet too.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Books bought with this Apple ID come back on this phone too.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Books bought with this Apple ID come back on this tablet too.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Books bought with this Microsoft account come back on this computer too.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>1 book restored. It’s on the shelf.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0} books restored. They’re on the shelf.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>No bought books found on this account.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>The store has a problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restore purchases</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Redeem a code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>The purchase didn’t go through. Please try again.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Some books cost a little. They are bought through your store account, and nothing about you or your child is sent to us.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>Your purchases were checked. Books you own can now be got from the Store.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Waiting for the store…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Checking your purchases…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>

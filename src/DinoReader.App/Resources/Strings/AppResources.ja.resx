@@ -182,7 +182,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>消す</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>マウスで、またはスペースキーを押し続けます。</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>入力してから Enter キーを押します</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>入力して Enter キーを押すか、答えをクリックします</value></data>
   <data name="Key_Space" xml:space="preserve"><value>スペースキー</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>左矢印キー</value></data>
   <data name="Key_Right" xml:space="preserve"><value>右矢印キー</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
@@ -361,18 +363,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>{0}を{1}で購入</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>購入するにはインターネットに接続してください</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>承認を待っています</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>この本を入手するにはログインが必要です。</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>この本を入手する権限がありません。</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>この本は見つかりませんでした。</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>先にこの本を購入する必要があります</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>試行回数が多すぎます。1分待ってからもう一度お試しください。</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>サーバーに接続できません。しばらくしてからもう一度お試しください</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>先にこの本を購入する必要があります。</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>サーバーで問題が発生しました。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>試行回数が多すぎます。1分待ってからもう一度お試しください。</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>この本はもうストアにありません。</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>無料</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>以前に本を購入しましたか？</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>この Google アカウントで購入した本は、この電話にも戻ります。</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>この Google アカウントで購入した本は、このタブレットにも戻ります。</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>この Apple ID で購入した本は、この電話にも戻ります。</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>この Apple ID で購入した本は、このタブレットにも戻ります。</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>この Microsoft アカウントで購入した本は、このコンピューターにも戻ります。</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>1冊の本を復元しました。本棚にあります。</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0}冊の本を復元しました。本棚にあります。</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>このアカウントに購入済みの本は見つかりませんでした。</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>ストアに問題が発生しています</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>購入を復元</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>コードを使う</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>購入できませんでした。もう一度お試しください。</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>有料の本もあります。購入はストアのアカウントで行われ、あなたやお子さまの情報は私たちには送られません。</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>購入内容を確認しました。お持ちの本はストアから取り戻せます。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>ストアの応答を待っています…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>購入内容を確認しています…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>

@@ -297,20 +297,11 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Dieses Stimmpaket lässt sich nicht verwenden. Es liest die {0}.</value>
   </data>
-  <data name="Pack_Error_Unauthorized" xml:space="preserve">
-    <value>Zum Herunterladen ist eine Anmeldung nötig.</value>
+  <data name="Error_Server" xml:space="preserve">
+    <value>Auf dem Server ist etwas schiefgelaufen. Bitte versuche es später noch einmal.</value>
   </data>
-  <data name="Pack_Error_Forbidden" xml:space="preserve">
-    <value>Du darfst das nicht herunterladen.</value>
-  </data>
-  <data name="Pack_Error_NotFound" xml:space="preserve">
-    <value>Der Download wurde nicht gefunden.</value>
-  </data>
-  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
-    <value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value>
-  </data>
-  <data name="Pack_Error_Server" xml:space="preserve">
-    <value>Problem bei der Verbindung zum Server, bitte versuche es später noch einmal</value>
+  <data name="Error_VoiceGone" xml:space="preserve">
+    <value>Diese Stimme ist nicht mehr verfügbar.</value>
   </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Der Download ist fehlgeschlagen. Wiederhole ihn, um es noch einmal zu versuchen.</value>

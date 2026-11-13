@@ -28,9 +28,27 @@ public readonly record struct OnboardingShape(OnboardingMode Mode, OnboardingFam
     public bool Split => Mode == OnboardingMode.Split;
 }
 
-/// <summary>The grown-up gate's arrangement: <see cref="Split"/> puts the question left and the answers (or the hold ring) right.</summary>
-/// <remarks>A tablet held upright (frame 137) gets a centred <see cref="Card"/> of <see cref="CardWidth"/> dp with <see cref="KeyHeight"/> dp answers and a <see cref="RingSize"/> dp hold ring; elsewhere those are the phone's 52 and 120.</remarks>
-public readonly record struct GateShape(bool Split, bool Card = false, double CardWidth = 0, double KeyHeight = OnboardingLayout.UprightKeyHeight, double RingSize = OnboardingLayout.PhoneHoldRing, double CardMaxHeight = 0);
+/// <summary>The grown-up gate's arrangement (Slice 363, mock Missing States G1-G3): the phone's bottom sheet, or one centred cream card.</summary>
+public enum GateMode
+{
+    /// <summary>A window under 600 wide: the bottom sheet, as built.</summary>
+    Sheet,
+
+    /// <summary>600 or wider and tall enough: the upright card (G1, G2), 440 wide.</summary>
+    Card,
+
+    /// <summary>600 or wider but short (a phone held sideways): the short card (G3), 470 wide, the ring or keys beside the heading.</summary>
+    ShortCard,
+}
+
+/// <summary>Which of the three arrangements the window gets and how wide the card is.</summary>
+/// <remarks><see cref="CardWidth"/> is 0 for the sheet.</remarks>
+public readonly record struct GateShape(GateMode Mode, double CardWidth = 0)
+{
+    public bool Card => Mode != GateMode.Sheet;
+
+    public bool Short => Mode == GateMode.ShortCard;
+}
 
 /// <summary>One cell of a grid, counted from 0.</summary>
 public readonly record struct GridCell(int Row, int Column);
@@ -178,15 +196,28 @@ public static class OnboardingLayout
     public static double CentredWidth(double width, double sidePadding) =>
         Math.Max(0, Math.Min(CentredColumn, width - (2 * sidePadding)));
 
-    /// <summary>Held sideways the gate splits (question left, answers right, the hold ring where the answers were); upright it is the bottom sheet with 52 dp keys, and a tablet held upright gets a centred card with 80 dp keys. Sideways the layout itself shares the height between the four key rows, each key 40..64 dp.</summary>
+    /// <summary>The upright gate card is 440 wide, the short one 470 (mock G1-G3), never wider than the window less 24 dp each side.</summary>
+    public const double GateCardWidth = 440;
+    public const double GateShortCardWidth = 470;
+    public const double GateCardMargin = 24;
+
+    /// <summary>The upright card is about 460 dp tall on its tallest step; under this height the short card is used so the card fits with room around it.</summary>
+    public const double GateShortBelowHeight = 540;
+
+    /// <summary>Size rule after review: under 540 high is the short card (G3) at any width; else 600 or wider is the card; else the bottom sheet (phone upright).</summary>
     public static GateShape Gate(double width, double height)
     {
-        if (LandscapeLayout.IsTabletPortrait(width, height))
+        if (height < GateShortBelowHeight)
         {
-            return new GateShape(false, true, TabletCardLayout.CardWidth(width, TabletCardKind.Gate), TabletCardLayout.GateKeyHeight, TabletCardLayout.GateHoldRing, TabletCardLayout.CardMaxHeight(height));
+            return new GateShape(GateMode.ShortCard, Math.Max(0, Math.Min(GateShortCardWidth, width - (2 * GateCardMargin))));
         }
 
-        return new GateShape(LandscapeLayout.IsLandscape(width, height));
+        if (width >= SplitFromWidth)
+        {
+            return new GateShape(GateMode.Card, Math.Max(0, Math.Min(GateCardWidth, width - (2 * GateCardMargin))));
+        }
+
+        return new GateShape(GateMode.Sheet);
     }
 
     /// <summary>Where the item at <paramref name="index"/> goes in a grid of <paramref name="columns"/> columns, filled row by row.</summary>

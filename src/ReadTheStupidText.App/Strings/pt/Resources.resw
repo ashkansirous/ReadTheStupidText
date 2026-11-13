@@ -297,20 +297,11 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Este pacote de voz não pode ser usado. Lê {0}.</value>
   </data>
-  <data name="Pack_Error_Unauthorized" xml:space="preserve">
-    <value>É preciso iniciar sessão para baixar isto.</value>
+  <data name="Error_Server" xml:space="preserve">
+    <value>Algo deu errado no servidor. Tente novamente mais tarde.</value>
   </data>
-  <data name="Pack_Error_Forbidden" xml:space="preserve">
-    <value>Você não tem permissão para baixar isto.</value>
-  </data>
-  <data name="Pack_Error_NotFound" xml:space="preserve">
-    <value>O download não foi encontrado.</value>
-  </data>
-  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
-    <value>Muitas tentativas. Aguarde um minuto e tente novamente.</value>
-  </data>
-  <data name="Pack_Error_Server" xml:space="preserve">
-    <value>Problema ao conectar ao servidor, tente novamente mais tarde</value>
+  <data name="Error_VoiceGone" xml:space="preserve">
+    <value>Esta voz não está mais disponível.</value>
   </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>O download falhou. Tente novamente.</value>

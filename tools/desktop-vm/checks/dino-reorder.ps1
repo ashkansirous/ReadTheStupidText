@@ -87,11 +87,17 @@ function Enter-GrownUpMode {
     Invoke-Uia (Wait-Until { Find-Visible 'GalleryGrownUps' } 15 'no For grown-ups button')
     Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' | Out-Null
     $sum = Invoke-GateHold -FindRing { Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' } -PackageName $PackageName -HoldMs $HoldMs
-    foreach ($ch in ([string]$sum).ToCharArray()) {
-        Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "no keypad key $ch")
-        Start-Sleep -Milliseconds 300
+    # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
+    $answerKey = Find-UiaExact (Get-DinoWindow) ([string]$sum) 'Button'
+    if ($answerKey) {
+        Invoke-Uia $answerKey
+    } else {
+        foreach ($ch in ([string]$sum).ToCharArray()) {
+            Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "no keypad key $ch")
+            Start-Sleep -Milliseconds 300
+        }
+        Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'no OK key')
     }
-    Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'no OK key')
     Wait-Until { Find-Visible 'GalleryDone' } 15 'grown-up mode did not open' | Out-Null
 }
 

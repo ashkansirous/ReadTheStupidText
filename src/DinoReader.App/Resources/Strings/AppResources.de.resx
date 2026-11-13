@@ -184,7 +184,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>Löschen</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Mit der Maus oder die Leertaste gedrückt halten.</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Eintippen, dann Enter drücken</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>Eintippen, dann Enter drücken, oder die Antwort anklicken</value></data>
   <data name="Key_Space" xml:space="preserve"><value>Leertaste</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>Pfeil links</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Pfeil rechts</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
@@ -362,18 +364,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>{0} für {1} kaufen</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Zum Kaufen mit dem Internet verbinden</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Wartet auf Genehmigung</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Zum Holen dieses Buchs ist eine Anmeldung nötig.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Du darfst dieses Buch nicht holen.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>Dieses Buch wurde nicht gefunden.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Du musst dieses Buch zuerst kaufen</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>Problem bei der Verbindung zum Server, bitte versuche es später noch einmal</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>Du musst dieses Buch zuerst kaufen.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Auf dem Server ist etwas schiefgelaufen. Bitte versuche es später noch einmal.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>Dieses Buch ist nicht mehr im Shop.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>Kostenlos</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Schon früher Bücher gekauft?</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Mit diesem Microsoft-Konto gekaufte Bücher kommen auch auf diesem Computer zurück.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>1 Buch wiederhergestellt. Es steht im Regal.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0} Bücher wiederhergestellt. Sie stehen im Regal.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>Auf diesem Konto wurden keine gekauften Bücher gefunden.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Der Shop hat ein Problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Käufe wiederherstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Code einlösen</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Der Kauf hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Manche Bücher kosten ein bisschen. Sie werden über dein Store-Konto gekauft, und nichts über dich oder dein Kind wird an uns gesendet.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>Deine Käufe wurden geprüft. Bücher, die dir gehören, kannst du jetzt im Store holen.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Warte auf den Store …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Käufe werden geprüft …</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bücher, die aus dem Store zurückkommen</value></data>

@@ -183,7 +183,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>Slett</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Med musen, eller hold inne mellomromstasten.</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Skriv det, og trykk Enter</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>Skriv det, og trykk Enter, eller klikk på svaret</value></data>
   <data name="Key_Space" xml:space="preserve"><value>Mellomromstast</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>Venstrepil</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Høyrepil</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
@@ -360,18 +362,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Kjøp {0} for {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Koble til internett for å kjøpe</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Venter på godkjenning</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Du må logge inn for å hente denne boka.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Du har ikke lov til å hente denne boka.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>Fant ikke boka.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Du må kjøpe denne boka først</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>For mange forsøk. Vent ett minutt og prøv igjen.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>Problem med å koble til serveren, prøv igjen senere</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>Du må kjøpe denne boka først.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Noe gikk galt på serveren. Prøv igjen senere.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>For mange forsøk. Vent ett minutt og prøv igjen.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>Denne boka er ikke i butikken lenger.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>Gratis</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Har du kjøpt bøker før?</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Bøker kjøpt med denne Google-kontoen kommer også tilbake på denne telefonen.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Bøker kjøpt med denne Google-kontoen kommer også tilbake på dette nettbrettet.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Bøker kjøpt med denne Apple-ID-en kommer også tilbake på denne telefonen.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Bøker kjøpt med denne Apple-ID-en kommer også tilbake på dette nettbrettet.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Bøker kjøpt med denne Microsoft-kontoen kommer også tilbake på denne datamaskinen.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>1 bok gjenopprettet. Den står i hyllen.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0} bøker gjenopprettet. De står i hyllen.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>Fant ingen kjøpte bøker på denne kontoen.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Butikken har et problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Gjenopprett kjøp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Løs inn en kode</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Kjøpet gikk ikke gjennom. Prøv igjen.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Noen bøker koster litt. De kjøpes med butikkontoen din, og ingenting om deg eller barnet ditt sendes til oss.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>Kjøpene dine er sjekket. Bøker du eier, kan nå hentes i butikken.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Sjekker kjøpene dine …</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>

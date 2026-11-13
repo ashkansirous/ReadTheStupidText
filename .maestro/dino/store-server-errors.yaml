@@ -1,12 +1,12 @@
 # Slice 357: a refused Get in the Store tab says why, under the book's row, in the app's language. The Debug test store (mode status402|status404|status429|status503) refuses every book download with that
 # HTTP status and no body, as the Worker does; the pretend store (fake-purchases) makes one test book owned but not on the shelf, so its row shows the Get pill.
-# 404 shows "wasn't found", 429 "Too many tries", 503 the general "Problem connecting to the server" (402 is in store-payment-required.yaml). After the test store answers again,
-# Try again puts the book on the shelf and the line is gone. Against the old behaviour (a failed row showed only "Try again") every text assert below fails.
+# 429 shows "Too many tries", 503 the general "Something went wrong on the server" (402 and 404 are in store-payment-required.yaml: a 404 leaves the row with no button, so nothing can follow it). After the test
+# store answers again, Try again puts the book on the shelf and the strip is gone. Slice 364: the strip sits inside the book's card, with the tinted Try again button at the end of the row.
+# Against the old behaviour (a failed row showed only "Try again") every text assert below fails.
 # Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it.
-# expect-log: HOOK test-store ok status404
+# expect-log: HOOK test-store ok status429
 # expect-log: HOOK fake-purchases ok on paid=1 owned=1
 # expect-log: HOOK skip-first-run ok
-# expect-log: [StoreError] row kind=NotFound
 # expect-log: [StoreError] row kind=TooManyRequests
 # expect-log: [StoreError] row kind=ServerError
 appId: uk.sirous.dinoreader.dbg
@@ -51,7 +51,7 @@ onFlowComplete:
     stopApp: false
     arguments:
       cmd: test-store
-      mode: status404
+      mode: status429
 - launchApp:
     stopApp: false
     arguments:
@@ -64,21 +64,9 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: "Get"
     timeout: 30000
-# 404: the row offers Try again with its own line.
+# 429: the strip says so inside the card and the row offers Try again.
 - tapOn:
     text: "Get"
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible: "This book wasn.t found\\."
-    timeout: 30000
-# 429
-- launchApp:
-    stopApp: false
-    arguments:
-      cmd: test-store
-      mode: status429
-- tapOn:
-    text: "Try again"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible: "Too many tries.*"
@@ -93,7 +81,7 @@ onFlowComplete:
     text: "Try again"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible: "Problem connecting to the server.*"
+    visible: "Something went wrong on the server.*"
     timeout: 30000
 # The test store answers again: Try again downloads the book and the line is gone.
 - launchApp:
@@ -107,4 +95,4 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: "On the shelf"
     timeout: 60000
-- assertNotVisible: "Problem connecting to the server.*"
+- assertNotVisible: "Something went wrong on the server.*"
