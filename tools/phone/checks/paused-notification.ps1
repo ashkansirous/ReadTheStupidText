@@ -6,7 +6,7 @@
   Needs an Android 15 phone (the dataSync foreground service time limit). Same set-up as notification-text: a verified aside copy of the installed packs is made, the pack folder is MOVED (never
   deleted) so the app has to download it, the Debug throttle marker makes that download slow. Then: 1. the dataSync timeout is lowered to 30 s (`device_config put activity_manager
   data_sync_fgs_timeout_duration 30000`) and the time limit switched on for the dev package (`am compat enable FGS_INTRODUCE_TIME_LIMITS`); 2. the dev app is launched and `PACKDL start` must be
-  logged; 3. the app is sent to the background (HOME); 4. once `PACKDL service timeout` is logged (the time limit stopped the service) the dev app's network is blocked (`cmd netpolicy add restrict-background-blacklist <uid>`, never wifi/data: the adb link is wireless) so the
+  logged; 3. the app is sent to the background (HOME); 4. once `PACKDL service timeout` is logged (the time limit stopped the service) the dev app's network is blocked (`cmd netpolicy add restrict-background-blacklist <uid>`, never wifi/data: over wireless adb a network cut drops the link; the ban stands over USB too) so the
   run ends unfinished; 5. `PACKDL service paused-notified` must then be logged (the notice is posted where the run ends, never at the timeout itself); 6. the
   notice must be in `dumpsys notification --noredact`: title "Download paused. Tap to finish.", text naming the language and the size "(<n> MB)" (verbatim in the result);
   7. the network is switched back on, and tap-to-finish: the notice's content intent is the app's launcher intent, so it is fired with `am start` of the launcher activity (not a physical tap on the shade: SystemUI is not driven here);
@@ -117,7 +117,7 @@ function Reset-TimeLimit {
     } catch { Write-Host "   WARNING: could not reset the dataSync timeout: $($_.Exception.Message)"; return $false }
 }
 
-# Only the dev app's network is cut (never wifi/data: the adb link is wireless, Slice 208 rule). The cut is made after the time limit fired so the run ends unfinished; always lifted in the finally block.
+# Only the dev app's network is cut (never wifi/data: over wireless adb a network cut drops the link; the ban stands over USB too, Slice 208 rule). The cut is made after the time limit fired so the run ends unfinished; always lifted in the finally block.
 # Slice 225 item 15: with no uid (Get-PackageUid threw before it was read) `netpolicy remove ... 0` must never run. Round 3: that is NOT a restore: it returns $false ("not restored (no uid)"),
 # so the device-side heal is not cancelled and a leftover block for the real uid from a dead run is still cleared by it. $true when the block is off.
 function Set-Network([bool]$On) {

@@ -87,7 +87,7 @@ function Get-CheckArguments([string]$Name, [string]$Phone, [string]$App, [int]$R
 }
 
 # Slice 225 item 2: a check that changes device-wide state (a setting the user sees without opening the app) must start the device-side restore first, so a lost link heals by itself.
-# Whole-device network changes (svc wifi/data, airplane mode) are never allowed in a check at all: the adb link is wireless.
+# Whole-device network changes (svc wifi/data, airplane mode) are never allowed in a check at all: over wireless adb a network cut drops the link; the ban stands over USB too.
 $script:DeviceWideChangePattern = '(?i)(\bsvc\W+(wifi|data)\b|airplane|device_config\W+put\b|compat\W+enable\b|settings\W+put\W+global\b|\bnetpolicy\b)'
 $script:WholeDeviceNetworkPattern = '(?i)(\bsvc\W+(wifi|data)\b|airplane)'
 $script:DeviceRestoreCall = 'Start-DeviceRestore'
@@ -103,7 +103,7 @@ function Test-CheckRestoresFirst([string]$Name, [string]$Source) {
     $code = Remove-PowerShellComments $Source
     $change = [regex]::Match($code, $script:DeviceWideChangePattern)
     if (-not $change.Success) { return $null }
-    if ($change.Value -match $script:WholeDeviceNetworkPattern) { return "${Name}: '$($change.Value)' changes the whole device's network, which would cut the wireless adb link; cut the dev app's network instead (Set-AppNetworkBlocked)" }
+    if ($change.Value -match $script:WholeDeviceNetworkPattern) { return "${Name}: '$($change.Value)' changes the whole device's network, which over wireless adb would cut the link (the ban stands over USB too); cut the dev app's network instead (Set-AppNetworkBlocked)" }
     $restore = $code.IndexOf($script:DeviceRestoreCall, [StringComparison]::Ordinal)
     if ($restore -lt 0 -or $restore -gt $change.Index) { return "${Name}: changes device-wide state ('$($change.Value)') without calling $($script:DeviceRestoreCall) before it" }
     return $null

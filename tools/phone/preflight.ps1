@@ -2,7 +2,7 @@
 .SYNOPSIS
   One go/no-go check before an unattended run on the real phone (Slice 206).
 .DESCRIPTION
-  Prints one line per check and ends with `PREFLIGHT GO` (exit 0) or `PREFLIGHT NO-GO: <reasons>` (exit 1). Not connected over wireless adb prints the pairing ask and exits 2.
+  Prints one line per check and ends with `PREFLIGHT GO` (exit 0) or `PREFLIGHT NO-GO: <reasons>` (exit 1). Not connected (USB or wireless adb) prints the pairing ask and exits 2.
   Checks: connected, charging, screen lock None or Swipe (a PIN, pattern or password is NO-GO: ask the user to set Screen lock to None or Swipe; a lock state that
   cannot be read, or reads contradictory, is NO-GO too: GO needs a positive "no secure keyguard" read made in this run), stay-awake-while-charging (the bit of the charger in use must be set in stay_on_while_plugged_in: 1 AC, 2 USB, 4 wireless; with -Fix a missing bit is fixed by setting 7, it stays on), free space on /data (warn under 2 GB, NO-GO under 0.5 GB), the .dbg dev app(s)
   installed with their versionName (with -App both a missing app is a warning, and NO-GO only when neither is installed), and the phone lease (held by
@@ -13,7 +13,7 @@
 #>
 param(
     [string]$Serial,
-    [switch]$AllowEmulator,   # Slice 308: run-checks.ps1 passes it for a named emulator serial; run by hand, preflight stays wireless-only
+    [switch]$AllowEmulator,   # Slice 308: run-checks.ps1 passes it for a named emulator serial; run by hand, preflight never takes an emulator
     [switch]$Fix,
     [switch]$Restore,   # Slice 236 item 6: writes stay_on_while_plugged_in back to the value -Fix (or a lease take) recorded, then exits; no checks run
     [ValidateSet('rtst', 'dino', 'both')][string]$App = 'both'
@@ -136,11 +136,11 @@ function Invoke-RestoreMode([string]$Phone) {
 }
 
 $phone = $null
-try { $phone = Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+try { $phone = Find-Phone $Serial -AllowEmulator:$AllowEmulator } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if ($Restore) { exit (Invoke-RestoreMode $phone) }
 Write-Host "Preflight for $phone"
-Write-Check 'connection' 'OK' $(if ((Get-DeviceKind $phone) -eq $script:KindEmulator) { 'emulator (named by run-checks)' } else { 'wireless adb' })
+Write-Check 'connection' 'OK' $(if ((Get-DeviceKind $phone) -eq $script:KindEmulator) { 'emulator (named by run-checks)' } elseif ((Get-DeviceKind $phone) -eq $script:KindUsb) { 'USB' } else { 'wireless adb' })
 Invoke-Check 'charging' { Test-Charging $phone }
 Invoke-Check 'screen lock' { Test-ScreenLock $phone }
 Invoke-Check 'stay awake' { Test-StayAwake $phone }

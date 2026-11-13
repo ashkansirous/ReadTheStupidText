@@ -195,16 +195,28 @@ Assert-Equal 'restore deletes the timeout' $true ($restore -like '*device_config
 Assert-Equal 'restore resets the compat flag' $true ($restore -like '*am compat reset FGS_INTRODUCE_TIME_LIMITS uk.sirous.rtst.dbg*')
 Assert-Equal 'paused check never calls svc' $false ((Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw) -match "'svc'")
 
-# ---- Slice 308: run-checks.ps1 -Serial emulator-NNNN. The emulator is accepted only with -AllowEmulator (run-checks passes it) and only when named; every other script stays wireless-only.
+# ---- Slice 308: run-checks.ps1 -Serial emulator-NNNN. The emulator is accepted only with -AllowEmulator (run-checks passes it) and only when named; every other script never takes an emulator.
+$savedKnown = $env:RTST_PHONE_SERIAL; $env:RTST_PHONE_SERIAL = $null   # the known phone is the S21 constant in every block below
 $emu = [pscustomobject]@{ Serial = 'emulator-5554'; State = 'device' }
 $wifi = [pscustomobject]@{ Serial = '192.168.1.20:41234'; State = 'device' }
-$usb = [pscustomobject]@{ Serial = 'R5CR1234ABC'; State = 'device' }
+$usb = [pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'device' }   # the known S21 over USB
 $offlineEmu = [pscustomobject]@{ Serial = 'emulator-5556'; State = 'offline' }
 Assert-Equal 'named emulator is accepted with -AllowEmulator' 'emulator-5554' (Select-ReadyPhoneSerial @($usb, $emu, $wifi) 'emulator-5554' $true)
 Assert-Equal 'named emulator is refused without -AllowEmulator' $null (Select-ReadyPhoneSerial @($usb, $emu, $wifi) 'emulator-5554')
-Assert-Equal 'no serial: the wireless phone, never the emulator' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($emu, $usb, $wifi) '' $true)
+Assert-Equal 'no serial: the USB phone first, never the emulator' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($emu, $wifi, $usb) '' $true)
+Assert-Equal 'USB only -> USB serial' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($usb))
+Assert-Equal 'USB + wireless of the same phone -> USB' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($wifi, $usb))
+$mdns = [pscustomobject]@{ Serial = 'adb-R3CR30FQT0V-xYz._adb-tls-connect._tcp'; State = 'device' }
+Assert-Equal 'USB + mDNS wireless -> USB' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($mdns, $usb))
+Assert-Equal 'wireless only -> wireless' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($emu, $wifi))
+Assert-Equal 'emulator only -> none' $null (Select-ReadyPhoneSerial @($emu))
+Assert-Equal 'emulator only, allowed but not named -> none' $null (Select-ReadyPhoneSerial @($emu) '' $true)
+Assert-Equal 'an offline USB phone is not ready' $null (Select-ReadyPhoneSerial @([pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'offline' }))
+Assert-Equal 'named wireless serial skips the USB phone' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($usb, $wifi) '192.168.1.20:41234')
+Assert-Equal 'kind: USB serial' 'Usb' (Get-DeviceKind 'R3CR30FQT0V')
+Assert-Equal 'USB kind gets the phone gates' $true (Get-DeviceKindPlan 'Usb').ChargerGate
 Assert-Equal 'no serial and only an emulator: nothing' $null (Select-ReadyPhoneSerial @($emu) '' $true)
-Assert-Equal 'unknown (USB) serial is rejected even when named' $null (Select-ReadyPhoneSerial @($usb, $wifi) 'R5CR1234ABC' $true)
+Assert-Equal 'a named USB serial is accepted' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($usb, $wifi) 'R3CR30FQT0V' $true)
 Assert-Equal 'a named emulator that is not connected is nothing' $null (Select-ReadyPhoneSerial @($wifi) 'emulator-5554' $true)
 Assert-Equal 'an offline emulator is nothing' $null (Select-ReadyPhoneSerial @($offlineEmu) 'emulator-5556' $true)
 Assert-Equal 'named wireless serial still works' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($emu, $wifi) '192.168.1.20:41234' $true)
@@ -215,6 +227,38 @@ Assert-Equal 'an absent emulator says not running' $true ((Get-EmulatorProblemTe
 Assert-Equal 'a non-emulator serial gets no emulator text' $null (Get-EmulatorProblemText '192.168.1.20:41234' @($wifi))
 Assert-Equal 'Test-EmulatorSerial: emulator' $true (Test-EmulatorSerial 'emulator-5554')
 Assert-Equal 'Test-EmulatorSerial: wireless' $false (Test-EmulatorSerial '192.168.1.20:41234')
+
+Assert-Equal 'a stuck USB phone is not named when -Serial names another device' $null (Get-UsbNotReadyText @([pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'unauthorized' }) '192.168.1.20:41234')
+$loop = [pscustomobject]@{ Serial = '127.0.0.1:58526'; State = 'device' }
+Assert-Equal 'loopback + wireless S21: wireless, never the loopback' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($loop, $wifi))
+Assert-Equal 'loopback only: none' $null (Select-ReadyPhoneSerial @($loop))
+$s21 = [pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'device' }
+$tablet = [pscustomobject]@{ Serial = 'R9TABLET001'; State = 'device' }
+$watch = [pscustomobject]@{ Serial = 'R8WATCH0002'; State = 'device' }
+Assert-Equal 'known USB listed among other USB devices: the known one' 'R3CR30FQT0V' (Select-ReadyPhoneSerial @($tablet, $s21, $watch))
+Assert-Equal 'other USB devices only, wireless present: wireless' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($tablet, $watch, $wifi))
+Assert-Equal 'other USB devices only, no wireless: none' $null (Select-ReadyPhoneSerial @($tablet, $watch))
+Assert-Equal 'a named USB serial wins even when it is not the known one' 'R8WATCH0002' (Select-ReadyPhoneSerial @($tablet, $watch, $s21) 'R8WATCH0002')
+Assert-Equal 'a named wireless serial wins over the known USB phone' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($s21, $wifi) '192.168.1.20:41234')
+Assert-Equal 'localhost:5555 is never picked by discovery' $null (Select-ReadyPhoneSerial @([pscustomobject]@{ Serial = 'localhost:5555'; State = 'device' }))
+Assert-Equal 'localhost:5555 is not the USB kind' 'Phone' (Get-DeviceKind 'localhost:5555')
+Assert-Equal 'a USB-looking unknown serial is not the USB kind' 'Phone' (Get-DeviceKind 'R9TABLET001')
+Assert-Equal 'the known serial is the USB kind' 'Usb' (Get-DeviceKind 'R3CR30FQT0V')
+$env:RTST_PHONE_SERIAL = 'R9TABLET001'
+Assert-Equal 'RTST_PHONE_SERIAL overrides the known phone' 'R9TABLET001' (Select-ReadyPhoneSerial @($s21, $tablet))
+Assert-Equal 'with the override the S21 is no longer the USB kind' 'Phone' (Get-DeviceKind 'R3CR30FQT0V')
+$env:RTST_PHONE_SERIAL = $savedKnown
+$mdnsName = 'adb-R3CR30FQT0V-xYz._adb-tls-connect._tcp'
+Assert-Equal 'connect.ps1: the address itself when listed' '192.168.1.20:41234' (Select-ConnectedAddress @($wifi) '192.168.1.20:41234')
+Assert-Equal 'connect.ps1: the mDNS name when adb lists the phone that way' $mdnsName (Select-ConnectedAddress @($s21, [pscustomobject]@{ Serial = $mdnsName; State = 'device' }) '192.168.1.20:41234')
+Assert-Equal 'connect.ps1: never the USB phone' $null (Select-ConnectedAddress @($s21) '192.168.1.20:41234')
+$stuckUsb = [pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'unauthorized' }
+Assert-Equal 'an unauthorized USB phone says unlock and accept' $true ((Get-UsbNotReadyText @($stuckUsb)) -match 'unauthorized: unlock it and accept the USB debugging prompt')
+Assert-Equal 'no stuck USB phone: no text' $null (Get-UsbNotReadyText @($wifi, $s21))
+Assert-Equal 'an unauthorized known USB phone falls back to ready wireless' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($stuckUsb, $wifi))
+Assert-Equal 'an unauthorized known USB phone and no wireless: none (the hint is printed)' $null (Select-ReadyPhoneSerial @($stuckUsb))
+Assert-Equal 'an unauthorized other USB device gives no hint' $null (Get-UsbNotReadyText @([pscustomobject]@{ Serial = 'R9TABLET001'; State = 'unauthorized' }))
+Assert-Equal 'the pairing function is not wireless-named any more' $false ((Get-Content (Join-Path $PSScriptRoot 'common.ps1') -Raw) -match 'Find-WirelessPhone')
 
 # ---- Slice 308 (two strikes): the device kind is decided once from the serial; which lease and gates apply is a pure function of it.
 Assert-Equal 'kind: emulator serial' 'Emulator' (Get-DeviceKind 'emulator-5554')

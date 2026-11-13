@@ -12,7 +12,7 @@
   -ExpectText <text> makes the script exit 5 when that text is not on screen after the tap (within -WaitSeconds). Exit 1: the dump before the tap failed.
   Exit 7: the tap WAS sent but no dump after it could be read; the tap is never repeated by the script, so check the screen before tapping again.
   The screen comparison ignores the status bar (SystemUI), so a clock tick or a notification is not a change.
-  -XmlFile reads a saved dump instead of the phone and taps nothing (used by test-tap.ps1). Wireless adb only; respects the phone lease.
+  -XmlFile reads a saved dump instead of the phone and taps nothing (used by test-tap.ps1). USB first, else wireless adb; respects the phone lease.
   Source for the dump: Android's `uiautomator dump [file]` writes the view hierarchy as XML with text, resource-id, content-desc, clickable and bounds attributes.
 #>
 param(
@@ -27,7 +27,7 @@ param(
     [int]$WaitSeconds = 10,
     [string]$ExpectText,
     [string]$Serial,
-    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, tap.ps1 stays wireless-only
+    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, tap.ps1 never takes an emulator
     [string]$XmlFile
 )
 $ErrorActionPreference = 'Stop'
@@ -132,8 +132,8 @@ function Write-ScreenChange([string]$Phone, $Before) {
     return $afterNodes
 }
 
-$phone = if ($XmlFile) { 'saved-dump' } else { Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+$phone = if ($XmlFile) { 'saved-dump' } else { Find-Phone $Serial -AllowEmulator:$AllowEmulator }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if (-not $XmlFile) { Assert-PhoneLease $phone }
 if ($List) { Write-ScreenList (Get-ScreenNodes $phone); exit 0 }
 $attribute = $PSCmdlet.ParameterSetName

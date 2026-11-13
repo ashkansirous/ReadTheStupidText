@@ -2,7 +2,7 @@
 .SYNOPSIS
   Reads a fixed passage (RTST's reader, or Dino's reader) at 1x and 2x on the user's real phone and prints the timing table (Slice 165).
 .DESCRIPTION
-  Wireless adb only (connect.ps1 explains how to pair). Builds and installs the arm64 Debug build under a second package
+  USB when plugged in, else wireless adb (connect.ps1 explains how to pair). Builds and installs the arm64 Debug build under a second package
   id (<app id>.dbg), so the store install, its data and signature are never touched; nothing is ever uninstalled, and data is cleared only with -FreshInstall (the dev package's own).
   Debug builds send no analytics (UsageGate). The Slice 162 test hooks skip first run and read the fixed text at the given speed
   (`read` hook; nothing is stored), so no taps are needed and the phone may stay locked while it is charging (a keep-awake loop always runs and wakes the screen every 15 s, no unlock, no taps). Time zero is the app's own `HOOK read start` log line.
@@ -382,8 +382,8 @@ if ($LogFile) {
     exit 0
 }
 
-$phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-WirelessPhone $Serial }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+$phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-Phone $Serial }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1)
 # Raw logs go to the shared worktrees folder (like run-checks.ps1), not into the repo and not next to it (Slice 216).
 $script:OutDir = Join-Path (Get-WorktreesRoot) '.phone'

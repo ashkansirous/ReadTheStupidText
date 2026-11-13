@@ -32,7 +32,7 @@
   (TIMEOUT); every check not run is listed with its reason. Exit: 0 all passed, 1 a check failed or timed out, 2 no phone, 3 some checks skipped, 4 the phone is leased
   by someone else or a run with your own owner name is still alive (-Force starts anyway, Slice 221), 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link), 8 -NoBuild and the build cache lacks a variant a check needs
   (prints `cache missed for <app> <variant>, key <k>: run -Build first`, the table with every check SKIP, and run-status.json; starts no process and takes no lease; also set by RTST_NO_BUILD=1). Every path prints the table, with each check's
-  outcome or its SKIP reason; cold-start reports MEASURED (numbers, no pass criterion), never PASS. Wireless adb only. Self-test with no device: test-run-checks.ps1.
+  outcome or its SKIP reason; cold-start reports MEASURED (numbers, no pass criterion), never PASS. USB when plugged in, else wireless adb. Self-test with no device: test-run-checks.ps1.
   Checks live in tools/phone/checks/<name>.ps1 (a check is added as one file there, with a `# check:` header line on top that the catalogue is read from (Slice 225), not as a brief).
 #>
 param(
@@ -66,7 +66,7 @@ $script:Projects = @{ rtst = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mob
 $script:ApkFilter = '*-Signed.apk'
 # Slice 308 (two strikes): the device kind is decided once, from -Serial (Get-DeviceKind), and Get-DeviceKindPlan says which lease and gates it has. An emulator builds and caches the x86_64 APK
 # (the same RID and cache name as audio-timing.ps1 -Emulator), a phone the arm64 one. No environment variable: the child scripts get -AllowEmulator as a parameter.
-$script:Kind = Get-DeviceKind $Serial
+$script:Kind = Get-DeviceKind $Serial   # provisional (emulator or not, from -Serial; Usb and Phone share one plan): set again from the selected serial right after Find-Phone
 $script:KindPlan = Get-DeviceKindPlan $script:Kind
 $script:OnEmulator = ($script:Kind -eq $script:KindEmulator)
 $variantError = Get-VariantKindError $script:Kind $PSBoundParameters.ContainsKey('Variant') $Variant   # Slice 308 review 1: also for -Build and -Prepare
@@ -473,7 +473,7 @@ function Write-AotNote($Plans) {
 function Write-NoPhone([string]$Serial) {
     $devices = @(); try { $devices = @(Get-AdbDevices) } catch { Write-Host "adb failed: $($_.Exception.Message)" }
     $problem = Get-EmulatorProblemText $Serial $devices
-    if ($problem) { Write-Host $problem } else { Write-PairingAsk }
+    if ($problem) { Write-Host $problem } else { Write-PairingAsk $Serial }
 }
 
 function Invoke-PrepareMode {
@@ -487,8 +487,10 @@ function Invoke-PrepareMode {
         $script:Apk = Find-VariantApk $Variant $script:CachedKey
     }
     Reset-BudgetClock   # the build above is outside any budget: the lease wait and the install start their clock now (run start and waited seconds together)
-    $phone = Find-WirelessPhone $Serial -AllowEmulator:$script:OnEmulator
+    $phone = Find-Phone $Serial -AllowEmulator:$script:OnEmulator
     if (-not $phone) { Write-NoPhone $Serial; return $script:ExitNoPhone }
+    $script:Kind = Get-DeviceKind $phone   # review 9: the kind comes from the serial actually selected, as in the run path
+    $script:KindPlan = Get-DeviceKindPlan $script:Kind
     $state = New-StageState
     try { return (Invoke-PrepareGuarded $phone $state) }
     catch { Write-Host "PREPARE FAIL: runner error: $($_.Exception.Message)"; return $script:ExitRunnerError }
@@ -779,8 +781,10 @@ if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
     $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)) $script:PinVariant)
     if ($missed.Count -gt 0) { exit (Stop-CacheMissed $plans (Format-NoBuildMiss $App $missed $noBuildKey)) }
 }
-$phone = Find-WirelessPhone $Serial -AllowEmulator:$script:OnEmulator
+$phone = Find-Phone $Serial -AllowEmulator:$script:OnEmulator
 if (-not $phone) { Write-NoPhone $Serial; exit $script:ExitNoPhone }
+$script:Kind = Get-DeviceKind $phone   # review 5: the kind comes from the serial actually selected (an auto-found USB phone is Usb)
+$script:KindPlan = Get-DeviceKindPlan $script:Kind
 Write-AotNote @($plans)
 # Slice 221: a second run with the same lease owner while the first is alive is refused before any build or lease (exit 4), unless -Force. The default owner is stable per phone
 # (run-checks-<phone key>, Get-RunChecksOwner), so a second run started in another shell without an owner variable is refused too.
