@@ -1,6 +1,6 @@
 # Slice 360 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
 
-*Built 2026-11-13, PR #1063 pending merge.*
+*Built 2026-11-13, not yet verified on a device; merged as PR #1063 (4427e6a1).*
 
 **Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.Core/ShelfAudioNetwork.cs`, `src/DinoReader.Core/ShelfAudioPlan.cs`, `src/DinoReader.Core/PackRepair*.cs` (new), `src/DinoReader.App/PackRepair*.cs` (new), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/*`, `.maestro/dino/*` (new reading-sound flows), `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`, `worker/stories-audio.test.mjs`, `src/DinoReader.App/ShelfAudioPacksCard.cs`, `src/DinoReader.App/SoundStatusPill.cs`, `src/DinoReader.App/SoundStatusPillState.cs`, `src/DinoReader.Core/InstalledShelfAudio.cs`
 
@@ -205,12 +205,12 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
 - After release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
 - Worker serving one version behind, live, after the batched release deploys.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Book audio packs download on any network, never wait for Wi-Fi, and `ShelfAudioAsk` is gone; `ShelfAudioNetwork.NeedsWifi` is for the large storyteller pack only. Failed or 404 packs are retried hourly and on opening the book by `PackRepair` (due check `PackRepairDue` in Core), never by the weekly `BookUpdater` check. "Is a pack expected" is only `PackExpectation.For` (Core). (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
 - `publish-store-books.mjs` never deletes old pack versions; the Worker (`worker/stories.ts`) serves one version behind the listing. (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
 - The grown-ups' hold haptic needs `android.permission.VIBRATE` in `AndroidManifest.xml`; iOS needs none. (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
 
-#### For README.md
+#### For README.md (lifted 2026-11-13)
 
 Nothing user-facing to add.
