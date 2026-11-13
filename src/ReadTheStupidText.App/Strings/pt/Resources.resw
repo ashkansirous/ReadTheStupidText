@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>Algo deu errado no servidor. Tente novamente mais tarde.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>não baixada</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>Esta voz não está mais disponível.</value>
   </data>

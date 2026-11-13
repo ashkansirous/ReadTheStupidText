@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>Noget gik galt på serveren. Prøv igen senere.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>ikke hentet</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>Denne stemme er ikke tilgængelig længere.</value>
   </data>

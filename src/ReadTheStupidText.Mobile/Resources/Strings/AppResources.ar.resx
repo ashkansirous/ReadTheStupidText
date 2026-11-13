@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقًا.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>لم يعد هذا الصوت متاحًا.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>حزمة الصوت · {0} ميغابايت</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>توقف التنزيل. تتم القراءة بصوت الهاتف. اضغط للتنزيل.</value></data>

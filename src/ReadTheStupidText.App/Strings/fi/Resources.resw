@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>Palvelimella tapahtui virhe. Yritä myöhemmin uudelleen.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>ei ladattu</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>Tämä ääni ei ole enää saatavilla.</value>
   </data>

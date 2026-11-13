@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
   <data name="Error_Server" xml:space="preserve"><value>服务器出了点问题，请稍后重试。</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>这个语音已不可用。</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>语音包 · {0} MB</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点按可下载。</value></data>

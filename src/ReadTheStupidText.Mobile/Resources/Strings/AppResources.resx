@@ -125,6 +125,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Something went wrong on the server. Please try again later.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>This voice isn’t available any more.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>Voice pack · {0} MB</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Download stopped. Reading with the phone voice. Tap to download.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>A natural voice for your language isn't available yet. Reading with the phone voice.</value></data>

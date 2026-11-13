@@ -27,13 +27,6 @@
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
                     <VerticalStackLayout x:Name="LanguageList" AutomationId="LanguageList" />
                 </Border>
-
-                <VerticalStackLayout x:Name="ProgressSection" Spacing="8" IsVisible="False">
-                    <ProgressBar x:Name="DownloadProgressBar" Progress="0" ProgressColor="{StaticResource Primary}" />
-                    <Label x:Name="StatusLabel" FontSize="12"
-                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                    <Button x:Name="RetryButton" IsVisible="False" Clicked="OnRetryClicked" />
-                </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 

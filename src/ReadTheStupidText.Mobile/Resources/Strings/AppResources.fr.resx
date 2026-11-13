@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Le pack de voix naturelles est inutilisable. Lecture avec la voix du téléphone.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Un problème est survenu sur le serveur. Veuillez réessayer plus tard.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>Cette voix n’est plus disponible.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>Pack de voix · {0} Mo</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Impossible de télécharger les voix naturelles. Lecture avec la voix du téléphone. Touchez pour réessayer.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Téléchargement arrêté. Lecture avec la voix du téléphone. Touchez pour télécharger.</value></data>

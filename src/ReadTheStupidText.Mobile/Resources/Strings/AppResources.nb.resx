@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Noe gikk galt på serveren. Prøv igjen senere.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>Denne stemmen er ikke tilgjengelig lenger.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>Stemmepakke · {0} MB</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke laste ned naturlige stemmer. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Nedlastingen er stoppet. Leser med telefonens stemme. Trykk for å laste ned.</value></data>

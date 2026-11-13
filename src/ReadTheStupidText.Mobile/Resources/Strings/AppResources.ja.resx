@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="Error_Server" xml:space="preserve"><value>サーバーで問題が発生しました。しばらくしてからもう一度お試しください。</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>この音声は利用できなくなりました。</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>音声パック · {0} MB</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。タップしてダウンロードします。</value></data>

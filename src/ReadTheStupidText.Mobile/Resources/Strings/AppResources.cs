@@ -145,6 +145,7 @@ public static class AppResources
     public static string PackStatus_Failed => Get();
     public static string Error_Server => Get();
     public static string Error_VoiceGone => Get();
+    public static string Pack_RowSize => Get();
     public static string PackStatus_Stopped => Get();
     public static string PackStatus_Unavailable => Get();
     public static string VoicePicker_Heading => Get();

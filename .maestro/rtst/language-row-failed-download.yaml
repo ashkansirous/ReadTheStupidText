@@ -1,0 +1,53 @@
+# Slice 373 (Missing States mock RT1): a voice pack download the server answers 404 to shows on the chosen language's own row: the red strip
+# "This voice isn't available any more." under it and Retry at its end (not one shared status line under the list); Retry starts the next try and the strip goes away.
+# The Debug hook fail-pack-download kind=gone lang=en (RtstTestCommands) makes the NEXT download of the English voice pack fail once as a 404 (other packs download normally); it is armed on the first launch, before the language is picked.
+# The strip text is English: a cleared emulator speaks English, and the flow fails (instead of passing) on any other UI language, which is what we want.
+# Android only for the flow; iOS shares the page and is covered by its compile check.
+# expect-log: HOOK fail-pack-download ok gone
+# expect-log: PACKDL forced-failure
+appId: uk.sirous.readthestupidtext
+name: A failed voice download shows on its language row
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow tests the first-run language page and needs no pack installed, so the download it starts is the one the hook fails.
+    clearState: true
+    arguments:
+      cmd: fail-pack-download
+      kind: gone
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: LanguageList
+    timeout: 20000
+- tapOn:
+    text: "English"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: LanguageContinue
+    waitToSettleTimeoutMs: 300
+# Slice 183: the "keep downloading when the phone is locked?" sheet; answer Not now by its button id (optional: it may not show).
+- extendedWaitUntil:
+    visible:
+      id: "android:id/button2"
+    timeout: 10000
+    optional: true
+- tapOn:
+    id: "android:id/button2"
+    optional: true
+# The failure shows on the English row: the red strip with the 404 text, and Retry at the row's end.
+- extendedWaitUntil:
+    visible:
+      id: LanguageRowError_en
+      text: "This voice isn.t available any more."
+    timeout: 60000
+- assertVisible:
+    id: LanguageRowEnd_en
+    text: "Retry"
+# The one-shot hook is spent: Retry downloads for real, and the strip goes away when the next try starts.
+- tapOn:
+    id: LanguageRowEnd_en
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible:
+      id: LanguageRowError_en
+    timeout: 20000

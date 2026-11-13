@@ -1,9 +1,11 @@
 #if DEBUG
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Usage;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace ReadTheStupidText.Mobile.Testing;
@@ -21,7 +23,11 @@ internal static class RtstTestCommands
 	private const string SetTranslateName = "set-translate";
 	private const string ForceFallbackName = "force-fallback";
 	private const string StallReadName = "stall-read";
+	private const string FailPackDownloadName = "fail-pack-download";
 	private const string ModeKey = "mode";
+	private const string KindKey = "kind";
+	private const string GoneKind = "gone";
+	private const string ServerKind = "server";
 	private const string On = "on";
 	private const string Off = "off";
 	private const string Unavailable = "unavailable";
@@ -37,7 +43,7 @@ internal static class RtstTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [ModeKey];
+		TestHookDispatcher.AppLaunchKeys = [ModeKey, KindKey];
 		StallHook.Shared.Log = TestHookLog.Write; // Slice 320 item 7: the held-wait markers go to the RTST-TEST log
 	}
 
@@ -49,8 +55,33 @@ internal static class RtstTestCommands
 		SetTranslateName => SetTranslate(command.Get(ModeKey, string.Empty)),
 		ForceFallbackName => ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(TestHookDispatcher.IdKey, string.Empty)),
 		StallReadName => ArmStallRead(),
+		FailPackDownloadName => FailPackDownload(command.Get(KindKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty)),
 		_ => null,
 	};
+
+	// Slice 373: fail-pack-download kind=gone|server lang=<code> makes the NEXT download of the voice pack serving that language fail as if the server answered 404 (gone) or 5xx (server), once, so the language row's red strip
+	// (Error_VoiceGone / Error_Server) shows and Retry then downloads for real; any other pack downloads normally. Logs "HOOK fail-pack-download ok <kind>"; the download writes "PACKDL forced-failure pack=<id> kind=<kind>".
+	private static string FailPackDownload(string kind, string language)
+	{
+		if (language.Length == 0)
+		{
+			return $"{TestHookDispatcher.Failed} {TestHookDispatcher.Unknown} lang";
+		}
+
+		HttpErrorKind? answer = kind switch
+		{
+			GoneKind => HttpErrorKind.NotFound,
+			ServerKind => HttpErrorKind.ServerError,
+			_ => null,
+		};
+		if (answer is not { } forced)
+		{
+			return $"{TestHookDispatcher.Failed} {TestHookDispatcher.Unknown} {kind}";
+		}
+
+		MobileVoicePackService.ForceNextFailure(forced, language);
+		return $"{TestHookDispatcher.Ok} {kind}";
+	}
 
 	// Slice 320 item 7: the next read's SECOND chunk wait is held for 90 s (or until the read stops); needs a text over 200 characters (shorter text is one chunk, takes nothing, and disarms the request when it ends; Slice 345), so the stall overlay with its Cancel shows and a flow can leave the reader and come back (Slice 314).
 	// Needs a neural voice pack (the system voice has no chunk wait). Logs "HOOK stall-read ok"; the held wait writes "STALL hold begins" and "STALL hold released".

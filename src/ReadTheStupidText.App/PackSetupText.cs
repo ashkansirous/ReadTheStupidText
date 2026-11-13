@@ -36,6 +36,15 @@ internal static class PackSetupText
     public static string ForPanel(PackSetupState state, double progress, HttpErrorKind? failure = null) =>
         state == PackSetupState.Idle ? Windows : For(state, progress, failure);
 
+    /// <summary>
+    /// Slice 373 (Missing States mock RT2): what a language's row shows for the setup state. A row whose pack is not installed says "not downloaded" on its second line
+    /// (<see cref="VoicePackSetup.IsInstalled"/> tells installed from not), a failed download adds the error line under the row and Retry at its end; a state that is
+    /// still going shows its own line on the chosen row.
+    /// </summary>
+    public static RowText ForRow(bool isRunRow, RunView run, bool? installed) =>
+        PackRowText.Compose(isRunRow, run, installed, UiStrings.Get("Pack_NotDownloaded"),
+            r => For(r.State, r.Progress, r.Failure), r => For(r.State, r.Progress, r.Failure));
+
     /// <summary>Slice 357 / 364 (Missing States mock RT2): the line for a failed pack download by what the server answered; a 404 says the voice is gone, every other answer shows the general server text.</summary>
     public static string FailureText(HttpErrorKind kind) =>
         kind == HttpErrorKind.NotFound ? UiStrings.Get("Error_VoiceGone") : UiStrings.Get("Error_Server");

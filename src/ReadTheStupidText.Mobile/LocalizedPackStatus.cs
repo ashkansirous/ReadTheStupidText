@@ -35,4 +35,32 @@ public static class LocalizedPackStatus
     /// voice is gone, every other answer (5xx, any other 4xx, a 400) the general server text. A pack download has no message from the server, nothing to buy, and 429 never happens.
     /// </summary>
     public static string FailureText(HttpErrorKind kind) => kind == HttpErrorKind.NotFound ? AppResources.Error_VoiceGone : AppResources.Error_Server;
+
+    private const double BytesPerMegabyte = 1_000_000;
+
+    /// <summary>Slice 373 (Missing States mock RT1): a language row's second line, "Voice pack · 38 MB", from the catalog's size; null while the size is not known.</summary>
+    public static string? SizeLine(long? sizeBytes) => sizeBytes is { } bytes
+        ? AppResources.Format(AppResources.Pack_RowSize, Math.Max(1, (long)Math.Round(bytes / BytesPerMegabyte)).ToString(CultureInfo.CurrentUICulture))
+        : null;
+
+    /// <summary>
+    /// Slice 373 (RT1): what the chosen language's row shows for the installer's state. <see cref="RowView.Detail"/> is the second line (the size, or the status text where the
+    /// row has nothing else to say), <see cref="RowView.EndText"/> the percent while the pack downloads or the retry label when it can be started again, <see cref="RowView.ErrorText"/>
+    /// the red strip under the row. The shared status line under the list is gone: every state is read on its row.
+    /// </summary>
+    public static RowView ForRow(PackInstallState state, double progress, HttpErrorKind? failure, bool canRetry, string? sizeLine)
+    {
+        string? status = Compose(state, progress, failure);
+        return state switch
+        {
+            PackInstallState.Resolving => new RowView(status, null, null, false), // looking the pack up: its own text, no percent yet
+            PackInstallState.Downloading => new RowView(sizeLine, progress.ToString("P0", CultureInfo.CurrentUICulture), null, false),
+            PackInstallState.Failed or PackInstallState.HashMismatch or PackInstallState.InvalidPack => new RowView(sizeLine, canRetry ? AppResources.Wait_Retry : null, status, canRetry),
+            PackInstallState.Offline or PackInstallState.Stopped or PackInstallState.Unavailable => new RowView(status, canRetry ? RetryLabel(state) : null, null, canRetry),
+            _ => new RowView(sizeLine, null, null, false),
+        };
+    }
+
+    /// <summary>The pieces of one language row; a null end text means nothing sits at the row's end.</summary>
+    public sealed record RowView(string? Detail, string? EndText, string? ErrorText, bool EndIsRetry);
 }
