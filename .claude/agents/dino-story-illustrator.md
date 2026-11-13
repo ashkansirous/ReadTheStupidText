@@ -61,7 +61,7 @@ the contact sheet live only in the working folder. Touch nothing else.
    screenshot; `__attachmentCount()` returns `UNKNOWN` then): do that one picture click by click (the fallback: `find` refs only, one menu step at a time, a zoom to confirm 3:4 before
    the prompt, `__sendChecked` to send), never by coordinates, since a stray click on a suggestion chip sends a prompt you didn't
    write. Other lines (`REFUSED`, `SENT WITHOUT TEXT`, `UNCONFIRMED`) are `__sendChecked`'s, with its rules below. If a chat draws an earlier scene
-   again instead of the new one, start a new chat for it (that is the rule already). One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead.
+   again instead of the new one, start a new chat for it. If the bad picture would steer a patch, start a new chat instead of patching.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
    - 5 s after opening or reloading a tab, check the tab URL and `window.__geminiHealth()` once (the left menu loads only

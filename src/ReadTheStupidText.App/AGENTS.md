@@ -53,7 +53,7 @@ Every time you work on this codebase, follow this checklist:
 
 ### While Writing Code
 
-> **Agent Rule -- MANDATORY:** Steps 5-8 are **not** passive references. You **must** actually open and read the linked instruction file before writing code that falls within its scope. Do not skip this -- these files contain rules, anti-patterns, and checklists that must be applied.
+> Steps 5-8 link files with this folder's rules and checklists: read the linked file before writing code within its scope.
 
 5. **Apply Design Principles** -- **Read** [design-principles](.github/instructions/design-principles.instructions.md) before adding/refactoring classes or logic. Apply DRY, KISS, SOLID, YAGNI.
 6. **Follow Fundamentals** -- **Read the applicable instruction files** based on what you're changing:
@@ -66,15 +66,15 @@ Every time you work on this codebase, follow this checklist:
 
 ### After Writing Code
 9. **Remove unused code** -- Delete unused `using` statements, dead code, commented-out blocks.
-10. **Write unit tests** -- Every new public method/class needs tests. **Read** [testing](.github/instructions/testing.instructions.md) for framework setup, naming conventions (`MethodName_Scenario_ExpectedResult`), AAA pattern, and `dotnet test` commands.
+10. **Write unit tests** -- Pure logic gets xUnit v3 tests in `tests/Shared.Tests` (anything Dino Reader can reach) or `tests/ReadTheStupidText.Tests` (RTST-only); WinUI/WinRT paths are not unit-tested. See the root `CLAUDE.md` *Tests* section; it overrides [testing](.github/instructions/testing.instructions.md) (MSTest/Moq, a `<ProjectName>.Tests` project), which does not match this repo.
 11. **Build the project** -- Detect the platform first (`$Platform = $env:PROCESSOR_ARCHITECTURE`), then run `dotnet build -c Debug -p:Platform=$Platform` from the project folder and fix all warnings/errors. **If build errors occur, follow the Troubleshooting Build Errors workflow below.**
-12. **Run tests** -- Run tests related to the change using `--filter` (see [testing](.github/instructions/testing.instructions.md)). Run the full suite only when the change is cross-cutting.
-13. **Run the app with package identity** -- Use `dotnet run` (preferred -- the project references `Microsoft.Windows.SDK.BuildTools.WinApp`, which automatically invokes `winapp run` to register a loose-layout package and launch via AUMID). See [Build, Run & Deploy](#build-run--deploy) below for advanced scenarios.
+12. **Run tests** -- Run the test projects named in the root `CLAUDE.md` (`dotnet test tests/Shared.Tests/Shared.Tests.csproj`, `dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj`), with `--filter` for a narrow change.
+13. **Run the app with package identity** -- in the headless Hyper-V test VM (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App rtst`), never on the host desktop: see `CLAUDE.md` in this folder (*Desktop acceptance*). `dotnet run` registers the dev package on the host, so it is not used here.
 14. **Re-review against original goal** -- Confirm the implementation matches the user's request.
 
 ### Troubleshooting Build Errors
 
-> **Agent Rule -- MANDATORY:** When a build fails due to an unknown type, missing namespace, unresolved API, or similar definition error, follow this escalation order. **Do NOT jump straight to reading `.winmd` files or using `ildasm`/decompilers** -- always try web search first.
+> When a build fails on an unknown type, missing namespace or unresolved API, look the API up in documentation (context7 first, per the root `CLAUDE.md`, then the API references below) before inspecting `.winmd` files or decompiling; docs are faster and give the supported shape.
 
 **Step 1 -- Web Search (ALWAYS try first):**
 1. Open and read [windows-apis.instructions.md](.github/instructions/windows-apis.instructions.md) -- it contains the API namespace catalog and lookup guidance.
@@ -90,7 +90,7 @@ Only if Steps 1-2 fail to resolve the issue, then inspect `.winmd` metadata file
 
 ## Build, Run & Deploy
 
-This is an MSIX-packaged WinUI 3 app. You **must** pass both `-c` (Configuration) and `-p:Platform=` to every `dotnet build`/`dotnet test` command.
+This is an MSIX-packaged WinUI 3 app. Pass `-p:Platform=` to every `dotnet build` of the app project; the test projects under `tests/` need no platform.
 
 This template references the [`Microsoft.Windows.SDK.BuildTools.WinApp`](https://www.nuget.org/packages/Microsoft.Windows.SDK.BuildTools.WinApp) NuGet package, which hooks `dotnet run` to invoke the [`winapp` CLI](https://github.com/microsoft/WinAppCli). Use `dotnet run` for everyday inner-loop development -- you do not need to call `Add-AppxPackage` or `MakeAppx.exe` by hand.
 
@@ -191,11 +191,9 @@ winapp run .\bin\$Platform\Debug\<TargetFramework> --clean
 #### Run Tests
 
 ```powershell
-# Run from the test project folder
-cd <ProjectName>.Tests
-$arch = $env:PROCESSOR_ARCHITECTURE
-$Platform = if ($arch -eq 'AMD64') { 'x64' } else { $arch }
-dotnet test -c Debug -p:Platform=$Platform
+# From the repo root (xUnit v3; see the root CLAUDE.md "Tests" section)
+dotnet test tests/Shared.Tests/Shared.Tests.csproj
+dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
 ```
 
 ### winapp CLI command reference
@@ -240,7 +238,7 @@ If the launch fails because an old instance is still running, terminate it with 
 ## Key Rules (Always Enforced)
 
 - **Every change must build and pass tests** -- Run `dotnet build` and `dotnet test` (see [Build, Run & Deploy](#build-run--deploy)) before considering any task complete.
-- **Follow all instruction files** -- The detailed rules in `.github/instructions/` are authoritative. **You must actually open and read them** (not just acknowledge they exist) when working within their scope. See the trigger conditions in steps 5-8 above.
+- **Follow the instruction files** -- Read the files in `.github/instructions/` when working within their scope (trigger conditions in steps 5-8 above); where one disagrees with `CLAUDE.md`, `CLAUDE.md` wins.
 - **Web search before decompilation** -- When facing unknown types or build errors, always search the web / API docs first. Only use WinMD/ILDASM as a last resort (see [Troubleshooting Build Errors](#troubleshooting-build-errors)).
 - **Use `winapp` for app-identity / packaging / signing** -- Don't hand-roll `MakeAppx`/`SignTool`/`Add-AppxPackage` invocations. The CLI keeps the manifest, certificate, and registration steps in sync.
 

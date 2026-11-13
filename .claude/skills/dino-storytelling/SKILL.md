@@ -75,10 +75,10 @@ number, the one action, who is in it with a count, where, and time of day. Then 
 ## 5. Changing an existing book
 
 - The translations are keyed by sentence (piece). **Moving page breaks or splitting a paragraph keeps
-  every existing translation**; only new or reworded sentences need translating into all 13 languages
+  every existing translation**; only new or reworded sentences need translating into every language in `UiLanguage.Supported` (14 besides English)
   (`content/dino/<stem>/translations/<lang>.json`; dump the pieces with
   `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`).
-- Reword a sentence only when it must change, since each reworded sentence costs 13 translations.
+- Reword a sentence only when it must change, since each reworded sentence costs 14 translations.
 - A new page count needs one picture per page. Reuse an earlier picture only when it shows exactly that
   page's one action. Otherwise draw it again.
 - Every book ends on a silent back cover made from `storyBy`/`retold` in `book.json` (Slice 237): credit the real original author, or `"traditional"`; never write credits into the story text.

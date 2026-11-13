@@ -13,6 +13,8 @@ changes app code. The caller applies the pick (usually through `implement-slice`
 - Engines and packs as in `tools/sound-words-test/README.md` (`engines.py` mirrors `SherpaEngineFactory.cs`:
   Supertonic, Kokoro, Melo, Piper). Packs from the newest `packs-<n>` release; venv, packs and WAVs live
   outside the repo or in the ignored `tools/voice-listen/out/` folder.
+- Dino reads only pre-made clips, rendered with Gemini TTS: render Dino candidates with `tools/premade-audio`
+  (`generate.py --batch`, see its README), never the normal per-request route.
 - Use the caller's lines; else two everyday sentences in the language plus one with a number and a name.
   The same lines for every candidate, the app's default pace, no flavour unless the question is about flavours.
 - Label each clip with the voice id the code uses (e.g. `piper:nb-knv`) and a plain hint (woman/man, from

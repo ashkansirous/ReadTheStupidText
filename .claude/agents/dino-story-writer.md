@@ -1,6 +1,6 @@
 ---
 name: dino-story-writer
-description: Write, retell or re-split one Dino Reader book's text for ages 3-9 in a given worktree - one action per page, nobody hurt, speaker-tagged dialogue, the cast lines and page-by-page picture plan in the art record, all 13 translations, and the version bump - without committing and without drawing anything. Use PROACTIVELY before illustrating any Dino book, when the user asks for a new story, a retelling, more pages, or a gentler version. Several can run at once only in separate worktrees, each editing only its own book's constant or blocks in the shared files; their PRs merge one at a time.
+description: Write, retell or re-split one Dino Reader book's text for ages 3-9 in a given worktree - one action per page, nobody hurt, speaker-tagged dialogue, the cast lines and page-by-page picture plan in the art record, every translation (14 languages besides English), and the version bump - without committing and without drawing anything. Use PROACTIVELY before illustrating any Dino book, when the user asks for a new story, a retelling, more pages, or a gentler version. Several can run at once only in separate worktrees, each editing only its own book's folder `content/dino/<stem>/` and its own entries in `StarterUpdate.EarlierPageTextHashes`; their PRs merge one at a time.
 model: opus
 effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash
@@ -52,7 +52,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    character (a seagull is a duckling, not a mummy), no two characters of a book on one id, and the suggestion's gender the character's. Record each choice and why in the book's art
    record under "Voices". Raise a starter's version; a store book needs none (set `"version": 1` in a new one: `publish-store` versions it from its content hash, Slice 239).
 4. Translations: dump the pieces (`dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`, which writes `content/dino/<stem>/translations/pieces.json`) and translate
-   every new or reworded piece into `content/dino/<stem>/translations/<lang>.json` (all 13 languages). Keep each language's own conventions (Brazilian
+   every new or reworded piece into `content/dino/<stem>/translations/<lang>.json` (every language in `UiLanguage.Supported`, 14 besides English). Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
    «بگذار بیایم تو»), with that language's own sound words (as many as the English has; no forced repeats).

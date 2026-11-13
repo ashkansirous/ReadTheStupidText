@@ -19,7 +19,7 @@ Arabic is out of scope (user, 2026-10-27).
 - **Every word gets a suggestion.** Write a Finglish `guess` for every word not prefilled, in everyday spoken (Tehran)
   Farsi, not literary (informal درو = "daro" for "dar ro", not "dero"), and check each one with `finglish_to_marks` before
   seeding; a guess that doesn't line up is rewritten, never seeded. An empty box is not acceptable (user, 2026-10-27:
-  "it does not have any suggestions"). Write the guesses yourself or, for many words, hand the list to an Opus subagent.
+  "it does not have any suggestions"). Write the guesses yourself (the `farsi-review` agent has no Agent tool).
 - **Sound words the voice drops** (short repeated exclamations; `mana` drops short words) get 2-3 spoken-only options with
   audio. Kids still see the original text. The page must show unanswered option boxes under "To check".
 - **Quiet.** Report only the page link, a question you cannot settle, and "merged". No status lines.

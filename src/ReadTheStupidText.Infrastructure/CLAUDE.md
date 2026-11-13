@@ -5,7 +5,7 @@ rules are in `src/ReadTheStupidText.App/CLAUDE.md`. Tray-only code (hotkey, UIA 
 
 Note (Windows; Android/iOS use downloaded packs): the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
 **sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
-(Apache-2.0, `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
+(weights BigScience OpenRAIL-M, see the licence rule in the root `CLAUDE.md`; `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
 `org.k2fsa.sherpa.onnx`. The model (~145 MB) is a **downloaded pack** (Slice 56,
 see the Windows packs rule below; `VoiceModel/` stays in the repo only as the source for `packs.yml`); the picker offers the pack's
 voices plus a labelled "Windows voice". The Supertonic voices (`SupertonicVoiceTable`, the fixed 10-style F1–F5/M1–M5 set in
@@ -15,8 +15,8 @@ if the pack is missing; it is selectable as "Windows voice" (Slice 56). Narrator
 "Natural"/neural voices are unreachable by a Store app, so we bring our own
 engine. **Piper is GPL — do not use it; Kokoro was rejected** (Chinese-focused,
 no English male voice in the latest, ships GPL-adjacent espeak data); Supertonic
-is English-first, Apache-2.0, espeak-free, and Store-safe. (The one scoped GPL
-exception, espeak-ng data inside the downloaded `piper-fa` and `piper-nb` packs, is in the Mobile rules.)
+is English-first, espeak-free, and Store-safe. (The one scoped GPL
+exception, espeak-ng data inside the downloaded `piper-fa`, `piper-nb` and `kokoro-en` packs, is in the root `CLAUDE.md` licence rule.)
 
 - Windows packs (Slice 56): the MSIX holds no voice model and declares `internetClient` (STORE.md, PRIVACY.md and `site/privacy.html` say so). Packs live in `LocalCacheFolder\packs\<id>`, never `LocalFolder` (cloud-backed). `PackVoiceModelService` and `WindowsVoicePackService` are Windows copies of the Mobile ones, `VoicePackSetup` (Application) the MAUI-free twin of `VoicePackInstaller`: change both sides together. `windows.yml` has no LFS; keep `RemoveWinMlOnnxRuntimeDuplicate`. (Slice 56: docs/plan/slices/56-windows-packs-language-headstart.md)
 - Pack versions and engine cache (Slice 89): packs install to versioned folders with an `active` pointer, and engines come from the shared `EngineCache`; the full rule is in `src/ReadTheStupidText.Mobile/CLAUDE.md` (Voice packs) and applies to Windows too. (Slice 89: docs/plan/slices/89-four-farsi-voices.md)

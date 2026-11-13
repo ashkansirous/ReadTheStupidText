@@ -19,7 +19,7 @@ Per-book prompts, cast and check results live in `content/dino/<stem>/art.md`.
 ## Who does what
 
 The main thread coordinates and never drives Gemini or writes a book's text itself; that keeps its
-context free of screenshots, pictures and 13 translation files.
+context free of screenshots, pictures and 14 translation files.
 
 1. **`dino-story-writer`** (Opus, high effort): steps 1-2 with the `dino-storytelling` skill. Several may
    run at once, one book each, in their own worktrees.
@@ -77,7 +77,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
 
 ## 1. Text
 
-- The text is `content/dino/<stem>/story.md`; `book.json` says whether the book is a `starter` (bundled) or a `store` book.
+- The text is `content/dino/<stem>/story.md`; `book.json`'s `kind` says whether the book is a former starter (`"Starter"`: served by the store like the rest, also kept as a Debug-only test book in the app, and still stamped) or a store book.
 - **Write or retell the text with the `dino-storytelling` skill first**: one action per page, 10-18
   pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
   casts voices.
@@ -91,7 +91,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
   `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).
 - Translations: `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
-  translate into `content/dino/<stem>/translations/<lang>.json` (all 13 languages).
+  translate into `content/dino/<stem>/translations/<lang>.json` (every language in `UiLanguage.Supported`, 14 besides English).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.
 
 ## 2. Art record
@@ -117,9 +117,9 @@ Prompt templates: [prompts.md](prompts.md).
     chat or with a new chat every 2-3 characters. Note in the art record which you did and how it went,
     and update this line once it is clear.
   - **Page chats**: **one prompt per chat**: every picture gets its own new chat, so one picture can't influence the next
-    (the user, 2026-11-10, Slice 350; this replaces "a fresh chat every 3 pictures", for all Dino illustration work). A redo of a
+    (the user, 2026-11-10, Slice 350; all Dino illustration work). A redo of a
     bad result also gets a new chat; the only exception is a small patch of a bad result, which may continue that chat while the
-    chat stays at or under 3 picture requests (the patch counts as one). Past 3, start a new chat. One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead. Start each by giving it the line-up (plus the sheets of the characters on those pages), then
+    chat stays at or under 3 picture requests (the patch counts as one). Past 3, or if the bad picture would steer the patch, start a new chat. Start each by giving it the line-up (plus the sheets of the characters on those pages), then
     "These are the characters. Keep their outfits exactly as shown", every outfit spelled out
     (including what they do NOT wear: "no shirt", "no trousers", "no bobble"), then one prompt per
     page. Gemini adds no file input until its native picker opens, which can't be driven, so **paste**
@@ -280,7 +280,7 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 ## 7. Build, test, upload
 
 - `dotnet run --project tools/DinoReader.BookBuilder -- build <stem>` writes `artifacts/store/<id>/` and, for a starter, rewrites
-  `src/DinoReader.App/Resources/Raw/starters/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
+  the Debug-only test book `src/DinoReader.App/Resources/Raw/testbooks/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
   `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` for a **starter** (raises its version and stores the content hash; also add the old text's page hashes to
   `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `check` fails otherwise and runs in CI. A store book is not stamped (Slice 239).
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
