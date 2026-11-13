@@ -1041,3 +1041,74 @@ Also read these files the selection imports:
 
 Implement: the selected files
 ```
+
+## 2026-11-13 mocks (Slices 362, 363, 359, 357, 358, 360)
+
+Two mocks from 2026-11-13: onboarding redone as one guided path of six steps, and the screens for states that had no
+picture (back cover, store errors and buying, missing book sound, the Windows gate). Both carry the final app copy; the
+string keys for every text are in `docs/plan/notes/2026-11-13-dino-copy.md`. Both import the book covers already in `assets/`
+(and `assets/three-little-pigs/13.jpg`). Open the files in a text editor (`support.js` is not copied). Each file is one very long
+line, so the tables below give the caption to search for, not a line number. Fonts: Fredoka, Andika, Vazirmatn. Icons in these two
+files are inline SVG, not Phosphor. Refresh: fetch again with `DesignSync get_file` (main thread only), overwrite the copy with a
+script, regenerate the tables.
+
+## Onboarding — `Dino Reader 2026-11-13 Onboarding.dc.html`
+
+- **Source:** claude.ai canvas <https://claude.ai/code/artifact/16e8b2ab-0a01-432b-973a-f35f61f629b1>.
+- **Copied:** 2026-11-13, after the copy pass (the canvas carries the final text), by the main thread.
+- **Covers:** Slice 362 (`docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md`, its `#### Design`). It replaces the
+  2026-11-08 onboarding file's first run and intro wizard. The mock's three review questions are answered in the slice's Decisions.
+
+| # | Screen (caption) | Feeds |
+|---|---|---|
+| — | Part 1 · Steps 1 to 3 (group) | 362 A |
+| N1 | Language | 362 A |
+| N2 | Reading languages (required) | 362 A |
+| N3 | First books (required) | 362 A |
+| — | Part 2 · Step 4 (group) | 362 B |
+| N4a | Plays in English | 362 B |
+| N4b | Now the other language | 362 B |
+| N4c | Same page in Farsi | 362 B |
+| N4d | One family language | 362 B |
+| — | Part 3 · Step 5 (group) | 362 C |
+| N5 | You can be the voice | 362 C |
+| N6a | Line 1 of 2, ready | 362 C |
+| N6b | Line 2 of 2, recorded | 362 C |
+| N7 | Hear yourself | 362 C |
+| — | Part 4 · Step 6 (group) | 362 D |
+| N8a | Welcome to the corner | 362 D |
+| N8b | The tour, one tab at a time | 362 D |
+| N9 | See your child's shelf | 362 D |
+| N10 | This is your child's shelf | 362 D |
+| — | 600 wide or more (group) | 362 A, B |
+| WN2 | Reading languages, Windows 1100 × 760 | 362 A |
+| WN4 | Listen, in the second language | 362 B |
+
+## Missing states — `Dino Reader 2026-11-13 Missing States.dc.html`
+
+- **Source:** claude.ai canvas <https://claude.ai/code/artifact/16e8b2ab-0a01-432b-973a-f35f61f629b1> (same canvas, second file).
+- **Copied:** 2026-11-13, after the copy pass.
+- **Covers:** four sections, each fed into its slice's `#### Design`.
+
+| # | Screen (caption) | Feeds |
+|---|---|---|
+| — | 1 · Slice 359 (group) | 359 item 6 |
+| BC1 | Phone upright | 359 |
+| BC3 | Farsi | 359 |
+| BC2 | Phone landscape (852 × 393) | 359 |
+| — | 2 · Slices 346, 357, 358 (group) | 357, 358 |
+| S1 | Prices, Get and on the shelf | 357 (Free tag, price button) |
+| S2 | When it fails | 357 (strips), 358 (NotForSaleNow) |
+| S3 | The end of the list | 357 (404, Bought books before? card), 358 (Connect to the internet to buy) |
+| — | Read The Stupid Text · the same messages on a voice pack row (group) | 357 |
+| RT1 | RTST phone, Settings › Voices | 357 |
+| RT2 | RTST Windows control panel, voice row | 357 |
+| — | 3 · Slice 360 (group) | 360 |
+| SS1 | Getting the sound | 360 |
+| SS2 | No internet | 360 |
+| SS3 | Problem on the server | 360 |
+| SS4 | Nothing to switch to | 360 |
+| — | 4 · Windows (and every wide screen) (group) | 363 |
+| G1 | Hold, Windows 1100 × 760 | 363 |
+| G2 | The sum, Windows | 363 |
+| G3 | Phone landscape (and tablets) | 363 |
