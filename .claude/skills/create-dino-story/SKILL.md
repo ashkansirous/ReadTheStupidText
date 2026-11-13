@@ -87,6 +87,9 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   `"traditional"` for a tale nobody owns) and `retold: true` for every book that is not the user's own. Own books: `storyBy` is the user's name (plus a co-author) and no `retold`.
   A classic needs its real original author, checked, never guessed (Potter, Aesop, Andersen, the Brothers Grimm...). The illustrator is Ashkan Sirous unless `illustration` says otherwise,
   and the month is the book's `added` date. Nobody types the page into `story.md`; `check` fails a book without `storyBy`. It shows as the last page in every reading mode (an older app reads it aloud).
+  **Slice 359: every book also gets a drawn back-cover picture** (one per book, no words in it, the middle left calm because the reader lays the credit lines over it): `content/dino/<stem>/back-cover.jpg`
+  (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
+  `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).
 - Translations: `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
   translate into `content/dino/<stem>/translations/<lang>.json` (all 13 languages).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.
@@ -268,6 +271,9 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   path: `content/dino/<stem>`. It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,
   `<target>/cover.jpg` and `<target>/cover-thumb.jpg` (288x384, the small cover the store list fetches).
+- The back cover (Slice 359) goes through the same script, so its app copy is made the same way: copy the picture twice into an empty scratch folder as `cover.jpg` and `1.jpg`, run the script with page count 1 and a scratch
+  target, and copy that target's `cover.jpg` to `content/dino/<stem>/back-cover.jpg`. The untouched original goes to `content/dino/<stem>/high-res/back-cover.jpg` (Slice 350 rules: LFS, never read by the build).
+  Then `stamp` a starter (a store book needs none) and `build` a starter so its committed package carries the picture.
 - Last, `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`
   for the coordinator's second look.
 

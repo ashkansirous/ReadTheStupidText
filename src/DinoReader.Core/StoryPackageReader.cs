@@ -387,6 +387,7 @@ public static class StoryPackageReader
         {
             Pages = story.Pages.Select(p => p with { ImageFile = Keep(p.ImageFile) }).ToList(),
             CoverFile = Keep(story.CoverFile),
+            BackCover = story.BackCover is { } back ? back with { PictureFile = Keep(back.PictureFile) } : null,
         }, entries);
     }
 

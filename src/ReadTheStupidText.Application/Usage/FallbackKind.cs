@@ -255,6 +255,10 @@ public static class FallbackReason
     /// <summary>Slice 351 (area "speech"): the player threw while playing an animal's clip.</summary>
     public const string AnimalClipPlayFailed = "animal_clip_play_failed";
 
+    // Slice 359.
+    /// <summary>Slice 359 (area "library"): a book names a drawn back-cover picture but the file is missing, so the live credits page of Slice 237 is shown instead.</summary>
+    public const string BackCoverMissing = "back_cover_missing";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -268,6 +272,7 @@ public static class FallbackReason
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
+        BackCoverMissing,
     ];
 }
 

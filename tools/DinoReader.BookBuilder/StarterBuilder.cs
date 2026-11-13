@@ -122,6 +122,29 @@ internal static class StarterBuilder
         }
     }
 
+    /// <summary>Slice 359: the book's <c>back-cover.jpg</c> copied into the story's folder, so the package carries it; a story with no back-cover picture copies nothing.</summary>
+    public static void CopyBackCoverPicture(Story story, string stem, FileStoryLibrary library)
+    {
+        string source = Books.Folder(stem).BackCoverPath;
+        if (story.BackCover is null && File.Exists(source))
+        {
+            throw new InvalidOperationException($"{stem}: {source} exists but the book has no back-cover credit fields in book.json, so the picture would be left out of the package");
+        }
+
+        if (story.BackCover?.PictureFile is not { } name)
+        {
+            return;
+        }
+
+        string? target = library.TryResolveFile(story.Id, name);
+        if (!File.Exists(source) || target is null)
+        {
+            throw new InvalidOperationException($"{stem}: cannot pack the back cover: {(File.Exists(source) ? $"the story folder has no place for {name}" : $"{source} does not exist")}");
+        }
+
+        File.Copy(source, target, overwrite: true);
+    }
+
     public static string RepoRoot() => Books.RepoRoot();
 
     public static Story Build(string id, string title, string text, int colourIndex)
@@ -187,6 +210,7 @@ internal static class StarterBuilder
             Story story = WithTranslations(WithPictures(Build(id, title, text, colour), pictures), stem);
             await library.AddAsync(story);
             CopyPictures(story, pictures, library);
+            CopyBackCoverPicture(story, stem, library);
             built.Add((fileName, await WithPictureCoverAsync(story, CoverPictureOf(stem), library)));
         }
 
@@ -221,7 +245,7 @@ internal static class StarterBuilder
 
         BookFolder book = Books.Folder(stem);
         BookInfo info = book.Info;
-        return story with { Translations = tables.Count == 0 ? null : WithTitles(tables, story.Title, book.Titles), TextInPictures = info.TextInPictures == true, BackCover = info.BackCover };
+        return story with { Translations = tables.Count == 0 ? null : WithTitles(tables, story.Title, book.Titles), TextInPictures = info.TextInPictures == true, BackCover = book.BackCover };
     }
 
     /// <summary>Slice 239: the book's own titles (<c>titles.json</c>) go into each language's table under the English title, so the shelf and the reading screen find them

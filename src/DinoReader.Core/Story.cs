@@ -159,9 +159,9 @@ public sealed record Story(
         _ => null,
     };
 
-    /// <summary>Every picture file the story names (page pictures and the chosen cover photo), without blanks or repeats.</summary>
+    /// <summary>Every picture file the story names (page pictures, the chosen cover photo and the back-cover picture, Slice 359), without blanks or repeats.</summary>
     public IEnumerable<string> PictureFiles() =>
-        Pages.Select(p => p.ImageFile).Append(CoverFile)
+        Pages.Select(p => p.ImageFile).Append(CoverFile).Append(BackCover?.PictureFile)
             .Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).Distinct(StringComparer.Ordinal);
 
     /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>

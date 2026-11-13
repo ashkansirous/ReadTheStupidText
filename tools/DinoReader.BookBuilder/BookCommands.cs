@@ -63,6 +63,7 @@ internal static class BookCommands
         var problems = new List<string>();
         problems.AddRange(CheckHashes());
         problems.AddRange(CheckIds());
+        problems.AddRange(CheckBackCovers());
         problems.AddRange(CheckStoreBooksBuild());
         problems.AddRange(CheckStoreTitles());
         problems.AddRange(await CheckStartersAsync());
@@ -147,6 +148,68 @@ internal static class BookCommands
     }
 
     private static IEnumerable<string> CheckIds() => IdProblems();
+
+    /// <summary>Slice 359: every book except Good Enough (its pictures are being redrawn, Slice 350 E) has a <c>back-cover.jpg</c>.</summary>
+    private static IEnumerable<string> CheckBackCovers() =>
+        Books.All.SelectMany(b => BackCoverProblems(b.Stem, b.BackCoverPath, b.Info.BackCover is not null));
+
+    /// <summary>The problem with a book's back-cover picture: missing (Good Enough alone may lack it), not a JPEG, not 3:4 (the reader frames it 3:4), or present while book.json has no credit
+    /// fields (<paramref name="hasCredits"/> false: the picture would never be packed or shown); null when it is fine.</summary>
+    public static string? BackCoverProblem(string stem, string path, bool hasCredits = true) =>
+        BackCoverProblems(stem, path, hasCredits) is { Count: > 0 } problems ? string.Join("; ", problems) : null;
+
+    /// <summary>Every problem with a book's back cover, not only the first: lost credit fields (with or without a picture: the book would show no back cover), a missing, non-JPEG or mis-shaped picture.</summary>
+    public static IReadOnlyList<string> BackCoverProblems(string stem, string path, bool hasCredits = true)
+    {
+        var problems = new List<string>();
+        if (!hasCredits)
+        {
+            problems.Add($"{stem}'s book.json has no credit fields (storyBy, retold, illustration, month), so it shows no back cover and a back-cover.jpg would never be packed or shown");
+        }
+
+        if (!File.Exists(path))
+        {
+            if (stem != StarterBuilder.GoodEnoughStem)
+            {
+                problems.Add($"{stem} has no back-cover.jpg (every book needs a drawn back cover, Slice 359)");
+            }
+
+            return problems;
+        }
+
+        problems.AddRange(PictureProblems(stem, path));
+        return problems;
+    }
+
+    private static IEnumerable<string> PictureProblems(string stem, string path)
+    {
+        byte[] head = new byte[JpegMagic.Length];
+        using (FileStream stream = File.OpenRead(path))
+        {
+            if (stream.Read(head, 0, head.Length) != head.Length || !head.AsSpan().SequenceEqual(JpegMagic))
+            {
+                return [$"{stem}/back-cover.jpg is not a JPEG"];
+            }
+        }
+
+        return AspectProblem(stem, path) is { } problem ? [problem] : [];
+    }
+
+    private static string? AspectProblem(string stem, string path)
+    {
+        if (JpegSize.Of(path) is not { } size)
+        {
+            return $"{stem}/back-cover.jpg has no readable size";
+        }
+
+        double aspect = (double)size.Width / size.Height;
+        return Math.Abs(aspect - BackCoverAspect) <= BackCoverAspectTolerance ? null : $"{stem}/back-cover.jpg is {size.Width}x{size.Height}, not 3:4 (the reader frames it 3:4 and would crop it)";
+    }
+
+    private const double BackCoverAspect = 0.75;
+    private const double BackCoverAspectTolerance = 0.01;
+
+    private static readonly byte[] JpegMagic = [0xFF, 0xD8, 0xFF];
 
     internal static IEnumerable<string> IdProblems() =>
         Books.All.GroupBy(b => b.Info.Id).Where(g => g.Count() > 1).Select(g => $"the books {string.Join(", ", g.Select(b => b.Stem))} share the id {g.Key}");

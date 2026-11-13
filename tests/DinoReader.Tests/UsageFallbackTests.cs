@@ -33,6 +33,7 @@ public sealed class UsageFallbackTests
     [InlineData("config", "config_cached")]
     [InlineData("config", "config_default")]
     [InlineData("ui_language", "ui_language_unsupported")]
+    [InlineData("library", "back_cover_missing")]
     public void Slice_273_part_C_kinds_have_a_detail_the_worker_list_accepts(string area, string reason) =>
         Assert.Equal($"{area}:{reason}", FallbackUsage.Detail(area, reason));
 
