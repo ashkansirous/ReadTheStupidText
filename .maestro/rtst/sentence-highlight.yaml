@@ -1,9 +1,9 @@
-# Slice 190: a chunk of three sentences highlights one sentence at a time. The Debug marker SENTENCE <chunk> <n>
-# is written when the highlight moves to sentence n of a chunk that is still playing, so sentence 1 of chunk 0
-# appearing before READ_END proves the highlight moved inside the chunk. Android emulator, English only
+# Slice 190: the highlight moves one sentence at a time inside a multi-sentence chunk. The Debug marker SENTENCE_MOVED
+# is written once, the first time the highlight moves past the first sentence of any chunk that is still playing,
+# so it appearing before READ_END proves the move whatever the chunker does (Slice 361). Android emulator, English only
 # (Maestro's inputText does not type Farsi reliably; the Farsi/RTL spans are unit-tested).
 # expect-log: READ_START
-# expect-log: SENTENCE 0 1
+# expect-log: SENTENCE_MOVED
 # expect-log: READ_END
 appId: uk.sirous.readthestupidtext
 name: Highlight moves one sentence at a time
