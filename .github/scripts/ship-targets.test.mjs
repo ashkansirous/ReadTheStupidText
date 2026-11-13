@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct, testSuites } from './ship-targets.mjs';
 
 // Slice 265: every book is store-only content (Slice 299: dino-starters.json is gone); the book stems are read from the real content folders, so a renamed book cannot leave these tests empty.
 const CONTENT_DIR = fileURLToPath(new URL('../../content/dino/', import.meta.url));
@@ -38,6 +38,7 @@ const CASES = [
     ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/ReadTheStupidText.Application/X.cs'], { ...ALL3, dinostore: true }],
     ['Documents core', ['src/ReadTheStupidText.Documents/X.cs'], ALL3],
     ['unit tests build and ship nothing', ['tests/ReadTheStupidText.Tests/X.cs'], {}],
+    ['shared unit tests build and ship nothing', ['tests/Shared.Tests/X.cs'], {}],
     // Slice 316 item 8: no build or test job goes through the solution file (each builds its own csproj), so editing it, e.g. a Dino-only line, ships nothing.
     ['solution file builds and ships nothing', ['ReadTheStupidText.slnx'], {}],
     ['global.json', ['global.json'], ALL3],
@@ -119,6 +120,43 @@ test('a Windows App change builds and submits to the Store', () => {
 
 test('a tests-only change builds and ships nothing', () => {
     assert.deepEqual(targetsOf(['tests/ReadTheStupidText.Tests/X.cs']), NONE);
+});
+
+// Slice 368: tests.yml runs the shared suite (tests/Shared.Tests) and RTST's own (tests/ReadTheStupidText.Tests); testSuites picks which.
+const SUITE_CASES = [
+    ['a shared engine file (Application) selects both suites', ['src/ReadTheStupidText.Application/Reading/X.cs'], { shared: true, rtst: true }],
+    ['Domain selects both', ['src/ReadTheStupidText.Domain/X.cs'], { shared: true, rtst: true }],
+    ['Documents selects both', ['src/ReadTheStupidText.Documents/X.cs'], { shared: true, rtst: true }],
+    ['Infrastructure selects both', ['src/ReadTheStupidText.Infrastructure/Reading/X.cs'], { shared: true, rtst: true }],
+    ['Mobile.Shared root code selects both', [`${S}/PackDownloadHost.cs`], { shared: true, rtst: true }],
+    // The repo-wide guards (FallbackGuardTests, SherpaVersionPinTests) live in Shared.Tests and scan all of src/.
+    ['a tray change selects both suites (the guards scan it)', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { shared: true, rtst: true }],
+    ['an App change selects both suites', ['src/ReadTheStupidText.App/X.xaml.cs'], { shared: true, rtst: true }],
+    ['the RTST phone app selects both suites', [`${M}/ReaderPage.xaml.cs`], { shared: true, rtst: true }],
+    ['the Android packaging props select both suites (SherpaVersionPinTests reads them)', ['src/AndroidSherpaPackaging.props'], { shared: true, rtst: true }],
+    ['the pin checker selects the shared suite only (SherpaVersionPinTests runs it)', ['.github/scripts/check-sherpa-pins.mjs'], { shared: true, rtst: false }],
+    ['packs.yml (holds a sherpa-onnx pin) selects the shared suite only', ['.github/workflows/packs.yml'], { shared: true, rtst: false }],
+    ['the sound-words requirements (a sherpa-onnx pin) select the shared suite only', ['tools/sound-words-test/requirements.txt'], { shared: true, rtst: false }],
+    ['Dino app code selects the shared suite only (the guards scan it)', ['src/DinoReader.App/X.cs'], { shared: true, rtst: false }],
+    ['TestFakes.cs (linked into both test projects) selects both', ['tests/ReadTheStupidText.Tests/TestFakes.cs'], { shared: true, rtst: true }],
+    ['TranslationFakes.cs (linked) selects both', ['tests/ReadTheStupidText.Tests/TranslationFakes.cs'], { shared: true, rtst: true }],
+    ['MainThreadStub.cs (linked) selects both', ['tests/Shared.Tests/MainThreadStub.cs'], { shared: true, rtst: true }],
+    ['a change to RTST tests only selects only the RTST suite', ['tests/ReadTheStupidText.Tests/X.cs'], { shared: false, rtst: true }],
+    ['a change to the shared tests only selects only the shared suite', ['tests/Shared.Tests/X.cs'], { shared: true, rtst: false }],
+    ['Dino Reader tests alone select neither .NET suite here (dinoreader.yml owns them)', ['tests/DinoReader.Tests/ParserTests.cs'], { shared: false, rtst: false }],
+    ['Markdown selects nothing', ['src/ReadTheStupidText.Application/CLAUDE.md'], { shared: false, rtst: false }],
+    ['an unknown range selects both', null, { shared: true, rtst: true }],
+];
+
+for (const [name, files, expected] of SUITE_CASES) {
+    test(`testSuites: ${name}`, () => {
+        assert.deepEqual(testSuites(files), expected);
+    });
+}
+
+test('--tests prints shared and rtst for a file list on standard input', () => {
+    const out = execFileSync('node', [fileURLToPath(new URL('./ship-targets.mjs', import.meta.url)), '--local', '--tests', '--stdin'], { input: 'tests/ReadTheStupidText.Tests/X.cs\n', encoding: 'utf8' });
+    assert.equal(out.trim(), 'shared=false\nrtst=true');
 });
 
 test('force_all, a major bump and a missing base tag submit to the Store', () => {
@@ -297,8 +335,8 @@ const PR_TARGETS = {
     'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot'],
     'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot'],
     'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot'],
-    // tests.yml is RTST's suite (Slice 128): it gates the Windows, Android and iOS builds, never Dino alone.
-    'tests.yml': ['core', 'unittests', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot'],
+    // tests.yml holds RTST's suite and the shared suite (Slice 368; Slice 128 before it): the shared suite gates the Dino builds too, and testSuites() selects it for every Dino group, so a Dino-only PR must start this workflow.
+    'tests.yml': ['core', 'unittests', 'sharedtests', 'sherpapins', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'dinoapp', 'dinoios', 'dinowin'],
     // dinoreader.yml is Dino's suite: it runs for every Dino target (core is in each of them).
     'dinoreader.yml': ['core', 'dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'sharedroot'],
 };
@@ -397,10 +435,11 @@ test('parseCommits splits messages from their changed files', () => {
 test('parseLocalArgs reads --local, --base and --files, defaulting the base to origin/main', () => {
     const { repoRoot, ...plain } = parseLocalArgs(['--local']);
     assert.ok(repoRoot);
-    assert.deepEqual(plain, { local: true, files: false, stdin: false, base: 'origin/main' });
+    assert.deepEqual(plain, { local: true, files: false, stdin: false, tests: false, base: 'origin/main' });
     const { repoRoot: explicit, ...withFlags } = parseLocalArgs(['--local', '--base', 'main', '--files', '--repo-root', 'X']);
     assert.equal(explicit, 'X');
-    assert.deepEqual(withFlags, { local: true, files: true, stdin: false, base: 'main' });
+    assert.deepEqual(withFlags, { local: true, files: true, stdin: false, tests: false, base: 'main' });
+    assert.equal(parseLocalArgs(['--local', '--tests']).tests, true);
     assert.equal(parseLocalArgs([]).local, false);
 });
 

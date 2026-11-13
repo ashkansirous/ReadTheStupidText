@@ -5,7 +5,7 @@
  *
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
  *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
- *   - tests/ReadTheStupidText.Tests                               -> nothing (tests.yml runs it on PRs)
+ *   - tests/ReadTheStupidText.Tests, tests/Shared.Tests           -> nothing (tests.yml runs them on PRs; `--local --tests` / testSuites() says which suite a change needs, Slice 368)
  *   - App / Windows.Tray / Infrastructure / store-submit.yml / windows.yml -> windows + windowsstore (the Store submission)
  *   - Windows.Tray (Slice 128, tray-only code) maps to no dino* target: only App references it
  *   - Mobile/Platforms/Android/**                                 -> android
@@ -117,9 +117,15 @@ export const CORE_PATHS = [
  */
 export const GROUPS = {
     core: { include: CORE_PATHS },
-    // RTST's unit tests: they build and ship nothing, so no target maps here. The group only exists so
-    // tests.yml's pull_request.paths (which runs them on PRs) stays derived from GROUPS.
+    // The unit tests build and ship nothing, so no target maps here. The groups only exist so tests.yml's
+    // pull_request.paths (which runs them on PRs) stays derived from GROUPS, and so testSuites() can pick the suites.
+    // unittests: RTST's own (tray, control panel, phone app); sharedtests: the shared engine's (Slice 368).
     unittests: { include: ['tests/ReadTheStupidText.Tests/'] },
+    sharedtests: { include: ['tests/Shared.Tests/'] },
+    // The pin checker SherpaVersionPinTests runs, and the pin sites outside every other group (Slice 368): they select the shared suite only.
+    sherpapins: { include: ['.github/scripts/check-sherpa-pins.mjs', '.github/workflows/packs.yml', 'tools/sound-words-test/requirements.txt'] },
+    // Infrastructure is in `windows` too (RTST's suite builds on it); on its own it is shared code (Dino Reader on Windows reads with it).
+    infrastructure: { include: ['src/ReadTheStupidText.Infrastructure/'] },
     windows: {
         include: [
             'src/ReadTheStupidText.App/',
@@ -264,6 +270,32 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
     // rebuilds the MSIX (windows) for the GitHub release but is not worth a Store review.
     const windowsstore = everything || g.windows;
     return { windows, windowsstore, android, ios, dinoreader, dinoapp, dinoios, dinowin, dinostore };
+}
+
+/** Test files one project compiles from the other (see the two csproj files): editing one can break the other project. */
+const LINKED_TEST_FILES = [
+    'tests/ReadTheStupidText.Tests/TestFakes.cs',
+    'tests/ReadTheStupidText.Tests/TranslationFakes.cs',
+    'tests/Shared.Tests/MainThreadStub.cs',
+];
+
+/**
+ * Slice 368: which of RTST's two .NET suites a change set needs. `shared` (tests/Shared.Tests) covers Domain, Application,
+ * Documents, Infrastructure and Mobile.Shared's pure logic, so any of those selects it; `rtst` (tests/ReadTheStupidText.Tests)
+ * covers the tray, control panel and the RTST phone app on top of the same engine, so it runs for those and for core changes.
+ * The two repo-wide guards (FallbackGuardTests, SherpaVersionPinTests) live in Shared.Tests and scan all of src/, so any code
+ * change selects `shared`. Only a change to RTST's own tests (not the files the two projects link) selects `rtst` alone, and a change
+ * to the shared tests alone only `shared`. Unknown (`null`) selects both.
+ */
+export function testSuites(changedFiles) {
+    if (changedFiles === null) return { shared: true, rtst: true };
+    const g = touchedGroups(changedFiles);
+    // FallbackGuardTests and SherpaVersionPinTests (in Shared.Tests) scan all of src/, so every code group selects the shared suite too.
+    const code = g.core || g.infrastructure || g.sharedroot || g.windows || g.android || g.ios || g.mobileshared || g.dinoapp || g.dinoios || g.dinowin;
+    const linked = changedFiles.some((file) => LINKED_TEST_FILES.includes(file));
+    const shared = code || g.sharedtests || g.sherpapins || linked;
+    const rtst = g.core || g.unittests || g.windows || g.android || g.ios || g.mobileshared || g.sharedroot || linked;
+    return { shared, rtst };
 }
 
 const appTagPattern = (prefix) => new RegExp(`^${prefix}(\\d+)\\.(\\d+)\\.(\\d+)$`);
@@ -447,12 +479,15 @@ export function parseLocalArgs(argv) {
         local: argv.includes('--local'),
         files: argv.includes('--files'),
         stdin: argv.includes('--stdin'),
+        tests: argv.includes('--tests'),
         base: baseIndex >= 0 && argv[baseIndex + 1] ? argv[baseIndex + 1] : DEFAULT_LOCAL_BASE,
     };
 }
 
-function mainLocal({ base, files, stdin, repoRoot }) {
+function mainLocal({ base, files, stdin, repoRoot, tests }) {
     const changedFiles = stdin ? readStdinFiles() : localChangedFiles(base, repoRoot);
+    // Slice 368: `--tests` prints shared=<bool> and rtst=<bool> (and appends them to $GITHUB_OUTPUT), tests.yml's suite selection.
+    if (tests) return writeOutputs(testSuites(changedFiles));
     if (files) {
         // `*` means unknown (git failed); an empty list prints nothing, so a clean tree is not mistaken for a failure.
         if (changedFiles === null) console.log('*');

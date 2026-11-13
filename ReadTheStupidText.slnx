@@ -31,6 +31,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj" />
+    <Project Path="tests/Shared.Tests/Shared.Tests.csproj" />
     <Project Path="tests/DinoReader.Tests/DinoReader.Tests.csproj" />
   </Folder>
 </Solution>

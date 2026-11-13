@@ -4,7 +4,7 @@ using ReadTheStupidText.Mobile.Shared;
 namespace ReadTheStupidText.Tests;
 
 // PackDownloadHost is static state: these tests share it, so they run one after another and put back what they change.
-[Collection("PackDownloadHost")]
+[Collection(PackDownloadHostCollection.Name)]
 public class PackDownloadHostLabelTests : IDisposable
 {
     private const long OneMegabyte = 1_000_000; // StorytellerOffer.Megabytes counts decimal megabytes

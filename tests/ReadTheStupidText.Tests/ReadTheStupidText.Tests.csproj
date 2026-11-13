@@ -28,32 +28,15 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\LocalizedPackStatus.cs" Link="Mobile\LocalizedPackStatus.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.cs" Link="Mobile\AppResources.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
-    <!-- Debug-only test-hook command parser (Slice 162); its file is empty outside Debug. -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookLaunchKeys.cs" Link="Mobile\TestHookLaunchKeys.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
+    <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
+    <!-- Slice 368: every other Mobile.Shared link moved to tests/Shared.Tests with its tests. PackStatusText uses PackInstallState,
+         which lives in VoicePackInstaller.cs (also linked in Shared.Tests; two assemblies, no reference between them), and that file
+         refers to MAUI's MainThread, so the test stand-in is linked from there too. -->
+    <Compile Include="..\Shared.Tests\MainThreadStub.cs" Link="Mobile\MainThreadStub.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialPolicy.cs" Link="Mobile\StalePartialPolicy.cs" />
-    <!-- Slice 243 item 5 / Slice 249: the log-line words and the "Report a problem" code and report, pure and shared by both apps. -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\TraceLines.cs" Link="Mobile\TraceLines.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\ReportCode.cs" Link="Mobile\ReportCode.cs" />
-    <!-- The launch scan's wanted/undecided pack rule (Slice 208), pulled out of the service so DecideAll is tested (Slice 225). -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialDecider.cs" Link="Mobile\StalePartialDecider.cs" />
-    <!-- The translation download session has no MAUI types (Slice 187). -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\TranslationModelDownloadSession.cs" Link="Mobile\TranslationModelDownloadSession.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />
-    <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IDocumentScanner.cs" Link="Mobile\IDocumentScanner.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerReporting.cs" Link="Mobile\DocumentScannerReporting.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerRegistration.cs" Link="Mobile\DocumentScannerRegistration.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Usage\ConfigFallbackHold.cs" Link="Mobile\ConfigFallbackHold.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerStartFailedException.cs" Link="Mobile\DocumentScannerStartFailedException.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerUnavailableException.cs" Link="Mobile\DocumentScannerUnavailableException.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerPreparingException.cs" Link="Mobile\DocumentScannerPreparingException.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@ using ReadTheStupidText.Mobile.Shared;
 namespace ReadTheStupidText.Tests;
 
 // Slice 233: one rule for the "Download paused. Tap to finish." notice on Android and iOS.
-[Collection("PackDownloadHost")]
+[Collection(PackDownloadHostCollection.Name)]
 public class PausedNoticePolicyTests
 {
     [Theory]
