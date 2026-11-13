@@ -6,6 +6,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Read The Stupid Text
 
+### Slice 373: RTST voice rows RT1 and RT2 ([slice](slices/373-rtst-voice-rows-rt1-rt2.md))
+- VM check `rtst-language-rows` not run: free memory 7 GB was under the 8 GB the VM needs, so the VM was not started.
+- The Windows failed row (not downloaded line, error line, Retry): the VM has no forced-failure hook on Windows.
+- Layout check: no `layout-check ok` line was produced.
+- iOS on a device (iOS only compiled).
+- A real failed download on the S21.
+
 ### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
 - **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
 
