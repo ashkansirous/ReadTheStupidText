@@ -3,6 +3,10 @@
 
 *Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below.*
 
+*Item 6 in progress (wave 2026-11-13), draft PR.*
+
+**Touches (item 6):** `src/DinoReader.App/BackCoverPages.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingTransport*.cs` (the view-switch hide, if it lives there), `src/DinoReader.App/App.xaml`, `src/DinoReader.App/DinoTokens.cs`, `src/DinoReader.Core/BackCover*.cs`, `.maestro/dino/back-cover*.yaml`, `tests/DinoReader.Tests/BackCover*.cs`. Item 6 needs none of the content, skill or agent paths below (the live gedlg worktree edits those).
+
 **Touches:** `content/dino/*/back-cover.jpg` (new), `content/dino/*/high-res/back-cover.jpg` (new, LFS), `content/dino/*/art.md`, `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson*.cs`, `src/DinoReader.Core/BackCover*.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/BackCoverPages.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Resources/Raw/testbooks/*.dino`, `.maestro/dino/back-cover*.yaml`, `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `tests/DinoReader.Tests/**`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`
 
 ## Why
