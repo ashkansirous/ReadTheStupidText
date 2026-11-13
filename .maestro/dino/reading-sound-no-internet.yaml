@@ -3,6 +3,7 @@
 # language (Farsi) whose pack for The Three Little Pigs is installed by the install-audio-pack hook; the card then has the "Read in" button, and tapping it reads this book in Farsi (this reading only).
 # The flow fails against the old behaviour: there is no card, so "[Reading] sound-state kind=NoInternet" and the ids ReadingSoundNote / ReadingSoundReadIn never exist.
 # expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
 # expect-log: HOOK pack-repair ok offline
 # expect-log: [Reading] sound-state kind=NoInternet percent=0 switch=no
 # expect-log: [Reading] sound-state kind=NoInternet percent=0 switch=yes
@@ -31,7 +32,18 @@ name: No internet shows the card, with Read in only when another language's soun
     arguments:
       cmd: pack-repair
       mode: offline
-# SS4: one family language, the sound of this book is not on the phone.
+# SS4: one family language, the sound of this book is not on the phone. The shelf audio run installs the main language's pack at launch, so delete this book's (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: three-little-pigs
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
 - launchApp:
     stopApp: false
     arguments:
@@ -51,12 +63,18 @@ name: No internet shows the card, with Read in only when another language's soun
     visible:
       id: StoryTile
     timeout: 20000
-# SS2: add Farsi as a second family language and put its pack for the book on the phone; the card now offers it.
+# SS2: add Farsi as a second family language and put its pack for the book on the phone; the card now offers it. The install hook downloads for real, so the forced failure is off for it (it made the
+# install fail in the second run) and back on before the book opens, so the Swedish try still fails.
 - launchApp:
     stopApp: false
     arguments:
       cmd: shelf-audio
       lang: fa
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"
 - launchApp:
     stopApp: false
     arguments:
@@ -66,8 +84,13 @@ name: No internet shows the card, with Read in only when another language's soun
 - extendedWaitUntil:
     visible:
       id: PackInstallNeverShown
-    timeout: 6000
+    timeout: 8000
     optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: network
 - launchApp:
     stopApp: false
     arguments:

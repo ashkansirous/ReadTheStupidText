@@ -4,6 +4,7 @@
 # The flow fails against the old behaviour: no repair try starts on open, so "pack repair ... try starts" and the "[Reading] sound-state kind=Getting" marker are never written (the old page showed only
 # "Waiting for Wi-Fi" or a quiet "no sound" line).
 # expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
 # expect-log: HOOK test-store ok slow
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473: opened, missing packs are tried now
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: try starts
@@ -27,6 +28,18 @@ name: Opening a book with its sound missing downloads it and shows the percent
     arguments:
       cmd: test-store
       mode: slow
+# The shelf audio run installs the main language's pack at launch, before any step here: delete it so the book opens with its sound missing (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: gingerbread-man
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
 - launchApp:
     stopApp: false
     arguments:

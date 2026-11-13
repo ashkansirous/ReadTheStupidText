@@ -213,8 +213,10 @@ public sealed class PackRepair(Action<RepairScope> requestRun, Func<string, stri
 		try
 		{
 			_log.Prune(stillNeeded); // an installed pack, a book with no listing or no pack by design, a removed language: nothing to retry
+			AudioPackLog.Write($"{Tag}: hourly tick");
 			if (!_log.AnyDue(Now))
 			{
+				AudioPackLog.Write($"{Tag}: tick, nothing is due yet");
 				return; // nothing that was tried and failed is an hour old yet: no listing fetch, no scan
 			}
 

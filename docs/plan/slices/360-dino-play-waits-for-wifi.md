@@ -1,6 +1,6 @@
 # Slice 360 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
 
-*In progress (wave 2026-11-13), draft PR.*
+*Built 2026-11-13, PR #1063 pending merge.*
 
 **Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.Core/ShelfAudioNetwork.cs`, `src/DinoReader.Core/ShelfAudioPlan.cs`, `src/DinoReader.Core/PackRepair*.cs` (new), `src/DinoReader.App/PackRepair*.cs` (new), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/*`, `.maestro/dino/*` (new reading-sound flows), `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`, `worker/stories-audio.test.mjs`, `src/DinoReader.App/ShelfAudioPacksCard.cs`, `src/DinoReader.App/SoundStatusPill.cs`, `src/DinoReader.App/SoundStatusPillState.cs`, `src/DinoReader.Core/InstalledShelfAudio.cs`
 
@@ -84,18 +84,18 @@ Stateful work, so the design is fixed before the build:
 
 ## Work
 
-- [ ] **Hourly retry and retry on open** (Decisions 1-2): a pack-repair run separate from the weekly book update check;
+- [x] **Hourly retry and retry on open** (Decisions 1-2): a pack-repair run separate from the weekly book update check;
   remove the per-launch two-failure cap for it (keep a back-off inside the hour); a 404 refreshes the listing and retries.
   Due-check logic in Core with tests (never tried, failed 59 min ago, failed 61 min ago, 404 then new version).
-- [ ] **Mobile data everywhere for book packs** (Decision 3): drop the Wi-Fi wait in `ShelfAudioPacks`/`ShelfAudioNetwork`
+- [x] **Mobile data everywhere for book packs** (Decision 3): drop the Wi-Fi wait in `ShelfAudioPacks`/`ShelfAudioNetwork`
   for book packs and the `ShelfAudioAsk` question on `LanguagePage`, `StoryLanguagesPage`, `IntroWizardPage`; remove the
   `ShelfAudio_WaitingWifi` pill (the mock supersedes "if nothing else uses it": frame 198's pill goes). Update the rule in `src/DinoReader.App/CLAUDE.md`.
-- [ ] **Keep old packs on the server** until phones have moved: `publish-store-books.mjs` leaves the previous pack version
+- [x] **Keep old packs on the server** until phones have moved: `publish-store-books.mjs` leaves the previous pack version
   in R2 and the Worker serves a version one behind the listing, so a phone with a slightly old listing never gets a 404.
 
-- [ ] **Play never waits silently.** When the reader opens a book whose pack for the reading language is missing, it
+- [x] **Play never waits silently.** When the reader opens a book whose pack for the reading language is missing, it
   downloads at once on any network (Decision 2) and shows the download's progress, not a Wi-Fi wait.
-- [ ] **Say what is really wrong** (the mock, Design SS1-SS4, supersedes the earlier wording). Four states under the words
+- [x] **Say what is really wrong** (the mock, Design SS1-SS4, supersedes the earlier wording). Four states under the words
   card, each a pill or card, never a pop-up, and the words keep showing and highlighting: downloading `Reading_GettingBookSound`
   "Getting {0} sound for this book · {1}%"; no internet `Reading_NoInternetSound` "No internet, so this book's {0} sound can't
   download yet." plus the button `Reading_ReadIn` "Read in {0}" when another family language's sound is on the phone; pack missing
@@ -104,14 +104,21 @@ Stateful work, so the design is fixed before the build:
   still show, and the sound comes once you're back online." with no button (also used for a server problem when there is no other
   language). The `ShelfAudio_WaitingWifi` "Waiting for Wi-Fi..." pill (frame 198) goes, not "if nothing else uses it". Strings in every
   `AppResources.<lang>.resx`; `{0}` is the language's name in its own script.
-- [ ] **Log it.** A fallback `premade_audio:waiting_wifi` and `premade_audio:pack_missing_on_play` (closed reasons,
+- [x] **Log it.** A fallback `premade_audio:waiting_wifi` and `premade_audio:pack_missing_on_play` (closed reasons,
   `FallbackReason` + `worker/events.ts` `FALLBACK_REASONS` + test), so this case shows in the data next time.
-- [ ] **Find the missing pack.** From the 11-09 rows (book id in `blob` fields) list which book and language returned
+- [x] **Find the missing pack.** From the 11-09 rows (book id in `blob` fields) list which book and language returned
   `failed:missing`, check that pack exists in R2 now, and record the answer here. If a release or store upload can leave
   a listing pointing at a pack that isn't uploaded yet, fix that order in `publish-store`.
+  Answer (`analytics-query`, 2026-11-13; findings in `reviews/s360-missing-pack.md`): book The Three Little Pigs
+  (`966400017c494fb5b045786f53852c9e`), en and fa each `audio_pack_download failed:missing` x2, Android 1.123.2, GB,
+  2026-11-09 20:15-20:40 UTC. The 5 `premade_audio:clip_missing` rows carry book `none`. The version asked is not recorded
+  (blob2 book, blob3 lang, blob9 outcome have no version column). Both packs are live now: en v2 (1514197 bytes), fa v3
+  (1619564 bytes), book v15; `GET /api/stories/<id>/audio/en?v=2` and `/audio/fa?v=3` both return 200. Likely, not proven:
+  the 11-09 listing pointed at a pack version not served, which fits commit `b60cca23` re-rendering the book that morning.
+  `publish-store-books.mjs` already never deletes old packs, and the Worker now serves one version behind the listing.
 - [ ] **iOS twin:** the same code is shared (`ShelfAudioPacks`, `ReadingPage`); verify the iOS cellular check
-  (`ShelfAudioNetwork`) on a TestFlight build.
-- [ ] **Side crash found on the run:** holding the grown-ups' 3-second press crashed 1.124.1 once with
+  (`ShelfAudioNetwork`) on a TestFlight build. Code shared, not compiled or run on iOS after the last fixes (see Not yet verified).
+- [x] **Side crash found on the run:** holding the grown-ups' 3-second press crashed 1.124.1 once with
   `PermissionException ... android.permission.VIBRATE` (log `D:\ReadTheStupidText-worktrees\reviews\dino-1.124.1-cellular-crash.txt`).
   Add the permission to `AndroidManifest.xml` or drop the haptic; check iOS needs nothing.
 
@@ -166,7 +173,9 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
   language-change rule's `IntroWizardPage` wording goes with Slice 362. The honoured-only-if-installed rule for the child's pick stays: "Read in {0}" appears only when
   that audio is on the phone. No hard rule (privacy, store, parity) clashes: iOS and Android share the code.
 
-*From review:*
+*Changed while building:* the `premade_audio:waiting_wifi` fallback exists but has no emitter (the Wi-Fi wait is gone), so its post-release count will read zero; `pack_missing_on_play` is the live one. Debug hooks added: `force-pack-failure`, `pack-repair`, `remove-audio-pack`. The saved store listing (`store-listing.json`, `KnownListing`, `PackExpectation`) came from review rounds 3-5, see the Expectation rule above. Device flows (emulator-5554, logs in `D:/ReadTheStupidText-worktrees/reviews/w53-device/s360-run1/`, `s360-run2/`, `s360-run3/`): `dino-landscape-gate` PASS (hold, no VIBRATE `PermissionException`); `reading-sound-getting` and `reading-sound-retry-on-open` PASS (run 2, cache ae67c7099028); `reading-sound-no-internet` and `reading-sound-failed-404` PASS (run 3, cache af6412669b6c). Earlier failures were flow setup (pack already installed at launch, a forced network failure blocking the real install, a log marker the app never wrote), not app bugs.
+
+*From review:* `reviews/s360-check6.md` (check pass 6 on the remove-audio-pack hook, the OnTick log lines and the four reading-sound flows): no findings.
 - Skipped #9 (`reviews/s360-high.md`): "Convention and dead code - LOW" (long `ShowAudioStatus`, magic strings in `PackRepairHook`, `SoundStatusPillState.From`, Preparing/WaitingForInternet pill kinds, `RunIncludes`, `Reading_GettingSound`, `FallbackReason.WaitingWifi`) - style only; `waiting_wifi` is kept because the Log item names it, and it has no emitter now (the Wi-Fi wait is gone), so its Verification count will read zero.
 
 - Skipped #8 (`reviews/s360-medium.md`): "Unrelated VIBRATE permission (grown-ups' 3-second press haptic) added; not in the slice's Decisions or SS1-SS4" - it is this slice's own work item "Side crash found on the run"; iOS needs no permission for haptics.
@@ -190,4 +199,18 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
 - Offline launch with a saved listing older than a newly published pack: the child opens the book in that language, sees no card until the next online launch refreshes the listing (check3 #1).
 
 - Check no jank opening a book on a slow phone (the pack-folder listing on the UI thread in `ReadingPage.OnAppearing`, review #9).
-- _(rest filled when built)_
+- iOS compile after the last fixes, and a TestFlight run of the cellular pack download and the reading-page states.
+- Real airplane mode on a phone (the flows force offline by a Debug hook).
+- Add a language on mobile data only: every shelf book's pack for it downloads with no question.
+- After release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
+- Worker serving one version behind, live, after the batched release deploys.
+
+#### For CLAUDE.md
+
+- Book audio packs download on any network, never wait for Wi-Fi, and `ShelfAudioAsk` is gone; `ShelfAudioNetwork.NeedsWifi` is for the large storyteller pack only. Failed or 404 packs are retried hourly and on opening the book by `PackRepair` (due check `PackRepairDue` in Core), never by the weekly `BookUpdater` check. "Is a pack expected" is only `PackExpectation.For` (Core). (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
+- `publish-store-books.mjs` never deletes old pack versions; the Worker (`worker/stories.ts`) serves one version behind the listing. (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
+- The grown-ups' hold haptic needs `android.permission.VIBRATE` in `AndroidManifest.xml`; iOS needs none. (Slice 360: docs/plan/slices/360-dino-play-waits-for-wifi.md)
+
+#### For README.md
+
+Nothing user-facing to add.

@@ -3,6 +3,7 @@
 # "now" and it installs. The Debug markers: "opened, missing packs are tried now" (the open trigger) and the pack's own "Ok".
 # The flow fails against the old behaviour: opening the book started nothing, so after the failure the pack stayed missing until the next weekly check and "pack repair ...: Ok" is never written.
 # expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
 # expect-log: HOOK test-store ok ok
 # expect-log: HOOK force-pack-failure ok network
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Failed
@@ -31,6 +32,18 @@ name: Opening the book again retries its failed pack at once
     arguments:
       cmd: force-pack-failure
       mode: network
+# The shelf audio run installs the main language's pack at launch, before any step here: delete it so the book opens with its sound missing (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: gingerbread-man
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
 - launchApp:
     stopApp: false
     arguments:

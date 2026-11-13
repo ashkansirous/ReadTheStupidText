@@ -3,11 +3,12 @@
 # a tick inside the hour is "not due yet", and after pack-repair mode=advance (the process clock moves 61 minutes) the next tick tries again; with the failure switched off that try installs the pack.
 # The flow fails against the old behaviour: the old weekly check never retried a 404, so "pack repair ...: Ok" after the advance is never written.
 # expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
 # expect-log: HOOK test-store ok ok
 # expect-log: HOOK force-pack-failure ok missing
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Missing404
 # expect-log: [Reading] sound-state kind=Failed percent=0 switch=no
-# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: not due yet
+# expect-log: pack repair: tick, nothing is due yet
 # expect-log: HOOK pack-repair ok advance
 # expect-log: pack repair: hourly tick
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Ok
@@ -34,6 +35,18 @@ name: A 404 shows the failed card and the hourly retry fetches the pack
     arguments:
       cmd: force-pack-failure
       mode: missing
+# The shelf audio run installs the main language's pack at launch, before any step here: delete it so the book opens with its sound missing (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: gingerbread-man
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
 - launchApp:
     stopApp: false
     arguments:
