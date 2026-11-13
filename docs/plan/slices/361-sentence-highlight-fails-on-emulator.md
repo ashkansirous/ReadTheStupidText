@@ -4,7 +4,7 @@
 
 **Status:** planned.
 
-**Touches:** `.maestro/rtst/sentence-highlight.yaml` (the Maestro flow under `tests/maestro`/`.maestro`) and the RTST read path (`ReaderPage`, the `RTST-TEST: SENTENCE` marker).
+**Touches:** `.maestro/rtst/sentence-highlight.yaml` and the RTST read path (`ReaderPage`, the `RTST-TEST: SENTENCE` marker).
 
 ## Evidence
 
