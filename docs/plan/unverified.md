@@ -4,6 +4,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 360: Dino play waits for Wi-Fi ([slice](slices/360-dino-play-waits-for-wifi.md))
+
+- **Device:** book pulled mid-launch keeps its card until relaunch (check5 #1); a malformed listing entry gets no card (check5 #2).
+- **Device:** offline launch with a saved listing older than a newly published pack: no card until the next online launch refreshes the listing (check3 #1).
+- **Device:** no jank opening a book on a slow phone (the pack-folder listing on the UI thread in `ReadingPage.OnAppearing`, review #9).
+- **You:** iOS compile after the last fixes, and a TestFlight run of the cellular pack download and the reading-page states.
+- **Device:** real airplane mode on a phone (the flows force offline by a Debug hook).
+- **Device:** add a language on mobile data only: every shelf book's pack for it downloads with no question.
+- **Device:** after release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
+- **Device:** Worker serving one version behind, live, after the batched release deploys.
+
 ### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
 
 - **Device:** the test run on Linux CI (the PR's checks).
