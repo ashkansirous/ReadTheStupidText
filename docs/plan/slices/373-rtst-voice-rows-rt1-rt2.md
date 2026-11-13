@@ -1,6 +1,6 @@
 # Slice 373 — RTST voice rows RT1 and RT2: per-row size, state and the error strip
 
-*Planned 2026-11-13.* Split out of [Slice 364](364-server-errors-design-pass.md) item C, whose *Waiting on the user* line said "main has no such row on Mobile or Windows". Checked 2026-11-13 against origin/main: the rows exist; they only carry no size, state or Retry of their own. So no new screen and no question for the user: the mock is built onto the existing language lists (the mock always wins).
+*In progress (wave 2026-11-13), draft PR.* Planned 2026-11-13. Split out of [Slice 364](364-server-errors-design-pass.md) item C, whose *Waiting on the user* line said "main has no such row on Mobile or Windows". Checked 2026-11-13 against origin/main: the rows exist; they only carry no size, state or Retry of their own. So no new screen and no question for the user: the mock is built onto the existing language lists (the mock always wins).
 
 **Touches:** `src/ReadTheStupidText.Mobile/LanguagePage.xaml`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml.cs`, `src/ReadTheStupidText.Mobile/LocalizedPackStatus.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources.cs`, `src/ReadTheStupidText.App/LanguageWindow.xaml`, `src/ReadTheStupidText.App/LanguageWindow.xaml.cs`, `src/ReadTheStupidText.App/PackSetupText.cs`, `src/ReadTheStupidText.App/Strings/*/Resources.resw`, `tests/ReadTheStupidText.Tests/*`, `.maestro/rtst/*` (new flow), `tools/desktop-vm/checks/*` (new or changed check)
 
