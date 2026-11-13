@@ -33,17 +33,17 @@ function caller(permissionsBlock) {
 
 test('PR #702: a called job asking actions: write under a caller job granting only contents: write fails', () => {
   const problems = checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: write   # gh release upload\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: write   # gh release upload\n'),
     'dinoreader-windows.yml': CALLED_ASKING_ACTIONS_WRITE,
   });
   assert.equal(problems.length, 1);
-  assert.match(problems[0], /release\.yml job build-dinowin calls dinoreader-windows\.yml/);
+  assert.match(problems[0], /release-dino\.yml job build-dinowin calls dinoreader-windows\.yml/);
   assert.match(problems[0], /actions: write/);
 });
 
 test('hotfix #704: the caller job also granting actions: write passes', () => {
   const problems = checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: write\n      actions: write    # why\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: write\n      actions: write    # why\n'),
     'dinoreader-windows.yml': CALLED_ASKING_ACTIONS_WRITE,
   });
   assert.deepEqual(problems, []);
@@ -52,18 +52,18 @@ test('hotfix #704: the caller job also granting actions: write passes', () => {
 test('a read request under a write grant of the same permission passes; read under none fails', () => {
   const called = CALLED_ASKING_ACTIONS_WRITE.replace('actions: write', 'actions: read');
   assert.deepEqual(checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: write\n      actions: write\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: write\n      actions: write\n'),
     'dinoreader-windows.yml': called,
   }), []);
   assert.equal(checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: write\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: write\n'),
     'dinoreader-windows.yml': called,
   }).length, 1);
 });
 
 test('a caller job with no permissions inherits the workflow-level ones', () => {
   const problems = checkWorkflows({
-    'release.yml': caller(''),
+    'release-dino.yml': caller(''),
     'dinoreader-windows.yml': CALLED_ASKING_ACTIONS_WRITE,
   });
   assert.equal(problems.length, 2);   // contents: write and actions: write both exceed the workflow's contents: read
@@ -71,7 +71,7 @@ test('a caller job with no permissions inherits the workflow-level ones', () => 
 
 test('a caller with no permissions anywhere is skipped (the repository default cannot be read from files)', () => {
   const problems = checkWorkflows({
-    'release.yml': 'name: r\njobs:\n  build-dinowin:\n    uses: ./.github/workflows/dinoreader-windows.yml\n',
+    'release-dino.yml': 'name: r\njobs:\n  build-dinowin:\n    uses: ./.github/workflows/dinoreader-windows.yml\n',
     'dinoreader-windows.yml': CALLED_ASKING_ACTIONS_WRITE,
   });
   assert.deepEqual(problems, []);
@@ -80,13 +80,13 @@ test('a caller with no permissions anywhere is skipped (the repository default c
 test('the called workflow top-level permissions count too', () => {
   const called = 'name: c\non:\n  workflow_call:\npermissions:\n  packages: write\njobs:\n  build:\n    runs-on: x\n';
   assert.equal(checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: write\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: write\n'),
     'dinoreader-windows.yml': called,
   }).length, 1);
 });
 
 test('a called workflow that does not exist is reported', () => {
-  const problems = checkWorkflows({ 'release.yml': caller('    permissions:\n      contents: write\n') });
+  const problems = checkWorkflows({ 'release-dino.yml': caller('    permissions:\n      contents: write\n') });
   assert.match(problems[0], /which was not found/);
 });
 
@@ -101,12 +101,12 @@ test('the parser reads scalar, empty and block permissions and ignores comments'
 test('a top-level write that every job overrides with read asks for nothing', () => {
   const called = 'name: c\non:\n  workflow_call:\npermissions:\n  contents: write\njobs:\n  a:\n    permissions:\n      contents: read\n  b:\n    permissions:\n      contents: read\n';
   assert.deepEqual(checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: read\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: read\n'),
     'dinoreader-windows.yml': called,
   }), []);
   const oneJobWithout = called.replace('  b:\n    permissions:\n      contents: read\n', '  b:\n    runs-on: x\n');
   assert.equal(checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: read\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: read\n'),
     'dinoreader-windows.yml': oneJobWithout,
   }).length, 1);   // job b inherits the top-level contents: write
 });
@@ -122,13 +122,13 @@ test('a permissions shape the reader cannot read fails loudly instead of passing
   const calledWith = (permissions) => `name: c\non:\n  workflow_call:\njobs:\n  build:\n    runs-on: x\n    permissions:\n${permissions}`;
   for (const shape of ['      contents: ${{ inputs.level }}\n', '      contents: [write]\n', '      - contents: write\n']) {
     const problems = checkWorkflows({
-      'release.yml': caller('    permissions:\n      contents: read\n'),
+      'release-dino.yml': caller('    permissions:\n      contents: read\n'),
       'dinoreader-windows.yml': calledWith(shape),
     });
     assert.ok(problems.some((problem) => /dinoreader-windows\.yml: .*cannot read/.test(problem)), shape);
   }
   const flowBad = checkWorkflows({
-    'release.yml': caller('    permissions:\n      contents: read\n'),
+    'release-dino.yml': caller('    permissions:\n      contents: read\n'),
     'dinoreader-windows.yml': 'name: c\njobs:\n  build:\n    permissions: ${{ inputs.p }}\n',
   });
   assert.ok(flowBad.some((problem) => /cannot read the permissions value/.test(problem)));
@@ -139,6 +139,20 @@ test('quoted and flow-style permissions are read, not skipped', () => {
   assert.deepEqual(parsed.jobs.a.permissions, { map: { contents: 'write', actions: 'read' } });
   assert.deepEqual(parsed.jobs.b.permissions, { map: { contents: 'write' } });
   assert.deepEqual(parsed.unparsed, []);
+});
+
+// Slice 369: the shared release part is called by both product workflows and itself calls tests.yml, dinoreader.yml (nested); the
+// `shared` caller job of each product must grant what release-shared.yml's own jobs ask for (contents: write, actions: read).
+test('Slice 369: both release workflows call release-shared.yml and grant what its jobs ask for', () => {
+  const workflows = readWorkflowDir(fileURLToPath(new URL('../workflows', import.meta.url)));
+  for (const file of ['release-rtst.yml', 'release-dino.yml']) {
+    const caller = parseWorkflow(workflows[file]);
+    assert.equal(caller.jobs.shared.uses, './.github/workflows/release-shared.yml', file);
+    assert.deepEqual(caller.jobs.shared.permissions, { map: { contents: 'write', actions: 'read' } }, file);
+  }
+  const shared = parseWorkflow(workflows['release-shared.yml']);
+  assert.deepEqual(shared.jobs.version.permissions, { map: { contents: 'write', actions: 'read' } });
+  assert.equal(shared.jobs['shared-test'].uses, './.github/workflows/tests.yml');
 });
 
 test('main: every called workflow asks for no more than its caller job grants', () => {

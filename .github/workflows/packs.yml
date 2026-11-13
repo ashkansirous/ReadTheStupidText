@@ -9,7 +9,7 @@ name: packs
 # Why this can't disturb app versioning:
 #   * GitVersion.yml / GitVersion.dino.yml set tag-prefix rtst-v / dino-v, so only those
 #     <prefix><semver> tags are versions; `packs-1` does not parse as one.
-#   * release.yml's base-tag lookup (ship-targets.mjs) only matches rtst-v* / dino-v* tags.
+#   * the release workflows' base-tag lookup (ship-targets.mjs) only matches rtst-v* / dino-v* tags.
 #   * the release is created with --latest=false, so releases/latest stays the app.
 # Details and the pack format: docs/voice-packs.md.
 #

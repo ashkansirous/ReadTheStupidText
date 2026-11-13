@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Whether release.yml's `site-checks` job (the downloads Worker's tests) runs for a push to main (Slice 239). A push that changes only
+ * Whether release-rtst.yml's `site-checks` job (the downloads Worker's tests) runs for a push to main (Slice 239). A push that changes only
  * Dino book content (content/dino/**, a store story) must start no test, so the job is skipped; anything else, an unknown range and a manual run run it.
  * Measured from the push's own `before` commit: the job is advisory (no other job needs it), so a skipped run's changes need not carry over.
  *

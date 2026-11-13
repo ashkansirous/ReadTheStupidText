@@ -148,7 +148,7 @@ translation), because the app pins one catalogue: a run with a pack missing woul
 pointing at a catalogue without it.
 
 `packs-<n>` cannot disturb app versioning: GitVersion has no `tag-prefix`, so only
-`[vV]?<semver>` tags count; `release.yml` (via `ship-targets.mjs` and `find-release.sh`) only looks at strict `v<x.y.z>` tags; and the release is
+`[vV]?<semver>` tags count; `release-rtst.yml` and `release-dino.yml` (via `ship-targets.mjs` and `find-release.sh`) only looks at strict `v<x.y.z>` tags; and the release is
 created `--latest=false`, so `releases/latest` stays the app.
 
 ## Publishing

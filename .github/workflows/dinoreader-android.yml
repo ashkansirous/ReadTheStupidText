@@ -4,7 +4,7 @@ name: dinoreader-android
 # MAUI app, `src/DinoReader.App` (id uk.sirous.dinoreader). Entry points:
 #   * pull_request (own paths) / workflow_dispatch: the unsigned Debug build as a compile
 #     check. Nothing is signed or uploaded, and no secret is read.
-#   * workflow_call from release.yml with `release` = true (release-draft has a draft to
+#   * workflow_call from release-dino.yml with `release` = true (release-draft has a draft to
 #     fill AND the Dino Reader signing secrets exist): also builds the signed .aab/.apk and
 #     uploads them to the draft release as DinoReader-<version>.aab/.apk.
 # Dino Reader has its OWN upload key and Play service account (DINOREADER_* secrets), never
@@ -24,7 +24,8 @@ on:
       - 'GitVersion.yml'
       - 'GitVersion.dino.yml'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-dino.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
