@@ -259,6 +259,13 @@ public static class FallbackReason
     /// <summary>Slice 359 (area "library"): a book names a drawn back-cover picture but the file is missing, so the live credits page of Slice 237 is shown instead.</summary>
     public const string BackCoverMissing = "back_cover_missing";
 
+    // Slice 360.
+    /// <summary>Slice 360 (area "premade_audio"): a read needed a pack that was waiting for Wi-Fi (the Wi-Fi wait is gone; the reason stays so older rows and builds still parse).</summary>
+    public const string WaitingWifi = "waiting_wifi";
+
+    /// <summary>Slice 360 (area "premade_audio"): a piece had no sound because its book's pack for the reading language is missing on the phone while the child played.</summary>
+    public const string PackMissingOnPlay = "pack_missing_on_play";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -272,7 +279,7 @@ public static class FallbackReason
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
-        BackCoverMissing,
+        BackCoverMissing, WaitingWifi, PackMissingOnPlay,
     ];
 }
 

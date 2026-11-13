@@ -275,8 +275,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	// A shelf audio step has no bar to move in place: only the rows' cards are drawn again (a book is done at most every few seconds), never the whole picker.
 	private void OnShelfChanged(object? sender, EventArgs e) => _picker.UpdateShelfCards();
 
-	// A tick saves at once and fetches the language's pre-made audio for the shelf books (Slice 262). On mobile data only, the grown-up is asked first whether to download now
-	// or wait for Wi-Fi (ShelfAudioAsk); the run is started with the answer.
+	// A tick saves at once and fetches the language's pre-made audio for the shelf books (Slice 262) on any network, no question asked (Slice 360, Decision 3).
 	private void OnToggled(string language, bool ticked)
 	{
 		StoryLanguages.SaveSides(_picker.Set);
@@ -287,29 +286,10 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 
 		if (ticked)
 		{
-			_ = StartAudioAsync(language);
+			_shelf.Start(language);
 		}
 
 		ShowFull();
-	}
-
-	private async Task StartAudioAsync(string language)
-	{
-		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
-		try
-		{
-			outcome = await ShelfAudioAsk.AskAsync(this, [language]);
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
-			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
-		}
-
-		if (StoryLanguages.Current().Sides.Contains(language))
-		{
-			_shelf.Start(language, outcome); // unticked while the question was open: nothing is fetched for it
-		}
 	}
 
 	private void ShowFull() => _full.IsVisible = _picker.Set.IsFull;

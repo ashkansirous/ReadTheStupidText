@@ -10,7 +10,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>《{0}》还没有{1}音频，音频下载完成后，将用它的音频来读。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>《{0}》和另外{2}本书还没有{1}音频，音频下载完成后，将用它们各自的音频来读。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>正在等待网络…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>正在准备…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>部分{0}音频暂时无法获取。Dino 稍后会再试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>这本书还没有这种语言的音频。</value></data>
@@ -341,10 +340,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>原来的应用语言</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>故事语言：{0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>无法获取语音。点按重试。</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>使用移动数据下载吗？</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>你没有连接 Wi-Fi。将通过移动数据下载 {0}。</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>立即下载</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>等待 Wi-Fi</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>正在为这本书获取{0}声音 · {1}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>没有网络，所以这本书的{0}声音暂时无法下载。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>用{0}阅读</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>无法获取{0}声音。恐龙稍后会再试。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>没有网络。文字仍会显示，恢复联网后就会有声音。</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>正在更新你的书…</value></data>
   <!-- /Slice 181 -->

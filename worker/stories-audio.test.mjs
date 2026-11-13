@@ -77,6 +77,16 @@ test("a wrong version, a missing version, another language or a bad language is 
   }
 });
 
+test("Slice 360: the one older pack version the folder still holds is served too, an older one or a version never uploaded is a 404", async () => {
+  const held = ["story-v2.dino", "audio-fa-v1.zip", "audio-fa-v2.zip", "audio-fa-v3.zip"];
+  const older = await call(`/api/stories/${ID}/audio/fa?v=2`, withAudio, held);
+  assert.equal(older.response.status, 200);
+  assert.equal(older.served[0].file.key, `${FOLDER}audio-fa-v2.zip`);
+  assert.equal((await call(`/api/stories/${ID}/audio/fa?v=1`, withAudio, held)).response.status, 404);
+  assert.equal((await call(`/api/stories/${ID}/audio/fa?v=4`, withAudio, held)).response.status, 404);
+  assert.equal((await call(`/api/stories/${ID}/audio/fa?v=2`, withAudio, files)).response.status, 404, "v2 is not in the folder");
+});
+
 test("a pack that meta lists but nobody uploaded, and a book without audio, are a 404", async () => {
   assert.equal((await call(`/api/stories/${ID}/audio/fa?v=3`, withAudio, ["story-v2.dino"])).response.status, 404);
   assert.equal((await call(`/api/stories/${ID}/audio/fa?v=3`, baseMeta, files)).response.status, 404);

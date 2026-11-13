@@ -35,6 +35,115 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	// Slice 346: the books of the last listing by id, so a request for a book's files (a download, an update, an audio pack) can carry that book's purchase proof.
 	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, StoreItem> _listed = new(StringComparer.OrdinalIgnoreCase);
 
+	private const string SavedListingFile = "store-listing.json"; // Slice 360: the last good store listing, kept in AppDataDirectory so a launch that is offline still knows which packs the store makes
+	private IReadOnlyDictionary<string, StoreItem>? _saved; // loaded once per launch; never holds an exception, a failed load is an empty listing
+	private volatile bool _liveListingRead; // this launch has read the store's list (or the Debug test store's)
+
+	/// <summary>
+	/// Slice 360 (the known listing): the book's entry in the listing this launch read. Only when no live listing was read this launch is the last good listing saved on the phone
+	/// (<c>store-listing.json</c>) used; a book the live listing leaves out is not in the store now. Null when no listing names it.
+	/// </summary>
+	public StoreItem? ListedItem(string bookId)
+	{
+#if DEBUG
+		if (HideListing)
+		{
+			return null;
+		}
+#endif
+		StoreItem? live = _listed.GetValueOrDefault(bookId);
+		StoreItem? saved = _liveListingRead ? null : LazyInitializer.EnsureInitialized(ref _saved, LoadSavedListing).GetValueOrDefault(bookId);
+		return KnownListing.Pick(_liveListingRead, live, saved);
+	}
+
+	/// <summary>Slice 360: this launch read a live listing (the store's list, or the Debug test store's); a book it leaves out is then not in the store, so no pack is expected for it.</summary>
+	public bool LiveListingRead
+	{
+		get
+		{
+#if DEBUG
+			return _liveListingRead && !HideListing; // a hidden listing is as on a first offline launch: no listing known at all
+#else
+			return _liveListingRead;
+#endif
+		}
+	}
+
+#if DEBUG
+	/// <summary>Debug only (the <c>pack-repair</c> test hook, mode no-listing / listing): the known listing is hidden, as on a first launch that is offline, so a flow can check the page with no listing.</summary>
+	public static bool HideListing { get; set; }
+
+	// Reset on every launch (this field initializer runs when the singleton is built) and by the hook's listing mode, so an aborted flow cannot leave the listing hidden for the next one.
+	private readonly bool _hideListingReset = ResetHideListing();
+
+	private static bool ResetHideListing()
+	{
+		HideListing = false;
+		return false;
+	}
+#endif
+
+	private static string SavedListingPath => Path.Combine(FileSystem.AppDataDirectory, SavedListingFile);
+
+	// Any failure to read the saved listing (a missing file is none, not a failure) means "no saved listing": it is reported, a file that does not parse is deleted, and nothing is thrown or cached as an exception.
+	private IReadOnlyDictionary<string, StoreItem> LoadSavedListing()
+	{
+		var none = new Dictionary<string, StoreItem>(StringComparer.OrdinalIgnoreCase);
+		try
+		{
+			string path = SavedListingPath;
+			if (!File.Exists(path))
+			{
+				return none;
+			}
+
+			IReadOnlyDictionary<string, StoreItem>? items = new FileInfo(path).Length > KnownListing.MaxSavedBytes ? null : KnownListing.ParseSaved(File.ReadAllText(path));
+			if (items is null)
+			{
+				Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // an unusable saved listing is dropped: no saved listing until the next good read
+				DeleteSavedListing(path);
+			}
+
+			return items ?? none;
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not read the saved store listing: {ex.Message}");
+			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+			return none;
+		}
+	}
+
+	private static void DeleteSavedListing(string path)
+	{
+		try
+		{
+			File.Delete(path);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: the unusable file stays and is overwritten by the next good listing; this launch already treats it as none
+			Debug.WriteLine($"Dino Reader could not delete the saved store listing: {ex.Message}");
+		}
+	}
+
+	// Off the UI thread, to a temp file with its own name, then moved over the saved one in one step: two saves at once cannot interleave and a half-written file is never the saved one.
+	private Task SaveListingAsync(string json) => Task.Run(() =>
+	{
+		string temp = $"{SavedListingPath}.{Guid.NewGuid():N}{PartExtension}";
+		try
+		{
+			File.WriteAllText(temp, json);
+			File.Move(temp, SavedListingPath, overwrite: true);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not save the store listing: {ex.Message}");
+			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // this launch has the listing in memory; only the next offline launch loses it
+			DeleteSavedListing(temp);
+		}
+	});
+
 	/// <summary>What the app sells and what the store account owns (Slice 346).</summary>
 	public BookSales Sales => sales;
 
@@ -132,6 +241,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 			if (fixture.Status == StoreLoadStatus.Ok)
 			{
+				_liveListingRead = true;
 				await ReadPurchasesAsync(fixture.Items, cancel); // Slice 346: the fake store of the fake-purchases hook answers here
 			}
 
@@ -155,6 +265,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			foreach (StoreItem item in readable)
 			{
 				_listed[item.Id] = item;
+			}
+
+			_liveListingRead = true;
+			if (KnownListing.IsSavable(json))
+			{
+				await SaveListingAsync(json); // an empty or invalid live listing never replaces the last good saved one
 			}
 
 			await ReadPurchasesAsync(readable, cancel);
@@ -416,16 +532,16 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	}
 
 	/// <summary>Installs one pack of a shelf book and says exactly what happened (Slice 262: the shelf audio run maps NotFound and Failed differently).</summary>
-	public Task<PackInstall> InstallPackAsync(StoreItem item, string language, AudioPackInfo pack, CancellationToken cancel) =>
-		InstallOnePackAsync(item.Id, language, pack, null, cancel);
+	public Task<PackInstall> InstallPackAsync(StoreItem item, string language, AudioPackInfo pack, CancellationToken cancel, IProgress<long>? bytes = null) =>
+		InstallOnePackAsync(item.Id, language, pack, null, cancel, bytes);
 
 	// Audio never fails the book or the update check: whatever the install throws is a failed pack. The pack bytes reach the summed progress on the downloading thread, in order.
-	private async Task<PackInstall> InstallOnePackAsync(string bookId, string language, AudioPackInfo pack, SummedProgress? summed, CancellationToken cancel)
+	private async Task<PackInstall> InstallOnePackAsync(string bookId, string language, AudioPackInfo pack, SummedProgress? summed, CancellationToken cancel, IProgress<long>? bytes = null)
 	{
 		try
 		{
 			await SettlePurchasesAsync(cancel);
-			return await packs.InstallAsync(bookId, language, pack, summed is null ? null : new SyncProgress<long>(summed.Pack), cancel);
+			return await packs.InstallAsync(bookId, language, pack, bytes ?? (summed is null ? null : new SyncProgress<long>(summed.Pack)), cancel);
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{

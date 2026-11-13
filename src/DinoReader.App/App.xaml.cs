@@ -76,6 +76,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Resumed += (_, _) => UiUsage.Resumed(); // Slice 352: counted only after a counted background, so the cold-start resume is not a return
 		window.ModalPopped += (_, e) => UiScreen.ModalClosed(e.Modal); // Slice 352: a closed modal gives the screen back to the page beneath
 		window.Stopped += (_, _) => _bookUpdateCancel.Cancel();
+		window.Stopped += (_, _) => _services.GetRequiredService<ShelfAudioPacks>().Repair.StopTicking(); // Slice 360: the tick is a foreground one
 		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
@@ -158,7 +159,15 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 		try
 		{
-			_services.GetRequiredService<ShelfAudioPacks>().Resume(force);
+			var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+			try
+			{
+				shelfAudio.Resume(force);
+			}
+			finally
+			{
+				shelfAudio.Repair.StartTicking(); // Slice 360: the hourly retry and the network-back watch run while the app is in the foreground, even when this resume threw
+			}
 		}
 		catch (Exception ex)
 		{

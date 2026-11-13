@@ -119,7 +119,6 @@ internal static class ShelfAudioPacksCard
 	{
 		ShelfAudioPhase.Preparing => AppResources.ShelfAudio_Preparing,
 		ShelfAudioPhase.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
-		ShelfAudioPhase.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
 		_ => state.CurrentTitle ?? string.Empty,
 	};
 

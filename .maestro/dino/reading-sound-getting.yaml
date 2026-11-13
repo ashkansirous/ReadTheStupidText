@@ -1,0 +1,65 @@
+# Slice 360 (Design SS1): opening a book whose sound is missing starts the download at once, on any network, and the reading page shows "Getting {0} sound for this book - n%" (never a Wi-Fi wait).
+# Setup: the Debug test store lists one Swedish pack (the gingerbread-man book); the app language is Swedish, so that pack is the main language's and is not on the phone. test-store mode=slow serves it in a
+# few timed chunks, so the pill is on screen while it downloads. The open-book hook opens the reading page like a tap on the tile (its OnAppearing asks PackRepair for the book's missing packs now) and plays.
+# The flow fails against the old behaviour: no repair try starts on open, so "pack repair ... try starts" and the "[Reading] sound-state kind=Getting" marker are never written (the old page showed only
+# "Waiting for Wi-Fi" or a quiet "no sound" line).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
+# expect-log: HOOK test-store ok slow
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473: opened, missing packs are tried now
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: try starts
+# expect-log: [Reading] sound-state kind=Getting
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Ok
+appId: uk.sirous.dinoreader.dbg
+name: Opening a book with its sound missing downloads it and shows the percent
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the flow needs no pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: slow
+# The shelf audio run installs the main language's pack at launch, before any step here: delete it so the book opens with its sound missing (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: gingerbread-man
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: gingerbread-man
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# SS1: the pill is the label with this id; no Wi-Fi wait, no card.
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+    timeout: 30000
+- assertNotVisible:
+    id: ReadingSoundNote
+# Put the test store back to the live store for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"

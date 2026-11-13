@@ -85,6 +85,8 @@ export const FALLBACK_REASONS = [
   "file_missing", "no_clip", "animal_clip_copy_failed", "animal_clip_play_failed",
   // Slice 359: a book's drawn back cover is named but its picture file is missing
   "back_cover_missing",
+  // Slice 360: a read had no sound for a missing pack (the Wi-Fi wait is gone; its reason stays so old rows parse)
+  "waiting_wifi", "pack_missing_on_play",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;

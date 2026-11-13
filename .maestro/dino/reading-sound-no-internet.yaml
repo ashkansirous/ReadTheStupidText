@@ -1,0 +1,153 @@
+# Slice 360 (Design SS4 and SS2): no internet under the words card. The pack-repair hook forces the page's "no internet" state (the downloads are untouched), and force-pack-failure mode=network
+# makes the try fail, so nothing arrives. SS4 first: the family has one language (Swedish), so there is nothing to switch to: the card has the one line and no "Read in" button. SS2 next: a second family
+# language (Farsi) whose pack for The Three Little Pigs is installed by the install-audio-pack hook; the card then has the "Read in" button, and tapping it reads this book in Farsi (this reading only).
+# The flow fails against the old behaviour: there is no card, so "[Reading] sound-state kind=NoInternet" and the ids ReadingSoundNote / ReadingSoundReadIn never exist.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
+# expect-log: HOOK pack-repair ok offline
+# expect-log: [Reading] sound-state kind=NoInternet percent=0 switch=no
+# expect-log: [Reading] sound-state kind=NoInternet percent=0 switch=yes
+# expect-log: HOOK pack-repair ok no-listing
+# expect-log: HOOK pack-repair ok online
+appId: uk.sirous.dinoreader.dbg
+name: No internet shows the card, with Read in only when another language's sound is on the phone
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the flow installs the one pack it needs.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: network
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: offline
+# SS4: one family language, the sound of this book is not on the phone. The shelf audio run installs the main language's pack at launch, so delete this book's (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: three-little-pigs
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSoundNote
+    timeout: 30000
+- assertNotVisible:
+    id: ReadingSoundReadIn
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 20000
+# SS2: add Farsi as a second family language and put its pack for the book on the phone; the card now offers it. The install hook downloads for real, so the forced failure is off for it (it made the
+# install fail in the second run) and back on before the book opens, so the Swedish try still fails.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: fa
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 8000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: network
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSoundReadIn
+    timeout: 30000
+- assertVisible:
+    id: ReadingSoundNote
+- tapOn:
+    id: ReadingSoundReadIn
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# Expectation rule with no known listing (an offline first launch): the hook hides the listing, the store book is opened again; a store book in a language other than its own is still expected, so the card shows.
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: no-listing
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSoundNote
+    timeout: 30000
+- assertVisible:
+    id: ReadingSoundReadIn
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: listing
+# Put the switches back for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: online
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"

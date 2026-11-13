@@ -197,7 +197,6 @@ public sealed class ShelfAudioPlanTests
         Assert.False(new ShelfAudioState(ShelfAudioPhase.Cancelled).IsActive);
         Assert.True(new ShelfAudioState(ShelfAudioPhase.Running, 0, 1).IsActive);
         Assert.True(new ShelfAudioState(ShelfAudioPhase.WaitingForInternet, 0, 1).IsActive);
-        Assert.True(new ShelfAudioState(ShelfAudioPhase.WaitingForWifi, 0, 1).IsActive);
         Assert.Equal(0, ShelfAudioState.Idle.Fraction);
     }
 }

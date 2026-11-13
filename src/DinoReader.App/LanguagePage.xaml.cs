@@ -67,7 +67,6 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 	private readonly IServiceProvider _services;
 	private readonly string _openedWith;
 	private readonly StoryLanguageSet _openedSet; // the story languages when the page opened: what a change adds is compared with it (Slice 285)
-	private bool _asking; // the mobile-data question is open: a leave event must not start the audio before the answer
 	private readonly HashSet<string> _audioStarted = []; // languages whose shelf audio run this page already started quietly (a swipe back), so it is not started twice
 	private string? _pending;
 	private StoryLanguageSet? _sides; // the story languages as the taps so far leave them; saved only when the page is left with a changed language
@@ -113,12 +112,12 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 
 	private Task CloseAsync() => _hostClose is { } close ? close() : Task.CompletedTask;
 
-	// A sheet covering the page (the drop-language sheet, the mobile-data question) fires the gallery's disappearing too, with this page still open: only a page that has left starts the audio of what it changed.
+	// A sheet covering the page (the drop-language sheet) fires the gallery's disappearing too, with this page still open: only a page that has left starts the audio of what it changed.
 	private void StartAudioIfLeft()
 	{
-		if (!_asking && Owner.Navigation.ModalStack.Count == 0) // while the mobile-data question or a sheet is open, its answer starts the audio
+		if (Owner.Navigation.ModalStack.Count == 0)
 		{
-			StartShelfAudioSafely(VoiceRequestOutcome.NothingAsked); // leaving some other way never asks; Back asks first (BackAsync) and starts with the answer
+			StartShelfAudioSafely();
 		}
 	}
 
@@ -260,7 +259,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 
 	// Slice 285: the language change fetches the books' sound in every language it added (the new main one too), as the other two ways to add a language do. Start joins a run already going.
 	// Each language starts once per page (Back and a swipe back share _audioStarted), and a throw never reaches the caller: the grown-up is never stranded on this page by it.
-	private void StartShelfAudioSafely(VoiceRequestOutcome outcome)
+	private void StartShelfAudioSafely()
 	{
 		ShelfAudioPacks shelf;
 		IReadOnlyList<string> toStart;
@@ -278,16 +277,16 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 
 		foreach (string language in toStart)
 		{
-			StartOneLanguage(shelf, language, outcome);
+			StartOneLanguage(shelf, language);
 		}
 	}
 
 	// One language's start never stops the next: it counts as started only once Start returned, so a throw leaves it to be tried again on this page.
-	private void StartOneLanguage(ShelfAudioPacks shelf, string language, VoiceRequestOutcome outcome)
+	private void StartOneLanguage(ShelfAudioPacks shelf, string language)
 	{
 		try
 		{
-			shelf.Start(language, outcome);
+			shelf.Start(language);
 			_audioStarted.Add(language);
 		}
 		catch (Exception ex)
@@ -297,34 +296,13 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 		}
 	}
 
-	private async Task AskAndStartShelfAudioAsync()
-	{
-		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
-		_asking = true;
-		try
-		{
-			outcome = await ShelfAudioAsk.AskAsync(Owner,ShelfAudioLanguages.Added(_openedSet, StoryLanguages.Current()));
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
-			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
-		}
-		finally
-		{
-			_asking = false;
-		}
-
-		StartShelfAudioSafely(outcome);
-	}
-
 	private async Task BackAsync()
 	{
 		if (_changed)
 		{
 			CommitSides();
 			CountLanguageChange();
-			await AskAndStartShelfAudioAsync();
+			StartShelfAudioSafely();
 			await RebuildAndReturnToSettingsAsync();
 			return;
 		}

@@ -6,7 +6,6 @@ namespace DinoReader;
 public enum SoundStatusKind
 {
 	Getting,
-	WaitingForWifi,
 	WaitingForInternet,
 	Preparing,
 	NoSound,
@@ -39,7 +38,6 @@ public sealed record SoundStatusPillState(SoundStatusKind Kind, int Position = 0
 			ShelfAudioPhase.Running => new SoundStatusPillState(SoundStatusKind.Getting, state.Position, state.Total),
 			ShelfAudioPhase.Preparing => new SoundStatusPillState(SoundStatusKind.Preparing),
 			ShelfAudioPhase.WaitingForInternet => new SoundStatusPillState(SoundStatusKind.WaitingForInternet),
-			ShelfAudioPhase.WaitingForWifi => new SoundStatusPillState(SoundStatusKind.WaitingForWifi),
 			_ => new SoundStatusPillState(SoundStatusKind.NoSound), // idle, done, cancelled, failed or the main language
 		};
 	}

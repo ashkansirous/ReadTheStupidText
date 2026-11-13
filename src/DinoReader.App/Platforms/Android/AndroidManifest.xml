@@ -16,4 +16,6 @@
 	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 	<!-- The microphone is used only on the Record screen, behind the grown-up gate, to save a parent's own reading of a page (Slice 111). The recording stays in the story's folder on the device (and in a backup the grown-up makes); it is never uploaded or used for anything else. -->
 	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+	<!-- Slice 360: the grown-ups' 3-second press (GalleryPage) gives a click of haptic feedback (MAUI HapticFeedback), which needs this normal permission on Android (no prompt); iOS needs no key for it. -->
+	<uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

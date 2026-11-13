@@ -18,7 +18,6 @@ public sealed class SoundStatusPillStateTests
 	[Theory]
 	[InlineData(ShelfAudioPhase.Preparing, SoundStatusKind.Preparing)]
 	[InlineData(ShelfAudioPhase.WaitingForInternet, SoundStatusKind.WaitingForInternet)]
-	[InlineData(ShelfAudioPhase.WaitingForWifi, SoundStatusKind.WaitingForWifi)]
 	[InlineData(ShelfAudioPhase.Idle, SoundStatusKind.NoSound)]
 	[InlineData(ShelfAudioPhase.Cancelled, SoundStatusKind.NoSound)]
 	public void A_covered_book_maps_each_phase_to_its_pill(ShelfAudioPhase phase, SoundStatusKind expected)
@@ -88,7 +87,6 @@ public sealed class SoundStatusPillStateTests
 	}
 
 	[Theory]
-	[InlineData(SoundStatusKind.WaitingForWifi)]
 	[InlineData(SoundStatusKind.WaitingForInternet)]
 	[InlineData(SoundStatusKind.Preparing)]
 	[InlineData(SoundStatusKind.NoSound)]

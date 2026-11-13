@@ -1,7 +1,7 @@
 # Slice 310: a pack download whose connection drops part-way fails with a clear line, leaves no temp file, and the next launch fetches the pack. The Debug hook force-pack-failure makes every pack
 # download fail the named way (network = some bytes, then a network error) so nobody corrupts a .part file by hand. Same setup as side-language-audio: the test store lists one Swedish pack.
-# The run tries a book three times with a 15 s and a 30 s wait between them, so the failed line takes about a minute. The app is then restarted (a pack that failed twice in a launch is not tried
-# again until the next open). The restart clears the process-wide failure switch, so the next launch fetches the pack.
+# Slice 360: the run makes one try per pack (no 15 s / 30 s waits any more; PackRepair owns the retries: the hourly tick, the app return and opening the book), so the failed line shows at once. The app
+# is then restarted, which clears the process-wide failure switch, so the next launch fetches the pack.
 # Against the old behaviour there is no hook: "HOOK force-pack-failure ok network" is never written and the run installs the pack, so no failed line shows.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK test-store ok ok

@@ -547,7 +547,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		StoryLanguageSet before = StoryLanguages.Current();
 		StoryLanguageSet set = _languagePicker?.Set ?? before;
 		StoryLanguages.SaveSides(set);
-		await StartShelfAudioAsync(set.Sides.Except(before.Sides).ToList()); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
+		StartShelfAudio(set.Sides.Except(before.Sides).ToList()); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
 		if (!set.Sides.SequenceEqual(before.Sides))
 		{
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
@@ -557,25 +557,14 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		await AdvanceAsync();
 	}
 
-	// On mobile data only, the grown-up is asked once for all the added languages whether to download now or wait for Wi-Fi.
-	private async Task StartShelfAudioAsync(IReadOnlyList<string> added)
+	// Every added language starts its book audio at once, on any network (Slice 360, Decision 3: no question).
+	private void StartShelfAudio(IReadOnlyList<string> added)
 	{
-		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
-		try
-		{
-			outcome = await ShelfAudioAsk.AskAsync(this, added);
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
-			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
-		}
-
 		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
 		IReadOnlyList<string> selected = StoryLanguages.Current().Sides;
-		foreach (string language in added.Where(selected.Contains)) // only those still selected after the question
+		foreach (string language in added.Where(selected.Contains))
 		{
-			shelf.Start(language, outcome);
+			shelf.Start(language);
 		}
 	}
 

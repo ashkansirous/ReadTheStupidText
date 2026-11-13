@@ -10,7 +10,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>「{0}」にはまだ{1}の音声がありません。ダウンロードが終わると、その音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>「{0}」ほか{2}冊にはまだ{1}の音声がありません。ダウンロードが終わると、それぞれの音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>インターネットを待っています…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>準備しています…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>{0}の音声の一部をまだ取得できていません。ディノは後でもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>この本には、この言語の音声がまだありません。</value></data>
@@ -341,10 +340,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>以前のアプリの言語</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>おはなしの言語：{0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>声を取得できませんでした。タップして再試行。</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>モバイルデータでダウンロードしますか？</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Wi-Fiに接続されていません。{0}をモバイルデータでダウンロードします。</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wi-Fiを待つ</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>この本の{0}の音を取得中 · {1}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>インターネットに接続されていないため、この本の{0}の音をまだダウンロードできません。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>{0}で読む</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>{0}の音を取得できませんでした。ディノがもうすぐもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>インターネットに接続されていません。文字は表示されたままで、オンラインに戻ると音が聞こえます。</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>本を更新しています…</value></data>
   <!-- /Slice 181 -->

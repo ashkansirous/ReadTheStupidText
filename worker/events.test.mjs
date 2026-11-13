@@ -904,6 +904,7 @@ test("the part D fallbacks (windows, fonts, library, swallowed catches) are acce
     ["store", "in_app_update_failed"], ["window", "window_frame_failed"], ["window", "displays_unreadable"], ["window", "saved_position_moved"],
     ["window", "dpi_defaulted"], ["font", "font_fallback"], ["config", "intro_state_reset"],
     ["library", "shelf_order_unreadable"], ["library", "story_unreadable"], ["translation", "language_detect_failed"], ["ocr", "page_read_failed"], ["ocr", "ocr_crop_degraded"], ["input", "uia_unavailable"], ["store", "store_failed"], ["config", "preference_unsaved"], ["library", "back_cover_missing"],
+    ["premade_audio", "waiting_wifi"], ["premade_audio", "pack_missing_on_play"], // Slice 360
   ];
   for (const [area, reason] of partD) {
     assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `${area}:${reason}` })?.detail, `${area}:${reason}`, `${area}:${reason}`);

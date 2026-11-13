@@ -12,7 +12,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} hat noch kein {1}-Audio. Es wird mit seinem Audio vorgelesen, sobald es geladen ist.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} und {2} weitere haben noch kein {1}-Audio. Sie werden mit ihrem Audio vorgelesen, sobald es geladen ist.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Warte auf das Internet…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Wird vorbereitet…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Ein Teil des {0}-Audios konnte noch nicht geladen werden. Dino versucht es später erneut.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Für dieses Buch gibt es in dieser Sprache noch kein Audio.</value></data>
@@ -342,10 +341,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>War die App-Sprache</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Geschichtensprache: {0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>Die Stimme konnte nicht geladen werden. Tippe, um es erneut zu versuchen.</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Über mobile Daten herunterladen?</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du bist nicht im WLAN. {0} wird über mobile Daten heruntergeladen.</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Jetzt herunterladen</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Auf WLAN warten</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>Ton auf {0} für dieses Buch wird geladen · {1} %</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>Kein Internet, deshalb kann der Ton auf {0} für dieses Buch noch nicht geladen werden.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>Auf {0} lesen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>Der Ton auf {0} konnte nicht geladen werden. Dino versucht es bald wieder.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>Kein Internet. Der Text bleibt sichtbar, und der Ton kommt, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Deine Bücher werden aktualisiert…</value></data>
   <!-- /Slice 181 -->

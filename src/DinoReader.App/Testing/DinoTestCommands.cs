@@ -37,6 +37,7 @@ internal static partial class DinoTestCommands
 	private const string StageBookUpdateName = "stage-book-update";
 	private const string InstallAudioPackName = "install-audio-pack";
 	private const string FetchAudioPackName = "fetch-audio-pack";
+	private const string RemoveAudioPackName = "remove-audio-pack";
 	private const string ForceFallbackName = "force-fallback";
 	private const string MissKey = "miss";
 	private const string MissTextMismatch = "text_mismatch";
@@ -91,6 +92,12 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == RemoveAudioPackName)
+		{
+			_ = RemoveAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+			return StartedOutcome;
+		}
+
 		if (command.Name == ForceFallbackName)
 		{
 			return ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(IdKey, string.Empty));
@@ -121,6 +128,11 @@ internal static partial class DinoTestCommands
 		if (command.Name == ForcePackFailureName)
 		{
 			return ForcePackFailure(command.Get(ModeKey, string.Empty));
+		}
+
+		if (command.Name == PackRepairName)
+		{
+			return PackRepairHook(command.Get(ModeKey, string.Empty), command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
 		}
 
 		if (command.Name == FakePurchasesName)
@@ -254,6 +266,31 @@ internal static partial class DinoTestCommands
 		{
 			// no-fallback: Debug test hook, logs the fault
 			Log($"{InstallAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 360 (Debug only): deletes the installed pack of a shelf book for a language, so a flow can open the book with its sound missing (the shelf audio run installs the main language's pack at launch
+	// before any flow step runs). Logs "HOOK remove-audio-pack ok <book> <lang>" (the store itself also writes "[AudioPack] pack <book>/<lang>: removed") or "failed <reason>".
+	private static async Task RemoveAudioPackAsync(string id, string language)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			Story? story = await FindWhenImportedAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			if (story?.SourceId is not { } bookId)
+			{
+				Log($"{RemoveAudioPackName} failed no book {id}");
+				return;
+			}
+
+			string key = BundledTranslations.Key(language);
+			await services.GetRequiredService<AudioPackStore>().RemoveAsync(bookId, key);
+			Log($"{RemoveAudioPackName} ok {bookId} {key}");
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: Debug test hook, logs the fault
+			Log($"{RemoveAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
 

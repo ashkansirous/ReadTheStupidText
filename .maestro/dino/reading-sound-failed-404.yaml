@@ -1,0 +1,102 @@
+# Slice 360 (Design SS3, Decision 1): a pack the store answers 404 for. The Debug hook force-pack-failure mode=missing makes every download throw the 404 error. The run refreshes the store listing once, finds
+# no newer version, records Missing404, and the reading page shows the warm "Couldn't get the {0} sound. Dino will try again soon." card (no "Read in" button: one family language). Then the hourly retry:
+# a tick inside the hour is "not due yet", and after pack-repair mode=advance (the process clock moves 61 minutes) the next tick tries again; with the failure switched off that try installs the pack.
+# The flow fails against the old behaviour: the old weekly check never retried a 404, so "pack repair ...: Ok" after the advance is never written.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK remove-audio-pack ok
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK force-pack-failure ok missing
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Missing404
+# expect-log: [Reading] sound-state kind=Failed percent=0 switch=no
+# expect-log: pack repair: tick, nothing is due yet
+# expect-log: HOOK pack-repair ok advance
+# expect-log: pack repair: hourly tick
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Ok
+appId: uk.sirous.dinoreader.dbg
+name: A 404 shows the failed card and the hourly retry fetches the pack
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: missing
+# The shelf audio run installs the main language's pack at launch, before any step here: delete it so the book opens with its sound missing (the hook runs in the background: give it a moment).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: remove-audio-pack
+      id: gingerbread-man
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: PackRemoveNeverShown
+    timeout: 3000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: gingerbread-man
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSoundNote
+    timeout: 60000
+- assertNotVisible:
+    id: ReadingSoundReadIn
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 20000
+# Inside the hour: the tick finds the pack not due and does not try it.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: tick
+# An hour later: the same tick now tries it, and with the failure off it installs.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: advance
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: pack-repair
+      mode: tick
+# The install runs quietly in the background; the log line above is the proof (run-flows.ps1 reads it). This wait only gives it time.
+- extendedWaitUntil:
+    visible:
+      id: PackRepairNeverShown
+    timeout: 15000
+    optional: true
+# Put the test store back to the live store for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"
