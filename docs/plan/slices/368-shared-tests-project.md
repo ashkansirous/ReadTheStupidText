@@ -1,8 +1,12 @@
 # Slice 368 — Tests for the shared code in their own test project
 
+*In progress (wave 2026-11-13), draft PR.*
+
 *Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 4 of 5).
 
-**Touches:** `tests/ReadTheStupidText.Tests/**`, `tests/Shared.Tests/**` (new; final name from Slice 370), `ReadTheStupidText.slnx`, `.github/workflows/tests.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/workflows/release.yml` (test job only), `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, `src/*/Properties/AssemblyInfo.cs` or csproj `InternalsVisibleTo` lines
+**Touches:** `tests/ReadTheStupidText.Tests/**`, `tests/Shared.Tests/**` (new; final name from Slice 370), `ReadTheStupidText.slnx`, `.github/workflows/tests.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/workflows/release.yml` (test job only), `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, `src/*/Properties/AssemblyInfo.cs` or csproj `InternalsVisibleTo` lines, `tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj` (linked `<Compile Include>` files), `tests/ReadTheStupidText.Tests/xunit.runner.json`, `tests/Shared.Tests/xunit.runner.json` (new)
+
+**Decisions at claim (wave 54, 2026-11-13, no user answer needed):** `tests/Shared.Tests` targets `net10.0-windows10.0.19041.0` like the old project, because the Infrastructure tests move and Infrastructure is Windows-only (plain `net10.0` would need a second project; not worth it, CI runs tests on `windows-latest`). The `<Compile Include>` links to `Mobile.Shared` files move with their tests; links to `Mobile` and `App` files stay. A test whose subject is used only by the RTST app (grep the subject's callers: only `src/ReadTheStupidText.App`, `src/ReadTheStupidText.Windows.Tray` or `src/ReadTheStupidText.Mobile`) stays in `ReadTheStupidText.Tests`; everything Dino can reach moves. The builder writes the per-file list into this file before moving.
 
 ## Why
 
