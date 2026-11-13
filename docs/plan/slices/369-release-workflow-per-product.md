@@ -1,6 +1,6 @@
 # Slice 369 — One release workflow per product, sharing a reusable part
 
-*Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 3 of 5).
+*In progress (wave 2026-11-13), draft PR.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 3 of 5).
 
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/release-rtst.yml` (new), `.github/workflows/release-dino.yml` (new), `.github/workflows/release-shared.yml` (new, `workflow_call`), `.github/workflows/dino-store.yml`, `.github/workflows/store-submit.yml`, `.github/workflows/testflight-external.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/find-release.sh`, `.github/scripts/check-called-workflow-permissions.mjs`, `.github/CLAUDE.md`, `tools/**` scripts that name `release.yml`
 
