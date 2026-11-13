@@ -1,6 +1,11 @@
 # Slice 330: Listening page: Store listening track: page gaps audible
 
-*Parked 2026-11-13 (index pass): needs the user's ear; headless night sessions have no Artifact tool to publish the listening page. Run from an interactive session.*
+*Verified 2026-11-13 by measurement, no listen needed.* The user asked why they should listen to Three Little Pigs again (they had checked its lines on 2026-11-08 and 2026-11-09, Slices 334 and 335); a page-gap check can be measured, so it was. ffmpeg `silencedetect` (-40 dB) on the live tracks `listen/en?v=2` (290.05 s) and `listen/fa?v=3` (318.61 s), 16 pages each, yardstick `ListenTrackPlan.PageGapMs` 900 ms (Slice 281):
+- English: 15 page gaps, min 0.95 s, median 1.01 s, max 1.07 s; longest silence inside a page 0.70 s (a sentence pause).
+- Farsi: 15 page gaps, min 0.99 s, median 1.02 s, max 1.40 s (171.0-172.28 s, speech resumes right after); longest silence inside a page 0.62 s.
+- No missing (< 0.3 s) or overlong (> 2.5 s) gap; speech resumes within 10 ms of every gap end; peaks +0.61 dB (en) and +0.29 dB (fa) from the AAC encode, no flat-topped samples. Check closed; the listening page https://claude.ai/artifact/NoAfafbFzyhrZRD9iQ5bS4 is not needed.
+
+*Earlier: parked 2026-11-13 (index pass): needs the user's ear; headless night sessions have no Artifact tool to publish the listening page.*
 
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page). A night wave that hits the same blocker parks it again with that reason.*
 
