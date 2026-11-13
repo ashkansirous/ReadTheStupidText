@@ -1,0 +1,14 @@
+# Outstanding work: built-not-verified bullets that only record something done or decided
+
+Moved verbatim from the old "Built but not verified" block of `plan.md`'s Outstanding work on 2026-11-13 (night 2026-11-13-1149, housekeeping). Checks still to run went to [unverified.md](../unverified.md); a step only the user can do is a **Waiting on the user** line in `plan.md`. Links are fixed for this folder.
+
+- Slice 194 (PR #591): the panel-shot retake is part of [Slice 291](../slices/291-store-listings-and-screenshots.md) ([slice](../slices/194-control-panel-screenshot-script.md)).
+- 182 design frame R12 (wait screen for translation downloads) is planned as Slice 187.
+- Slice 164 (PR #491): pure moves, unit-tested, no device run needed. Follow-up done (PR #557: SpeedPreset, EmptyPlayer, Dino LanguagePick, ... [full text](2026-10-30-outstanding-detail.md#o027) ([slice](../slices/164-more-logic-in-unit-tests.md))
+- Slice 168 (packs-8): existing Supertonic users re-download ~145 MB (`pack_version` 4) ([slice](../slices/168-german-in-both-apps.md))
+- Done 2026-10-24: packs-5 (packs run 40081509906; fixes #295 Python 3.12, #296 `no_dict` guard) carries Supertonic v2 with da/fi/sv/nl, piper-nb and ... [full text](2026-10-30-outstanding-detail.md#o050)
+- Slice 127: Dino's first Microsoft Store submission went in by hand on 2026-10-29 (1.78.1.0, x64 and ARM64, 15 listing languages, machine drafts ... [full text](2026-10-30-outstanding-detail.md#o064) ([slice](../slices/127-release-safety-fixes.md))
+- Slice 132: seed R2 `config.json` after merge; emulator: Version card and "A new version is ready" row PASS, and the resume fetch (follow-up #366) ... [full text](2026-10-30-outstanding-detail.md#o067) ([slice](../slices/132-dino-remote-config-and-force-update.md))
+- Dino cold start: fixed in Slice 177; Pixel cold first audio 3.2-3.3 s ([slice](../slices/177-dino-cold-start-synthesis.md))
+- Slice 227 (PR #654, crash reports) deployed and live: Worker deployed (Workers Builds success on b8c420d); `POST https://dinoreader.sirous.uk/api/crash` answers 204 with crash reports off; `/crashes/x.json` answers 404; R2 lifecycle rule `crash-reports-90d` (prefix `crashes/`, 90 days) added 2026-10-31. The read-only R2 token `CF_R2_CRASHES_READ` is no longer needed: `tools/crashes/pull-crashes.mjs` now reads through wrangler's login (PR #711, [Slice 243](../slices/243-crash-report-gaps.md) item 3); App Store App Privacy "Crash Data" published for both apps and Play Data safety "Crash logs" submitted and live for both (2026-11-01), and `crashReports.enabled` is true in both remote configs (2026-11-01); item 9 (symbolicate the 2026-10-28 TestFlight crash) open ([slice](../slices/227-crash-reports.md)).
+- Slice 183 (the done part of its old bullet): The Play foreground-service declaration is filed for both apps (2026-10-29, demo videos PR #561). The native review of the new strings is in [unverified.md](../unverified.md).
