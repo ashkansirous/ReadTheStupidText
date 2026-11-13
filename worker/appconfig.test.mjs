@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { APP_CONFIG_KEY, DEFAULT_CONFIG, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig.ts";
+import { APP_CONFIG_KEY, DEFAULT_CATALOGUE_PRICE, DEFAULT_CONFIG, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig.ts";
 import { resolveSite, Product } from "./downloads.ts";
 
 test("paidBooks is on only for a literal true; missing, malformed or truthy-but-not-true is off (Slice 346)", () => {
@@ -11,6 +11,15 @@ test("paidBooks is on only for a literal true; missing, malformed or truthy-but-
   for (const bad of [undefined, null, "true", 1, [], {}, { enabled: "true" }, { enabled: 1 }, { enabled: false }]) {
     assert.deepEqual(parseAppConfig({ paidBooks: bad }).paidBooks, { enabled: false }, JSON.stringify(bad));
   }
+});
+
+test("catalogue.price is a trimmed text of 1-60 characters without control characters; anything else is the default (Slice 355)", () => {
+  assert.equal(DEFAULT_CONFIG.catalogue.price, DEFAULT_CATALOGUE_PRICE);
+  assert.equal(DEFAULT_CATALOGUE_PRICE, "$0.99 / €0.99 / £0.99");
+  assert.deepEqual(parseAppConfig({ catalogue: { price: "  $1.49 / €1.49  " } }).catalogue, { price: "$1.49 / €1.49" });
+  const bad = [undefined, null, "x", 5, [], {}, { price: 1 }, { price: "" }, { price: "   " }, { price: "a".repeat(61) }, { price: "a\nb" }, { price: "a\x00" }, ...[0x202e, 0x200b, 0x2066, 0xfeff].map((c) => ({ price: "$1" + String.fromCharCode(c) + "2" }))];
+  for (const value of bad) assert.deepEqual(parseAppConfig({ catalogue: value }).catalogue, { price: DEFAULT_CATALOGUE_PRICE }, JSON.stringify(value));
+  assert.equal(parseAppConfig({ catalogue: { price: "a".repeat(60) } }).catalogue.price.length, 60);
 });
 
 function bucketWith(text) {
@@ -38,6 +47,15 @@ test("a valid config is served with a five minute cache", async () => {
   assert.deepEqual(json.ios, { minVersion: "1.0.0", latestVersion: "0.0.0" });
   assert.deepEqual(json.windows, DEFAULT_CONFIG.windows);
   assert.deepEqual(json.telemetry, { enabled: true, sampleRate: 0.25 });
+});
+
+test("the served config carries the catalogue price next to paidBooks and the app fields are unchanged (Slice 355)", async () => {
+  const body = { paidBooks: { enabled: true }, catalogue: { price: "$2" }, android: { minVersion: "1.2.0" } };
+  const json = await (await handleAppConfig(get(), { DOWNLOADS: bucketWith(JSON.stringify(body)) })).json();
+  assert.deepEqual(json.catalogue, { price: "$2" });
+  assert.deepEqual(json.paidBooks, { enabled: true });
+  assert.equal(json.schemaVersion, 1);
+  assert.deepEqual(json.android, { minVersion: "1.2.0", latestVersion: "0.0.0" });
 });
 
 test("a missing file gives the safe defaults", async () => {
