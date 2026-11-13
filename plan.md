@@ -20,7 +20,6 @@ Open slices only. Finished slices (354 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | planned | | | [373-rtst-voice-rows-rt1-rt2.md](docs/plan/slices/373-rtst-voice-rows-rt1-rt2.md) |
 
 ### Dino Reader
 
@@ -89,7 +88,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 367 checks across 150 slices (Read The Stupid Text 20, Dino Reader 242, Shared 105), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 372 checks across 151 slices (Read The Stupid Text 25, Dino Reader 242, Shared 105), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Tooling gap (Slice 362):** `Test-LogMarkerCanMatch` in `tools/emulator/common.ps1` tests a marker with " end" appended, so a marker ending mid-token (`lines=`) passes lint but can never match at run time; found in Slice 362's emulator run 2 ([slice](docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md)).
 - **Worker change not deployed:** PR #1048 added the fallback reason `back_cover_missing` in `worker/events.ts`; the batched skip-CI merge skips Workers Builds and there is no deploy hook yet ([Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18), so it deploys with the next plain merge touching worker paths.
 - **Worker change not deployed (Slice 360):** the Worker now serves one pack version behind the listing (`worker/stories.ts`). It deploys only through Workers Builds, which skips skip-CI merges, so check it is live after the batched release ([Slice 360](docs/plan/slices/360-dino-play-waits-for-wifi.md); gap: [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18).

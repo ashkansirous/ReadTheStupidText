@@ -100,6 +100,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | built | #987 | | [345-rtst-stall-hook-blocks-reader.md](../slices/345-rtst-stall-hook-blocks-reader.md) |
 | 341 | Listening page: Farsi short words never dropped | built | #993 | | [341-farsi-short-words-never-dropped.md](../slices/341-farsi-short-words-never-dropped.md) |
 | 361 | RTST `sentence-highlight` Maestro flow fails on the emulator: flow bug, fixed with a `SENTENCE_MOVED` marker | verified | #1051 | | [361-sentence-highlight-fails-on-emulator.md](../slices/361-sentence-highlight-fails-on-emulator.md) |
+| 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | built, not yet verified | #1090 | | [373-rtst-voice-rows-rt1-rt2.md](../slices/373-rtst-voice-rows-rt1-rt2.md) |
 
 ## Dino Reader
 
