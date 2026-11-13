@@ -73,6 +73,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _surfaceShown;
 	private static readonly Dictionary<string, string> DrawnBackCovers = []; // Slice 359: story id to its drawn back-cover path once found; UI thread only
 	private static readonly HashSet<string> MissingBackCoversReported = []; // Slice 359: books whose back_cover_missing fallback was already recorded this run
+	private bool _storyHasPictures; // the view switch is offered (Slice 359 item 6 hides it on the back cover)
 	private bool _hasBackCover; // the book shows the silent back cover as its last page (Slice 237)
 	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
 	private int _displayVersion;
@@ -195,7 +196,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_mode = story.Mode;
 		_shownPages = story.Pages;
 		SyncModeSwitch();
-		Modes.IsVisible = story.HasPictures; // a book without pictures has only the text view
+		_storyHasPictures = story.HasPictures;
+		Modes.IsVisible = _storyHasPictures; // a book without pictures has only the text view
 		ApplyTheme();
 		_ = OpenWithLanguagesAsync();
 		if (_sentences.Count > 0)
@@ -706,7 +708,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		string language = _translatedDisplay ? _session.ReadingLanguage : story.Language;
 		string? picture = story.CoverImageFile is { } file ? _library.TryResolveFile(story.Id, file) : null;
-		return new BackCoverView(BackCoverText.Lines(cover, language), Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), picture, DrawnBackCover(story, cover));
+		return new BackCoverView(BackCoverText.Lines(cover, language), Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), picture, DrawnBackCover(story, cover), TitleLabel.Text ?? story.Title); // ApplyTitle ran first: the title is the one shown, in the reading language
 	}
 
 	// Slice 359: the drawn picture's path; a book that names one whose file is missing shows the live page and reports the fallback (a book that names none, Good Enough, is not one).
@@ -1604,7 +1606,15 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		SessionState state = _session.State;
 		bool wandering = _follower.IsWandering && state != SessionState.Idle;
-		Transport.Apply(state, _theme, ((IDinoKeyTarget)this).Screen == DinoScreen.ReadingBackCover);
+		bool onBackCover = ((IDinoKeyTarget)this).Screen == DinoScreen.ReadingBackCover;
+		Transport.Apply(state, _theme, onBackCover);
+		Modes.IsVisible = _storyHasPictures && !onBackCover; // Slice 359 item 6: the back cover is one picture page in every view, so the view switch hides
+#if DEBUG
+		if (onBackCover)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER modes visible={(Modes.IsVisible ? "yes" : "no")}");
+		}
+#endif
 		WanderPill.IsVisible = wandering;
 		PillLabel.Text = ReadingText.ReadingPage(_follower.ReadingPage + 1);
 	}
