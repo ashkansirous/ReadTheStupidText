@@ -2,9 +2,9 @@
 
 *Planned 2026-11-13 (found by the 2026-11-13 emulator run).*
 
-**Status:** planned.
+**Status:** in progress (wave 2026-11-13), draft PR.
 
-**Touches:** `.maestro/rtst/sentence-highlight.yaml` and the RTST read path (`ReaderPage`, the `RTST-TEST: SENTENCE` marker).
+**Touches:** `.maestro/rtst/sentence-highlight.yaml`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs` (the `RTST-TEST: SENTENCE` marker, line ~822), `docs/plan/slices/361-sentence-highlight-fails-on-emulator.md`, `docs/plan/unverified.md`. Item 2 may need another RTST read-path file once item 1 names the cause; the builder reports it before editing.
 
 ## Evidence
 
