@@ -61,6 +61,8 @@ Shared:
 
 ## Layered structure (one-direction dependencies)
 
+The shared projects are named `Sirous.Reading.{Domain,Application,Documents,Infrastructure,Mobile.Shared}` (folders under `src/`, namespaces the same); the diagram uses the short names. (Slice 370: docs/plan/slices/370-rename-shared-code.md)
+
 ```
 App  →  Application  →  Domain
 Infrastructure  →  Application / Domain

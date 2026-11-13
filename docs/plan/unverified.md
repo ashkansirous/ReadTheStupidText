@@ -502,6 +502,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 370: Give the shared code a neutral name ([slice](slices/370-rename-shared-code.md))
+
+- iOS simulator upgrade test (old build, setting, pack, install the renamed build over it): no Mac available.
+- Release, R8 and aab builds of both Android apps (only Debug manifests and builds were compared).
+- CI iOS builds on `main` after the merge (only compile checks ran locally).
+
 ### Slice 374: Store listings in 13 more languages ([slice](slices/374-store-listings-13-languages.md))
 
 Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
