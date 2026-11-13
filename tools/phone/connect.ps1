@@ -23,8 +23,8 @@ if (-not $phone) {
     if ($PairAddress -and $PairCode) { & $script:Adb pair $PairAddress $PairCode }
     if ($ConnectAddress) { & $script:Adb connect $ConnectAddress }
     $ErrorActionPreference = 'Stop'
-    # review 5: after an explicit -ConnectAddress, report the wireless serial just connected (its adb serial is the address), not a USB phone
-    $phone = Find-Phone $(if ($ConnectAddress) { $ConnectAddress } else { $Serial })
+    # after an explicit -ConnectAddress, report that address (or the mDNS name adb lists for it) when adb shows it connected, not a USB phone
+    $phone = if ($ConnectAddress) { Select-ConnectedAddress @(Get-AdbDevices) $ConnectAddress } else { Find-Phone $Serial }
 }
 if (-not $phone) {
     Write-PairingAsk $Serial   # says the USB line instead when a USB phone is listed unauthorized or offline (review 4)

@@ -39,7 +39,7 @@ if ($Clear) {
     if (-not $cleared.Count -and -not $unreadable.Count) { Write-Host 'No corrupt phone lease file found.' }
     exit $(if ($unreadable.Count) { 1 } else { 0 })
 }
-if (-not $Serial) { Write-PairingAsk; exit 2 }
+if (-not $Serial) { Write-PairingAsk $Serial; exit 2 }
 $adbSerial = $Serial
 $Serial = Get-PhoneLeaseKey $Serial  # the phone's own serial number, the same whichever adb name it was found under
 $held = Read-Lease $Serial

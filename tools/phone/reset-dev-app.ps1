@@ -243,7 +243,7 @@ function Test-HoldNeedsClear([string]$Phone, [string]$LevelName) {
 }
 
 $phone = Find-Phone $Serial -AllowEmulator:$AllowEmulator
-if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 Assert-PhoneLease $phone
 foreach ($name in $(if ($Level -eq 'auto') { 'setting', 'clear', 'reinstall' } else { $Level })) {
     # A level that throws (run-as refused, no cached APK, an aside copy that did not verify) counts as not alive and ends in the RESET FAILED line

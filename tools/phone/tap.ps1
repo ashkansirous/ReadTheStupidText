@@ -133,7 +133,7 @@ function Write-ScreenChange([string]$Phone, $Before) {
 }
 
 $phone = if ($XmlFile) { 'saved-dump' } else { Find-Phone $Serial -AllowEmulator:$AllowEmulator }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if (-not $XmlFile) { Assert-PhoneLease $phone }
 if ($List) { Write-ScreenList (Get-ScreenNodes $phone); exit 0 }
 $attribute = $PSCmdlet.ParameterSetName

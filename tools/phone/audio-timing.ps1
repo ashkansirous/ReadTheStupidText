@@ -383,7 +383,7 @@ if ($LogFile) {
 }
 
 $phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-Phone $Serial }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1)
 # Raw logs go to the shared worktrees folder (like run-checks.ps1), not into the repo and not next to it (Slice 216).
 $script:OutDir = Join-Path (Get-WorktreesRoot) '.phone'

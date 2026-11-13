@@ -66,7 +66,7 @@ $script:Projects = @{ rtst = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mob
 $script:ApkFilter = '*-Signed.apk'
 # Slice 308 (two strikes): the device kind is decided once, from -Serial (Get-DeviceKind), and Get-DeviceKindPlan says which lease and gates it has. An emulator builds and caches the x86_64 APK
 # (the same RID and cache name as audio-timing.ps1 -Emulator), a phone the arm64 one. No environment variable: the child scripts get -AllowEmulator as a parameter.
-$script:Kind = Get-DeviceKind $Serial
+$script:Kind = Get-DeviceKind $Serial   # provisional (emulator or not, from -Serial; Usb and Phone share one plan): set again from the selected serial right after Find-Phone
 $script:KindPlan = Get-DeviceKindPlan $script:Kind
 $script:OnEmulator = ($script:Kind -eq $script:KindEmulator)
 $variantError = Get-VariantKindError $script:Kind $PSBoundParameters.ContainsKey('Variant') $Variant   # Slice 308 review 1: also for -Build and -Prepare

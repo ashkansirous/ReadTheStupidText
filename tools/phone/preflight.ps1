@@ -137,7 +137,7 @@ function Invoke-RestoreMode([string]$Phone) {
 
 $phone = $null
 try { $phone = Find-Phone $Serial -AllowEmulator:$AllowEmulator } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
-if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 if ($Restore) { exit (Invoke-RestoreMode $phone) }
 Write-Host "Preflight for $phone"
 Write-Check 'connection' 'OK' $(if ((Get-DeviceKind $phone) -eq $script:KindEmulator) { 'emulator (named by run-checks)' } elseif ((Get-DeviceKind $phone) -eq $script:KindUsb) { 'USB' } else { 'wireless adb' })

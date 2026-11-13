@@ -38,7 +38,7 @@ function Get-PacksNow([string]$Phone) {
 }
 
 $phone = Find-Phone $Serial
-if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $phone) { Write-PairingAsk $Serial; exit 2 }
 Assert-PhoneLease $phone
 $apks = [ordered]@{}
 foreach ($variant in 'aot', 'debug') {
