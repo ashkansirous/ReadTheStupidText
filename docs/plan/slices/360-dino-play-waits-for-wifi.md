@@ -1,8 +1,8 @@
 # Slice 360 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
 
-*Planned 2026-11-13 (user bug report).*
+*In progress (wave 2026-11-13), draft PR.*
 
-**Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.App/ShelfAudioNetwork.cs`, `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`
+**Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.Core/ShelfAudioNetwork.cs`, `src/DinoReader.Core/ShelfAudioPlan.cs`, `src/DinoReader.Core/PackRepair*.cs` (new), `src/DinoReader.App/PackRepair*.cs` (new), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/*`, `.maestro/dino/*` (new reading-sound flows), `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`
 
 ## Why
 
@@ -47,6 +47,22 @@ update check. Getting a book does that at once on any network (`StoreClient.cs:2
 3. **Mobile data is fine for every book audio download**: no Wi-Fi wait for book packs anywhere (launch, app return,
    language added, update, retry). The "Download on mobile data?" question for book audio goes. Decision 120's Wi-Fi rule
    stays only for anything large that is not a book pack, if any remains.
+
+## Design: pack repair state (coordinator, wave 2026-11-13)
+
+Stateful work, so the design is fixed before the build:
+- **One owner.** A new App service `PackRepair` (singleton) owns the retry state; `AudioPackStore` keeps downloading and reports each
+  outcome to it. The weekly `BookUpdater` check no longer decides retries for book packs.
+- **State.** Per pack key (book id, language): `LastAttemptUtc` and `LastOutcome` (`Ok`, `Failed`, `Missing404`, `Offline`), in memory only.
+  A pure Core function `PackRepairDue.IsDue(entry, now)` decides: never tried this launch -> due; failed under 60 min ago -> not due; 60+ min -> due.
+  Unit tests: never tried, failed 59 min ago, failed 61 min ago, 404 then a new listed version (a new version is a new attempt, due at once).
+- **Triggers.** App launch (every missing pack is due), an hourly tick while the app is in the foreground, app return (due check only), opening a
+  book (that book's missing packs are due at once, ignoring the hour), and the network coming back (due check only).
+- **Interrupts.** Killed: nothing persisted, the next launch tries everything missing. Offline: the attempt ends as `Offline`, the reading page shows
+  SS2/SS4, and the network-back trigger retries. A 404: refresh the store listing once, then retry with the listed version; still 404 -> `Missing404`,
+  the page shows SS3, retried at the next hour. No cancel: runs are quiet. Back-off inside the hour: one attempt per pack per trigger, never a loop.
+- The per-launch two-failure cap in `AudioPackStore.cs:565-569` goes for book packs (the hourly due check replaces it).
+- Mobile data allowed for every book pack (Decision 3); `NeedsWifi` keeps answering only for the large storyteller pack, if still used.
 
 ## Work
 
