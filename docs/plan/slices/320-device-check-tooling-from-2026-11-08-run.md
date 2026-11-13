@@ -43,7 +43,7 @@ Fast checks: DinoReader.Tests 3918 pass, ReadTheStupidText.Tests 2196 pass (new:
 - OPEN, moved to a follow-up slice: RTST `stall-return-overlay` failed twice (20:00 and 20:19; `D:\ReadTheStupidText-worktrees\.emulator\logcat-i1\rtst-stall-return-overlay.log`): `STALL hold begins`, then chunk 0 still synthesizes and plays (`CHUNK_SYNTH 0 end`, `CHUNK_AUDIO 0`), no overlay, no `STALL hold released`. Likely cause (not proven): `StallHook` holds `StallReporter`'s watch, not the reader's chunk wait, so the reader never stalls. Coordinator decision: after the second strike it is not patched in this slice; the follow-up slice makes the stall hook block the reader's first-chunk wait so the overlay can show.
 - Phone: `book-end` on Dino with the fixture pack, `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading on the S21 (Samsung form unknown).
 - iOS: the hooks are untried; no Mac, no iOS compile was possible here.
-- Not in this slice: `sentence-highlight` (L241/L264) was fixed by Slice 319 (PR #957) and passed on the S21 (`RTST-TEST: SENTENCE 2 1`, twice); its Maestro flow on the emulator is still unrun.
+- Not in this slice: `sentence-highlight` (L241/L264) was fixed by Slice 319 (PR #957) and passed on the S21 (`RTST-TEST: SENTENCE 2 1`, twice); its Maestro flow on the emulator ran 2026-11-13 (emulator-5554, origin/main ef8c1838) and FAILED ("Missing log marker(s) under tag RTST-TEST: SENTENCE 0 1"), cause not diagnosed: [Slice 361](361-sentence-highlight-fails-on-emulator.md).
 
 ## From review
 

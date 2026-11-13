@@ -10,7 +10,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 352: Dino: every screen, wizard step and button press is counted ([slice](slices/352-dino-screen-and-tap-events.md))
 - **Device:** corner screen row and a speed `setting_changed` on a device (the flows do not open them).
-- **Device:** the Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path); the package builds since Slice 353.
+- **Device:** the Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path); the package builds since Slice 353. Harness gap (2026-11-13 VM run): no VM check closes the window and reads the usage events.
 - **You:** the iOS simulator (none on this machine) and the `DidEnterBackground` flush.
 - **Device:** `tools/usage-sessions` against live data after release.
 
@@ -65,9 +65,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 321: Reorder layer back to the mock on Windows ([slice](slices/321-reorder-layer-per-mock.md))
 - **Device:** The tablet AVD (`dino-tablet-upright-shelf`): the layer uses the shelf's grid, hint aligned with its left edge, also beside the grown-ups' rail.
 - **Device:** Phone portrait: 3 across, 14 dp sides, 27 dp row gap (no flow asserts the measurements).
-- **Device:** Windows VM with 6 or more books (only 2 books were used), and a window resize while the layer is open (columns change, no layout cycle).
+- **Device:** Windows VM with 6 or more books (only 2 books were used; 2026-11-13 VM run: still 2 books, `dino-reorder` passed, no 6-book + resize check exists), and a window resize while the layer is open (columns change, no layout cycle).
 - **Device:** A narrow Windows window after recheck fix 1.
-- **Device:** The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot).
+- **Device:** The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot). 2026-11-13 VM run: `dino-reorder` logged 30 px against the mock's 40, with 0 layout-cycle lines, but no assertion.
 - **Device:** The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
 - **You:** iOS phone/tablet: the same shared MAUI code; no Mac, not run.
 
@@ -75,14 +75,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
 - **Device:** On the S21: `book-end` on Dino with the fixture pack, `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (Samsung form unknown).
 - **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
-- **Device:** `sentence-highlight` Maestro flow on the emulator is still unrun (the S21 run passed, Slice 319).
+- **Device:** `sentence-highlight` Maestro flow: the S21 run passed (Slice 319); on emulator-5554 (2026-11-13, origin/main ef8c1838) it ran and FAILED ("Missing log marker(s) under tag RTST-TEST: SENTENCE 0 1", slowest step inputText 43.4 s), cause not diagnosed: [Slice 361](slices/361-sentence-highlight-fails-on-emulator.md).
 
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 
 ### Slice 325: Dino every page in the 2026-11-08 design, parts A-F ([slice](slices/325-dino-2026-11-08-redesign.md))
-- **Device:** VM `dino-keyboard` after the first run: with `-Check dino-keyboard` alone the app is still in the first-run grown-up handover; needs the full Dino list or an `# after:` step that leaves grown-up mode.
-- **Device:** The post-loop Windows run of `dino-launch`'s new walk: `dino-onboarding-keys` reaches the shelf first, so `dino-launch` returns early.
 - **Device:** No `layout-check ok` line was printed for any onboarding or intro flow.
 - **You:** iOS on a device (34 pt home bar, 59 pt island inset) for the first run and intro.
 - **Device:** Windows intro Left from the languages step may drop unsaved ticks (check6 #4, unconfirmed).
@@ -100,7 +98,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iOS: a fresh Dino install shows 1x on the Reading speed page and a pre-made clip plays at normal speed.
 
 ### Slice 319: Fixes from the 2026-11-08 device run ([slice](slices/319-device-run-2026-11-08-fixes.md))
-- **Device:** VM `dino-record` key-R with the new prompt handling: the PickerHost consent window must be found, its deny button invoked (names logged), and the app's "Microphone is off" alert follow; the Record screen shows no loading state while `MediaCapture.InitializeAsync` waits on a pending prompt (still failing, see the slice's Device runs).
 - **Device:** Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
 - **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
 
@@ -157,7 +154,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** First-run picker and Cancel during the list load on emulator and iOS (item 2 follow-up: a cancelled load shows the "Connect to the internet" copy; a distinct copy needs new strings in every language).
 
 ### Slice 284: Final loop leftovers, night 2026-11-06-1250 ([slice](slices/284-final-loop-leftovers-night-2026-11-06-1250.md))
-- **Device:** Windows VM `dino-record` key-R stage (Stop button or the microphone alert, alert texts read from the host resx, dismiss): never run. Judge check3 findings 1-4 on that run.
 
 ### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
 - **Device:** Importing the same text keeps the language (device).
@@ -211,7 +207,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 278: Dino: store books only, parts A and B ([slice](slices/278-dino-store-books-only.md))
 - **You:** Part B: the mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
 - **Device:** Part B: the beat pausing on screen lock (no scripted flow).
-- **Device:** Part B: flows not run this round: `dino-landscape-settings`, `premade-audio-past-roar`, `usage-playback-events`, `dino-landscape-store` (the first emulator run's results were lost: the agent piped `run-flows` through `Out-String`).
 - **Device:** Part B: a Release build downloads no voice pack.
 - **Device:** No flow asserts the "Get more books" text or that the Add pill is gone.
 - **Device:** The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
@@ -297,10 +292,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 235: Dino on Windows, parts A and B ([slice](slices/235-dino-windows-window.md))
 - **You:** Part B on a real PC: whether PreviewKeyDown gets keys with nothing focused, the Space hold with real key repeats, title bar colours and height, tooltips on a hovering mouse.
-- **Device:** Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay.
-- **Device:** Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close.
+- **Device:** Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay. 2026-11-13 VM run: did not reproduce (Right 446 ms, Space 460 ms); a real PC is still unchecked.
+- **Device:** Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close. 2026-11-13 VM run: Record Esc popped exactly one page; the language page, cast picker and Settings are not covered; title bar ink in the corner and back to cream confirmed, tone after the intro and after the gate close unchecked.
 - **Device:** Tab then Enter on "Back to story".
-- **You:** Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
+- **You:** Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it; 2026-11-13: the VM screen is 1024 x 768, cannot run there).
 - **Device:** 150% scaling and the unit of `PreferredMinimumWidth/Height`.
 - **You:** Title bar height and colour by eye.
 
@@ -428,7 +423,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iOS: a settings row with the button text left null keeps its height and look, and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
 
 ### Slice 217: rtst forced update ([slice](slices/217-rtst-forced-update.md))
-- **Device:** Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](slices/217-rtst-forced-update.md)).
+- **Device:** Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](slices/217-rtst-forced-update.md)). Harness gap (2026-11-13 VM run): the `rtst-update-forced` / `rtst-update-soft` VM checks do not exist and the Release MSIX has no test hooks.
 
 ### Slice 216: phone tooling leftovers ([slice](slices/216-phone-tooling-leftovers.md))
 - **Device:** Slice 216 (PR #637): item 11 cold-start rerun and the numbers in Slices 185 and 214; path-length estimates unmeasured; `Get-PhoneStamp` not device-run ([slice](slices/216-phone-tooling-leftovers.md)).

@@ -303,8 +303,7 @@ For `src/DinoReader.App/CLAUDE.md` (the `tools/desktop-vm/CLAUDE.md` line is alr
 
 #### Not yet verified
 
-- VM `dino-keyboard` after the first run: with `-Check dino-keyboard` alone the app is still in the first-run grown-up handover (as on main); needs the full Dino list or an `# after:` step that leaves grown-up mode.
-- The post-loop Windows run of `dino-launch`'s new walk: `dino-onboarding-keys` reaches the shelf first, so `dino-launch` returns early.
+- Passed 2026-11-13 (VM run, Dino Release MSIX from origin/main ef8c1838, all 10 Dino checks passed): `dino-keyboard` after the first run, and the post-loop run of `dino-launch`'s new walk (`dino-onboarding-keys` reaches the shelf, `dino-launch` finds it). (Removed from `docs/plan/unverified.md`.)
 - No `layout-check ok` line was printed for any flow.
 - iOS on a device (34 pt home bar, 59 pt island inset).
 - Windows intro Left from the languages step may drop unsaved ticks (check6 #4, unconfirmed).

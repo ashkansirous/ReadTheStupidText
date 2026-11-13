@@ -104,7 +104,7 @@ Four frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.
 
 #### Not yet verified
 
-- Windows forced and soft update on the VM: needs a Debug-hook MSIX or test-flag build plus `rtst-update-forced` / `rtst-update-soft` desktop-vm checks.
+- Windows forced and soft update on the VM: needs a Debug-hook MSIX or test-flag build plus `rtst-update-forced` / `rtst-update-soft` desktop-vm checks. Harness gap (2026-11-13 VM run): those two VM checks do not exist and the Release MSIX has no test hooks.
 - Store button tap on the phone (only its presence is asserted on the emulator).
 - The built forced and soft update screens (phone R14/R15, tray W3/W4) next to the Batch 42 mock frames: the builder took the values from the slice text and never opened the mock; the flows assert texts only.
 - iOS: compile in CI; TestFlight hand check.

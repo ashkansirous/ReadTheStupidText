@@ -66,8 +66,8 @@ Third pass (reviews `s319-phone.md`, `s319-check3.md` #1, `s319-vm2.md`): (a) th
 
 ## Not yet verified
 
-- VM: `dino-record` key-R with the new prompt handling: the PickerHost consent window must be found, its deny button invoked (names logged), and the app's "Microphone is off" alert follow; the Record screen shows no loading state while `MediaCapture.InitializeAsync` waits on a pending prompt.
-- Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
+- Passed 2026-11-13 (VM run, Dino Release MSIX from origin/main ef8c1838, all 10 Dino checks passed): `dino-record` key-R: mic consent denied via "No", the "Microphone is off" alert followed, R and Esc traced once each. (Removed from `docs/plan/unverified.md`.)
+- Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text. 2026-11-13 emulator-5554 run (origin/main ef8c1838): ran and FAILED with "Missing log marker(s) under tag RTST-TEST: SENTENCE 0 1" (slowest step inputText 43.4 s), cause not diagnosed; still open, see [Slice 361](361-sentence-highlight-fails-on-emulator.md). iOS shares `ReaderPage`; no iOS change.
 
 ## Replaced by Slice 321
 

@@ -151,11 +151,11 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
 #### Not yet verified
 
 - Part B on a real PC and by eye: whether `PreviewKeyDown` gets keys when nothing has focus yet (the check focuses the window first), the Space hold with real key repeats, title bar colours and height, tooltips on a hovering mouse.
-- Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay.
-- Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close.
+- Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay. 2026-11-13 VM run: did not reproduce (Right 446 ms, Space 460 ms); a real PC is still unchecked.
+- Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close. 2026-11-13 VM run: Record Esc popped exactly one page; the language page, cast picker and Settings are not covered; title bar ink in the corner and back to cream confirmed, tone after the intro and after the gate close unchecked.
 - Typing the sum on AZERTY / AltGr layouts (on-screen pad and numpad only); Tab then Enter on "Back to story".
 - The title bar back to cream after Esc from the book is shown by the check's pass but not read from the trace.
-- Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
+- Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it; 2026-11-13: the VM screen is 1024 x 768, cannot run there).
 - A maximised window closed and reopened stays maximised (part A high finding 6).
 - 150% scaling and the unit of `PreferredMinimumWidth/Height`.
 - Two monitors, and an unplugged display (saved place on a missing monitor).

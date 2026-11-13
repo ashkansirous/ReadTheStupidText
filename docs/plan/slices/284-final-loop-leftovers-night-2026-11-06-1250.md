@@ -73,4 +73,4 @@ Verified: emulator run (key e3c8abd0a5a7): `first-run` flow PASS in 33.5 s; the 
 
 #### Not yet verified
 
-- Windows VM `dino-record` key-R stage (Stop button or the microphone alert, alert texts read from the host resx, dismiss): never run. Judge check3 findings 1-4 on that run.
+- Passed 2026-11-13 (VM run, Dino Release MSIX from origin/main ef8c1838, `rtst-desktop-test`, all 10 Dino checks passed): `dino-record` key-R ran; mic consent was denied via "No", the "Microphone is off" alert followed, R and Esc were traced once each. (Removed from `docs/plan/unverified.md`.)

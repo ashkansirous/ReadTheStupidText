@@ -231,7 +231,7 @@ For `src/DinoReader.App/CLAUDE.md`:
 - iOS device or simulator run.
 - The mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
 - The beat pausing on screen lock (no scripted flow).
-- Flows not run this round: `dino-landscape-settings`, `premade-audio-past-roar`, `usage-playback-events`, `dino-landscape-store` (the first emulator run's results were lost: the agent piped `run-flows` through `Out-String`).
+- Passed 2026-11-13 (emulator-5554, origin/main ef8c1838): `dino-landscape-settings` (62.8 s), `premade-audio-past-roar` (50.1 s), `usage-playback-events` (34.7 s), `dino-landscape-store` (45.8 s). (Removed from `docs/plan/unverified.md`.)
 - A Release build downloads no voice pack.
 - The Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
 
