@@ -36,7 +36,6 @@ Open slices only. Finished slices (354 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 374 | Store listings in the other 13 app languages for both apps on Play, App Store and Microsoft Store (machine-translated, pushed at once; native reads go to unverified) | parked: store pushes need an interactive session (auto mode denied the push); texts merged #1096 | #1096 | | [374-store-listings-13-languages.md](docs/plan/slices/374-store-listings-13-languages.md) |
-| 370 | Tidy by product 5/6: give the shared code a neutral name (no open PRs while it runs; name `Sirous.Reading.*`, decided 2026-11-13) | planned | | | [370-rename-shared-code.md](docs/plan/slices/370-rename-shared-code.md) |
 | 371 | Tidy by product 6/6: src, tests and tools folders grouped by product (no open PRs while it runs; after 370) | planned | | | [371-folders-by-product.md](docs/plan/slices/371-folders-by-product.md) |
 | 193 | German store listings for both apps | approved 2026-11-01; App Store done; Dino Play de-DE live (read 2026-11-13); RTST Play de-DE and RTST Partner Center German still to push (Claude) | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
 | 243 | Crash reports: keep iOS dSYMs and symbolicate, read R2 with wrangler's login, navigation/Back/lifecycle/memory log lines, one "did it crash?" command | in progress (items 3 and 5 built; 1, 2, 4, 6-8 open) | #711 (item 3), #781 (item 5) | | [243-crash-report-gaps.md](docs/plan/slices/243-crash-report-gaps.md) |
@@ -87,7 +86,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 397 checks across 154 slices (Read The Stupid Text 29, Dino Reader 250, Shared 118), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 400 checks across 155 slices (Read The Stupid Text 29, Dino Reader 250, Shared 121), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Tooling gap (Slice 362):** `Test-LogMarkerCanMatch` in `tools/emulator/common.ps1` tests a marker with " end" appended, so a marker ending mid-token (`lines=`) passes lint but can never match at run time; found in Slice 362's emulator run 2 ([slice](docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md)).
 - **Worker change not deployed:** PR #1048 added the fallback reason `back_cover_missing` in `worker/events.ts`; the batched skip-CI merge skips Workers Builds and there is no deploy hook yet ([Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18), so it deploys with the next plain merge touching worker paths.
 - **Worker change not deployed (Slice 360):** the Worker now serves one pack version behind the listing (`worker/stories.ts`). It deploys only through Workers Builds, which skips skip-CI merges, so check it is live after the batched release ([Slice 360](docs/plan/slices/360-dino-play-waits-for-wifi.md); gap: [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18).

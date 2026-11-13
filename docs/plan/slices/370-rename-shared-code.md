@@ -1,7 +1,7 @@
 # Slice 370 — Give the shared code a neutral name
 **Product:** Shared
 
-*Built 2026-11-13 (wave 2026-11-13), PR #1104, not merged; iOS simulator upgrade test, Release/R8/aab builds and CI iOS builds on main not yet verified.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 5 of 5). Runs only when no other PR or worktree with changes is open (it touches about 400 files); after 366-369, before 371.
+*Built 2026-11-13 (wave 2026-11-13), merged as PR #1104 (2fc6ac4f); iOS simulator upgrade test, Release/R8/aab builds and CI iOS builds on main not yet verified.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 5 of 5). Runs only when no other PR or worktree with changes is open (it touches about 400 files); after 366-369, before 371.
 
 **Touches:** `src/Sirous.Reading.Domain/**`, `src/Sirous.Reading.Application/**`, `src/Sirous.Reading.Documents/**`, `src/Sirous.Reading.Infrastructure/**`, `src/Sirous.Reading.Mobile.Shared/**` (renamed from the `src/ReadTheStupidText.*` folders of the same names), every `using ReadTheStupidText.` in `src/**` and `tests/**`, `ReadTheStupidText.slnx`, `Directory.Build.props`, `.github/scripts/ship-targets.mjs`, `.github/workflows/*.yml` (paths), `tests/**/FallbackGuardBaseline.txt`, folder `CLAUDE.md` files that name these projects; root `CLAUDE.md` and `README.md` (layer diagram, paths); `src/AndroidSherpaPackaging.props` and other `src/*.props` naming these paths; every `ProjectReference` in `src/**` and `tests/**` csproj files; `.github/scripts/*`; `tools/DinoReader.BookBuilder/**`, `tools/desktop-vm/**`, `tools/test-test-targets.ps1`, `tools/test-targets.ps1` (widened at claim, 2026-11-13, from `git grep` of the project names), `tools/crashes/pull-crashes.mjs` and its test (widened in review, 2026-11-13: crash grouping treats `Sirous.Reading.X` as `ReadTheStupidText.X`)
 
@@ -68,7 +68,7 @@ Findings files read: `reviews/s370-high.md` 7/7, `s370-medium.md` 7/7, `s370-che
 - Release, R8 and aab builds of both Android apps (only Debug manifests and builds were compared).
 - CI iOS builds on `main` after the merge (only compile checks ran locally).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Root `CLAUDE.md`: the layer diagram uses the `Sirous.Reading.{Domain,Application,Documents,Infrastructure,Mobile.Shared}` names. (Slice 370: docs/plan/slices/370-rename-shared-code.md)
 - A namespace rename changes the Android crc64 Java wrapper names MAUI generates, which breaks launcher shortcuts, jobs and the manifest service on update: pin the old name with `Name =` or `[Android.Runtime.Register("...")]` first, and diff the merged `AndroidManifest.xml` and `acw-map.txt` before and after. (Slice 370: docs/plan/slices/370-rename-shared-code.md)
