@@ -51,11 +51,30 @@ public enum StoreAction
     /// <summary>The Buy button with the store's own price.</summary>
     Buy,
 
-    /// <summary>A paid book whose price is not known (offline, or the store has not answered): a "connect to buy" note, no button.</summary>
+    /// <summary>A paid book whose price is not known because the platform store has not answered (offline, no store, a timeout): a calm "connect to buy" note, no button.</summary>
     ConnectToBuy,
+
+    /// <summary>Slice 358: a paid book with no price although the platform store did answer (product unknown or inactive, not for this account): a "can't be bought right now" note, no button.</summary>
+    NotForSaleNow,
 
     /// <summary>The purchase is waiting; shown as waiting, re-read on the next open.</summary>
     Waiting,
+}
+
+/// <summary>How the latest read of the platform store went (Slice 358); the one input that decides between the "connect to the internet" strip and the "can't be bought right now" strip.</summary>
+public enum StoreAnswer
+{
+    /// <summary>The store could not be reached (offline, no store, a timeout): the sand "connect to the internet" strip.</summary>
+    NotReached,
+
+    /// <summary>The store was reached but its price query ended in an error: the red strip, and a billing_error event.</summary>
+    PriceQueryFailed,
+
+    /// <summary>The device forbids purchases (iOS Screen Time): the red strip, no event.</summary>
+    Restricted,
+
+    /// <summary>The store answered the price query; a book with no price is not for sale now (red strip, prices_missing event).</summary>
+    Answered,
 }
 
 /// <summary>A listed book's state and the card it gets; <see cref="Price"/> is the store's own localised string, only for <see cref="StoreAction.Buy"/>.</summary>
@@ -99,8 +118,8 @@ public static class BookAccess
         return item.Products.Any(pending.Contains) ? BookState.Pending : BookState.Buyable;
     }
 
-    /// <summary>What the store card shows for the book; <paramref name="price"/> is the store's formatted price for the book's product, or null when not known.</summary>
-    public static StoreCardPlan Plan(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending, string? price)
+    /// <summary>What the store card shows for the book; <paramref name="price"/> is the store's formatted price for the book's product, or null when not known; <paramref name="answer"/> is how the latest store read went (Slice 358): only a store that was not reached makes a missing price "connect to buy", every other way of having no price is "not for sale now".</summary>
+    public static StoreCardPlan Plan(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending, string? price, StoreAnswer answer = StoreAnswer.NotReached)
     {
         BookState state = StateOf(paidBooksOn, item, onShelf, owned, pending);
         StoreAction action = state switch
@@ -108,10 +127,33 @@ public static class BookAccess
             BookState.Free or BookState.Owned => onShelf ? StoreAction.OnShelf : StoreAction.Get,
             BookState.KeptFromBefore => StoreAction.OnShelf,
             BookState.Pending => StoreAction.Waiting,
-            _ => string.IsNullOrWhiteSpace(price) ? StoreAction.ConnectToBuy : StoreAction.Buy,
+            _ => BuyableAction(price, answer),
         };
         return new StoreCardPlan(state, action, action == StoreAction.Buy ? price : null);
     }
+
+    // A device that forbids purchases never shows Buy, whatever price an older read left; otherwise a price means Buy, and no price depends on whether the store was reached.
+    private static StoreAction BuyableAction(string? price, StoreAnswer answer)
+    {
+        if (answer == StoreAnswer.Restricted)
+        {
+            return StoreAction.NotForSaleNow;
+        }
+
+        if (HasPrice(price))
+        {
+            return StoreAction.Buy;
+        }
+
+        return answer == StoreAnswer.NotReached ? StoreAction.ConnectToBuy : StoreAction.NotForSaleNow;
+    }
+
+    /// <summary>The one definition of "has a price" (Slice 358): a blank or whitespace-only price is no price.</summary>
+    public static bool HasPrice(string? price) => !string.IsNullOrWhiteSpace(price);
+
+    /// <summary>The price the card shows for a book: the first non-blank price among its products (its own or a bundle's), or null.</summary>
+    public static string? PriceOf(StoreItem item, IReadOnlyDictionary<string, string> prices) =>
+        item.Products.Select(product => prices.GetValueOrDefault(product)).FirstOrDefault(HasPrice);
 
     /// <summary>Whether a book already on the shelf may be updated from the store: not sold, or owned. A kept old copy gets no updates (and no request that would be refused).</summary>
     public static bool MayUpdate(bool paidBooksOn, StoreItem item, IReadOnlySet<string> owned) =>
@@ -151,11 +193,19 @@ public static class BookAccess
     /// </summary>
     public static BookSale LegacyAccess(bool listed, bool soldPerListing) => listed && soldPerListing ? BookSale.Paid : BookSale.Free;
 
+    /// <summary>How the latest store read counts as an answer (Slice 358), by one rule on every platform: a device with no internet has not reached the store; with internet a failed price query is a failure, then a restricted device, else answered.</summary>
+    public static StoreAnswer AnswerOf(bool hasInternet, bool pricesFailed, bool restricted) =>
+        !hasInternet ? StoreAnswer.NotReached : pricesFailed ? StoreAnswer.PriceQueryFailed : restricted ? StoreAnswer.Restricted : StoreAnswer.Answered;
+
+    /// <summary>The ids of the sold books none of whose products has a (non-blank) price in a reachable store's answer (Slice 358); each one's card says "can't be bought right now". A book with one priced product (its own or a bundle) is not listed, since its card shows Buy.</summary>
+    public static string[] UnpricedBooks(IEnumerable<StoreItem> items, IReadOnlyDictionary<string, string> prices) =>
+        [.. items.Where(item => item.Sale == BookSale.Paid && PriceOf(item, prices) is null).Select(item => item.Id)];
+
     /// <summary>The prices to show after a store read: the last known ones, overlaid with what the store just answered, so a failed or timed-out price query never blanks a card.</summary>
     public static IReadOnlyDictionary<string, string> KeepPrices(IReadOnlyDictionary<string, string> previous, IReadOnlyDictionary<string, string> fresh)
     {
-        var merged = new Dictionary<string, string>(previous);
-        foreach ((string product, string price) in fresh)
+        var merged = previous.Where(p => HasPrice(p.Value)).ToDictionary(p => p.Key, p => p.Value); // a blank price is no price: it neither is kept nor replaces a real one
+        foreach ((string product, string price) in fresh.Where(p => HasPrice(p.Value)))
         {
             merged[product] = price;
         }

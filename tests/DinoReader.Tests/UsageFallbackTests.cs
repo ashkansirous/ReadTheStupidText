@@ -30,6 +30,8 @@ public sealed class UsageFallbackTests
     [InlineData("document", "pdf_import_failed")]
     [InlineData("store", "store_unreachable")]
     [InlineData("store", "update_check_failed")]
+    [InlineData("store", "prices_missing")]
+    [InlineData("store", "billing_error")]
     [InlineData("config", "config_cached")]
     [InlineData("config", "config_default")]
     [InlineData("ui_language", "ui_language_unsupported")]

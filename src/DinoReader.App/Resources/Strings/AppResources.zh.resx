@@ -362,6 +362,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>购买 {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>以 {1} 购买 {0}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>请连接互联网后购买</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>目前无法购买这本书。请稍后再试。</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>等待批准</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>你需要先购买这本书。</value></data>
   <data name="Error_Server" xml:space="preserve"><value>服务器出了点问题，请稍后重试。</value></data>

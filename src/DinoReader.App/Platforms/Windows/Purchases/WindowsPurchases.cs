@@ -30,10 +30,10 @@ public sealed class WindowsPurchases : IBookPurchases
             return PurchaseSnapshot.Empty;
         }
 
-        Dictionary<string, string> prices = await QueryPricesAsync(context);
+        (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(context);
         (HashSet<string> owned, bool ok) = await QueryOwnedAsync(context);
         Dictionary<string, string> proofs = await ProofsAsync(context, owned);
-        return new PurchaseSnapshot(prices, owned, new HashSet<string>(), proofs, ok);
+        return new PurchaseSnapshot(prices, owned, new HashSet<string>(), proofs, ok, pricesFailed);
     }
 
     // The Store has no separate restore: the account's add-ons are read again.
@@ -95,7 +95,7 @@ public sealed class WindowsPurchases : IBookPurchases
         }
     }
 
-    private async Task<Dictionary<string, string>> QueryPricesAsync(StoreContext context)
+    private async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(StoreContext context)
     {
         var prices = new Dictionary<string, string>();
         StoreProductQueryResult result = await context.GetAssociatedStoreProductsAsync([DurableKind]);
@@ -108,7 +108,10 @@ public sealed class WindowsPurchases : IBookPurchases
             }
         }
 
-        return prices;
+        int hresult = result.ExtendedError?.HResult ?? 0;
+        bool failed = hresult != 0; // a Store error is billing_error; an answer with no priced add-on is prices_missing
+        PurchaseTrace.Line($"product details: hresult=0x{hresult:X8} got={result.Products.Count} priced={prices.Count}");
+        return (prices, failed);
     }
 
     private static async Task<(HashSet<string> Owned, bool Ok)> QueryOwnedAsync(StoreContext context)

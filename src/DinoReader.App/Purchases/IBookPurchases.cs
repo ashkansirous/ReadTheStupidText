@@ -11,14 +11,16 @@ public enum BuyOutcome
 
 /// <summary>
 /// What the platform store said right now (Slice 346): the store's own formatted price per product, the products the signed-in store account owns, the ones waiting for approval, and a
-/// purchase proof per owned product (the token the Worker checks with the store). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked.
+/// purchase proof per owned product (the token the Worker checks with the store). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked; <see cref="PricesFailed"/> is true when it was asked but its price query ended in an error (Slice 358: a non-OK Play response code, a StoreKit request failure or timeout, a Windows Store error), as opposed to answering with no price; <see cref="Restricted"/> is true when the device forbids purchases (iOS Screen Time), which is an answer and not a fault.
 /// </summary>
 public sealed record PurchaseSnapshot(
     IReadOnlyDictionary<string, string> Prices,
     IReadOnlySet<string> Owned,
     IReadOnlySet<string> Pending,
     IReadOnlyDictionary<string, string> Proofs,
-    bool Reachable)
+    bool Reachable,
+    bool PricesFailed = false,
+    bool Restricted = false)
 {
     public static PurchaseSnapshot Empty { get; } = new(
         new Dictionary<string, string>(), new HashSet<string>(), new HashSet<string>(), new Dictionary<string, string>(), false);
