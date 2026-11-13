@@ -13,3 +13,5 @@ docs/plan/** text eol=lf
 docs/plan/notes/batch-intros-1-8.md -text
 docs/plan/slices/177-dino-cold-start-synthesis.md -text
 docs/plan/slices/201-norwegian-pack-crash.md -text
+# Slice 365: the site files are LF in the index and in every checkout, so worker/catalogue.test.mjs and check-site-eol.mjs (which read the files on disk) pass on Windows regardless of core.autocrlf.
+site/** text=auto eol=lf
