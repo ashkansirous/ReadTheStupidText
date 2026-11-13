@@ -11,6 +11,14 @@
 - Item 3 repo text: `docs/store-listings/en.md` made current: the offline bullet now says Windows and Android download the voice pack once, and the stale "don't add until Slice 56 ships" line became a Microsoft Store download note (about 145 MB, built-in Windows voice until the pack lands). The Partner Center push stays open; compare with the live text first.
 - Still open: items 1 (push) and 3 (push), 4, 5, 6.
 
+## Pushed 2026-11-13 (user: "fucking yes!", "yes fucking yesss")
+
+- Item 4, Dino only: App Store version 1.81.1 en-US and de-DE text, copyright, categories (BOOKS, EDUCATION), content rights, age declaration and review detail pushed through the ASC API and read back equal. Not submitted (`PREPARE_FOR_SUBMISSION`). The old text sold scanning, own books, translation and a voice download (removed by Slices 278 and 305); rewritten from the current app and the paid books of Slice 346.
+- **Apple computed the age rating as 9+, not the expected 4+.** Non-default answers: cartoon violence INFREQUENT_OR_MILD and parental controls true; the violence answer is the likely cause (not tested). Open question for the user before Submit for Review: keep 9+, or answer cartoon violence NONE (the books are rewritten so nobody is hurt).
+- Item 1, Dino Play en-GB and de-DE: full description rewritten the same way, pushed and committed through a Play edit, read back 2026-11-13 with no scan/PDF/translation words left. Title and short description unchanged. So the service account can commit Play listing edits on Dino. RTST Play is not done yet.
+- Not yet verified: a native German read of the App Store and Play de-DE text (machine-written).
+- Still open: item 3 (RTST Microsoft push), RTST parts of 1 and 4, 5 (screenshots), 6.
+
 ## Review notes (`reviews/pr-941-high.md`)
 
 - Applied #1: this note now says `index.html` is done; item 2 ticked.
