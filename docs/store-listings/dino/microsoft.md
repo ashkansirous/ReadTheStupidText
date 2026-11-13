@@ -1,6 +1,6 @@
 # Microsoft Store listing: Dino Book Reader (Store ID 9N9VHRLCZXN5)
 
-**DRAFT, nothing pushed (Slice 346 Part D, 2026-11-13).** New file: the English and German texts were read from the live public pages (`apps.microsoft.com/detail/9N9VHRLCZXN5?hl=en-gb` and `?hl=de-de`, last update 2026-11-12). Only the purchase lines below differ from live; everything else stays as live. Push with the next Partner Center submission once the paid-books switch is on (Partner Center changes only with a submission; never one that discards a pending draft). The price field stays "Free" (the app is free to download; each paid story is an add-on product made by `store-products.mjs`).
+**Pushed 2026-11-13 (Slice 346 Part D): English in submission 82 (published), German (Partner Center locale `de`) in submission 1152921505702395457 (listing only, committed).** New file: the English and German texts were read from the live public pages (`apps.microsoft.com/detail/9N9VHRLCZXN5?hl=en-gb` and `?hl=de-de`, last update 2026-11-12). Only the purchase lines below differ from live; everything else stays as live. Push with the next Partner Center submission once the paid-books switch is on (Partner Center changes only with a submission; never one that discards a pending draft). The price field stays "Free" (the app is free to download; each paid story is an add-on product made by `store-products.mjs`).
 
 ## English (en-gb / en-us)
 

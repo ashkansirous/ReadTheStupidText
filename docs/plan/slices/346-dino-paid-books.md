@@ -333,7 +333,13 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - Windows Store add-on on the VM.
 - The switch-on store page with the real Worker.
 - Microsoft Store ID flow against a live store.
-- A native German read of the `de` store listing text (`docs/store-listings/dino/de.md`).
+- The `de` store listing text is machine-written and live (pushed 2026-11-13 on the user's order; they don't read German, so this never holds anything).
+
+## Switched on (2026-11-13)
+
+- `paidBooks.enabled: true` in the live config (read back from `/api/app-config`); #1038 merged and deployed by Workers Builds; `dino-store.yml` run 43390771295 republished every meta: 4 free, 11 paid, all with underscore product ids; a paid download without proof answers 402, a free one 200.
+- Listings: Play en-GB and de-DE, App Store en-US and de-DE (version 1.81.1, not submitted) read back identical; Microsoft en-us published (submission 82), `de` committed (submission 1152921505702395457).
+- Microsoft: all 11 add-ons Published (Partner Center API). 2 single-use promo codes for Goldilocks ordered for a free real purchase test.
 
 - The store tab replanning a book to owned after a purchase made while the tab was hidden (no flow exists; add one to `.maestro/dino/`).
 - A plain store download with the switch off has no dedicated flow.
