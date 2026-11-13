@@ -22,6 +22,7 @@ Follow 357's *Design (Dino Reader 2026-11-13 Missing States mock, section 2)* se
 ## Waiting on the user
 
 - Where should RT1/RT2 (the voice-row strip, `Pack_RowSize`, `Pack_NotDownloaded`) live? Main has no such row on Mobile or Windows, so it needs a design or a new screen. Blocks RT1/RT2 only.
+- When every bought book is already on the shelf, Restore says "nothing to restore" (the one copy-note line). Should a separate "all already on your shelf" line exist? Copy decision, blocks nothing.
 
 ## Changed while building
 
@@ -56,6 +57,9 @@ Follow 357's *Design (Dino Reader 2026-11-13 Missing States mock, section 2)* se
 - Skipped #7 (`reviews/s364-check2.md`): "re-downloaded on every Restore tap" - a Failed NotFound row retrying on Restore is intended.
 - Skipped #8 (`reviews/s364-check2.md`): "file name does not match the class" - style.
 - Skipped #9 (`reviews/s364-check2.md`): "pass arriving.Count and arrived instead" - style.
+- `reviews/s364-check3.md` (2 findings, read 2/2): none applied (listed below).
+- Skipped #1 (`reviews/s364-check3.md`): "No bought books found on this account." - the copy note has one "nothing to restore" line; a separate "all already on your shelf" line is a copy decision, added under *Waiting on the user* (blocks nothing).
+- Skipped #2 (`reviews/s364-check3.md`): "with no mention of the failed one" - a failed book's row shows its own error strip, so the count line need not repeat it.
 
 ## Device run
 
