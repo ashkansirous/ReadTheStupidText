@@ -37,7 +37,7 @@ function Get-PacksNow([string]$Phone) {
     return @(Get-InstalledPackFolders $Phone $package)
 }
 
-$phone = Find-WirelessPhone $Serial
+$phone = Find-Phone $Serial
 if (-not $phone) { Write-PairingAsk; exit 2 }
 Assert-PhoneLease $phone
 $apks = [ordered]@{}

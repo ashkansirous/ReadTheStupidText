@@ -27,7 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 
-if (-not $Serial) { $Serial = Find-WirelessPhone '' }
+if (-not $Serial) { $Serial = Find-Phone '' }
 if ($Clear) {
     # A corrupt file can be removed with or without a phone connected: check every phone lease file
     # (a corrupt lease left under another or an earlier phone's key would otherwise stay up to 24 h).

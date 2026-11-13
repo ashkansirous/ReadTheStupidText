@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 $script:UnknownExitCode = 5
 
-if (-not $Serial) { $Serial = Find-WirelessPhone '' }
+if (-not $Serial) { $Serial = Find-Phone '' }
 if (-not $Serial) { Write-PairingAsk; exit 2 }
 Assert-PhoneLease $Serial
 

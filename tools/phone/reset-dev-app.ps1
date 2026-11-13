@@ -20,7 +20,7 @@ param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [ValidateSet('setting', 'clear', 'reinstall', 'auto')][string]$Level = 'setting',
     [string]$Serial,
-    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, this script stays wireless-only
+    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, this script never takes an emulator
     [int]$AliveSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
@@ -242,7 +242,7 @@ function Test-HoldNeedsClear([string]$Phone, [string]$LevelName) {
     return $true
 }
 
-$phone = Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator
+$phone = Find-Phone $Serial -AllowEmulator:$AllowEmulator
 if (-not $phone) { Write-PairingAsk; exit 2 }
 Assert-PhoneLease $phone
 foreach ($name in $(if ($Level -eq 'auto') { 'setting', 'clear', 'reinstall' } else { $Level })) {

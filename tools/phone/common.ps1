@@ -1,11 +1,11 @@
-# Shared helpers for the real-phone scripts (Slice 165). Dot-sourced, not run. Wireless adb only, never USB.
+# Shared helpers for the real-phone scripts (Slice 165). Dot-sourced, not run. The phone is reached over USB when plugged in, else over wireless adb (user rule 2026-11-13).
 $script:SdkRoot = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
 if (-not $script:SdkRoot) { throw 'ANDROID_HOME (or ANDROID_SDK_ROOT) is not set.' }
 $script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
 $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 . (Join-Path $PSScriptRoot 'quoting.ps1')
 . (Join-Path $PSScriptRoot '..\detached-process.ps1')  # Slice 241 item 5: background builds that hold none of the caller's handles
-# Wireless debugging shows up as `adb-<serial>-<suffix>._adb-tls-connect._tcp` or `<ip>:<port>`; emulators and USB serials never do.
+# Wireless debugging shows up as `adb-<serial>-<suffix>._adb-tls-connect._tcp` or `<ip>:<port>`; emulators and USB serials never do. A USB phone is matched positively by Test-UsbSerial.
 $script:WirelessPattern = '^(adb-.+_adb-tls-connect\._tcp|(?!127\.)\d{1,3}(\.\d{1,3}){3}:\d+)$'
 
 $script:MdnsTimeoutSeconds = 10
@@ -18,9 +18,9 @@ function Get-AdbDevices {
         ForEach-Object { [pscustomobject]@{ Serial = $Matches[1]; State = $Matches[2] } }
 }
 
-# The wireless phone that is ready, or $null. With -Serial, only that exact serial counts.
-# Slice 308 (two strikes): -AllowEmulator is an explicit parameter, never an environment variable. run-checks.ps1 passes it (and its checks pass it to tap.ps1, reset-dev-app.ps1, preflight.ps1) only when Get-DeviceKind says the -Serial is an emulator; every script run by hand stays wireless-only.
-function Find-WirelessPhone([string]$Serial, [switch]$AllowEmulator) {
+# The phone that is ready (USB first, else wireless), or $null. With -Serial, only that exact serial counts.
+# Slice 308 (two strikes): -AllowEmulator is an explicit parameter, never an environment variable. run-checks.ps1 passes it (and its checks pass it to tap.ps1, reset-dev-app.ps1, preflight.ps1) only when Get-DeviceKind says the -Serial is an emulator; a script run by hand never takes an emulator.
+function Find-Phone([string]$Serial, [switch]$AllowEmulator) {
     return Select-ReadyPhoneSerial @(Get-AdbDevices) $Serial $AllowEmulator.IsPresent
 }
 
@@ -28,10 +28,48 @@ function Find-WirelessPhone([string]$Serial, [switch]$AllowEmulator) {
 $script:PhoneEmulatorSerialPattern = '^emulator-\d{4,5}$'
 function Test-EmulatorSerial([string]$Serial) { return [bool]($Serial -match $script:PhoneEmulatorSerialPattern) }
 
-# The device kind, decided once from the serial: 'Emulator' for emulator-NNNN, else 'Phone' (also for no serial: the wireless phone).
+# Review 7: a USB serial is matched positively (letters, digits, hyphen and underscore, at least 4 characters, no colon or dot), so `127.0.0.1:5555`, `localhost:5555` and a trailing-dot mDNS name are never USB.
+$script:UsbSerialPattern = '^[A-Za-z0-9_-]{4,}$'
+function Test-UsbSerial([string]$Serial) {
+    return [bool]($Serial -and $Serial -notmatch '^emulator' -and $Serial -match $script:UsbSerialPattern)
+}
+
+# Review 2: the user's phone (S21) by its USB serial; RTST_PHONE_SERIAL overrides it. With several USB phones the known one wins; with several unknown ones none is picked (wireless is the fallback).
+$script:KnownPhoneUsbSerial = 'R3CR30FQT0V'
+$script:PhoneSerialEnvName = 'RTST_PHONE_SERIAL'
+function Get-KnownPhoneSerial {
+    $fromEnv = [Environment]::GetEnvironmentVariable($script:PhoneSerialEnvName)
+    if ($fromEnv) { return $fromEnv.Trim() }
+    return $script:KnownPhoneUsbSerial
+}
+
+# Review 2: the USB phone to use from the ready USB devices: the only one, else the known one, else none (the reason is one printed line).
+function Select-UsbPhone([object[]]$UsbDevices) {
+    $usb = @($UsbDevices)
+    if ($usb.Count -le 1) { return $usb }
+    $known = @($usb | Where-Object { $_.Serial -eq (Get-KnownPhoneSerial) })
+    if ($known.Count -gt 0) { return $known }
+    Write-Host "Several USB phones are plugged in ($(($usb | ForEach-Object { $_.Serial }) -join ', ')) and none is the known phone ($(Get-KnownPhoneSerial)); picking none, trying wireless. Name one with -Serial or set $($script:PhoneSerialEnvName)."
+    return @()
+}
+
+# Review 4: one line when a USB phone is listed but unauthorized or offline; $null when there is none.
+function Get-UsbNotReadyText([object[]]$Devices, [string]$Serial = '') {
+    # Review 6: when -Serial names another device, a stuck USB phone is not the one asked for.
+    $stuck = @($Devices | Where-Object { $_.State -ne 'device' -and (Test-UsbSerial $_.Serial) -and (-not $Serial -or $_.Serial -eq $Serial) }) | Select-Object -First 1
+    if (-not $stuck) { return $null }
+    return "The USB phone $($stuck.Serial) is $($stuck.State): unlock it and accept the USB debugging prompt on the screen, then run this again."
+}
+
+# The device kind, decided once from the serial: 'Emulator' for emulator-NNNN, 'Usb' for a USB-attached phone, else 'Phone' (wireless, also for no serial).
 $script:KindPhone = 'Phone'
 $script:KindEmulator = 'Emulator'
-function Get-DeviceKind([string]$Serial) { return $(if (Test-EmulatorSerial $Serial) { $script:KindEmulator } else { $script:KindPhone }) }
+$script:KindUsb = 'Usb'
+function Get-DeviceKind([string]$Serial) {
+    if (Test-EmulatorSerial $Serial) { return $script:KindEmulator }
+    if (Test-UsbSerial $Serial) { return $script:KindUsb }
+    return $script:KindPhone
+}
 
 # Which lease and which phone-only gates a kind has. Phone: the phone lease (key = ro.serialno), charger/readiness gate, stay-on, AOT. Emulator: only the emulator lease (key = adb serial, as tools/emulator does), none of the others.
 function Get-DeviceKindPlan([string]$Kind) {
@@ -64,8 +102,10 @@ function Select-ReadyPhoneSerial([object[]]$Devices, [string]$Serial, [bool]$All
     $ready = @($Devices | Where-Object { $_.State -eq 'device' })
     if ($AllowEmulator -and $Serial -and (Test-EmulatorSerial $Serial)) { $ready = @($ready | Where-Object { $_.Serial -eq $Serial }) }
     else {
-        $ready = @($ready | Where-Object { $_.Serial -match $script:WirelessPattern })
         if ($Serial) { $ready = @($ready | Where-Object { $_.Serial -eq $Serial }) }
+        $usbFirst = @(Select-UsbPhone @($ready | Where-Object { Test-UsbSerial $_.Serial }))
+        $wireless = @($ready | Where-Object { $_.Serial -match $script:WirelessPattern })
+        $ready = @($usbFirst) + @($wireless)
     }
     return $ready | Select-Object -First 1 -ExpandProperty Serial
 }
@@ -83,12 +123,15 @@ function Get-EmulatorProblemText([string]$Serial, [object[]]$Devices) {
     return "The emulator $Serial is not running (or not ready). Start it with tools/emulator/start-warm.ps1, then run this again."
 }
 
-function Write-PairingAsk {
-    Write-Host 'The phone is not connected over wireless debugging. I need two things from you:'
+function Write-PairingAsk([string]$Serial = '') {
+    # Review 4: a USB phone that is plugged in but unauthorized or offline gets its own line; the pairing ask would be wrong. Review 6: not when -Serial names another device.
+    $usbText = $null; try { $usbText = Get-UsbNotReadyText @(Get-AdbDevices) $Serial } catch { Write-Warning $_.Exception.Message }
+    if ($usbText) { Write-Host $usbText; return }
+    Write-Host 'The phone is not plugged in by USB and not connected over wireless debugging (last resort). I need two things from you:'
     Write-Host '  1. On the phone: Settings > Developer options > Wireless debugging > Pair device with pairing code.'
     Write-Host '  2. Tell me the pairing IP:port and the 6-digit code shown there, then the IP:port on the main Wireless debugging screen.'
     Write-Host 'Then run: connect.ps1 -PairAddress <ip:port> -PairCode <6 digits> -ConnectAddress <ip:port>'
-    Write-Host '(Wireless debugging only. USB is never used.)'
+    Write-Host '(Plugging the phone in by USB also works and needs none of this.)'
 }
 
 # Every adb call has a time limit, so a dropped wireless link fails loudly instead of blocking a wait loop in silence.
