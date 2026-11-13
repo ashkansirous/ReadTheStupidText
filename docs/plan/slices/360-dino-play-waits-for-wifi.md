@@ -1,4 +1,4 @@
-# Slice 359 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
+# Slice 360 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
 
 *Planned 2026-11-13 (user bug report).*
 
