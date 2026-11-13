@@ -6,7 +6,7 @@
 # each matching asset name; prints nothing if no release matches.
 # Only app releases are considered; packs-<n> releases are skipped. [tag-regex]
 # picks which tags count (default: any product, i.e. rtst-v<digit>, dino-v<digit>
-# and the old shared v<digit>); release.yml narrows it to one product (Slice 130).
+# and the old shared v<digit>); release-shared.yml narrows it to one product (Slice 130, 369).
 # Needs GH_TOKEN and GITHUB_REPOSITORY (both set in Actions).
 set -euo pipefail
 

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct, testSuites } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, plansFromEnv, productBump, releaseWorkflows, shipTargets, shipTargetsPerProduct, testSuites } from './ship-targets.mjs';
 
 // Slice 265: every book is store-only content (Slice 299: dino-starters.json is gone); the book stems are read from the real content folders, so a renamed book cannot leave these tests empty.
 const CONTENT_DIR = fileURLToPath(new URL('../../content/dino/', import.meta.url));
@@ -47,7 +47,9 @@ const CASES = [
     ['GitVersion.yml', ['GitVersion.yml'], ALL3],
     ['GitVersion.dino.yml', ['GitVersion.dino.yml'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['.gitattributes', ['.gitattributes'], ALL3],
-    ['release workflow (the pipeline itself)', ['.github/workflows/release.yml'], ALL3],
+    ['shared release workflow (the pipeline itself, both products)', ['.github/workflows/release-shared.yml'], ALL3],
+    ['RTST release workflow rebuilds RTST only (Slice 369)', ['.github/workflows/release-rtst.yml'], { windows: true, android: true, ios: true }],
+    ['Dino release workflow rebuilds Dino Reader only (Slice 369)', ['.github/workflows/release-dino.yml'], { dinoapp: true, dinoios: true, dinowin: true }],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
     ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true, windowsstore: true }],
     ['Windows tray library only (no Dino target)', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { windows: true, windowsstore: true }],
@@ -177,7 +179,7 @@ test('forceAll (manual run) builds every target', () => {
     assert.deepEqual(targetsOf([], { forceAll: true }), EVERYTHING);
 });
 
-test('an iOS-only change reports ios and nothing else (release.yml declines to ship it unsigned)', () => {
+test('an iOS-only change reports ios and nothing else (release-shared.yml declines to ship it unsigned)', () => {
     assert.deepEqual(targetsOf([`${M}/Platforms/iOS/Info.plist`]), { ...NONE, ios: true });
 });
 
@@ -328,17 +330,18 @@ function derivedPaths(groupNames) {
     return wanted;
 }
 
+// Slice 369: rtstrelease / dinorelease are release-rtst.yml / release-dino.yml; the shared half, release-shared.yml, is in `core`.
 const PR_TARGETS = {
-    'windows.yml': ['core', 'windows'],
-    'android.yml': ['core', 'android', 'mobileshared', 'sharedroot'],
-    'ios.yml': ['core', 'ios', 'mobileshared', 'sharedroot'],
-    'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot'],
-    'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot'],
-    'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot'],
+    'windows.yml': ['core', 'windows', 'rtstrelease'],
+    'android.yml': ['core', 'android', 'mobileshared', 'sharedroot', 'rtstrelease'],
+    'ios.yml': ['core', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'],
+    'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot', 'dinorelease'],
+    'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot', 'dinorelease'],
+    'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot', 'dinorelease'],
     // tests.yml holds RTST's suite and the shared suite (Slice 368; Slice 128 before it): the shared suite gates the Dino builds too, and testSuites() selects it for every Dino group, so a Dino-only PR must start this workflow.
-    'tests.yml': ['core', 'unittests', 'sharedtests', 'sherpapins', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'dinoapp', 'dinoios', 'dinowin'],
+    'tests.yml': ['core', 'unittests', 'sharedtests', 'sherpapins', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'dinoapp', 'dinoios', 'dinowin', 'rtstrelease', 'dinorelease'],
     // dinoreader.yml is Dino's suite: it runs for every Dino target (core is in each of them).
-    'dinoreader.yml': ['core', 'dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'sharedroot'],
+    'dinoreader.yml': ['core', 'dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'sharedroot', 'dinorelease'],
 };
 
 for (const [file, groups] of Object.entries(PR_TARGETS)) {
@@ -624,14 +627,14 @@ test('Slice 222: the newest Store marker wins whatever order the tags come in, s
 });
 
 test('Slice 222: the marker job never moves or adds an older marker', () => {
-    const job = readFileSync(`${WORKFLOWS_DIR}release.yml`, 'utf8').split('store-submit-mark:')[1].split('store-submit-dino:')[0];
+    const job = readFileSync(`${WORKFLOWS_DIR}release-rtst.yml`, 'utf8').split('store-submit-mark:')[1].split('play-submit:')[0];
     assert.match(job, /existing" = "\$sha"/);
     assert.match(job, /\[ -n "\$existing" \].*exit 0/);
     assert.match(job, /not adding an older marker/);
     assert.doesNotMatch(job, /--force|-X PATCH/);
 });
 
-// ---- "Changed after merge" (Slice 239): the store upload is its own workflow, release.yml ignores store-book folders ----
+// ---- "Changed after merge" (Slice 239): the store upload is its own workflow, the release workflows ignore store-book folders ----
 /** GitHub glob: `**` crosses folders (also a lone `**`), `*` stays inside one. (matchesPattern's `**` is for the narrower patterns of GROUPS.) */
 function globMatches(file, pattern) {
     const body = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '@@').replace(/\*/g, '[^/]*').replace(/@@/g, '.*');
@@ -661,17 +664,53 @@ function pushPathsOf(workflow) {
     return out;
 }
 
-test('release.yml ignores every book folder, audio clips included, but still runs for code and mixed pushes (Slice 265)', () => {
-    const paths = pushPathsOf('release.yml');
-    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), false);
-    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), false);
-    assert.ok(BOOK_STEMS.length > 0, 'content/dino has no book folders');
-    for (const stem of BOOK_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), false, stem);
-    assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/manifest.json'), false);
-    assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), false);
-    for (const file of ['src/DinoReader.Core/Parser.cs', 'docs/plan/x.md', '.github/workflows/release.yml']) assert.equal(pushRuns(paths, file), true, file);
+for (const workflow of ['release-rtst.yml', 'release-dino.yml']) {
+    test(`${workflow} ignores every book folder, audio clips included (Slice 265)`, () => {
+        const paths = pushPathsOf(workflow);
+        assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), false);
+        assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), false);
+        assert.ok(BOOK_STEMS.length > 0, 'content/dino has no book folders');
+        for (const stem of BOOK_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), false, stem);
+        assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/manifest.json'), false);
+        assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), false);
+    });
+}
+
+test('a mixed push (a book plus Dino code) still starts release-dino.yml; shared code starts both release workflows', () => {
     const mixed = ['content/dino/x-marks-the-treasure/story.md', 'src/DinoReader.Core/Parser.cs'];
-    assert.equal(mixed.some((file) => pushRuns(paths, file)), true);
+    assert.equal(mixed.some((file) => pushRuns(pushPathsOf('release-dino.yml'), file)), true);
+    for (const workflow of ['release-rtst.yml', 'release-dino.yml']) {
+        for (const file of ['src/ReadTheStupidText.Domain/X.cs', '.github/workflows/release-shared.yml', 'GitVersion.yml']) assert.equal(pushRuns(pushPathsOf(workflow), file), true, `${workflow}: ${file}`);
+    }
+});
+
+// Slice 369 (review): the release workflows' push paths are written by hand, so they are checked against GROUPS here.
+// (release-dino.yml's list is already compared with GROUPS by the "release-dino.yml push paths equal ..." test above.)
+// dino-store.yml is not in any GROUPS entry (it ships books, not an app) but only the store workflow reads it.
+const RTST_EXTRA_NEGATIONS = ['!content/dino/**', '!.github/workflows/dino-store.yml'];
+const RTST_RELEASE_GROUPS = ['core', 'unittests', 'sharedtests', 'sherpapins', 'infrastructure', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'];
+const sampleFileOf = (pattern) => globOf(pattern).replace('**', 'sample.cs').replace('*', 'a');
+const includeSamples = (groups) => groups.flatMap((name) => GROUPS[name].include.map(sampleFileOf));
+
+test('release-rtst.yml push paths run for every RTST group and skip every path only Dino Reader reads', () => {
+    const paths = pushPathsOf('release-rtst.yml');
+    const rtstSamples = includeSamples(RTST_RELEASE_GROUPS);
+    const dinoOnly = [...new Set(includeSamples(['dinoapp', 'dinoios', 'dinowin', 'dinoreader', 'dinostore', 'dinorelease']))].filter((file) => !rtstSamples.includes(file));
+    assert.ok(dinoOnly.length > 5, 'no Dino-only paths derived from GROUPS');
+    const stillRuns = dinoOnly.filter((file) => pushRuns(paths, file) && !RTST_RELEASE_GROUPS.some((name) => GROUPS[name].include.some((p) => matchesPattern(file, p))));
+    assert.deepEqual(stillRuns, [], 'Dino-only paths that still start release-rtst.yml: add a ! line');
+    const skipped = rtstSamples.filter((file) => !pushRuns(paths, file));
+    assert.deepEqual(skipped, [], 'RTST paths that release-rtst.yml would not run for');
+    const negations = paths.filter((p) => p.startsWith('!'));
+    const orphans = negations.filter((p) => !dinoOnly.some((file) => globMatches(file, p.slice(1))) && !RTST_EXTRA_NEGATIONS.includes(p));
+    assert.deepEqual(orphans, [], 'release-rtst.yml negations that no Dino-only GROUPS path needs');
+});
+
+test('release-rtst.yml keeps the old release.yml exclusion (content/dino/**) and nothing a docs-only merge could use', () => {
+    const paths = pushPathsOf('release-rtst.yml');
+    assert.equal(paths[0], '**');
+    assert.ok(paths.includes('!content/dino/**'));
+    assert.deepEqual(targetsOf(['docs/plan/slices/369-release-workflow-per-product.md', 'plan.md']), NONE);
 });
 
 test('dino-store.yml runs for every book folder and workflow_dispatch, and has its own concurrency group', () => {
@@ -682,7 +721,7 @@ test('dino-store.yml runs for every book folder and workflow_dispatch, and has i
     const text = readFileSync(`${WORKFLOWS_DIR}dino-store.yml`, 'utf8');
     assert.match(text, /group: dino-store\r?\n\s+cancel-in-progress: false/);
     assert.match(text, /workflow_dispatch:/);
-    assert.doesNotMatch(readFileSync(`${WORKFLOWS_DIR}release.yml`, 'utf8'), /publish-store-books/);
+    for (const workflow of ['release-rtst.yml', 'release-dino.yml', 'release-shared.yml']) assert.doesNotMatch(readFileSync(`${WORKFLOWS_DIR}${workflow}`, 'utf8'), /publish-store-books\.mjs --/);
     assert.match(text, /schedule:\r?\n\s+- cron: /);
     assert.match(text, /publish-store-books\.mjs --delist --bucket-state "\$RUNNER_TEMP\/live-store\.json" --audio-verdict "\$RUNNER_TEMP\/audio-verdict\.json"\r?\n/);
     assert.doesNotMatch(text, /content-changed/);
@@ -700,4 +739,120 @@ test('dino-store.yml push paths cover every path of the dinostore group (one sou
 test('tools-selftests.yml still runs on a high-res-only pull request (a PR must always have a check to wait on)', () => {
     const paths = readPullRequestPaths('tools-selftests.yml');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/high-res/cover.png'), true);
+});
+
+// ---- Slice 369: one release workflow per product ----
+const BOTH = { rtst: true, dino: true };
+const RELEASE_CASES = [
+    ['a Dino-only change starts only the Dino workflow', ['src/DinoReader.App/MainPage.xaml.cs'], { rtst: false, dino: true }],
+    ['a Dino Core change starts only the Dino workflow', ['src/DinoReader.Core/Parser.cs'], { rtst: false, dino: true }],
+    ['a Dino test change starts only the Dino workflow (its suite)', ['tests/DinoReader.Tests/ParserTests.cs'], { rtst: false, dino: true }],
+    ['a tray-only change starts only the RTST workflow', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { rtst: true, dino: false }],
+    ['the RTST phone app starts only the RTST workflow', [`${M}/ReaderPage.xaml.cs`], { rtst: true, dino: false }],
+    ['a shared engine change starts both', ['src/ReadTheStupidText.Application/Reading/X.cs'], BOTH],
+    ['Infrastructure starts both (Dino reads with its Windows engines)', ['src/ReadTheStupidText.Infrastructure/X.cs'], BOTH],
+    ['the shared release workflow starts both', ['.github/workflows/release-shared.yml'], BOTH],
+    ['each product release workflow starts only its own product', ['.github/workflows/release-rtst.yml'], { rtst: true, dino: false }],
+    ['docs only start neither', ['CLAUDE.md', 'plan.md', 'docs/plan/slices/1-x.md'], { rtst: false, dino: false }],
+    ['a store book starts neither (dino-store.yml owns it)', ['content/dino/x-marks-the-treasure/story.md'], { rtst: false, dino: false }],
+    ['a change in both products starts both', ['src/DinoReader.App/MainPage.xaml.cs', 'src/ReadTheStupidText.Windows.Tray/Input/X.cs'], BOTH],
+    ['an unknown range starts both', null, BOTH],
+];
+
+for (const [name, files, expected] of RELEASE_CASES) {
+    test(`releaseWorkflows: ${name}`, () => {
+        assert.deepEqual(releaseWorkflows(files), expected);
+    });
+}
+
+/** Whether a workflow's push `paths` start it for at least one file. */
+const startsFor = (workflow, files) => files.some((file) => pushRuns(pushPathsOf(workflow), file));
+
+test('push paths: every CASES change set starts the release workflow(s) releaseWorkflows names, and never the other product when it is not named', () => {
+    for (const [name, files] of CASES) {
+        const wanted = releaseWorkflows(files);
+        if (wanted.rtst) assert.equal(startsFor('release-rtst.yml', files), true, `${name}: release-rtst.yml must start`);
+        if (wanted.dino) assert.equal(startsFor('release-dino.yml', files), true, `${name}: release-dino.yml must start`);
+        // A Dino-only change must not start the RTST run, and an RTST-only one not the Dino run (docs/other files may start RTST: ship-targets then plans nothing).
+        if (wanted.dino && !wanted.rtst) assert.equal(startsFor('release-rtst.yml', files), false, `${name}: release-rtst.yml must not start`);
+        if (wanted.rtst && !wanted.dino) assert.equal(startsFor('release-dino.yml', files), false, `${name}: release-dino.yml must not start`);
+    }
+});
+
+test('push paths: every path of every group starts the workflow(s) of the product(s) it ships (one source of truth, GROUPS)', () => {
+    const probe = (entry) => (entry.includes('*') ? entry.replace(/\*/g, 'x') : entry.endsWith('/') ? `${entry}sub/file.x` : entry);
+    for (const [group, { include, exclude = [] }] of Object.entries(GROUPS)) {
+        for (const entry of include) {
+            const file = probe(entry);
+            if (exclude.some((pattern) => matchesPattern(file, pattern))) continue;
+            const wanted = releaseWorkflows([file]);
+            if (wanted.rtst) assert.equal(startsFor('release-rtst.yml', [file]), true, `${group}: ${file} must start release-rtst.yml`);
+            if (wanted.dino) assert.equal(startsFor('release-dino.yml', [file]), true, `${group}: ${file} must start release-dino.yml`);
+            if (wanted.dino && !wanted.rtst) assert.equal(startsFor('release-rtst.yml', [file]), false, `${group}: ${file} is Dino-only and must not start release-rtst.yml`);
+            if (wanted.rtst && !wanted.dino) assert.equal(startsFor('release-dino.yml', [file]), false, `${group}: ${file} is RTST-only and must not start release-dino.yml`);
+        }
+    }
+});
+
+test('release-dino.yml push paths equal the paths derived from GROUPS (core + every Dino group + sharedroot + dinorelease), like a Dino build workflow', () => {
+    const actual = pushPathsOf('release-dino.yml');
+    const expected = derivedPaths(['core', 'dinoapp', 'dinoios', 'dinowin', 'dinoreader', 'sharedroot', 'dinorelease']);
+    IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
+    assert.equal(new Set(actual).size, actual.length, 'duplicate path entries');
+    assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
+    const excluded = actual.indexOf('!src/ReadTheStupidText.Mobile.Shared/Platforms/**');
+    assert.ok(excluded > actual.indexOf('src/ReadTheStupidText.Mobile.Shared/**') && actual.indexOf('src/ReadTheStupidText.Mobile.Shared/**') >= 0, '! must follow the Mobile.Shared glob');
+    assert.ok(actual.filter((p) => p.startsWith('src/ReadTheStupidText.Mobile.Shared/Platforms/')).every((p) => actual.indexOf(p) > excluded), 'Platforms re-includes must follow the !');
+});
+
+test('a Dino-only PR starts only release-dino.yml and an RTST-only one only release-rtst.yml (the first-merge check of Slice 369)', () => {
+    assert.equal(startsFor('release-dino.yml', ['src/DinoReader.App/MainPage.xaml.cs']), true);
+    assert.equal(startsFor('release-rtst.yml', ['src/DinoReader.App/MainPage.xaml.cs']), false);
+    assert.equal(startsFor('release-rtst.yml', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs']), true);
+    assert.equal(startsFor('release-dino.yml', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs']), false);
+});
+
+test('per product plan: PRODUCT=dino plans only Dino (the RTST tag is never read), PRODUCT=rtst only RTST, no PRODUCT both', () => {
+    const asked = [];
+    const plan = (name, versionEnv) => { asked.push([name, versionEnv]); return { changedFiles: [], bump: 'other' }; };
+    assert.deepEqual(Object.keys(plansFromEnv({ PRODUCT: 'dino' }, plan)), ['dino']);
+    assert.deepEqual(Object.keys(plansFromEnv({ PRODUCT: 'rtst' }, plan)), ['rtst']);
+    assert.deepEqual(Object.keys(plansFromEnv({}, plan)).sort(), ['dino', 'rtst']);
+    assert.deepEqual(asked, [['dino', 'VERSION'], ['rtst', 'VERSION'], ['rtst', 'RTST_VERSION'], ['dino', 'DINO_VERSION']]);
+    assert.throws(() => plansFromEnv({ PRODUCT: 'other' }, plan), /unknown PRODUCT/);
+});
+
+test('per product plan: a Dino plan sets only the Dino targets, force_all and a major bump stay inside the product', () => {
+    const dinoOnly = shipTargetsPerProduct({ plans: { dino: { changedFiles: ['src/DinoReader.App/X.cs'], bump: 'other' } } });
+    assert.deepEqual(Object.keys(dinoOnly).sort(), [...PRODUCTS.dino.targets].sort());
+    assert.deepEqual([dinoOnly.dinoapp, dinoOnly.dinoios, dinoOnly.dinowin], [true, true, true]);
+    const forced = shipTargetsPerProduct({ plans: { rtst: { changedFiles: [], bump: 'other' } }, forceAll: true });
+    assert.deepEqual(Object.keys(forced).sort(), [...PRODUCTS.rtst.targets].sort());
+    assert.deepEqual([forced.windows, forced.android, forced.ios, forced.windowsstore], [true, true, true, true]);
+});
+
+test('the release workflows: own concurrency group per product, a dispatch trigger each, no workflow_call mixed into a caller', () => {
+    const groups = [];
+    for (const [workflow, product] of [['release-rtst.yml', 'rtst'], ['release-dino.yml', 'dino']]) {
+        const text = readFileSync(`${WORKFLOWS_DIR}${workflow}`, 'utf8');
+        assert.match(text, /workflow_dispatch:/, workflow);
+        assert.doesNotMatch(text, /workflow_call:/, workflow);
+        assert.match(text, new RegExp(`product: ${product}\\r?\\n\\s+workflow_file: ${workflow.replace('.', '\\.')}`), workflow);
+        const group = /^concurrency:\r?\n\s+group: (.+)\r?\n\s+cancel-in-progress: false/m.exec(text);
+        assert.ok(group, `${workflow}: concurrency group with cancel-in-progress: false`);
+        for (const prefix of [`release-${product}-dispatch-`, `release-${product}-fix-`, `release-${product}-{0}`]) assert.ok(group[1].includes(prefix), `${workflow}: group names ${prefix}`);
+        groups.push(group[1]);
+    }
+    assert.ok(!groups[0].includes('release-dino') && !groups[1].includes('release-rtst'), 'a product group never names the other product');
+    const shared = readFileSync(`${WORKFLOWS_DIR}release-shared.yml`, 'utf8');
+    assert.doesNotMatch(shared, /^concurrency:/m, 'release-shared.yml has no group of its own (a group shared with its caller would cancel the caller)');
+    assert.match(shared, /^on:\r?\n  workflow_call:/m);
+    assert.doesNotMatch(shared, /^  (push|workflow_dispatch):/m);
+});
+
+test('the retired release.yml is gone and no workflow or script still points at it (a path, a `uses`, a `gh run list --workflow`)', () => {
+    assert.equal(existsSync(`${WORKFLOWS_DIR}release.yml`), false);
+    const scriptsDir = fileURLToPath(new URL('./', import.meta.url));
+    const files = [...readdirSync(WORKFLOWS_DIR).map((f) => `${WORKFLOWS_DIR}${f}`), ...readdirSync(scriptsDir).filter((f) => /\.(mjs|sh)$/.test(f) && !f.endsWith('.test.mjs')).map((f) => `${scriptsDir}${f}`)];
+    for (const file of files) assert.doesNotMatch(readFileSync(file, 'utf8'), /workflows\/release\.yml|--workflow "?release\.yml/, file);
 });

@@ -3,7 +3,7 @@ name: android
 # Android build. Slice 70: split out of build.yml's `build-android`. Entry points:
 #   * pull_request (own paths) / workflow_dispatch: the unsigned Debug build as
 #     a compile check. Nothing is signed or uploaded, and no secret is read.
-#   * workflow_call from release.yml with `release` = true (release-draft has a
+#   * workflow_call from release-rtst.yml with `release` = true (release-draft has a
 #     draft to fill): once ANDROID_SIGNING_KEYSTORE_BASE64 exists, also builds
 #     the signed .aab/.apk and uploads them to the draft release.
 # CI signs with an upload key; Google Play App Signing re-signs for
@@ -23,7 +23,8 @@ on:
       - 'src/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-rtst.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'

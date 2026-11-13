@@ -2,7 +2,7 @@ name: tools-selftests
 
 # Slice 212: the device-test tooling's own self-tests (no device, no Maestro). A separate workflow on purpose:
 # editing tests.yml would ship every app (it is a core path in ship-targets.mjs), and this file is in no build group.
-# Pull requests only: release.yml is the only workflow that runs on push to main. No upload-artifact.
+# Pull requests only: release-rtst.yml and release-dino.yml are the only workflows that run on push to main (besides dino-store.yml). No upload-artifact.
 
 on:
   pull_request:

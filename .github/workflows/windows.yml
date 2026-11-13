@@ -4,7 +4,7 @@ name: windows
 # `build-windows`. Three entry points:
 #   * pull_request (own paths): compiles and packages, uploads nothing.
 #   * workflow_dispatch: same, by hand.
-#   * workflow_call from release.yml: the same build, plus `upload` = true when
+#   * workflow_call from release-rtst.yml: the same build, plus `upload` = true when
 #     release-draft has a draft to fill, which sends each MSIX straight to the
 #     draft release. Zero Actions artifacts (Batch 8): don't add
 #     actions/upload-artifact for build outputs.
@@ -23,7 +23,8 @@ on:
       - 'src/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-rtst.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
@@ -57,7 +58,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Skipped when release.yml passes its version in; `build` then reads the
+  # Skipped when release-rtst.yml passes its version in; `build` then reads the
   # input directly.
   version:
     if: inputs.version == ''

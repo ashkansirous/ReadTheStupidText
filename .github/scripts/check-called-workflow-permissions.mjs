@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Slice 242 item 7: a reusable workflow cannot ask for more token permissions than the caller's job grants.
-// PR #702 shipped a dinoreader-windows.yml job asking `actions: write` while release.yml's build-dinowin job granted only
+// PR #702 shipped a dinoreader-windows.yml job asking `actions: write` while the release workflow's build-dinowin job (now release-dino.yml's) granted only
 // `contents: write`: every release on main ended `startup_failure` until hotfix #704, and actionlint did not catch it.
 //
 // For each `uses: ./.github/workflows/<file>.yml` job in any workflow, this fails when the called workflow (its top-level

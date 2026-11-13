@@ -3,7 +3,7 @@ name: testflight-external
 # Daily: sends each iOS app's newest processed build to the external TestFlight group ("Rofagha")
 # and submits it for Beta App Review, even if an older build's review is still waiting. Never
 # cancels a review, never expires a build (Decision 154, Slice 147). Internal testers still get
-# every merge via release.yml. Two crons because GitHub delays or drops on-the-hour ones; the
+# every merge via release-rtst.yml / release-dino.yml. Two crons because GitHub delays or drops on-the-hour ones; the
 # backup skips when the newest build is already submitted, and submits a newer one if it
 # finished processing after the first run.
 

@@ -3,13 +3,13 @@ name: dinoreader-windows
 # Dino Reader Windows MSIX build (x64 + ARM64), Slice 67. The twin of windows.yml for the second
 # MAUI app, `src/DinoReader.App` (a WinUI head: no tray, no hotkey). Entry points:
 #   * pull_request (own paths) / workflow_dispatch: compiles and packages, uploads nothing.
-#   * workflow_call from release.yml: the same build, plus `upload` = true when release-draft has
+#   * workflow_call from release-dino.yml: the same build, plus `upload` = true when release-draft has
 #     a draft to fill, which sends each MSIX straight to the draft release as
 #     DinoReader.App_<v>.0_<arch>.msix. Zero Actions artifacts (Batch 8): don't add
 #     actions/upload-artifact for build outputs.
 # The package is unsigned (the Store re-signs) and, in Release, .NET self-contained like Read The
 # Stupid Text's (Store certification 10.2.4.1). No LFS and no voice model: voices download as packs.
-# The Store submission is store-submit.yml (package DinoReader.App) via release.yml, gated on DINOREADER_STORE_APP_ID.
+# The Store submission is store-submit.yml (package DinoReader.App) via release-dino.yml, gated on DINOREADER_STORE_APP_ID.
 # Without a `version` input (PR or manual run) it asks GitVersion itself so the manifest stamp is
 # exercised too.
 
@@ -26,7 +26,8 @@ on:
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-dino.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
@@ -63,7 +64,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Skipped when release.yml passes its version in; `build` then reads the input directly.
+  # Skipped when release-dino.yml passes its version in; `build` then reads the input directly.
   version:
     if: inputs.version == ''
     runs-on: ubuntu-latest

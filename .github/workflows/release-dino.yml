@@ -1,0 +1,317 @@
+name: release-dino
+
+# Dino Reader's release (Slice 369: the Dino half of the old `release.yml`; Read The Stupid Text's is `release-rtst.yml`, the
+# shared first half is `release-shared.yml`). A push to main that changes a file a Dino target reads, or a manual run, cuts
+# `dino-v<x.y.z>` (GitVersion.dino.yml, kept identical to GitVersion.yml except `tag-prefix`) with the Android .aab/.apk, the
+# signed iOS .ipa and the unsigned Windows MSIX, and submits them. Never marked "latest" (the README badge follows RTST).
+# Pull requests are covered by each platform workflow's own `pull_request` paths: dinoreader.yml, dinoreader-android.yml,
+# dinoreader-ios.yml, dinoreader-windows.yml, tests.yml, release-scripts.yml.
+#
+# Manual run: `workflow_dispatch` behaves exactly like a push to main and is refused on any other ref. `force_all` builds every
+# Dino Reader target (and, with the secrets set, signs and submits them: Play, TestFlight and, when DINOREADER_STORE_APP_ID is
+# set, the Microsoft Store); it never touches RTST's targets. A wave's batched release (run-wave `batch-release.mjs`)
+# dispatches each release workflow whose push `paths` match the batch, so a batch that changed both products starts both.
+#
+# Push `paths` are derived from ship-targets.mjs's GROUPS (core + dinoapp + dinoios + dinowin + dinoreader + sharedroot +
+# dinorelease), so an RTST-only file (the tray, the Windows app, the RTST phone app) starts no Dino run and a shared code path
+# starts both products' runs; ship-targets.test.mjs fails on drift. A store book folder never starts it (Slice 265: only
+# `dino-store.yml` reads content/dino/**; it publishes books without building an app).
+#
+# Dino Reader (Slice 58, Decision 72) is a second Android app. It compiles unsigned until its OWN four signing secrets exist
+# (DINOREADER_ANDROID_SIGNING_*; release-shared's `release-draft` reports whether they do as `android_signed`, which also requires
+# DINOREADER_PLAY_SERVICE_ACCOUNT_JSON so a half-configured repo never publishes a Dino-only GitHub release). With them, a release
+# run signs a DinoReader-<v>.aab/.apk, attaches both to the draft, and `play-submit-dino` sends the .aab to its own Play internal
+# track. A Dino-only change without the signing secrets cuts no release, like an unsigned iOS one.
+#   * Dino Reader on iOS (Slice 67) is a signed target (`dinoios`): its own `dinoreader-ios.yml`, signed when the five team-wide iOS
+#     secrets AND DINOREADER_IOS_PROVISIONING_PROFILE_BASE64 exist (`ios_signed`), uploaded by `testflight-submit-dino`. Without
+#     them it compiles unsigned and ships nothing.
+#   * Dino Reader on Windows (Slice 67) is the `dinowin` target: `dinoreader-windows.yml` builds an unsigned, self-contained MSIX per
+#     architecture (no secrets needed) and attaches both to the draft as DinoReader.App_<v>.0_<arch>.msix. `store-submit-dino`
+#     sends them to the Store with the same AZURE_AD_*/SELLER_ID secrets, but only when the repository variable
+#     DINOREADER_STORE_APP_ID is set (it is empty until the Partner Center listing exists).
+#   * ZERO Actions artifacts and only changed targets are built: the rules in release-rtst.yml apply unchanged.
+#
+# Flow: shared (release-shared.yml: version + ship-targets, shared + Dino tests, the draft release) -> build-dinoapp / build-dinoios /
+# build-dinowin (reusable workflows; they upload into the draft) -> release-publish-dino (only if every affected build succeeded; the
+# tag is created here, so a failed run leaves no tag) -> store-submit-dino / play-submit-dino / testflight-submit-dino.
+# The Dino store upload (Slice 158) lives in `dino-store.yml`, not here, so a story merge never queues behind this workflow's
+# concurrency group (Slice 239, "Changed after merge").
+
+on:
+  push:
+    branches: [main]
+    # Later patterns override earlier ones: the shared Mobile.Shared root first, its Platforms folders out, then the three Dino
+    # platform folders back in (the same order as the pull_request lists of dinoreader-*.yml).
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'global.json'
+      - 'Directory.Build.props'
+      - 'src/SherpaOnnxVersion.props'
+      - 'GitVersion.yml'
+      - '.gitattributes'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'GitVersion.dino.yml'
+      - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/AndroidSherpaPackaging.props'
+      - 'src/AndroidRelease.props'
+      - 'src/AndroidProguard.cfg'
+      - '.github/scripts/stage-android-package.sh'
+      - '.github/scripts/check-android-natives.sh'
+      - '.github/workflows/dinoreader-android.yml'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/IosSherpaPackaging.props'
+      - '.github/scripts/ios-signing.sh'
+      - '.github/scripts/testflight-upload.sh'
+      - '.github/scripts/check-ios-bundle.sh'
+      - '.github/workflows/dinoreader-ios.yml'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - 'src/ReadTheStupidText.Infrastructure/**'
+      - '.github/workflows/store-submit.yml'
+      - '.github/workflows/dinoreader-windows.yml'
+      - 'tests/DinoReader.Tests/**'
+      - 'tools/DinoReader.BookBuilder/**'
+      - '.github/workflows/dinoreader.yml'
+      - '.github/workflows/release-dino.yml'
+      - '!**/*.md'
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: 'Build every Dino Reader target (Android, iOS, Windows and the Dino suite) whatever changed.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never cancel an in-progress run (two runs would race on the same draft Release); the same group scheme as release-rtst.yml
+# (dispatch, fix merge, ordinary push: Slices 221 and 267, see the comment there), under `release-dino-` names so the two products
+# never replace or wait for each other. Never reuse a group name inside release-shared.yml (the caller would be cancelled).
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('release-dino-dispatch-{0}', github.ref) || (contains(github.event.head_commit.message, '/fix/') && format('release-dino-fix-{0}', github.sha)) || format('release-dino-{0}', github.ref) }}
+  cancel-in-progress: false
+
+jobs:
+  # Version, tests and the draft release (release-shared.yml). Its permissions are what the called jobs ask for: a called
+  # workflow can only lower them (check-called-workflow-permissions.mjs fails a PR otherwise).
+  shared:
+    permissions:
+      contents: write   # push the baseline tag, create the draft release
+      actions: read     # gh run list, the wait on older runs
+    uses: ./.github/workflows/release-shared.yml
+    with:
+      product: dino
+      workflow_file: release-dino.yml
+      force_all: ${{ inputs.force_all == true }}
+    secrets: inherit
+
+  # Dino Reader (Slice 58, Decision 72): the second Android app. The unsigned compile runs whenever the app (or code it
+  # shares) changed; the signed .aab/.apk is built only when cutting a release and once its four secrets exist.
+  build-dinoapp:
+    needs: shared
+    # !cancelled() + explicit results: the draft is skipped when nothing ships, and a bare `needs` would cascade that skip into this job.
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.dinoapp == 'true'
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/dinoreader-android.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      version_code: ${{ needs.shared.outputs.version_code }}
+      release: ${{ needs.shared.outputs.android_signed == 'true' && needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # Dino Reader on iOS (Slice 67): the iOS twin of RTST's build for `src/DinoReader.App` (uk.sirous.dinoreader).
+  # The signed .ipa needs the five team-wide iOS secrets plus its own provisioning profile.
+  build-dinoios:
+    needs: shared
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.dinoios == 'true'
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/dinoreader-ios.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      sign: ${{ needs.shared.outputs.ios_signed == 'true' && needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # Dino Reader on Windows (Slice 67): the Windows twin for `src/DinoReader.App`. Unsigned
+  # MSIX x64 + ARM64, so it needs no secrets and always uploads into the draft.
+  build-dinowin:
+    needs: shared
+    if: >-
+      !cancelled()
+      && needs.shared.result == 'success'
+      && needs.shared.outputs.dinowin == 'true'
+      && needs.shared.outputs.proceed == 'true'
+    permissions:
+      contents: write   # gh release upload
+      actions: write    # gh cache delete of a broken SDK cache (Slice 240); a called workflow can't ask for more than this
+    uses: ./.github/workflows/dinoreader-windows.yml
+    with:
+      version: ${{ needs.shared.outputs.version }}
+      upload: ${{ needs.shared.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # Publishes the Dino draft (creating the dino-v<x.y.z> tag at the merge commit) only when every platform this change
+  # touched built successfully; never marked "latest".
+  release-publish-dino:
+    needs: [shared, build-dinowin, build-dinoapp, build-dinoios]
+    if: >-
+      !cancelled()
+      && needs.shared.outputs.proceed == 'true'
+      && (needs.shared.outputs.dinowin != 'true' || needs.build-dinowin.result == 'success')
+      && (needs.shared.outputs.dinoapp != 'true' || (needs.shared.outputs.android_signed != 'true' || needs.build-dinoapp.result == 'success'))
+      && (needs.shared.outputs.dinoios != 'true' || (needs.shared.outputs.ios_signed != 'true' || needs.build-dinoios.result == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.publish.outputs.released }}
+    steps:
+      - name: Publish dino-v${{ needs.shared.outputs.version }}
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ needs.shared.outputs.version }}
+          DINO_WIN: ${{ needs.shared.outputs.dinowin }}
+          DINO: ${{ needs.shared.outputs.dinoapp }}
+          DINO_SIGNED: ${{ needs.shared.outputs.android_signed }}
+          DINO_IOS: ${{ needs.shared.outputs.dinoios }}
+          DINO_IOS_SIGNED: ${{ needs.shared.outputs.ios_signed }}
+        run: |
+          set -euo pipefail
+          # A re-run of an old failed run must not publish its stale draft over a newer release: discard it instead.
+          # Only dino-v<x.y.z> tags count (rtst-v and packs-<n> releases are never compared as Dino versions).
+          newest=$(gh release list --repo "$REPO" --limit 100 --exclude-drafts --json tagName --jq '.[].tagName' |
+            grep -E '^dino-v[0-9]+[.][0-9]+[.][0-9]+$' | sed 's/^dino-v//' | sort -V | tail -n 1 || true)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            echo "::warning::dino-v${newest} is already published, newer than dino-v${VERSION} — deleting this stale draft instead of publishing it."
+            gh release delete "dino-v${VERSION}" --repo "$REPO" --yes
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          names=$(gh release view "dino-v${VERSION}" --repo "$REPO" --json assets --jq '.assets[].name')
+          echo "Assets on dino-v${VERSION}:"; echo "$names"
+          if [ "$DINO_WIN" = "true" ]; then
+            built=$(grep -cE "^DinoReader[.]App_${VERSION//./[.]}[.]0_.*[.]msix$" <<< "$names" || true)
+            if [ "$built" -ne 2 ]; then
+              echo "::error::Expected 2 freshly built Dino Reader MSIX (x64 + ARM64) for ${VERSION}, found ${built}"; exit 1
+            fi
+          fi
+          if [ "$DINO" = "true" ] && [ "$DINO_SIGNED" = "true" ]; then
+            for ext in aab apk; do
+              if ! grep -qxF "DinoReader-${VERSION}.${ext}" <<< "$names"; then
+                echo "::error::Expected the freshly built DinoReader-${VERSION}.${ext} on the draft"; exit 1
+              fi
+            done
+          fi
+          if [ "$DINO_IOS" = "true" ] && [ "$DINO_IOS_SIGNED" = "true" ]; then
+            if ! grep -qxF "DinoReader-${VERSION}.ipa" <<< "$names"; then
+              echo "::error::Expected the freshly built DinoReader-${VERSION}.ipa on the draft"; exit 1
+            fi
+          fi
+          gh release edit "dino-v${VERSION}" --repo "$REPO" --draft=false --latest=false
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+  # Dino Reader's Microsoft Store submission (Slice 67) - only when Dino Reader's MSIX were rebuilt AND
+  # the Partner Center listing exists, i.e. the repository variable DINOREADER_STORE_APP_ID (its Store
+  # id) is set. With the variable empty the job is skipped cleanly. Same store-submit.yml and the same
+  # AZURE_AD_*/SELLER_ID secrets as Read The Stupid Text; only the package and product id differ.
+  store-submit-dino:
+    needs: [shared, release-publish-dino]
+    if: >-
+      !cancelled()
+      && needs.release-publish-dino.outputs.released == 'true'
+      && needs.shared.outputs.dinowin == 'true'
+      && vars.DINOREADER_STORE_APP_ID != ''
+    uses: ./.github/workflows/store-submit.yml
+    with:
+      tag: dino-v${{ needs.shared.outputs.version }}
+      package: DinoReader.App
+      product_id: ${{ vars.DINOREADER_STORE_APP_ID }}
+    secrets: inherit
+
+  # Dino Reader's Google Play internal-testing upload (Slice 58) - only when Dino Reader was
+  # rebuilt, signed, and its OWN service account exists. A no-op until then: the app must first
+  # be created in Play Console (uk.sirous.dinoreader), and its very first release on a track
+  # uploaded by hand once (an API limitation). Never uses the Read The Stupid Text secrets.
+  play-submit-dino:
+    needs: [shared, release-publish-dino]
+    if: >-
+      !cancelled()
+      && needs.release-publish-dino.outputs.released == 'true'
+      && needs.shared.outputs.dinoapp == 'true'
+      && needs.shared.outputs.android_signed == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CAN_PUBLISH: ${{ secrets.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Download the .aab from the release
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.shared.outputs.version }}
+        run: gh release download "dino-v${VERSION}" --repo "${{ github.repository }}" --pattern "DinoReader-${VERSION}.aab" --dir play
+
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.dinoreader
+          releaseFiles: play/*.aab
+          track: internal
+          status: completed
+
+  # Slice 67: Dino Reader's own TestFlight upload (ASC app 6825053435, uk.sirous.dinoreader). Runs only when the
+  # release was published with its signed .ipa, which needs DINOREADER_IOS_PROVISIONING_PROFILE_BASE64: with that
+  # secret empty ios_signed is false, nothing is built signed and this job is skipped.
+  testflight-submit-dino:
+    needs: [shared, release-publish-dino]
+    if: >-
+      !cancelled()
+      && needs.release-publish-dino.outputs.released == 'true'
+      && needs.shared.outputs.dinoios == 'true'
+      && needs.shared.outputs.ios_signed == 'true'
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.shared.outputs.version }}
+    steps:
+      - name: Checkout (scripts only)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Download the .ipa from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Capture first: `gh | grep -q` under pipefail fails on grep's early exit (SIGPIPE), reading as "asset missing".
+          names=$(gh release view "dino-v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "DinoReader-${VERSION}.ipa" <<< "$names"; then
+            echo "::error::Release dino-v${VERSION} was published as signed Dino Reader iOS but carries no DinoReader-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
+          fi
+          gh release download "dino-v${VERSION}" --repo "${{ github.repository }}" --pattern "DinoReader-${VERSION}.ipa" --dir testflight
+
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: bash .github/scripts/testflight-upload.sh "testflight/DinoReader-${VERSION}.ipa"

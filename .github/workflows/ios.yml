@@ -4,9 +4,9 @@ name: ios
 # `dotnet publish`, not xcodebuild. Entry points:
 #   * pull_request (own paths) / workflow_dispatch: the unsigned simulator
 #     compile check (macOS minutes cost ~10x Linux, so nothing more).
-#   * workflow_call from release.yml with `sign` = true (release-draft reports
+#   * workflow_call from release-rtst.yml with `sign` = true (release-draft reports
 #     the six iOS signing secrets exist and has a draft to fill): builds the
-#     signed App Store .ipa and uploads it to the draft release; release.yml's
+#     signed App Store .ipa and uploads it to the draft release; release-rtst.yml's
 #     testflight-submit sends it to App Store Connect after the publish.
 # Signing material lives in a temp keychain removed in an `always()` step.
 # Zero Actions artifacts (Batch 8): don't add actions/upload-artifact for build outputs.
@@ -23,7 +23,8 @@ on:
       - 'src/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-rtst.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'

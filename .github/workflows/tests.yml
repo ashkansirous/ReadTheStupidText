@@ -2,13 +2,13 @@ name: tests
 
 # The pure-logic unit tests (net10.0-windows: they reference Infrastructure), in two projects (Slice 368):
 # tests/Shared.Tests (the engine both apps ship) and tests/ReadTheStupidText.Tests (RTST's own). Slice 128: they run for
-# RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml. release.yml calls this workflow twice:
+# RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml. release-shared.yml calls this workflow twice:
 # `shared-test` (suite: shared) whenever any product output builds, and `rtst-test` (suite: rtst) when an RTST output builds,
-# so the shared suite runs once per push and every build gate needs `success` from each test job it depends on.
+# so the shared suite runs once per product run (twice for a push that starts both products) and every build gate needs `success` from each test job it depends on.
 # The check names are `shared-test / shared` and `rtst-test / rtst` in a release run, `shared` and `rtst` (under `tests`) on a PR.
 # Slice 70: split out of build.yml. Runs on its own PRs (when anything that
 # build-windows or build-android compiles changes), by hand, and as the test
-# jobs of release.yml, where they gate every product build and so every
+# jobs of release-shared.yml, where they gate every product build and so every
 # release. No LFS: the tests don't load the voice model.
 
 on:
@@ -25,7 +25,9 @@ on:
       - 'src/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
-      - '.github/workflows/release.yml'
+      - '.github/workflows/release-shared.yml'
+      - '.github/workflows/release-rtst.yml'
+      - '.github/workflows/release-dino.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
@@ -104,7 +106,7 @@ jobs:
         run: node .github/scripts/ship-targets.mjs --local --tests --base origin/main
 
   # The shared engine's tests (Domain, Application, Documents, Infrastructure's engines, Mobile.Shared's pure logic):
-  # both products ship this code, so release.yml gates the RTST and the Dino Reader builds on it.
+  # both products ship this code, so release-shared.yml gates the RTST and the Dino Reader builds on it.
   shared:
     needs: select
     # Fail closed (Slice 368): on a pull request a `select` that did not succeed (failed, cancelled) runs the suite anyway, never skips it.
