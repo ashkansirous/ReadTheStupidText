@@ -941,7 +941,7 @@ public sealed class ReadingSession
 
 		try
 		{
-			double rate = ReadingSpeedPreference.Load().Value;
+			double rate = ReadingSpeedPreference.LoadForPlayback().Value;
 			// The clip counts as playing before Play, so an ended or failed callback that reaches the main thread at once finds it playing and is handled, not dropped.
 			// Slice 288: but it is not audible until Play has returned, so loading time is never heard time (and a Play that throws raises no audible flip).
 			_playStarting = true;

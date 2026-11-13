@@ -500,6 +500,28 @@ internal static partial class DinoTestCommands
 		}
 	}
 
+	// Slice 372 item 3: open-book never read `speed=`, so the S21's "speed=2" book ran at the saved speed (1x by default) and was still playing after 521 s. A given speed is held for this app run only
+	// (ReadingSpeedPreference.TestOverride, 0.5-2x; never saved, so the grown-up's speed is untouched). Every clip reads the speed when it starts (ReadingSession.TryPlayPremade), so an already-open reader follows it too.
+	// Nothing given clears an earlier override, so a later open-book plays at the saved speed again. The line says what was applied, so a run shows the speed it really had.
+	private static void ApplySpeed(string speedText)
+	{
+		if (speedText.Length == 0)
+		{
+			ReadingSpeedPreference.TestOverride = null;
+			return;
+		}
+
+		if (!double.TryParse(speedText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double speed))
+		{
+			Log($"{Name} speed ignored '{speedText}'");
+			return;
+		}
+
+		PlaybackRate rate = new(speed);
+		ReadingSpeedPreference.TestOverride = rate;
+		Log($"{Name} speed {rate.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+	}
+
 	private static async Task OpenAsync(TestHookCommand command)
 	{
 		try
@@ -507,6 +529,7 @@ internal static partial class DinoTestCommands
 			string id = command.Get(IdKey, string.Empty);
 			int page = int.TryParse(command.Get(PageKey, "1"), out int parsed) && parsed >= 1 ? parsed : 1;
 			string play = command.Get(PlayKey, string.Empty);
+			ApplySpeed(command.Get(TestHookDispatcher.SpeedKey, string.Empty));
 			await OpenBookAsync(id, page, play);
 		}
 		catch (Exception ex)

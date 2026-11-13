@@ -452,8 +452,11 @@ $script = Get-DeviceRestoreScript 'uk.sirous.rtst.dbg' 10234 240
 Assert-Equal 'item 15: the heal records its pid' $true ($script -like 'echo $$ > */rtst-heal-uk.sirous.rtst.dbg.pid; sleep 240; *')
 $cancel = Get-DeviceRestoreCancelCommand 'uk.sirous.rtst.dbg'
 Assert-Equal 'item 15: the cancel kills the recorded pid and removes the file' $true ($cancel -like '*p=$(cat /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid)*kill $p*rm -f /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid*')
-Assert-Equal 'check 2: the heal ignores TERM once its sleep is over, before the undo' $true ($script -like '*sleep 240; trap : TERM HUP INT; cmd netpolicy remove*')
-Assert-Equal 'check 2: the cancel waits for a heal that is mid-undo and says finished' $true ($cancel -like '*kill -0 $p*sleep 1*echo stuck*echo cancelled*echo finished*')
+Assert-Equal 'check 2: the heal ignores TERM once its sleep is over, before the undo' $true ($script.Contains('sleep 240; [ $(cat /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid 2>/dev/null) = $$ ] || exit 0; trap : TERM HUP INT; cmd netpolicy remove'))
+Assert-Equal 'check 2: the cancel waits for a heal that is mid-undo and says finished' $true ($cancel -like '*while tr*/proc/$p/cmdline*grep -qF *sleep 1*if tr*/proc/$p/cmdline*echo stuck*echo cancelled*echo finished*')
+Assert-Equal 'slice 372 item 2: liveness is the cmdline test, never kill -0 (a zombie passes kill -0)' $false ($cancel -like '*kill -0*')
+Assert-Equal 'slice 372 item 2: the cancel call gets more than the 30 s adb default' $true ($script:DeviceRestoreCancelAdbSeconds -gt 30)
+Assert-Equal 'review 6: the device-side wait is at least 20 s under the adb call limit' $true (($script:DeviceRestoreCancelAdbSeconds - $script:DeviceRestoreCancelWaitSeconds) -ge 20)
 Assert-Equal 'review 6: the pid is killed only when its command line holds the heal pid file path' $true ($cancel -like '*/proc/$p/cmdline*grep -qF /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid; then kill $p*')
 $script:FakeHealPending = 'cancelled'
 Assert-Equal 'item 15: a pending heal reports cancelled' $true (Stop-DeviceRestore 'ph' 'uk.sirous.rtst.dbg')
