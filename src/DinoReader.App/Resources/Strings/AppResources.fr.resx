@@ -361,18 +361,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Acheter {0} pour {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connectez-vous à Internet pour acheter</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>En attente d’approbation</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Il faut se connecter pour obtenir ce livre.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Vous n’avez pas le droit d’obtenir ce livre.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>Ce livre est introuvable.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Vous devez d’abord acheter ce livre</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Trop d’essais. Attendez une minute, puis réessayez.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>Problème de connexion au serveur, veuillez réessayer plus tard</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>Vous devez d’abord acheter ce livre.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Un problème est survenu sur le serveur. Veuillez réessayer plus tard.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>Trop d’essais. Attendez une minute, puis réessayez.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>Ce livre n’est plus dans la boutique.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>Gratuit</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Déjà acheté des livres ?</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Les livres achetés avec ce compte Google reviennent aussi sur ce téléphone.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Les livres achetés avec ce compte Google reviennent aussi sur cette tablette.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Les livres achetés avec cet identifiant Apple reviennent aussi sur ce téléphone.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Les livres achetés avec cet identifiant Apple reviennent aussi sur cette tablette.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Les livres achetés avec ce compte Microsoft reviennent aussi sur cet ordinateur.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>1 livre restauré. Il est sur l’étagère.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0} livres restaurés. Ils sont sur l’étagère.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>Aucun livre acheté n’a été trouvé sur ce compte.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>La boutique a un problème</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurer les achats</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Utiliser un code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>L’achat n’a pas abouti. Veuillez réessayer.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Certains livres coûtent un peu. Ils s’achètent avec votre compte de la boutique, et rien sur vous ni sur votre enfant ne nous est envoyé.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>Vos achats ont été vérifiés. Les livres que vous possédez peuvent maintenant être récupérés dans la boutique.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>En attente de la boutique…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Vérification de vos achats…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Livres à récupérer depuis la boutique</value></data>

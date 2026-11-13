@@ -15,14 +15,30 @@
         <Color x:Key="CoverPlaceholder">#efe6d2</Color>
         <x:String x:Key="WifiOffGlyph">M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18</x:String>
         <x:String x:Key="ServerErrorGlyph">M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20M12 7v6M12 16.5v0.5</x:String>
+        <!-- Slice 364: the Missing States mock's glyphs on its 24-unit grid (cart, alert circle, retry arrow, cloud), and its strip and tag colours. -->
+        <x:String x:Key="CartGlyph">M3.5 4.5h2.2l2.1 10.2h10.1l1.9-7.2H7M8.1 19a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0M15.6 19a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0</x:String>
+        <x:String x:Key="AlertGlyph">M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 7.5v5.5M12 16.5v.01</x:String>
+        <x:String x:Key="RetryGlyph">M20 11a8 8 0 1 0-2.3 5.7M20 4.5V11h-6.5</x:String>
+        <x:String x:Key="CloudGlyph">M3 3l18 18M8.5 6.3A6 6 0 0 1 17.6 10H18a4 4 0 0 1 2.3 7.3M16.5 19H7a5 5 0 0 1-1.6-9.7</x:String>
+        <Color x:Key="FreeTagFill">#DFF5E3</Color>
+        <Color x:Key="StripRedFill">#FFF0EA</Color>
+        <Color x:Key="StripRedText">#A4462A</Color>
+        <Color x:Key="StripSandFill">#F0E8D8</Color>
+        <Color x:Key="StripSandText">#4a4460</Color>
+        <Color x:Key="ResultGreenFill">#DFF5E3</Color>
+        <Color x:Key="ResultGreenText">#1F5F23</Color>
+        <Color x:Key="CardButtonBorder">#d9d2c4</Color>
+        <Color x:Key="CardButtonText">#3a3450</Color>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
-            <Border BackgroundColor="White" StrokeThickness="0" Padding="14">
+            <!-- Slice 364 (Missing States mock S1-S3): the card is 12 padding, 10 between the row and the message strip under it. -->
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="12">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                    <Border WidthRequest="76" HeightRequest="101.3333" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
+                <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Border WidthRequest="60" HeightRequest="80" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="10" />
                         </Border.StrokeShape>
@@ -31,20 +47,59 @@
                     <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                         <!-- Slice 260: the tag badges (mock Batch 47 frame 161) sit above the title; the row is hidden for an untagged book. -->
                         <local:StoreTagRow Tags="{Binding Badges}" />
-                        <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
-                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12.5" TextColor="{StaticResource Muted}" />
-                        <Label Text="{Binding Meta}" IsVisible="{Binding HasMeta}" FontSize="13" TextColor="{StaticResource Body}" />
-                        <!-- Slice 357: why the last Get failed (the server's answer in the app's language), under the row while the pill offers Try again or Buy. -->
-                        <Label AutomationId="StoreRowError" Text="{Binding ErrorText}" IsVisible="{Binding HasError}" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
+                        <Label Text="{Binding Title}" FontSize="15.5" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
+                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12.5" TextColor="{StaticResource Body}" />
+                        <!-- Mock S1: the length, and the green Free tag after it. -->
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="{Binding Meta}" IsVisible="{Binding HasMeta}" FontSize="12.5" TextColor="{StaticResource Body}" VerticalOptions="Center" />
+                            <Border IsVisible="{Binding IsFree}" HeightRequest="20" Padding="8,0" BackgroundColor="{StaticResource FreeTagFill}" StrokeThickness="0" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label Text="{x:Static res:AppResources.Store_Free}" FontSize="11.5" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}" VerticalOptions="Center" />
+                            </Border>
+                        </HorizontalStackLayout>
                     </VerticalStackLayout>
 
-                    <!-- Get: the brand pill, 44 high, words only (frame T2). -->
-                    <Border Grid.Column="2" IsVisible="{Binding IsGet}" HeightRequest="44" Padding="18,0" BackgroundColor="{StaticResource Brand}"
+                    <!-- Get: the brand pill, 40 high, words only (mock S1d). -->
+                    <Border Grid.Column="2" IsVisible="{Binding IsGet}" HeightRequest="40" Padding="16,0" BackgroundColor="{StaticResource Brand}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding GetHint}">
                         <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="22" />
+                            <RoundRectangle CornerRadius="20" />
                         </Border.StrokeShape>
-                        <Label Text="{Binding GetLabel}" FontSize="14" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        <Label Text="{Binding GetLabel}" FontSize="14.5" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnGetTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <!-- Buy (mock S1b): the store's own price with a small cart glyph; it stays under a 402 strip. -->
+                    <Border Grid.Column="2" IsVisible="{Binding IsBuy}" HeightRequest="40" Padding="16,0" BackgroundColor="{StaticResource Brand}"
+                            StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding GetHint}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20" />
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                            <shapes:Path Data="{StaticResource CartGlyph}" Stroke="White" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                         WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                            <Label Text="{Binding Price}" FontSize="14.5" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnGetTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <!-- Try again (mock S2): the tinted button at the end of a failed row; a book the store no longer has gets none. -->
+                    <Border Grid.Column="2" IsVisible="{Binding IsTryAgain}" HeightRequest="40" Padding="14,0" BackgroundColor="{StaticResource BrandTint}"
+                            StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding GetHint}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20" />
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                            <shapes:Path Data="{StaticResource RetryGlyph}" Stroke="{StaticResource BrandEdge}" StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                         WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                            <Label Text="{Binding TryAgainLabel}" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnGetTapped" />
                         </Border.GestureRecognizers>
@@ -54,36 +109,53 @@
                     <Label Grid.Column="2" IsVisible="{Binding HasNote}" Text="{Binding NoteText}" FontSize="12.5" TextColor="{StaticResource Muted}" MaximumWidthRequest="110"
                            HorizontalTextAlignment="End" VerticalOptions="Center" />
 
-                    <!-- Downloading: an 88 px pill whose fill grows left to right under the percentage. -->
-                    <Border Grid.Column="2" IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="44" BackgroundColor="{StaticResource BrandTint}"
-                            StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding ProgressHint}">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="22" />
-                        </Border.StrokeShape>
-                        <Grid>
-                            <BoxView HorizontalOptions="Start" WidthRequest="{Binding FillWidth}" Color="{StaticResource MergeBorder}" />
-                            <Label Text="{Binding ProgressText}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Grid>
-                    </Border>
+                    <!-- Downloading (mock S1c): the 24 px ring and the percent, "40%" 14 / 600 in the brand edge colour. -->
+                    <HorizontalStackLayout Grid.Column="2" IsVisible="{Binding IsDownloading}" Spacing="8" HeightRequest="40" VerticalOptions="Center"
+                                           SemanticProperties.Description="{Binding ProgressHint}">
+                        <local:StoreProgressRing Progress="{Binding Progress}" VerticalOptions="Center" />
+                        <Label Text="{Binding ProgressText}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
 
                     <!-- On the shelf: no fill, a green check. -->
-                    <HorizontalStackLayout Grid.Column="2" IsVisible="{Binding IsOnShelf}" Spacing="5" HeightRequest="44" VerticalOptions="Center">
+                    <HorizontalStackLayout Grid.Column="2" IsVisible="{Binding IsOnShelf}" Spacing="5" HeightRequest="40" VerticalOptions="Center">
                         <local:IconView Kind="Check" Color="{StaticResource StoreGreen}" Size="16" StrokeWidth="3" VerticalOptions="Center" />
                         <Label Text="{x:Static res:AppResources.Store_OnShelf}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}"
                                VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Grid>
+
+                <!-- Slice 357 / 364 (mock S2, S3): why the last try failed, inside the card under the row, in the app's language. The red strip is a server answer, the sand one no answer at all; it goes away when the next try starts. -->
+                <Border AutomationId="StoreRowErrorRed" IsVisible="{Binding HasRedError}" Padding="12,9" BackgroundColor="{StaticResource StripRedFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <shapes:Path Data="{StaticResource AlertGlyph}" Stroke="{StaticResource StripRedText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                     WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{Binding ErrorText}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+                <Border AutomationId="StoreRowErrorCalm" IsVisible="{Binding HasCalmError}" Padding="12,9" BackgroundColor="{StaticResource StripSandFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <shapes:Path Data="{StaticResource CloudGlyph}" Stroke="{StaticResource StripSandText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                     WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{Binding ErrorText}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripSandText}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+                </VerticalStackLayout>
             </Border>
         </DataTemplate>
     </ContentView.Resources>
 
-    <Grid x:Name="StoreRoot">
+    <Grid x:Name="StoreRoot" RowDefinitions="*,Auto">
         <ActivityIndicator x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto,Auto" IsVisible="False">
+        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
@@ -114,14 +186,34 @@
                 <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
                 <Label x:Name="FooterLabel" Text="{x:Static res:AppResources.Store_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
             </HorizontalStackLayout>
-            <!-- Slice 346: shown only while books are sold (the remote switch). Both open the store's own screens; the grown-up corner is already behind the gate. -->
-            <HorizontalStackLayout Grid.Row="4" x:Name="PurchaseActions" IsVisible="False" Spacing="10" Padding="4,0,4,14">
-                <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Store_RestorePurchases}" HeightRequest="44" CornerRadius="22" Padding="20,0" FontSize="14" FontAttributes="Bold"
-                        BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}" BorderWidth="2" Clicked="OnRestorePurchasesClicked" />
-                <Button x:Name="RedeemButton" Text="{x:Static res:AppResources.Store_RedeemCode}" HeightRequest="44" CornerRadius="22" Padding="20,0" FontSize="14" FontAttributes="Bold"
-                        BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}" BorderWidth="2" Clicked="OnRedeemCodeClicked" />
-            </HorizontalStackLayout>
         </Grid>
+
+        <!-- Slice 364 (mock S3): the "Bought books before?" card, shown only while books are sold (the remote switch). It is the foot of the list while the list has books (the page moves it into the CollectionView footer)
+             and sits at the bottom of the page when the list is empty, filtered to nothing or offline, so Restore and Redeem are always reachable. Both buttons open the store's own screens; the grown-up corner is already behind the gate.
+             The result line of a restore sits under the card: green when books came to the shelf, sand when there was nothing to bring. -->
+        <VerticalStackLayout x:Name="PurchaseArea" Grid.Row="1" Spacing="10" Margin="0,14,0,0" IsVisible="False">
+                        <Border x:Name="BoughtBeforeCard" IsVisible="False" BackgroundColor="White" StrokeThickness="0" Padding="16">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="18" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="12">
+                                <Label x:Name="BoughtBeforeTitle" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
+                                <Label x:Name="BoughtBeforeLine" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Store_RestorePurchases}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
+                                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnRestorePurchasesClicked" />
+                                    <Button x:Name="RedeemButton" Grid.Column="1" Text="{x:Static res:AppResources.Store_RedeemCode}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
+                                            BackgroundColor="Transparent" TextColor="{StaticResource CardButtonText}" BorderColor="{StaticResource CardButtonBorder}" BorderWidth="2" Clicked="OnRedeemCodeClicked" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border x:Name="RestoreResultView" IsVisible="False" Padding="12,10" StrokeThickness="0" BackgroundColor="{StaticResource ResultGreenFill}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="14" />
+                            </Border.StrokeShape>
+                            <Label x:Name="RestoreResultLabel" AutomationId="StoreRestoreResult" FontSize="13.5" FontAttributes="Bold" LineHeight="1.4" TextColor="{StaticResource ResultGreenText}" />
+                        </Border>
+        </VerticalStackLayout>
 
         <!-- Screen 22: offline, or the server cannot be reached. -->
         <VerticalStackLayout x:Name="OfflineView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">

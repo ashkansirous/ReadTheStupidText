@@ -31,15 +31,8 @@ public static class LocalizedPackStatus
     };
 
     /// <summary>
-    /// Slice 357: the line for a failed pack download by what the server answered, in the app language. Offline never reaches here (it is its own state); a 5xx, any other 4xx and a 400
-    /// show the general server text (a pack download has no message from the server and nothing to buy).
+    /// Slice 357 / 364 (Missing States mock RT1): the line for a failed pack download by what the server answered, in the app language. Offline never reaches here (it is its own state); a 404 says the
+    /// voice is gone, every other answer (5xx, any other 4xx, a 400) the general server text. A pack download has no message from the server, nothing to buy, and 429 never happens.
     /// </summary>
-    public static string FailureText(HttpErrorKind kind) => kind switch
-    {
-        HttpErrorKind.Unauthorized => AppResources.PackStatus_Error_Unauthorized,
-        HttpErrorKind.Forbidden => AppResources.PackStatus_Error_Forbidden,
-        HttpErrorKind.NotFound => AppResources.PackStatus_Error_NotFound,
-        HttpErrorKind.TooManyRequests => AppResources.PackStatus_Error_TooManyRequests,
-        _ => AppResources.PackStatus_Error_Server,
-    };
+    public static string FailureText(HttpErrorKind kind) => kind == HttpErrorKind.NotFound ? AppResources.Error_VoiceGone : AppResources.Error_Server;
 }

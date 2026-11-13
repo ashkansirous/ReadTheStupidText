@@ -122,11 +122,8 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Väntar på Wi-Fi. Det fortsätter av sig självt på Wi-Fi. Tryck för att ladda ned nu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Nedladdningen av rösten blev skadad. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Paketet med naturliga röster går inte att använda. Läser med telefonens röst.</value></data>
-  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>Du måste logga in för att ladda ner detta.</value></data>
-  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>Du har inte behörighet att ladda ner detta.</value></data>
-  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>Nedladdningen hittades inte.</value></data>
-  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>För många försök. Vänta en minut och försök igen.</value></data>
-  <data name="PackStatus_Error_Server" xml:space="preserve"><value>Problem med att ansluta till servern, försök igen senare</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Något gick fel på servern. Försök igen senare.</value></data>
+  <data name="Error_VoiceGone" xml:space="preserve"><value>Den här rösten är inte längre tillgänglig.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Nedladdningen är stoppad. Läser med telefonens röst. Tryck för att ladda ned.</value></data>

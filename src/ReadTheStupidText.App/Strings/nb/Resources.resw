@@ -297,20 +297,11 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Denne stemmepakken kan ikke brukes. {0} leser.</value>
   </data>
-  <data name="Pack_Error_Unauthorized" xml:space="preserve">
-    <value>Du må logge inn for å laste ned dette.</value>
+  <data name="Error_Server" xml:space="preserve">
+    <value>Noe gikk galt på serveren. Prøv igjen senere.</value>
   </data>
-  <data name="Pack_Error_Forbidden" xml:space="preserve">
-    <value>Du har ikke lov til å laste ned dette.</value>
-  </data>
-  <data name="Pack_Error_NotFound" xml:space="preserve">
-    <value>Fant ikke nedlastingen.</value>
-  </data>
-  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
-    <value>For mange forsøk. Vent ett minutt og prøv igjen.</value>
-  </data>
-  <data name="Pack_Error_Server" xml:space="preserve">
-    <value>Problem med å koble til serveren, prøv igjen senere</value>
+  <data name="Error_VoiceGone" xml:space="preserve">
+    <value>Denne stemmen er ikke tilgjengelig lenger.</value>
   </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Nedlastingen mislyktes. Prøv igjen.</value>
