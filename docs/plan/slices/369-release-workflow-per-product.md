@@ -1,7 +1,7 @@
 # Slice 369 — One release workflow per product, sharing a reusable part
 **Product:** Shared
 
-*Built 2026-11-13 (wave 55), PR #1087, not merged; not yet run on GitHub.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 3 of 5).
+*Built 2026-11-13 (wave 55), merged as PR #1087 (3ba64b04); not yet run on GitHub.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 3 of 5).
 
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/release-rtst.yml` (new), `.github/workflows/release-dino.yml` (new), `.github/workflows/release-shared.yml` (new, `workflow_call`), `.github/workflows/dino-store.yml`, `.github/workflows/store-submit.yml`, `.github/workflows/testflight-external.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/find-release.sh`, `.github/scripts/check-called-workflow-permissions.mjs`, `.github/CLAUDE.md`, `.github/scripts/check-called-workflow-permissions.test.mjs`, `.github/scripts/site-checks-needed.mjs`, and the path filters / `workflow_call` callers in `.github/workflows/android.yml`, `ios.yml`, `windows.yml`, `dinoreader.yml`, `dinoreader-android.yml`, `dinoreader-ios.yml`, `dinoreader-windows.yml`, `tests.yml`, `site-checks.yml`, `release-scripts.yml`, `tools-selftests.yml`, `packs.yml`, and the docs that name `release.yml`: `STORE.md`, `docs/voice-packs.md` (premise check 2026-11-13: no file under `tools/` or `.claude/` names `release.yml`)
 
@@ -77,7 +77,7 @@ Checks run: `node --test .github/scripts` 356/356, `actionlint` clean, `check-ca
 - One batched `workflow_dispatch` from a wave releases both products.
 - No version goes backwards (compare the new tags with the last `rtst-v` and `dino-v`).
 
-## For CLAUDE.md
+## For CLAUDE.md (lifted 2026-11-13)
 
 Not edited on this branch (the root file changed on main in another slice); the index pass applies these replacements:
 
@@ -85,11 +85,11 @@ Not edited on this branch (the root file changed on main in another slice); the 
 - line 170: `The `tests.yml` workflow (called by `release-shared.yml`, once per product run) runs them on every push/PR that`
 - line 190: replace "The single `release.yml` run does it all:" with "Each product's release run (`release-rtst.yml`, `release-dino.yml`, both calling `release-shared.yml`; Slice 369) does it all:".
 
-## For README.md
+## For README.md (lifted 2026-11-13)
 
 Line 136, replace "`release.yml` runs on every push to `main` and calls a reusable workflow per platform (`windows.yml`, `android.yml`, `ios.yml`)" with "`release-rtst.yml` (Read The Stupid Text) and `release-dino.yml` (Dino Reader) run on every push to `main` that touches their files; each calls `release-shared.yml` and then a reusable workflow per platform (`windows.yml`, `android.yml`, `ios.yml`, and Dino's `dinoreader-*.yml`)".
 
-## For the index pass
+## For the index pass (applied 2026-11-13)
 
 - `docs/plan/unverified.md` line ~31 (Slice 368 block): "the new `release.yml` gates (`shared-test`, `rtst-test`)" now live in `release-shared.yml` (called by both product workflows); reword it and add the Slice 369 first-run check (the run ids named under Verification).
 - `worker/CLAUDE.md` line 26 (not edited on this branch): "uploaded **automatically on every merge** by `release.yml`'s `publish-store` job" is stale; replace with "uploaded **automatically on every merge** by `dino-store.yml`'s `publish-store` job" (the store upload lives in `dino-store.yml`, Slices 239 and 369; check that file for the job's current name before writing it).

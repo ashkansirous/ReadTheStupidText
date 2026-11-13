@@ -133,8 +133,8 @@ real model files (not pointers).
 
 ## Continuous integration
 
-`release.yml` runs on every push to `main` and calls a reusable workflow per
-platform (`windows.yml`, `android.yml`, `ios.yml`); each platform workflow also runs
+`release-rtst.yml` (Read The Stupid Text) and `release-dino.yml` (Dino Reader) run on every push to `main` that touches their files; each calls `release-shared.yml` and then a reusable workflow per
+platform (`windows.yml`, `android.yml`, `ios.yml`, and Dino's `dinoreader-*.yml`); each platform workflow also runs
 on its own pull requests. Only the platforms a change touches are built: shared code
 builds all of them, `App`/`Infrastructure` only Windows, and `Mobile` Android and/or
 iOS. Docs-only changes build nothing. PRs are compile-and-test checks only. On
