@@ -1,5 +1,5 @@
 using DinoReader.BookBuilder;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Domain.Reading;
 using System.Text.Json;
 using DinoReader.Core;
 

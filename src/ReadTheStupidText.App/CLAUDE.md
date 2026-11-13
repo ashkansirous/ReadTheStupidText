@@ -1,7 +1,7 @@
 # CLAUDE.md — Windows App (WinUI 3 tray, panel, read orchestration)
 
 Loaded when you work under `src/ReadTheStupidText.App`. Speech engines, voice packs and the
-neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This folder's `AGENTS.md` is
+neural reader are in `src/Sirous.Reading.Infrastructure/CLAUDE.md`. (This folder's `AGENTS.md` is
 a generic WinUI template and is separate from these rules.)
 The tray's Win32/UIA services (hotkey, selection monitor, clipboard listener, selection copier, foreground probe, startup task) live in `src/ReadTheStupidText.Windows.Tray`, referenced only by this project (Slice 128).
 
@@ -53,7 +53,7 @@ logic.
 
 ## Localization and translation (Slice 57)
 
-UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar, ru, ja, da, fi, sv, nb, nl, de; tags from `UiLanguageTag`, listed in `Package.appxmanifest`). XAML uses `x:Uid` (`Uid.Property` keys; attached properties as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`), code uses `UiStrings.Get/Format`; never hard-code a UI string. A new key goes into all fifteen files (the resource-coverage tests fail otherwise). `UiStrings.ApplyLanguage` runs in `App()` before any window; `x:Uid` text is applied once per window, so the panel's language picker restarts the app (`AppInstance.Restart`). The layout never mirrors (Slice 88): each window's `RootGrid` is fixed `LeftToRight`, and only text takes a direction through `TextFlow` (`ContentDirection` for read/activity text by first strong letter, `ForUi` for localised strings by UI language). Translation runs in `ReadAloudService.ReadEntryAsync` through `ReadTranslator` (time budget, falls back to the original with a `TranslationOutcome`); the engine is `PackTranslator` over Opus-MT ONNX translation packs (rules in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`). (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
+UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar, ru, ja, da, fi, sv, nb, nl, de; tags from `UiLanguageTag`, listed in `Package.appxmanifest`). XAML uses `x:Uid` (`Uid.Property` keys; attached properties as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`), code uses `UiStrings.Get/Format`; never hard-code a UI string. A new key goes into all fifteen files (the resource-coverage tests fail otherwise). `UiStrings.ApplyLanguage` runs in `App()` before any window; `x:Uid` text is applied once per window, so the panel's language picker restarts the app (`AppInstance.Restart`). The layout never mirrors (Slice 88): each window's `RootGrid` is fixed `LeftToRight`, and only text takes a direction through `TextFlow` (`ContentDirection` for read/activity text by first strong letter, `ForUi` for localised strings by UI language). Translation runs in `ReadAloudService.ReadEntryAsync` through `ReadTranslator` (time budget, falls back to the original with a `TranslationOutcome`); the engine is `PackTranslator` over Opus-MT ONNX translation packs (rules in `src/Sirous.Reading.Infrastructure/CLAUDE.md`). (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
 
 ## Anonymous usage counts (Slice 140)
 

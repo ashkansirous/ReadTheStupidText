@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace ReadTheStupidText_App;
 

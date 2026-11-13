@@ -1,6 +1,6 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Mobile.Shared.ModelDownload;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Mobile.Shared.ModelDownload;
 
 namespace ReadTheStupidText.Tests;
 

@@ -3,7 +3,7 @@
 
 *Built (wave 2026-11-01), merged as PR #672 (b62197c).* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidPackKeepAlive.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/PackDownloadService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosPackNotification.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadHost.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadThrottle.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookDispatcher.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `tools/phone/**`, `docs/plan/slices/233-paused-notice-same-on-android-and-ios.md`
+**Touches:** `src/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidPackKeepAlive.cs`, `src/Sirous.Reading.Mobile.Shared/Platforms/Android/PackDownloadService.cs`, `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosPackNotification.cs`, `src/Sirous.Reading.Mobile.Shared/MobileVoicePackService.cs`, `src/Sirous.Reading.Mobile.Shared/PackDownloadHost.cs`, `src/Sirous.Reading.Mobile.Shared/PackDownloadThrottle.cs`, `src/Sirous.Reading.Mobile.Shared/Testing/TestHookDispatcher.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `tools/phone/**`, `docs/plan/slices/233-paused-notice-same-on-android-and-ios.md`
 
 #### Why
 

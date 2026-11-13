@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
-using ReadTheStupidText.Application.Net;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Net;
+using Sirous.Reading.Application.Reading;
 using Xunit;
 
 namespace ReadTheStupidText.Tests.Net;

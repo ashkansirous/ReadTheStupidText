@@ -1,7 +1,7 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -235,7 +235,7 @@ public partial class FirstBooksPage
 
 	private string PickedLine(int ticked) =>
 		FirstBooks.TotalBytes(_items, _ticked) is { } bytes
-			? AppResources.Format(AppResources.FirstBooks_Picked, ticked, AppResources.Format(AppResources.Storyteller_Size, ReadTheStupidText.Application.Reading.StorytellerOffer.Megabytes(bytes)))
+			? AppResources.Format(AppResources.FirstBooks_Picked, ticked, AppResources.Format(AppResources.Storyteller_Size, Sirous.Reading.Application.Reading.StorytellerOffer.Megabytes(bytes)))
 			: AppResources.Format(AppResources.FirstBooks_PickedNoSize, ticked);
 
 	private void BuildCards()
@@ -313,7 +313,7 @@ public partial class FirstBooksPage
 		{
 			string page = _gettingLayer.IsVisible ? "getting" : _offlineLayer.IsVisible ? "offline" : "books";
 			string kind = page == "books" ? (shape.Split ? "split" : "stack") : "centred";
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page={page} shape={kind}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page={page} shape={kind}");
 		}
 #endif
 	}

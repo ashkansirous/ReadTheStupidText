@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Mobile.Shared;
 
 namespace DinoReader;
 

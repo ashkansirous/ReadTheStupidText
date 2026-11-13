@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 

@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
@@ -46,7 +46,7 @@ public partial class ReaderPage
 
         UpdateCard.IsVisible = show;
 #if DEBUG
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"UPDATE_CARD {(show ? "shown" : "hidden")}"); // the scripted check asserts on this line
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"UPDATE_CARD {(show ? "shown" : "hidden")}"); // the scripted check asserts on this line
 #endif
     }
 

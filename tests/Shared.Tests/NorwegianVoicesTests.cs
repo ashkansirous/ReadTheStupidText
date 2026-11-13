@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -39,7 +39,7 @@ public class NorwegianVoicesTests
 
         foreach (string code in Enum.GetValues<AppLanguage>().Select(AppLanguages.Code))
         {
-            Assert.Equal(served.Contains(code), ReadTheStupidText.Domain.Reading.SupertonicVoiceTable.Serves(code));
+            Assert.Equal(served.Contains(code), Sirous.Reading.Domain.Reading.SupertonicVoiceTable.Serves(code));
         }
     }
 
@@ -100,8 +100,8 @@ public class NorwegianVoicesTests
     [Fact]
     public void SupertonicDoesNotServeNorwegian()
     {
-        Assert.False(ReadTheStupidText.Domain.Reading.SupertonicVoiceTable.Serves("nb"));
-        Assert.True(ReadTheStupidText.Domain.Reading.SupertonicVoiceTable.Serves("sv"));
+        Assert.False(Sirous.Reading.Domain.Reading.SupertonicVoiceTable.Serves("nb"));
+        Assert.True(Sirous.Reading.Domain.Reading.SupertonicVoiceTable.Serves("sv"));
     }
 
     private static string FindWorkflow()

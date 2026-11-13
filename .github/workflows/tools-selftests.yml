@@ -14,7 +14,7 @@ on:
       - 'PSScriptAnalyzerSettings.psd1'
       # Slice 272: the Dino audio alignment check below. The `scope` job keeps the Windows self-tests off these paths.
       - 'src/DinoReader.Core/**'
-      - 'src/ReadTheStupidText.Application/**'
+      - 'src/Sirous.Reading.Application/**'
       - 'src/DinoReader.App/StoryVoicing.cs'
       - 'content/dino/**'
 
@@ -46,7 +46,7 @@ jobs:
         run: |
           changed="$(git diff --name-only "$BASE" "$GITHUB_SHA")"
           if echo "$changed" | grep -qE '^(tools/|\.maestro/|\.github/workflows/tools-selftests\.yml$|PSScriptAnalyzerSettings\.psd1$)'; then echo "tooling=true" >> "$GITHUB_OUTPUT"; else echo "tooling=false" >> "$GITHUB_OUTPUT"; fi
-          if echo "$changed" | grep -qE '^(src/DinoReader\.Core/|src/ReadTheStupidText\.Application/|src/DinoReader\.App/StoryVoicing\.cs$|tools/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -qE '^(src/DinoReader\.Core/|src/Sirous\.Reading\.Application/|src/DinoReader\.App/StoryVoicing\.cs$|tools/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
 
   # Slice 272: every Dino pre-made audio manifest must hash the sentences the app reads now, position by position (Slice 255 changed the count and eight Farsi packs silently stopped fitting).
   # Only the manifest.json files are fetched from Git LFS (about 240 small files), never a clip.

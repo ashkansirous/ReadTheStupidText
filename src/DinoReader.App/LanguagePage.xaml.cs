@@ -4,9 +4,9 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -28,7 +28,7 @@ public static class LanguageChoice
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 275: the saved language could not be read; the app's current culture is shown as selected
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Config, Sirous.Reading.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 275: the saved language could not be read; the app's current culture is shown as selected
 			return AppResources.Culture;
 		}
 	}

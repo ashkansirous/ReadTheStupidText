@@ -3,12 +3,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Testing;
 
 namespace DinoReader.Testing;
 
@@ -191,8 +191,8 @@ internal static partial class DinoTestCommands
 	// Slice 273 part C: with id=<area>:<reason> it sends that fallback instead (a pack, OCR, store or config one), so a flow proves each area reaches the counter.
 	private static string ForceFallback(string language, string kind)
 	{
-		var sink = IPlatformApplication.Current!.Services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();
-		(string area, string reason) = ReadTheStupidText.Application.Usage.FallbackKinds.Split(kind);
+		var sink = IPlatformApplication.Current!.Services.GetRequiredService<Sirous.Reading.Application.Usage.IFallbackSink>();
+		(string area, string reason) = Sirous.Reading.Application.Usage.FallbackKinds.Split(kind);
 		sink.Report(area, reason, language.Length == 0 ? null : language);
 		return $"{TestHookDispatcher.Ok} {language}";
 	}

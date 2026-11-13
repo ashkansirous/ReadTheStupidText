@@ -1,5 +1,5 @@
 #if DEBUG
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 

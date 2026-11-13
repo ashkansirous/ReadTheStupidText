@@ -217,13 +217,22 @@ export function topFrame(report) {
   const lines = stack.split("\n").map((l) => l.trim());
   const first = lines.find((l) => l.startsWith("at ")) ?? lines.find((l) => l.length > 0);
   if (!first) return "(no stack)";
-  return first.replace(/^at\s+/, "").replace(/\(.*$/, "").replace(/\s+in\s+.*$/, "").slice(0, FRAME_LIMIT);
+  return normalizeRenamed(first.replace(/^at\s+/, "").replace(/\(.*$/, "").replace(/\s+in\s+.*$/, "")).slice(0, FRAME_LIMIT);
+}
+
+// Slice 370: five projects were renamed from ReadTheStupidText.* to Sirous.Reading.*; a leading new name counts as the old one, so one crash is one group across the release boundary.
+// The RTST app's own ReadTheStupidText.Mobile / .App / .Windows.Tray keep their names and are not touched.
+// Matched anywhere at a namespace boundary (start, or after "at ", "<", ",", "[", space), so generic arguments and assembly names in a type key map too.
+const RENAMED_PROJECT = /(?<![\w.])Sirous\.Reading\.(Domain|Application|Documents|Infrastructure|Mobile\.Shared)(?!\w)/g;
+
+export function normalizeRenamed(name) {
+  return String(name ?? "").replace(RENAMED_PROJECT, "ReadTheStupidText.$1");
 }
 
 export function groupReports(reports) {
   const groups = new Map();
   for (const report of reports) {
-    const key = `${report.kind} | ${report.exceptionType} | ${topFrame(report)}`;
+    const key = `${report.kind} | ${normalizeRenamed(report.exceptionType)} | ${topFrame(report)}`;
     const group = groups.get(key) ?? { key, count: 0, platforms: {}, versions: {}, channels: {}, newest: report };
     group.count += 1;
     group.platforms[report.platform] = (group.platforms[report.platform] ?? 0) + 1;

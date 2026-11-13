@@ -22,7 +22,7 @@ on:
       - '.github/actionlint.yaml'
       - 'src/**/*.props'
       - 'src/**/*.csproj'
-      - 'src/ReadTheStupidText.Application/Reading/PackConstants.cs'
+      - 'src/Sirous.Reading.Application/Reading/PackConstants.cs'
       - 'tools/sound-words-test/requirements.txt'
       - '!**/*.md'
   workflow_dispatch:

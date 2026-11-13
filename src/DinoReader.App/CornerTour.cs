@@ -514,7 +514,7 @@ internal sealed class CornerTour : Grid
 	private static void TourLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] tour {line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] tour {line}");
 #endif
 		Debug.WriteLine($"Dino Reader onboarding tour {line}");
 	}

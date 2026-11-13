@@ -1,4 +1,4 @@
-using ReadTheStupidText.Application.Input;
+using Sirous.Reading.Application.Input;
 
 namespace ReadTheStupidText.Windows.Tray.Input;
 

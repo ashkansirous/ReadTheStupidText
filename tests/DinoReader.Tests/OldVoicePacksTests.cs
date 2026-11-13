@@ -1,5 +1,5 @@
 using DinoReader.Core;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 using Xunit;
 
 namespace DinoReader.Tests;

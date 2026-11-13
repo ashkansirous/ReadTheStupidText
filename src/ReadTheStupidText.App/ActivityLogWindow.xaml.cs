@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ReadTheStupidText.Application.Activity;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Domain.Activity;
+using Sirous.Reading.Application.Activity;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Domain.Activity;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;

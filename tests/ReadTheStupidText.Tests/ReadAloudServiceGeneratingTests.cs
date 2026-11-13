@@ -1,15 +1,15 @@
-using ReadTheStupidText.Application.Activity;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Sanitizing;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Domain.Activity;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Domain.Sanitizing;
+using Sirous.Reading.Application.Activity;
+using Sirous.Reading.Application.Documents;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Sanitizing;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Activity;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Domain.Sanitizing;
 
 namespace ReadTheStupidText.Tests;
 

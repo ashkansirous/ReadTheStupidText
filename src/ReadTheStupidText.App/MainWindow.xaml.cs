@@ -1,10 +1,10 @@
-using ReadTheStupidText.Application.Activity;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Startup;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Activity;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Startup;
+using Sirous.Reading.Domain.Reading;
 using Microsoft.UI.Dispatching;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.UI.Xaml;

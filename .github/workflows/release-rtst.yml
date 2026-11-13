@@ -57,7 +57,7 @@ on:
       - '!tools/DinoReader.BookBuilder/**'
       - '!tools/upload-store-story.ps1'
       - '!GitVersion.dino.yml'
-      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - '!src/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
       - '!.github/workflows/release-dino.yml'
       - '!.github/workflows/dinoreader.yml'
       - '!.github/workflows/dinoreader-*.yml'

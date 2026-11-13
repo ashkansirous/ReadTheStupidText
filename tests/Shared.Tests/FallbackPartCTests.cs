@@ -1,8 +1,8 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 using ReadTheStupidText.Mobile;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 
@@ -99,7 +99,7 @@ public sealed class FallbackPartCTests
     public void Repeated_failed_fetches_hold_one_entry_per_kind()
     {
         var sent = new RecordingSink();
-        var hold = new ReadTheStupidText.Mobile.Shared.Usage.ConfigFallbackHold(() => false, sent.Report);
+        var hold = new Sirous.Reading.Mobile.Shared.Usage.ConfigFallbackHold(() => false, sent.Report);
 
         Assert.True(hold.TryHold(FallbackArea.Config, FallbackReason.ConfigDefault, null));
         Assert.True(hold.TryHold(FallbackArea.Config, FallbackReason.ConfigDefault, null));
@@ -114,7 +114,7 @@ public sealed class FallbackPartCTests
     {
         bool configHeld = false;
         var sent = new RecordingSink();
-        var hold = new ReadTheStupidText.Mobile.Shared.Usage.ConfigFallbackHold(() => configHeld, sent.Report);
+        var hold = new Sirous.Reading.Mobile.Shared.Usage.ConfigFallbackHold(() => configHeld, sent.Report);
 
         Assert.True(hold.TryHold(FallbackArea.Config, FallbackReason.ConfigDefault, null));
         Assert.True(hold.TryHold(FallbackArea.UiLanguage, FallbackReason.UiLanguageUnsupported, null));

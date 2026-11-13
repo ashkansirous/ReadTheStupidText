@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
-using ReadTheStupidText.Application.Reading;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using IFallbackSink = ReadTheStupidText.Application.Usage.IFallbackSink;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using IFallbackSink = Sirous.Reading.Application.Usage.IFallbackSink;
+using Sirous.Reading.Mobile.Shared.Waiting;
 using RoundRectangle = Microsoft.Maui.Controls.Shapes.RoundRectangle;
 
 namespace DinoReader;
@@ -83,7 +83,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 #if DEBUG
 		if (TabletPageLayout.Applies(width, height))
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] backup sideBySide={sideBySide}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] backup sideBySide={sideBySide}");
 		}
 #endif
 	}
@@ -117,7 +117,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		Grid.SetColumn(RestoreCard, sideBySide ? 1 : 0);
 		Grid.SetColumnSpan(RestoreCard, span);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] backup sideBySide={sideBySide}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] backup sideBySide={sideBySide}");
 #endif
 	}
 

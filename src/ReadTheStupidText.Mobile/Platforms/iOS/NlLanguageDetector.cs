@@ -1,6 +1,6 @@
 using Foundation;
 using NaturalLanguage;
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 

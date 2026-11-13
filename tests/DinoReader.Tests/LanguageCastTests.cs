@@ -2,7 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json.Nodes;
 using DinoReader.Core;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader.Tests;
 

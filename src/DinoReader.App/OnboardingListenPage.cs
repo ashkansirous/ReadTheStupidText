@@ -2,9 +2,9 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Waiting;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace DinoReader;
@@ -796,7 +796,7 @@ public partial class ReadingPage
 	private static void DemoLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] listen {line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] listen {line}");
 #endif
 		Debug.WriteLine($"Dino Reader onboarding listen {line}");
 	}

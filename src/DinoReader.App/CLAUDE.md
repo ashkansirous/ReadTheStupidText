@@ -1,7 +1,7 @@
 # CLAUDE.md — Dino Reader app
 
 Loaded when you work under `src/DinoReader.App`. The pure library is `src/DinoReader.Core`
-(own CLAUDE.md); shared platform code is `src/ReadTheStupidText.Mobile.Shared`; MAUI gotchas
+(own CLAUDE.md); shared platform code is `src/Sirous.Reading.Mobile.Shared`; MAUI gotchas
 are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CLAUDE.md`. Windows-head rules are in
 `Platforms/Windows/CLAUDE.md`, Debug test hooks in `Testing/CLAUDE.md`. Long incident accounts and reversed
 decisions behind these rules: `docs/plan/notes/dino-app-claude-md-history.md` (the verbatim old text).

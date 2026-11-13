@@ -2,7 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DinoReader.Core;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader.BookBuilder;
 

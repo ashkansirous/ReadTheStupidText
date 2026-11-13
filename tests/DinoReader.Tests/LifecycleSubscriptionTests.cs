@@ -25,7 +25,7 @@ public partial class LifecycleSubscriptionTests
     private static readonly string[] Roots =
     [
         Path.Combine("src", "DinoReader.App"),
-        Path.Combine("src", "ReadTheStupidText.Mobile.Shared"),
+        Path.Combine("src", "Sirous.Reading.Mobile.Shared"),
         Path.Combine("src", "ReadTheStupidText.Mobile"),
     ];
 

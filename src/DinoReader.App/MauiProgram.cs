@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Crashes;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Crashes;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
 #if DEBUG
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Mobile.Shared.Testing;
 #endif
 
 namespace DinoReader;
@@ -70,7 +70,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
-		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the reading session and the app's own code report fallbacks through it
+		builder.Services.AddSingleton<Sirous.Reading.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the reading session and the app's own code report fallbacks through it
 		builder.Services.AddSingleton<IBookTextSync, BookUpdater>(); // Slice 313: every store listing the shelf audio fetches first brings a behind book's text up to date, so a pack is never installed ahead of its text
 		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddPages(builder.Services);
@@ -88,8 +88,8 @@ public static class MauiProgram
 		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
 		if (deviceLanguageUnsupported)
 		{
-			app.Services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>().Report(
-				ReadTheStupidText.Application.Usage.FallbackArea.UiLanguage, ReadTheStupidText.Application.Usage.FallbackReason.UiLanguageUnsupported);
+			app.Services.GetRequiredService<Sirous.Reading.Application.Usage.IFallbackSink>().Report(
+				Sirous.Reading.Application.Usage.FallbackArea.UiLanguage, Sirous.Reading.Application.Usage.FallbackReason.UiLanguageUnsupported);
 		}
 
 		string sessionId = app.Services.GetRequiredService<UsageCounter>().SessionId; // Slice 250: captured now, so the crash path never touches the container
@@ -119,8 +119,8 @@ public static class MauiProgram
 
 	private static void WireConfigFallbacks(IServiceProvider services)
 	{
-		var sink = services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();
-		services.GetRequiredService<AppConfigClient>().FallbackReported = reason => sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.Config, reason);
+		var sink = services.GetRequiredService<Sirous.Reading.Application.Usage.IFallbackSink>();
+		services.GetRequiredService<AppConfigClient>().FallbackReported = reason => sink.Report(Sirous.Reading.Application.Usage.FallbackArea.Config, reason);
 	}
 
 	// Slice 267: every pack download is counted (book id, language, closed outcome) and, through AudioPackLog, kept in the rolling log; no title or file name is carried.

@@ -3,8 +3,8 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -358,7 +358,7 @@ internal sealed class OnboardingVoicePage : ContentPage, IDinoKeyTarget
 	private static void OnboardingLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] voice {line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] voice {line}");
 #endif
 		Debug.WriteLine($"Dino Reader onboarding voice {line}");
 	}

@@ -137,7 +137,7 @@ internal sealed class ShelfReorderView : Grid
 
 	private void AddEntries(IReadOnlyList<StoryTile> tiles, string? liftedId)
 	{
-		bool outline = ReadTheStupidText.Mobile.Shared.Waiting.ReduceMotion.IsOn;
+		bool outline = Sirous.Reading.Mobile.Shared.Waiting.ReduceMotion.IsOn;
 		for (int i = 0; i < tiles.Count; i++)
 		{
 			Grid view = ShelfReorderTiles.Build(tiles[i], _grid, _titleHeight, TitleSpacing, outline);
@@ -573,7 +573,7 @@ internal sealed class ShelfReorderView : Grid
 	private static void DebugLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reorder] {line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reorder] {line}");
 #endif
 	}
 }

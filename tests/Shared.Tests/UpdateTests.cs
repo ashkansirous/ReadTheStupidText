@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.AppConfig;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.AppConfig;
+using Sirous.Reading.Application.Usage;
 
 namespace ReadTheStupidText.Tests;
 

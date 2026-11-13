@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 

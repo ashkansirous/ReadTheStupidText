@@ -28,7 +28,7 @@ $dinoTests = 'dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj'
 $sharedTests = 'dotnet test tests/Shared.Tests/Shared.Tests.csproj'
 
 # Mobile.Shared always names both Android apps and both test projects, even for iOS-only code (which CI maps to iOS alone).
-$shared = Get-CheckLines @('src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/X.cs')
+$shared = Get-CheckLines @('src/Sirous.Reading.Mobile.Shared/Platforms/iOS/X.cs')
 foreach ($line in $rtstAndroid, $dinoAndroid, $rtstTests, $dinoTests) {
     if ($shared -notcontains $line) { $failed++; Write-Host "FAIL: Mobile.Shared iOS file is missing [$line]; got: $($shared -join ' | ')" }
 }
@@ -44,10 +44,10 @@ Assert-Lines 'test tooling alone names no build or test line' @('tools/lease-com
 Assert-Lines 'a shared build input names every build and both test projects' @('Directory.Build.props') @($rtstAndroid, $dinoAndroid, $rtstWindows, $dinoWindows, $rtstTests, $sharedTests, $dinoTests)
 Assert-Lines 'an unreadable change names everything' @('*') @($rtstAndroid, $dinoAndroid, $rtstWindows, $dinoWindows, $rtstTests, $sharedTests, $dinoTests)
 
-$infra = Get-CheckLines @('src/ReadTheStupidText.Infrastructure/A.cs')
+$infra = Get-CheckLines @('src/Sirous.Reading.Infrastructure/A.cs')
 if ($infra -notcontains $dinoTests) { $failed++; Write-Host "FAIL: Infrastructure (used by Dino's Windows head) is missing [$dinoTests]; got: $($infra -join ' | ')" }
 
-$domain = Get-CheckLines @('src/ReadTheStupidText.Domain/A.cs')
+$domain = Get-CheckLines @('src/Sirous.Reading.Domain/A.cs')
 foreach ($line in $rtstTests, $sharedTests, $dinoTests) {
     if ($domain -notcontains $line) { $failed++; Write-Host "FAIL: Domain is missing [$line]; got: $($domain -join ' | ')" }
 }

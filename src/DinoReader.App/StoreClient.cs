@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Net;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Net;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 

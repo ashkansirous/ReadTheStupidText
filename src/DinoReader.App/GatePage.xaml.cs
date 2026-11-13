@@ -185,7 +185,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 			ScrimLayer.BackgroundColor = DinoTokens.Get(DinoTokens.Scrim);
 		}
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={shape.Mode} step={(SumText.IsVisible ? "sum" : "hold")} cardWidth={shape.CardWidth}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={shape.Mode} step={(SumText.IsVisible ? "sum" : "hold")} cardWidth={shape.CardWidth}");
 #endif
 	}
 
@@ -511,7 +511,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 			_keyHolding = true;
 			StartHold();
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold started by the Space bar");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold started by the Space bar");
 #endif
 		}
 
@@ -528,7 +528,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		_keyHolding = false;
 		ResetHold();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold ended by letting go of the Space bar");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold ended by letting go of the Space bar");
 #endif
 		return true;
 	}
@@ -602,7 +602,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		StepBarTwo.Color = DinoTokens.Get(DinoTokens.Brand);
 		ShowCardStep();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={_shape?.Mode} step=sum cardWidth={_shape?.CardWidth}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={_shape?.Mode} step=sum cardWidth={_shape?.CardWidth}");
 #endif
 		ClearStaleFocus(); // the hidden Continue button may still hold the focus from the hold step
 	}

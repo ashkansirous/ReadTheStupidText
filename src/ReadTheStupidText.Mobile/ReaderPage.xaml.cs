@@ -1,15 +1,15 @@
 using System.Globalization;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Documents;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -423,7 +423,7 @@ public partial class ReaderPage : ContentPage
 
 #if DEBUG
             // Slice 316: the scripted Review-pick-then-Read check asserts the language a Play reads in. Logged only for the read that is still current, and before the voice check, so an emulator with no voice for that language still shows which language was asked for.
-            ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"READ_LANGUAGE {readingLanguage}");
+            Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"READ_LANGUAGE {readingLanguage}");
 #endif
 
             if (!await AllowReadAsync(id, plan))
@@ -822,7 +822,7 @@ public partial class ReaderPage : ContentPage
         RenderReading();
         ScrollToHighlight(text.Length);
 #if DEBUG
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"SENTENCE {change.ChunkIndex} {change.SentenceIndex}");
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"SENTENCE {change.ChunkIndex} {change.SentenceIndex}");
         LogSentenceMovedOnce(change.SentenceIndex);
 #endif
     }
@@ -839,7 +839,7 @@ public partial class ReaderPage : ContentPage
         }
 
         _sentenceMovedLogged = true;
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("SENTENCE_MOVED");
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("SENTENCE_MOVED");
     }
 #endif
 

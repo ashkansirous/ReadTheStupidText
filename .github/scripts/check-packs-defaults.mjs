@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const WORKFLOW_PATH = '.github/workflows/packs.yml';
-export const CONSTANTS_PATH = 'src/ReadTheStupidText.Application/Reading/PackConstants.cs';
+export const CONSTANTS_PATH = 'src/Sirous.Reading.Application/Reading/PackConstants.cs';
 
 // Each workflow input and the catalog pack ids it stamps. A new `*_pack_version` input must be added here.
 export const INPUT_PACKS = {

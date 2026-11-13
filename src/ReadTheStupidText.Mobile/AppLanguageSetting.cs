@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
 
 namespace ReadTheStupidText.Mobile;
 

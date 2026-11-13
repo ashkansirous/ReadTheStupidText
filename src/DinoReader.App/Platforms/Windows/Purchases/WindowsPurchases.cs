@@ -158,7 +158,7 @@ public sealed class WindowsPurchases : IBookPurchases
         if (!response.IsSuccessStatusCode)
         {
             // Slice 357: background proof work, so the person is told nothing here; the kind is only logged. A Worker answer is a status with no body.
-            Debug.WriteLine($"Dino Reader: the Worker gave no Store ticket ({(int)response.StatusCode}, {ReadTheStupidText.Application.Net.HttpErrorClassifier.Classify((int)response.StatusCode)})");
+            Debug.WriteLine($"Dino Reader: the Worker gave no Store ticket ({(int)response.StatusCode}, {Sirous.Reading.Application.Net.HttpErrorClassifier.Classify((int)response.StatusCode)})");
             return null; // the Worker has no ticket to give (books are not sold yet, or its Microsoft keys are missing)
         }
 

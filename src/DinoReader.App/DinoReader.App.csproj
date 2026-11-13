@@ -130,7 +130,7 @@
 	<Import Project="..\AndroidRelease.props" />
 	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
 	<PropertyGroup><TestHookPlist>TestHooks.Dino.plist</TestHookPlist></PropertyGroup>
-	<Import Project="..\ReadTheStupidText.Mobile.Shared\Testing\TestHooks.props" />
+	<Import Project="..\Sirous.Reading.Mobile.Shared\Testing\TestHooks.props" />
 
 	<!-- Same fix as the RTST App: the Windows App SDK pulls WinML, whose onnxruntime.dll collides with
 	     sherpa-onnx's version-matched one at the package root (APPX1101). Still needed on the Windows head only: Mobile.Shared's Windows target
@@ -142,10 +142,10 @@
 	</Target>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there); Slice 305: and which engines this app links -->
-		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Mobile.Shared\Sirous.Reading.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there); Slice 305: and which engines this app links -->
+		<ProjectReference Include="..\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
 

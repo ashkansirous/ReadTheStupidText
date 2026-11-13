@@ -1,12 +1,12 @@
 using DinoReader.Core;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using FallbackTally = ReadTheStupidText.Application.Usage.FallbackTally;
-using FallbackTotal = ReadTheStupidText.Application.Usage.FallbackTotal;
-using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
-using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
-using ReadTheStupidText.Mobile.Shared.Waiting;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using FallbackTally = Sirous.Reading.Application.Usage.FallbackTally;
+using FallbackTotal = Sirous.Reading.Application.Usage.FallbackTotal;
+using UsageBuckets = Sirous.Reading.Application.Usage.UsageBuckets;
+using UsageWaitStage = Sirous.Reading.Application.Usage.UsageWaitStage;
+using Sirous.Reading.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace DinoReader;
 
@@ -60,7 +60,7 @@ public sealed class UsageCounter
 			IsNoise: IsUiRow)); // Slice 352: a full queue drops taps, screens and setting changes before any other row
 		if (_launch.StoreFailed)
 		{
-			RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 351: the launch history could not be read or saved; the counts carry "none" buckets
+			RecordGeneralFallback(Sirous.Reading.Application.Usage.FallbackArea.Config, Sirous.Reading.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 351: the launch history could not be read or saved; the counts carry "none" buckets
 		}
 
 		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
@@ -108,7 +108,7 @@ public sealed class UsageCounter
 #if DEBUG
 		// Slice 250: a Debug-only line per count asked for (before the sampling and switch checks), so a device flow can read the order of a session's counts and its one session id.
 		// Slice 273: with the counts a read_voice or fallback carries. Slice 288: with the played seconds a read_paused or read_stopped carries (book_listened carries none).
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name}{(detail.Length == 0 ? "" : $" {detail}")} session={_session.Id}{(count is null ? "" : $" count={count}")}{(deviceCount is null ? "" : $" device={deviceCount}")}{(seconds is null ? "" : $" seconds={seconds}")}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name}{(detail.Length == 0 ? "" : $" {detail}")} session={_session.Id}{(count is null ? "" : $" count={count}")}{(deviceCount is null ? "" : $" device={deviceCount}")}{(seconds is null ? "" : $" seconds={seconds}")}");
 #endif
 		RecordCore(name, story, detail, language, count, deviceCount, seconds);
 	}
@@ -276,7 +276,7 @@ public sealed class UsageCounter
 		counted?.Invoke(); // Slice 351 review: the caller learns the tally has it, so a later failure here is not reported to the sink a second time
 		bool first = FallbackTally.IsFirst(times);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")} book={story.Id} lang={readIn}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")} book={story.Id} lang={readIn}");
 #endif
 		if (first)
 		{
@@ -300,7 +300,7 @@ public sealed class UsageCounter
 		int times = _fallbacks.Note(area, reason, string.Empty, readIn);
 		bool first = FallbackTally.IsFirst(times);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
 #endif
 		if (first)
 		{
@@ -310,7 +310,7 @@ public sealed class UsageCounter
 
 	// The tally key and the event use one language code ("en-US" and "en" are one kind): the primary subtag, else the text as given.
 	private static string NormalisedLanguage(string? language) =>
-		ReadTheStupidText.Application.Usage.UsageEvents.Language(language) ?? language ?? string.Empty;
+		Sirous.Reading.Application.Usage.UsageEvents.Language(language) ?? language ?? string.Empty;
 
 	// Slice 273: a fallback that happened again gets one more row with the session total, queued just before the flush.
 	private void QueueFallbackRepeats()
@@ -364,7 +364,7 @@ public sealed class UsageCounter
 			using IDisposable? scope = _uiLangReport.TryEnter(); // a report that stamps a count and fails here again is skipped, never nested (Slice 351 review)
 			if (scope is not null)
 			{
-				RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved);
+				RecordGeneralFallback(Sirous.Reading.Application.Usage.FallbackArea.Config, Sirous.Reading.Application.Usage.FallbackReason.PreferenceUnsaved);
 			}
 
 			return UsageSource.None;
@@ -387,7 +387,7 @@ public sealed class UsageCounter
 		};
 #if DEBUG
 		// Slice 320 item 7: a Debug-only line per count that reached the queue, with the seq it was given (the line in RecordLogged is written before sampling, so it has none), so a flow reads the sequence on a device. Nothing is sent from here.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch} screen={stamped.Screen} detail={stamped.Detail}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch} screen={stamped.Screen} detail={stamped.Detail}");
 #endif
 		return stamped;
 	}

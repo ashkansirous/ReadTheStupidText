@@ -16,13 +16,13 @@
       <Platform Solution="Debug|x64" Project="x64" />
       <Deploy Solution="Debug|x64" />
     </Project>
-    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
-    <Project Path="src/ReadTheStupidText.Documents/ReadTheStupidText.Documents.csproj" />
-    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
-    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
+    <Project Path="src/Sirous.Reading.Application/Sirous.Reading.Application.csproj" />
+    <Project Path="src/Sirous.Reading.Documents/Sirous.Reading.Documents.csproj" />
+    <Project Path="src/Sirous.Reading.Domain/Sirous.Reading.Domain.csproj" />
+    <Project Path="src/Sirous.Reading.Infrastructure/Sirous.Reading.Infrastructure.csproj" />
     <Project Path="src/ReadTheStupidText.Windows.Tray/ReadTheStupidText.Windows.Tray.csproj" />
     <Project Path="src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj" />
-    <Project Path="src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj" />
+    <Project Path="src/Sirous.Reading.Mobile.Shared/Sirous.Reading.Mobile.Shared.csproj" />
     <Project Path="src/DinoReader.App/DinoReader.App.csproj" />
     <Project Path="src/DinoReader.Core/DinoReader.Core.csproj" />
   </Folder>

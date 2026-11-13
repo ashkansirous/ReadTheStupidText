@@ -118,7 +118,7 @@ internal sealed partial class RecordingPlayer
 		}
 		catch (Exception ex) when (ex is Java.Lang.IllegalArgumentException or Java.Lang.IllegalStateException)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipSpeedUnset); // Slice 273 part D: the clip plays at its own speed
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.PremadeAudio, Sirous.Reading.Application.Usage.FallbackReason.ClipSpeedUnset); // Slice 273 part D: the clip plays at its own speed
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not set the clip speed {rate}: {ex.Message}");
 		}
 	}

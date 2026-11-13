@@ -1,9 +1,9 @@
 using System.Net;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Domain.Activity;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Infrastructure.Usage;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Activity;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Infrastructure.Usage;
 
 namespace ReadTheStupidText.Tests;
 

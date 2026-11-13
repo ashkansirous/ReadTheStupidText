@@ -89,9 +89,9 @@ Notes:
 ReadTheStupidText.slnx
 src/
   ReadTheStupidText.App/             WinUI 3 single-project MSIX app (UI, DI wiring)
-  ReadTheStupidText.Application/     Use cases / orchestration (net10.0)
-  ReadTheStupidText.Domain/          Entities, value objects, enums — no framework deps (net10.0)
-  ReadTheStupidText.Infrastructure/  TTS, clipboard, UIA, OS integration (net10.0-windows)
+  Sirous.Reading.Application/     Use cases / orchestration (net10.0)
+  Sirous.Reading.Domain/          Entities, value objects, enums — no framework deps (net10.0)
+  Sirous.Reading.Infrastructure/  TTS, clipboard, UIA, OS integration (net10.0-windows)
 ```
 
 Dependency direction is one-way: `App → Application → Domain` and

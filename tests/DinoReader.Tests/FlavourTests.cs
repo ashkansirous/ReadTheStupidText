@@ -1,5 +1,5 @@
 using DinoReader.Core;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -299,6 +299,6 @@ public class FlavourTransformCacheTests
     [Fact]
     public void Normal_gap_matches_the_engine_default()
     {
-        Assert.Equal(ReadTheStupidText.Application.Reading.VoicedAudio.DefaultSentenceGap, VoiceFlavours.ShapeOf(VoiceFlavour.Normal).SentenceGap);
+        Assert.Equal(Sirous.Reading.Application.Reading.VoicedAudio.DefaultSentenceGap, VoiceFlavours.ShapeOf(VoiceFlavour.Normal).SentenceGap);
     }
 }

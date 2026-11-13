@@ -94,7 +94,7 @@ Decisions 1-99 are in [notes/decisions-001-099.md](notes/decisions-001-099.md) (
 
 133. **Read The Stupid Text and Dino Reader stay in one repo (Batch 27).** About a third of the app code is shared and it is the engine (speech readers, voice packs, chunking, OCR, translation); splitting would mean versioned NuGet packages for every engine fix. The fix is in how changes ship. (note: docs/plan/notes/2026-10-25-product-separation.md)
 
-134. **Only Mobile.Shared's namespace is renamed, to `ReadTheStupidText.Mobile.Shared` (Batch 27).** No wider rename of the shared projects for now. (Slice 131)
+134. **Only Mobile.Shared's namespace is renamed, to `ReadTheStupidText.Mobile.Shared` (Batch 27).** No wider rename of the shared projects for now. (Slice 131) *Superseded by Slice 370 (2026-11-13): the five shared projects are renamed to `Sirous.Reading.Domain`, `.Application`, `.Documents`, `.Infrastructure` and `.Mobile.Shared`, namespaces included; see docs/plan/slices/370-rename-shared-code.md.*
 
 135. **Tray-only code lives in `ReadTheStupidText.Windows.Tray`, referenced only by the RTST Windows app (Batch 27).** Shared Infrastructure keeps speech, translation, settings, logging and sanitizing; tests run per product. (Slice 128)
 

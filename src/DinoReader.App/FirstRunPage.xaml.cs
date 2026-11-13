@@ -2,8 +2,8 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -280,8 +280,8 @@ public partial class FirstRunPage : ContentPage
 		if (_shape is { } shape)
 		{
 			string kind = shape.Split ? "split" : "stack";
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={OnboardingLayout.LanguageColumns(shape)} page=language selected={_selected}");
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page=language shape={kind}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={OnboardingLayout.LanguageColumns(shape)} page=language selected={_selected}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page=language shape={kind}");
 		}
 #endif
 	}

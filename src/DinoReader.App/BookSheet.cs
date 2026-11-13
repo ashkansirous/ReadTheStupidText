@@ -2,8 +2,8 @@ using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -124,7 +124,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		{
 			Arrange(shape);
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] book sheet card={shape.Card} width={shape.CardWidth} coverOnTop={shape.CoverOnTop}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] book sheet card={shape.Card} width={shape.CardWidth} coverOnTop={shape.CoverOnTop}");
 #endif
 		}
 	}

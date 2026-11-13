@@ -1,5 +1,5 @@
 using System.Text;
-using ReadTheStupidText.Infrastructure.Translation;
+using Sirous.Reading.Infrastructure.Translation;
 
 namespace ReadTheStupidText.Tests;
 

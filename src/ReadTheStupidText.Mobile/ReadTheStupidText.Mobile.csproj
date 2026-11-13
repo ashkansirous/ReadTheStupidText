@@ -80,7 +80,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
-	<!-- The engine, the scanner and ML Kit text recognition live in ReadTheStupidText.Mobile.Shared (Slice 58, 63).
+	<!-- The engine, the scanner and ML Kit text recognition live in Sirous.Reading.Mobile.Shared (Slice 58, 63).
 	     The sherpa-onnx native packaging is imported here too, because ExcludeAssets does not
 	     flow through a project reference (see AndroidSherpaPackaging.props). Android-only: the
 	     packages referenced below are the translation ones (this app's translation flow). -->
@@ -88,7 +88,7 @@
 	<Import Project="..\AndroidRelease.props" />
 	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
 	<PropertyGroup><TestHookPlist>TestHooks.Rtst.plist</TestHookPlist></PropertyGroup>
-	<Import Project="..\ReadTheStupidText.Mobile.Shared\Testing\TestHooks.props" />
+	<Import Project="..\Sirous.Reading.Mobile.Shared\Testing\TestHooks.props" />
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<!-- The document scanner, ML Kit text recognition and the onnxruntime binding moved to
@@ -116,8 +116,8 @@
 
 	<!-- iOS neural voice and OCR native packaging (Slice 49, 55, 67): the managed sherpa-onnx binding,
 	     the SherpaOnnxC.xcframework fetch and the full onnxruntime package, shared with Dino Reader.
-	     The engine and OCR code itself lives in ReadTheStupidText.Mobile.Shared. -->
-	<Import Project="..\ReadTheStupidText.Mobile.Shared\IosSherpaPackaging.props" />
+	     The engine and OCR code itself lives in Sirous.Reading.Mobile.Shared. -->
+	<Import Project="..\Sirous.Reading.Mobile.Shared\IosSherpaPackaging.props" />
 
 	<!-- Slice 305: ML Kit Translate on iOS, referenced here because Mobile.Shared's own reference is PrivateAssets="all" (Dino Reader links none). Not in the simulator compile: the xcframework has no simulator slice. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator'))">
@@ -154,10 +154,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
+		<ProjectReference Include="..\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
+		<ProjectReference Include="..\Sirous.Reading.Mobile.Shared\Sirous.Reading.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
 	</ItemGroup>
 
 	<!-- Fail early and clearly instead of restoring a project with no target framework. -->

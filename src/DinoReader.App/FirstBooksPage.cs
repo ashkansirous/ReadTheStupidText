@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared.Waiting;
-using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
-using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared.Waiting;
+using UsageBuckets = Sirous.Reading.Application.Usage.UsageBuckets;
+using UsageWaitStage = Sirous.Reading.Application.Usage.UsageWaitStage;
 
 namespace DinoReader;
 
@@ -230,7 +230,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the page shows its load-failed state with Try again
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the page shows its load-failed state with Try again
 			Debug.WriteLine($"Dino Reader first-books load failed: {ex}");
 			ShowLoadFailed();
 		}
@@ -572,7 +572,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the cover stays a tinted block; the book itself is unaffected
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the cover stays a tinted block; the book itself is unaffected
 			Debug.WriteLine($"Dino Reader first-books cover failed: {ex.Message}");
 		}
 	}
@@ -581,7 +581,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	private void LogState(string what)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[FirstBooks] {what} listed={_items.Count} ticked={_ticked.Count} onShelf={_onShelf.Count}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[FirstBooks] {what} listed={_items.Count} ticked={_ticked.Count} onShelf={_onShelf.Count}");
 #endif
 	}
 }

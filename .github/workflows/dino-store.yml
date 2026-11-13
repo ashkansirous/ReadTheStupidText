@@ -14,7 +14,7 @@ on:
       - '!content/dino/*/high-res/**'
       - 'tools/DinoReader.BookBuilder/**'
       - 'src/DinoReader.Core/**'
-      - 'src/ReadTheStupidText.Application/**'
+      - 'src/Sirous.Reading.Application/**'
       - 'src/DinoReader.App/ShippedTitles.cs'
       - 'tools/upload-store-story.ps1'
       - '.github/scripts/publish-store-books.mjs'

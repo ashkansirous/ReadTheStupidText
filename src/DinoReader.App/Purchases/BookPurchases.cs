@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 
@@ -146,7 +146,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 #if DEBUG
         if (reason is not null)
         {
-            ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(read.PricesFailed ? "[Purchases] billing error prices" : $"[Purchases] prices missing count={unpriced} of={sold}");
+            Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(read.PricesFailed ? "[Purchases] billing error prices" : $"[Purchases] prices missing count={unpriced} of={sold}");
         }
 #endif
         string key = reason is null ? string.Empty : $"{reason}:{unpriced}";
@@ -203,7 +203,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         Interlocked.Exchange(ref _readAt, Stopwatch.GetTimestamp());
         _snapshot = read with { Prices = BookAccess.KeepPrices(before.Prices, read.Prices) };
 #if DEBUG
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count}");
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count}");
 #endif
         if (flipped || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key)))
         {

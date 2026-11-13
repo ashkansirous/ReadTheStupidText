@@ -16,7 +16,7 @@ internal static class IosAttributes
 	{
 		if (Interlocked.Exchange(ref _fontFallbackReported, 1) == 0)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Font, ReadTheStupidText.Application.Usage.FallbackReason.FontFallback);
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Font, Sirous.Reading.Application.Usage.FallbackReason.FontFallback);
 		}
 	}
 

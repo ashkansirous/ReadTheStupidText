@@ -7,8 +7,8 @@ priority", "add slices for adding anything missing from the crash report".
 
 **Depends on:** none (Slice 227 built the reports).
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/*ios*.yml`, `.github/CLAUDE.md`, `tools/crashes/**`,
-`src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/Crashes/**`,
-`src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**`,
+`src/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Sirous.Reading.Application/Crashes/**`,
+`src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/Android/**`,
 `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/DinoLog.cs`, `src/DinoReader.App/App.xaml.cs`,
 `src/ReadTheStupidText.Mobile/App.xaml.cs`, `worker/crashes.ts`, `worker/crashes.test.mjs`, `worker/CLAUDE.md`,
 `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/227-crash-reports.md`

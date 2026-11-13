@@ -1,11 +1,11 @@
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 

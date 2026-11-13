@@ -1,6 +1,6 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
 
 namespace ReadTheStupidText.Tests;
 

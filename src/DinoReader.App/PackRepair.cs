@@ -1,6 +1,6 @@
 using DinoReader.Core;
 using Microsoft.Maui.Networking;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 

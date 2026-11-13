@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.AppConfig;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Application.AppConfig;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -142,7 +142,7 @@ public sealed class AppUpdate
     internal void SetTestConfig(UsageConfig? config)
     {
         _testConfig = config;
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"UPDATE state={State} card={ShowAvailableCard}");
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"UPDATE state={State} card={ShowAvailableCard}");
         RaiseChanged();
     }
 #endif

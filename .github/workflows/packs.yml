@@ -102,7 +102,7 @@ env:
   SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar,da,fi,sv,nl,de'
   SUPERTONIC_LICENSE: 'BigScience OpenRAIL-M (model weights) AND MIT (sample code)'
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
-  # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.
+  # Keep the ids in sync with src/Sirous.Reading.Application/Reading/PackConstants.cs.
   PERSIAN_ID: piper-fa
   PERSIAN_LICENSE: 'CC0-1.0 (voice data) AND MIT (voice models) AND GPL-3.0-or-later (espeak-ng data)'
   # Slice 89: four voices in one pack. The sherpa-onnx int8 archives are pinned by sha256 (their
@@ -161,7 +161,7 @@ env:
   OCR_CJK_REC_SHA256: 26fa4f47060f58e25962b9af6beaee05c8182b90e026c4ecc6db165d9dfdc38a
   OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
   # Opus-MT ONNX models (Slice 75). The pack ids and folder layout are read by
-  # src/ReadTheStupidText.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
+  # src/Sirous.Reading.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
   TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en en-ja da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb de-en en-de'
 
 jobs:
@@ -212,7 +212,7 @@ jobs:
           set -euo pipefail
           mkdir -p "out/$SUPERTONIC_ID"
           # The required file set — keep in sync with the constants in
-          # src/ReadTheStupidText.Domain/Reading/SupertonicFiles.cs (never `cp *`:
+          # src/Sirous.Reading.Domain/Reading/SupertonicFiles.cs (never `cp *`:
           # stray files must not ship, and a missing one must fail the job).
           model_files=(duration_predictor.int8.onnx text_encoder.int8.onnx vector_estimator.int8.onnx vocoder.int8.onnx tts.json unicode_indexer.bin voice.bin)
           for f in "${model_files[@]}" LICENSE; do
@@ -450,7 +450,7 @@ jobs:
           SOURCE_TEXT
           files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
           # Speaker codes of the upstream speaker_id_map (K = woman, M = man; the app shows the gender, localised). KNN first: it is the default voice.
-          # Keep the ids in sync with NorwegianVoices.cs in src/ReadTheStupidText.Application/Reading.
+          # Keep the ids in sync with NorwegianVoices.cs in src/Sirous.Reading.Application/Reading.
           voices='[
             {"id": "piper:nb-knn", "name": "KNN", "sid": 0, "model": "voices/nvcc"},
             {"id": "piper:nb-ksv", "name": "KSV", "sid": 1, "model": "voices/nvcc"},

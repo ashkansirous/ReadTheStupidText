@@ -7,7 +7,7 @@
 
 ## Why
 
-Both apps speak 15 languages (`src/ReadTheStupidText.Application/Reading/AppLanguage.cs`: English, Persian, French, Spanish, Portuguese, Chinese, Arabic, Russian, Japanese, Danish, Finnish, Swedish, Norwegian, Dutch, German), but the stores list them in far fewer. Read live on 2026-11-13:
+Both apps speak 15 languages (`src/Sirous.Reading.Application/Reading/AppLanguage.cs`: English, Persian, French, Spanish, Portuguese, Chinese, Arabic, Russian, Japanese, Danish, Finnish, Swedish, Norwegian, Dutch, German), but the stores list them in far fewer. Read live on 2026-11-13:
 
 - **App Store:** Dino 1.81.1 and RTST 1.76.1 have en-US and de-DE only (ASC API).
 - **Google Play:** Dino en-GB and de-DE; RTST en-US only (Play API).

@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Reading;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Waiting;
 using DinoReader.Resources.Strings;
 
 namespace DinoReader;
@@ -144,7 +144,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			await _appeared.Task;
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read starts playing");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read starts playing");
 #endif
 			await StartFromPlayAsync();
 		}
@@ -167,7 +167,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			_introPopQueued = true;
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read finished, back to the intro");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read finished, back to the intro");
 #endif
 			_ = _busy.RunWhenFreeAsync(PopIntroReadAsync); // waits for a running Play/Back handler instead of being dropped
 		}
@@ -234,7 +234,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		await _languageReady;
 		RetryFailedTranslation();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] read starts story={DinoReader.Core.BookMatch.Slug(_story?.Title ?? string.Empty)}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] read starts story={DinoReader.Core.BookMatch.Slug(_story?.Title ?? string.Empty)}");
 #endif
 		await _session.StartAtAsync(sentence);
 	}
@@ -614,7 +614,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Keyboard] reading {action}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Keyboard] reading {action}");
 #endif
 		switch (action)
 		{
@@ -832,7 +832,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		Transport.Wide = Stacked;
 		FitOverlayTransport();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading controls={(rail ? "rail" : FloatingHeader ? "row" : "upright")} layout={_layoutKind}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading controls={(rail ? "rail" : FloatingHeader ? "row" : "upright")} layout={_layoutKind}");
 #endif
 	}
 
@@ -882,7 +882,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			SideTitle.IsVisible = show;
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading tablet title={(show ? "shown" : "hidden")}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading tablet title={(show ? "shown" : "hidden")}");
 #endif
 		}
 
@@ -1056,7 +1056,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_usage.EndReading(); // Slice 288: the one place that closes a reading on leaving: a still-open one gets its read_stopped with the seconds, then audio is no longer heard
 		_ = _usage.FlushAsync();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
 #endif
 	}
 
@@ -1281,7 +1281,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		if (state != _shownSoundState)
 		{
 			_shownSoundState = state;
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] sound-state {state}"); // Slice 360: a flow reads which of the four states the page chose
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] sound-state {state}"); // Slice 360: a flow reads which of the four states the page chose
 		}
 #endif
 	}
@@ -1579,7 +1579,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		RenderChrome();
 #if DEBUG
 		// Slice 232: a rotation re-lays the surface out; this line proves which page was held and which way up the screen was.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading laid out landscape={LandscapeLayout.IsLandscape(Width, Height)} page={Surface.CurrentPage} layout={_layoutKind}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading laid out landscape={LandscapeLayout.IsLandscape(Width, Height)} page={Surface.CurrentPage} layout={_layoutKind}");
 #endif
 	}
 
@@ -1592,7 +1592,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.PagePrefix} {page}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"{Sirous.Reading.Mobile.Shared.Testing.TestHookLog.PagePrefix} {page}");
 #endif
 		_session.ClearFinished();
 		_follower.Swiped(page);
@@ -1612,7 +1612,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 #if DEBUG
 		if (onBackCover)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER modes visible={(Modes.IsVisible ? "yes" : "no")}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER modes visible={(Modes.IsVisible ? "yes" : "no")}");
 		}
 #endif
 		WanderPill.IsVisible = wandering;

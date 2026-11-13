@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
 
 namespace ReadTheStupidText.Tests;
 

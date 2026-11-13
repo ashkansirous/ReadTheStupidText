@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Windows.Automation;
 using System.Windows.Automation.Text;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Usage;
 
 namespace ReadTheStupidText.Windows.Tray.Input;
 

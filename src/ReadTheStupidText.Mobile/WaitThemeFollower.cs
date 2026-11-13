@@ -1,4 +1,4 @@
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace ReadTheStupidText.Mobile;
 

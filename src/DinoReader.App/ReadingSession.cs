@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -67,7 +67,7 @@ public sealed class ReadingSession
 
 		public HashSet<int> Reported { get; } = []; // the steps whose missing or unplayable clip was already reported, so a resumed step reports nothing twice
 
-		public string? SilentReason { get; init; } = ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text); Slice 351: null for an own book, which never has a pack, so a silent piece is expected and reports nothing
+		public string? SilentReason { get; init; } = Sirous.Reading.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text); Slice 351: null for an own book, which never has a pack, so a silent piece is expected and reports nothing
 
 		public Story? Story { get; init; } // Slice 351: the book and reading language this read started for, so a late callback reports for them, not for whatever the screen shows by then
 
@@ -110,14 +110,14 @@ public sealed class ReadingSession
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
 	private CancellationTokenSource? _readCancellation;
 
-	private readonly ReadTheStupidText.Application.Usage.IFallbackSink _fallbacks; // Slice 273 part B
+	private readonly Sirous.Reading.Application.Usage.IFallbackSink _fallbacks; // Slice 273 part B
 
 	private readonly UsageCounter? _usage; // Slice 351 B: a fallback in a read names the book it happened in
 
-	public ReadingSession(StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null, UsageCounter? usage = null)
+	public ReadingSession(StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, Sirous.Reading.Application.Usage.IFallbackSink? fallbacks = null, UsageCounter? usage = null)
 	{
 		_usage = usage;
-		_fallbacks = fallbacks ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
+		_fallbacks = fallbacks ?? Sirous.Reading.Application.Usage.NoFallbackSink.Instance;
 		_voicing = voicing;
 		_player = player;
 		_library = library;
@@ -665,13 +665,13 @@ public sealed class ReadingSession
 	{
 		Debug.WriteLine(line);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
 	}
 
 	// Slice 273 part B: a recording that cannot be played falls back to the book's own clips.
 	private void ReportRecordingUnplayable() =>
-		ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.RecordingUnplayable);
+		ReportFallback(Sirous.Reading.Application.Usage.FallbackArea.Speech, Sirous.Reading.Application.Usage.FallbackReason.RecordingUnplayable);
 
 	// A superseded or stopped read never alerts and never touches the current read's loading state.
 	private async Task TryStartReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
@@ -896,7 +896,7 @@ public sealed class ReadingSession
 		if (path is null)
 		{
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} has no file, slot skipped");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} has no file, slot skipped");
 #endif
 			SkipClip(read, index);
 			return;
@@ -910,16 +910,16 @@ public sealed class ReadingSession
 		catch (Exception ex)
 		{
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
 #endif
-			ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.AnimalClipPlayFailed); // Slice 273 part D: the sound is skipped; Slice 351: the player threw (the copy to the cache has animal_clip_copy_failed)
+			ReportFallback(Sirous.Reading.Application.Usage.FallbackArea.Speech, Sirous.Reading.Application.Usage.FallbackReason.AnimalClipPlayFailed); // Slice 273 part D: the sound is skipped; Slice 351: the player threw (the copy to the cache has animal_clip_copy_failed)
 			AnimalClipFiles.Discard(clip);
 			SkipClip(read, index);
 			return;
 		}
 
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} plays");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} plays");
 #endif
 		_recorded = RecordedPlay.Playing;
 		RunOnMain(() => PieceAudio?.Invoke(true)); // sound plays: an earlier silent piece's status line goes
@@ -958,7 +958,7 @@ public sealed class ReadingSession
 			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), the piece is shown for a beat");
 			if (read.Reported.Add(index))
 			{
-				ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, read); // Slice 273 part D
+				ReportFallback(Sirous.Reading.Application.Usage.FallbackArea.PremadeAudio, Sirous.Reading.Application.Usage.FallbackReason.ClipUnplayable, read); // Slice 273 part D
 			}
 
 			return false;
@@ -978,7 +978,7 @@ public sealed class ReadingSession
 	{
 		if (read.Reported.Add(index) && reason is not null)
 		{
-			ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, reason, read);
+			ReportFallback(Sirous.Reading.Application.Usage.FallbackArea.PremadeAudio, reason, read);
 		}
 	}
 
@@ -1082,7 +1082,7 @@ public sealed class ReadingSession
 		}
 
 		AudioPackLog.Write("premade clip failed while playing, the piece is shown for a beat");
-		ReportPieceFallback(read, index, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable);
+		ReportPieceFallback(read, index, Sirous.Reading.Application.Usage.FallbackReason.ClipUnplayable);
 		read.Steps[index] = PlaybackSteps.AsSilentPiece(read.Steps[index]);
 		bool wasPaused = _recorded == RecordedPlay.Paused;
 		_player.Stop();
@@ -1287,7 +1287,7 @@ internal sealed class ReadStartTrace
 	{
 		Debug.WriteLine($"{Tag} {line}");
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{Tag} {line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"{Tag} {line}");
 #endif
 	}
 }

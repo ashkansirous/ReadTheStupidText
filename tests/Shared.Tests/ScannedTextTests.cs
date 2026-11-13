@@ -1,4 +1,4 @@
-using ReadTheStupidText.Application.Images;
+using Sirous.Reading.Application.Images;
 
 namespace ReadTheStupidText.Tests;
 

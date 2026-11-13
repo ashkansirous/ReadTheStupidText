@@ -1,0 +1,371 @@
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Domain.Reading;
+using SherpaOnnx;
+
+namespace Sirous.Reading.Mobile.Shared;
+
+/// <summary>
+/// An <see cref="OfflineTts"/> disposed when its last holder releases it (Slice 55, the iOS
+/// counterpart of the Android reader's private type). The reader holds one reference while the
+/// engine is current; each read and each in-flight generation holds another.
+/// </summary>
+internal sealed class IosRefCountedTts(OfflineTts tts)
+{
+    private int _references = 1;
+    private readonly object _warmLock = new();
+    private bool _synthesized;
+    private int _active;
+    private readonly object _twinLock = new();
+    private readonly Dictionary<string, OfflineTts> _twins = new();
+    private readonly HashSet<string> _failedTwins = new();
+
+    public OfflineTts Tts { get; } = tts;
+
+    /// <summary>Slice 177: a read is about to synthesise here; waits for a warm-up in progress, and keeps a new warm-up off the engine until <see cref="EndSynthesis"/>.</summary>
+    public void BeginSynthesis()
+    {
+        lock (_warmLock)
+        {
+            _active++;
+        }
+    }
+
+    /// <summary>A synthesis begun with <see cref="BeginSynthesis"/> ended; only one that completed makes the engine warm.</summary>
+    public void EndSynthesis(bool completed)
+    {
+        lock (_warmLock)
+        {
+            _active--;
+            _synthesized |= completed;
+        }
+    }
+
+    /// <summary>Runs <paramref name="synthesize"/> only if nothing has synthesised on this engine yet and no read is synthesising on it; the engine counts as warm once it completes.</summary>
+    public void WarmOnce(Action synthesize)
+    {
+        lock (_warmLock)
+        {
+            if (_synthesized || _active > 0)
+            {
+                return;
+            }
+
+            synthesize();
+            _synthesized = true;
+        }
+    }
+
+    /// <summary>References held right now, the cache's own included.</summary>
+    public int References => Volatile.Read(ref _references);
+
+    public bool IsAlive => Volatile.Read(ref _references) > 0;
+
+    public bool TryAcquire()
+    {
+        int current;
+        do
+        {
+            current = Volatile.Read(ref _references);
+            if (current <= 0)
+            {
+                return false;
+            }
+        }
+        while (Interlocked.CompareExchange(ref _references, current + 1, current) != current);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Slice 220: runs <paramref name="use"/> on the single-thread twin for <paramref name="key"/> (the model it was
+    /// built from), built once by <paramref name="build"/> on first use. It holds the twin lock, so a slow load never
+    /// blocks the warm-up or synthesis counters and the twin cannot be disposed mid-call. A build that failed is not
+    /// retried until <see cref="ReleaseTwins"/> (the end of the read).
+    /// </summary>
+    public T WithSingleThread<T>(string key, Func<OfflineTts> build, Func<OfflineTts, T> use)
+    {
+        lock (_twinLock)
+        {
+            if (!_twins.TryGetValue(key, out OfflineTts? twin))
+            {
+                twin = BuildTwinLocked(key, build);
+            }
+
+            return use(twin);
+        }
+    }
+
+    private OfflineTts BuildTwinLocked(string key, Func<OfflineTts> build)
+    {
+        if (_failedTwins.Contains(key))
+        {
+            throw new InvalidOperationException("The single-thread engine failed to load earlier in this read.");
+        }
+
+        try
+        {
+            return _twins[key] = build();
+        }
+        catch
+        {
+            _failedTwins.Add(key);
+            throw;
+        }
+    }
+
+    /// <summary>Slice 220: disposes the single-thread twins and forgets failed builds; called when a read ends, so two models are resident only during a read that needed the rescue.</summary>
+    public void ReleaseTwins()
+    {
+        lock (_twinLock)
+        {
+            foreach (OfflineTts twin in _twins.Values)
+            {
+                twin.Dispose();
+            }
+
+            _twins.Clear();
+            _failedTwins.Clear();
+        }
+    }
+
+    public void Release()
+    {
+        if (Interlocked.Decrement(ref _references) == 0)
+        {
+            try
+            {
+                ReleaseTwins();
+            }
+            finally
+            {
+                Tts.Dispose();
+            }
+        }
+    }
+}
+
+/// <summary>
+/// An engine and the model it was built from, never changed after creation. A language change
+/// within one pack shares the <see cref="IosRefCountedTts"/>.
+/// </summary>
+internal sealed record IosBuiltEngine(IosRefCountedTts Tts, VoiceModelPaths Model) : IEngineHandle
+{
+    public bool TryAcquire() => Tts.TryAcquire();
+
+    public void Release() => Tts.Release();
+
+    // The cache holds one reference; any more is a read or generation.
+    public bool InUse => Tts.References > 1;
+}
+
+/// <summary>
+/// Builds the sherpa-onnx engine for an installed voice pack on iOS and runs one synthesis
+/// (Slice 55): Supertonic, Piper (the VITS family, phonemized with the pack's espeak-ng data)
+/// and MeloTTS, as on Android. Which engine a pack needs comes from its
+/// <see cref="VoiceModelPaths.Kind"/>, never from the platform.
+/// </summary>
+internal static class IosTtsEngine
+{
+    // Same reasoning as the Android reader: intra-op ONNX threads per synthesis, scaled to the
+    // device but capped so one Generate does not over-claim cores the concurrent chunks need.
+    private static readonly int SynthesisThreads = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
+
+    public static readonly int MaxSynthesisConcurrency =
+        Math.Clamp(Environment.ProcessorCount / SynthesisThreads, 2, 4);
+
+    // OfflineTtsGenerationConfig.Extra key that selects the Supertonic language.
+    private const string SupertonicLanguageKey = "lang";
+
+    private const string CpuProvider = "cpu";
+    private const float NormalSpeed = 1.0f;
+
+    /// <summary>
+    /// The engine for <paramref name="paths"/>: the live <paramref name="previous"/> of the same model folder
+    /// re-labelled for the new language (it shares the loaded model), otherwise a freshly built one.
+    /// </summary>
+    public static IosBuiltEngine Create(IosBuiltEngine? previous, VoiceModelPaths paths) =>
+        previous is not null && previous.Tts.TryAcquire()
+            ? new IosBuiltEngine(previous.Tts, paths)
+            : new IosBuiltEngine(new IosRefCountedTts(Build(paths, SynthesisThreads)), paths);
+
+    // Supertonic chooses its language per generation (Extra "lang"); the VITS-family models are
+    // single-language and take only the speaker id. Both come from the model the read captured,
+    // never from whatever is current now.
+    public static OfflineTtsGeneratedAudio Generate(
+        IosBuiltEngine engine, string text, int speakerId, float pace = NormalSpeed, bool singleThread = false)
+    {
+        VoiceModelPaths model = engine.Model;
+        if (model.Kind != VoiceEngineKind.Supertonic)
+        {
+            return singleThread
+                ? WithSingleThread(engine, twin => twin.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId))
+                : engine.Tts.Tts.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId);
+        }
+
+        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
+        config.Extra[SupertonicLanguageKey] = model.Language;
+        return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
+    }
+
+    /// <summary>Slice 177: <see cref="Generate"/> for a read: waits for a warm-up in progress and marks the engine warm only once it has completed.</summary>
+    public static OfflineTtsGeneratedAudio GenerateTracked(IosBuiltEngine engine, string text, int speakerId, float pace, bool singleThread = false)
+    {
+        engine.Tts.BeginSynthesis();
+        bool completed = false;
+        try
+        {
+            OfflineTtsGeneratedAudio audio = Generate(engine, text, speakerId, pace, singleThread);
+            completed = true;
+            return audio;
+        }
+        finally
+        {
+            engine.Tts.EndSynthesis(completed);
+        }
+    }
+
+    // Slice 220: builds the twin off the caller's thread, holding its own reference on the engine, so a Stop (the token)
+    // ends the wait at once; the build itself finishes in the background and the twin is kept for the next NaN take.
+    public static Task PrepareSingleThreadAsync(IosBuiltEngine engine, CancellationToken token)
+    {
+        if (!engine.TryAcquire())
+        {
+            throw new ObjectDisposedException(nameof(IosTtsEngine));
+        }
+
+        return Task.Run(() =>
+        {
+            try
+            {
+                WithSingleThread(engine, _ => true);
+            }
+            finally
+            {
+                engine.Release();
+            }
+        }).WaitAsync(token);
+    }
+
+    // Slice 220: the Kokoro engine with one ONNX thread, built on the first call (a NaN take or a probe) from this engine's own model
+    // paths, and disposed when the read ends (or with its engine).
+    private static T WithSingleThread<T>(IosBuiltEngine engine, Func<OfflineTts, T> use) =>
+        engine.Tts.WithSingleThread(TwinKey(engine.Model), () => Build(engine.Model, KokoroEngineConfig.SingleThreadCount), use);
+
+    // What Build reads for a Kokoro model: two engines sharing a tts never share a twin unless these match.
+    private static string TwinKey(VoiceModelPaths model) => $"{model.RootDir}|{model.ModelFolder}|{model.Language}";
+
+    /// <summary>Slice 220: the read ended; disposes the engine's single-thread twins off the caller's thread (a take still running on one finishes first).</summary>
+    public static void ReleaseTwinsInBackground(IosBuiltEngine engine)
+    {
+        if (engine.TryAcquire())
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    engine.Tts.ReleaseTwins();
+                }
+                finally
+                {
+                    engine.Release();
+                }
+            });
+        }
+    }
+
+    // Returning 1 tells sherpa-onnx to keep generating (0 would stop early).
+    private static int KeepGenerating(IntPtr samples, int count, float progress, IntPtr arg) => 1;
+
+    private static OfflineTts Build(VoiceModelPaths paths, int threads)
+    {
+        IosSherpaLibrary.EnsureResolver();
+        var config = new OfflineTtsConfig();
+        switch (paths.Kind)
+        {
+            case VoiceEngineKind.Supertonic:
+                ConfigureSupertonic(ref config, paths.RootDir);
+                break;
+            case VoiceEngineKind.Vits:
+                ConfigureVits(ref config, paths);
+                break;
+            case VoiceEngineKind.Melo:
+                ConfigureMelo(ref config, paths.RootDir);
+                break;
+            case VoiceEngineKind.Kokoro:
+                KokoroEngineConfig.Configure(ref config, paths.RootDir, paths.Language);
+                break;
+            default:
+                throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
+        }
+
+        config.Model.NumThreads = threads;
+        config.Model.Provider = CpuProvider;
+        RequireModelFiles(paths, config);
+        PiperTokenGuard.Require(paths); // Slice 201/303: sherpa aborts the process on a bad Piper tokens.txt; checked before the native load
+        return new OfflineTts(config);
+    }
+
+    // OfflineTtsConfig and its nested model configs are structs, so a Configure* helper must
+    // take the config by ref: a by-value copy silently drops every path. The native constructor
+    // reports a rejected config only by returning a null handle, which the C# wrapper never
+    // checks (the first Generate then logs "tts is nullptr"), so a missing model file is turned
+    // into an exception here, with the path in it.
+    private static void RequireModelFiles(VoiceModelPaths paths, OfflineTtsConfig config)
+    {
+        foreach (string file in RequiredFiles(paths.Kind, config))
+        {
+            if (string.IsNullOrEmpty(file) || !(File.Exists(file) || Directory.Exists(file)))
+            {
+                string message = $"Voice model file missing for {paths.Kind}: '{file}'.";
+                System.Diagnostics.Debug.WriteLine(message);
+                throw new FileNotFoundException(message, file);
+            }
+        }
+    }
+
+    private static string[] RequiredFiles(VoiceEngineKind kind, OfflineTtsConfig config) =>
+        kind switch
+        {
+            VoiceEngineKind.Supertonic =>
+            [
+                config.Model.Supertonic.DurationPredictor, config.Model.Supertonic.TextEncoder,
+                config.Model.Supertonic.VectorEstimator, config.Model.Supertonic.Vocoder,
+                config.Model.Supertonic.TtsJson, config.Model.Supertonic.UnicodeIndexer,
+                config.Model.Supertonic.VoiceStyle,
+            ],
+            VoiceEngineKind.Kokoro => KokoroEngineConfig.RequiredPaths(config),
+            _ => [config.Model.Vits.Model, config.Model.Vits.Tokens],
+        };
+
+    private static void ConfigureSupertonic(ref OfflineTtsConfig config, string dir)
+    {
+        config.Model.Supertonic.DurationPredictor = Path.Combine(dir, SupertonicFiles.DurationPredictor);
+        config.Model.Supertonic.TextEncoder = Path.Combine(dir, SupertonicFiles.TextEncoder);
+        config.Model.Supertonic.VectorEstimator = Path.Combine(dir, SupertonicFiles.VectorEstimator);
+        config.Model.Supertonic.Vocoder = Path.Combine(dir, SupertonicFiles.Vocoder);
+        config.Model.Supertonic.TtsJson = Path.Combine(dir, SupertonicFiles.TtsJson);
+        config.Model.Supertonic.UnicodeIndexer = Path.Combine(dir, SupertonicFiles.UnicodeIndexer);
+        config.Model.Supertonic.VoiceStyle = Path.Combine(dir, SupertonicFiles.VoiceStyle);
+    }
+
+    // Piper: the espeak-ng data directory phonemizes the text (it lives only in the pack).
+    // The voice's own model + tokens may sit in a folder of the pack (Slice 89); the data directory
+    // is shared and stays at the pack root.
+    private static void ConfigureVits(ref OfflineTtsConfig config, VoiceModelPaths paths)
+    {
+        config.Model.Vits.Model = Path.Combine(paths.ModelFolder, VitsFiles.Model);
+        config.Model.Vits.Tokens = Path.Combine(paths.ModelFolder, VitsFiles.Tokens);
+        config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
+    }
+
+    // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the
+    // upstream example uses so digits and dates are spoken as words.
+    private static void ConfigureMelo(ref OfflineTtsConfig config, string dir)
+    {
+        config.Model.Vits.Model = Path.Combine(dir, MeloFiles.Model);
+        config.Model.Vits.Lexicon = Path.Combine(dir, MeloFiles.Lexicon);
+        config.Model.Vits.Tokens = Path.Combine(dir, MeloFiles.Tokens);
+        config.Model.Vits.DictDir = Path.Combine(dir, MeloFiles.DictDir);
+        config.RuleFsts = string.Join(',', MeloFiles.RuleFsts.Select(file => Path.Combine(dir, file)));
+    }
+}

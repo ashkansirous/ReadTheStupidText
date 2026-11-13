@@ -1,6 +1,6 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Domain.Reading;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;

@@ -1,6 +1,6 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Reading;
 using Xunit;
 
 namespace ReadTheStupidText.Tests;

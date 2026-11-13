@@ -15,9 +15,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/ReadTheStupidText.Domain/**'
-      - 'src/ReadTheStupidText.Application/**'
-      - 'src/ReadTheStupidText.Documents/**'
+      - 'src/Sirous.Reading.Domain/**'
+      - 'src/Sirous.Reading.Application/**'
+      - 'src/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
@@ -30,7 +30,7 @@ on:
       - '.github/scripts/ship-targets.mjs'
       - 'src/ReadTheStupidText.App/**'
       - 'src/ReadTheStupidText.Windows.Tray/**'
-      - 'src/ReadTheStupidText.Infrastructure/**'
+      - 'src/Sirous.Reading.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'
       - '!**/*.md'

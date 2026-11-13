@@ -11,7 +11,7 @@ public static partial class StoreUpdater
 		try
 		{
 			// Slice 276: only an App Store install opens the App Store; any other install (TestFlight, unreadable) opens TestFlight, as Dino has no App Store app yet.
-			string url = IosUpdateTarget.For(ReadTheStupidText.Mobile.Shared.Crashes.CrashGate.Channel).Url;
+			string url = IosUpdateTarget.For(Sirous.Reading.Mobile.Shared.Crashes.CrashGate.Channel).Url;
 			await Launcher.Default.OpenAsync(new Uri(url));
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or FeatureNotSupportedException)

@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using DeviceContext = ReadTheStupidText.Application.Usage.DeviceContext;
+using DeviceContext = Sirous.Reading.Application.Usage.DeviceContext;
 
 namespace DinoReader.Core;
 

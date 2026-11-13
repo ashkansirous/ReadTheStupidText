@@ -27,7 +27,7 @@ public class IosPrivacyStringsTests
     [Fact]
     public void Dino_build_drops_the_scanner_source()
     {
-        string csproj = File.ReadAllText(Path.Combine(RepoRoot(), "src", "ReadTheStupidText.Mobile.Shared", "ReadTheStupidText.Mobile.Shared.csproj"));
+        string csproj = File.ReadAllText(Path.Combine(RepoRoot(), "src", "Sirous.Reading.Mobile.Shared", "Sirous.Reading.Mobile.Shared.csproj"));
         int target = csproj.IndexOf("<Target Name=\"DropSpeechEngineSources\"", StringComparison.Ordinal);
         Assert.True(target >= 0);
         int end = csproj.IndexOf("</Target>", target, StringComparison.Ordinal);
@@ -39,7 +39,7 @@ public class IosPrivacyStringsTests
     [Fact]
     public void Scanner_registration_stays_under_NO_SPEECH_ENGINES_guard()
     {
-        string source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "ReadTheStupidText.Mobile.Shared", "Platforms", "iOS", "MobileSharedServices.iOS.cs"));
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "Sirous.Reading.Mobile.Shared", "Platforms", "iOS", "MobileSharedServices.iOS.cs"));
         int registration = source.IndexOf("VisionKitDocumentScanner>", StringComparison.Ordinal);
         Assert.True(registration >= 0);
         int guardStart = source.LastIndexOf("#if !NO_SPEECH_ENGINES", registration, StringComparison.Ordinal);

@@ -2,9 +2,9 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -126,7 +126,7 @@ public sealed class ReportProblemPage : SettingsSubPage
 		_send.IsVisible = false;
 		SemanticScreenReader.Announce($"{AppResources.ReportProblem_Sent} {AppResources.ReportProblem_QuoteCode} {string.Join(' ', shown.AsEnumerable())}");
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"REPORT_PROBLEM code-shown {shown}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"REPORT_PROBLEM code-shown {shown}");
 #endif
 	}
 
@@ -171,7 +171,7 @@ public sealed class ReportProblemPage : SettingsSubPage
 		_send.Text = AppResources.ReportProblem_TryAgain;
 		SemanticScreenReader.Announce(text);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("REPORT_PROBLEM failed");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("REPORT_PROBLEM failed");
 #endif
 	}
 

@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Reading;
-using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
-using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
+using Sirous.Reading.Application.Reading;
+using UsageBuckets = Sirous.Reading.Application.Usage.UsageBuckets;
+using UsageWaitStage = Sirous.Reading.Application.Usage.UsageWaitStage;
 
 namespace DinoReader.Tests;
 
@@ -60,7 +60,7 @@ public class UsageEventTests
     public void The_batch_body_carries_the_device_object_when_given_and_nothing_about_a_model()
     {
         UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);
-        var device = new ReadTheStupidText.Application.Usage.DeviceContext(15, "phone", "arm64", "5-8", "<3");
+        var device = new Sirous.Reading.Application.Usage.DeviceContext(15, "phone", "arm64", "5-8", "<3");
 
         string json = UsageBatch.ToJson([count], device);
 

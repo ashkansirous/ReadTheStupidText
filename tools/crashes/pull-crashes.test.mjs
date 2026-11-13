@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { groupReports, topFrame, listUrl, parseListPage, collectKeys, isReportKey, daysBetween, parseTokenOutput, apiErrorMessage, safeFileName, withRetry, isRetryable } from "./pull-crashes.mjs";
+import { groupReports, normalizeRenamed, topFrame, listUrl, parseListPage, collectKeys, isReportKey, daysBetween, parseTokenOutput, apiErrorMessage, safeFileName, withRetry, isRetryable } from "./pull-crashes.mjs";
 
 const base = { app: "dino", platform: "ios", version: "1.83.0", channel: "testflight", kind: "managed", exceptionType: "System.NullReferenceException", message: "m", logTail: "a\nb\nc", minute: "2026-10-31T10:00Z" };
 
@@ -33,6 +33,41 @@ test("reports group by kind, type and top frame, biggest first, with the newest 
   assert.deepEqual(groups[0].platforms, { ios: 1, android: 1 });
   assert.equal(groups[0].newest.logTail, "newest");
   assert.match(groups[0].key, /^managed \| System\.NullReferenceException \| A\.B$/);
+});
+
+test("a crash before and after the Slice 370 rename is one group; the RTST app's own projects are not renamed", () => {
+  const before = { ...base, exceptionType: "ReadTheStupidText.Application.PackException", stack: "at ReadTheStupidText.Infrastructure.Pack.Load(String s)" };
+  const after = { ...base, exceptionType: "Sirous.Reading.Application.PackException", stack: "at Sirous.Reading.Infrastructure.Pack.Load(String s)" };
+  const groups = groupReports([before, after]);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].count, 2);
+  assert.equal(normalizeRenamed("Sirous.Reading.Mobile.Shared.X"), "ReadTheStupidText.Mobile.Shared.X");
+  assert.equal(normalizeRenamed("Sirous.Reading.Mobile.Foo"), "Sirous.Reading.Mobile.Foo");
+  assert.equal(normalizeRenamed("ReadTheStupidText.Mobile.Foo"), "ReadTheStupidText.Mobile.Foo");
+});
+
+test("every renamed project maps back; the RTST app's own namespaces and look-alike names stay distinct", () => {
+  for (const project of ["Domain", "Application", "Documents", "Infrastructure", "Mobile.Shared"]) {
+    assert.equal(normalizeRenamed(`Sirous.Reading.${project}.X`), `ReadTheStupidText.${project}.X`);
+  }
+  assert.equal(normalizeRenamed("Sirous.Reading.Mobile.X"), "Sirous.Reading.Mobile.X");
+  assert.equal(normalizeRenamed("Sirous.Reading.App.X"), "Sirous.Reading.App.X");
+  assert.equal(normalizeRenamed("ReadTheStupidText.Mobile.X"), "ReadTheStupidText.Mobile.X");
+  assert.equal(normalizeRenamed("ReadTheStupidText.App.X"), "ReadTheStupidText.App.X");
+  assert.equal(normalizeRenamed("Sirous.Reading.ApplicationX.Y"), "Sirous.Reading.ApplicationX.Y");
+  assert.notEqual(normalizeRenamed("ReadTheStupidText.Mobile.X"), normalizeRenamed("ReadTheStupidText.App.X"));
+});
+
+test("renamed types inside generic arguments and long frames map before truncation", () => {
+  assert.equal(normalizeRenamed("System.AggregateException`1[[Sirous.Reading.Domain.X, Sirous.Reading.Domain]]"), "System.AggregateException`1[[ReadTheStupidText.Domain.X, ReadTheStupidText.Domain]]");
+  assert.equal(topFrame({ stack: "at Foo.Bar<Sirous.Reading.Application.T>.M()" }), "Foo.Bar<ReadTheStupidText.Application.T>.M");
+  assert.equal(topFrame({ stack: "at Sirous.Reading.Application.X.Y()" }), topFrame({ stack: "at ReadTheStupidText.Application.X.Y()" }));
+  assert.equal(normalizeRenamed("Foo.Sirous.Reading.Domain.X"), "Foo.Sirous.Reading.Domain.X");
+  const pad = "N".repeat(140);
+  const oldFrame = topFrame({ stack: `at ReadTheStupidText.Application.${pad}.M()` });
+  const newFrame = topFrame({ stack: `at Sirous.Reading.Application.${pad}.M()` });
+  assert.equal(newFrame, oldFrame);
+  assert.equal(groupReports([{ ...base, stack: `at ReadTheStupidText.Application.${pad}.M()` }, { ...base, stack: `at Sirous.Reading.Application.${pad}.M()` }]).length, 1);
 });
 
 test("the list URL carries the prefix, a page size and the cursor only when there is one", () => {

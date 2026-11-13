@@ -1,6 +1,6 @@
 using DinoReader.Core;
 using Microsoft.Maui.Networking;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 
@@ -638,7 +638,7 @@ public sealed class ShelfAudioPacks
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
 			AudioPackLog.Write($"shelf audio: the book text check failed, packs planned as before: {ex.Message}");
-			_store.Fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.UpdateCheckFailed);
+			_store.Fallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.UpdateCheckFailed);
 			return new HashSet<string>();
 		}
 	}

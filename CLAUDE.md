@@ -41,9 +41,9 @@ Dino Reader:
 
 Shared:
 
-- `src/ReadTheStupidText.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
-- `src/ReadTheStupidText.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
-- `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
+- `src/Sirous.Reading.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
+- `src/Sirous.Reading.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
+- `src/Sirous.Reading.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
 - `tools/CLAUDE.md` — device-test tooling: `-App auto`, the build cache, device limits, phone runs.
 - `tools/desktop-vm/CLAUDE.md` — the headless Hyper-V VM desktop tests: PowerShell script gotchas.
 - `.github/CLAUDE.md` — CI quota rules, `release-rtst.yml`/`release-dino.yml`/`release-shared.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
@@ -104,7 +104,7 @@ DinoReader.Core → Application, Domain
   `ReadAloudService`. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/DinoReader.App`** — the
-  MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/DinoReader.App/CLAUDE.md`).
+  MAUI apps, sharing `src/Sirous.Reading.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/DinoReader.App/CLAUDE.md`).
 
 ## Build & run
 

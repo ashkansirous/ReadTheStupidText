@@ -1,8 +1,8 @@
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Infrastructure.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Infrastructure.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -208,7 +208,7 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
         PackDownloadOutcome outcome = await Service(server).DownloadWithAnswerAsync(PackId, null, CancellationToken.None);
 
         Assert.Equal(PackDownloadResult.Failed, outcome.Status);
-        Assert.Equal(ReadTheStupidText.Application.Net.HttpErrorKind.ServerError, outcome.ServerAnswer);
+        Assert.Equal(Sirous.Reading.Application.Net.HttpErrorKind.ServerError, outcome.ServerAnswer);
     }
 
     [Fact]
@@ -353,10 +353,10 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
         Assert.Null(service.GetInstalledPath(PackConstants.NorwegianPackId));
         Assert.Empty(service.GetInstalledVoicePacks());
 
-        Assert.Equal([(ReadTheStupidText.Application.Usage.FallbackArea.Pack, ReadTheStupidText.Application.Usage.FallbackReason.PackFailed)], sink.Reports);
+        Assert.Equal([(Sirous.Reading.Application.Usage.FallbackArea.Pack, Sirous.Reading.Application.Usage.FallbackReason.PackFailed)], sink.Reports);
     }
 
-    private sealed class RecordingSink : ReadTheStupidText.Application.Usage.IFallbackSink
+    private sealed class RecordingSink : Sirous.Reading.Application.Usage.IFallbackSink
     {
         public List<(string Area, string Reason)> Reports { get; } = [];
 

@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 using Xunit;
 
 namespace ReadTheStupidText.Tests;
