@@ -10,6 +10,12 @@ decisions behind these rules: `docs/plan/notes/dino-app-claude-md-history.md` (t
 > app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
 > projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
 
+Dino Reader also has a
+**Windows head** (Slice 67, MSIX, no tray or hotkey): Mobile.Shared's Windows target references
+`Infrastructure` for the Windows speech engines. Package it with
+`dotnet publish src/DinoReader.App -f net10.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64`
+(never a global `RuntimeIdentifier`; rules in `src/DinoReader.App/CLAUDE.md` and `.github/CLAUDE.md`).
+
 **What it is (Batch 10):** a kids' book reader, a second MAUI app sharing `Mobile.Shared` plus Domain/Application/Documents;
 `DinoReader.Core` holds the pure dialogue logic. Icons ("Book hug") live in `docs/design/dino-reader/icons/`: copy, never
 redraw. Screens are the mocks in `docs/design/dino-reader/` (`Dino Reader v2.dc.html` plus one file per later batch; the

@@ -3,6 +3,12 @@
 Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code in
 `src/ReadTheStupidText.Mobile.Shared` and the Dino Reader app have their own files. CI is in `.github/CLAUDE.md`.
 
+Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`.
+On a Windows host Mobile.Shared also restores its Windows target (needs the `maui-windows` workload);
+where only `maui-android` is installed add `-p:IncludeWindows=false` (CI's Android and iOS jobs run on
+Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=true -p:IncludeWindows=false
+-p:IncludeAndroid=false` (emulator and iOS notes in the Mobile file). CI and packaging: `.github/CLAUDE.md`; Store details: `STORE.md`.
+
 > **Multi-platform (Batch 6):** the app is Android-first via **.NET MAUI**, with
 > iOS/macOS later on the same stack. `Domain` and `Application` stay
 > framework-agnostic and are reused **unchanged** by Mobile; only platform

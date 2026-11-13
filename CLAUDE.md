@@ -6,10 +6,7 @@ the user's global instructions (which always apply). Area rules live in folder-s
 
 ## What this is
 
-**ReadTheStupidText** is a Windows 11 tray utility that reads selected/copied text aloud
-at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
-**MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
-(the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
+**ReadTheStupidText** (RTST) is a Windows 11 tray utility that reads selected/copied text aloud; its description, naming and tray build/run are in `src/ReadTheStupidText.App/CLAUDE.md`.
 
 **Two more products share this repo.** The same RTST app ships on **Android** (and iOS) via
 **.NET MAUI**, reusing `Domain`/`Application` unchanged. **Dino Reader** is a second MAUI app (a
@@ -21,27 +18,18 @@ its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (De
 > merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
 > note: docs/plan/notes/claude-md-history.md)
 
-> **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
-> spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
-> and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
-> and the StartupTask `TaskId`** are internal identifiers and stay `ReadTheStupidText`
-> — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
-> `Package.appxmanifest`; see Decision 23 in `docs/plan/notes/decisions-001-099.md` and `STORE.md`.
-
-> **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
-> app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
-> projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
-
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
 and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
 
 ## Where the rules live
 
+Read The Stupid Text:
+
 - `src/ReadTheStupidText.App/CLAUDE.md` — Windows tray, control panel, activity log, read paths, console/UIA limitation, self-contained Release, onnxruntime dedupe.
-- `src/ReadTheStupidText.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
-- `src/ReadTheStupidText.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
 - `src/ReadTheStupidText.Mobile/CLAUDE.md` — MAUI Android/iOS: namespace and `Application` gotchas, sherpa-onnx native `.so` packaging, voice packs, Scan, emulator and iOS compile notes.
-- `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
+
+Dino Reader:
+
 - `src/DinoReader.App/CLAUDE.md` — Dino Reader app: icons, the design mock, story, reading and cast rules.
 - `src/DinoReader.App/Platforms/Windows/CLAUDE.md` — Dino Reader's Windows head: package identity, key hook, ListViewBase input, Hyper-V VM test.
 - `src/DinoReader.App/Testing/CLAUDE.md` — Dino Debug test hooks (`test-store`, `import-test-book`) and Maestro log markers.
@@ -49,6 +37,12 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 - `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus), `dino-story-illustrator` (Gemini pictures, Sonnet, up to four in parallel, JS-only input, one `gemini-lock`) and `dino-story-reviewer` (Opus, after each; its pass is required to ship); the main thread only coordinates.
 - `.claude/skills/farsi-review-book/SKILL.md` — the Farsi pronunciation review, one book at a time (Slice 154): run it through the repo agent `farsi-review` (Sonnet); later books prefill the user's earlier answers.
 - `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text goes through the global `store-listing` agent (draft, then apply after the user approves).
+
+Shared:
+
+- `src/ReadTheStupidText.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
+- `src/ReadTheStupidText.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
+- `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
 - `tools/CLAUDE.md` — device-test tooling: `-App auto`, the build cache, device limits, phone runs.
 - `tools/desktop-vm/CLAUDE.md` — the headless Hyper-V VM desktop tests: PowerShell script gotchas.
 - `.github/CLAUDE.md` — CI quota rules, `release.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
@@ -109,37 +103,11 @@ DinoReader.Core → Application, Domain
   `ReadAloudService`. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/DinoReader.App`** — the
-  MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files. Dino Reader also has a
-  **Windows head** (Slice 67, MSIX, no tray or hotkey): Mobile.Shared's Windows target references
-  `Infrastructure` for the Windows speech engines. Package it with
-  `dotnet publish src/DinoReader.App -f net10.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64`
-  (never a global `RuntimeIdentifier`; rules in `src/DinoReader.App/CLAUDE.md` and `.github/CLAUDE.md`).
+  MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/DinoReader.App/CLAUDE.md`).
 
 ## Build & run
 
-```bash
-dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
-dotnet run   --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
-```
-
-Builds are **per-architecture** — always pass `-p:Platform=x64` (or `arm64`).
-Building the **app project** is the quickest way to build the whole graph.
-
-The solution (`ReadTheStupidText.slnx`) also builds directly — e.g.
-`dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens in Visual
-Studio. The class libraries are `AnyCPU` and the app is `x86;x64;ARM64`; the
-`.slnx` bridges the gap with explicit `<Configurations>` (platforms only, no
-`Any CPU`) and a per-app `<Platform Solution="Debug|x64" Project="x64" />`
-mapping, plus a `<Deploy Solution="Debug|x64" />` rule so F5 deploys the
-package. Debug through the **(Package)** profile — there is no unpackaged
-profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
-package identity).
-
-Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`.
-On a Windows host Mobile.Shared also restores its Windows target (needs the `maui-windows` workload);
-where only `maui-android` is installed add `-p:IncludeWindows=false` (CI's Android and iOS jobs run on
-Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=true -p:IncludeWindows=false
--p:IncludeAndroid=false` (emulator and iOS notes in the Mobile file). CI and packaging: `.github/CLAUDE.md`; Store details: `STORE.md`.
+Build and run commands: RTST tray in `src/ReadTheStupidText.App/CLAUDE.md`, RTST Android/iOS in `src/ReadTheStupidText.Mobile/CLAUDE.md`, Dino Reader in `src/DinoReader.App/CLAUDE.md`. The solution is `ReadTheStupidText.slnx`.
 
 **Landing site, usage counts, story store, remote config.** The Cloudflare Worker `readthestupidtext` (`wrangler.jsonc`, `worker/`, `site/`) and its rules live in `worker/CLAUDE.md`; read it before touching the Worker, `site/`, usage counts or the Dino story store.
 
