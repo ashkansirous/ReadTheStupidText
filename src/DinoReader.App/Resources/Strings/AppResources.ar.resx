@@ -361,18 +361,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>شراء {0} مقابل {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>اتصل بالإنترنت للشراء</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>في انتظار الموافقة</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>تسجيل الدخول مطلوب للحصول على هذا الكتاب.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>غير مسموح لك بالحصول على هذا الكتاب.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>لم يتم العثور على هذا الكتاب.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>عليك شراء هذا الكتاب أولاً</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>حدثت مشكلة في الاتصال بالخادم، يرجى المحاولة لاحقًا</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>عليك شراء هذا الكتاب أولاً.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقًا.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>لم يعد هذا الكتاب في المتجر.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>مجاني</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>هل اشتريت كتبًا من قبل؟</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Google هذا تعود إلى هذا الهاتف أيضًا.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Google هذا تعود إلى هذا الجهاز اللوحي أيضًا.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>الكتب التي اشتريتها بمعرّف Apple هذا تعود إلى هذا الهاتف أيضًا.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>الكتب التي اشتريتها بمعرّف Apple هذا تعود إلى هذا الجهاز اللوحي أيضًا.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Microsoft هذا تعود إلى هذا الكمبيوتر أيضًا.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>تمت استعادة كتاب واحد. إنه على الرف.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>تمت استعادة {0} كتب. أصبحت على الرف.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>لم يتم العثور على كتب مشتراة في هذا الحساب.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>المتجر يواجه مشكلة</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>استعادة المشتريات</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>استبدال رمز</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>لم تتم عملية الشراء. حاول مرة أخرى.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>بعض الكتب لها ثمن بسيط. تُشترى عبر حساب المتجر الخاص بك، ولا يُرسل إلينا أي شيء عنك أو عن طفلك.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>تم فحص مشترياتك. يمكنك الآن الحصول من المتجر على الكتب التي تملكها.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>في انتظار المتجر…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>جارٍ فحص مشترياتك…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>كتب تُستعاد من المتجر</value></data>

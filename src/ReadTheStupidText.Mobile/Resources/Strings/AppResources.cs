@@ -143,11 +143,8 @@ public static class AppResources
     public static string PackStatus_HashMismatch => Get();
     public static string PackStatus_InvalidPack => Get();
     public static string PackStatus_Failed => Get();
-    public static string PackStatus_Error_Unauthorized => Get();
-    public static string PackStatus_Error_Forbidden => Get();
-    public static string PackStatus_Error_NotFound => Get();
-    public static string PackStatus_Error_TooManyRequests => Get();
-    public static string PackStatus_Error_Server => Get();
+    public static string Error_Server => Get();
+    public static string Error_VoiceGone => Get();
     public static string PackStatus_Stopped => Get();
     public static string PackStatus_Unavailable => Get();
     public static string VoicePicker_Heading => Get();

@@ -36,13 +36,7 @@ internal static class PackSetupText
     public static string ForPanel(PackSetupState state, double progress, HttpErrorKind? failure = null) =>
         state == PackSetupState.Idle ? Windows : For(state, progress, failure);
 
-    /// <summary>Slice 357: the line for a failed pack download by what the server answered; a 5xx, any other 4xx and a 400 show the general server text.</summary>
-    public static string FailureText(HttpErrorKind kind) => kind switch
-    {
-        HttpErrorKind.Unauthorized => UiStrings.Get("Pack_Error_Unauthorized"),
-        HttpErrorKind.Forbidden => UiStrings.Get("Pack_Error_Forbidden"),
-        HttpErrorKind.NotFound => UiStrings.Get("Pack_Error_NotFound"),
-        HttpErrorKind.TooManyRequests => UiStrings.Get("Pack_Error_TooManyRequests"),
-        _ => UiStrings.Get("Pack_Error_Server"),
-    };
+    /// <summary>Slice 357 / 364 (Missing States mock RT2): the line for a failed pack download by what the server answered; a 404 says the voice is gone, every other answer shows the general server text.</summary>
+    public static string FailureText(HttpErrorKind kind) =>
+        kind == HttpErrorKind.NotFound ? UiStrings.Get("Error_VoiceGone") : UiStrings.Get("Error_Server");
 }

@@ -123,11 +123,8 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi. It carries on by itself on Wi-Fi. Tap to download now.</value></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>The voice download was corrupted. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>
-  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>Signing in is needed to download this.</value></data>
-  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>You’re not allowed to download this.</value></data>
-  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>The download wasn’t found.</value></data>
-  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>Too many tries. Wait a minute, then try again.</value></data>
-  <data name="PackStatus_Error_Server" xml:space="preserve"><value>Problem connecting to the server, please retry later</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>Something went wrong on the server. Please try again later.</value></data>
+  <data name="Error_VoiceGone" xml:space="preserve"><value>This voice isn’t available any more.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Download stopped. Reading with the phone voice. Tap to download.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>A natural voice for your language isn't available yet. Reading with the phone voice.</value></data>

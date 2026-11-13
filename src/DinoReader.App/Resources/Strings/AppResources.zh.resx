@@ -361,18 +361,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>以 {1} 购买 {0}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>请连接互联网后购买</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>等待批准</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>需要登录才能获取这本书。</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>你无权获取这本书。</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>找不到这本书。</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>你需要先购买这本书</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>尝试次数过多。请等一分钟再试。</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>连接服务器出现问题，请稍后重试</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>你需要先购买这本书。</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>服务器出了点问题，请稍后重试。</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>尝试次数过多。请等一分钟再试。</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>这本书已不在商店里。</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>免费</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>以前买过书吗？</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>用这个 Google 账号购买的书，也会回到这部手机上。</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>用这个 Google 账号购买的书，也会回到这台平板电脑上。</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>用这个 Apple ID 购买的书，也会回到这部手机上。</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>用这个 Apple ID 购买的书，也会回到这台平板电脑上。</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>用这个 Microsoft 账号购买的书，也会回到这台电脑上。</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>已恢复 1 本书，已放上书架。</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>已恢复 {0} 本书，已放上书架。</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>这个账号下没有找到已购买的书。</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>商店出了点问题</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>恢复购买</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>兑换代码</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>购买没有成功，请重试。</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>有些书需要付一点费用。购买通过你的商店账户完成，我们不会收到任何关于你或你孩子的信息。</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>已检查你的购买记录。你拥有的书现在可以从商店取回。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>正在等待商店…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>正在检查你的购买…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>

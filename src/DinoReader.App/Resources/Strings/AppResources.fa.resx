@@ -361,18 +361,25 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>خرید {0} به قیمت {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>برای خرید به اینترنت وصل شوید</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>در انتظار تأیید</value></data>
-  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>برای گرفتن این کتاب باید وارد شوید.</value></data>
-  <data name="Store_Error_Forbidden" xml:space="preserve"><value>اجازهٔ گرفتن این کتاب را ندارید.</value></data>
-  <data name="Store_Error_NotFound" xml:space="preserve"><value>این کتاب پیدا نشد.</value></data>
-  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>ابتدا باید این کتاب را بخرید</value></data>
-  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>تلاش‌های بیش از حد. یک دقیقه صبر کنید و دوباره امتحان کنید.</value></data>
-  <data name="Store_Error_Server" xml:space="preserve"><value>مشکل در اتصال به سرور، لطفاً بعداً دوباره امتحان کنید</value></data>
+  <data name="Error_PaymentRequired" xml:space="preserve"><value>ابتدا باید این کتاب را بخرید.</value></data>
+  <data name="Error_Server" xml:space="preserve"><value>مشکلی در سرور پیش آمد. لطفاً بعداً دوباره امتحان کنید.</value></data>
+  <data name="Error_TooManyTries" xml:space="preserve"><value>تلاش‌های بیش از حد. یک دقیقه صبر کنید و دوباره امتحان کنید.</value></data>
+  <data name="Error_BookGone" xml:space="preserve"><value>این کتاب دیگر در فروشگاه نیست.</value></data>
+  <data name="Store_Free" xml:space="preserve"><value>رایگان</value></data>
+  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>قبلاً کتاب خریده‌اید؟</value></data>
+  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>کتاب‌هایی که با این حساب Google خریده‌اید روی این تلفن هم برمی‌گردند.</value></data>
+  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>کتاب‌هایی که با این حساب Google خریده‌اید روی این تبلت هم برمی‌گردند.</value></data>
+  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>کتاب‌هایی که با این Apple ID خریده‌اید روی این تلفن هم برمی‌گردند.</value></data>
+  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>کتاب‌هایی که با این Apple ID خریده‌اید روی این تبلت هم برمی‌گردند.</value></data>
+  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>کتاب‌هایی که با این حساب Microsoft خریده‌اید روی این رایانه هم برمی‌گردند.</value></data>
+  <data name="Store_Restored_One" xml:space="preserve"><value>یک کتاب بازیابی شد. روی قفسه است.</value></data>
+  <data name="Store_Restored_Other" xml:space="preserve"><value>{0} کتاب بازیابی شد. روی قفسه‌اند.</value></data>
+  <data name="Store_NothingToRestore" xml:space="preserve"><value>هیچ کتاب خریداری‌شده‌ای در این حساب پیدا نشد.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>فروشگاه مشکلی دارد</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>بازیابی خریدها</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>وارد کردن کد</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>خرید انجام نشد. دوباره تلاش کنید.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>بعضی کتاب‌ها کمی هزینه دارند. آن‌ها با حساب فروشگاه شما خریده می‌شوند و هیچ چیزی درباره شما یا فرزندتان برای ما فرستاده نمی‌شود.</value></data>
-  <data name="Store_Restored" xml:space="preserve"><value>خریدهای شما بررسی شد. کتاب‌هایی که دارید اکنون از فروشگاه قابل دریافت‌اند.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>در انتظار فروشگاه…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>در حال بررسی خریدهای شما…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>کتاب‌هایی که باید از فروشگاه برگردند</value></data>
