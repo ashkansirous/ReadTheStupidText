@@ -1,6 +1,6 @@
 # Slice 357 — Server errors the user can see: standard messages per status, the server's text only on 400
 
-*Planned 2026-11-13 (user, RefineScope).*
+*In progress (wave 2026-11-13), draft PR.*
 
 **Touches:** `src/ReadTheStupidText.Application/Net/HttpErrorKind.cs` (new), `src/ReadTheStupidText.Application/Net/HttpErrorClassifier.cs` (new), `src/ReadTheStupidText.Application/Reading/PackErrorClassifier.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/Purchases/BookPurchases.cs`, `src/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `src/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs`, `src/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.Infrastructure/Reading/WindowsVoicePackService.cs`, `src/ReadTheStupidText.App/Strings/*/Resources.resw`, `worker/stories.ts`, `worker/stories.test.mjs`, `tests/ReadTheStupidText.Tests/Net/*` (new), `tests/DinoReader.Tests/*`, `src/DinoReader.App/CLAUDE.md`, `worker/CLAUDE.md`
 
