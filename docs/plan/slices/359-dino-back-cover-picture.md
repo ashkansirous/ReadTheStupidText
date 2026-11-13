@@ -44,8 +44,25 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
   never voiced, never counted. Android and iOS share the MAUI code; Windows head too.
 - [ ] 3. Every other book: draw its back cover in the picked style (illustrator, page groups of at most 5), full-size
   check, reviewer pass, version bump so installed copies update, store upload.
-- [ ] 4. Builder `check` fails a book without a back-cover picture; the skill, writer, illustrator and reviewer rules
-  make one for every new book.
+  Drawn 2026-11-13 (3.1 Pro, 1792x2400, untouched). The user rejected 6 of the first round with reasons (billy-goats:
+  "the troll is only half"; freddy: slipper on his head "not funny nor relevant"; jack: giant eye, show him small on
+  a cloud like the last page; three-little-pigs: they don't sleep outside together, pigs on one side and the wolf on
+  the other; ugly-duckling: the duckling small like the rest, not a swan; x-marks: chest "too small and is empty"),
+  then approved the full set: "all good now". The coordinator had checked only look and safety, not the story and the
+  book's own pictures; the redraw briefs required both. Approved source files, all under
+  `C:\Users\ashka\AppData\Local\Temp\claude\717394277bc5a198\a87d275d-c94c-4e10-91f5-de31b25da6a7\scratchpad\`:
+  - lion-and-mouse: `backcover-samples\sample-2.jpg` (bedtime)
+  - billy-goats-gruff, jack-and-the-beanstalk, three-little-pigs, ugly-duckling, x-marks-the-treasure,
+    freddy-and-the-slipper: `backcovers\<book>.v2.jpg` (Freddy's has a fridge-note scribble painted out; the
+    unretouched file is `freddy-and-the-slipper.v2-orig.jpg`)
+  - elves-and-shoemaker, gingerbread-man, goldilocks, little-red-hen, red-riding-hood, tortoise-and-hare,
+    town-mouse-country-mouse: `backcovers\<book>.jpg`
+  - good-enough: none yet. Its pictures are redrawn without text under Slice 350 E and its text is being rewritten
+    as dialogue (draft waiting for the user); it gets a back cover then. Until then the reader keeps Slice 237's
+    live-drawn credits page for a book without a back-cover picture, and `check` allows that only for good-enough.
+- [ ] 4. Builder `check` fails a book without a back-cover picture (good-enough excepted until it has one); the skill,
+  writer, illustrator and reviewer rules make one for every new book, and the full-size check of a back cover compares
+  it with the book's story and its own pictures (characters whole, sizes and props as in the book), not only its look.
 - [ ] 5. Tests: builder (picture packed, page not counted), Core (never in the sentence list).
 
 ## Verification
