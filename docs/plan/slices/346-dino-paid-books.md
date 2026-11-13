@@ -270,7 +270,10 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 
 - [ ] Before switch-on: fix review findings check7 #1 (Windows ticket audience and anonymous exposure), #4, #5, #6, #7, #8 (recordings of an unlisted book on restore), #9 (reviews/pr-1016-check7.md). Blocks: turning the switch on.
 - Create the products and $0.99 prices in App Store Connect, Play Console and Partner Center. Blocks: any purchase.
-- Paid apps agreement, bank and tax details. Blocks: selling on Apple, Google and Microsoft.
+- Paid apps agreement, bank and tax details. Blocks: selling on Apple, Google and Microsoft. State read live on 2026-11-13:
+  - Apple: Paid Apps agreement, bank (GBP) and W-8BEN active; a new agreement version waits for "View and Agree to Terms" at https://appstoreconnect.apple.com/business.
+  - Google: merchant account set up (the one-time products page opens); bank account verification pending (Payments profile, `.../developers/5892509739539100062/paymentssettings`); trader status declaration due 2027-02-01 (Play Console home, "Declare your trader status" card).
+  - Microsoft: no payout or tax profile (https://partner.microsoft.com/dashboard/payee/profiles/partner/manage lists none and has no create button). The docs' "Payout and tax profile assignment" page is missing from this account's Account settings; the docs name the Owner or Financial Contributor role as the likely cause (role not checked). Blocks: selling on Windows only.
 - Worker secrets `PLAY_SERVICE_ACCOUNT_JSON`, `APPLE_IAP_KEY_P8`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `MS_STORE_TENANT_ID`, `MS_STORE_CLIENT_ID`, `MS_STORE_CLIENT_SECRET` (optional `APPLE_IAP_ALLOW_SANDBOX` on a staging Worker). Blocks: the Worker confirming any purchase (without them it answers 403).
 - Republish every book's `meta.json` with `access` through `publish-store-books.mjs`. Blocks: paid books actually being sold.
 - `Platforms/iOS/Info.plist` purchase comment. Blocks: the iOS switch-on.
