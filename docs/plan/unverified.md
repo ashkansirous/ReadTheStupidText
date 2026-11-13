@@ -509,11 +509,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 204: cancelled voice pack stays cancelled ([slice](slices/204-cancelled-voice-pack-stays-cancelled.md))
 - **You:** iPhone: Dino cancelled voice pack stays cancelled; read the Stopped strings in English and Farsi.
 
+### Slice 203: Dino on the Microsoft Store: turn on automatic submissions and link it ([slice](slices/203-dino-microsoft-store-live.md))
+- **Device:** Slice 203 (PR #578): the first automatic Dino Store submission (needs the next Dino release on `main`).
+
 ### Slice 202: reader language change crash ([slice](slices/202-reader-language-change-crash.md))
 - **You:** iPhone: change the reader language; no crash.
 
 ### Slice 201: norwegian pack crash ([slice](slices/201-norwegian-pack-crash.md))
 - **Device:** Run the Maestro flow .maestro/rtst/norsk-pack-reads.yaml.
+
+### Slice 200: Check the live usage data after the store rollouts ([slice](slices/200-live-usage-data-checks.md))
+- **Device:** Slice 200 (live data checks): re-run the report after more real traffic (under 10 events per group everywhere on 2026-10-30); no rows yet for voice ... [full text](notes/2026-10-30-outstanding-detail.md#o013)
 
 ### Slice 197: dino download now tap dropped ([slice](slices/197-dino-download-now-tap-dropped.md))
 - **Device:** Slice 197 (PR #583): no stale "Downloading" status after the download ends; notification Cancel mid-download then nothing restarts; iOS TestFlight ... [full text](notes/2026-10-30-outstanding-detail.md#o016) ([slice](slices/197-dino-download-now-tap-dropped.md))
@@ -529,6 +535,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 183: pack downloads keep going when locked ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
 - **You:** Slice 183 (PR #549): iOS background session on a device (TestFlight); Dino storyteller first-download ask deferral; the dataSync timeout's silent ... [full text](notes/2026-10-30-outstanding-detail.md#o018) ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
+- **You:** Slice 183: native review of the new strings (13 machine drafts per app).
 
 ### Slice 182: pack download resumes by itself ([slice](slices/182-pack-download-resumes-by-itself.md))
 - **You:** "Waiting for Wi-Fi" on a real cellular-only phone (OCR resume dropped).
@@ -568,6 +575,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 159: dino everything in my language ([slice](slices/159-dino-everything-in-my-language.md))
 - **You:** Read the ShippedTitles and the 7 new resx keys in English and Farsi.
+
+### Slice 157: Dino: book content and the book builder out of the test project ([slice](slices/157-dino-book-content-out-of-tests.md))
+- **Device:** Slice 157 (book content out of the tests, PR #475): first main run of `publish-store` with the new builder; `ShippedTitles` edits do not reach live ... [full text](notes/2026-10-30-outstanding-detail.md#o046)
 
 ### Slice 155: dino first run intro wizard ([slice](slices/155-dino-first-run-intro-wizard.md))
 - **Device:** Slice 155: offline store step; microphone prompt on the Record step; Windows variant (title, Picture badge); iOS modal presentation; large-font ... [full text](notes/2026-10-30-outstanding-detail.md#o073) ([slice](slices/155-dino-first-run-intro-wizard.md))
