@@ -1,6 +1,6 @@
 # Slice 365 — The catalogue LF test passes on a Windows checkout
 
-*Planned 2026-11-13 (index pass). Not started.*
+*In progress (wave 2026-11-13), draft PR.*
 
 **Touches:** `worker/catalogue.test.mjs`, `.gitattributes`
 
