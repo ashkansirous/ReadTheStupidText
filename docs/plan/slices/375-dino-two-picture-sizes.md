@@ -32,8 +32,8 @@ every build and upload (BookBuilder `Books.cs:83` and `BookHash`, `publish-store
 5. **Slow connection** (the user asked; my recommendation, not objected to): a tablet or Windows PC on mobile data, a
    metered or a slow connection downloads the standard pack, then swaps in the high-res pictures by itself on Wi-Fi.
 
-Planner's choice, flagged for the user: starter books bundled in the app stay standard inside the app package (keeps the
-download from the stores small); tablets and Windows fetch their high-res pictures on Wi-Fi like decision 5.
+No book ships inside the app (Slice 261): every book, on every device, comes from the store, so these two packs cover them all.
+The Debug-only test books in `Resources/Raw/testbooks/` stay standard.
 
 ## Work
 
@@ -65,7 +65,6 @@ download from the stores small); tablets and Windows fetch their high-res pictur
 - [ ] On mobile data, a metered or a slow connection, a high-res device downloads standard first, marks the book
       "high-res pending", and swaps in the high-res pictures on Wi-Fi in the background (no loading screen; the open book
       is never swapped mid-read). Android and iOS, plus Windows' metered flag.
-- [ ] Starter books on tablets and Windows fetch their high-res pictures the same way.
 
 ## Verification
 - A: one illustrator run on a test picture shows the small copy saved beside the original and no full-size read in its
