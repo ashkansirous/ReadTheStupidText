@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (172 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/note
 | 364 | Slice 357 design pass: the 2026-11-13 Missing States mock's items (S1 Free tag and price button, S2 strip styling and `Error_*` keys, S3 Bought-books card and restore-to-shelf, RT1/RT2 rows) | planned | | | [364-server-errors-design-pass.md](docs/plan/slices/364-server-errors-design-pass.md) |
 | 365 | `worker/catalogue.test.mjs` "the page file uses LF line endings" fails on a Windows checkout (CRLF working copy); test what is committed | planned | | | [365-catalogue-lf-test-windows.md](docs/plan/slices/365-catalogue-lf-test-windows.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | planned | | | [358-dino-android-no-buy-button.md](docs/plan/slices/358-dino-android-no-buy-button.md) |
-| 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | planned | | | [359-dino-back-cover-picture.md](docs/plan/slices/359-dino-back-cover-picture.md) |
+| 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | planned (item 6 only: match the 2026-11-13 mock; items 1-5 merged #1048) | #1048 (items 1-5) | | [359-dino-back-cover-picture.md](docs/plan/slices/359-dino-back-cover-picture.md) |
 | 193 | German store listings for both apps | approved 2026-11-01; App Store done; Play needs one permission from the user ("Manage store presence" for the service account; Chrome grant refused 2026-11-07); RTST Partner Center German via Chrome (Claude) | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
 | 243 | Crash reports: keep iOS dSYMs and symbolicate, read R2 with wrangler's login, navigation/Back/lifecycle/memory log lines, one "did it crash?" command | in progress (items 3 and 5 built; 1, 2, 4, 6-8 open) | #711 (item 3), #781 (item 5) | | [243-crash-report-gaps.md](docs/plan/slices/243-crash-report-gaps.md) |
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
@@ -37,7 +37,6 @@ Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/note
 | 343 | Listening page: four Farsi voices | parked: needs the user's ear; headless night sessions have no Artifact tool to publish the listening page | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
 | 350 | Dino: high-resolution pictures for a printed Amazon book (Git LFS, `high-res/`), fixing faulty pages, one prompt per Gemini chat, stricter picture checks, Good Enough redrawn without text | in progress (Lion and Mouse done #1041; 14 books left, each needs the user's Chrome and Gemini account; B and C merged #1013) | #1013 | | [350-dino-high-res-pictures.md](docs/plan/slices/350-dino-high-res-pictures.md) |
 | 346 | Dino: four free books, the rest $0.99 each (store-account purchases, server receipt check, backups without book content) | in progress (switched on 2026-11-13; Windows purchase confirmed end to end; E1 merged #1046, E2 and E3 open; Play and App Store purchases wait on store review) | #1016, #1033, #1036, #1038, #1039, #1046 | | [346-dino-paid-books.md](docs/plan/slices/346-dino-paid-books.md) |
-| 356 | Dino illustrator: one script call per picture set-up, no per-click screenshots, fresh agent per page group, tokens and seconds per picture measured before and after | built, not yet verified | | #1035 | [356-illustrator-faster-and-cheaper.md](docs/plan/slices/356-illustrator-faster-and-cheaper.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -81,7 +80,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 316 checks across 136 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 323 checks across 137 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Fix (release failed):** the final batched release run 43293064848 (dispatch on 8eeade93, 2026-11-12 19:43Z) ended `failure`: `testflight-submit-dino` failed its upload check after altool reported a 500 then "UPLOAD SUCCEEDED" for Dino 1.124.0, and `build-ios` (RTST) was cancelled with no Mac runner, so the RTST release, Store, TestFlight and Play jobs were skipped. The next release carries the same commits; the fixes are [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) items 1 and 2.
 - **Not checked before handing over (2026-11-12):** Slices 351 and 352 add usage fields; the Play Data safety and App Store privacy answers were not read live against them. Read both before those builds go public ([Slice 351](docs/plan/slices/351-dino-usage-context-and-audio-causes.md), [Slice 352](docs/plan/slices/352-dino-screen-and-tap-events.md)).
 - **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
