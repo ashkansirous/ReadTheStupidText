@@ -1,4 +1,5 @@
 # Slice 60 — Reading with a voice per character
+**Product:** Shared
 
 *Built (wave 2026-10-21b), PR #193.*
 

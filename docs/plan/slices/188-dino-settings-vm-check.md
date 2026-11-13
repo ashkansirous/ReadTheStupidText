@@ -1,4 +1,5 @@
 ### Slice 188 — Dino Settings behind the grown-up gate as a permanent VM check
+**Product:** Dino
 
 *Built (wave 2026-10-30), PR #585.* *Planned 2026-10-29.* Follow-up of Slice 172 ("make `dino-settings.ps1` a permanent VM check").
 

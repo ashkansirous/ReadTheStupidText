@@ -1,4 +1,5 @@
 # Slice 38 — Reading text box: zoom + fit-to-box pagination
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

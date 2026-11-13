@@ -1,4 +1,5 @@
 # Slice 93 — Dino backup file and a first run that asks the language
+**Product:** Dino
 
 *Built 2026-10-23, not yet fully verified (Windows and iOS not run; see Not yet verified).* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).

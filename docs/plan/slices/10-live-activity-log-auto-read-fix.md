@@ -1,4 +1,5 @@
 # Slice 10 — Live activity log + auto-read fix
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

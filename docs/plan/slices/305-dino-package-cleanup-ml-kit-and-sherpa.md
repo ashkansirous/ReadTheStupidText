@@ -1,4 +1,5 @@
 # Slice 305 — Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages
+**Product:** Dino
 
 *Built 2026-11-07 (wave 3, night 2026-11-07-1412, PR #920), merged as PR #920 (d2ac88fd). Android checked on the emulator; iOS and Windows compiled only. Planned 2026-11-07.* From [Slice 278](278-dino-store-books-only.md) A4 and B4. ML Kit (Translate, TextRecognition, DocumentScanner; iOS MLKitTranslate) still reach the Dino Android and iOS packages through Mobile.Shared/Documents, though Dino no longer calls them. The sherpa-onnx/onnxruntime natives and the shared speech registrations also still reach Dino through Mobile.Shared; Dino's csproj keeps its three sherpa/onnxruntime imports (`AndroidSherpaPackaging.props`, `IosSherpaPackaging.props`, the WinML target) to neutralise them. Moved from plan.md's *Outstanding work*. Android and iOS in the same slice (repo rule): the Dino Windows head is part of it too because of the WinML target.
 

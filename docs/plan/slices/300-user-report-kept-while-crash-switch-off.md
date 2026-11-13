@@ -1,4 +1,5 @@
 # Slice 300 — A kept problem report must not be wiped at next start when the remote crash switch is off
+**Product:** Shared
 
 *Built 2026-11-07 (wave 3, night 2026-11-07-1412), merged as PR #919 (234b6290); emulator and iOS device checks not yet run.* *Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
 

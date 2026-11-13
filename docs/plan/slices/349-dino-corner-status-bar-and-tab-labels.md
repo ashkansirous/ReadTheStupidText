@@ -1,4 +1,5 @@
 # Slice 349 — Dino: grown-ups corner status bar and clipped tab labels
+**Product:** Dino
 
 *Built, merged as PR #1015 (699f8d06) and PR #1021 (a1516498); all items built. Not yet verified on a TestFlight upload.*
 

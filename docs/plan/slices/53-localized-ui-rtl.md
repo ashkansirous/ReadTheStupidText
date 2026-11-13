@@ -1,4 +1,5 @@
 # Slice 53 — Android: localized UI and right-to-left layout
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #194.* Emulator-checked on RTST_Test on 2026-10-21 (Farsi and Portuguese walked through); see "Verified on the emulator". Not yet verified: native-speaker read, Arabic RTL.
 

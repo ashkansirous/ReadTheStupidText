@@ -1,4 +1,5 @@
 # Slice 35 — Fix the stuck elapsed/total read-through timer
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

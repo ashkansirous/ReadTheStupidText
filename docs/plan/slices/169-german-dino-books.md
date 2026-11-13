@@ -1,4 +1,5 @@
 # Slice 169 — German translations for all 15 Dino books
+**Product:** Dino
 
 *Built 2026-10-27; German not yet heard aloud.* Dino Book Reader, Android, iOS and Windows. After Slice 168 merges (needs the German rule set, roster and voice).
 

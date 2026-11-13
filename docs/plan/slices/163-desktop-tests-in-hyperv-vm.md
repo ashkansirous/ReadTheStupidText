@@ -1,4 +1,5 @@
 # Slice 163 — Windows desktop tests in a headless Hyper-V VM
+**Product:** Shared
 
 *Built 2026-10-28, not yet fully verified (see Not yet verified).* Batch 36 (fast device tests), RTST tray app and the Dino Reader Windows head. Decision 165.
 

@@ -1,4 +1,5 @@
 # Slice 170 — Tray panel: every Controls button fits
+**Product:** RTST
 
 *Built 2026-10-27, not yet verified on the desktop (no screen tests until Slice 163).* Read The Stupid Text, Windows tray control panel only (no Android/iOS surface: the phone app has no Controls row).
 

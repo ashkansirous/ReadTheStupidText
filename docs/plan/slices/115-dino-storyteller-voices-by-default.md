@@ -1,4 +1,5 @@
 # Slice 115 — Dino: storyteller voices by default
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified on an emulator.* *Planned 2026-10-25*, from the user's report that Dino "is stuck to the old voices": the cast still
 shows Demiurge and Momonga after the storyteller pack is downloaded, and "Use Dino's first voices"

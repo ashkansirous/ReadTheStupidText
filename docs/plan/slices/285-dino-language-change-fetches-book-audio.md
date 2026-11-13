@@ -1,4 +1,5 @@
 ### Slice 285 — Dino: changing the app language fetches the books' sound in that language
+**Product:** Dino
 
 *Merged 2026-11-07: part 1 as PR #886 (50b61b3f), part 2 as PR #890 (1869b64e).*
 

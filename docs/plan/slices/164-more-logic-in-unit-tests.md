@@ -1,4 +1,5 @@
 # Slice 164 — Move more logic out of UI code into unit tests
+**Product:** Shared
 
 *Built 2026-10-27 (first batch; follow-ups listed below), not verified on a device (pure moves, unit-tested).* Batch 36 (fast device tests), RTST (Windows and Mobile) and Dino Reader. Decision 165.
 

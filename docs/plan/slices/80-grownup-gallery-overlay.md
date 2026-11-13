@@ -1,4 +1,5 @@
 # Slice 80 — Dino Reader: grown-up mode is the kids' gallery with an edit overlay
+**Product:** Dino
 
 *Built 2026-10-22 (wave 2026-10-22), PR #241. Dino 393 tests pass; Dino Android and Windows x64 build; emulator RTST_Test passed. Not yet verified on Windows Dino or TalkBack.*
 

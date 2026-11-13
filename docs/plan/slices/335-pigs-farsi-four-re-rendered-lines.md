@@ -1,4 +1,5 @@
 # Slice 335: Listening page: Pigs Farsi: four re-rendered lines
+**Product:** Dino
 
 *Built 2026-11-09 (branch `fix/334-335-pigs`, merged as PR #991, 3c98f43): fix done, user confirmed by ear on the second listen; verification complete.*
 

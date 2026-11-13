@@ -1,4 +1,5 @@
 ### Slice 253 — Final-loop leftovers, night 2026-11-01-2355: device-test harness gaps and two unrun checks
+**Product:** Shared
 
 *Parked 2026-11-02 by the final feedback loop of night 2026-11-01-2355 (note: `docs/plan/notes/2026-11-01-2355-feedback-loop.md`): `parked: feedback loop, waits for the user`. Repo code found by the loop is never built unreviewed; the user un-parks it.*
 

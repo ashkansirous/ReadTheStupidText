@@ -1,4 +1,5 @@
 # Slice 91 — Dino stories as packages, three starter stories, developer export
+**Product:** Dino
 
 *Built 2026-10-23, device-tested on the emulator; re-import on a device not yet verified.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).

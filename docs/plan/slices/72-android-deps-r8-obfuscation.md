@@ -1,4 +1,5 @@
 # Slice 72 — Android dependencies to latest, R8 shrinking and obfuscation
+**Product:** Shared
 
 *Built 2026-10-21 (PR #220, 19fea15); not yet verified.*
 

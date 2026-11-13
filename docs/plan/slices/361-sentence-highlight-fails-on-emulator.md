@@ -1,4 +1,5 @@
 # Slice 361 — RTST `sentence-highlight` Maestro flow fails on the emulator
+**Product:** RTST
 
 *Planned 2026-11-13 (found by the 2026-11-13 emulator run).*
 

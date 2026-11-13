@@ -1,4 +1,5 @@
 # Slice 265 — Dino: pre-made audio clips in Git LFS; book changes only publish to the store
+**Product:** Dino
 
 *Built 2026-11-04, merged as PR #810 (61b9d48d). The clips shipped in 8 content-only PRs #815-#822 (chore/s265-clips-1..8; last merge 4e1480a3), so they are in. The clips are not in this PR (see Changed while building); first real runs of `dino-store.yml` and `packs.yml` not yet seen.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
 

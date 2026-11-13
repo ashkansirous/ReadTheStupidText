@@ -1,4 +1,5 @@
 # Slice 340: Listening page: Mid-book speed change on a phone
+**Product:** Dino
 
 *Built 2026-11-09, merged as PR #985 (96a479d5); fix 1 (slowest speed 0.8x) was the only fix. Page: https://claude.ai/artifact/NWRNCx8GhfZneYoZ4Gt3NQ.* Clips: Dino Three Little Pigs page 1 at 1x, 0.6x and 1.2x, recorded with `scrcpy --audio-source=playback` over wireless adb. A mid-read speed change is no longer possible: reading stops when the page is left, so the page compares the three speeds instead.
 

@@ -1,4 +1,5 @@
 # Slice 302 — Slice 239 leftovers: renamed store package downloaded twice, `dino-store.yml` paths
+**Product:** Shared
 
 *Built (wave 2026-11-07, night 2026-11-07-1412), merged as PR #906 (3713b1bb).* Planned 2026-11-07. Two low items from [Slice 239](239-dino-store-book-without-app-build.md), moved from plan.md's *Outstanding work*.
 

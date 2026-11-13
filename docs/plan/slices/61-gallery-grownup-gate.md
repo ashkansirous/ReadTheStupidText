@@ -1,4 +1,5 @@
 # Slice 61 — Gallery, stories on the device, grown-up gate
+**Product:** Dino
 
 *Built (wave 2026-10-21b), PR #198.*
 

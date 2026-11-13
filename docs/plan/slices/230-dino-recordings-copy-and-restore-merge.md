@@ -1,4 +1,5 @@
 ### Slice 230 — Dino: say plainly that recordings stay on the phone, and restore brings them back
+**Product:** Dino
 
 *Built 2026-11-01, merged as PR #693 (b2503597). Emulator-checked (emulator-5554), not yet tried on iOS or by ear (see Not yet verified).* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
 

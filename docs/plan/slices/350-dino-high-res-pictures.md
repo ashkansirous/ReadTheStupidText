@@ -1,4 +1,5 @@
 ### Slice 350 — Dino: high-resolution pictures for a printed Amazon book, fixing the faulty pages
+**Product:** Dino
 
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): parts D and E need the user's Chrome and Gemini account (B and C merged #1013; A done 2026-11-13, model 3.1 Pro). A night wave that hits the same blocker parks it again with that reason.*
 

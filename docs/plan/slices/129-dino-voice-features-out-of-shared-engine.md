@@ -1,4 +1,5 @@
 # Slice 129 — Dino voice features out of the shared speech engine
+**Product:** Dino
 
 *Built 2026-10-25 (PR #364), not yet verified on a device.*
 

@@ -1,4 +1,5 @@
 # Slice 99 — RTST phone: a minimal main page and a Settings page
+**Product:** RTST
 
 *Built 2026-10-24 (PR #279), emulator-checked on RTST_Test the same day.* Planned 2026-10-24, from the user's report: "I gave Read The Stupid Text to my dad and my wife's dad,
 and they did not know what to do with it. The page is very crowded, and they didn't even see the add

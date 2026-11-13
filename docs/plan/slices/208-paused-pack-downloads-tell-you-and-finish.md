@@ -1,4 +1,5 @@
 ### Slice 208 — Paused pack downloads tell you, and half-finished ones finish
+**Product:** Shared
 
 *Built 2026-10-31, merged as PR #646 (f34b42a); device checks mostly not yet run (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 183, from the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md).
 

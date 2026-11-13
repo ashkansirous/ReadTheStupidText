@@ -1,4 +1,5 @@
 # Slice 82 — The phone voice reads in the text's language, and is only offered when it can
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #243. Emulator-verified on RTST_Test (see Not yet verified for the rest).*
 

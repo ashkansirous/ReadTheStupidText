@@ -1,4 +1,5 @@
 # Slice 20 — Text sanitizer (redact/simplify noise)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

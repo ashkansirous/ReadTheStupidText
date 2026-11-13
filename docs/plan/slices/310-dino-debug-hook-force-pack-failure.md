@@ -1,4 +1,5 @@
 # Slice 310 — Dino Debug hook to force a voice-pack download failure
+**Product:** Dino
 
 *Built 2026-11-07 (wave 2026-11-07, PR #925, merged as 4cda30ce). Android emulator flows pass; iOS not yet verified.* Planned 2026-11-07. Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. It was "worth adding with Slice 187" and 187 shipped without it. Moved from plan.md's *Built but not verified*. Debug builds only; the hook must never exist in a Release build and never reach production analytics (`UsageEligibility` already blocks Debug).
 

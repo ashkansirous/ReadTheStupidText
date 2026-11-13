@@ -1,4 +1,5 @@
 # Slice 74 — Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk
+**Product:** Dino
 
 *Built 2026-10-21 (PR #219, merge d5b56ad); not yet verified, see below.*
 

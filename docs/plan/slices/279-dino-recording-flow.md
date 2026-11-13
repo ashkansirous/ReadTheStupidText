@@ -1,4 +1,5 @@
 # Slice 279 — Dino: recording your own voice, one intro page, then per character or whole page
+**Product:** Dino
 
 *Built 2026-11-06 (wave 32), merged as PR #867 (000e1e26). Emulator and Windows VM checks pass; iPhone 8 / iOS and a real Windows microphone are not yet verified (see the end of this file).* Dino Reader only, Android, iOS and the Windows head the same in the same slice.
 

@@ -1,4 +1,5 @@
 # Slice 316: Gaps found by the unverified-checks triage
+**Product:** Shared
 
 *Built 2026-11-08 (wave 2026-11-08), merged as PR #946 (0d2b0b6f); device checks partly run on emulator 1, the rest under Not yet verified.* The [triage of `unverified.md`](../notes/2026-11-08-unverified-triage.md) found lines that were not device checks but real missing pieces. They move here so they get built instead of waiting for a device run that can never close them. Slice 307 item 10 (`phone-network-guard.mjs`) was also one; it stays in plan.md's *Outstanding work*, where it is already tracked.
 

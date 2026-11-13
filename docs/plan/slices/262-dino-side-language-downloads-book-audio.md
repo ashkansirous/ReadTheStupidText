@@ -1,4 +1,5 @@
 # Slice 262 — Dino: adding a second language downloads the shelf books' audio in it
+**Product:** Dino
 
 *Built 2026-11-04 (wave 2026-11-04), merged as PR #813 (197e467c); Android emulator runs only, iOS not run (see Not yet verified).* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
 

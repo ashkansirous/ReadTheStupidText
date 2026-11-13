@@ -1,4 +1,5 @@
 # Slice 283 — Dino: a Sonos music service for the store books (anonymous, no login)
+**Product:** Dino
 
 *Code built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged as PR #879 (a0687a11); user steps open (Sonos partner account, submission, sandbox, Self Test, a play on their Sonos).* Server only (Cloudflare Worker); the apps do not change.
 

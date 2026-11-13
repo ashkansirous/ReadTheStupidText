@@ -1,4 +1,5 @@
 # Slice 101 — RTST phone: wizard page 2, check the text, translate, read
+**Product:** RTST
 
 *Built 2026-10-24 (PR #297), not yet verified on a device.* Planned 2026-10-24, from the user's request: "Wizard page 2 shows the captured text in a text box and
 lets people edit it. The text box should be big so they see as much as possible, plus a checkbox, if it

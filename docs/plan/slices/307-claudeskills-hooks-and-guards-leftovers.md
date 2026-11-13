@@ -1,4 +1,5 @@
 # Slice 307 — ClaudeSkills hooks and guards leftovers
+**Product:** Shared
 
 *Built 2026-11-07, merged as PR ashkansirous/ClaudeSkills#186 (cdbc54b7; `install.ps1` exit 0). Item 10 not done. Not yet verified: see the end of this file.* Built in the ClaudeSkills repo (`D:\ClaudeSkills`), in its own worktree and PR. This repo holds the record. Moved from plan.md's *Outstanding work*: every other ClaudeSkills tooling bullet (feedback loops 2026-10-31-1301 final, 2026-11-01-0859 rounds 1-2, 2026-11-03-2349 final, 2026-11-06-0042).
 

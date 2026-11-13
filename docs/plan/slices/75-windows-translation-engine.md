@@ -1,4 +1,5 @@
 # Slice 75 — Windows translation engine
+**Product:** RTST
 
 *Built 2026-10-21 (PR #223, eab34d7); not yet verified.*
 

@@ -1,4 +1,5 @@
 ### Slice 249 — Dino: "Report a problem" in the grown-ups' corner sends the app's recent log, with a code to quote
+**Product:** Dino
 
 *Built 2026-11-04, merged as PR #781 (85d78533). Items 1-7 built; device run on the Android emulator passed; TestFlight and iOS not yet tried.* (Planned 2026-11-02.) Store forms done, checked live 2026-11-06 in Chrome: Play Data safety (Dino) already has App info and performance > Crash logs and Diagnostics ticked; App Store Connect App Privacy (Dino) already lists Other Diagnostic Data (published 5 days ago); `src/DinoReader.App/Platforms/iOS/Resources/PrivacyInfo.xcprivacy` already declares `NSPrivacyCollectedDataTypeOtherDiagnosticData`, twice (lines 23 and 59), the duplicate goes in [Slice 275](275-night-2026-11-06-0042-leftovers.md) item 10.
 

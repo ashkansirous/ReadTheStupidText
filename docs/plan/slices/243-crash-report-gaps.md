@@ -1,4 +1,5 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
+**Product:** Shared
 
 *In progress (2026-11-01): item 3 built.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a

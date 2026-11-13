@@ -1,4 +1,5 @@
 # Slice 149 — Never drop a short word: catch silent output from the voices
+**Product:** Shared
 
 *Built 2026-10-26 (wave PR #401); emulator Farsi read passed 2026-10-26 (logs only, not heard).*
 

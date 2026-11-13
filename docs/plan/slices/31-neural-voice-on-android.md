@@ -1,4 +1,5 @@
 # Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

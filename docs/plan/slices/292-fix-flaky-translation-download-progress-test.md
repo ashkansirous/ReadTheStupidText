@@ -1,4 +1,5 @@
 # Slice 292 — Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading`
+**Product:** RTST
 
 *Built 2026-11-07 (wave 2026-11-07, PR #902), merged as PR #902 (32e690e5); the 200-run loop is not yet verified (25 runs passed).* Test only (unless the session's progress reporting needs a synchronous seam). Moved from plan.md's *Outstanding work*.
 

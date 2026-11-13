@@ -1,4 +1,5 @@
 # Slice 303 — Slice 201 review leftovers that change behaviour
+**Product:** RTST
 
 *Built 2026-11-07 (wave 3, night 2026-11-07-1412), merged as PR #921 (6c487973); Windows read path, iOS device and a real packs.yml run not yet verified.* *Planned 2026-11-07.* Four items from [Slice 201](201-norwegian-pack-crash.md)'s review, listed in plan.md's *Outstanding work* and in the slice file. Moved here.
 

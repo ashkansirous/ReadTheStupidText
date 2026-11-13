@@ -1,4 +1,5 @@
 # Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run
+**Product:** Shared
 
 *Built 2026-11-08, merged as PR #961 (de1ae651); stall-return-overlay open (follow-up slice), phone and iOS checks not yet run.* The 2026-11-08 device run ([record](../notes/2026-11-08-unverified-triage.md), section "The 2026-11-08 device run") found checks and flows that cannot pass or cannot run for test-side reasons, and checks that need a Debug test hook that does not exist. The user gave a second 3-hour device session to clear what is left ("if not you have them all for another 3 hors"). Fixing these lets those open checks run. Per-row evidence: `reviews/triage/devrun-emu.tsv`, `devrun-phone.tsv`, `devrun-vm.tsv` and the `*-bugs.md` files next to them (under the worktrees folder); the plan rows with L-ids are in `reviews/triage/device-plan.md`.
 

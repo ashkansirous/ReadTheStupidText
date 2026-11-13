@@ -1,4 +1,5 @@
 # Slice 177 — Dino: slow speech for the first reads after the app starts
+**Product:** Dino
 
 *Built 2026-10-28 on the emulator; Pixel and iOS timing not yet verified.* Batch 38 (test gaps found 2026-10-28), Dino Reader (Android and iOS). After Slice 175 (it needs the
 `ENGINE_READY` and `CHUNK_SYNTH` markers).

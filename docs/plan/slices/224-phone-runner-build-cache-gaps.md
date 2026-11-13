@@ -1,4 +1,5 @@
 ### Slice 224 — Phone runner: build-cache gaps from the 2026-10-31-1000 night, round 1
+**Product:** Shared
 
 *Built (wave 2026-11-01); merged as PR #682 (f8a5430).* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1000-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 

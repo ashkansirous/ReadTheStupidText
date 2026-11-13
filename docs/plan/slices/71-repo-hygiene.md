@@ -1,4 +1,5 @@
 # Slice 71 — Repo hygiene and the Drive mirror
+**Product:** Shared
 
 *Built (wave 2026-10-20b), PR #184.*
 

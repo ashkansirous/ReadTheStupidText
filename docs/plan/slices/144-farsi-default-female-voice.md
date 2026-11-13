@@ -1,4 +1,5 @@
 # Slice 144 — Farsi: the female voice is the default, the literary voice leaves the cast
+**Product:** Dino
 
 *Built 2026-10-26 (wave PR #384), not yet verified by ear or on a device.*
 

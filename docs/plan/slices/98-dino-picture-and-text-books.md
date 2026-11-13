@@ -1,4 +1,5 @@
 # Slice 98 — Picture + text books: a picture per page, the text beside it
+**Product:** Dino
 
 *Built 2026-10-24 (PR #285), not yet verified on the emulator, the Windows head or by a native read of the strings.*
 

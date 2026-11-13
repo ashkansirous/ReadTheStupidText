@@ -1,4 +1,5 @@
 # Slice 364 — Slice 357 design pass: the Missing States mock's items
+**Product:** Dino
 
 *Built 2026-11-13, merged as PR #1062 (96133a3e). Part A and the Part C strings are built; RT1/RT2 row layouts are not (see *Waiting on the user*). Slice 357's file is not ticked: the 357 mock items built here are listed under *Work*.*
 

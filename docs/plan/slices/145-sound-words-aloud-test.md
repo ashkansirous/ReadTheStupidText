@@ -1,4 +1,5 @@
 # Slice 145 — Which sound-word spellings sound right when read aloud
+**Product:** Dino
 
 *Built 2026-10-26 (wave PR #385), not yet verified: the user's listen is still open. Runs before Slice 146.*
 

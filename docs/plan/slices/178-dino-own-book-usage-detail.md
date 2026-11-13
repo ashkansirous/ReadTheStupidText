@@ -1,4 +1,5 @@
 # Slice 178 — Dino: count how big an own book is and how it really came in
+**Product:** Dino
 
 *Built 2026-10-29 (PR #547), not yet verified on a device for pdf, docx, photo and scan.* Dino Reader (Android, iOS and Windows: the code is shared in `DinoReader.App`, so all heads get it in one change).
 Asked for by the user on 2026-10-28 after an analytics check.

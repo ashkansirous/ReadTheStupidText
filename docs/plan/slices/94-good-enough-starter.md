@@ -1,4 +1,5 @@
 # Slice 94 — "Good Enough" ships as a starter story
+**Product:** Dino
 
 *Built 2026-10-23, emulator-tested.* Planned 2026-10-23, from the user's request "I want my book to be available by default".
 

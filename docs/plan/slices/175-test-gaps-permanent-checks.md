@@ -1,4 +1,5 @@
 # Slice 175 — Close the test gaps: permanent checks, a Dino page hook, finer timing, the VM image
+**Product:** Shared
 
 *Built 2026-10-28 (PR #517); VM items done by PR #523, phone timing not yet verified.* Batch 38 (test gaps found 2026-10-28), tooling for both apps; Debug-only hooks on Android and iOS.
 After Slices 163 and 165.

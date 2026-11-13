@@ -1,4 +1,5 @@
 ### Slice 196 — Dino: each book opens in the view that fits it
+**Product:** Dino
 
 *Built (wave 2026-10-30), PR #575.*
 

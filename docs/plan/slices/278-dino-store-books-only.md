@@ -1,4 +1,5 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
+**Product:** Dino
 
 *Part A merged as PR #859 (09e2e892), not yet verified on every platform (see Not yet verified below). Part B merged as PR #863 (61fa6307), not yet verified on iOS. Part C merged as PR #862 (a854c8ed). All three parts built.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,

@@ -1,4 +1,5 @@
 # Slice 256 — Dino: `dump-sentences` works for picture books (Good Enough), so it gets Gemini audio
+**Product:** Dino
 
 *Built 2026-11-04 (items 1-2; item 3 render not run), merged as PR #782 (5630087).* (Planned 2026-11-03.) Dino Reader tooling only. Found while casting the store books for Slice 246: `dotnet run --project
 tools/DinoReader.BookBuilder -- dump-sentences good-enough --lang fa` exits 1 with "Good Enough has 1 pages but 10

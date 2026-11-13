@@ -1,4 +1,5 @@
 # Slice 176 — Reading text that is only spaces must not throw
+**Product:** RTST
 
 *Built 2026-10-28, not yet verified on the user's phone or an iOS run.* Batch 38 (test gaps found 2026-10-28), both apps, Android and iOS (and the Windows reader, if it
 shares the cause).

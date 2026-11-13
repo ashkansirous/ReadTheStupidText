@@ -1,4 +1,5 @@
 ### Slice 204 — A voice pack the user cancelled stays cancelled after a restart
+**Product:** Shared
 
 *Built (wave 2026-10-30), PR #588.* *Planned 2026-10-30.* Follow-up to Slice 186 (found on the S21, 2026-10-30).
 

@@ -1,4 +1,5 @@
 # Slice 161 — One warm headless x86_64 emulator, with an x86_64 Debug build
+**Product:** Shared
 
 *Built 2026-10-27 (wave 2026-10-27), not yet fully verified; see Not yet verified.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165.
 

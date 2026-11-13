@@ -1,4 +1,5 @@
 ### Slice 199 — Unit tests for the test-hook launch keys, BookMatch and the phone timing parser
+**Product:** Shared
 
 *Built (wave 2026-10-30), PR #586.* *Planned 2026-10-29.* Tooling only, no app behaviour change. Gap left in Slice 175 (*Not yet verified*).
 

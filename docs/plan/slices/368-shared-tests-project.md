@@ -1,4 +1,5 @@
 # Slice 368 — Tests for the shared code in their own test project
+**Product:** Shared
 
 *Built 2026-11-13 (wave 2026-11-13), merged as PR #1078 (05b25f25). The new `release.yml` gates and `tests.yml` jobs have not run on GitHub yet.*
 

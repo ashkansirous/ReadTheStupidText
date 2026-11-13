@@ -1,4 +1,5 @@
 ### Slice 209 — Test hooks for language, voice, Translate and a staged Dino book update
+**Product:** Shared
 
 *Built 2026-10-31, merged as PR #644 (f2b8fec); verified on the emulator and the S21 (2026-10-31), iOS hooks compile-checked only.* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md) and Slice 206. Tooling: Debug builds only, no Release behaviour change.
 

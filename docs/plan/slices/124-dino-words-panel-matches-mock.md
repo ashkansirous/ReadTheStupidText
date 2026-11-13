@@ -1,4 +1,5 @@
 # Slice 124 — Dino: the words panel and its switch match the Batch 25 mock
+**Product:** Dino
 
 *Built 2026-10-25, not yet checked on an emulator (943 tests green, Android build clean).* Dino Reader only; RTST is not touched.
 

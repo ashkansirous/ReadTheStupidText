@@ -1,4 +1,5 @@
 ### Slice 242 — Leftovers from night 2026-11-01-0859 round 4 (run markers, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check)
+**Product:** Shared
 
 *Built 2026-11-02: every item done or dropped (item 1 dropped by the user; 2-5 and 7 PR #727, 6 PR #731 (6038884b)); merged.* Written 2026-11-01 by the round 4 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w4.md)). Parked until 2026-11-01 by the round 4 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 

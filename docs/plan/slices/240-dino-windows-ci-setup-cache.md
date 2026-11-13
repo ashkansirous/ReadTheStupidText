@@ -1,4 +1,5 @@
 # Slice 240 — Dino Reader Windows CI: cache the SDK, workload and NuGet packages
+**Product:** Dino
 
 *Built 2026-11-01, merged as PR #702 (4e94d766, 21:22 UTC) plus hotfix PR #704 (880ef8a4, 21:44 UTC); the cache hit on a run on `main` is not yet verified.* Planned 2026-11-01, from the user: "fix the caching problem for windows build and setup, specially installing maui and all the rest".
 

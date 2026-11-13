@@ -1,4 +1,5 @@
 # Slice 246 — Dino: store books read with pre-made audio from the best voice
+**Product:** Dino
 
 *Planned 2026-11-01.* From the user, about Farsi on the iPhone ("it even pronounces the sukun ... isn't there a tehrani
 accent?") and the vendors Google lists: "emotions and dedicated Tehrani Standard neural voice option are crucial for this

@@ -1,4 +1,5 @@
 # Slice 143 — One shared wait overlay; Dino shows it on every wait
+**Product:** Shared
 
 *Built 2026-10-26 (wave PR #383); emulator checks passed 2026-10-26.*
 

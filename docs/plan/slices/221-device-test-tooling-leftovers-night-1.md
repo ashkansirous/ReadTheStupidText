@@ -1,4 +1,5 @@
 ### Slice 221 — Device-test tooling leftovers from the 2026-10-30-2100 night, round 1
+**Product:** Shared
 
 *Built 2026-11-01, merged as PR #694 (f9208c1c); items 1, 2 and the lint run passed on emulator-5556, items 4 and 6 are not yet tried on GitHub / the real phone (see Not yet verified).* Written 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 

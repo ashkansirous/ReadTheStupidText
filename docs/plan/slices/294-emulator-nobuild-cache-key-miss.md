@@ -1,4 +1,5 @@
 # Slice 294 — The `-NoBuild` cache-key miss in the emulator runner
+**Product:** Shared
 
 *Built 2026-11-07 (wave 2026-11-07), merged as PR #900 (87126e55); verified on the emulator, cause still not proven.* *Planned 2026-11-07.* Slice 275 item 4, open: `run-flows -NoBuild` once computed a different build-cache key than `install-debug -BuildOnly` in the same worktree with no source change between them (63d09e94b4b3 versus 95de159d430d). Source: [Slice 275](275-night-2026-11-06-0042-leftovers.md) item 4 (half done: `tools/emulator/build-cache.ps1` prints the key's inputs on a miss; on 2026-11-06 `-NoBuild` hit the cache for both apps, key `78daf6ab6d08`). Moved from plan.md's *Outstanding work*. Tooling only; no app change.
 

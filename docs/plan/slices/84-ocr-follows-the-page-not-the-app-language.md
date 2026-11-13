@@ -1,4 +1,5 @@
 # Slice 84 — Scan reads the page in the page's script, whatever the app language
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #246; on-device checks not yet verified.*
 

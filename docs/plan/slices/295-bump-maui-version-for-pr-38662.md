@@ -1,4 +1,5 @@
 # Slice 295 — Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships
+**Product:** Shared
 
 **Status (2026-11-13): built (merged as PR #1050, a5310321), not verified; do not re-park.** MAUI 10.0.130 is on NuGet (read 2026-11-13 11:50Z) and its release notes list #38662 as a cherry-pick (`gh api repos/dotnet/maui/releases/tags/10.0.130`, line 695, read by library-docs); `MauiVersion` is bumped in `Directory.Build.props`. Dino emulator flows pass on the new version; the TestFlight check is still owed, and the Slice 274 workaround stays until it passes (work item 5).
 

@@ -1,4 +1,5 @@
 # Slice 37 — Reading text box: window, toggle, whole-chunk highlight
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

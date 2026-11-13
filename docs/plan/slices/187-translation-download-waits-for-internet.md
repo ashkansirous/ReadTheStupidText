@@ -1,4 +1,5 @@
 ### Slice 187 — Translation downloads wait for the internet (design frame R12)
+**Product:** RTST
 
 *Built (wave 2026-10-30), PR #576.* *Planned 2026-10-29.* Follow-up of Slice 182 (its design frame R12 was not built: Slice 182 covered our own pack downloads, and the phone's translation models come from ML Kit's own download).
 

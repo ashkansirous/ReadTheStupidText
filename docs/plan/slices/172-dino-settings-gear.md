@@ -1,4 +1,5 @@
 # Slice 172 — Dino: one gear for all grown-up settings
+**Product:** Dino
 
 *Built 2026-10-28 (wave 2026-10-28b), draft PR; Windows Settings flow past the gate and iOS run not yet verified.* Dino Reader only (Android, iOS and the Windows head).
 

@@ -1,4 +1,5 @@
 # Slice 322: Dino's silent beats pause when the screen locks
+**Product:** Dino
 
 *Built 2026-11-08, merged as PR #963 (63271fbd). Taken over the same day from a dead session that stopped at "reviewed, device checks pending"; origin/main merged (90278ae3). Verified on the S21 (real lock) and the emulator; iOS and Windows not run.* Found by the 2026-11-08 device run (L69, Slice 278's open check "the beat pausing on screen lock"): on the emulator, after `input keyevent 26` (Asleep; the app logged `[GrownUps] closed on stop`), the silent beats kept going (`silent piece shown`, sentences 4-12, about every 1.2 s). Likely cause, from the code: the beat pauses only from `ReadingPage.OnDisappearing` (`src/DinoReader.App/ReadingPage.xaml.cs:952`), which Android does not fire on a screen lock. Evidence: `reviews/emu3/results.tsv` and `bugs.md` under the worktrees folder.
 

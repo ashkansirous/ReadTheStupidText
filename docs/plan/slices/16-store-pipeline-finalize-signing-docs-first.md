@@ -1,4 +1,5 @@
 # Slice 16 — Store-pipeline finalize + signing docs, first release
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

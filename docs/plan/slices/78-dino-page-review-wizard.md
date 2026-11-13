@@ -1,4 +1,5 @@
 # Slice 78 — Dino Reader: the page-review wizard (pages → cover → text)
+**Product:** Dino
 
 *Built 2026-10-22 (wave 2026-10-22), PR #235. Emulator-tested on RTST_Test; not yet verified on the items below.*
 

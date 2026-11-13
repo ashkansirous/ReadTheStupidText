@@ -1,4 +1,5 @@
 # Slice 39 — Windows: no artifacts, release via draft
+**Product:** Shared
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

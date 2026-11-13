@@ -1,4 +1,5 @@
 # Slice 22 — Read-latency instrumentation + low-risk tuning
+**Product:** RTST
 
 *Built and verified 2026-10-23 on a Windows dev build (see Measured 2026-10-23 below). Legacy entry marked `[~]` moved verbatim by archive-docs 2026-10-20; its Deferred note (#117) is now closed by the measurement.*
 

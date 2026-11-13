@@ -1,4 +1,5 @@
 ### Slice 363 — Dino: the grown-ups' gate as one centred card on Windows and every wide screen
+**Product:** Dino
 
 *Built 2026-11-13, merged as PR #1060 (1b28bf6d). Not yet tried on the Windows VM; Android emulator landscape gate flow passes.*
 

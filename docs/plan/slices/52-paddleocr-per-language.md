@@ -1,4 +1,5 @@
 # Slice 52 — PaddleOCR per language (Android)
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #203.*
 

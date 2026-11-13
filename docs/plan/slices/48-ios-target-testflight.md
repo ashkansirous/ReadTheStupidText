@@ -1,4 +1,5 @@
 # Slice 48 — iOS target and TestFlight from CI
+**Product:** Shared
 
 *Built (wave 2026-10-20c), PR #186. Not yet verified: the first signed build and TestFlight upload, and runtime behaviour on an iPhone.*
 

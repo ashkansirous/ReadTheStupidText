@@ -4,6 +4,66 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+## Read The Stupid Text
+
+### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
+- **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
+
+### Slice 345: RTST: the Debug stall hook must block the reader's first-chunk wait ([slice](slices/345-rtst-stall-hook-blocks-reader.md))
+- **Device:** `stall-return-overlay` on iOS (**You**, no Mac; the iOS reader edit is not compiled or run) and on the Windows head (VM); only the Android emulator ran, twice, 2026-11-09.
+
+### Slice 314: Restore the stall overlay when the person returns to the reader ([slice](slices/314-reader-stall-overlay-after-return.md))
+- **Device:** Start a stalled read on Android, open Settings, come back: overlay and Cancel shown.
+- **You:** The iOS stall watcher on device.
+
+### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
+- **Device:** Importing the same text keeps the language (device).
+- **Device:** Language-change rebuild shows a loading state when it takes over 500 ms (review 9; caller in Settings/AppShell, not read by this slice).
+
+### Slice 217: rtst forced update ([slice](slices/217-rtst-forced-update.md))
+- **Device:** Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](slices/217-rtst-forced-update.md)). Harness gap (2026-11-13 VM run): the `rtst-update-forced` / `rtst-update-soft` VM checks do not exist and the Release MSIX has no test hooks.
+
+### Slice 214: rtst phone cold first audio ([slice](slices/214-rtst-phone-cold-first-audio.md))
+- **Device:** Slice 214 (PR #647): piece 2 timing against piece 1 at 1x and 2x (run `tools/phone/audio-timing.ps1 -App rtst -Aot` on the S21; it flags gaps); a truly cold run after a fresh install or reboot; iOS TestFlight first-audio timing by hand ([slice](slices/214-rtst-phone-cold-first-audio.md)).
+
+### Slice 211: play before detection waits for it ([slice](slices/211-play-before-detection-waits-for-it.md))
+- **Device:** Slice 211 (PR #633): S21 rerun of the Slice 139 race (tap ~0.4 s after typing, against the 1456 ms baseline); iOS TestFlight hand check; back-during-wait scripted check not run; `translation-wait-cancel` not run; Debug iOS compile of the final code (incl. the hold-detection hook) not done ([slice](slices/211-play-before-detection-waits-for-it.md)).
+
+### Slice 202: reader language change crash ([slice](slices/202-reader-language-change-crash.md))
+- **You:** iPhone: change the reader language; no crash.
+
+### Slice 201: norwegian pack crash ([slice](slices/201-norwegian-pack-crash.md))
+- **Device:** Run the Maestro flow .maestro/rtst/norsk-pack-reads.yaml.
+
+### Slice 190: rtst phone sentence highlight ([slice](slices/190-rtst-phone-sentence-highlight.md))
+- **Device:** Slice 190 (PR #573): on-screen sentence highlight PASS on the S21 (2026-10-30); pause/resume mid-chunk; iOS TestFlight read of a 3-sentence ... [full text](notes/2026-10-30-outstanding-detail.md#o007) ([slice](slices/190-rtst-phone-sentence-highlight.md))
+
+### Slice 176: whitespace read crash ([slice](slices/176-whitespace-read-crash.md))
+- **You:** iPhone: reading whitespace-only text does not crash.
+
+### Slice 170: tray panel controls row fits ([slice](slices/170-tray-panel-controls-row-fits.md))
+- **Device:** Device check at 100% and 150% scale, idle and reading, in English (all five toggles and the wait flyout fully visible).
+
+### Slice 160: ios translation parity ([slice](slices/160-ios-translation-parity.md))
+- **You:** Slice 160 (PR #486): TestFlight translate English to Farsi on iOS, model download progress and Cancel, offline translate after download, Dino typed ... [full text](notes/2026-10-30-outstanding-detail.md#o024) ([slice](slices/160-ios-translation-parity.md))
+
+### Slice 142: rtst windows early start ([slice](slices/142-rtst-windows-early-start.md))
+- **Device:** Slice 142: packaged desktop run done 2026-10-26 on a CPU-saturated host; re-check first-audio timing on a quiet machine; prompt tray exit not verified ([slice](slices/142-rtst-windows-early-start.md)).
+
+### Slice 141: rtst windows wait indicator ([slice](slices/141-rtst-windows-wait-indicator.md))
+- **Device:** The panel ring (Play becomes the ring with Cancel) re-check on the desktop (native read dropped).
+
+### Slice 139: rtst phone early start ([slice](slices/139-rtst-phone-early-start.md))
+- **Device:** Slice 139: emulator 2026-10-26 (swapping AVD): early work finished gives first audio in 396-749 ms with a cache hit on sentence 1, but in-flight ... [full text](notes/2026-10-30-outstanding-detail.md#o040) ([slice](slices/139-rtst-phone-early-start.md))
+
+### Slice 138: rtst phone wait indicator ([slice](slices/138-rtst-phone-wait-indicator.md))
+- **Device:** Slice 138: emulator PASS 2026-10-26; sub-500 ms play start PASS on the S21 (61-140 ms); not seen: an ML Kit progress % (Slice 139 downloads the ... [full text](notes/2026-10-30-outstanding-detail.md#o035) ([slice](slices/138-rtst-phone-wait-indicator.md))
+
+### Slice 99: rtst mobile minimal main page ([slice](slices/99-rtst-mobile-minimal-main-page.md))
+- **Device:** Slice 99: full TalkBack walk-through; iOS device run; Settings voice name refresh PASS on the S21 ([S21 night runs](notes/2026-10-29-s21-night-runs.md)) ([slice](slices/99-rtst-mobile-minimal-main-page.md)).
+
+## Dino Reader
+
 ### Slice 362: Dino onboarding shows what Dino can do ([slice](slices/362-dino-onboarding-shows-what-dino-can-do.md))
 
 - **Device:** `onboarding-tablet`: no tablet instance.
@@ -20,16 +80,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** iOS and Windows strips are only compiled, not run.
 - **You:** the translations of `Store_NotForSaleNow` are machine drafts.
 
-### Slice 372: S21 check fixes ([slice](slices/372-s21-check-fixes-2026-11-13.md))
-
-- **Device:** left on the phone by the runner: `/sdcard/Download/rtst-packs-aside/uk.sirous.readthestupidtext.dbg/packs-20261113172728.tar` (the dev app's own pack backup).
-- **Device:** why the heal survived TERM is unknown (now harmless: the pid-file guard).
-- **Device:** voiced book-end timing measured once (159 s; timeout 240 s).
-
-### Slice 368: Shared tests in their own project ([slice](slices/368-shared-tests-project.md))
-
-- **Device:** the new `release.yml` gates (`shared-test`, `rtst-test`) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
-
 ### Slice 360: Dino play waits for Wi-Fi ([slice](slices/360-dino-play-waits-for-wifi.md))
 
 - **Device:** book pulled mid-launch keeps its card until relaunch (check5 #1); a malformed listing entry gets no card (check5 #2).
@@ -40,10 +90,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** add a language on mobile data only: every shelf book's pack for it downloads with no question.
 - **Device:** after release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
 - **Device:** Worker serving one version behind, live, after the batched release deploys.
-
-### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
-
-- **Device:** the test run on Linux CI (the PR's checks).
 
 ### Slice 364: Slice 357 design pass ([slice](slices/364-server-errors-design-pass.md))
 
@@ -73,23 +119,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Good Enough's back cover (after its text-free redraw, Slice 350 part E, and its text rewrite).
 - **Device:** the store upload of the 11 store books and their new versions on the live store.
 
-### Slice 357: Server errors the user can see: standard messages per status ([slice](slices/357-server-error-messages.md))
-- **Device:** RTST pack-failure text on a device: no scripted hook for a pack server error.
-- **Device:** Dino shop list-failure panel text on a device: no list-error hook.
-- **Device:** Windows VM: a refused Get on the Dino Windows head.
-- **You:** iOS TestFlight: one refused Get.
-- **You:** Native read of the new strings in the 14 non-English languages.
-- **Device:** Dino shop: a failed Get while a background book update downloads the same book at the same moment (`StoreClient._downloadErrors` is keyed by book id; check3 #2).
-- **You:** Part D: the `minVersion` change to `1.124.0` is open until paid books are switched on for everyone.
-
 ### Slice 355: Dino: a public web page listing every store book, free or paid, and the price ([slice](slices/355-dino-web-catalogue.md))
 - **Device:** Live `/books` and the workers.dev `/dino/books` after the batched release deploys: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.
 - **You:** Native read of the 14 non-English translations of the page text.
 - **You:** Switched-on check after the paid books store setup (Slice 346 Part D).
-
-### Slice 295: Bump MauiVersion for dotnet/maui PR 38662 ([slice](slices/295-bump-maui-version-for-pr-38662.md))
-- **Device:** RTST emulator flows on MAUI 10.0.130: not reached in the one emulator run (Dino only).
-- **You:** TestFlight iPhone check of the earlier Slice 274 crash path on a release build: open a parent page, leave it (language page), background, return; no crash. Needs a TestFlight build after merge; Slice 295 work item 5 (remove the Slice 274 workaround) waits on it.
 
 ### Slice 356: Dino illustrator: faster and cheaper ([slice](slices/356-illustrator-faster-and-cheaper.md))
 - **Device:** after-numbers on a real page group of a book (seconds per picture, peak context, cache reads per picture against the Baseline table), taken on the next real illustrator run with `illustrator-usage.mjs`.
@@ -100,10 +133,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** the Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path); the package builds since Slice 353. Harness gap (2026-11-13 VM run): no VM check closes the window and reads the usage events.
 - **You:** the iOS simulator (none on this machine) and the `DidEnterBackground` flush.
 - **Device:** `tools/usage-sessions` against live data after release.
-
-### Slice 353: CI: keep the .NET 10 SDK on runners with .NET 11, fix the Dino Windows VM test package ([slice](slices/353-ci-sdk-pin-and-vm-test-package.md))
-- **Device:** `android.yml` and one other workload workflow green on a run whose "Set up job" shows runner image 20261111 or later (the android jobs of PR #1024 and PR #1022 both ran on the old image 20261101.186.1, so the pin is not yet proven there).
-- **Device:** Dino VM checks of Slice 352 (desktop), now that `Build-TestPackage.ps1 -App dino` builds.
 
 ### Slice 351: Dino: every usage row says who and when, and audio failures say why ([slice](slices/351-dino-usage-context-and-audio-causes.md))
 - **Device:** `premade_audio:no_pack` with a book id, on a book whose pack is not downloaded.
@@ -131,17 +160,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** the Microsoft Store ID flow against a live store.
 - **Device:** E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
 
-### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
-- **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
-
-### Slice 345: RTST: the Debug stall hook must block the reader's first-chunk wait ([slice](slices/345-rtst-stall-hook-blocks-reader.md))
-- **Device:** `stall-return-overlay` on iOS (**You**, no Mac; the iOS reader edit is not compiled or run) and on the Windows head (VM); only the Android emulator ran, twice, 2026-11-09.
-
 ### Slice 340: Listening page: Mid-book speed change on a phone ([slice](slices/340-mid-book-speed-change-on-a-phone.md))
 - **Device:** Fix 1 on a device: Settings > Reading speed slider runs 0.8x-1.2x with the left label "0.8x", on Android, iOS and the Windows head, and a book reads at 0.8x at the low end. Android phone emulator, 2026-11-09: `settings-reading-speed-row.yaml` passed and shows "0.8x · slow"; iOS (**You**, no Mac), Windows and the 0.8x reading are still open.
-
-### Slice 339: RTST real-phone audio timing ([slice](slices/339-real-phone-audio-timing.md))
-- **Device:** S21: run `tools/phone/audio-timing.ps1 -App rtst` and check the 1x gaps between chunks against the script's own limit (a scrcpy recording on 2026-11-08 showed 1.1-1.5 s gaps).
 
 ### Slice 322: Dino's silent beats pause when the screen locks ([slice](slices/322-dino-beat-pauses-on-screen-lock.md))
 - **You:** iOS (no Mac): the same `Window.Stopped`/`Resumed` handlers, not run.
@@ -157,14 +177,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot). 2026-11-13 VM run: `dino-reorder` logged 30 px against the mock's 40, with 0 layout-cycle lines, but no assertion.
 - **Device:** The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
 - **You:** iOS phone/tablet: the same shared MAUI code; no Mac, not run.
-
-### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
-- **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
-- **Device:** On the S21: `book-end` on Dino with the fixture pack (run 2026-11-13: not finished, still playing at 521 s of its 900 s window when the 590 s agent timeout ended the run; the 420 s catalogue estimate is too low for the S21), `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (run 2026-11-13 FAILED as a check bug: parsed flags 0x800 lack FLAG_AUTO_CANCEL 0x10, so `Get-NotificationFlagsFromText` reads the wrong field of Samsung's record; fix and rerun in Slice 372).
-- **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
-
-### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
-- **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 
 ### Slice 325: Dino every page in the 2026-11-08 design, parts A-F ([slice](slices/325-dino-2026-11-08-redesign.md))
 - **Device:** No `layout-check ok` line was printed for any onboarding or intro flow.
@@ -183,10 +195,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 324: Dino reads at 1x by default ([slice](slices/324-dino-default-speed-1x.md))
 - **You:** iOS: a fresh Dino install shows 1x on the Reading speed page and a pre-made clip plays at normal speed.
 
-### Slice 319: Fixes from the 2026-11-08 device run ([slice](slices/319-device-run-2026-11-08-fixes.md))
-- **Device:** Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
-- **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
-
 ### Slice 318: Dino: the /stats page on phones and tablets ([slice](slices/318-dino-stats-phone-tablet.md))
 - **Device:** Both orientations on the live /stats page on the S21 and the tablet AVD (touch, notch spacing, Filters sheet focus, the side panel in landscape).
 - **You:** The live page against real D1 data (the Worker deployed 2026-11-08 and serves the new layouts; the real-data look is not checked).
@@ -196,13 +204,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** The user's phone: Freddy in English and Farsi after updating to the release with this slice (Dino 1.116.0 or later): new text, and sound plays.
 - **You:** iPhone: the same path.
 - **Device:** Windows head: the same path.
-
-### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
-- **Device:** `paused-notification-repost` has never run on a phone: the `flags=0x` parsing of dumpsys is unproven.
-- **Device:** That a later edit clears the Review pick on the reader page: no flow step yet.
-
-### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
-- **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 
 ### Slice 287: Dino: a public usage dashboard at dinoreader.sirous.uk/stats ([slice](slices/287-dino-usage-dashboard.md))
 - **You:** A private-window open of the public page shows it.
@@ -215,38 +216,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 289: Dino: count Sonos plays on the server ([slice](slices/289-dino-count-sonos-plays.md))
 - **You:** A live Sonos play counts exactly one row, once the user's Sonos sandbox (Slice 283) works.
 
-### Slice 314: Restore the stall overlay when the person returns to the reader ([slice](slices/314-reader-stall-overlay-after-return.md))
-- **Device:** Start a stalled read on Android, open Settings, come back: overlay and Cancel shown.
-- **You:** The iOS stall watcher on device.
-
-### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
-- **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
-- **You:** The real `.ips` field names and header layout: the parser was written from the known iOS crash format and checked only against a synthetic fixture, so the first real file may need a tweak.
-
-### Slice 297: Slice 267 follow-ups ([slice](slices/297-slice-267-follow-ups.md))
-- **You:** iOS wizard layout (no Mac or iPhone tonight).
-
 ### Slice 305: Dino package cleanup ([slice](slices/305-dino-package-cleanup-ml-kit-and-sherpa.md))
 - **You:** TestFlight look of Dino.
 
-### Slice 300: Kept problem report with the crash switch off ([slice](slices/300-user-report-kept-while-crash-switch-off.md))
-- **Device:** Emulator: with the usage switch off, a failed user-report send shows the not-kept text and logs `not kept, usage switch off`. Needs a Debug hook that makes the report endpoint refuse; none exists.
-- **You:** iOS device: the same shared code, not run on a device.
-
-### Slice 308: Slice 225 run-checks -Serial and failed-build cause ([slice](slices/308-slice-225-run-checks-serial-and-build-cause.md))
-- **Device:** Phone `paused-notification` before the `Get-PackageUid` fix: the shadowing left the dev app's uid unread, so earlier phone PASS results may never have blocked the network; re-run it on the phone once (feedback loop 2026-11-07-1412, [Slice 315](slices/315-feedback-loop-2026-11-07-1412-leftovers.md) item 11).
-
 ### Slice 299: Slice 261 leftovers ([slice](slices/299-slice-261-leftovers.md))
 - **Device:** First-run picker and Cancel during the list load on emulator and iOS (item 2 follow-up: a cancelled load shows the "Connect to the internet" copy; a distinct copy needs new strings in every language).
-
-### Slice 284: Final loop leftovers, night 2026-11-06-1250 ([slice](slices/284-final-loop-leftovers-night-2026-11-06-1250.md))
-
-### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
-- **Device:** Importing the same text keeps the language (device).
-- **Device:** Language-change rebuild shows a loading state when it takes over 500 ms (review 9; caller in Settings/AppShell, not read by this slice).
-
-### Slice 302: Slice 239 leftovers ([slice](slices/302-slice-239-leftovers.md))
-- **Device:** Item 1 was closed from a code read only: the "renamed store package downloaded twice" report was not reproduced on a device run, so a double download on a fresh install is not ruled out.
 
 ### Slice 298: Slice 264 gallery reorder follow-ups ([slice](slices/298-slice-264-gallery-reorder-follow-ups.md))
 - **Device:** Real drag in both drop event orders (Drop then DropCompleted, and the reverse) on Android, iOS and the Windows head.
@@ -297,21 +271,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** No flow asserts the "Get more books" text or that the Add pill is gone.
 - **Device:** The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
 
-### Slice 275: Leftovers from night 2026-11-06-0042, parts 1 to 3 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
-- **Device:** Item 7: no emulator flow cancels an audio pack download and checks that `cancelled` is sent (there is no test hook to stall a pack fetch); only unit and Worker tests cover it.
-
-### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))
-- **Device:** A Windows VM check that plays a pre-made-audio book past two clip hand-offs (item 2, VM half): the VM package is a Release build with no Debug test hooks, so no fixture audio pack can be installed there; it needs Debug test hooks (or an install path) in the VM package first.
-
 ### Slice 274: Dino iPhone crash after leaving the grown-ups pages ([slice](slices/274-dino-ios-crash-after-leaving-parent-page.md))
 - **Device:** Android emulator: drag and release the reading-speed slider, and open the Language page; both behave as before (the builder moved the slider's Unloaded handler onto a wrapper and made `LanguagePage.WhenLoadedAsync` wait on RootPage; added by the feedback loop of 2026-11-06).
 
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
 - **Device:** Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - **Device:** A parent's recording that ends while paused waits for Resume (`_recordingEndedWhilePaused` in `ReadingSession.cs`): the logic is unit-tested now (Slice 271, `ReadingPauseStateTests`); the device flow is still owed.
-
-### Slice 269: Leftovers from night 2026-11-04-1441 ([slice](slices/269-feedback-loop-2026-11-04-1441-leftovers.md))
-- **Device:** Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
 
 ### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
 - **Device:** Reorder mode on Windows keeps phone padding (review high 6).
@@ -349,9 +314,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** The Store_Tag_* labels in English and Farsi read by the user.
 - **Device:** Badge text after an app-language switch with the store page open (review high 3, not confirmed).
 
-### Slice 259: Leftovers from night 2026-11-03-2349 ([slice](slices/259-night-2026-11-03-2349-leftovers.md))
-- **Device:** Item 1: the mid-book wait on a slow real phone (overlay when above 500 ms); the emulator measured 540 ms to first sound with no overlay.
-
 ### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
 - **Device:** `seq` on a device (the Debug line has no `seq`; unit-tested only).
 
@@ -367,11 +329,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 257: Dino: a quote after "said Mouse." is the Mouse's, not the Lion's ([slice](slices/257-lion-and-mouse-speaker.md))
 - **Device:** On a device, Lion and the Mouse reads the Mouse's line ("I didn't mean to wake you up. ...") in the Mouse's voice (no device run: pure Core logic, covered by the unit tests).
-
-### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
-- **Device:** Item 1: a forced "System UI isn't responding" dialog on the tablet AVD with the dialog guard, a flow passing with no brief text (not run).
-- **Device:** Item 1: the dialog guard's restore after a lease loss (a killed run leaves `hide_error_dialogs=1`, cleared by the next `run-flows.ps1`; not exercised on a device).
-- **Device:** Item 6: before/after seconds per slow flow (command in the slice file's Built block, item 6; not run).
 
 ### Slice 248: Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice ([slice](slices/248-dino-stop-read-on-leave-ios.md))
 - **You:** iOS (TestFlight build after the merge): play a book, tap Back: the voice stops. Open another book: its button shows Play; Play reads that book. Swipe back from a playing book: the voice stops.
@@ -402,31 +359,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** `build-audio` was run on real folders only by the pack run; the zips were not opened.
 - **You:** iPhone: pre-made audio rate and playback, and a real store download fetching live packs.
 
-### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
-- **Device:** Item 6: the 34/26 dp phone insets (no log or tree value; screenshots only).
-- **Device:** Item 6: the tablet screenshot against frame 127, by eye only.
-
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
 - **You:** The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - **Device:** The window size on a real phone.
-
-### Slice 238: packs.yml defaults match the catalog ([slice](slices/238-packs-workflow-defaults-match-catalog.md))
-- **Device:** What a lower version does on phones: Slice 220's record says a re-download is decided by `PackVersions.IsNewer` only, so a phone holding piper-nb 2 would most likely keep it and a fresh install would get 1; not checked on a device.
-
-### Slice 236: phone runner gaps, night 2026-11-01-0859 ([slice](slices/236-phone-runner-gaps-night-2026-11-01-0859.md))
-- **Device:** Item 6 with no lease held: `preflight.ps1 -Fix` then `-Restore` back to 0.
-- **Device:** A mid-run `CHANGED:` stop with no record.
-- **Device:** The `dumpsys platform_compat` override-line wording (`Get-CompatOverrideLines` matching).
-- **Device:** The 30 s device-side restore cancel timeout warning ("did not finish in 30 s").
-
-### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
-- **Device:** Translation with managed onnxruntime 1.28.0 against native 1.28.2 on Android and Windows (scan and OCR dropped).
-
-### Slice 241: Faster, quieter device tests ([slice](slices/241-device-test-speed.md))
-- **Device:** Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
-- **Device:** Item 3, timing: a cache-miss run's total is build time, not build plus boot (the `Cache miss` line itself passed on 2026-11-01; the time was not recorded).
-- **You:** The iOS stall watcher on a device.
-- **Device:** The `-Split` two-emulator path.
 
 ### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
 - **Device:** A translated title for a newly added store book on an installed app, with no app update.
@@ -458,28 +393,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Portrait reading unchanged on iOS, Windows and tablets after `TransportRow`'s base class changed to `StackLayout` (shown only by two Android emulator flows).
 - **You:** Phone side margins (about 14 dp, mock 34/26) and tablet frame 127's title against the mock (the user's eye).
 
-### Slice 225: Device-test tooling leftovers, night 2026-10-31-1301 ([slice](slices/225-device-tooling-leftovers-night-2026-10-31-1301.md))
-- **Device:** Paused-notification checks on the S21 (needs `run-checks.ps1 -Build -App rtst` first; cache miss). Passed 2026-11-13: `paused-notification-network` in 57 s (title "Download paused. Tap to finish.", text "English voice (124 MB) · 0% done"; tap resumed `PACKDL start pack=supertonic-3 offset=990290`; notice cleared). Still open: the other text variants, the repost flags check (Slice 372).
-- **Device:** `stay_on` restore when the user changed the value (self-tested only).
-- **Device:** Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
-- **Device:** Item 21: a flow reading a TalkBack focus event (TalkBack on and off passed; the focus event was not read).
-
 ### Slice 230: Dino: say plainly that recordings stay on the phone, and restore brings them back ([slice](slices/230-dino-recordings-copy-and-restore-merge.md))
 - **You:** iOS simulator or TestFlight: back up, restore, recordings come back.
 - **You:** VoiceOver on the new Record/Backup lines.
 - **You:** iPhone: layouts of the new Record/Backup lines.
 - **You:** Read the new Record/Backup strings in Farsi (right to left).
 
-### Slice 221: Device-test tooling leftovers from the 2026-10-30-2100 night, round 1 ([slice](slices/221-device-test-tooling-leftovers-night-1.md))
-- **Device:** Item 6 on the real phone: two timed runs with the same owner, the second exits 4.
-- **Device:** Item 3 seen in a device-test run log.
-- **Device:** `adb uninstall` stderr under Windows PowerShell 5.1 with `ErrorActionPreference` Stop (`Remove-StaleDevPackages`, `tools/emulator/common.ps1:151`) could abort the install instead of warning.
-
 ### Slice 229: Dino Done/Continue button on every grown-up page ([slice](slices/229-dino-subpage-done-button.md))
 - **Device:** Page editor header over the crop stage (44 dp pill vs 38).
-
-### Slice 224: Phone runner build-cache gaps ([slice](slices/224-phone-runner-build-cache-gaps.md))
-- **Device:** A real phone run of the runner with a dead-builder status file, and with `-NoBuild` on a warm cache (no device run this wave; host tooling only).
 
 ### Slice 237: Dino back cover (credits page) ([slice](slices/237-dino-back-cover-credits.md))
 - **Device:** Landscape layout of the back cover.
@@ -488,18 +409,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iPhone: the back cover page.
 - **Device:** Credit-line wrapping in long languages on a narrow phone (estimated, not measured).
 
-### Slice 233: paused notice same on Android and iOS ([slice](slices/233-paused-notice-same-on-android-and-ios.md))
-- **Device:** A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
-
 ### Slice 228: Dino grown-ups' corner clarity ([slice](slices/228-dino-grownups-corner-clarity.md))
 - **Device:** Corner tiles and title truncation on a small phone and on a tablet.
 - **You:** The Farsi strings of the grown-ups' corner, read by the user.
 - **Device:** The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those).
 - **Device:** The 48 dp close button on a device (changed after the last emulator run; check pass only).
-
-### Slice 220: Kokoro silent short lines on arm64 ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
-- **Device:** The 68-read Slice 210 set.
-- **Device:** A fresh install's rebuilt non-kokoro packs (rebuilt in packs-11 at the same versions, no device run).
 
 ### Slice 231: Dino Record page shows the page's words ([slice](slices/231-dino-record-page-shows-words.md))
 - **Device:** An RTL/Farsi book on the Record page.
@@ -508,44 +422,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** TalkBack / VoiceOver hearing each reading page once.
 - **You:** iOS: a settings row with the button text left null keeps its height and look, and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
 
-### Slice 217: rtst forced update ([slice](slices/217-rtst-forced-update.md))
-- **Device:** Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](slices/217-rtst-forced-update.md)). Harness gap (2026-11-13 VM run): the `rtst-update-forced` / `rtst-update-soft` VM checks do not exist and the Release MSIX has no test hooks.
-
-### Slice 216: phone tooling leftovers ([slice](slices/216-phone-tooling-leftovers.md))
-- **Device:** Slice 216 (PR #637): item 11 cold-start rerun and the numbers in Slices 185 and 214; path-length estimates unmeasured; `Get-PhoneStamp` not device-run ([slice](slices/216-phone-tooling-leftovers.md)).
-
-### Slice 215: device guard gaps ([slice](slices/215-device-guard-gaps.md))
-- **Device:** Slice 215 (PR #639): site image retake (VM sample read never leaves GeneratingAudio with the copied pack; `site/img/control-panel.webp` not replaced; watermark crop); `sentence-highlight` first-run failure after a fresh install; `test-activity.ps1 -DeviceKillCheck` script path not run ([slice](slices/215-device-guard-gaps.md)).
-
-### Slice 214: rtst phone cold first audio ([slice](slices/214-rtst-phone-cold-first-audio.md))
-- **Device:** Slice 214 (PR #647): piece 2 timing against piece 1 at 1x and 2x (run `tools/phone/audio-timing.ps1 -App rtst -Aot` on the S21; it flags gaps); a truly cold run after a fresh install or reboot; iOS TestFlight first-audio timing by hand ([slice](slices/214-rtst-phone-cold-first-audio.md)).
-
-### Slice 213: phone check runner ([slice](slices/213-phone-check-runner.md))
-- **Device:** Slice 213 (PR #610): a cold-cache run where the AOT build fails or stalls (the FAIL path); a run while another session holds the lease; the ... [full text](notes/2026-10-30-outstanding-detail.md#o017) ([slice](slices/213-phone-check-runner.md))
-
-### Slice 211: play before detection waits for it ([slice](slices/211-play-before-detection-waits-for-it.md))
-- **Device:** Slice 211 (PR #633): S21 rerun of the Slice 139 race (tap ~0.4 s after typing, against the 1456 ms baseline); iOS TestFlight hand check; back-during-wait scripted check not run; `translation-wait-cancel` not run; Debug iOS compile of the final code (incl. the hold-detection hook) not done ([slice](slices/211-play-before-detection-waits-for-it.md)).
-
-### Slice 208: paused pack downloads tell you and finish ([slice](slices/208-paused-pack-downloads-tell-you-and-finish.md))
-- **Device:** Slice 208 (PR #646) partly verified on the S21 on 2026-11-13 (`paused-notification-network` passed in 57 s: title "Download paused. Tap to finish.", text "English voice (124 MB) · 0% done", tap resumed `PACKDL start pack=supertonic-3 offset=990290`, notice cleared). Still open: the other notification text variants, the stale partial resume/delete, the cold-run marker, Dino first download, iOS and the `device_config` time-limit variant (never passed on an emulator, not run). Earlier list: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted); Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the `paused-notification` check itself was reworked by Slice 233 (Debug hook `drop-pack-network`, no netpolicy) and passed on the S21 on 2026-11-01, so its earlier netpolicy and detached-restore doubts no longer apply. [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
-
-### Slice 206: phone run scripts ([slice](slices/206-phone-run-scripts.md))
-- **Device:** Slice 206 (PR #594): `preflight.ps1` reading a PIN or pattern lock as NO-GO; `reset-dev-app.ps1 -Level reinstall`; Dino resets (`-App dino`); ... [full text](notes/2026-10-30-outstanding-detail.md#o001) ([slice](slices/206-phone-run-scripts.md))
-
-### Slice 204: cancelled voice pack stays cancelled ([slice](slices/204-cancelled-voice-pack-stays-cancelled.md))
-- **You:** iPhone: Dino cancelled voice pack stays cancelled; read the Stopped strings in English and Farsi.
-
 ### Slice 203: Dino on the Microsoft Store: turn on automatic submissions and link it ([slice](slices/203-dino-microsoft-store-live.md))
 - **Device:** Slice 203 (PR #578): the first automatic Dino Store submission (needs the next Dino release on `main`).
-
-### Slice 202: reader language change crash ([slice](slices/202-reader-language-change-crash.md))
-- **You:** iPhone: change the reader language; no crash.
-
-### Slice 201: norwegian pack crash ([slice](slices/201-norwegian-pack-crash.md))
-- **Device:** Run the Maestro flow .maestro/rtst/norsk-pack-reads.yaml.
-
-### Slice 200: Check the live usage data after the store rollouts ([slice](slices/200-live-usage-data-checks.md))
-- **Device:** Slice 200 (live data checks): re-run the report after more real traffic (under 10 events per group everywhere on 2026-10-30); no rows yet for voice ... [full text](notes/2026-10-30-outstanding-detail.md#o013)
 
 ### Slice 197: dino download now tap dropped ([slice](slices/197-dino-download-now-tap-dropped.md))
 - **Device:** Slice 197 (PR #583): no stale "Downloading" status after the download ends; notification Cancel mid-download then nothing restarts; iOS TestFlight ... [full text](notes/2026-10-30-outstanding-detail.md#o016) ([slice](slices/197-dino-download-now-tap-dropped.md))
@@ -556,48 +434,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 192: dino store credits in every language ([slice](slices/192-dino-store-credits-in-every-language.md))
 - **Device:** Slice 192 (PR #582): live `meta.json` refreshed (all 15 books in `/api/stories` carry `creditsByLanguage`, checked 2026-10-30); ... [full text](notes/2026-10-30-outstanding-detail.md#o012) ([slice](slices/192-dino-store-credits-in-every-language.md))
 
-### Slice 190: rtst phone sentence highlight ([slice](slices/190-rtst-phone-sentence-highlight.md))
-- **Device:** Slice 190 (PR #573): on-screen sentence highlight PASS on the S21 (2026-10-30); pause/resume mid-chunk; iOS TestFlight read of a 3-sentence ... [full text](notes/2026-10-30-outstanding-detail.md#o007) ([slice](slices/190-rtst-phone-sentence-highlight.md))
-
-### Slice 183: pack downloads keep going when locked ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
-- **You:** Slice 183 (PR #549): iOS background session on a device (TestFlight); Dino storyteller first-download ask deferral; the dataSync timeout's silent ... [full text](notes/2026-10-30-outstanding-detail.md#o018) ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
-- **You:** Slice 183: native review of the new strings (13 machine drafts per app).
-
-### Slice 182: pack download resumes by itself ([slice](slices/182-pack-download-resumes-by-itself.md))
-- **You:** "Waiting for Wi-Fi" on a real cellular-only phone (OCR resume dropped).
-
 ### Slice 181: dino books update from store ([slice](slices/181-dino-books-update-from-store.md))
 - **Device:** Slice 181 (PR #543): a recording carried over a swap; a store-downloaded book with edited text getting an update; a crash during the apply itself ... [full text](notes/2026-10-30-outstanding-detail.md#o005) ([slice](slices/181-dino-books-update-from-store.md))
-
-### Slice 180: faster device tests ([slice](slices/180-faster-device-tests.md))
-- **Device:** Slice 180 (PR #536, #538): the System UI "isn't responding" dismissal in `run-flows.ps1` never triggered (read only); one first-run flow flake with ... [full text](notes/2026-10-30-outstanding-detail.md#o022) ([slice](slices/180-faster-device-tests.md))
-
-### Slice 179: no robot or own machine counts ([slice](slices/179-no-robot-or-own-machine-counts.md))
-- **Device:** Slice 179 (PR #542): Windows VM run with a CI MSIX; iOS `sandboxReceipt` on TestFlight; Windows Store-signature check on a Store build; Release ... [full text](notes/2026-10-30-outstanding-detail.md#o019) ([slice](slices/179-no-robot-or-own-machine-counts.md))
-
-### Slice 176: whitespace read crash ([slice](slices/176-whitespace-read-crash.md))
-- **You:** iPhone: reading whitespace-only text does not crash.
 
 ### Slice 173: dino kid story languages ([slice](slices/173-dino-kid-story-languages.md))
 - **You:** Slice 173 (PR #525): mobile-data "Wait for Wi-Fi / Download now" prompt not seen (emulator has Wi-Fi); a persisted no-pack language ... [full text](notes/2026-10-30-outstanding-detail.md#o021) ([slice](slices/173-dino-kid-story-languages.md))
 
 ### Slice 171: dino text card shows whole page ([slice](slices/171-dino-text-card-shows-whole-page.md))
 - **You:** iPhone: the line reader and the card's scroll for English and Farsi text.
-
-### Slice 170: tray panel controls row fits ([slice](slices/170-tray-panel-controls-row-fits.md))
-- **Device:** Device check at 100% and 150% scale, idle and reading, in English (all five toggles and the wait flyout fully visible).
-
-### Slice 167: no test device counts ([slice](slices/167-no-test-device-counts.md))
-- **Device:** Slice 167 (PR #497): Release build on an emulator (crashed at startup in MAUI before any usage code, x64 only); emulator and Test Lab rules on a ... [full text](notes/2026-10-30-outstanding-detail.md#o029) ([slice](slices/167-no-test-device-counts.md))
-
-### Slice 166: usage device context ([slice](slices/166-usage-device-context.md))
-- **Device:** Slice 166 (PR #492): Windows heads only compiled (no desktop run of the RTST tray or Dino Windows head); iOS compiled only (no simulator); first ... [full text](notes/2026-10-30-outstanding-detail.md#o028) ([slice](slices/166-usage-device-context.md))
-
-### Slice 161: warm headless x64 emulator ([slice](slices/161-warm-headless-x64-emulator.md))
-- **Device:** Slice 161 (PR #485): arm64-vs-x64 launch-and-read timing not compared; version-mismatch guard, bump guard and concurrent-build paths reviewed only, ... [full text](notes/2026-10-30-outstanding-detail.md#o025) ([slice](slices/161-warm-headless-x64-emulator.md))
-
-### Slice 160: ios translation parity ([slice](slices/160-ios-translation-parity.md))
-- **You:** Slice 160 (PR #486): TestFlight translate English to Farsi on iOS, model download progress and Cancel, offline translate after download, Dino typed ... [full text](notes/2026-10-30-outstanding-detail.md#o024) ([slice](slices/160-ios-translation-parity.md))
 
 ### Slice 159: dino everything in my language ([slice](slices/159-dino-everything-in-my-language.md))
 - **You:** Read the ShippedTitles and the 7 new resx keys in English and Farsi.
@@ -610,21 +454,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 151: dino three view modes ([slice](slices/151-dino-three-view-modes.md))
 - **Device:** Night-theme segment colours unchanged on the Windows head and iPhone (photo import and native read dropped).
-
-### Slice 148: phone wait followups ([slice](slices/148-phone-wait-followups.md))
-- **Device:** Windows stall overlay on a packaged run (native read dropped).
-
-### Slice 142: rtst windows early start ([slice](slices/142-rtst-windows-early-start.md))
-- **Device:** Slice 142: packaged desktop run done 2026-10-26 on a CPU-saturated host; re-check first-audio timing on a quiet machine; prompt tray exit not verified ([slice](slices/142-rtst-windows-early-start.md)).
-
-### Slice 141: rtst windows wait indicator ([slice](slices/141-rtst-windows-wait-indicator.md))
-- **Device:** The panel ring (Play becomes the ring with Cancel) re-check on the desktop (native read dropped).
-
-### Slice 139: rtst phone early start ([slice](slices/139-rtst-phone-early-start.md))
-- **Device:** Slice 139: emulator 2026-10-26 (swapping AVD): early work finished gives first audio in 396-749 ms with a cache hit on sentence 1, but in-flight ... [full text](notes/2026-10-30-outstanding-detail.md#o040) ([slice](slices/139-rtst-phone-early-start.md))
-
-### Slice 138: rtst phone wait indicator ([slice](slices/138-rtst-phone-wait-indicator.md))
-- **Device:** Slice 138: emulator PASS 2026-10-26; sub-500 ms play start PASS on the S21 (61-140 ms); not seen: an ML Kit progress % (Slice 139 downloads the ... [full text](notes/2026-10-30-outstanding-detail.md#o035) ([slice](slices/138-rtst-phone-wait-indicator.md))
 
 ### Slice 133: dino anonymous usage counts ([slice](slices/133-dino-anonymous-usage-counts.md))
 - **Device:** Slice 133: telemetry on and rows arrive in `dino_usage` since 2026-10-27; settings off sends nothing still to check on a device; no rate limit or ... [full text](notes/2026-10-30-outstanding-detail.md#o066) ([slice](slices/133-dino-anonymous-usage-counts.md))
@@ -644,11 +473,188 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 111: dino parent recordings ([slice](slices/111-dino-parent-recordings.md))
 - **Device:** Record/replay on the S21, iPhone and Windows head; mic permission denial; backup round trip.
 
-### Slice 99: rtst mobile minimal main page ([slice](slices/99-rtst-mobile-minimal-main-page.md))
-- **Device:** Slice 99: full TalkBack walk-through; iOS device run; Settings voice name refresh PASS on the S21 ([S21 night runs](notes/2026-10-29-s21-night-runs.md)) ([slice](slices/99-rtst-mobile-minimal-main-page.md)).
-
 ### Slice 96: dino layout never mirrors ([slice](slices/96-dino-layout-never-mirrors.md))
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
+
+## Shared
+
+### Slice 372: S21 check fixes ([slice](slices/372-s21-check-fixes-2026-11-13.md))
+
+- **Device:** left on the phone by the runner: `/sdcard/Download/rtst-packs-aside/uk.sirous.readthestupidtext.dbg/packs-20261113172728.tar` (the dev app's own pack backup).
+- **Device:** why the heal survived TERM is unknown (now harmless: the pid-file guard).
+- **Device:** voiced book-end timing measured once (159 s; timeout 240 s).
+
+### Slice 368: Shared tests in their own project ([slice](slices/368-shared-tests-project.md))
+
+- **Device:** the new `release.yml` gates (`shared-test`, `rtst-test`) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
+
+### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
+
+- **Device:** the test run on Linux CI (the PR's checks).
+
+### Slice 357: Server errors the user can see: standard messages per status ([slice](slices/357-server-error-messages.md))
+- **Device:** RTST pack-failure text on a device: no scripted hook for a pack server error.
+- **Device:** Dino shop list-failure panel text on a device: no list-error hook.
+- **Device:** Windows VM: a refused Get on the Dino Windows head.
+- **You:** iOS TestFlight: one refused Get.
+- **You:** Native read of the new strings in the 14 non-English languages.
+- **Device:** Dino shop: a failed Get while a background book update downloads the same book at the same moment (`StoreClient._downloadErrors` is keyed by book id; check3 #2).
+- **You:** Part D: the `minVersion` change to `1.124.0` is open until paid books are switched on for everyone.
+
+### Slice 295: Bump MauiVersion for dotnet/maui PR 38662 ([slice](slices/295-bump-maui-version-for-pr-38662.md))
+- **Device:** RTST emulator flows on MAUI 10.0.130: not reached in the one emulator run (Dino only).
+- **You:** TestFlight iPhone check of the earlier Slice 274 crash path on a release build: open a parent page, leave it (language page), background, return; no crash. Needs a TestFlight build after merge; Slice 295 work item 5 (remove the Slice 274 workaround) waits on it.
+
+### Slice 353: CI: keep the .NET 10 SDK on runners with .NET 11, fix the Dino Windows VM test package ([slice](slices/353-ci-sdk-pin-and-vm-test-package.md))
+- **Device:** `android.yml` and one other workload workflow green on a run whose "Set up job" shows runner image 20261111 or later (the android jobs of PR #1024 and PR #1022 both ran on the old image 20261101.186.1, so the pin is not yet proven there).
+- **Device:** Dino VM checks of Slice 352 (desktop), now that `Build-TestPackage.ps1 -App dino` builds.
+
+### Slice 339: RTST real-phone audio timing ([slice](slices/339-real-phone-audio-timing.md))
+- **Device:** S21: run `tools/phone/audio-timing.ps1 -App rtst` and check the 1x gaps between chunks against the script's own limit (a scrcpy recording on 2026-11-08 showed 1.1-1.5 s gaps).
+
+### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
+- **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
+- **Device:** On the S21: `book-end` on Dino with the fixture pack (run 2026-11-13: not finished, still playing at 521 s of its 900 s window when the 590 s agent timeout ended the run; the 420 s catalogue estimate is too low for the S21), `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (run 2026-11-13 FAILED as a check bug: parsed flags 0x800 lack FLAG_AUTO_CANCEL 0x10, so `Get-NotificationFlagsFromText` reads the wrong field of Samsung's record; fix and rerun in Slice 372).
+- **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
+
+### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
+- **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
+
+### Slice 319: Fixes from the 2026-11-08 device run ([slice](slices/319-device-run-2026-11-08-fixes.md))
+- **Device:** Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
+- **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
+
+### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
+- **Device:** `paused-notification-repost` has never run on a phone: the `flags=0x` parsing of dumpsys is unproven.
+- **Device:** That a later edit clears the Review pick on the reader page: no flow step yet.
+
+### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
+- **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
+
+### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
+- **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
+- **You:** The real `.ips` field names and header layout: the parser was written from the known iOS crash format and checked only against a synthetic fixture, so the first real file may need a tweak.
+
+### Slice 297: Slice 267 follow-ups ([slice](slices/297-slice-267-follow-ups.md))
+- **You:** iOS wizard layout (no Mac or iPhone tonight).
+
+### Slice 300: Kept problem report with the crash switch off ([slice](slices/300-user-report-kept-while-crash-switch-off.md))
+- **Device:** Emulator: with the usage switch off, a failed user-report send shows the not-kept text and logs `not kept, usage switch off`. Needs a Debug hook that makes the report endpoint refuse; none exists.
+- **You:** iOS device: the same shared code, not run on a device.
+
+### Slice 308: Slice 225 run-checks -Serial and failed-build cause ([slice](slices/308-slice-225-run-checks-serial-and-build-cause.md))
+- **Device:** Phone `paused-notification` before the `Get-PackageUid` fix: the shadowing left the dev app's uid unread, so earlier phone PASS results may never have blocked the network; re-run it on the phone once (feedback loop 2026-11-07-1412, [Slice 315](slices/315-feedback-loop-2026-11-07-1412-leftovers.md) item 11).
+
+### Slice 284: Final loop leftovers, night 2026-11-06-1250 ([slice](slices/284-final-loop-leftovers-night-2026-11-06-1250.md))
+
+### Slice 302: Slice 239 leftovers ([slice](slices/302-slice-239-leftovers.md))
+- **Device:** Item 1 was closed from a code read only: the "renamed store package downloaded twice" report was not reproduced on a device run, so a double download on a fresh install is not ruled out.
+
+### Slice 275: Leftovers from night 2026-11-06-0042, parts 1 to 3 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
+- **Device:** Item 7: no emulator flow cancels an audio pack download and checks that `cancelled` is sent (there is no test hook to stall a pack fetch); only unit and Worker tests cover it.
+
+### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))
+- **Device:** A Windows VM check that plays a pre-made-audio book past two clip hand-offs (item 2, VM half): the VM package is a Release build with no Debug test hooks, so no fixture audio pack can be installed there; it needs Debug test hooks (or an install path) in the VM package first.
+
+### Slice 269: Leftovers from night 2026-11-04-1441 ([slice](slices/269-feedback-loop-2026-11-04-1441-leftovers.md))
+- **Device:** Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
+
+### Slice 259: Leftovers from night 2026-11-03-2349 ([slice](slices/259-night-2026-11-03-2349-leftovers.md))
+- **Device:** Item 1: the mid-book wait on a slow real phone (overlay when above 500 ms); the emulator measured 540 ms to first sound with no overlay.
+
+### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
+- **Device:** Item 1: a forced "System UI isn't responding" dialog on the tablet AVD with the dialog guard, a flow passing with no brief text (not run).
+- **Device:** Item 1: the dialog guard's restore after a lease loss (a killed run leaves `hide_error_dialogs=1`, cleared by the next `run-flows.ps1`; not exercised on a device).
+- **Device:** Item 6: before/after seconds per slow flow (command in the slice file's Built block, item 6; not run).
+
+### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
+- **Device:** Item 6: the 34/26 dp phone insets (no log or tree value; screenshots only).
+- **Device:** Item 6: the tablet screenshot against frame 127, by eye only.
+
+### Slice 238: packs.yml defaults match the catalog ([slice](slices/238-packs-workflow-defaults-match-catalog.md))
+- **Device:** What a lower version does on phones: Slice 220's record says a re-download is decided by `PackVersions.IsNewer` only, so a phone holding piper-nb 2 would most likely keep it and a fresh install would get 1; not checked on a device.
+
+### Slice 236: phone runner gaps, night 2026-11-01-0859 ([slice](slices/236-phone-runner-gaps-night-2026-11-01-0859.md))
+- **Device:** Item 6 with no lease held: `preflight.ps1 -Fix` then `-Restore` back to 0.
+- **Device:** A mid-run `CHANGED:` stop with no record.
+- **Device:** The `dumpsys platform_compat` override-line wording (`Get-CompatOverrideLines` matching).
+- **Device:** The 30 s device-side restore cancel timeout warning ("did not finish in 30 s").
+
+### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
+- **Device:** Translation with managed onnxruntime 1.28.0 against native 1.28.2 on Android and Windows (scan and OCR dropped).
+
+### Slice 241: Faster, quieter device tests ([slice](slices/241-device-test-speed.md))
+- **Device:** Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
+- **Device:** Item 3, timing: a cache-miss run's total is build time, not build plus boot (the `Cache miss` line itself passed on 2026-11-01; the time was not recorded).
+- **You:** The iOS stall watcher on a device.
+- **Device:** The `-Split` two-emulator path.
+
+### Slice 225: Device-test tooling leftovers, night 2026-10-31-1301 ([slice](slices/225-device-tooling-leftovers-night-2026-10-31-1301.md))
+- **Device:** Paused-notification checks on the S21 (needs `run-checks.ps1 -Build -App rtst` first; cache miss). Passed 2026-11-13: `paused-notification-network` in 57 s (title "Download paused. Tap to finish.", text "English voice (124 MB) · 0% done"; tap resumed `PACKDL start pack=supertonic-3 offset=990290`; notice cleared). Still open: the other text variants, the repost flags check (Slice 372).
+- **Device:** `stay_on` restore when the user changed the value (self-tested only).
+- **Device:** Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
+- **Device:** Item 21: a flow reading a TalkBack focus event (TalkBack on and off passed; the focus event was not read).
+
+### Slice 221: Device-test tooling leftovers from the 2026-10-30-2100 night, round 1 ([slice](slices/221-device-test-tooling-leftovers-night-1.md))
+- **Device:** Item 6 on the real phone: two timed runs with the same owner, the second exits 4.
+- **Device:** Item 3 seen in a device-test run log.
+- **Device:** `adb uninstall` stderr under Windows PowerShell 5.1 with `ErrorActionPreference` Stop (`Remove-StaleDevPackages`, `tools/emulator/common.ps1:151`) could abort the install instead of warning.
+
+### Slice 224: Phone runner build-cache gaps ([slice](slices/224-phone-runner-build-cache-gaps.md))
+- **Device:** A real phone run of the runner with a dead-builder status file, and with `-NoBuild` on a warm cache (no device run this wave; host tooling only).
+
+### Slice 233: paused notice same on Android and iOS ([slice](slices/233-paused-notice-same-on-android-and-ios.md))
+- **Device:** A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
+
+### Slice 220: Kokoro silent short lines on arm64 ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
+- **Device:** The 68-read Slice 210 set.
+- **Device:** A fresh install's rebuilt non-kokoro packs (rebuilt in packs-11 at the same versions, no device run).
+
+### Slice 216: phone tooling leftovers ([slice](slices/216-phone-tooling-leftovers.md))
+- **Device:** Slice 216 (PR #637): item 11 cold-start rerun and the numbers in Slices 185 and 214; path-length estimates unmeasured; `Get-PhoneStamp` not device-run ([slice](slices/216-phone-tooling-leftovers.md)).
+
+### Slice 215: device guard gaps ([slice](slices/215-device-guard-gaps.md))
+- **Device:** Slice 215 (PR #639): site image retake (VM sample read never leaves GeneratingAudio with the copied pack; `site/img/control-panel.webp` not replaced; watermark crop); `sentence-highlight` first-run failure after a fresh install; `test-activity.ps1 -DeviceKillCheck` script path not run ([slice](slices/215-device-guard-gaps.md)).
+
+### Slice 213: phone check runner ([slice](slices/213-phone-check-runner.md))
+- **Device:** Slice 213 (PR #610): a cold-cache run where the AOT build fails or stalls (the FAIL path); a run while another session holds the lease; the ... [full text](notes/2026-10-30-outstanding-detail.md#o017) ([slice](slices/213-phone-check-runner.md))
+
+### Slice 208: paused pack downloads tell you and finish ([slice](slices/208-paused-pack-downloads-tell-you-and-finish.md))
+- **Device:** Slice 208 (PR #646) partly verified on the S21 on 2026-11-13 (`paused-notification-network` passed in 57 s: title "Download paused. Tap to finish.", text "English voice (124 MB) · 0% done", tap resumed `PACKDL start pack=supertonic-3 offset=990290`, notice cleared). Still open: the other notification text variants, the stale partial resume/delete, the cold-run marker, Dino first download, iOS and the `device_config` time-limit variant (never passed on an emulator, not run). Earlier list: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted); Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the `paused-notification` check itself was reworked by Slice 233 (Debug hook `drop-pack-network`, no netpolicy) and passed on the S21 on 2026-11-01, so its earlier netpolicy and detached-restore doubts no longer apply. [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
+
+### Slice 206: phone run scripts ([slice](slices/206-phone-run-scripts.md))
+- **Device:** Slice 206 (PR #594): `preflight.ps1` reading a PIN or pattern lock as NO-GO; `reset-dev-app.ps1 -Level reinstall`; Dino resets (`-App dino`); ... [full text](notes/2026-10-30-outstanding-detail.md#o001) ([slice](slices/206-phone-run-scripts.md))
+
+### Slice 204: cancelled voice pack stays cancelled ([slice](slices/204-cancelled-voice-pack-stays-cancelled.md))
+- **You:** iPhone: Dino cancelled voice pack stays cancelled; read the Stopped strings in English and Farsi.
+
+### Slice 200: Check the live usage data after the store rollouts ([slice](slices/200-live-usage-data-checks.md))
+- **Device:** Slice 200 (live data checks): re-run the report after more real traffic (under 10 events per group everywhere on 2026-10-30); no rows yet for voice ... [full text](notes/2026-10-30-outstanding-detail.md#o013)
+
+### Slice 183: pack downloads keep going when locked ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
+- **You:** Slice 183 (PR #549): iOS background session on a device (TestFlight); Dino storyteller first-download ask deferral; the dataSync timeout's silent ... [full text](notes/2026-10-30-outstanding-detail.md#o018) ([slice](slices/183-pack-downloads-keep-going-when-locked.md))
+- **You:** Slice 183: native review of the new strings (13 machine drafts per app).
+
+### Slice 182: pack download resumes by itself ([slice](slices/182-pack-download-resumes-by-itself.md))
+- **You:** "Waiting for Wi-Fi" on a real cellular-only phone (OCR resume dropped).
+
+### Slice 180: faster device tests ([slice](slices/180-faster-device-tests.md))
+- **Device:** Slice 180 (PR #536, #538): the System UI "isn't responding" dismissal in `run-flows.ps1` never triggered (read only); one first-run flow flake with ... [full text](notes/2026-10-30-outstanding-detail.md#o022) ([slice](slices/180-faster-device-tests.md))
+
+### Slice 179: no robot or own machine counts ([slice](slices/179-no-robot-or-own-machine-counts.md))
+- **Device:** Slice 179 (PR #542): Windows VM run with a CI MSIX; iOS `sandboxReceipt` on TestFlight; Windows Store-signature check on a Store build; Release ... [full text](notes/2026-10-30-outstanding-detail.md#o019) ([slice](slices/179-no-robot-or-own-machine-counts.md))
+
+### Slice 167: no test device counts ([slice](slices/167-no-test-device-counts.md))
+- **Device:** Slice 167 (PR #497): Release build on an emulator (crashed at startup in MAUI before any usage code, x64 only); emulator and Test Lab rules on a ... [full text](notes/2026-10-30-outstanding-detail.md#o029) ([slice](slices/167-no-test-device-counts.md))
+
+### Slice 166: usage device context ([slice](slices/166-usage-device-context.md))
+- **Device:** Slice 166 (PR #492): Windows heads only compiled (no desktop run of the RTST tray or Dino Windows head); iOS compiled only (no simulator); first ... [full text](notes/2026-10-30-outstanding-detail.md#o028) ([slice](slices/166-usage-device-context.md))
+
+### Slice 161: warm headless x64 emulator ([slice](slices/161-warm-headless-x64-emulator.md))
+- **Device:** Slice 161 (PR #485): arm64-vs-x64 launch-and-read timing not compared; version-mismatch guard, bump guard and concurrent-build paths reviewed only, ... [full text](notes/2026-10-30-outstanding-detail.md#o025) ([slice](slices/161-warm-headless-x64-emulator.md))
+
+### Slice 148: phone wait followups ([slice](slices/148-phone-wait-followups.md))
+- **Device:** Windows stall overlay on a packaged run (native read dropped).
 
 ### Slices 43-95 ([moved from notes/2026-10-25-outstanding-older.md](notes/2026-10-25-outstanding-older.md))
 - **Device:** Slice 46: the Windows tray panel's progress ring in the running app (auto-read, copy, hotkey; clears on supersede/failure/completion); follow-up: a reader-level generating signal on `ISpeechReader` for Android ([slice](docs/plan/slices/46-play-loading-state.md)).

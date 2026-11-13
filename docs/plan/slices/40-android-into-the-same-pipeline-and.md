@@ -1,4 +1,5 @@
 # Slice 40 — Android into the same pipeline and release
+**Product:** Shared
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

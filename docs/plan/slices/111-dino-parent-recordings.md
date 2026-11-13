@@ -1,4 +1,5 @@
 # Slice 111 — Dino: parents read in their own voice
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified on a device (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —

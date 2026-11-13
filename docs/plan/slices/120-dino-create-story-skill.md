@@ -1,4 +1,5 @@
 # Slice 120 — Dino: a repo skill for making a story
+**Product:** Dino
 
 *Planned 2026-10-25. Work items delivered early on the Slice 119 branch (2026-10-25); the verification (a fresh session illustrating a new book) is still to do.* Dino Reader only; RTST is not touched.
 

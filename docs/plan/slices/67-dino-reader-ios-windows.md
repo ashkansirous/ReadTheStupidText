@@ -1,4 +1,5 @@
 # Slice 67 — Dino Reader on iOS and Windows
+**Product:** Dino
 
 *Built 2026-10-21 (PR #221, 9db8100); not yet verified.*
 

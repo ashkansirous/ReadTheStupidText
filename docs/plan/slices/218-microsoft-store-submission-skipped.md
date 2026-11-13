@@ -1,4 +1,5 @@
 ### Slice 218 — RTST Microsoft Store submission skipped Windows code changes
+**Product:** RTST
 
 *Built 2026-10-30, merged (PR #630, 050e076); the force_all Store run (41137137107) submitted rtst-v1.77.0; Partner Center not yet verified.* Planned 2026-10-30. Found while checking where RTST 1.74.0+ is available.
 

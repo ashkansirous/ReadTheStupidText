@@ -1,4 +1,5 @@
 # Slice 299 — Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names)
+**Product:** Dino
 
 *Built 2026-11-07, merged as PR #912 (08f65b2f); items 1 and 3 built, item 2 not built (see Decisions), not yet verified on a device.* (Planned 2026-11-07.) Three leftovers from [Slice 261](261-dino-no-starters-first-run-book-picker.md), not built. Moved from plan.md's *Outstanding work*. App code is shared MAUI (Android and iOS together).
 

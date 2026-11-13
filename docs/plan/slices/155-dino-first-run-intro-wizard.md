@@ -1,4 +1,5 @@
 # Slice 155 — Dino: a first-run intro wizard for three things
+**Product:** Dino
 
 *Built 2026-10-27 (PR #432), not yet verified on a real device, Windows or iOS.* Dino Reader only.
 

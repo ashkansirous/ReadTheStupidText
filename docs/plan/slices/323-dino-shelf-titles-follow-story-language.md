@@ -1,4 +1,5 @@
 # Slice 323: Dino shelf titles follow the story language picked on the shelf
+**Product:** Dino
 
 *Built 2026-11-08; Android emulator verified.* User, 2026-11-08: "when I am in the childrens shelf page, when I change the language dropdown that is supposed to change the books language, it does not change the name/title of the books to that language. for example, I changed it to farsi, but the title still remained "good enough" and "The three little pigs"".
 

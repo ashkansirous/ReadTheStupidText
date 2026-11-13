@@ -1,4 +1,5 @@
 # Slice 367 — Root CLAUDE.md keeps shared rules only; each app's rules live in its own folder
+**Product:** Shared
 
 *Built 2026-11-13 (wave 55), PR #1089, not merged.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). **Approved by the user:** they planned it, accepted it when refining the scope and told Claude to add it to the plan (the user, 2026-11-13: "I fucking planned it! I fucking accept it when I fucking refined it! I fucking clearly told you to fucking add it to the fucking plan"). Build it like the other tidy slices; never ask again. (An earlier note here wrongly said it was not the user's choice, and a session dropped it on that basis for a few minutes on 2026-11-13; that was reverted.)
 

@@ -1,4 +1,5 @@
 # Slice 128 — Tray code out of the shared Infrastructure, and tests per product
+**Product:** Shared
 
 *Built 2026-10-25 (PR #363), not yet verified on the desktop.*
 

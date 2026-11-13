@@ -1,4 +1,5 @@
 # Slice 360 — Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…"
+**Product:** Dino
 
 *Built 2026-11-13, not yet verified on a device; merged as PR #1063 (4427e6a1).*
 

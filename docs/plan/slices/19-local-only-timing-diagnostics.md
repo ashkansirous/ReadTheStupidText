@@ -1,4 +1,5 @@
 # Slice 19 — Local-only timing diagnostics
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

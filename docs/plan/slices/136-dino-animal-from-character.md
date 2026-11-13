@@ -1,4 +1,5 @@
 # Slice 136 — Dino: the animal comes from the picked character (no Animal line)
+**Product:** Dino
 
 *Reversed by Slice 152 (Decision 157, planned 2026-10-26): the animal comes from the book again, never from the picked character.*
 

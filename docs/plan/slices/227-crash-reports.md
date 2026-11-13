@@ -1,4 +1,5 @@
 ### Slice 227 — Crash and error reports from the phone apps (Dino Reader and RTST, Android and iOS)
+**Product:** RTST
 
 *Built 2026-10-31, merged as PR #654 (b8c420d); Worker deployed, not yet verified on iOS.* Planned 2026-10-31. From a friend's iPhone crashing Dino Reader several times on 2026-10-31 and nothing in our data showing why.
 

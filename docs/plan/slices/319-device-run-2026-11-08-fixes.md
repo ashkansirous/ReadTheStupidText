@@ -1,4 +1,5 @@
 # Slice 319: Fixes from the 2026-11-08 device run
+**Product:** Shared
 
 *Built 2026-11-08, merged as PR #957 (c46110ee): items 1 and 3 verified on devices; item 2 still open (see Device runs).* Bugs found by the 3-hour device run the user asked for ("check as many of 157 android and 53 windows ones as you can"), run on the emulator, the S21 and the Hyper-V VM against origin/main e61a9a8a. Evidence files: `reviews/triage/devrun-vm-bugs.md`, `devrun-phone-bugs.md`, `devrun-emu-bugs.md` (under the worktrees folder).
 

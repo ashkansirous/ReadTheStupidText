@@ -1,4 +1,5 @@
 # Slice 263 — Dino: both apps about 50-60 MB; drop ML Kit translation from iPhone, download what is needed on first use
+**Product:** Shared
 
 **Dropped 2026-11-05 by the user: "lets keep ml kit for now."** Google ML Kit translation stays in the iPhone app (about 82 MB after Slice 261's starter removal; Android about 47 MB). Reason on record: Apple allows downloading data after install, never program code, so the ML Kit engine cannot be fetched later; the routes without it either lose Farsi (Apple Translation, Farsi unconfirmed, iOS 18 minimum) or need a 630 MB model download (M2M100). Reopen only if the user asks. The text below is the record.
 

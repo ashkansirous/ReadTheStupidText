@@ -1,4 +1,5 @@
 # Slice 66 — Dino Reader languages and translation
+**Product:** Dino
 
 *Built (wave 2026-10-21b), PR #208.*
 

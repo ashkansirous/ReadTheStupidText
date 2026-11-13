@@ -1,4 +1,5 @@
 # Slice 257 — Dino: a quote after "said Mouse." is the Mouse's, not the Lion's (Lion and the Mouse)
+**Product:** Dino
 
 *Planned 2026-11-03.* Dino Reader only (Core), so Android, iOS and the Windows head alike. Found while casting the store
 books for Slice 246: in Lion and the Mouse the Mouse's line "I didn't mean to wake you up. If you're kind to me today,

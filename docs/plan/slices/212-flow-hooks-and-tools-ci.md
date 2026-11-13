@@ -1,4 +1,5 @@
 # Slice 212: hooks reach the running app, and the tool self-tests run in CI
+**Product:** Shared
 
 *Built 2026-10-30. Verified on the emulator and in CI.*
 

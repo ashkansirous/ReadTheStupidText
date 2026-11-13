@@ -1,4 +1,5 @@
 # Slice 62 — Reading screen: text and picture modes
+**Product:** Dino
 
 *Built (wave 2026-10-21b), PR #200.*
 

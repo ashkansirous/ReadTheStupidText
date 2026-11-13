@@ -1,4 +1,5 @@
 # Slice 357 — Server errors the user can see: standard messages per status, the server's text only on 400
+**Product:** Shared
 
 *Parts A-C built 2026-11-13 to the plan as it stood before the mock, merged as PR #1052 (5778b02b). The mock's items (S1 tags and price button, S2 strip styling and wording keys `Error_*`, S3 Bought-books card and restore-to-shelf, RT1/RT2 rows) are not built: they move to Slice 364 (docs/plan/slices/364-server-errors-design-pass.md, planned). Part D stays open until paid books are switched on.*
 

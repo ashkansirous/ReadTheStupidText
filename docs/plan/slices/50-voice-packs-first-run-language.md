@@ -1,4 +1,5 @@
 # Slice 50 — Voice packs, first-run language and a slimmer app (Android)
+**Product:** RTST
 
 *Built (wave 2026-10-20), PR #173.*
 

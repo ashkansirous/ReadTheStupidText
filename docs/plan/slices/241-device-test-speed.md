@@ -1,4 +1,5 @@
 ### Slice 241 — Faster, quieter device tests (emulator run 12 min, phone run 20 min, 2026-11-01)
+**Product:** Shared
 
 *Built 2026-11-01, merged as PR #708 (f8bdccd4, 22:05 UTC); not yet verified on a device: the crash fail-fast and the build during boot (see Not yet verified).* The user asked (2026-11-01): "fix the findings on the emulator as you suggested" and "fix the frozen download and the build wait for the phone".
 

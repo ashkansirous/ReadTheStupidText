@@ -1,4 +1,5 @@
 # Slice 142 — RTST Windows: early translate and voice in the control panel
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #408), not yet verified on a desktop.*
 

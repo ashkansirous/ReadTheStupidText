@@ -1,4 +1,5 @@
 ### Slice 210 — A short Kokoro line is dropped ("gave up")
+**Product:** Shared
 
 *Built 2026-10-30, verification criterion not met (see below).* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md): a 5-character line in `kokoro:am_liam` was not read, with `gave up (voice kokoro:am_liam, 5 chars)`. Investigate first, then fix by what the evidence shows.
 

@@ -1,4 +1,5 @@
 # Slice 330: Listening page: Store listening track: page gaps audible
+**Product:** Dino
 
 *Verified 2026-11-13 by measurement, no listen needed.* The user asked why they should listen to Three Little Pigs again (they had checked its lines on 2026-11-08 and 2026-11-09, Slices 334 and 335); a page-gap check can be measured, so it was. ffmpeg `silencedetect` (-40 dB) on the live tracks `listen/en?v=2` (290.05 s) and `listen/fa?v=3` (318.61 s), 16 pages each, yardstick `ListenTrackPlan.PageGapMs` 900 ms (Slice 281):
 - English: 15 page gaps, min 0.95 s, median 1.01 s, max 1.07 s; longest silence inside a page 0.70 s (a sentence pause).

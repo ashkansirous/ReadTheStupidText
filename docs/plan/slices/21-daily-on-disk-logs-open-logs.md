@@ -1,4 +1,5 @@
 # Slice 21 — Daily on-disk logs + open-logs button
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

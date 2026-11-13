@@ -1,4 +1,5 @@
 ### Slice 231 — Dino: the Record page shows the page's words (bug)
+**Product:** Dino
 
 *Built 2026-11-01 (wave 7, night 2026-11-01-0859), merged as PR #666 (e93daaa); emulator flow passed, rest not yet verified.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
 

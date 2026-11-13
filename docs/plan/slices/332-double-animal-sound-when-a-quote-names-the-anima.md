@@ -1,4 +1,5 @@
 # Slice 332: Listening page: Double animal sound when a quote names the animal
+**Product:** Dino
 
 *Verified (the user, 2026-11-08: all sound right; every item ticked).*
 

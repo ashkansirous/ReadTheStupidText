@@ -1,4 +1,5 @@
 # Slice 81 — A language change in Settings downloads that language's voice
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #239. Verified on the RTST_Test emulator, not yet on a real phone.*
 

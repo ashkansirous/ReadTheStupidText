@@ -1,4 +1,5 @@
 # Slice 281 — Dino: one listening track per store book and language, served for smart speakers
+**Product:** Dino
 
 *Built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged as PR #876 (e74bb206: BookBuilder `build-listen`, `AudioPacks`, Worker route and tests) and PR #878 (edec1d8e) with the publish side (`dino-store.yml`, `publish-store-books.mjs` and tests, `ship-targets.test.mjs`, `.github/CLAUDE.md`, this file), which the coordinator's commit brief for #876 left out by mistake (it named only tools/, tests/ and worker/ for staging). Not yet verified live (first `dino-store` run after merge, a live track).* Server and build tooling only; the Android, iOS and Windows apps do not change.
 

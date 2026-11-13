@@ -1,4 +1,5 @@
 # Slice 237 — Dino: a silent back cover (credits page) at the end of every book
+**Product:** Dino
 
 *Built 2026-11-01, merged as PR #688 (0a206a23). Android emulator back-cover flow passed; the checks under "Not yet verified" are open.* From the user, after "Freddy and the Slipper" shipped: "update the relevant skills to always
 generate a back cover page. It should write the credits, basically who wrote the original story, and for the ones

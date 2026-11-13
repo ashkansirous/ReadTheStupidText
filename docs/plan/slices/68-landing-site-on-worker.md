@@ -1,4 +1,5 @@
 # Slice 68 — Landing site served by a Cloudflare Worker
+**Product:** Shared
 
 *Built and live (wave 2026-10-20b), PR #182.*
 

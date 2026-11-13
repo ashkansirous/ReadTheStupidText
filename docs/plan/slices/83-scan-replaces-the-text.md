@@ -1,4 +1,5 @@
 # Slice 83 — Scan replaces the text, like Paste and File
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #245. Scan itself not yet verified on a device.*
 

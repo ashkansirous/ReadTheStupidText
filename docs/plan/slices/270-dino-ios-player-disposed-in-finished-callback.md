@@ -1,4 +1,5 @@
 # Slice 270 — Dino iPhone crash: the audio player is thrown away inside its own "finished playing" call
+**Product:** Dino
 
 *Built 2026-11-05 (wave 2026-11-05), merged as PR #834 (75a3a7c8). Verified 2026-11-06 by the user on iPhone (TestFlight): tested, no crashes (also 2026-11-06 ~00:10: "no crash on reading stories").* Bug fix, Dino Reader, iOS (Android checked for the same pattern). Reported by the user on 2026-11-05: "I just tried the app on my iphone and it crashed multiple times. I sent the crash report."
 

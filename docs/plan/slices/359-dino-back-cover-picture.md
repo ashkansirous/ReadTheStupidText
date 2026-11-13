@@ -1,4 +1,5 @@
 ### Slice 359 — Dino: a drawn back-cover picture for every book, with the credits shown over it
+**Product:** Dino
 
 *Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below.*
 

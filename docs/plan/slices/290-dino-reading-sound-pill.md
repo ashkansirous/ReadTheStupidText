@@ -1,4 +1,5 @@
 ### Slice 290 — Dino: the reading page's sound line as a pill (Batch 50 design)
+**Product:** Dino
 
 *Built 2026-11-07, merged as PR #889 (ca6b039f); part B merged as PR #895 (ed0bd9a6).*
 

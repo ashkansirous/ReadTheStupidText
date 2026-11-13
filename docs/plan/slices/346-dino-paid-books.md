@@ -1,4 +1,5 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
+**Product:** Dino
 
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: Part D, store setup and keys, and switching on wait for the user (A-C merged #1016 behind the off switch). A night wave that hits the same blocker parks it again with that reason.*
 

@@ -1,4 +1,5 @@
 ### Slice 197 — Dino: a "Download now" tap right after the mobile-data check is never dropped
+**Product:** Dino
 
 *Built (wave 2026-10-30), PR #583.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the code). Gap left in Slice 115 (*Not yet verified*).
 

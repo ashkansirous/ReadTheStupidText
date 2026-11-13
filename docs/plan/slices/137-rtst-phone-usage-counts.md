@@ -1,4 +1,5 @@
 # Slice 137 — RTST phone: anonymous usage counts and timings
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #382), not yet verified on a device or in Analytics Engine.*
 

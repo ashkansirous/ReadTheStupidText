@@ -1,4 +1,5 @@
 # Slice 116 — Dino: storyteller characters in every language
+**Product:** Dino
 
 *Built 2026-10-25; emulator check passed (migrated English cast, picker and EDITED pin, narrator page, Farsi cast with distinct right-aligned characters, reading plays); native-speaker read open.* *Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
 then allow people to change the character… be creative with the voice… create enough characters for

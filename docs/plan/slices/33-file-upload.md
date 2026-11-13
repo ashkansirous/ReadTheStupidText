@@ -1,4 +1,5 @@
 # Slice 33 — File upload: .txt/.pdf/.docx (reused)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

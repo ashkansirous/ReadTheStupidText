@@ -1,4 +1,5 @@
 # Slice 260 — Dino: tags on store books (Hot, Popular, Recommended, New)
+**Product:** Dino
 
 *Built 2026-11-04 (night 2026-11-04-1441, wave 1), merged as PR #798 (aca9748e); tags and per-book sizes are live in /api/stories; fix PR #805 (store crash, AutomationId) merged (bbf31fe0; reviewed high and medium; emulator store-tags, store-credits-language and dino-landscape-store PASS, night 2026-11-04-1441 wave 1). Planned 2026-11-04.* Dino Reader only; Android and iOS alike (the Windows head shares the pages). First of the onboarding group (260-265); 261's first-run book picker shows these tags.
 

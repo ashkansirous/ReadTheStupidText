@@ -1,4 +1,5 @@
 ### Slice 354 — Feedback loop 2026-11-12-1337 leftovers (TestFlight upload check, Mac runner wait, flow and package checks, Slice 346 switch-on fixes, Gemini helper residuals)
+**Product:** Shared
 
 *Parked: feedback loop, waits for the user (2026-11-12).* Found by the night 2026-11-12-1337 feedback loop ([note](../notes/2026-11-12-1337-feedback-loop.md)); repo code, so it is planned here and not built outside an implementation phase. Digest entry numbers are from the loop's digests (run sessions, or "interactive" for the starter session f7f59fb2).
 

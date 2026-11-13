@@ -1,4 +1,5 @@
 ### Slice 181 — Dino: books on the device update themselves from the store
+**Product:** Dino
 
 *Built 2026-10-29 (PR #543); emulator-verified, see Not yet verified.*
 

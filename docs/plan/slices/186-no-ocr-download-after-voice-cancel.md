@@ -1,4 +1,5 @@
 ### Slice 186 — No scan pack download after the user cancels the voice pack
+**Product:** RTST
 
 *Built (wave 2026-10-30), PR #574.* *Planned 2026-10-29. Follow-up to Slice 183.*
 

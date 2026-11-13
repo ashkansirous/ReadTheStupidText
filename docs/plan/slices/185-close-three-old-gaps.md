@@ -1,4 +1,5 @@
 ### Slice 185 — Confirm and close three old gaps (fix only what still fails)
+**Product:** Shared
 
 *Built 2026-10-29 (PR #545). No app code changed; all three gaps no longer fail on the x64 Debug emulator. Dino first run not yet checked on an AOT Release x64 build.*
 

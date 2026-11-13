@@ -1,4 +1,5 @@
 # Slice 272 — Dino: Farsi pre-made audio falls back to the device voice after the first animal sound
+**Product:** Dino
 
 *Verified 2026-11-06 by the user on iPhone (TestFlight): tested, no crashes. Built 2026-11-05, merged as PR #839 (7f84ce99); item 4 (live-store recheck) and the device checks are open, see `docs/plan/unverified.md`. Asked for by the user 2026-11-05: "fix the farsi books".* Bug fix, Dino Reader, content and tooling (the app code is unchanged). Reported by the user on 2026-11-05: in Lion and Mouse in Farsi, from page 5 ("but you are too small", where the lion lifts his paw) the read falls back to the device voice and stays on it; English was fine.
 

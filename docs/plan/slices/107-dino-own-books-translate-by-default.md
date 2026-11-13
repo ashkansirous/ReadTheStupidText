@@ -1,4 +1,5 @@
 # Slice 107 — Dino: own books translate by default
+**Product:** Dino
 
 *Built 2026-10-24, not yet verified on a device.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —

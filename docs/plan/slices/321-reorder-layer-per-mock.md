@@ -1,4 +1,5 @@
 # Slice 321: Reorder layer back to the mock on Windows
+**Product:** Dino
 
 *Built 2026-11-08 (taken over from a dead session; origin/main merged in at 7996f7ba), merged as PR #962 (c65682e3). Windows VM and Android emulator checked, see Not yet verified.* Slice 319 (PR #957) changed the Dino Reorder layer to copy the shelf's geometry so it "lies over the shelf". That design was the coordinator's, written without reading the mock, which always wins. The mock (`docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, frames 173-176, lines 314-330; Slice 264 lines 33-34) shows Reorder as its own panel: the ink bar (Cancel / "Reorder" / Done), the hint ("Drag a book to a new place. Your child's shelf shows the same order.", `padding:12px 18px 12px`), then the grid (`padding:0 14px`, no top padding). Phone: 3 across, 14 dp sides. Windows (frame 176, 1100x760 window): 6 across, gap 18, side padding 40. The mock has no tablet frame. The 2026-11-08 VM bug (L95: the layer kept phone padding, 13 px from the window edge) is fixed by the mock's 40 dp and 6 columns, not by the shelf's centred margin.
 

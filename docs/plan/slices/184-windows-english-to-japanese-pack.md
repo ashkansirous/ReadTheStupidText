@@ -1,4 +1,5 @@
 ### Slice 184 — Windows: an English-to-Japanese translation pack
+**Product:** RTST
 
 *Built 2026-10-29 (merged PR #562, reopened after the user allowed CC-BY-SA for downloaded packs; first pass closed in PR #548). Not yet verified in the Windows app, see below.*
 

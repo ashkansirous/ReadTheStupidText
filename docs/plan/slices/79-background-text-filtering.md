@@ -1,4 +1,5 @@
 # Slice 79 — Background text: drop signs and titles from the story, with a manual override
+**Product:** Dino
 
 *Built 2026-10-22 (wave 2026-10-22), PR #240; not yet verified on a real picture-book scan.
 

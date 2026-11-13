@@ -1,4 +1,5 @@
 # Slice 58 — Dino Reader skeleton: shared Mobile library, new app, pipeline
+**Product:** Dino
 
 *Built (wave 2026-10-21), PR #191. Not yet verified: the Play Console and signing steps below.*
 

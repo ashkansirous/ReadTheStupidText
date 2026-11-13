@@ -1,4 +1,5 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
+**Product:** Shared
 
 *Planned (2026-11-13).*
 

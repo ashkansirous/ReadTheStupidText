@@ -1,4 +1,5 @@
 # Slice 309 — Split `src/DinoReader.App/CLAUDE.md` (52 KB, budget ~20 KB)
+**Product:** Dino
 
 *Built (wave 2026-11-07), merged as PR #907 (a997142b).* Planned 2026-11-07. The Dino app's folder rules file is read whole every time anyone works in `src/DinoReader.App/`. plan.md said 41 KB; it is now 52,793 bytes (read 2026-11-07). The promised split was never planned. Moved from plan.md's *Built but not verified*. Docs only; run it between waves, when no other branch edits the file (`archive-docs` rule).
 

@@ -1,4 +1,5 @@
 # Slice 268 — Dino: remove "Show original text" from grown-up mode
+**Product:** Dino
 
 *Built 2026-11-04, merged as PR #825 (a52b1dac). Checked on the Android emulator (emulator-5554, build cfd10992f4e6); iOS is compiled by CI only.* Dino Reader, Android and iOS alike (and the Windows head, which shares the pages). User, 2026-11-04: "there is a part in the parents mode that allows reading a book in the original language. I dont need that. remove it". Fits the rule in Slice 267: a book has no language of its own; it is read in the family's languages.
 

@@ -1,4 +1,5 @@
 # Slice 76 — Soft line-break reflow and heading detection
+**Product:** Shared
 
 *In progress (wave 2026-10-22), draft PR.*
 

@@ -1,4 +1,5 @@
 # Slice 159 — Dino: everything in the chosen language
+**Product:** Dino
 
 *Built 2026-10-27 (PR #473).* Dino Reader only.
 

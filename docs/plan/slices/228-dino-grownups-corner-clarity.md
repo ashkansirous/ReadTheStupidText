@@ -1,4 +1,5 @@
 ### Slice 228 — Dino: make the kids' shelf and the grown-ups' corner obvious
+**Product:** Dino
 
 *Built (wave 2026-11-01), merged as PR #673 (e3c9eb9).* Planned 2026-11-01. From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 

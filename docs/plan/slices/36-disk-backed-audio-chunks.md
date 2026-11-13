@@ -1,4 +1,5 @@
 # Slice 36 — Disk-backed audio chunks
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

@@ -1,4 +1,5 @@
 # Slice 154 — Dino: vowel marks in Farsi and Arabic books
+**Product:** Dino
 
 *Dropped 2026-11-03 (the user): "discard the slice for adding vowels to farsi. Gemini is good and I dont need to do anything manually."* No more books get vowel marks or a Farsi pronunciation review; store books get Gemini audio from plain text instead (Slice 246). What already shipped (Three Little Pigs, PR #470) stays. Draft PR #435 closed.
 

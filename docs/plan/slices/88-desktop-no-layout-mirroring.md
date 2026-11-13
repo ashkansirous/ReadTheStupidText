@@ -1,4 +1,5 @@
 # Slice 88 — The Windows desktop layout never mirrors; only text flows by its own direction
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #254; desktop check in Farsi and Arabic passed; paging back not yet verified.*
 

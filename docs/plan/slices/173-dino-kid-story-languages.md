@@ -1,4 +1,5 @@
 # Slice 173 — Dino: up to three story languages, switched by the kid
+**Product:** Dino
 
 *Built 2026-10-28 (wave 2026-10-28c), not yet verified on iOS or a phone; planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
 

@@ -1,4 +1,5 @@
 # Slice 337: Listening page: Dino first-run hello line sounds whole
+**Product:** Dino
 
 *Dropped 2026-11-08 (planned 2026-11-08).* **Why dropped:** Dino has no speech engine since Slice 278, so the first run plays nothing (a 30 s S21 recording of a fresh install was digital silence, -91 dB). The stale "Dino downloads a voice for it" line is no longer in the code on main (removed by Slice 325 part D). A listening page was made (https://claude.ai/artifact/992axYddYaAGWkFuPePHUM) and is withdrawn.
 

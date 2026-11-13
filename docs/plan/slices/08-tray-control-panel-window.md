@@ -1,4 +1,5 @@
 # Slice 8 — Tray control panel window
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

@@ -1,4 +1,5 @@
 # Slice 114 — Dino: Kokoro storyteller voices for English
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified (packs-6 run and device listening open).* *Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up", asking for better
 options "at least for English and alike".

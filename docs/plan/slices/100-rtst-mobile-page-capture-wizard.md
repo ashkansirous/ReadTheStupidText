@@ -1,4 +1,5 @@
 # Slice 100 — RTST phone: "Take a photo of each page", wizard page 1
+**Product:** RTST
 
 *Built 2026-10-24 (PR #290), emulator-checked on RTST_Test the same day.* Planned 2026-10-24, from the user's request: "The text from picture button lets people take a picture
 and add more, until they are done. It should be clear that it expects multiple pages."

@@ -1,4 +1,5 @@
 # Slice 297 — Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid)
+**Product:** Shared
 
 *Built 2026-11-07 (wave 2026-11-07, PR #926, merged as 8abf2632); iOS wizard and read_voice on iOS not yet verified.* Planned 2026-11-07. Four items left by [Slice 267](267-dino-old-voice-and-wizard-buttons.md) (built, #826). Moved from plan.md's *Outstanding work*. Items 1 and 4 are app code (the same MAUI code on Android and iOS); items 2 and 3 are emulator tooling.
 

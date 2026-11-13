@@ -1,4 +1,5 @@
 # Slice 130 — A version and a release per product
+**Product:** Shared
 
 *Built 2026-10-26 (PR #367), verified 2026-10-26: actionlint passed in PR CI; first release run 40253931851 succeeded.*
 

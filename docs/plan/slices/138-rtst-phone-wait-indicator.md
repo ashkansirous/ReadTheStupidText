@@ -1,4 +1,5 @@
 # Slice 138 — RTST phone: a wait indicator after 500 ms
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #390); emulator checks passed 2026-10-26.*
 

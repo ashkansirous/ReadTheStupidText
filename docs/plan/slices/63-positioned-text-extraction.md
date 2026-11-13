@@ -1,4 +1,5 @@
 # Slice 63 — Positioned text extraction and kept page images
+**Product:** Shared
 
 *Built (wave 2026-10-21b), PR #205.* Not yet verified on a device (see the end of this file).
 

@@ -1,4 +1,5 @@
 ### Slice 317 — Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows)
+**Product:** Shared
 
 *Parked: feedback loop, waits for the user (2026-11-08).* Found by the night 2026-11-08-0106 feedback loop ([note](../notes/2026-11-08-0106-feedback-loop.md)); repo code, so it is planned here and not built outside an implementation phase.
 
