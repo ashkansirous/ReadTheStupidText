@@ -1,9 +1,9 @@
 # Slice 370 — Give the shared code a neutral name
 **Product:** Shared
 
-*Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 5 of 5). Runs only when no other PR or worktree with changes is open (it touches about 400 files); after 366-369, before 371.
+*In progress (wave 2026-11-13), draft PR.* Planned 2026-11-13. Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 5 of 5). Runs only when no other PR or worktree with changes is open (it touches about 400 files); after 366-369, before 371.
 
-**Touches:** `src/ReadTheStupidText.Domain/**`, `src/ReadTheStupidText.Application/**`, `src/ReadTheStupidText.Documents/**`, `src/ReadTheStupidText.Infrastructure/**`, `src/ReadTheStupidText.Mobile.Shared/**`, every `using ReadTheStupidText.` in `src/**` and `tests/**`, `ReadTheStupidText.slnx`, `Directory.Build.props`, `.github/scripts/ship-targets.mjs`, `.github/workflows/*.yml` (paths), `tests/**/FallbackGuardBaseline.txt`, folder `CLAUDE.md` files that name these projects
+**Touches:** `src/ReadTheStupidText.Domain/**`, `src/ReadTheStupidText.Application/**`, `src/ReadTheStupidText.Documents/**`, `src/ReadTheStupidText.Infrastructure/**`, `src/ReadTheStupidText.Mobile.Shared/**`, every `using ReadTheStupidText.` in `src/**` and `tests/**`, `ReadTheStupidText.slnx`, `Directory.Build.props`, `.github/scripts/ship-targets.mjs`, `.github/workflows/*.yml` (paths), `tests/**/FallbackGuardBaseline.txt`, folder `CLAUDE.md` files that name these projects; root `CLAUDE.md` and `README.md` (layer diagram, paths); `src/AndroidSherpaPackaging.props` and other `src/*.props` naming these paths; every `ProjectReference` in `src/**` and `tests/**` csproj files; `.github/scripts/*`; `tools/DinoReader.BookBuilder/**`, `tools/desktop-vm/**`, `tools/test-test-targets.ps1` (widened at claim, 2026-11-13, from `git grep` of the project names)
 
 ## Why
 
