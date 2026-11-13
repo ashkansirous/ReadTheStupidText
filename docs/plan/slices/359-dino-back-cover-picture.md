@@ -1,7 +1,7 @@
 ### Slice 359 — Dino: a drawn back-cover picture for every book, with the credits shown over it
 **Product:** Dino
 
-*Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below.*
+*Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below. Item 6 built in wave 2026-11-13, PR #1097 (merge pending).*
 
 *Item 6 in progress (wave 2026-11-13), draft PR.*
 
@@ -73,14 +73,14 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
   it with the book's story and its own pictures (characters whole, sizes and props as in the book), not only its look.
 - [x] 5. Tests: builder (picture packed, page not counted), Core (never in the sentence list).
   - **From review:**
-    - Skipped #1 (`reviews/s359b-high.md`): "Work items 2, 4 and 5 are built but unticked; header still says 'step 2 next'" - update-docs ticks items.
+    - Skipped #1 (`reviews/s359b-high.md`): "Work items 2, 4 and 5 are built but unticked" - update-docs ticks items.
     - Skipped #10 (`reviews/s359b-high.md`): "two sources for one value" - the name is written twice on purpose: old apps read the last page's picture, new apps read the `Picture` field.
     - Skipped #3 (`reviews/s359b-check.md`): "DrawnBackCovers static cache never evicted; a hit skips File.Exists" - an installed book's files do not vanish during a run; a re-download is a new process or story id.
     - Skipped #4 (`reviews/s359b-check.md`): "AspectProblem ignores EXIF orientation" - Gemini JPEGs carry no EXIF rotation.
     - Skipped #5 (`reviews/s359b-check.md`): "no zero guard on SOF width/height, and Of(string) reads the whole file" - low severity, a corrupt picture still fails the check; not worth more code.
     - Skipped #6 (`reviews/s359b-check.md`): "side-by-side FitFontSize reserves 2*ScrimPadding though there is no scrim; credits loop duplicated" - cosmetic.
-    - Skipped #8 (`reviews/s359b-check.md`): "asserts fixed 'October 2026' credits month; flow not run on a device" - the flow was run on the emulator and passed.
-    - `reviews/s359b-check2.md`, all 6 skipped, no code changed after it:
+    - Skipped #8 (`reviews/s359b-check.md`): "flow not run on a device" - the flow was run on the emulator and passed.
+    - `reviews/s359b-check2.md`, all 6 skipped ("side-by-side (Width >= 1.5 x Height) puts credits beside the picture"), no code changed after it:
       - #1 landscape puts the credits beside the picture, not over its middle: the coordinator's call after the first
         emulator run (in landscape the overlay hid the characters), following Slice 237's Design frame 148. Portrait
         keeps the user's "text in the middle". The user may overrule it. (The user did, through the 2026-11-13 mock: item 6.)
@@ -97,7 +97,7 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
     - Skipped #9 (`reviews/s359b-medium.md`): "items 2, 4, 5 built but unticked" - a docs finding, done by this update-docs pass (same as high #1).
     - #5 applied as: `check` fails a book that has back-cover.jpg but no credit fields in book.json. #6: `check` fails a picture that is not 3:4 (1% tolerance). #9: reason `back_cover_missing` (area `library`) when a book names its picture and the file is missing.
 
-- [ ] 6. **Match the 2026-11-13 mock** (Design below). The built layout differs in these ways, each to be changed:
+- [x] 6. **Match the 2026-11-13 mock** (Design below). *Built in wave 2026-11-13, PR #1097 (merge pending).* The built layout differed in these ways, each changed:
   - Credits sit on a **cream card in the middle of the picture at every size and view**: 300 wide (never wider than the picture
     less 16 each side), radius 22, padding 18 22 20, `rgba(255,246,230,.9)`, shadow 0 8 28 rgba(43,37,64,.22), centred both ways.
     Built: a light box in the 30-62% band (`BandTop`/`BandBottom`, `ScrimAlpha` 0.6, `ScrimCorner` 16, `ScrimPadding` 14, grown
@@ -167,11 +167,25 @@ No new strings.
 *Changed while building:*
 
 - (The mock supersedes this; see item 6. The mock's cream card is small, a 340 wide card of about four lines, and the user kept it in the middle.) Landscape shows the picture left and the credits right (no overlay): the first emulator run showed the overlay hid the picture. Portrait puts the credits on a light box in the picture's 30-62% band (grows only if the text does not fit). Side-by-side only when the card is at least twice as wide as the 3:4 picture's height needs.
+- Item 6 (PR #1097): `BackCoverCard.For`/`Fit` and `BackCoverPicture.Frame` in `src/DinoReader.Core/BackCoverCard.cs`: card 300/340/360 by the page's size class (`WindowShapeSeam`/`LandscapeLayout`), never wider than the picture less 32; fixed sizes, fonts step down only when the card would overflow the stage; CJK counted 1 em; the picture fills the stage with 40% of the crop from the top, from the picture's real aspect. `BackCoverPages.cs` lost the band, scrim and side-by-side. `ReadingPage` hides Modes on the back cover. New tokens `BackCoverCream` and `Amber` in `App.xaml`/`DinoTokens.cs`. Debug log lines `BACKCOVER shown ... card=<w>` (invariant culture) and `BACKCOVER modes visible=no`; flows back-cover, back-cover-picture, back-cover-fa, back-cover-ar updated. Differences from the plan: no stage margins of its own (the reading surface sets the area); no blur (90% cream alone, as the Design allows); title 600 is Bold; MAUI `Image` has no focal point, so the offset is an explicit size plus `TranslationY`.
 - `check` also fails a back cover that is not 3:4 and a book with a picture but no credit fields.
 - New fallback reason `back_cover_missing` (area `library`), reported once per book per run.
 - Text-only: the app was right; the flow now swipes until the back cover shows.
 
 *Device run (Android emulator-5554, Dino Debug, 2026-11-13):* back-cover-picture (Three Little Pigs portrait, landscape, picture-only, text-only), back-cover-fa and back-cover-ar all PASS after the layout fix. The first run failed (portrait box over the characters, landscape overlay hid the picture, text-only flow wrong); fixed, screenshots checked by the coordinator.
+
+*From review (item 6):*
+
+- `reviews/s359i6-high.md`: applied #1-4.
+  - Skipped #5 (`reviews/s359i6-high.md`): "token duplicates #FFC24D" - the token is the shared one; the two private copies in `CornerShell.cs` and `CornerTabs.cs` are left alone.
+- `reviews/s359i6-medium.md`: applied #1, 4, 5, 6, 8.
+  - Skipped #2 (`reviews/s359i6-medium.md`): "Fit steps font sizes down when the card is too tall" - high #1 already chose fixed sizes with a step-down only on overflow, which meets both.
+  - Skipped #3 (`reviews/s359i6-medium.md`): "written on every RenderChrome call" - logging only.
+  - Skipped #7 (`reviews/s359i6-medium.md`): "keeps the old CreditsHeight/FitFontSize/PictureHeight constants" - the old fitting code still serves the Good Enough live page, not dead.
+  - Skipped #9 (`reviews/s359i6-medium.md`): "The assertions only check log lines" - the device run checked the screenshots.
+- `reviews/s359i6-check1.md`: #1 applied (`BuildCard` split). `reviews/s359i6-check2.md`: no findings.
+
+*Device run, item 6 (Android emulator, build c7f9c4eec4f9):* back-cover, back-cover-picture (portrait card=300, landscape card=340), back-cover-fa and back-cover-ar all PASS; screenshots match BC1/BC2/BC3 (card centred, picture fills the stage, no view switch). Evidence: `D:/ReadTheStupidText-worktrees/reviews/s359i6-device/` (outside the repo).
 
 #### For CLAUDE.md (lifted 2026-11-13)
 
@@ -186,3 +200,10 @@ In `src/DinoReader.App/CLAUDE.md`: every Dino book has `content/dino/<book>/back
 - Older installed apps showing the picture page.
 - Good Enough's back cover (after its text-free redraw, Slice 350 part E, and its text rewrite).
 - The store upload of the 11 store books and their new versions on the live store.
+- Item 6: `layout-check` (the four back-cover flows carry no layout-check header).
+- Item 6: the Read again glyph on the back cover (screens show the play triangle; no flow asserts it).
+- Item 6: the tablet and Windows 360 card.
+- Item 6: Windows head build.
+- Item 6: iOS on a device.
+- Item 6: the text-only view screenshot was not reviewed.
+- Item 6: the Farsi/Arabic author line wraps "Ashkan / Sirous" in the 300 card (check against BC3).

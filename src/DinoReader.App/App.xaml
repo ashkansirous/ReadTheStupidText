@@ -81,6 +81,9 @@
         <!-- Slice 290: the reading page's sound pill (Batch 50 frames 197-199): the quiet sand pill and the progress ring's track. -->
         <Color x:Key="SoundPillSand">#F0E8D8</Color>
         <Color x:Key="RingTrack">#d6cffc</Color>
+        <!-- Slice 359 item 6: the back cover's credits card (2026-11-13 Missing States mock, section 1): cream at 90% (ARGB) and the amber rule under the title. -->
+        <Color x:Key="BackCoverCream">#E6FFF6E6</Color>
+        <Color x:Key="Amber">#FFC24D</Color>
 
         <Style TargetType="Label">
             <Setter Property="FontFamily" Value="Fredoka" />

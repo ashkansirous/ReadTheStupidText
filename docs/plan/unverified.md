@@ -125,6 +125,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** older installed apps showing the picture page.
 - **Device:** Good Enough's back cover (after its text-free redraw, Slice 350 part E, and its text rewrite).
 - **Device:** the store upload of the 11 store books and their new versions on the live store.
+- **Device:** item 6: `layout-check` (the four back-cover flows carry no layout-check header).
+- **Device:** item 6: the Read again glyph on the back cover (screens show the play triangle; no flow asserts it).
+- **Device:** item 6: the tablet and Windows 360 card.
+- **Device:** item 6: Windows head build.
+- **Device:** item 6: iOS on a device.
+- **Device:** item 6: the text-only view screenshot was not reviewed.
+- **Device:** item 6: the Farsi/Arabic author line wraps "Ashkan / Sirous" in the 300 card (check against BC3).
 
 ### Slice 355: Dino: a public web page listing every store book, free or paid, and the price ([slice](slices/355-dino-web-catalogue.md))
 - **Device:** Live `/books` and the workers.dev `/dino/books` after the batched release deploys: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.

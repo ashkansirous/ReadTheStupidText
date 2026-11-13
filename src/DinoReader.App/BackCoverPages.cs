@@ -1,3 +1,4 @@
+using System.Globalization;
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
@@ -5,8 +6,8 @@ using Microsoft.Maui.Layouts;
 namespace DinoReader;
 
 /// <summary>What the back cover shows (Slice 237): its lines already worded in the reading language, the book's colour and the small cover picture (a file path, or null for a colour cover).
-/// Slice 359: <see cref="BackPicture"/> is the book's drawn back-cover picture (a file path); with it the credits sit over the picture's middle, and without it (Good Enough) the live page above is drawn.</summary>
-public sealed record BackCoverView(IReadOnlyList<string> Lines, Color Colour, string? CoverPicture, string? BackPicture = null);
+/// Slice 359: <see cref="BackPicture"/> is the book's drawn back-cover picture (a file path); with it the credits sit on a cream card in the middle of the picture (item 6), and without it (Good Enough) the live page above is drawn.</summary>
+public sealed record BackCoverView(IReadOnlyList<string> Lines, Color Colour, string? CoverPicture, string? BackPicture = null, string Title = "");
 
 /// <summary>
 /// The silent last page of a book (Slice 237): the story's own renderer with one more page after its last. The back cover has no sentences, so it is never read,
@@ -29,16 +30,23 @@ public sealed class BackCoverPages(IPageRenderer inner, BackCoverView view, stri
 	private const double SidePadding = 24;
 	private const double LineHeightFactor = 1.4;
 	private const double MinPictureHeight = 72; // a shorter card drops the picture and keeps the credits
-	private const double BackPictureAspect = 0.75; // the drawn back covers are 3:4
-	private const double ScrimPadding = 14;
-	private const float ScrimAlpha = 0.6f; // the credits' backing is the page colour at this strength: readable on a light or a dark picture, the drawing still shows through
-	private const double ScrimCorner = 16;
-	private const double BandTop = 0.30; // the credits stay in this band of the picture's height: the drawings keep their middle open (Slice 359)
-	private const double BandBottom = 0.62;
+	private const double StageCorner = 18; // the drawn picture's stage (Slice 359 item 6, mock BC1-BC3)
+	private const double CardCorner = 22;
+	private const double CardShadowBlur = 28;
+	private const double CardShadowOffset = 8;
+	private const float CardShadowOpacity = 0.22f; // rgba(43,37,64,.22)
+	private const double TitleLineHeight = 1.25;
+	private const double CreditLineHeight = 1.55;
+	private const double CreditGap = 2;
+	private const double RuleWidth = 36;
+	private const double RuleHeight = 3;
+	private const double RuleMargin = 10;
+	private static readonly Thickness CardPadding = new(22, 18, 22, 20);
 
 	private ReadingTheme? _theme;
 	private Size _card;
 	private double _fontSize = LineFontSize;
+	private double _appliedCardWidth; // the width BuildCard really set (0 for the live page), logged by DrawPage
 
 	/// <summary>The index of the back cover page: right after the inner renderer's last.</summary>
 	public int BackPage => inner.PageCount;
@@ -80,9 +88,10 @@ public sealed class BackCoverPages(IPageRenderer inner, BackCoverView view, stri
 
 		layers.Boxes.Children.Clear();
 		layers.Text.Children.Clear();
+		_appliedCardWidth = 0;
 		layers.Text.Children.Add(BuildPage());
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER shown lines={view.Lines.Count} picture={(view.BackPicture is null ? "live" : "drawn")}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER shown lines={view.Lines.Count} picture={(view.BackPicture is null ? "live" : "drawn")}{CardLogSuffix()}");
 #endif
 	}
 
@@ -141,100 +150,107 @@ public sealed class BackCoverPages(IPageRenderer inner, BackCoverView view, stri
 		return host;
 	}
 
-	// Slice 359: the drawn back cover. Portrait: the picture is shown whole (3:4, centred on the card) and the credit lines sit in its open middle band (BandTop to BandBottom of the
-	// PICTURE's height, not the page's) on a light strip of the page colour just behind the text. Landscape (frame 148 of Slice 237): the picture whole on the left and the lines on the
-	// right on the page colour, no overlay. In every reading mode, in either direction.
+	// Slice 359 item 6 (mock BC1-BC3): the drawn picture fills the stage (cover, radius 18, sand fill) and the credits sit on one cream card in the middle of it, at every size, view and
+	// direction. The card has fixed text sizes and grows in height; only when it would not fit the stage do its sizes step down (BackCoverCard.Fit). The picture keeps its crop a little above centre.
 	private View BuildDrawnPage(string file)
 	{
-		// Side by side only when the whole picture at full height still leaves at least as much width again for the credits; otherwise the credits go over the picture.
-		bool sideBySide = _card.Width >= 2 * _card.Height * BackPictureAspect;
-		double pictureHeight = sideBySide ? _card.Height : Math.Min(_card.Height, _card.Width / BackPictureAspect);
-		var picture = new Image { Source = ImageSource.FromFile(file), Aspect = Aspect.AspectFill, InputTransparent = true, WidthRequest = pictureHeight * BackPictureAspect, HeightRequest = pictureHeight };
-		return Host(sideBySide ? BuildSideBySide(picture, pictureHeight) : BuildOverPicture(picture, pictureHeight));
-	}
-
-	// The credits' band: BandTop to BandBottom of the picture, grown (kept centred on that band, up to the whole picture) when the credits at the smallest font would not fit it.
-	private (double Top, double Bottom) BandFor(double pictureWidth, double pictureHeight)
-	{
-		double inset = SidePadding + ScrimPadding;
-		double needed = CreditsHeight(_fontSize, new Size(pictureWidth, pictureHeight), inset) + 2 * ScrimPadding;
-		double height = Math.Min(pictureHeight, Math.Max(pictureHeight * (BandBottom - BandTop), needed));
-		double top = Math.Clamp(pictureHeight * (BandTop + BandBottom) / 2 - height / 2, 0, pictureHeight - height);
-		return (top / pictureHeight, (top + height) / pictureHeight);
-	}
-
-	private View BuildOverPicture(Image picture, double pictureHeight)
-	{
-		double pictureWidth = pictureHeight * BackPictureAspect;
-		double bandHeight = pictureHeight * (BandBottom - BandTop);
-		_fontSize = FitFontSize(new Size(pictureWidth, bandHeight), SidePadding + ScrimPadding, 2 * ScrimPadding);
-		(double bandTop, double bandBottom) = BandFor(pictureWidth, pictureHeight);
-		var framed = new Grid
+		Size area = _card; // the one stage size the picture frame and the card fit both use
+		double aspect = PageImageSize.Read(file) is { Height: > 0 } size ? size.Width / size.Height : 0; // the picture's real pixel aspect; 0 falls back to 3:4
+		BackCoverPictureFrame frame = BackCoverPicture.Frame(area.Width, area.Height, aspect);
+		var picture = new Image
 		{
-			WidthRequest = pictureWidth,
-			HeightRequest = pictureHeight,
+			Source = ImageSource.FromFile(file),
+			Aspect = Aspect.AspectFill,
+			WidthRequest = frame.Width,
+			HeightRequest = frame.Height,
 			HorizontalOptions = LayoutOptions.Center,
-			VerticalOptions = LayoutOptions.Center,
+			VerticalOptions = LayoutOptions.Start,
+			TranslationY = frame.OffsetY,
 			InputTransparent = true,
-			RowDefinitions =
-			{
-				new RowDefinition(new GridLength(Math.Max(bandTop, 0.0001), GridUnitType.Star)),
-				new RowDefinition(new GridLength(bandBottom - bandTop, GridUnitType.Star)),
-				new RowDefinition(new GridLength(Math.Max(1 - bandBottom, 0.0001), GridUnitType.Star)),
-			},
 		};
-		framed.Add(picture);
-		Grid.SetRowSpan(picture, 3);
-		Border scrim = BuildScrim(pictureWidth);
-		framed.Add(scrim);
-		Grid.SetRow(scrim, 1);
-		return framed;
+		var stage = new Grid { InputTransparent = true, Children = { picture, BuildCard(area) } };
+		return Host(new Border
+		{
+			BackgroundColor = DinoTokens.Get(DinoTokens.SoundPillSand),
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = StageCorner },
+			InputTransparent = true,
+			Content = stage,
+		});
 	}
 
-	private View BuildSideBySide(Image picture, double pictureHeight)
+	private BackCoverCardSpec CardSpec(Size stage)
 	{
-		double textWidth = Math.Max(0, _card.Width - pictureHeight * BackPictureAspect);
-		_fontSize = FitFontSize(new Size(textWidth, _card.Height), SidePadding, 2 * ScrimPadding);
-		var credits = new VerticalStackLayout { Spacing = LineGap, VerticalOptions = LayoutOptions.Center, Padding = new Thickness(SidePadding, 0), InputTransparent = true };
-		foreach (string line in view.Lines)
-		{
-			credits.Add(LineLabel(line));
-		}
-
-		var row = new Grid
-		{
-			HorizontalOptions = LayoutOptions.Fill,
-			VerticalOptions = LayoutOptions.Fill,
-			InputTransparent = true,
-			ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) },
-		};
-		row.Add(picture);
-		row.Add(credits);
-		Grid.SetColumn(credits, 1);
-		return row;
+		(double width, double height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, stage.Width, stage.Height); // the size class the reading page uses, so a narrow window gets the phone card
+		bool wide = LandscapeLayout.SizeOf(width, height) == DeviceSize.Tablet;
+		return BackCoverCard.Fit(BackCoverCard.KindFor(wide, width > height), stage.Width, stage.Height, view.Title, view.Lines); // wide and landscape both from the effective size
 	}
 
-	private Border BuildScrim(double pictureWidth)
+	// The card's width in whole points for the BACKCOVER log, culture-independent so a Farsi or Arabic device logs "card=300"; empty for the live page, which has no card.
+	private string CardLogSuffix() =>
+		_appliedCardWidth > 0 ? $" card={((int)Math.Round(_appliedCardWidth)).ToString(CultureInfo.InvariantCulture)}" : string.Empty;
+
+	private Border BuildCard(Size stage)
 	{
-		var credits = new VerticalStackLayout { Spacing = LineGap, InputTransparent = true };
+		BackCoverCardSpec spec = CardSpec(stage);
+		_appliedCardWidth = spec.Width;
+		return CardFrame(spec.Width, CardContent(spec));
+	}
+
+	private VerticalStackLayout CardContent(BackCoverCardSpec spec)
+	{
+		var content = new VerticalStackLayout { Spacing = CreditGap, InputTransparent = true };
+		content.Add(CardLabel(view.Title, spec.TitleSize, TitleLineHeight, FontAttributes.Bold));
+		content.Add(CardRule());
 		foreach (string line in view.Lines)
 		{
-			credits.Add(LineLabel(line));
+			content.Add(CardLabel(line, spec.LineSize, CreditLineHeight, FontAttributes.None));
 		}
 
+		return content;
+	}
+
+	private static BoxView CardRule() => new()
+	{
+		WidthRequest = RuleWidth,
+		HeightRequest = RuleHeight,
+		CornerRadius = RuleHeight / 2,
+		Color = DinoTokens.Get(DinoTokens.Amber),
+		HorizontalOptions = LayoutOptions.Center,
+		Margin = new Thickness(0, RuleMargin - CreditGap),
+		InputTransparent = true,
+	};
+
+	private static Border CardFrame(double width, View content)
+	{
 		return new Border
 		{
 			HorizontalOptions = LayoutOptions.Center,
 			VerticalOptions = LayoutOptions.Center,
-			MaximumWidthRequest = pictureWidth - 2 * SidePadding,
-			Padding = new Thickness(ScrimPadding),
-			BackgroundColor = CardColour(BackPage).WithAlpha(ScrimAlpha),
+			WidthRequest = width,
+			Padding = CardPadding,
+			BackgroundColor = DinoTokens.Get(DinoTokens.BackCoverCream),
 			StrokeThickness = 0,
-			StrokeShape = new RoundRectangle { CornerRadius = ScrimCorner },
+			StrokeShape = new RoundRectangle { CornerRadius = CardCorner },
+			Shadow = new Shadow { Brush = new SolidColorBrush(DinoTokens.Get(DinoTokens.Ink)), Offset = new Point(0, CardShadowOffset), Radius = (float)CardShadowBlur, Opacity = CardShadowOpacity },
 			InputTransparent = true,
-			Content = credits,
+			Content = content,
 		};
 	}
+
+	private Label CardLabel(string text, double size, double lineHeight, FontAttributes weight) => new()
+	{
+		Text = text,
+		FontFamily = font,
+		FontSize = size,
+		FontAttributes = weight,
+		LineHeight = lineHeight,
+		FontAutoScalingEnabled = false,
+		TextColor = DinoTokens.Get(DinoTokens.Ink), // the card is cream in every theme, so its ink is fixed
+		HorizontalTextAlignment = TextAlignment.Center,
+		FlowDirection = rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
+		InputTransparent = true,
+	};
 
 	// The credits' height at a font size: each line's wrapped line count is estimated from its length and the room's width (less the inset each side), so a long language on a narrow card gets the room it needs.
 	private double CreditsHeight(double fontSize, Size area, double inset)

@@ -61,6 +61,8 @@ public static class DinoTokens
 	public const string OnBrand = "OnBrand";
 	public const string SoundPillSand = "SoundPillSand";
 	public const string RingTrack = "RingTrack";
+	public const string BackCoverCream = "BackCoverCream";
+	public const string Amber = "Amber";
 	public const string StorytellerOn = "StorytellerOn";
 	public const string TagHotFill = "TagHotFill";
 	public const string TagHotInk = "TagHotInk";
