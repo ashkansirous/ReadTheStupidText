@@ -62,6 +62,14 @@ name: First run with the microphone refused, Continue without recording
 - tapOn:
     id: OnboardingRecord
     waitToSettleTimeoutMs: 600
+# The Record page asks for the microphone when Record is pressed, not when it opens.
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 30000
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 600
 # The system prompt (when Android shows one) is answered with Don't allow.
 - tapOn:
     id: com.android.permissioncontroller:id/permission_deny_button

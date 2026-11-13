@@ -12,7 +12,7 @@
 # expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=2
 # expect-log: [Onboarding] listen enter kind=Listen page=13
 # expect-log: [Onboarding] listen page-ended stage=First continue=True
-# expect-log: [Onboarding] voice record opened lines=
+# expect-log: [Onboarding] voice record opened lines=1
 # expect-log: [Record] finish
 # expect-log: [Onboarding] listen enter kind=HearYourself page=13
 # expect-log: [Onboarding] tour stop=Welcome

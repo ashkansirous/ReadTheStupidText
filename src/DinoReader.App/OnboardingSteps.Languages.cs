@@ -137,6 +137,7 @@ public sealed class OnboardingLanguagesPage : ContentPage, IDinoKeyTarget
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
 		}
 
+		FirstBooksGate.StoryLanguagesPending = false; // the pick is saved first; a kill from here reopens on the book picker
 		OnboardingUsage.StepDone(_usage, OnboardingStep.StoryLanguages, tried: set.Sides.Count > 0);
 		await ShowBooksAsync();
 	}

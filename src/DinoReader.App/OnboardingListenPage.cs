@@ -502,6 +502,7 @@ public partial class ReadingPage
 	{
 		_plan = plan;
 		_demoContinued = continued;
+		ReadOrigin = ReadOrigins.Wizard; // the onboarding's reads say so, never "shelf" (the listen and "That's you" steps are the old wizard's successor; no separate onboarding value exists)
 		MarkDemoRead(); // counts no book open or finish
 		Load(plan.Story with { PreferredMode = ReadingMode.PictureAndText });
 		_demoBook = RecordSplitBook.Of(plan.Story);

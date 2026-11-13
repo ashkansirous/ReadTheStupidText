@@ -177,6 +177,7 @@ internal static class OnboardingRoute
 	public static async Task VoiceDoneAsync(IServiceProvider services, bool tried)
 	{
 		OnboardingUsage.StepDone(services.GetRequiredService<UsageCounter>(), OnboardingStep.Voice, tried);
+		OnboardingState.Begin(OnboardingStep.Corner); // the next step is saved before the try is deleted: a kill in between resumes on the corner, and the gallery deletes the leftover try
 		// The child leaves the voice step: exactly the clips recorded in it go now (a failure keeps the record, reports the fallback, and the gallery retries). One book's delete, well under 500 ms, so no wait overlay.
 		await OnboardingTryStore.DeleteAsync(services.GetRequiredService<IStoryLibrary>());
 		await ShowStepAsync(services, OnboardingStep.Corner);

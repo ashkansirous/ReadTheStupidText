@@ -344,6 +344,7 @@ public partial class FirstRunPage : ContentPage
 	private async Task ContinueAsync()
 	{
 		_chosen = _selected;
+		FirstBooksGate.StoryLanguagesPending = true; // Slice 362: the story languages step comes next; a kill on it reopens it, and its Continue clears this before the books
 		FirstBooksGate.Pending = true; // Slice 261: language, then the story languages and the books (at least two); set before the language is stored so a kill in between reopens on the picker
 		LanguageChoice.Apply(_chosen, _settings); // the grown-up's own choice
 		if (!_startCounted)

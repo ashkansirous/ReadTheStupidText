@@ -34,6 +34,11 @@ name: First run with two story languages, the language bar and the bubble
       id: OnboardingLanguages
     timeout: 15000
 # Swedish is the language the test store lists a pre-made audio pack in (for The Gingerbread Man).
+- scrollUntilVisible:
+    element:
+      id: StoryLanguageRow-sv
+    direction: DOWN
+    timeout: 20000
 - tapOn:
     id: StoryLanguageRow-sv
     waitToSettleTimeoutMs: 300

@@ -44,7 +44,8 @@ onFlowComplete:
     timeout: 15000
 - assertVisible: Deutsch
 - tapOn:
-    text: "Weiter"
+    # The pick is applied when Continue is pressed, so the button still reads "Continue" here (it turns German on the next step).
+    text: "Continue"
     waitToSettleTimeoutMs: 300
 - tapOn:
     id: android:id/button2
@@ -57,7 +58,7 @@ onFlowComplete:
     timeout: 15000
 - assertVisible: "Schritt 2 von 6 · .*"
 - assertNotVisible: "Warum mehr als eine?"
-- assertVisible: "Viele Kinder hören zu Hause eine Sprache.*"
+- assertVisible: ".*Viele Kinder hören zu Hause eine Sprache.*"
 - assertVisible:
     id: OnboardingLanguagesContinue
 - takeScreenshot: shot-WN2-languages

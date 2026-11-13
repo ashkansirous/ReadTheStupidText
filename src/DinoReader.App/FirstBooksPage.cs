@@ -24,6 +24,15 @@ public static class FirstBooksGate
 		set => Preferences.Default.Set(PendingKey, value);
 	}
 
+	/// <summary>True from the language pick until the story languages step's Continue has saved its pick: a kill on that step reopens it, not the book picker (Slice 362).</summary>
+	public static bool StoryLanguagesPending
+	{
+		get => Preferences.Default.Get(StoryLanguagesPendingKey, false);
+		set => Preferences.Default.Set(StoryLanguagesPendingKey, value);
+	}
+
+	private const string StoryLanguagesPendingKey = "dino.firstbooks.storylanguages.pending";
+
 	/// <summary>The store id of the book the grown-up ticked first: the intro's "Try it" opens it. Null when none was picked.</summary>
 	public static string? FirstPick
 	{

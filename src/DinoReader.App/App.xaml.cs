@@ -268,6 +268,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		_services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code);
 		OnboardingState.Clear(); // Slice 362: the hook skips the whole onboarding path
 		FirstBooksGate.Pending = false;
+		FirstBooksGate.StoryLanguagesPending = false;
 		Testing.TestBooks.StartAll(_services.GetRequiredService<StoreClient>()); // Slice 261: no book ships in the app, so a flow that skips the first run gets the four test books; the gallery waits for them
 		RebuildRoot();
 		return true;
@@ -286,6 +287,11 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		if (FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>()))
 		{
 			return _services.GetRequiredService<FirstRunPage>();
+		}
+
+		if (FirstBooksGate.Pending && FirstBooksGate.StoryLanguagesPending)
+		{
+			return ActivatorUtilities.CreateInstance<OnboardingLanguagesPage>(_services); // Slice 362: killed on step 2: it opens again (the root, so no Back); its Continue goes on to the books
 		}
 
 		if (FirstBooksGate.Pending)

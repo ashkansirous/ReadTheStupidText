@@ -101,6 +101,7 @@ internal sealed class CornerTour : Grid
 		IsVisible = false;
 		_drawing = false;
 		ClearLayer();
+		_showShelf(); // every end leaves grown-ups mode, as the normal end does (a stop that cannot be drawn must not leave Settings and delete in a child's reach)
 		_finish();
 	}
 
