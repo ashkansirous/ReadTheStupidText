@@ -1,8 +1,10 @@
 # Slice 358 — Dino Android: "Connect to the internet to buy" while online, no Buy button
 
+*In progress (wave 2026-11-13), draft PR.*
+
 *Planned 2026-11-13 (user bug report).*
 
-**Touches:** `src/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `src/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs`, `src/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/DinoReader.App/Purchases/BookPurchases.cs`, `src/DinoReader.Core/BookAccess.cs`, `src/DinoReader.App/StorePage.xaml.cs`, `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/*`
+**Touches:** `src/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `src/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs`, `src/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/DinoReader.App/Purchases/BookPurchases.cs`, `src/DinoReader.Core/BookAccess.cs`, `src/DinoReader.App/StorePage.xaml.cs`, `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/*`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `.maestro/dino/store-*.yaml`
 
 ## Why
 
