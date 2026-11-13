@@ -42,6 +42,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** the Windows Store add-on on the VM.
 - **Device:** the switch-on store page against the real Worker.
 - **You:** the Microsoft Store ID flow against a live store.
+- **Device:** E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
 
 ### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
 - **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
