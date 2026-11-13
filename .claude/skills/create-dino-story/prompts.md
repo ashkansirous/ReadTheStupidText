@@ -28,8 +28,10 @@ is about twice the height of the pigs">. Each character appears exactly once. <S
 ```
 Make the book cover. <STYLE> Portrait 3:4. The characters, with their outfits: <Name 1: look, what
 they wear and do NOT wear>, <Name 2: ...>. Exactly <k> characters. <Scene: the main characters together, the story's key
-place>. <Villain, if any, shown silly not scary>. Keep all characters in the top 70% of the picture;
-the bottom 30% is calm scene (<grass, floor or water>) with no faces or action in it, never a plain empty strip. <SIZE>
+place>. <Villain, if any, shown silly not scary>. Every character stays whole in the top 70% of the
+picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above the 70% line. The
+bottom 30% is calm scene (<grass, flowers, floor or water>) with no character or any part of one in it,
+never a plain empty strip. <SIZE>
 ```
 
 ## Page
@@ -38,9 +40,10 @@ the bottom 30% is calm scene (<grass, floor or water>) with no faces or action i
 Page <n>. <STYLE> Portrait 3:4, no text or letters anywhere. Characters on this page, outfits exactly
 as in the pasted picture: <Name: look, what they wear and do NOT wear>. Scene: <time of
 day, place>. <Who does what, with each character's outfit in brackets>. <Who is NOT on this page>.
-Exactly <k> <characters>, each appearing once. Nobody is hurt or in danger. The whole scene sits in the
-TOP 70% of the picture; the bottom 30% is calm scene (<grass, floor or water>) with no
-faces or action in it, never a plain empty strip. <SIZE>
+Exactly <k> <characters>, each appearing once. Nobody is hurt or in danger. Every character stays
+whole in the TOP 70% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all
+end above the 70% line. The bottom 30% is calm scene (<grass, flowers, floor or water>) with no
+character or any part of one in it, never a plain empty strip. <SIZE>
 ```
 
 ## Fresh page chat opener (first message of every page chat, with the line-up pasted)
@@ -67,5 +70,5 @@ Do not argue in the same chat. One prompt per chat is the rule (Slice 350), and 
 
 ```
 Draw a single picture. <STYLE> Portrait 3:4. <Full scene description from scratch, every character
-with outfit, the count, indoor/outdoor, the top-70% rule.> <SIZE>
+with outfit, the count, indoor/outdoor, the top-70% rule: every character whole above the 70% line, feet and tails included.> <SIZE>
 ```
