@@ -20,7 +20,7 @@ Open slices only. Finished slices (174 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | planned | | | [373-rtst-voice-rows-rt1-rt2.md](docs/plan/slices/373-rtst-voice-rows-rt1-rt2.md) |
 | 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | planned | | | [366-plan-split-by-product.md](docs/plan/slices/366-plan-split-by-product.md) |
-| 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (Claude's suggestion, never chosen by the user) | dropped 2026-11-13 | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
+| 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (approved by the user 2026-11-13) | planned | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
 | 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | planned | | | [369-release-workflow-per-product.md](docs/plan/slices/369-release-workflow-per-product.md) |
 | 370 | Tidy by product 5/6: give the shared code a neutral name (no open PRs while it runs; name `Sirous.Reading.*`, decided 2026-11-13) | planned | | | [370-rename-shared-code.md](docs/plan/slices/370-rename-shared-code.md) |
 | 371 | Tidy by product 6/6: src, tests and tools folders grouped by product (no open PRs while it runs; after 370) | planned | | | [371-folders-by-product.md](docs/plan/slices/371-folders-by-product.md) |
