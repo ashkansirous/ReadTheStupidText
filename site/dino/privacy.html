@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy &mdash; Dino Book Reader</title>
-  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, keeps a family&rsquo;s voice recordings on the device, and sends only anonymous counts and crash reports (which can be turned off) that identify no one." />
+  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, sells extra books through the app store without keeping anything about the buyer, keeps a family&rsquo;s voice recordings on the device, and sends only anonymous counts and crash reports (which can be turned off) that identify no one." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
@@ -27,7 +27,7 @@
 </head>
 <body>
   <h1>Privacy Policy &mdash; Dino Book Reader</h1>
-  <p class="eff"><strong>Effective date:</strong> 9 November 2026</p>
+  <p class="eff"><strong>Effective date:</strong> 13 November 2026</p>
 
   <p class="lede">Dino Book Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 9. It reads
   stories aloud with a different voice for each character, and a family can record their own voice for the characters. This policy explains how the app handles
@@ -35,18 +35,18 @@
 
   <h2>The short version</h2>
   <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare keeps and deletes on its own schedule (see &ldquo;Server request log&rdquo; below).</strong>
-  It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
+  It has no accounts of its own, no advertising, and no third-party analytics. Extra books are bought through the app store (Apple, Google or Microsoft); this project keeps nothing about the buyer (see &ldquo;Buying books&rdquo; below). It does send anonymous usage counts to this
   project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
   child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Like most web servers,
   this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for as long as Cloudflare sets
   (see &ldquo;Server request log&rdquo; below). If the app crashes it can also
   send a crash report on the same switch (see &ldquo;Crash reports&rdquo; below). Everything
-  else the app does happens <strong>on the device</strong>, apart from downloading free stories and their audio from this project&rsquo;s own server.
+  else the app does happens <strong>on the device</strong>, apart from downloading stories and their audio from this project&rsquo;s own server and, when a grown-up buys or restores a book, talking to the app store.
   Your family&rsquo;s recordings are never sent.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
-    <li><strong>Stories</strong> come only from this project&rsquo;s free story store. The app has no way to
+    <li><strong>Stories</strong> come only from this project&rsquo;s story store (four free books, the rest $0.99 each). The app has no way to
       add a book from typed text, files, photos or scans.</li>
     <li><strong>Speech</strong> is the stories&rsquo; pre-made audio, downloaded from the store, plus a family&rsquo;s own
       recordings. The app does not turn text into speech on the device, and no text is sent to any server to be read aloud
@@ -61,22 +61,23 @@
       stored on the device and are not uploaded; the only facts about them that leave it are the few anonymous counts listed under &ldquo;Anonymous usage counts&rdquo; (such as which story languages were chosen).</li>
     <li><strong>Backup and restore.</strong> A grown-up can save one backup file of the stories and recordings, and
       choose where it is kept; the app does not upload it. Restoring reads a file the grown-up picks.</li>
-    <li>The app contains <strong>no advertising and no in-app purchases</strong>, and it does not
-      link children to other apps or websites.</li>
+    <li>The app contains <strong>no advertising</strong>. Its only purchases are the extra books a grown-up buys through the app store, behind the grown-ups gate (see &ldquo;Buying books&rdquo;). It does not
+      link children to other apps or websites. The one exception is the <strong>Redeem code</strong> button (behind the grown-ups gate), which opens the app store&rsquo;s own redeem page (Apple, Google or Microsoft) in the browser or the store app; nothing else links out.</li>
   </ul>
 
   <h2>Network use</h2>
-  <p><strong>Free stories and their audio.</strong> The app shows a store of free
-  stories (a new install picks its first books from it, and a grown-up can open it again behind the grown-ups gate). Opening it fetches the list of stories, their cover pictures, and any story chosen,
+  <p><strong>Stories and their audio.</strong> The app shows a store of stories, four of them free, with the price of each paid one
+  (see &ldquo;Buying books&rdquo; below) (a new install picks its first books from it, and a grown-up can open it again behind the grown-ups gate). Opening it fetches the list of stories, their cover pictures, and any story chosen,
   from this project&rsquo;s own server (dinoreader.sirous.uk). The app also downloads each book&rsquo;s pre-made audio, one
   pack per language the family has chosen, from the same server (the addresses come from that list), and now and then (when the app starts, when it comes back to the front, when the story language changes, and in a weekly update check) fetches the list again to check for a newer version of a book on the shelf, and downloads the newer text or audio. These are plain file
   requests: no account, no identifier, and nothing about the child or the recordings is sent. The app does not use cookies. Each time the app starts or comes back to the front it also fetches a small settings file
   (dinoreader.sirous.uk/api/app-config: whether counting is on, and the oldest app version still allowed), again a plain request that sends nothing about the child. Once a book and its audio are on the device the app works offline. The server&rsquo;s own short request log is described under &ldquo;Server request log&rdquo; below. What the app counts about reading is described next.</p>
+  <p><strong>Buying books.</strong> Four books are free; every other book costs $0.99 (the store shows the price in your own currency). A grown-up buys a book behind the grown-ups gate, and the purchase is made and paid entirely by the app store on the device (Google Play on Android, the App Store on iPhone and iPad, the Microsoft Store on Windows), under that store&rsquo;s own privacy policy. This project has no account, no payment details and no purchase record: it never sees a name, email address, card or Apple, Google or Microsoft account. To download a bought book, the app sends the store&rsquo;s purchase proof (a receipt or token the store gave the device, with the book&rsquo;s product code) to this project&rsquo;s server in a request header, together with the request for the book&rsquo;s files. The server asks the store whether that purchase is real and hands out the files if it is. It does not save the proof or the answer: it only remembers the answer in memory for a few minutes, so a download&rsquo;s many requests ask the store once, and it uses the connecting address briefly to limit how many such checks one connection can make. &ldquo;Restore purchases&rdquo; asks the store what the account owns and works the same way. Which books were bought is kept by the store, not by this project; on an iPhone or iPad the app also remembers on the device which products the store confirmed, so its shelf can show them.</p>
   <p><strong>Anonymous usage counts.</strong> To learn which books families enjoy and which features are used, the app
   counts a few things and sends the counts to this project&rsquo;s own server (dinoreader.sirous.uk), in one small batch
   when a reading session ends or the app next starts. Today it counts: that a book was opened and that a book was read to
   the end; that a book was listened to for 30 seconds or more, and how many seconds of audio were played in a reading
-  (one whole number of seconds when the reading is paused or stopped); that a free story was downloaded (and whether the age or author filter was in use, never which); that a
+  (one whole number of seconds when the reading is paused or stopped); that a story was downloaded (and whether the age or author filter was in use, never which); that a
   reading started, was paused, was resumed or stopped (and, from a fixed list, why it stopped: the book was left, it reached
   the end, it was cancelled, the language changed, a new reading replaced it, it was skipped, it failed or the app stopped it for another internal reason), and that a book was left; that a book on the shelf was
   checked against a newer version in the store, and the two version numbers; that a family recording
@@ -87,7 +88,7 @@
   in (how many, from one to three, and where it was set, and each language added); that a child switched a story&rsquo;s
   language while reading (to which language); which audio a reading used (the book&rsquo;s pre-made audio for every sentence, for some of them, or for none,
   with how many sentences each way and, from a fixed list, why some had none); that a download of a book&rsquo;s pre-made audio started, finished, was cancelled or failed (and, from a fixed list, how it failed); that a feature
-  fell back to something simpler (such as an audio clip that could not be played or the store that could not be reached; the part of the app and the reason come from fixed lists, with how many times it happened in that session); and that the app was opened. Each count carries only: what happened; which free store book it was (its public story code), never its title or text; the language; the one extra fact named
+  fell back to something simpler (such as an audio clip that could not be played or the store that could not be reached; the part of the app and the reason come from fixed lists, with how many times it happened in that session); and that the app was opened. Each count carries only: what happened; which store book it was (its public story code), never its title or text; the language; the one extra fact named
   above (such as the page range or a version number); whether a family recording is on the book; the app version;
   the platform (Android, iPhone or Windows); and, added by the server, the time the batch arrived and the random session number described below.
   </p>
@@ -132,7 +133,7 @@
   <p><strong>On Windows</strong> the app sends the anonymous counts described above, on the same switch, but it sends no crash
   reports and has no Report a problem page.</p>
   <p><strong>No other services.</strong> The app contains no Google ML Kit, no advertising or analytics software from any other
-  company, and makes no request to any server other than this project&rsquo;s own (dinoreader.sirous.uk). Like any web request, a download or a batch of counts is seen by the server that receives it, which may log the
+  company, and makes no request to any server other than this project&rsquo;s own (dinoreader.sirous.uk); the only other party is the app store&rsquo;s own purchase service on the device, which the operating system provides, and only when a grown-up buys or restores a book (the Redeem code button hands the grown-up over to that store&rsquo;s own redeem page, as described above). Like any web request, a download or a batch of counts is seen by the server that receives it, which may log the
   device&rsquo;s IP address; this project&rsquo;s own server keeps only the short request log described next. When a store
   listing or an app update is opened, the app store (Google Play, the App Store or the Microsoft Store) handles that under its own privacy policy.</p>
 
@@ -150,16 +151,16 @@
 
   <h2>Permissions</h2>
   <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
-  used only to download free stories and their audio, send the counts and reports described above, and to tell &ldquo;offline&rdquo;
-  from a failed download. On Android it also declares the <strong>Microphone</strong> permission (on iPhone and Windows the
+  used only to download stories and their audio, send the counts and reports described above, and to tell &ldquo;offline&rdquo;
+  from a failed download. On Android it also declares the <strong>Billing</strong> permission (Google Play&rsquo;s in-app purchase service, used only for the purchases described above) and the <strong>Microphone</strong> permission (on iPhone and Windows the
   matching microphone access), asked for only when a grown-up first taps record on the Record screen, and used only while
   a recording is running. On Android the app also declares the <strong>Foreground service</strong> (data sync) and <strong>Notifications</strong> permissions, because it includes a shared download component that can keep a large download running with a progress notice that has a Cancel button, and a &ldquo;download paused&rdquo; notice. This app downloads no such packs, so nothing starts that component; the permissions send nothing. The app&rsquo;s code never asks for camera, photo, contacts or location access. The iPhone build still declares camera and photo-library usage texts that nothing uses; they are being removed. Saving or restoring a backup uses the standard file picker or share sheet of the device, and the app only opens the file a grown-up picks.</p>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts, no ads, no social
+  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts of its own, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
   that leaves the device is the anonymous counts and crash reports described above (no identifier, off at a grown-up&rsquo;s choice),
-  and a Report a problem that a grown-up chooses to send, none of which includes any content a child creates. Settings and the story library sit behind a
+  and a Report a problem that a grown-up chooses to send, none of which includes any content a child creates. A grown-up can buy extra books through the app store: the store handles the purchase, this project receives no name or payment detail, and a child cannot buy anything without passing the grown-ups gate. Settings and the story library sit behind a
   grown-ups gate. Because the app collects no personal information, there is nothing for a parent to review, correct or
   delete beyond the content on their own device, which they can remove by deleting a story or
   clearing the app&rsquo;s storage. The only personal data this project&rsquo;s server keeps is the connecting IP address in its short request log

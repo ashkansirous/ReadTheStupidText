@@ -1,10 +1,10 @@
 # Store listing: German (`de`), Dino Book Reader
 
-**Machine-written by Claude (Slice 193, 2026-10-30). Needs a native German read before it goes live.** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing.
+**Machine-written by Claude (Slice 193, 2026-10-30; Kauf-Zeilen Slice 346 Teil D, 2026-11-13, nicht gepusht, erst wenn der Schalter fuer bezahlte Buecher an geht). Needs a native German read before it goes live.** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing.
 
-## Microsoft Store (already live in German; do not overwrite)
+## Microsoft Store (live in German; Slice 346 changes only the purchase lines, see below)
 
-Read from the public catalogue on 2026-10-30: title "Dino Book Reader"; short description "Geschichten zum Vorlesen, mit einer eigenen Stimme für jede Figur."; description of about 1,450 chars (ages "3 bis 9 Jahren"; sections EIGENE BÜCHER MITBRINGEN, GEMEINSAM LESEN, GESCHICHTEN INKLUSIVE, FÜNFZEHN SPRACHEN, FÜR KINDER GEMACHT; no scan or translation lines, since Windows has no scanner); search terms Kindergeschichten, Vorlesen, Gutenachtgeschichten, Bilderbücher, Geschichten Reader, Kinderbücher, Figurenstimmen. Nothing to change. The Play and App Store texts below reuse its wording.
+Read from the public catalogue on 2026-10-30: title "Dino Book Reader"; short description "Geschichten zum Vorlesen, mit einer eigenen Stimme für jede Figur."; description of about 1,450 chars (ages "3 bis 9 Jahren"; sections EIGENE BÜCHER MITBRINGEN, GEMEINSAM LESEN, GESCHICHTEN INKLUSIVE, FÜNFZEHN SPRACHEN, FÜR KINDER GEMACHT; no scan or translation lines, since Windows has no scanner); search terms Kindergeschichten, Vorlesen, Gutenachtgeschichten, Bilderbücher, Geschichten Reader, Kinderbücher, Figurenstimmen. The "FÜR KINDER GEMACHT" bullets "Keine Werbung und keine In-App-Käufe." and "Keine Konten." and the feature "Keine Werbung, keine Käufe, keine Konten" become the lines in `microsoft.md` (German section) when the switch goes on; nothing else changes. The Play and App Store texts below reuse its wording.
 
 ## Title (Play and App Store <= 30)
 
@@ -26,15 +26,15 @@ GEMEINSAM LESEN
 - Bildseiten bleiben, wie sie sind, die Wörter werden darüber vorgelesen.
 - Ein Nachtmodus für Gutenachtgeschichten.
 
-GESCHICHTEN INKLUSIVE
-Die App enthält bebilderte Starter-Geschichten, und Erwachsene können im integrierten Geschichtenregal weitere kostenlose Geschichten holen.
+GESCHICHTEN UND PREISE
+Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte im integrierten Geschichtenregal kostet je 0,99 € bzw. der entsprechende Preis in Ihrer Landeswährung (der Store zeigt den Preis an). Ein Erwachsener kauft eine Geschichte einmal, hinter der Erwachsenensperre, über den Store und kann frühere Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
 
 FÜNFZEHN SPRACHEN
 Arabisch, Chinesisch, Dänisch, Deutsch, Englisch, Farsi, Finnisch, Französisch, Japanisch, Niederländisch, Norwegisch, Portugiesisch, Russisch, Schwedisch und Spanisch. Geschichten lassen sich direkt auf dem Handy in die Sprache des Erwachsenen übersetzen.
 
 FÜR KINDER GEMACHT
-- Keine Werbung und keine In-App-Käufe.
-- Keine Konten.
+- Keine Werbung.
+- Geschichten werden über den Store gekauft, von einem Erwachsenen hinter der Erwachsenensperre. Es gibt kein Konto anzulegen, und wir speichern nichts über den Käufer.
 - Einstellungen sowie das Hinzufügen und Löschen von Geschichten liegen hinter einer Erwachsenensperre.
 - Die Stimmen werden auf dem Handy erzeugt. Sobald die Stimme für Ihre Sprache geladen ist, funktioniert das Vorlesen offline.
 - Ihre Geschichten, Fotos und Scans bleiben auf Ihrem Gerät.
@@ -48,7 +48,7 @@ Subtitle (<= 30): Vorlesen mit Figurenstimmen
 
 Keywords (<= 100 bytes, no spaces after commas): kindergeschichten,gutenachtgeschichten,bilderbücher,kinderbücher,vorlesen,geschichten,stimmen
 
-Promotional text (<= 170): Geschichten zum Vorlesen für Kinder von 3 bis 9, mit einer eigenen Stimme für jede Figur. Keine Werbung, keine Konten, 15 Sprachen.
+Promotional text (<= 170): Geschichten zum Vorlesen für Kinder von 3 bis 9, mit einer Stimme für jede Figur. Keine Werbung. Vier gratis, weitere je 0,99 € (Landeswährung). 15 Sprachen.
 
 What's new: none (first version 1.0).
 
