@@ -1,13 +1,17 @@
 # Saves the picture Gemini just downloaded (create-dino-story step 6), with no clipboard, so it also works while the PC is locked:
-#   pwsh gemini-take-download.ps1 <file> [-Bytes <n>]    waits for the newest Downloads\Gemini_Generated_Image_* written in the last
-#                                            two minutes, moves it out of Downloads and saves it as JPEG quality 95 at <file>
+#   pwsh gemini-take-download.ps1 <file> [-Bytes <n>] [-Untouched]    waits for the newest Downloads\Gemini_Generated_Image_*
+#                                            written in the last two minutes, moves it out of Downloads and saves it as JPEG
+#                                            quality 95 at <file> (with -Untouched: moved byte for byte, see below)
 # Moving it means the next call can never pick up the same picture again; if the save fails it is moved back to Downloads under its original name (or the error names where it is).
 # Pass -Bytes with the size(s) `__grab` printed ("image/jpeg <n>"; several allowed: -Bytes 123,456): only a download of exactly
 # one of those sizes is taken, so another session's Gemini download can't be. A relative <file> is relative to the PowerShell location.
+# -Untouched (Slice 350 high-res pictures): move the download byte for byte instead of re-saving it; <file>'s extension is
+# replaced by the download's own, and the path actually written is printed ("Saved <path> ...").
 param(
   [Parameter(Mandatory = $true)][string]$Path,
   [int]$WaitSeconds = 30,
-  [long[]]$Bytes = @()
+  [long[]]$Bytes = @(),
+  [switch]$Untouched
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -46,9 +50,31 @@ function Save-AsJpeg([System.IO.FileInfo]$source, [string]$file) {
     $parameters.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, $saveQuality)
     $picture.Save($file, $encoder, $parameters)
     Write-Host "Saved $file ($($picture.Width)x$($picture.Height)) from $($source.Name)"
-    if ([math]::Abs($picture.Width * 4 - $picture.Height * 3) -gt $picture.Height * 0.03) { Write-Host "WARNING: $file is not 3:4, so it is probably the wrong picture." }
+    Write-SizeWarning $file $picture.Width $picture.Height
   }
   finally { $picture.Dispose() }
+}
+
+function Write-SizeWarning([string]$file, [int]$width, [int]$height) {
+  if ([math]::Abs($width * 4 - $height * 3) -gt $height * 0.03) { Write-Host "WARNING: $file is not 3:4, so it is probably the wrong picture." }
+}
+
+function Assert-NameFree([string]$file) {
+  $stem = Join-Path ([System.IO.Path]::GetDirectoryName($file)) ([System.IO.Path]::GetFileNameWithoutExtension($file))
+  foreach ($ext in '.jpg', '.jpeg', '.png') {
+    if (Test-Path -LiteralPath "$stem$ext") { throw "$stem$ext already exists; pick a new name so no picture is overwritten or mixed up" }
+  }
+}
+
+function Save-Untouched([System.IO.FileInfo]$source, [string]$file) {
+  $final = [System.IO.Path]::ChangeExtension($file, $source.Extension.ToLowerInvariant())
+  Assert-NameFree $file
+  $picture = [System.Drawing.Image]::FromFile($source.FullName)
+  try { $width = $picture.Width; $height = $picture.Height }
+  finally { $picture.Dispose() }
+  Move-Item -LiteralPath $source.FullName -Destination $final
+  Write-Host "Saved $final (${width}x${height}, $($source.Length) bytes, untouched) from $($source.Name)"
+  Write-SizeWarning $final $width $height
 }
 
 function Move-ToFailedFolder([System.IO.FileInfo]$source) {
@@ -59,9 +85,10 @@ function Move-ToFailedFolder([System.IO.FileInfo]$source) {
 }
 
 $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+if ($Untouched) { Assert-NameFree $target }
 $original = Wait-ForDownload
 $download = Move-ToFailedFolder $original
-try { Save-AsJpeg $download $target }
+try { if ($Untouched) { Save-Untouched $download $target; return } else { Save-AsJpeg $download $target } }
 catch {
   $restored = Join-Path $downloads $original.Name
   try { Move-Item -LiteralPath $download.FullName -Destination $restored -Force -ErrorAction Stop; $where = $restored }

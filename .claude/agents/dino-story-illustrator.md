@@ -69,14 +69,15 @@ the contact sheet live only in the working folder. Touch nothing else.
      `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
-   - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed) waits for that download, moves it out of
+   - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed; add `-Untouched` for
+     Slice 350 high-res pictures, which keeps the file byte for byte, and use the path it prints) waits for that download, moves it out of
      `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it). No clipboard and no real click,
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
      route in SKILL.md step 6.
 5. Check every candidate by reading the saved file at full size against the step 5 checklist, counting
    every character and comparing each outfit with the line-up item by item. Run `pwsh <repo or worktree root>/.claude/skills/create-dino-story/line70.ps1 <file>` (absolute path;
    `<file>` is in your out folder, never in the repo) and read the `.line70.png` it writes next to the file: any part of any character (feet, tail, a held berry) below the red line fails. A fail: write why, ask again
-   (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename it to `cover.jpg` / `<page>.jpg`.
+   (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename it to `cover.jpg` / `<page>.jpg` (Slice 350 high-res pictures keep the extension `-Untouched` gave them, are never prepared or re-encoded, and go to `content/dino/<book>/high-res/` as the slice's part D says).
    Record every attempt in the art record's table (`pages` mode: in `<out folder>/checks.md` instead).
 6. (`finish` and `all` only.) When every picture the book needs is accepted, copy the repo's current pictures for pages you didn't
    redraw, and `cover.jpg` if the cover wasn't redrawn (they sit in `<target>/pictures/` and `<target>/cover.jpg`), into the working folder (preparing re-encodes every file once more at JPEG q85, which is fine), run
