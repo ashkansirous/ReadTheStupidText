@@ -419,3 +419,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 330 | Listening page: Store listening track, page gaps audible | verified 2026-11-13 (measured with ffmpeg, no listen needed) | #1064 | | [330-store-listening-track-page-gaps-audible.md](../slices/330-store-listening-track-page-gaps-audible.md) |
 | 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | built | #1077 | | [372-s21-check-fixes-2026-11-13.md](../slices/372-s21-check-fixes-2026-11-13.md) |
 | 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
+| 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
