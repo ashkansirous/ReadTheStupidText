@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Usage;
 
@@ -62,7 +63,8 @@ public sealed class MobileVoicePackService : IVoicePackService
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
             // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
-            return PackCatalogResult.Failure(ClassifyFailure(ex));
+            PackDownloadOutcome failed = ClassifyFailure(ex);
+            return PackCatalogResult.Failure(failed.Status, failed.ServerAnswer);
         }
     }
 
@@ -184,14 +186,18 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
     }
 
-    public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken) =>
+        (await DownloadWithAnswerAsync(packId, progress, cancellationToken).ConfigureAwait(false)).Status;
+
+    // Slice 357: the server's answer is part of the returned outcome of this very run, so a later run of the same pack cannot change it.
+    public async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
         if (LoadInstalled(packId) is { } installed && !UpgradeAvailable(installed))
         {
             PackDownloadHost.ClearPaused(packId); // already there: a notice left from before has nothing to ask any more
             progress?.Report(1);
-            return PackDownloadResult.Ok;
+            return new PackDownloadOutcome(PackDownloadResult.Ok);
         }
 
         return await RunWithKeepAliveAsync(packId, progress, cancellationToken).ConfigureAwait(false);
@@ -199,7 +205,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     // Slice 183: a foreground service (Android) holds the process and the network while the phone is locked. The user's Cancel on its notification
     // also stops this run; the caller's own token stays what ends a run the caller asked to stop.
-    private async Task<PackDownloadResult> RunWithKeepAliveAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task<PackDownloadOutcome> RunWithKeepAliveAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         using var notificationCancel = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         using var cancelListener = new NotificationCancelListener(packId, notificationCancel);
@@ -222,9 +228,9 @@ public sealed class MobileVoicePackService : IVoicePackService
         // Hash, extract and copy are heavy: keep all of it off the UI thread.
         try
         {
-            PackDownloadResult result = await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
-            SettlePausedNotice(packId, result, lastFraction);
-            return result;
+            PackDownloadOutcome outcome = await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
+            SettlePausedNotice(packId, outcome.Status, lastFraction);
+            return outcome;
         }
         catch (OperationCanceledException) when (notificationCancel.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
@@ -465,45 +471,46 @@ public sealed class MobileVoicePackService : IVoicePackService
         _catalog?.FirstOrDefault(p => p.Id == installed.Manifest.Id) is { } listed
         && PackVersions.IsNewer(listed.Version, installed.Manifest.Version);
 
-    private async Task<PackDownloadResult> DownloadOffUiThreadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task<PackDownloadOutcome> DownloadOffUiThreadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         PackCatalogResult catalog = _catalog is null
             ? await GetCatalogAsync(cancellationToken).ConfigureAwait(false)
             : new PackCatalogResult(PackDownloadResult.Ok, _catalog);
         if (catalog.Status != PackDownloadResult.Ok)
         {
-            return catalog.Status;
+            return new PackDownloadOutcome(catalog.Status, catalog.ServerAnswer);
         }
 
         PackInfo? pack = catalog.Packs.FirstOrDefault(p => p.Id == packId);
         if (pack is null)
         {
-            return PackDownloadResult.Failed;
+            return new PackDownloadOutcome(PackDownloadResult.Failed);
         }
 
-        PackDownloadResult result = await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
-        if (result == PackDownloadResult.Ok)
+        PackDownloadOutcome outcome = await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+        if (outcome.Status == PackDownloadResult.Ok)
         {
             InstalledPacksChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        return result;
+        return outcome;
     }
 
-    private static async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    // The outcome of the last attempt is returned whole, so its server answer (if any) is the one the failed run shows.
+    private async Task<PackDownloadOutcome> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         long started = Stopwatch.GetTimestamp();
         for (int attempt = 1; ; attempt++)
         {
-            PackDownloadResult result = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
-            if (!PackRetryPolicy.ShouldRetry(result, attempt))
+            PackDownloadOutcome outcome = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+            if (!PackRetryPolicy.ShouldRetry(outcome.Status, attempt))
             {
-                LogOutcome(pack, attempt, result, started);
-                return result;
+                LogOutcome(pack, attempt, outcome.Status, started);
+                return outcome;
             }
 
             TimeSpan backoff = PackRetryPolicy.Backoff(attempt);
-            PackDownloadLog.Retry(pack.Id, attempt, result, backoff);
+            PackDownloadLog.Retry(pack.Id, attempt, outcome.Status, backoff);
             await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -520,7 +527,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
     }
 
-    private static async Task<PackDownloadResult> TryDownloadOnceAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task<PackDownloadOutcome> TryDownloadOnceAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         string zipPath = ZipPath(pack);
         try
@@ -528,7 +535,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             if (!await HasVerifiedZipAsync(pack, zipPath, cancellationToken).ConfigureAwait(false)
                 && await FetchZipAsync(pack, zipPath, progress, cancellationToken).ConfigureAwait(false) is { } failure)
             {
-                return failure;
+                return new PackDownloadOutcome(failure);
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -537,7 +544,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             return ClassifyFailure(ex);
         }
 
-        return InstallVerifiedZip(pack, zipPath, progress, cancellationToken);
+        return new PackDownloadOutcome(InstallVerifiedZip(pack, zipPath, progress, cancellationToken));
     }
 
     // A verified zip survives only if an earlier run was killed between verify and install.
@@ -598,14 +605,15 @@ public sealed class MobileVoicePackService : IVoicePackService
     // ConstrainedInternet (captive portal) and Local still have a route, so they fall
     // through to the exception classifier and a transient failure is retried; Unknown
     // means the OS cannot tell, so the exception itself is the better evidence.
-    private static PackDownloadResult ClassifyFailure(Exception exception)
+    // Slice 357: the server's answer is kept only when the failure is not reported as Offline, so the result and the answer always agree.
+    private static PackDownloadOutcome ClassifyFailure(Exception exception)
     {
         if (Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.None)
         {
-            return PackDownloadResult.Offline;
+            return new PackDownloadOutcome(PackDownloadResult.Offline);
         }
 
-        return PackErrorClassifier.Classify(exception);
+        return new PackDownloadOutcome(PackErrorClassifier.Classify(exception), PackErrorClassifier.ClassifyHttp(exception));
     }
 
     private static async Task DownloadBodyAsync(PackInfo pack, string partial, IProgress<double>? progress, CancellationToken cancellationToken)

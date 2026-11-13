@@ -360,6 +360,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Osta {0} hintaan {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Muodosta internetyhteys ostaaksesi</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Odottaa hyväksyntää</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Tämän kirjan hakeminen vaatii kirjautumisen.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Sinulla ei ole lupaa hakea tätä kirjaa.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>Kirjaa ei löytynyt.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Sinun täytyy ensin ostaa tämä kirja</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Liian monta yritystä. Odota minuutti ja yritä uudelleen.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Palvelimeen ei saatu yhteyttä, yritä myöhemmin uudelleen</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Kaupassa on ongelma</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Palauta ostot</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lunasta koodi</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Osto ei onnistunut. Yritä uudelleen.</value></data>

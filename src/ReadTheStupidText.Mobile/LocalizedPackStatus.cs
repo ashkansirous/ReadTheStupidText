@@ -1,4 +1,5 @@
 using System.Globalization;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
 
@@ -15,8 +16,9 @@ public static class LocalizedPackStatus
         state == PackInstallState.Stopped ? AppResources.Language_Download : AppResources.Language_Retry;
 
     /// <summary>The status line, or null when there is nothing to show.</summary>
-    public static string? Compose(PackInstallState state, double progress) => state switch
+    public static string? Compose(PackInstallState state, double progress, HttpErrorKind? failure = null) => state switch
     {
+        PackInstallState.Failed when failure is { } kind => FailureText(kind),
         PackInstallState.Resolving => AppResources.PackStatus_Resolving,
         PackInstallState.Downloading => AppResources.Format(AppResources.PackStatus_Downloading, progress.ToString("P0", CultureInfo.CurrentUICulture)),
         PackInstallState.Offline => PackStatusText.CellularOnly() ? AppResources.PackStatus_WaitingWifi : AppResources.PackStatus_Waiting,
@@ -26,5 +28,18 @@ public static class LocalizedPackStatus
         PackInstallState.Stopped => AppResources.PackStatus_Stopped,
         PackInstallState.Unavailable => AppResources.PackStatus_Unavailable,
         _ => null,
+    };
+
+    /// <summary>
+    /// Slice 357: the line for a failed pack download by what the server answered, in the app language. Offline never reaches here (it is its own state); a 5xx, any other 4xx and a 400
+    /// show the general server text (a pack download has no message from the server and nothing to buy).
+    /// </summary>
+    public static string FailureText(HttpErrorKind kind) => kind switch
+    {
+        HttpErrorKind.Unauthorized => AppResources.PackStatus_Error_Unauthorized,
+        HttpErrorKind.Forbidden => AppResources.PackStatus_Error_Forbidden,
+        HttpErrorKind.NotFound => AppResources.PackStatus_Error_NotFound,
+        HttpErrorKind.TooManyRequests => AppResources.PackStatus_Error_TooManyRequests,
+        _ => AppResources.PackStatus_Error_Server,
     };
 }

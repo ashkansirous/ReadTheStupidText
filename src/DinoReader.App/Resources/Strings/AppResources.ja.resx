@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>{0}を{1}で購入</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>購入するにはインターネットに接続してください</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>承認を待っています</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>この本を入手するにはログインが必要です。</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>この本を入手する権限がありません。</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>この本は見つかりませんでした。</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>先にこの本を購入する必要があります</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>試行回数が多すぎます。1分待ってからもう一度お試しください。</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>サーバーに接続できません。しばらくしてからもう一度お試しください</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>ストアに問題が発生しています</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>購入を復元</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>コードを使う</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>購入できませんでした。もう一度お試しください。</value></data>

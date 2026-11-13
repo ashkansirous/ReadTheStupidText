@@ -152,7 +152,7 @@ public partial class LanguagePage : ContentPage
     private void RenderStatus()
     {
         DownloadProgressBar.Progress = _installer.Progress;
-        TextFlow.ForUi(StatusLabel, LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? string.Empty);
+        TextFlow.ForUi(StatusLabel, LocalizedPackStatus.Compose(_installer.State, _installer.Progress, _installer.FailureKind) ?? string.Empty);
         DownloadProgressBar.IsVisible = _installer.State == PackInstallState.Downloading;
         RetryButton.IsVisible = _installer.CanRetry;
         RetryButton.Text = LocalizedPackStatus.RetryLabel(_installer.State);

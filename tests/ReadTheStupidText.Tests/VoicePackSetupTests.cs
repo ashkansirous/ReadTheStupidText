@@ -181,6 +181,27 @@ public class VoicePackSetupTests
     }
 
     [Fact]
+    public async Task A_shown_failure_keeps_the_kind_it_had_when_the_step_failed_until_the_state_leaves_Failed()
+    {
+        var kind = ReadTheStupidText.Application.Net.HttpErrorKind.NotFound;
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]), DownloadResult = PackDownloadResult.Failed };
+        packs.DownloadAnswer = kind;
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "en" });
+
+        await setup.StartAsync();
+        packs.DownloadAnswer = ReadTheStupidText.Application.Net.HttpErrorKind.TooManyRequests; // a later download answers differently: the shown failure keeps the answer of the call that failed
+
+        Assert.Equal(PackSetupState.Failed, setup.State);
+        Assert.Equal(kind, setup.FailureKind);
+
+        packs.DownloadResult = PackDownloadResult.Ok;
+        await setup.StartAsync();
+
+        Assert.Equal(PackSetupState.Ready, setup.State);
+        Assert.Null(setup.FailureKind);
+    }
+
+    [Fact]
     public async Task An_offline_catalog_fetch_publishes_offline_and_retry_then_succeeds()
     {
         var packs = new FakePacks { Catalog = PackCatalogResult.Failure(PackDownloadResult.Offline) };
@@ -1049,6 +1070,13 @@ public class VoicePackSetupTests
         public int CatalogCalls { get; private set; }
         public int DownloadCalls { get; private set; }
         public bool CatalogThrows { get; set; }
+        public ReadTheStupidText.Application.Net.HttpErrorKind? DownloadAnswer { get; set; }
+
+        public async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+        {
+            PackDownloadResult status = await DownloadAsync(packId, progress, cancellationToken);
+            return new PackDownloadOutcome(status, DownloadAnswer);
+        }
         public Task FirstDownloadStarted => _firstStarted.Task;
         private readonly TaskCompletionSource _firstStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? UnwindGate { get; set; }

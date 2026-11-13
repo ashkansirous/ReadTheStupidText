@@ -15,6 +15,11 @@ internal enum TestStoreMode
 	Offline,
 	/// <summary>Slice 271: the same list as Ok, but <see cref="UnknownTagStem"/> lists a tag name this build does not know next to a known one (a newer store's), so a flow sees the unknown one dropped with no badge and no error.</summary>
 	UnknownTag,
+	/// <summary>Slice 357: the list is served as in Ok, but every book download is refused with that HTTP status and no body (as the Worker does), so a flow sees the row's own text per status.</summary>
+	Status402,
+	Status404,
+	Status429,
+	Status503,
 }
 
 /// <summary>
@@ -150,9 +155,23 @@ internal static class TestStore
 		return StoryPackageManifest.Parse(reader.ReadToEnd());
 	}
 
+	private static System.Net.HttpStatusCode? RefusalOf(TestStoreMode mode) => mode switch
+	{
+		TestStoreMode.Status402 => System.Net.HttpStatusCode.PaymentRequired,
+		TestStoreMode.Status404 => System.Net.HttpStatusCode.NotFound,
+		TestStoreMode.Status429 => System.Net.HttpStatusCode.TooManyRequests,
+		TestStoreMode.Status503 => System.Net.HttpStatusCode.ServiceUnavailable,
+		_ => null,
+	};
+
 	/// <summary>Writes the test book behind <paramref name="url"/> to <paramref name="toPath"/>, reporting bytes as a download would; in slow mode in a few timed chunks.</summary>
 	public static async Task CopyAsync(string url, string toPath, Action<long, long?>? bytes, CancellationToken cancel)
 	{
+		if (RefusalOf(Mode) is { } refusal)
+		{
+			throw new HttpRequestException($"The test store refuses with {(int)refusal}.", null, refusal); // Slice 357: the Worker's answer for the status, with no body
+		}
+
 		string assetName = url[UrlScheme.Length..];
 		await using Stream asset = assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? new MemoryStream(FixturePack, writable: false) : await FileSystem.OpenAppPackageFileAsync(assetName);
 		using var all = new MemoryStream();

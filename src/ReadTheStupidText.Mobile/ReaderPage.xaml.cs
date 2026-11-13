@@ -763,7 +763,7 @@ public partial class ReaderPage : ContentPage
 
     private void RenderPackStatus()
     {
-        string? text = LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
+        string? text = LocalizedPackStatus.Compose(_installer.State, _installer.Progress, _installer.FailureKind);
         TextFlow.ForUi(PackStatusLabel, text);
         PackStatusLabel.IsVisible = text is not null;
     }

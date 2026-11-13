@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Купить «{0}» за {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Подключитесь к интернету, чтобы купить</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Ожидает подтверждения</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Чтобы получить эту книгу, нужно войти в аккаунт.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>У вас нет доступа к этой книге.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>Эта книга не найдена.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Сначала нужно купить эту книгу</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Слишком много попыток. Подождите минуту и попробуйте снова.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Не удаётся подключиться к серверу, повторите попытку позже</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>В магазине возникла проблема</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Восстановить покупки</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Ввести код</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Покупка не удалась. Попробуйте ещё раз.</value></data>

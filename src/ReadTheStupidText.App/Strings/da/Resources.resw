@@ -297,6 +297,21 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>Denne stemmepakke kan ikke bruges. {0} læser.</value>
   </data>
+  <data name="Pack_Error_Unauthorized" xml:space="preserve">
+    <value>Du skal logge ind for at hente dette.</value>
+  </data>
+  <data name="Pack_Error_Forbidden" xml:space="preserve">
+    <value>Du har ikke tilladelse til at hente dette.</value>
+  </data>
+  <data name="Pack_Error_NotFound" xml:space="preserve">
+    <value>Downloadet blev ikke fundet.</value>
+  </data>
+  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
+    <value>For mange forsøg. Vent et minut, og prøv igen.</value>
+  </data>
+  <data name="Pack_Error_Server" xml:space="preserve">
+    <value>Problem med at oprette forbindelse til serveren. Prøv igen senere</value>
+  </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>Hentningen mislykkedes. Prøv igen.</value>
   </data>

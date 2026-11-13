@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Acheter {0} pour {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connectez-vous à Internet pour acheter</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>En attente d’approbation</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Il faut se connecter pour obtenir ce livre.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Vous n’avez pas le droit d’obtenir ce livre.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>Ce livre est introuvable.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Vous devez d’abord acheter ce livre</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Trop d’essais. Attendez une minute, puis réessayez.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Problème de connexion au serveur, veuillez réessayer plus tard</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>La boutique a un problème</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurer les achats</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Utiliser un code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>L’achat n’a pas abouti. Veuillez réessayer.</value></data>

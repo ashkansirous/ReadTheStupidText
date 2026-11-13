@@ -54,6 +54,13 @@ public interface IVoicePackService
     /// <summary>Every installed, complete OCR pack with its parsed manifest (Slice 52); the input of <c>InstalledOcrCatalog</c>.</summary>
     IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks();
 
+    /// <summary>
+    /// Slice 357: like <see cref="DownloadAsync"/>, but the outcome also carries what the server answered when this very run failed (404, 429, 5xx ...).
+    /// A service that does not say keeps the default: the plain result and no answer, so the status line stays general.
+    /// </summary>
+    async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken) =>
+        new(await DownloadAsync(packId, progress, cancellationToken).ConfigureAwait(false));
+
     /// <summary>Downloads, verifies and installs a pack from the catalog; progress is 0..1.</summary>
     Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken);
 }

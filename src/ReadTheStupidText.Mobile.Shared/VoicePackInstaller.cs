@@ -60,6 +60,7 @@ public sealed class VoicePackInstaller
     // touch the same scratch or target folder.
     private readonly SemaphoreSlim _updateGate = new(1, 1);
     private string? _failedUpdateKey;
+    private ReadTheStupidText.Application.Net.HttpErrorKind? _failureKind; // Slice 357: set with the Failed state from the failing run's own capture, cleared when the state leaves Failed
     private VoiceRun? _current; // the run in flight or unwinding, if any; guarded by _gate
     private int _latestId;      // the id of the newest run ever created: the only id whose publishes are applied
 
@@ -75,11 +76,12 @@ public sealed class VoicePackInstaller
         public CancellationTokenSource? Cancel;           // gate: the pass in flight
         public string? PackId;                            // the pack this run downloaded
         public bool FreshInstall;                         // this run downloaded its pack, so the update check would only refetch the catalog
+        public ReadTheStupidText.Application.Net.HttpErrorKind? FailureKind; // Slice 357: what the server answered, read the moment the failing step ended
         public TaskCompletionSource Done { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     // What the locked end step decided, reported and published after the lock is released.
-    private sealed record RunEnd(int Id, PackInstallState? Failure, bool Cancelled, bool Held, bool IsCurrent, bool Fresh, bool LanguageChosen, string? PackId, bool LanguageMoved);
+    private sealed record RunEnd(int Id, PackInstallState? Failure, bool Cancelled, bool Held, bool IsCurrent, bool Fresh, bool LanguageChosen, string? PackId, bool LanguageMoved, ReadTheStupidText.Application.Net.HttpErrorKind? FailureKind);
 
     private readonly IFallbackSink _fallbacks; // Slice 273 part C
 
@@ -166,6 +168,9 @@ public sealed class VoicePackInstaller
     public bool IsUserCancelled(string language) => _hold.IsHeld(language);
 
     public PackInstallState State { get; private set; } = PackInstallState.Idle;
+
+    /// <summary>Slice 357: while <see cref="State"/> is Failed, what the server answered (404, 429, 5xx ...), so the status line can say it; null for any other failure.</summary>
+    public ReadTheStupidText.Application.Net.HttpErrorKind? FailureKind => State == PackInstallState.Failed ? _failureKind : null;
 
     /// <summary>Download progress 0..1 while <see cref="State"/> is Downloading.</summary>
     public double Progress { get; private set; }
@@ -272,7 +277,7 @@ public sealed class VoicePackInstaller
 
         if (next is null)
         {
-            Publish(latest, State, Progress);
+            Publish(latest, State, Progress, FailureKind);
             return joined!;
         }
 
@@ -333,7 +338,7 @@ public sealed class VoicePackInstaller
         _resume?.Report(ResumeKey, kind, ResumeAsync, end.PackId);
         if (end.Failure is { } state)
         {
-            Publish(end.Id, state);
+            Publish(end.Id, state, 0, end.FailureKind);
         }
         else if (!end.Fresh)
         {
@@ -430,7 +435,7 @@ public sealed class VoicePackInstaller
                 _current = null;
             }
 
-            return new RunEnd(run.Id, failure, cancelled, _hold.IsHeld(CurrentLanguage), isCurrent, run.FreshInstall, _settings.Language is not null, run.PackId, cancelled && !SameLanguage(run.Language, CurrentLanguage));
+            return new RunEnd(run.Id, failure, cancelled, _hold.IsHeld(CurrentLanguage), isCurrent, run.FreshInstall, _settings.Language is not null, run.PackId, cancelled && !SameLanguage(run.Language, CurrentLanguage), run.FailureKind);
         }
     }
 
@@ -503,16 +508,18 @@ public sealed class VoicePackInstaller
         }
 
         Publish(run.Generation, PackInstallState.Resolving);
-        (PackInfo? pack, PackInstallState? resolveFailure) = await ResolvePackAsync(language, run.Token);
+        (PackInfo? pack, PackInstallState? resolveFailure, ReadTheStupidText.Application.Net.HttpErrorKind? resolveAnswer) = await ResolvePackAsync(language, run.Token);
         if (pack is null)
         {
+            run.Voice!.FailureKind = resolveAnswer; // the answer of the catalog fetch that failed; null when the catalog loaded but lists no pack (Unavailable)
             return resolveFailure;
         }
 
-        PackDownloadResult downloaded = await DownloadPackAsync(pack, run);
-        if (downloaded != PackDownloadResult.Ok)
+        PackDownloadOutcome downloaded = await DownloadPackAsync(pack, run);
+        if (downloaded.Status != PackDownloadResult.Ok)
         {
-            return ToState(downloaded);
+            run.Voice!.FailureKind = downloaded.ServerAnswer; // from the result of this very call
+            return ToState(downloaded.Status);
         }
 
         run.Voice!.FreshInstall = true;
@@ -616,7 +623,7 @@ public sealed class VoicePackInstaller
             return; // this exact version was rejected: not again until the app restarts
         }
 
-        PackDownloadResult result = await DownloadPackAsync(pack, run);
+        PackDownloadResult result = (await DownloadPackAsync(pack, run)).Status;
         if (result == PackDownloadResult.Ok)
         {
             await ActivateInstalledAsync(run);
@@ -638,19 +645,19 @@ public sealed class VoicePackInstaller
         return listed is not null && PackVersions.IsNewer(listed.Version, installed!.Manifest.Version) ? listed : null;
     }
 
-    private async Task<(PackInfo? Pack, PackInstallState? Failure)> ResolvePackAsync(string language, CancellationToken cancellationToken)
+    private async Task<(PackInfo? Pack, PackInstallState? Failure, ReadTheStupidText.Application.Net.HttpErrorKind? ServerAnswer)> ResolvePackAsync(string language, CancellationToken cancellationToken)
     {
         PackCatalogResult catalog = await _packs.GetCatalogAsync(cancellationToken);
         if (catalog.Status != PackDownloadResult.Ok)
         {
-            return (null, ToState(catalog.Status));
+            return (null, ToState(catalog.Status), catalog.ServerAnswer);
         }
 
         PackInfo? pack = VoicePackSelector.Select(catalog.Packs, language);
-        return pack is null ? (null, PackInstallState.Unavailable) : (pack, null);
+        return pack is null ? (null, PackInstallState.Unavailable, null) : (pack, null, null);
     }
 
-    private async Task<PackDownloadResult> DownloadPackAsync(PackInfo pack, Run run)
+    private async Task<PackDownloadOutcome> DownloadPackAsync(PackInfo pack, Run run)
     {
         Volatile.Write(ref _resolvedPackId, pack.Id); // also for an update download, so the notification's Cancel finds it
         if (run.Voice is { } voice)
@@ -660,7 +667,7 @@ public sealed class VoicePackInstaller
 
         Publish(run.Generation, PackInstallState.Downloading, 0);
         var progress = new InlineProgress(value => PublishProgress(run, value));
-        return await _packs.DownloadAsync(pack.Id, progress, run.Token);
+        return await _packs.DownloadWithAnswerAsync(pack.Id, progress, run.Token);
     }
 
     // endsRun: the main run ends Ready here, so a Cancel landing after this point is ignored (Slice 186); the hold
@@ -691,15 +698,15 @@ public sealed class VoicePackInstaller
     // Called from the download pipeline's background thread too: state and the
     // Changed event always land on the main thread, so UI handlers can touch views.
     // A publish from a run that is no longer the latest is dropped.
-    private void Publish(int generation, PackInstallState state, double progress = 0)
+    private void Publish(int generation, PackInstallState state, double progress = 0, ReadTheStupidText.Application.Net.HttpErrorKind? failureKind = null)
     {
         if (MainThread.IsMainThread)
         {
-            Apply(generation, state, progress);
+            Apply(generation, state, progress, failureKind);
             return;
         }
 
-        MainThread.BeginInvokeOnMainThread(() => Apply(generation, state, progress));
+        MainThread.BeginInvokeOnMainThread(() => Apply(generation, state, progress, failureKind));
     }
 
     // A late progress tick must not drag a finished or failed state back to Downloading, nor
@@ -715,7 +722,7 @@ public sealed class VoicePackInstaller
         });
     }
 
-    private void Apply(int generation, PackInstallState state, double progress)
+    private void Apply(int generation, PackInstallState state, double progress, ReadTheStupidText.Application.Net.HttpErrorKind? failureKind = null)
     {
         if (generation != Volatile.Read(ref _latestId))
         {
@@ -732,6 +739,7 @@ public sealed class VoicePackInstaller
 
         State = state;
         Progress = progress;
+        _failureKind = state == PackInstallState.Failed ? failureKind : null;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

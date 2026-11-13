@@ -127,7 +127,7 @@ public sealed partial class ControlPanelWindow : Window
         _dispatcher.TryEnqueue(UpdateVoiceStatus);
 
     private void UpdateVoiceStatus() =>
-        TextFlow.ForUi(VoiceStatus, PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress));
+        TextFlow.ForUi(VoiceStatus, PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress, _packSetup.FailureKind));
 
     private void OnVoicesChanged(object? sender, EventArgs e) =>
         _dispatcher.TryEnqueue(() =>

@@ -81,18 +81,16 @@ export type StoreTag = (typeof STORE_TAGS)[number];
 export const BOOK_ACCESS = ["free", "paid"] as const;
 export type BookAccess = (typeof BOOK_ACCESS)[number];
 
+// Slice 357: an error answer is its status only; the app supplies the text. The one slug left is downloads.ts's `ServedFile.unavailable`
+// (the 502 body serveObject writes when a listed file is missing from the bucket).
 const ErrorCode = {
-  Unavailable: "stories-unavailable",
-  NotFound: "not-found",
   StoryUnavailable: "story-unavailable",
-  PaymentRequired: "payment-required",
-  PurchaseNotValid: "purchase-not-valid",
-  CannotVerify: "cannot-verify",
-  RateLimited: "rate-limited",
 } as const;
 
+const HTTP_BAD_REQUEST = 400;
 const HTTP_PAYMENT_REQUIRED = 402;
 const HTTP_FORBIDDEN = 403;
+const HTTP_UNAVAILABLE = 503;
 
 /** What `meta.json` holds, checked. `schemaVersion` is the `.dino` format the package is in. */
 export interface StoryMeta {
@@ -502,8 +500,14 @@ function jsonResponse(body: unknown, status: number, cacheControl: string): Resp
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": JSON_CONTENT_TYPE, "Cache-Control": cacheControl } });
 }
 
-function errorResponse(code: string, status: number): Response {
-  return jsonResponse({ code }, status, NO_CACHE);
+/** Slice 357: every error but a 400 is the status alone, with no body; the app shows its own translated text for it. */
+function statusOnly(status: number): Response {
+  return new Response(null, { status, headers: { "Cache-Control": NO_CACHE } });
+}
+
+/** Slice 357: a 400 is the only error that speaks: `{"message": "<English sentence>"}`, shown by the app as it is. For a request the user can fix. */
+export function badRequest(message: string): Response {
+  return jsonResponse({ message }, HTTP_BAD_REQUEST, NO_CACHE);
 }
 
 function listResponse(entries: readonly StoryEntry[], pathPrefix: string, isHead: boolean): Response {
@@ -537,7 +541,7 @@ function packageFile(id: string, version: number): ServedFile {
 
 // cover.jpg is one key per story that the owner may replace, so a cover is never cached as immutable, ?v= or not.
 function serveCover(request: Request, bucket: R2Bucket, entry: StoryEntry, serve: ObjectServer): Promise<Response> {
-  if (!entry.hasCover) return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+  if (!entry.hasCover) return Promise.resolve(statusOnly(404));
   return serve(request, bucket, coverFile(entry.id), COVER_CACHE);
 }
 
@@ -553,7 +557,7 @@ function serveDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, ve
 function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, serve: ObjectServer): Promise<Response> {
   const version = requestedVersion(new URL(request.url));
   const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
-  if (version === null || version === "invalid" || offered === undefined || offered.version !== version) return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+  if (version === null || version === "invalid" || offered === undefined || offered.version !== version) return Promise.resolve(statusOnly(404));
   return serve(request, bucket, audioFile(entry.id, language, version), VERSIONED_CACHE);
 }
 
@@ -568,7 +572,7 @@ function serveListen(request: Request, bucket: R2Bucket, entry: StoryEntry, lang
   const version = requestedVersion(new URL(request.url));
   const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
   if (version === null || version === "invalid" || offered === undefined || offered.version !== version || offered.listenSeconds === undefined) {
-    return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+    return Promise.resolve(statusOnly(404));
   }
   return serve(request, bucket, listenFile(entry.id, language, version), VERSIONED_CACHE);
 }
@@ -581,7 +585,7 @@ function listenFile(id: string, language: string, version: number): ServedFile {
 function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, segment: string, serve: ObjectServer): Promise<Response> {
   const version = requestedVersion(new URL(request.url));
   if (version === "invalid" || (segment !== COVER_SEGMENT && segment !== DOWNLOAD_SEGMENT)) {
-    return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+    return Promise.resolve(statusOnly(404));
   }
   return segment === COVER_SEGMENT ? serveCover(request, bucket, entry, serve) : serveDownload(request, bucket, entry, version, serve);
 }
@@ -599,13 +603,13 @@ async function paidDenial(request: Request, entry: StoryEntry, segment: string, 
   try {
     answer = await paid(request.headers.get(PROOF_HEADER), { id: entry.id, productId: entry.meta.productId }, request.headers.get("CF-Connecting-IP") ?? UNKNOWN_CLIENT);
   } catch {
-    return errorResponse(ErrorCode.Unavailable, 503); // the switch is on but a store check broke unexpectedly; never guess "owned"
+    return statusOnly(503); // the switch is on but a store check broke unexpectedly; never guess "owned"
   }
   if (answer === GateAnswer.Off) return Gate.Open;
   if (answer === GateAnswer.Allowed) return Gate.Passed;
-  if (answer === GateAnswer.RateLimited) return errorResponse(ErrorCode.RateLimited, HTTP_TOO_MANY_REQUESTS); // over the per-client limit on store calls: never "owned"
-  if (answer === GateAnswer.NoProof) return errorResponse(ErrorCode.PaymentRequired, HTTP_PAYMENT_REQUIRED);
-  return errorResponse(answer === GateAnswer.CannotVerify ? ErrorCode.CannotVerify : ErrorCode.PurchaseNotValid, HTTP_FORBIDDEN);
+  if (answer === GateAnswer.RateLimited) return statusOnly(HTTP_TOO_MANY_REQUESTS); // over the per-client limit on store calls: never "owned"
+  if (answer === GateAnswer.NoProof) return statusOnly(HTTP_PAYMENT_REQUIRED);
+  return statusOnly(answer === GateAnswer.CannotVerify ? HTTP_UNAVAILABLE : HTTP_FORBIDDEN); // Slice 357: a store that cannot be asked is a server problem (503), not a refusal
 }
 
 /** Slice 346: what the ticket source answers: a ticket, none (switch off, no Microsoft keys or no limiter: 404) or over the per-client limit (429). */
@@ -625,28 +629,28 @@ async function ticketResponse(request: Request, ticket: WindowsTicketSource | un
   } catch {
     answer = { none: true }; // no ticket: the app then cannot make a Store ID key, so a Windows book stays unowned (never "owned")
   }
-  if ("limited" in answer) return errorResponse(ErrorCode.RateLimited, HTTP_TOO_MANY_REQUESTS);
-  return "ticket" in answer ? jsonResponse({ ticket: answer.ticket }, 200, NO_CACHE) : errorResponse(ErrorCode.NotFound, 404);
+  if ("limited" in answer) return statusOnly(HTTP_TOO_MANY_REQUESTS);
+  return "ticket" in answer ? jsonResponse({ ticket: answer.ticket }, 200, NO_CACHE) : statusOnly(404);
 }
 
 async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname === STORIES_API_PATH) {
     const entries = await currentEntries(bucket);
-    return entries === null ? errorResponse(ErrorCode.Unavailable, 503) : listResponse(entries, pathPrefix, request.method === "HEAD");
+    return entries === null ? statusOnly(503) : listResponse(entries, pathPrefix, request.method === "HEAD");
   }
   if (pathname === WINDOWS_TICKET_PATH) return ticketResponse(request, ticket);
   const [id = "", segment = "", ...extra] = pathname.slice(STORY_PATH_PREFIX.length).split("/");
   const withLanguage = (segment === AUDIO_SEGMENT || segment === LISTEN_SEGMENT) && extra.length === 1;
   const audioLanguage = withLanguage ? (extra[0] ?? "") : null; // audio/<lang> and listen/<lang> are the routes with a third part
-  if (!STORY_ID_PATTERN.test(id) || (extra.length > 0 && audioLanguage === null)) return errorResponse(ErrorCode.NotFound, 404);
+  if (!STORY_ID_PATTERN.test(id) || (extra.length > 0 && audioLanguage === null)) return statusOnly(404);
   let entry: StoryEntry | null;
   try {
     entry = await freshEntry(bucket, id);
   } catch {
-    return errorResponse(ErrorCode.Unavailable, 503);
+    return statusOnly(503);
   }
-  if (entry === null) return errorResponse(ErrorCode.NotFound, 404);
+  if (entry === null) return statusOnly(404);
   const gate = await paidDenial(request, entry, segment, paid);
   if (gate instanceof Response) return gate;
   return serveFile(request, bucket, { entry, segment, audioLanguage }, gate === Gate.Passed ? privateServer(serve) : serve);
@@ -684,7 +688,7 @@ export async function handleStories(
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
-  if (!env.DOWNLOADS) return errorResponse(ErrorCode.Unavailable, 503);
+  if (!env.DOWNLOADS) return statusOnly(503);
   const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket);
   if (request.method !== "HEAD" || response.status < 400) return response;
   return new Response(null, { status: response.status, headers: response.headers });

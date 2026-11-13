@@ -399,6 +399,13 @@ public static class AppResources
 	public static string Store_RestorePurchases => Get();
 	public static string Store_RedeemCode => Get();
 	public static string Store_BuyFailed => Get();
+	public static string Store_Error_Unauthorized => Get();
+	public static string Store_Error_Forbidden => Get();
+	public static string Store_Error_NotFound => Get();
+	public static string Store_Error_PaymentRequired => Get();
+	public static string Store_Error_TooManyRequests => Get();
+	public static string Store_Error_Server => Get();
+	public static string Store_ServerErrorTitle => Get();
 	public static string Store_FooterPaid => Get();
 	public static string Store_Restored => Get();
 	public static string Wait_BuyingBook => Get();

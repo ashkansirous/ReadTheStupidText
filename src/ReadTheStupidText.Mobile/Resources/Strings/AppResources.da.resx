@@ -122,6 +122,11 @@
   <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsætter af sig selv på Wi-Fi. Tryk for at hente nu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
+  <data name="PackStatus_Error_Unauthorized" xml:space="preserve"><value>Du skal logge ind for at hente dette.</value></data>
+  <data name="PackStatus_Error_Forbidden" xml:space="preserve"><value>Du har ikke tilladelse til at hente dette.</value></data>
+  <data name="PackStatus_Error_NotFound" xml:space="preserve"><value>Downloadet blev ikke fundet.</value></data>
+  <data name="PackStatus_Error_TooManyRequests" xml:space="preserve"><value>For mange forsøg. Vent et minut, og prøv igen.</value></data>
+  <data name="PackStatus_Error_Server" xml:space="preserve"><value>Problem med at oprette forbindelse til serveren. Prøv igen senere</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Tryk for at hente.</value></data>

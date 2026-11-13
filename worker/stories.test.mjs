@@ -2,7 +2,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { compareEntries, parseCreditsByLanguage, parseMeta, parseTags, parseTitles, toListItem } from "./stories.ts";
+import { GateAnswer, createPaidGate } from "./entitlements/gate.ts";
+import { serveObject } from "./downloads.ts";
+import { badRequest, compareEntries, handleStories, parseCreditsByLanguage, parseMeta, parseTags, parseTitles, toListItem } from "./stories.ts";
 
 const baseMeta = { schemaVersion: 1, title: "The Town Mouse", language: "en" };
 
@@ -76,6 +78,72 @@ test("tags and bytes reach the list item; an older meta lists no tags and null b
 
 test("bytes that are not a positive whole number are dropped", () => {
   for (const bad of [0, -5, 1.5, "9", null, true]) assert.equal(toListItem(storyEntry({ bytes: bad }), "").bytes, null);
+});
+
+// Slice 357: an error answer is its status alone; only a 400 speaks.
+const PAID_ID = "7d0e5a4e000040008000000000000001";
+const PAID_PRODUCT = "uk.sirous.dinoreader.book.goldilocks";
+function oneBookBucket() {
+  const folder = `dinoreader/stories/${PAID_ID}/`;
+  const meta = { schemaVersion: 1, title: "Goldilocks", language: "en", version: 1, access: "paid", productId: PAID_PRODUCT };
+  const objects = new Map([[`${folder}meta.json`, Buffer.from(JSON.stringify(meta))], [`${folder}story-v1.dino`, Buffer.from("pkg")]]);
+  return {
+    async list({ prefix }) { return { objects: [...objects.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key })), truncated: false }; },
+    async head(key) { const body = objects.get(key); return body ? { size: body.length, httpEtag: '"e"' } : null; },
+    async get(key) {
+      const body = objects.get(key);
+      return body ? { size: body.length, httpEtag: '"e"', body: new Response(body).body, json: async () => JSON.parse(body.toString()) } : null;
+    },
+  };
+}
+const callStore = (path, gate, bucket = oneBookBucket(), headers = {}) => handleStories(new Request(`https://x.test${path}`, { headers }), { DOWNLOADS: bucket }, "", serveObject, gate);
+const DOWNLOAD = `/api/stories/${PAID_ID}/download?v=1`;
+
+test("a refused paid file is 402, 403 or 429 with no body; a store that cannot be asked is 503, not 403", async () => {
+  const expected = [[GateAnswer.NoProof, 402], [GateAnswer.BadProof, 403], [GateAnswer.RateLimited, 429], [GateAnswer.CannotVerify, 503]];
+  for (const [answer, status] of expected) {
+    const response = await callStore(DOWNLOAD, async () => answer);
+    assert.equal(response.status, status, answer);
+    assert.equal(await response.text(), "", `${answer} has no body`);
+  }
+});
+
+test("a missing store secret is 503 with no body, never owned", async () => {
+  const gate = createPaidGate({ enabled: async () => true, env: {}, fetcher: async () => new Response("{}") });
+  const noProof = await callStore(DOWNLOAD, gate);
+  const proofed = await callStore(DOWNLOAD, gate, oneBookBucket(), { "X-Purchase-Proof": `android:${PAID_PRODUCT}:t` });
+  assert.equal(noProof.status, 402);
+  assert.equal(proofed.status, 503);
+  assert.equal(await proofed.text(), "");
+});
+
+test("an unknown book, a bad id and an unreadable bucket answer 404 or 503 with no body", async () => {
+  const missing = await callStore(`/api/stories/${"0".repeat(32)}/download?v=1`, undefined);
+  assert.equal(missing.status, 404);
+  assert.equal(await missing.text(), "");
+  const badId = await callStore("/api/stories/not-an-id/download", undefined);
+  assert.equal(badId.status, 404);
+  assert.equal(await badId.text(), "");
+  const broken = { async list() { throw new Error("r2 down"); }, async head() { return null; }, async get() { return null; } };
+  const down = await callStore("/api/stories", undefined, broken);
+  assert.equal(down.status, 503);
+  assert.equal(await down.text(), "");
+});
+
+test("a 429 for the Windows ticket and a 404 for none have no body", async () => {
+  const call = (ticket) => handleStories(new Request("https://x.test/api/stories/windows-ticket"), { DOWNLOADS: oneBookBucket() }, "", serveObject, undefined, ticket);
+  const limited = await call(async () => ({ limited: true }));
+  assert.equal(limited.status, 429);
+  assert.equal(await limited.text(), "");
+  const none = await call(async () => ({ none: true }));
+  assert.equal(none.status, 404);
+  assert.equal(await none.text(), "");
+});
+
+test("a 400 carries the one message, in English, as JSON", async () => {
+  const response = badRequest("The book id is not valid.");
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { message: "The book id is not valid." });
 });
 
 test("tagged books list first, then newest first by added, then by title", () => {

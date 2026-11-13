@@ -360,6 +360,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Koop {0} voor {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Maak verbinding met internet om te kopen</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Wacht op goedkeuring</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Inloggen is nodig om dit boek te krijgen.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>Je mag dit boek niet ophalen.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>Dit boek is niet gevonden.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Je moet dit boek eerst kopen</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Te veel pogingen. Wacht een minuut en probeer het opnieuw.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Probleem met verbinden met de server, probeer het later opnieuw</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>De winkel heeft een probleem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Aankopen herstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Een code inwisselen</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>De aankoop is niet gelukt. Probeer het opnieuw.</value></data>

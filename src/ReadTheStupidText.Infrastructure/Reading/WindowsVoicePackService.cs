@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Usage;
 
@@ -63,7 +64,8 @@ public sealed class WindowsVoicePackService : IVoicePackService
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
             // no-fallback: the failure is returned to the caller as a PackCatalogResult, which shows or retries it
-            return PackCatalogResult.Failure(ClassifyFailure(ex));
+            PackDownloadOutcome failed = ClassifyFailure(ex);
+            return PackCatalogResult.Failure(failed.Status, failed.ServerAnswer);
         }
     }
 
@@ -123,19 +125,23 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     // A pack that is installed is kept unless the catalogue lists a newer version of it; an update
     // that cannot be fetched leaves the installed pack in place.
-    public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken) =>
+        (await DownloadWithAnswerAsync(packId, progress, cancellationToken).ConfigureAwait(false)).Status;
+
+    // Slice 357: the server's answer is part of the returned outcome of this very run, so a later run of the same pack cannot change it.
+    public async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
         InstalledVoicePack? installed = LoadInstalled(packId);
 
         // Hash, extract and copy are heavy: keep all of it off the calling (UI) thread.
-        PackDownloadResult result = await Task.Run(() => DownloadOffCallerAsync(packId, installed, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
-        if (result != PackDownloadResult.Ok)
+        PackDownloadOutcome outcome = await Task.Run(() => DownloadOffCallerAsync(packId, installed, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
+        if (outcome.Status != PackDownloadResult.Ok)
         {
             ReportVoicePackFailed(packId); // Slice 273 part C: the pack could not be installed; the Windows voice stays
         }
 
-        return result;
+        return outcome;
     }
 
     // Voice packs only: an OCR or translation pack's failure is reported by its own area (translation_pack_missing, ocr_*), so a second row would count it twice.
@@ -158,30 +164,30 @@ public sealed class WindowsVoicePackService : IVoicePackService
         PackConstants.SupertonicPackId, PackConstants.PersianPackId, PackConstants.ChinesePackId, PackConstants.NorwegianPackId,
     };
 
-    private async Task<PackDownloadResult> DownloadOffCallerAsync(string packId, InstalledVoicePack? installed, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task<PackDownloadOutcome> DownloadOffCallerAsync(string packId, InstalledVoicePack? installed, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         PackCatalogResult catalog = _catalog is null
             ? await GetCatalogAsync(cancellationToken).ConfigureAwait(false)
             : new PackCatalogResult(PackDownloadResult.Ok, _catalog);
         if (catalog.Status != PackDownloadResult.Ok)
         {
-            return KeepInstalledOr(installed, progress, catalog.Status);
+            return KeepInstalledOr(installed, progress, new PackDownloadOutcome(catalog.Status, catalog.ServerAnswer));
         }
 
         PackInfo? pack = catalog.Packs.FirstOrDefault(p => p.Id == packId);
         if (installed is not null && (pack is null || !PackVersions.IsNewer(pack.Version, installed.Manifest.Version)))
         {
             progress?.Report(1);
-            return PackDownloadResult.Ok; // current (or no longer listed): nothing to fetch
+            return new PackDownloadOutcome(PackDownloadResult.Ok); // current (or no longer listed): nothing to fetch
         }
 
         return pack is null
-            ? PackDownloadResult.Failed
+            ? new PackDownloadOutcome(PackDownloadResult.Failed)
             : await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
     }
 
     // With no catalogue to compare against, an installed pack is still good.
-    private static PackDownloadResult KeepInstalledOr(InstalledVoicePack? installed, IProgress<double>? progress, PackDownloadResult failure)
+    private static PackDownloadOutcome KeepInstalledOr(InstalledVoicePack? installed, IProgress<double>? progress, PackDownloadOutcome failure)
     {
         if (installed is null)
         {
@@ -189,23 +195,24 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
 
         progress?.Report(1);
-        return PackDownloadResult.Ok;
+        return new PackDownloadOutcome(PackDownloadResult.Ok);
     }
 
-    private async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    // The outcome of the last attempt is returned whole, so its server answer (if any) is the one the failed run shows.
+    private async Task<PackDownloadOutcome> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         long started = Stopwatch.GetTimestamp();
         for (int attempt = 1; ; attempt++)
         {
-            PackDownloadResult result = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
-            if (!PackRetryPolicy.ShouldRetry(result, attempt))
+            PackDownloadOutcome outcome = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+            if (!PackRetryPolicy.ShouldRetry(outcome.Status, attempt))
             {
-                LogOutcome(pack, attempt, result, started);
-                return result;
+                LogOutcome(pack, attempt, outcome.Status, started);
+                return outcome;
             }
 
             TimeSpan backoff = _backoff(attempt);
-            PackDownloadLog.Retry(pack.Id, attempt, result, backoff);
+            PackDownloadLog.Retry(pack.Id, attempt, outcome.Status, backoff);
             await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -222,7 +229,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
     }
 
-    private async Task<PackDownloadResult> TryDownloadOnceAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task<PackDownloadOutcome> TryDownloadOnceAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         string zipPath = ZipPath(pack);
         try
@@ -230,7 +237,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             if (!await HasVerifiedZipAsync(pack, zipPath, cancellationToken).ConfigureAwait(false)
                 && await FetchZipAsync(pack, zipPath, progress, cancellationToken).ConfigureAwait(false) is { } failure)
             {
-                return failure;
+                return new PackDownloadOutcome(failure);
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -239,7 +246,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             return ClassifyFailure(ex);
         }
 
-        return InstallVerifiedZip(pack, zipPath, progress, cancellationToken);
+        return new PackDownloadOutcome(InstallVerifiedZip(pack, zipPath, progress, cancellationToken));
     }
 
     // A verified zip survives only if an earlier run was killed between verify and install.
@@ -297,8 +304,11 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     // Offline wins when the OS reports no network at failure time; otherwise the exception
     // itself decides, so a transient failure on a live network is retried.
-    private PackDownloadResult ClassifyFailure(Exception exception) =>
-        _isNetworkAvailable() ? PackErrorClassifier.Classify(exception) : PackDownloadResult.Offline;
+    // Slice 357: the server's answer is kept only when the failure is not reported as Offline, so the result and the answer always agree.
+    private PackDownloadOutcome ClassifyFailure(Exception exception) =>
+        _isNetworkAvailable()
+            ? new PackDownloadOutcome(PackErrorClassifier.Classify(exception), PackErrorClassifier.ClassifyHttp(exception))
+            : new PackDownloadOutcome(PackDownloadResult.Offline);
 
     private async Task DownloadBodyAsync(PackInfo pack, string partial, IProgress<double>? progress, CancellationToken cancellationToken)
     {

@@ -297,6 +297,21 @@
   <data name="Pack_InvalidPack" xml:space="preserve">
     <value>لا يمكن استخدام حزمة الصوت هذه. يقرأ {0}.</value>
   </data>
+  <data name="Pack_Error_Unauthorized" xml:space="preserve">
+    <value>تسجيل الدخول مطلوب لتنزيل هذا.</value>
+  </data>
+  <data name="Pack_Error_Forbidden" xml:space="preserve">
+    <value>غير مسموح لك بتنزيل هذا.</value>
+  </data>
+  <data name="Pack_Error_NotFound" xml:space="preserve">
+    <value>لم يتم العثور على التنزيل.</value>
+  </data>
+  <data name="Pack_Error_TooManyRequests" xml:space="preserve">
+    <value>محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.</value>
+  </data>
+  <data name="Pack_Error_Server" xml:space="preserve">
+    <value>حدثت مشكلة في الاتصال بالخادم، يرجى المحاولة لاحقًا</value>
+  </data>
   <data name="Pack_Failed" xml:space="preserve">
     <value>فشل التنزيل. أعد المحاولة.</value>
   </data>

@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
@@ -17,8 +18,9 @@ internal static class PackSetupText
 
     public static string Intro => UiStrings.Format("Pack_Intro", Windows);
 
-    public static string For(PackSetupState state, double progress) => state switch
+    public static string For(PackSetupState state, double progress, HttpErrorKind? failure = null) => state switch
     {
+        PackSetupState.Failed when failure is { } kind => FailureText(kind),
         PackSetupState.Resolving => UiStrings.Get("Pack_Resolving"),
         PackSetupState.Downloading => UiStrings.Format("Pack_Downloading", (int)(progress * PercentScale)),
         PackSetupState.Ready => UiStrings.Get("Pack_Ready"),
@@ -31,6 +33,16 @@ internal static class PackSetupText
     };
 
     /// <summary>The control panel's line while the natural voice is not ready.</summary>
-    public static string ForPanel(PackSetupState state, double progress) =>
-        state == PackSetupState.Idle ? Windows : For(state, progress);
+    public static string ForPanel(PackSetupState state, double progress, HttpErrorKind? failure = null) =>
+        state == PackSetupState.Idle ? Windows : For(state, progress, failure);
+
+    /// <summary>Slice 357: the line for a failed pack download by what the server answered; a 5xx, any other 4xx and a 400 show the general server text.</summary>
+    public static string FailureText(HttpErrorKind kind) => kind switch
+    {
+        HttpErrorKind.Unauthorized => UiStrings.Get("Pack_Error_Unauthorized"),
+        HttpErrorKind.Forbidden => UiStrings.Get("Pack_Error_Forbidden"),
+        HttpErrorKind.NotFound => UiStrings.Get("Pack_Error_NotFound"),
+        HttpErrorKind.TooManyRequests => UiStrings.Get("Pack_Error_TooManyRequests"),
+        _ => UiStrings.Get("Pack_Error_Server"),
+    };
 }

@@ -5,6 +5,7 @@ using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
+using ReadTheStupidText.Application.Net;
 using ReadTheStupidText.Application.Usage;
 using WaitStage = ReadTheStupidText.Application.Reading.WaitStage;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -39,6 +40,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	private double _progress;
 	private ImageSource? _cover;
 	private string _price = string.Empty;
+	private HttpError? _error;
 
 	public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -101,11 +103,21 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public StoreRowState State => _state;
 
-	public void SetState(StoreRowState state)
+	/// <summary>Slice 357: why the last Get failed, shown under the row while the row offers a button again; cleared when a download starts or the book is on the shelf.</summary>
+	public HttpError? Error => _error;
+
+	public bool HasError => _error is not null && _state is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Buy or StoreRowState.ConnectToBuy;
+
+	public string ErrorText => _error is null ? string.Empty : StoreText.ErrorMessage(_error);
+
+	/// <summary>The error is part of the state: a call that ends the row in a failed or error-carrying state passes it, every other call passes none and so clears it (Slice 357 review).</summary>
+	public void SetState(StoreRowState state, HttpError? error = null)
 	{
 		_state = state;
 		_progress = 0;
-		Raise(nameof(IsGet), nameof(GetLabel), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+		_error = error;
+
+		Raise(nameof(Error), nameof(HasError), nameof(ErrorText), nameof(IsGet), nameof(GetLabel), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
 	}
 
 	/// <summary>The store's own formatted price for a sold book (Slice 346); empty otherwise.</summary>
@@ -183,6 +195,22 @@ public static class StoreText
 
 	public static string GetHint(string title) => AppResources.Format(AppResources.Store_GetStory, title);
 
+	/// <summary>
+	/// The text for a failed server call (Slice 357), in the UI language: one translated line per status kind, "You're offline" for no answer, and for a 400 the server's own English
+	/// sentence as it is (the general server text when it sent none). Every 5xx and any other 4xx show the general text.
+	/// </summary>
+	public static string ErrorMessage(HttpError error) => error.Kind switch
+	{
+		HttpErrorKind.Offline => AppResources.Store_OfflineTitle,
+		HttpErrorKind.BadRequest => error.Message ?? AppResources.Store_Error_Server,
+		HttpErrorKind.Unauthorized => AppResources.Store_Error_Unauthorized,
+		HttpErrorKind.Forbidden => AppResources.Store_Error_Forbidden,
+		HttpErrorKind.NotFound => AppResources.Store_Error_NotFound,
+		HttpErrorKind.PaymentRequired => AppResources.Store_Error_PaymentRequired,
+		HttpErrorKind.TooManyRequests => AppResources.Store_Error_TooManyRequests,
+		_ => AppResources.Store_Error_Server,
+	};
+
 	public static string ProgressHint(string title, string percent) => title + " " + percent;
 }
 
@@ -198,6 +226,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
 	private const int CoverParallelism = 4;
+	private const string WifiOffGlyphKey = "WifiOffGlyph";
+	private const string ServerErrorGlyphKey = "ServerErrorGlyph";
 	private int _shownColumns;
 	private const double ChipHeight = 40;
 	private const double ChipFontSize = 14;
@@ -405,7 +435,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			StoreListing listing = await _client.ListAsync(cancel);
 			if (listing.Status == StoreLoadStatus.Offline)
 			{
-				Show(OfflineView);
+				ShowOffline(listing.Error);
 				return true;
 			}
 
@@ -421,9 +451,24 @@ public partial class StorePage : ContentView, ICornerTabView
 		{
 			Debug.WriteLine($"Dino Reader store load failed: {ex}");
 			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: an unexpected failure (not the network) shows the offline view
-			Show(OfflineView);
+			ShowOffline(null);
 			return true;
 		}
+	}
+
+	// Slice 357: the offline panel for no answer, or for no known reason; when the server did answer with an error, the same panel carries that error's own text instead of "You're offline" (Try again stays).
+	private void ShowOffline(HttpError? error)
+	{
+		bool serverAnswered = error is { Kind: not HttpErrorKind.Offline };
+		// A server answer is not "you're offline": it has its own icon and title, and the error's text (the translated line, or a 400's own sentence) is the body.
+		OfflineTitleLabel.Text = serverAnswered ? AppResources.Store_ServerErrorTitle : AppResources.Store_OfflineTitle;
+		OfflineBodyLabel.Text = serverAnswered ? StoreText.ErrorMessage(error!) : AppResources.Store_OfflineBody;
+		string glyphKey = serverAnswered ? ServerErrorGlyphKey : WifiOffGlyphKey;
+		OfflineIcon.Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString((string)Resources[glyphKey])!;
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] list kind={error?.Kind.ToString() ?? "none"}");
+#endif
+		Show(OfflineView);
 	}
 
 	private async Task ShowItemsAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
@@ -719,8 +764,51 @@ public partial class StorePage : ContentView, ICornerTabView
 				_usage.RecordStoreDownload(row.Item, ageFilterSet, authorFilterSet);
 			}
 
-			row.SetState(outcome == DownloadOutcome.Done ? StoreRowState.Downloaded : StoreRowState.Failed);
+			await ShowDownloadResultAsync(row, outcome);
 		}
+	}
+
+	// Slice 357: a failed Get says why under the row (the server's answer, in the app's language) and offers Try again. A 402 ("You need to buy this book first") goes back to the row's plan, so the Buy button shows where the book can be bought.
+	private async Task ShowDownloadResultAsync(StoreRow row, DownloadOutcome outcome)
+	{
+		if (outcome == DownloadOutcome.Done)
+		{
+			row.SetState(StoreRowState.Downloaded);
+			return;
+		}
+
+		HttpError? error = outcome == DownloadOutcome.Failed ? _client.DownloadErrorFor(row.Item.Id) : null;
+		Debug.WriteLine($"Dino Reader store row {row.Item.Id} failed: {error?.Kind.ToString() ?? "no server answer"}");
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] row kind={error?.Kind.ToString() ?? "none"}");
+#endif
+		if (error?.Kind == HttpErrorKind.PaymentRequired)
+		{
+			await ShowPaymentRequiredAsync(row, error);
+			return;
+		}
+
+		row.SetState(StoreRowState.Failed, error);
+	}
+
+	// The plan decides what the row offers now: where the book can be bought it shows Buy (or Connect to buy) with the message under it. Where the plan still says Get or Waiting
+	// there is no way to buy from here, so the row keeps Try again with the message rather than a Get pill that can only fail the same way.
+	private async Task ShowPaymentRequiredAsync(StoreRow row, HttpError error)
+	{
+		row.SetState(StoreRowState.Get);
+		await ReplanRowsAsync();
+		if (row.State == StoreRowState.Downloaded)
+		{
+			return; // the replan found the book on the shelf after all
+		}
+
+		if (row.State is StoreRowState.Buy or StoreRowState.ConnectToBuy)
+		{
+			row.SetState(row.State, error);
+			return;
+		}
+
+		row.SetState(StoreRowState.Failed, error);
 	}
 
 	// Slice 346 (review): with the switch on, a download first waits for the store's purchase read (up to 25 s); past 500 ms the shared wait overlay says what is awaited. With the switch off this returns at once.

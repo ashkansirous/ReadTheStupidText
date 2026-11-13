@@ -361,6 +361,13 @@
   <data name="Store_BuyStory" xml:space="preserve"><value>Comprar {0} por {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Conéctate a internet para comprar</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Esperando aprobación</value></data>
+  <data name="Store_Error_Unauthorized" xml:space="preserve"><value>Hace falta iniciar sesión para obtener este libro.</value></data>
+  <data name="Store_Error_Forbidden" xml:space="preserve"><value>No tienes permiso para obtener este libro.</value></data>
+  <data name="Store_Error_NotFound" xml:space="preserve"><value>No se encontró este libro.</value></data>
+  <data name="Store_Error_PaymentRequired" xml:space="preserve"><value>Primero tienes que comprar este libro</value></data>
+  <data name="Store_Error_TooManyRequests" xml:space="preserve"><value>Demasiados intentos. Espera un minuto e inténtalo de nuevo.</value></data>
+  <data name="Store_Error_Server" xml:space="preserve"><value>Problema al conectar con el servidor, vuelve a intentarlo más tarde</value></data>
+  <data name="Store_ServerErrorTitle" xml:space="preserve"><value>La tienda tiene un problema</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurar compras</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Canjear un código</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>La compra no se completó. Inténtalo de nuevo.</value></data>

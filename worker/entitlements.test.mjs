@@ -427,12 +427,12 @@ test("routes: a paid book's package, audio pack and listening track are 402 with
   }
 });
 
-test("routes: a store that cannot be asked is 403 cannot-verify", async () => {
+test("routes: a store that cannot be asked is 503 with no body (Slice 357)", async () => {
   fresh();
   const stuck = gateWith({ verdict: CANNOT_VERIFY }).gate;
   const response = await callStories(PAID_FILES[0], stuck, { "X-Purchase-Proof": `android:${PRODUCT}:t` });
-  assert.equal(response.status, 403);
-  assert.equal((await response.json()).code, "cannot-verify");
+  assert.equal(response.status, 503);
+  assert.equal(await response.text(), "");
 });
 
 test("routes: a free book, the cover and the list never need proof, and the list says what is paid", async () => {
@@ -489,7 +489,7 @@ test("gate: a client over its limit never reaches a store and is never owned; ca
   assert.deepEqual(asked, ["one"]);
   const response = await callStories(PAID_FILES[0], gate, { "X-Purchase-Proof": `android:${PRODUCT}:three`, "CF-Connecting-IP": "1.2.3.4" });
   assert.equal(response.status, 429);
-  assert.equal((await response.json()).code, "rate-limited");
+  assert.equal(await response.text(), ""); // Slice 357: status only
 });
 
 test("routes: the Windows ticket is served only when a ticket source has one, never cached, and 429 over the limit", async () => {
