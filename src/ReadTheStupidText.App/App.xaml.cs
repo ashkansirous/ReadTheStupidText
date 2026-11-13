@@ -1,20 +1,20 @@
-using ReadTheStupidText.Application.Activity;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Sanitizing;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Startup;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Documents;
-using ReadTheStupidText.Infrastructure.Logging;
-using ReadTheStupidText.Infrastructure.Reading;
-using ReadTheStupidText.Infrastructure.Sanitizing;
-using ReadTheStupidText.Infrastructure.Settings;
-using ReadTheStupidText.Infrastructure.Translation;
-using ReadTheStupidText.Infrastructure.Usage;
+using Sirous.Reading.Application.Activity;
+using Sirous.Reading.Application.Documents;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Sanitizing;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Startup;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Documents;
+using Sirous.Reading.Infrastructure.Logging;
+using Sirous.Reading.Infrastructure.Reading;
+using Sirous.Reading.Infrastructure.Sanitizing;
+using Sirous.Reading.Infrastructure.Settings;
+using Sirous.Reading.Infrastructure.Translation;
+using Sirous.Reading.Infrastructure.Usage;
 using ReadTheStupidText.Windows.Tray.Input;
 using ReadTheStupidText.Windows.Tray.Startup;
 using Microsoft.Extensions.DependencyInjection;
@@ -98,7 +98,7 @@ public partial class App : Application
             sp.GetRequiredService<IVoicePackService>().GetInstalledPath));
         services.AddSingleton<TranslationPackInstaller>();
         services.AddSingleton<ILanguageDetector, ScriptLanguageDetector>();
-        services.AddSingleton<IPackUpdateNetwork, ReadTheStupidText.Infrastructure.Translation.WindowsPackUpdateNetwork>();
+        services.AddSingleton<IPackUpdateNetwork, Sirous.Reading.Infrastructure.Translation.WindowsPackUpdateNetwork>();
         services.AddSingleton<ReadTranslator>();
 
         // Anonymous usage counts (Slice 140): one service, also the IUsageRecorder the read service and the panel's switch use.

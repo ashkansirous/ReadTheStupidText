@@ -1,4 +1,4 @@
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 using Xunit;
 
 namespace ReadTheStupidText.Tests.Crashes;

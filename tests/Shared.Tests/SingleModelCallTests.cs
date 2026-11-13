@@ -1,4 +1,4 @@
-using ReadTheStupidText.Mobile.Shared.ModelDownload;
+using Sirous.Reading.Mobile.Shared.ModelDownload;
 
 namespace ReadTheStupidText.Tests;
 

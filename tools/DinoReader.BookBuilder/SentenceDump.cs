@@ -1,7 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 
 namespace DinoReader.BookBuilder;
 

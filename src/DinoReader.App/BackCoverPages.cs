@@ -91,7 +91,7 @@ public sealed class BackCoverPages(IPageRenderer inner, BackCoverView view, stri
 		_appliedCardWidth = 0;
 		layers.Text.Children.Add(BuildPage());
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER shown lines={view.Lines.Count} picture={(view.BackPicture is null ? "live" : "drawn")}{CardLogSuffix()}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"BACKCOVER shown lines={view.Lines.Count} picture={(view.BackPicture is null ? "live" : "drawn")}{CardLogSuffix()}");
 #endif
 	}
 

@@ -25,30 +25,30 @@
     <!-- Pure BCL helper from the Android-only Mobile project, compiled in (Slice 53); FallbackPartCTests checks its fallback. -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\UiCulture.cs" Link="Mobile\UiCulture.cs" />
     <!-- Debug-only test-hook command parser (Slice 162); its file is empty outside Debug. -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookLaunchKeys.cs" Link="Mobile\TestHookLaunchKeys.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialPolicy.cs" Link="Mobile\StalePartialPolicy.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Testing\TestHookLaunchKeys.cs" Link="Mobile\TestHookLaunchKeys.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\StalePartialPolicy.cs" Link="Mobile\StalePartialPolicy.cs" />
     <!-- Slice 243 item 5 / Slice 249: the log-line words and the "Report a problem" code and report, pure and shared by both apps. -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\TraceLines.cs" Link="Mobile\TraceLines.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\ReportCode.cs" Link="Mobile\ReportCode.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Crashes\TraceLines.cs" Link="Mobile\TraceLines.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Crashes\ReportCode.cs" Link="Mobile\ReportCode.cs" />
     <!-- The launch scan's wanted/undecided pack rule (Slice 208), pulled out of the service so DecideAll is tested (Slice 225). -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialDecider.cs" Link="Mobile\StalePartialDecider.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\StalePartialDecider.cs" Link="Mobile\StalePartialDecider.cs" />
     <!-- The translation download session has no MAUI types (Slice 187). -->
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\TranslationModelDownloadSession.cs" Link="Mobile\TranslationModelDownloadSession.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IDocumentScanner.cs" Link="Mobile\IDocumentScanner.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerReporting.cs" Link="Mobile\DocumentScannerReporting.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerRegistration.cs" Link="Mobile\DocumentScannerRegistration.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Usage\ConfigFallbackHold.cs" Link="Mobile\ConfigFallbackHold.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerStartFailedException.cs" Link="Mobile\DocumentScannerStartFailedException.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerUnavailableException.cs" Link="Mobile\DocumentScannerUnavailableException.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerPreparingException.cs" Link="Mobile\DocumentScannerPreparingException.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Translation\TranslationModelDownloadSession.cs" Link="Mobile\TranslationModelDownloadSession.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\IDocumentScanner.cs" Link="Mobile\IDocumentScanner.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\DocumentScannerReporting.cs" Link="Mobile\DocumentScannerReporting.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\DocumentScannerRegistration.cs" Link="Mobile\DocumentScannerRegistration.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Usage\ConfigFallbackHold.cs" Link="Mobile\ConfigFallbackHold.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\DocumentScannerStartFailedException.cs" Link="Mobile\DocumentScannerStartFailedException.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\DocumentScannerUnavailableException.cs" Link="Mobile\DocumentScannerUnavailableException.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\DocumentScannerPreparingException.cs" Link="Mobile\DocumentScannerPreparingException.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,9 +61,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Infrastructure\Sirous.Reading.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

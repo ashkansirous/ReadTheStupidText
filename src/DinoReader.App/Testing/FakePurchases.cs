@@ -67,7 +67,7 @@ internal sealed class FakePurchases : IBookPurchases
     private static void WriteMarker(string line)
     {
 #if DEBUG
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
     }
 

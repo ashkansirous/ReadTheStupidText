@@ -1,15 +1,15 @@
 using System.Globalization;
 using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared.ModelDownload;
-using ReadTheStupidText.Mobile.Shared.Network;
-using ReadTheStupidText.Mobile.Shared.Usage;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.ModelDownload;
+using Sirous.Reading.Mobile.Shared.Network;
+using Sirous.Reading.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared.Waiting;
 using AndroidPlatform = Microsoft.Maui.Controls.PlatformConfiguration.Android;
 
 namespace ReadTheStupidText.Mobile;
@@ -575,7 +575,7 @@ public partial class ReviewPage : ContentPage
     {
         System.Diagnostics.Debug.WriteLine(line);
 #if DEBUG
-        Shared.Testing.TestHookLog.Write(line);
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
     }
 

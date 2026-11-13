@@ -1,5 +1,5 @@
 using DinoReader.Core;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace DinoReader;
 
@@ -36,7 +36,7 @@ public sealed class AppConfigClient
 		remove => _client.Fetched -= value;
 	}
 
-	/// <summary>Slice 273 part C: told<see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigCached"/> or <see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigDefault"/> when a fetch failed; set by the app once its usage sink exists.</summary>
+	/// <summary>Slice 273 part C: told<see cref="Sirous.Reading.Application.Usage.FallbackReason.ConfigCached"/> or <see cref="Sirous.Reading.Application.Usage.FallbackReason.ConfigDefault"/> when a fetch failed; set by the app once its usage sink exists.</summary>
 	public Action<string>? FallbackReported
 	{
 		get => _client.FallbackReported;

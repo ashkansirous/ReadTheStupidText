@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Translation;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
+using Sirous.Reading.Application.Translation;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 

@@ -1,6 +1,6 @@
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 

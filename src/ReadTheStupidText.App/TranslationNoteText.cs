@@ -1,4 +1,4 @@
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Translation;
 
 namespace ReadTheStupidText_App;
 

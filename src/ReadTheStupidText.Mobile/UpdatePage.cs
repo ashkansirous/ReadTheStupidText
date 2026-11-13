@@ -1,4 +1,4 @@
-using ReadTheStupidText.Application.AppConfig;
+using Sirous.Reading.Application.AppConfig;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 
@@ -61,7 +61,7 @@ public sealed class UpdatePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("UPDATE_PAGE shown"); // the scripted check asserts on this line
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("UPDATE_PAGE shown"); // the scripted check asserts on this line
     }
 #endif
 

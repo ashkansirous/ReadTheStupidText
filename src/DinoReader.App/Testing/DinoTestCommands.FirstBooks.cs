@@ -1,6 +1,6 @@
 #if DEBUG
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Mobile.Shared.Testing;
 
 namespace DinoReader.Testing;
 

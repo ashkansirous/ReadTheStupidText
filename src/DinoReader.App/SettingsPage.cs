@@ -2,8 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile.Shared.Crashes;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -315,7 +315,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		UiScreen.Show((page is Page hosted ? UiScreen.ScreenOf(hosted) : null) ?? UiScreens.CornerSettings); // Slice 352: a hosted page is a screen of its own
 		AppTrace.Line(TraceLines.PageShown(page.GetType().Name)); // a hosted page is never pushed, so Application.PageAppearing does not see it: the report's log tail still names it (report-problem flow)
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] settings page={page.GetType().Name} hosted=true");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] settings page={page.GetType().Name} hosted=true");
 #endif
 		SubPageChanged?.Invoke();
 		return Task.CompletedTask;
@@ -370,7 +370,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		}
 
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Redesign] settings page=list hosted=false");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Redesign] settings page=list hosted=false");
 #endif
 		SubPageChanged?.Invoke();
 	}

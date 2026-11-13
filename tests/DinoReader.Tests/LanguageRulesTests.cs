@@ -237,7 +237,7 @@ public class LanguageRulesTests
     [Fact]
     public void Language_codes_come_from_the_app_language_enum()
     {
-        Assert.Equal(Enum.GetValues<ReadTheStupidText.Application.Reading.AppLanguage>().Length, UiLanguage.Supported.Count);
+        Assert.Equal(Enum.GetValues<Sirous.Reading.Application.Reading.AppLanguage>().Length, UiLanguage.Supported.Count);
         Assert.True(UiLanguage.IsRightToLeft("fa") && UiLanguage.IsRightToLeft("ar-SA"));
         Assert.False(UiLanguage.IsRightToLeft("fr"));
     }

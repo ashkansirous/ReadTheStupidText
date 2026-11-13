@@ -1,7 +1,7 @@
 # CLAUDE.md — Mobile (MAUI: Android and iOS)
 
 Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code in
-`src/ReadTheStupidText.Mobile.Shared` and the Dino Reader app have their own files. CI is in `.github/CLAUDE.md`.
+`src/Sirous.Reading.Mobile.Shared` and the Dino Reader app have their own files. CI is in `.github/CLAUDE.md`.
 
 Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`.
 On a Windows host Mobile.Shared also restores its Windows target (needs the `maui-windows` workload);
@@ -31,8 +31,8 @@ Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=tru
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) — the RTST
   app; references `Domain`/`Application`/`Documents`/`Mobile.Shared`. The shared
   platform code (engines, voice packs, `IPlatformServices`, per-OS
-  `Platforms/` folders) lives in **`src/ReadTheStupidText.Mobile.Shared`**
-  (namespace `ReadTheStupidText.Mobile.Shared`; `Application` grants it
+  `Platforms/` folders) lives in **`src/Sirous.Reading.Mobile.Shared`**
+  (namespace `Sirous.Reading.Mobile.Shared`; `Application` grants it
   `InternalsVisibleTo`). OCR and the scanner stay RTST-only.
   **`src/DinoReader.App`** (Android, iOS and a Windows head; `uk.sirous.dinoreader`) references
   `Application`/`Domain`/`Mobile.Shared`. **Nothing outside `Platforms/`
@@ -52,15 +52,16 @@ Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=tru
 
 ## Gotchas
 
-- Files under the app's own `Platforms/Android` use namespace `ReadTheStupidText.Mobile` (Mobile.Shared's use `ReadTheStupidText.Mobile.Shared`),
+- Files under the app's own `Platforms/Android` use namespace `ReadTheStupidText.Mobile` (Mobile.Shared's use `Sirous.Reading.Mobile.Shared`),
   *not* `...Platforms.Android` — a namespace segment literally named `Android`
   shadows the top-level `Android.*` binding namespace for unqualified lookups
   in that file.
-- Any bare `Application` in Mobile code must be
-  qualified as `Microsoft.Maui.Controls.Application` — the project also
-  references a library literally named `ReadTheStupidText.Application`, which
-  wins unqualified-name resolution from within the `ReadTheStupidText.Mobile`
-  namespace.
+- A bare `Application` inside the `Sirous.Reading.*` namespaces (so in
+  `Sirous.Reading.Mobile.Shared`, including its `Platforms/` folders) must be
+  qualified as `Microsoft.Maui.Controls.Application`: the sibling namespace
+  `Sirous.Reading.Application` wins unqualified-name resolution there. Code in
+  `ReadTheStupidText.Mobile` and `DinoReader.App` is not nested under
+  `Sirous.Reading`, so the clash does not occur there (Slice 370).
 - **sherpa-onnx on Android:** a plain `PackageReference` silently
   bundles wrong-OS `.so` files into `lib/arm64-v8a/`. The fix lives in
   `src/AndroidSherpaPackaging.props`, which **every** MAUI project linking the engine
@@ -96,13 +97,13 @@ physical device) before relying on a slice that touches the Mobile project.
 - The app pins one `packs-<n>` release in `PackConstants.CatalogUrl` (how they are published and tag-filtered: `.github/CLAUDE.md`). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 28 (Decision 82; see the API 28 rule above). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - **Pack layout.** An installed pack lives in `packs/<id>/v<version>/` with an `active` file naming the
-  folder; always resolve it through `PackVersionFolders.Resolve` (`src/ReadTheStupidText.Application/Reading/PackVersionFolders.cs`),
+  folder; always resolve it through `PackVersionFolders.Resolve` (`src/Sirous.Reading.Application/Reading/PackVersionFolders.cs`),
   never `packs/<id>/` directly, and never replace or delete the active folder (a live engine holds its files).
   A multi-model voice pack puts each model in `voices/<name>/` (`model.onnx` + `tokens.txt`), with one shared
   `espeak-ng-data` at the pack root. Phones update an installed pack only on an unmetered connection
   (`PackUpdatePolicy`). (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
 - **Engines are cached per model folder.** Readers get engines through `EngineCache`
-  (`src/ReadTheStupidText.Application/Reading/EngineCache.cs`, capacity 4, keyed by model folder and pack
+  (`src/Sirous.Reading.Application/Reading/EngineCache.cs`, capacity 4, keyed by model folder and pack
   version, reference counted). Acquire on the thread pool, never on the UI thread (it caused an ANR); the voice
   preview plays only when the reader is idle. (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
 

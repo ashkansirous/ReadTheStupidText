@@ -46,7 +46,7 @@ public readonly record struct FlavourShape(double Semitones, float Pace, TimeSpa
 /// <summary>The shape table for <see cref="VoiceFlavour"/>. Pitch stays within about +-4 semitones so voices don't turn into chipmunks.</summary>
 public static class VoiceFlavours
 {
-    private static readonly TimeSpan NormalGap = ReadTheStupidText.Application.Reading.VoicedAudio.DefaultSentenceGap;
+    private static readonly TimeSpan NormalGap = Sirous.Reading.Application.Reading.VoicedAudio.DefaultSentenceGap;
     private const double BleatWobble = 0.03;
     private static readonly TimeSpan StorytellerGap = TimeSpan.FromMilliseconds(260);
 

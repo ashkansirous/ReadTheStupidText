@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Crashes;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Crashes;
+using Sirous.Reading.Application.Reading;
 using Xunit;
 
 namespace ReadTheStupidText.Tests.Crashes;

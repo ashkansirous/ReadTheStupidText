@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.Globalization;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -81,7 +81,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		window.Resumed += (_, _) => ResumeShelfAudio(force: false);
-		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
+		var resume = _services.GetRequiredService<Sirous.Reading.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
 		resume.Start();
 		window.Resumed += (_, _) => resume.NotifyForeground();
 		Action ended = () => OnResumed(_navigation!, external);
@@ -200,7 +200,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private void FlushUsage(string reason = "other")
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] flush on window {reason}"); // Slice 352: which window event sent the queue (stopped, destroying)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] flush on window {reason}"); // Slice 352: which window event sent the queue (stopped, destroying)
 #endif
 		try
 		{
@@ -451,7 +451,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 #if DEBUG
 		if (popped)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] closed on stop"); // the settings-page-survives-background flow's expect-log marker: the same process ran the pop (RTST-TEST tag)
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] closed on stop"); // the settings-page-survives-background flow's expect-log marker: the same process ran the pop (RTST-TEST tag)
 		}
 #endif
 	}

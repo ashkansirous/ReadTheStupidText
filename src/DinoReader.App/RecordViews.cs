@@ -1,7 +1,7 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 

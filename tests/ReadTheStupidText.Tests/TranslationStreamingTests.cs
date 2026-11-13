@@ -1,7 +1,7 @@
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Infrastructure.Translation;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Infrastructure.Translation;
 
 namespace ReadTheStupidText.Tests;
 

@@ -1,8 +1,8 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Domain.Sanitizing;
-using ReadTheStupidText.Infrastructure.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Domain.Sanitizing;
+using Sirous.Reading.Infrastructure.Reading;
 
 namespace ReadTheStupidText.Tests;
 

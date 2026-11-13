@@ -1,6 +1,6 @@
 using DinoReader.Core;
 using DinoReader.BookBuilder;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 using Xunit;
 
 namespace DinoReader.Tests;

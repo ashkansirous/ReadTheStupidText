@@ -5,8 +5,8 @@
        Referenced only by ReadTheStupidText.App, so Dino Reader (which shares Infrastructure) neither
        rebuilds nor ships it. -->
   <ItemGroup>
-    <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-    <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
+    <ProjectReference Include="..\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
   </ItemGroup>
 
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the Windows Desktop runtime

@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
-using ReadTheStupidText.Application.AppConfig;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Infrastructure.Usage;
+using Sirous.Reading.Application.AppConfig;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Infrastructure.Usage;
 using Windows.ApplicationModel;
 using Windows.Storage;
 

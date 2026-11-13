@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 

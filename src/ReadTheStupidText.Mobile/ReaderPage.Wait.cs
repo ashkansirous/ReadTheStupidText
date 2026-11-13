@@ -1,7 +1,7 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace ReadTheStupidText.Mobile;
 

@@ -58,7 +58,7 @@ import { appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const MOBILE = 'src/ReadTheStupidText.Mobile/';
-const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
+const SHARED = 'src/Sirous.Reading.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
 /** The branch a local run compares against (Slice 180). */
 const DEFAULT_LOCAL_BASE = 'origin/main';
@@ -97,9 +97,9 @@ export const CONTENT_MARKDOWN = ['content/dino/*/story.md'];
 
 /** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
-    'src/ReadTheStupidText.Domain/',
-    'src/ReadTheStupidText.Application/',
-    'src/ReadTheStupidText.Documents/',
+    'src/Sirous.Reading.Domain/',
+    'src/Sirous.Reading.Application/',
+    'src/Sirous.Reading.Documents/',
     'global.json',
     'Directory.Build.props',
     'src/SherpaOnnxVersion.props',
@@ -126,12 +126,12 @@ export const GROUPS = {
     // The pin checker SherpaVersionPinTests runs, and the pin sites outside every other group (Slice 368): they select the shared suite only.
     sherpapins: { include: ['.github/scripts/check-sherpa-pins.mjs', '.github/workflows/packs.yml', 'tools/sound-words-test/requirements.txt'] },
     // Infrastructure is in `windows` too (RTST's suite builds on it); on its own it is shared code (Dino Reader on Windows reads with it).
-    infrastructure: { include: ['src/ReadTheStupidText.Infrastructure/'] },
+    infrastructure: { include: ['src/Sirous.Reading.Infrastructure/'] },
     windows: {
         include: [
             'src/ReadTheStupidText.App/',
             'src/ReadTheStupidText.Windows.Tray/',
-            'src/ReadTheStupidText.Infrastructure/',
+            'src/Sirous.Reading.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/windows.yml',
         ],
@@ -187,7 +187,7 @@ export const GROUPS = {
             'src/DinoReader.App/',
             'src/DinoReader.Core/',
             `${SHARED}Platforms/Windows/`,
-            'src/ReadTheStupidText.Infrastructure/',
+            'src/Sirous.Reading.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/dinoreader-windows.yml',
         ],
@@ -209,7 +209,7 @@ export const GROUPS = {
     dinostore: {
         include: [
             'src/DinoReader.Core/',
-            'src/ReadTheStupidText.Application/', // LineReflow, used by the book builder (Slice 302)
+            'src/Sirous.Reading.Application/', // LineReflow, used by the book builder (Slice 302)
             'content/dino/',
             'tools/DinoReader.BookBuilder/',
             'tools/upload-store-story.ps1',

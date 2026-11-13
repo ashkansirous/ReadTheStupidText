@@ -15,9 +15,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/ReadTheStupidText.Domain/**'
-      - 'src/ReadTheStupidText.Application/**'
-      - 'src/ReadTheStupidText.Documents/**'
+      - 'src/Sirous.Reading.Domain/**'
+      - 'src/Sirous.Reading.Application/**'
+      - 'src/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
@@ -31,9 +31,9 @@ on:
       - '.github/scripts/ship-targets.mjs'
       - 'src/DinoReader.App/**'
       - 'src/DinoReader.Core/**'
-      - 'src/ReadTheStupidText.Mobile.Shared/**'
-      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
-      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
       - 'src/AndroidSherpaPackaging.props'
       - 'src/AndroidRelease.props'
       - 'src/AndroidProguard.cfg'

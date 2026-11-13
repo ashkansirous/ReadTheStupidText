@@ -29,16 +29,16 @@
          The neutral (English) resx is embedded so AppResources resolves. -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\LocalizedPackStatus.cs" Link="Mobile\LocalizedPackStatus.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.cs" Link="Mobile\AppResources.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
     <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
     <!-- Slice 368: every other Mobile.Shared link moved to tests/Shared.Tests with its tests. PackStatusText uses PackInstallState,
          which lives in VoicePackInstaller.cs (also linked in Shared.Tests; two assemblies, no reference between them), and that file
          refers to MAUI's MainThread, so the test stand-in is linked from there too. -->
     <Compile Include="..\Shared.Tests\MainThreadStub.cs" Link="Mobile\MainThreadStub.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,9 +51,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-    <ProjectReference Include="..\..\src\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\..\src\Sirous.Reading.Infrastructure\Sirous.Reading.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
-using ReadTheStupidText.Domain.Activity;
-using ReadTheStupidText.Infrastructure.Logging;
+using Sirous.Reading.Domain.Activity;
+using Sirous.Reading.Infrastructure.Logging;
 
 namespace ReadTheStupidText.Tests;
 

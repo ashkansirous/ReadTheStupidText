@@ -91,7 +91,7 @@ public static partial class StoreUpdater
 		catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException or TaskCanceledException)
 		{
 			Debug.WriteLine($"Dino Reader could not start the Play update: {ex.Message}");
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the store page opens instead
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the store page opens instead
 			return false;
 		}
 	}

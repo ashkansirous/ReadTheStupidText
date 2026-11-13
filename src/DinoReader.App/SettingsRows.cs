@@ -1,8 +1,8 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader;
 
@@ -328,7 +328,7 @@ public static class AnimalSoundsPreference
 		}
 		catch (Exception)
 		{
-			AnimalSoundsPreference.ReportUnsaved(ReadTheStupidText.Application.Usage.FallbackArea.Config); // Slice 275: a value of another type under this key, or a preferences store that cannot be read, is treated as missing (on)
+			AnimalSoundsPreference.ReportUnsaved(Sirous.Reading.Application.Usage.FallbackArea.Config); // Slice 275: a value of another type under this key, or a preferences store that cannot be read, is treated as missing (on)
 			return true;
 		}
 	}
@@ -337,7 +337,7 @@ public static class AnimalSoundsPreference
 
 	/// <summary>Counts a preference that could not be read or written (the sounds then follow the default, on).</summary>
 	public static void ReportUnsaved(string area) =>
-		DinoFallbacks.Report(area, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved);
+		DinoFallbacks.Report(area, Sirous.Reading.Application.Usage.FallbackReason.PreferenceUnsaved);
 }
 
 /// <summary>
@@ -361,7 +361,7 @@ public static class AnimalSoundsCard
 		}
 		catch (Exception)
 		{
-			AnimalSoundsPreference.ReportUnsaved(ReadTheStupidText.Application.Usage.FallbackArea.Config); // Slice 275: the switch still shows the choice, but after a restart the sounds follow the default (on)
+			AnimalSoundsPreference.ReportUnsaved(Sirous.Reading.Application.Usage.FallbackArea.Config); // Slice 275: the switch still shows the choice, but after a restart the sounds follow the default (on)
 		}
 	}
 

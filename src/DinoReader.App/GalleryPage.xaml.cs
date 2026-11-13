@@ -4,12 +4,12 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -701,7 +701,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #if DEBUG
 		if (_shelfTitleLanguage is not null && _shelfTitleLanguage != titleLanguage)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[ShelfTitles] {_shelfTitleLanguage} -> {titleLanguage}"); // the shelf-titles-follow-story-language flow's expect-log markers (RTST-TEST tag)
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[ShelfTitles] {_shelfTitleLanguage} -> {titleLanguage}"); // the shelf-titles-follow-story-language flow's expect-log markers (RTST-TEST tag)
 		}
 #endif
 		_shelfLanguage = appLanguage; // recorded only now: a build that failed leaves them stale, so the next ask retries
@@ -823,7 +823,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private void LogShape(ChromeShape chrome, int columns, bool grownUp)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(chrome.IsRail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={chrome.RailWidth} tabletUpright={chrome.IsTabletPortrait && !grownUp} tabletCorner={chrome.IsTabletPortrait && grownUp}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(chrome.IsRail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={chrome.RailWidth} tabletUpright={chrome.IsTabletPortrait && !grownUp} tabletCorner={chrome.IsTabletPortrait && grownUp}");
 		if (grownUp)
 		{
 			LogCorner();
@@ -838,7 +838,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		if (!_mode.IsGrownUp)
 		{
 			int columns = ShelfTitleRules.Columns(_chrome, _windowSize.Width);
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] shelf title={title.ToString().ToLowerInvariant()} chrome={(_chrome.IsRail ? "rail" : "bar")} columns={columns}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] shelf title={title.ToString().ToLowerInvariant()} chrome={(_chrome.IsRail ? "rail" : "bar")} columns={columns}");
 		}
 #endif
 	}
@@ -849,7 +849,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #if DEBUG
 		ChromeShape chrome = _chrome;
 		int columns = CornerLayout.BookColumns(chrome, _windowSize.Width);
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] corner tab={_mode.Tab.ToString().ToLowerInvariant()} chrome={(chrome.IsRail ? "rail" : "bar")} railWidth={chrome.RailWidth} columns={columns}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] corner tab={_mode.Tab.ToString().ToLowerInvariant()} chrome={(chrome.IsRail ? "rail" : "bar")} railWidth={chrome.RailWidth} columns={columns}");
 #endif
 	}
 
@@ -1319,14 +1319,14 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	{
 		ReorderTrace.Step("sheet: " + line); // Release-visible on Windows (window-trace.log)
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[BookSheet] {line}"); // tells a sheet that never opened from one that opened and was hidden
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[BookSheet] {line}"); // tells a sheet that never opened from one that opened and was hidden
 #endif
 	}
 
 	private static void ReorderLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reorder] {line}"); // the shelf-reorder flow's expect-log markers (RTST-TEST tag)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reorder] {line}"); // the shelf-reorder flow's expect-log markers (RTST-TEST tag)
 #endif
 	}
 
@@ -1526,7 +1526,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private async Task LeaveAndReadAsync(Story story)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now leaves the corner and opens {story.Id}"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now leaves the corner and opens {story.Id}"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
 #endif
 		FirstRunState.HandoverPending = false;
 		_mode.Leave();

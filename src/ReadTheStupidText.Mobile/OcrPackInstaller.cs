@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -219,7 +219,7 @@ public sealed class OcrPackInstaller
         string line = $"{HeldMarker} {language}";
         System.Diagnostics.Debug.WriteLine(line);
 #if DEBUG
-        Shared.Testing.TestHookLog.Write(line);
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
     }
 

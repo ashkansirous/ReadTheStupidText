@@ -1,8 +1,8 @@
-using ReadTheStupidText.Application.Logging;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Domain.Sanitizing;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Domain.Sanitizing;
 
 namespace ReadTheStupidText.Tests;
 

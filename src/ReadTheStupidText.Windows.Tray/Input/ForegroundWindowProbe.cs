@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Domain.Activity;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Domain.Activity;
 
 namespace ReadTheStupidText.Windows.Tray.Input;
 

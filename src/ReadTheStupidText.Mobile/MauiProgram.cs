@@ -1,17 +1,17 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ReadTheStupidText.Application.Crashes;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Documents;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Application.Crashes;
+using Sirous.Reading.Application.Documents;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Documents;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Usage;
 #if DEBUG
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Mobile.Shared.Testing;
 #endif
 
 namespace ReadTheStupidText.Mobile;
@@ -47,7 +47,7 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<ReviewHandOff>();
 		builder.Services.AddSingleton<EarlyStartVoice>();
 		builder.Services.AddSingleton<RtstUsage>();
-		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink>(sp => sp.GetRequiredService<RtstUsage>().Fallbacks); // Slice 273 part B: the shared readers and translators report fallbacks through it
+		builder.Services.AddSingleton<Sirous.Reading.Application.Usage.IFallbackSink>(sp => sp.GetRequiredService<RtstUsage>().Fallbacks); // Slice 273 part B: the shared readers and translators report fallbacks through it
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();

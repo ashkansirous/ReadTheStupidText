@@ -1,12 +1,12 @@
 #if DEBUG
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Net;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Application.Net;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Testing;
 
 namespace ReadTheStupidText.Mobile.Testing;
 

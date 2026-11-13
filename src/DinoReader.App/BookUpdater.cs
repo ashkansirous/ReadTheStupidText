@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 
@@ -627,7 +627,7 @@ internal static class BookUpdateEvents
 	{
 		Debug.WriteLine(text);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(text);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(text);
 #endif
 	}
 

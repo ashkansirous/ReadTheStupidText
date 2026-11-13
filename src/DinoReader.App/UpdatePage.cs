@@ -64,7 +64,7 @@ public sealed class UpdatePage : ContentPage
 
 	// Slice 276: on iOS the button says which store it opens (TestFlight or App Store); other platforms keep "Update Dino".
 	private static string ButtonText() => OperatingSystem.IsIOS()
-		? AppResources.Get(IosUpdateTarget.For(ReadTheStupidText.Mobile.Shared.Crashes.CrashGate.Channel).TextKey)
+		? AppResources.Get(IosUpdateTarget.For(Sirous.Reading.Mobile.Shared.Crashes.CrashGate.Channel).TextKey)
 		: AppResources.Update_Button;
 
 	private async Task UpdateAsync()

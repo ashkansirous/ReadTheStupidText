@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 using ReadTheStupidText_App;
 
 namespace ReadTheStupidText.Tests;

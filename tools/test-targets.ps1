@@ -102,7 +102,7 @@ function Select-Platform([string[]]$Runs) {
 $bothTests = @('ReadTheStupidText.Tests', 'Shared.Tests', 'DinoReader.Tests')  # every .NET test project (Slice 368: Shared.Tests holds the engine both apps ship)
 # First match wins. A path reaches the test projects named here; builds come from the CI rules (Get-ShipRuns) plus Mobile.Shared below.
 $testRules = @(
-    @{ Pattern = '^src/ReadTheStupidText\.(Mobile\.Shared|Application|Domain|Infrastructure|Documents)/'; Tests = $bothTests }  # Dino references Infrastructure and Documents too
+    @{ Pattern = '^src/Sirous\.Reading\.(Mobile\.Shared|Application|Domain|Infrastructure|Documents)/'; Tests = $bothTests }  # Dino references Infrastructure and Documents too
     # FallbackGuardTests and SherpaVersionPinTests (Shared.Tests) scan all of src/, so every code folder also reaches Shared.Tests (the CI selector does the same).
     @{ Pattern = '^src/ReadTheStupidText\.(App|Windows\.Tray|Mobile)/|^src/AndroidSherpaPackaging\.props$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
     @{ Pattern = '^src/DinoReader\.(Core|App)/'; Tests = @('DinoReader.Tests', 'Shared.Tests') }
@@ -133,7 +133,7 @@ function Get-FastCheckBuilds([string[]]$Changed) {
     $code = @($Changed | Where-Object { $_ -notmatch '^(tools|\.maestro)/' })
     if ($code.Count -eq 0) { return @() }
     $runs = @(Get-ShipRuns $code)
-    if ($code | Where-Object { $_ -match '^src/ReadTheStupidText\.Mobile\.Shared/' }) { $runs += 'rtst-android', 'dino-android' }
+    if ($code | Where-Object { $_ -match '^src/Sirous\.Reading\.Mobile\.Shared/' }) { $runs += 'rtst-android', 'dino-android' }
     return @($buildCommands.Keys | Where-Object { $runs -contains $_ })
 }
 

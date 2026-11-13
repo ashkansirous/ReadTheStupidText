@@ -5,7 +5,7 @@ namespace ReadTheStupidText_App;
 
 /// <summary>
 /// A row in the activity log window — a view over one
-/// <see cref="ReadTheStupidText.Domain.Activity.ActivityEntry"/>. The
+/// <see cref="Sirous.Reading.Domain.Activity.ActivityEntry"/>. The
 /// <see cref="State"/>, <see cref="Reason"/>, and the timing columns change after
 /// creation (timings arrive when audio first plays), so those raise change
 /// notification to update the row in place; the trigger and originating window

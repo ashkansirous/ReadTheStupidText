@@ -2,8 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 

@@ -1,6 +1,6 @@
 using System.Text;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Documents;
+using Sirous.Reading.Application.Documents;
+using Sirous.Reading.Documents;
 
 namespace ReadTheStupidText.Tests;
 

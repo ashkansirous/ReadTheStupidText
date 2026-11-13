@@ -122,7 +122,7 @@ public sealed class OnboardingLanguagesPage : ContentPage, IDinoKeyTarget
 #if DEBUG
 		if (_shape is { } shape)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page=languages shape={(shape.Split ? "split" : "stack")}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page=languages shape={(shape.Split ? "split" : "stack")}");
 		}
 #endif
 	}

@@ -1,6 +1,6 @@
 using Android.Runtime;
 using Android.Gms.Extensions;
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Translation;
 using Xamarin.Google.MLKit.NL.LanguageId;
 
 namespace ReadTheStupidText.Mobile;

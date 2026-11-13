@@ -1,4 +1,4 @@
-using ReadTheStupidText.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared.Usage;
 
 namespace DinoReader.Tests;
 

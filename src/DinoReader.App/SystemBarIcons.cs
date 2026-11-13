@@ -38,7 +38,7 @@ internal static partial class SystemBarIcons
 		bool ink = page is IInkUnderStatusBar { InkUnderStatusBar: true };
 		_darkIcons = StatusBarIcons.UseDarkIcons(ink, luminance > LightBackgroundLuminance);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StatusBar] page={page.GetType().Name} bg={HexOf(background)} flag={ink} darkIcons={_darkIcons}"); // one line per apply: Slice 349's flow asserts the whole line (RTST-TEST tag)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StatusBar] page={page.GetType().Name} bg={HexOf(background)} flag={ink} darkIcons={_darkIcons}"); // one line per apply: Slice 349's flow asserts the whole line (RTST-TEST tag)
 #endif
 		Reapply();
 	}

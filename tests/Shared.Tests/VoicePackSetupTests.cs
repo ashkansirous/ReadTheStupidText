@@ -1,11 +1,10 @@
 using System.Reflection;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Domain.Reading;
-using ReadTheStupidText.Domain.Sanitizing;
-using ReadTheStupidText.Infrastructure.Reading;
-using ReadTheStupidText.Mobile;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Domain.Reading;
+using Sirous.Reading.Domain.Sanitizing;
+using Sirous.Reading.Infrastructure.Reading;
+using Sirous.Reading.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 
@@ -185,13 +184,13 @@ public class VoicePackSetupTests
     [Fact]
     public async Task A_shown_failure_keeps_the_kind_it_had_when_the_step_failed_until_the_state_leaves_Failed()
     {
-        var kind = ReadTheStupidText.Application.Net.HttpErrorKind.NotFound;
+        var kind = Sirous.Reading.Application.Net.HttpErrorKind.NotFound;
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]), DownloadResult = PackDownloadResult.Failed };
         packs.DownloadAnswer = kind;
         var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "en" });
 
         await setup.StartAsync();
-        packs.DownloadAnswer = ReadTheStupidText.Application.Net.HttpErrorKind.TooManyRequests; // a later download answers differently: the shown failure keeps the answer of the call that failed
+        packs.DownloadAnswer = Sirous.Reading.Application.Net.HttpErrorKind.TooManyRequests; // a later download answers differently: the shown failure keeps the answer of the call that failed
 
         Assert.Equal(PackSetupState.Failed, setup.State);
         Assert.Equal(kind, setup.FailureKind);
@@ -383,7 +382,7 @@ public class VoicePackSetupTests
         Assert.Equal(1, packs.DownloadCalls);
     }
 
-    private sealed class CountingSink : ReadTheStupidText.Application.Usage.IFallbackSink
+    private sealed class CountingSink : Sirous.Reading.Application.Usage.IFallbackSink
     {
         public List<(string Area, string Reason, string? Language)> Reports { get; } = [];
 
@@ -1072,7 +1071,7 @@ public class VoicePackSetupTests
         public int CatalogCalls { get; private set; }
         public int DownloadCalls { get; private set; }
         public bool CatalogThrows { get; set; }
-        public ReadTheStupidText.Application.Net.HttpErrorKind? DownloadAnswer { get; set; }
+        public Sirous.Reading.Application.Net.HttpErrorKind? DownloadAnswer { get; set; }
 
         public async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
         {

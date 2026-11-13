@@ -2,8 +2,8 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
-using ReadTheStupidText.Application.Input;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Usage;
 using Windows.Graphics;
 
 namespace ReadTheStupidText_App;

@@ -8,8 +8,8 @@ using PlatformTextMeasurer = DinoReader.WindowsTextMeasurer;
 using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 

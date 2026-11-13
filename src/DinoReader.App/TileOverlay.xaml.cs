@@ -154,7 +154,7 @@ public partial class TileOverlay : ContentView
 	private static void HoldLog(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
 	}
 

@@ -1,5 +1,5 @@
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 

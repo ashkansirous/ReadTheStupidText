@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Crashes;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Crashes;
+using Sirous.Reading.Application.Reading;
 
 namespace DinoReader.Tests;
 

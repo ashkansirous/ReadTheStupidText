@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader.Tests;
 

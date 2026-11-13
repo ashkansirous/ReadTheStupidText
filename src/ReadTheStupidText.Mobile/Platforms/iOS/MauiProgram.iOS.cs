@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.Translation;
+using Sirous.Reading.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 

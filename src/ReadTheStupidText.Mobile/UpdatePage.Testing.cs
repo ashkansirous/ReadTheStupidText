@@ -1,7 +1,7 @@
 #if DEBUG
-using ReadTheStupidText.Application.AppConfig;
-using ReadTheStupidText.Application.Usage;
-using ReadTheStupidText.Mobile.Shared.Testing;
+using Sirous.Reading.Application.AppConfig;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Mobile.Shared.Testing;
 
 namespace ReadTheStupidText.Mobile;
 

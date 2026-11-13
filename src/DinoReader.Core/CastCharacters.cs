@@ -1,4 +1,4 @@
-using ReadTheStupidText.Domain.Reading;
+using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader.Core;
 

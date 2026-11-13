@@ -3,7 +3,7 @@
 
 *Built 2026-10-30 (PR #571), verified on the S21 only; Windows desktop and iOS device not run.*
 
-**Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Domain/Reading/**`, `src/ReadTheStupidText.Mobile/**` (pack/engine loading), `src/ReadTheStupidText.Mobile.Shared/**` (engine loading), `src/ReadTheStupidText.Infrastructure/**` (Windows sherpa engine), `tests/ReadTheStupidText.Tests/**`, pack release constants.
+**Touches:** `.github/workflows/packs.yml`, `src/Sirous.Reading.Application/Reading/**`, `src/Sirous.Reading.Domain/Reading/**`, `src/ReadTheStupidText.Mobile/**` (pack/engine loading), `src/Sirous.Reading.Mobile.Shared/**` (engine loading), `src/Sirous.Reading.Infrastructure/**` (Windows sherpa engine), `tests/ReadTheStupidText.Tests/**`, pack release constants.
 
 ## Problem (found on a real S21, 2026-10-29)
 

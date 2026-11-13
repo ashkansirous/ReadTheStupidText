@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -182,7 +182,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	private static void Log(string line)
 	{
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 #endif
 #if WINDOWS
 		WindowTrace.Write($"Dino Record: {line}"); // the Release build on the VM shows no Debug.WriteLine; the VM check reads this back

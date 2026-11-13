@@ -50,7 +50,7 @@
     <Compile Include="..\..\src\DinoReader.App\SoundPillText.cs" Link="Linked\SoundPillText.cs" />
     <!-- The listen tally (Slice 288): plain .NET, so the 30 second rule and the played seconds are tested on the real file. -->
     <Compile Include="..\..\src\DinoReader.App\ListenTally.cs" Link="Linked\ListenTally.cs" />
-    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Usage\UsageQueueTrim.cs" Link="Linked\UsageQueueTrim.cs" />
+    <Compile Include="..\..\src\Sirous.Reading.Mobile.Shared\Usage\UsageQueueTrim.cs" Link="Linked\UsageQueueTrim.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
 using AudioToolbox;
 using AVFoundation;
 using Foundation;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared;
 
 namespace DinoReader;
 

@@ -5,10 +5,10 @@ using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Net;
-using ReadTheStupidText.Application.Usage;
-using WaitStage = ReadTheStupidText.Application.Reading.WaitStage;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Application.Net;
+using Sirous.Reading.Application.Usage;
+using WaitStage = Sirous.Reading.Application.Reading.WaitStage;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -194,7 +194,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 #if DEBUG
 		if (_state is StoreRowState.ConnectToBuy or StoreRowState.NotForSaleNow)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreSale] row state={_state}");
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreSale] row state={_state}");
 		}
 #endif
 	}
@@ -498,8 +498,8 @@ public partial class StorePage : ContentView, ICornerTabView
 		_shownColumns = columns;
 		((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={columns} rows={_rows.Count}");
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] store columns={columns} content={contentWidth:0} rows={_rows.Count}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={columns} rows={_rows.Count}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] store columns={columns} content={contentWidth:0} rows={_rows.Count}");
 #endif
 	}
 
@@ -546,7 +546,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		string glyphKey = serverAnswered ? ServerErrorGlyphKey : WifiOffGlyphKey;
 		OfflineIcon.Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString((string)Resources[glyphKey])!;
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] list kind={error?.Kind.ToString() ?? "none"}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] list kind={error?.Kind.ToString() ?? "none"}");
 #endif
 		Show(OfflineView);
 	}
@@ -875,7 +875,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		int arrived = arriving.Count(r => r.State == StoreRowState.Downloaded);
 		RestoreLine line = StoreRowRestore.LineFor(arriving.Count - alreadyDownloading, arrived, alreadyDownloading);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
 #endif
 		ShowRestoreLine(line, arrived);
 	}
@@ -960,7 +960,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		HttpError? error = outcome == DownloadOutcome.Failed ? _client.DownloadErrorFor(row.Item.Id) : null;
 		Debug.WriteLine($"Dino Reader store row {row.Item.Id} failed: {error?.Kind.ToString() ?? "no server answer"}");
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] row kind={error?.Kind.ToString() ?? "none"}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreError] row kind={error?.Kind.ToString() ?? "none"}");
 #endif
 		if (error?.Kind == HttpErrorKind.PaymentRequired)
 		{

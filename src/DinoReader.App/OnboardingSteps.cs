@@ -2,7 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Mobile.Shared.Waiting;
+using Sirous.Reading.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -86,7 +86,7 @@ internal static class OnboardingTryStore
 		}
 		catch (Exception ex)
 		{
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Library, ReadTheStupidText.Application.Usage.FallbackReason.OnboardingTryNotDeleted); // Slice 362: the record stays and the next start retries
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Library, Sirous.Reading.Application.Usage.FallbackReason.OnboardingTryNotDeleted); // Slice 362: the record stays and the next start retries
 			Debug.WriteLine($"Dino Reader could not delete the onboarding try: {ex}");
 		}
 	}

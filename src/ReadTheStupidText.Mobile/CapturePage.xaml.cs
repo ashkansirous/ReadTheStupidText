@@ -1,10 +1,10 @@
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Application.Usage;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
-using ReadTheStupidText.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
 

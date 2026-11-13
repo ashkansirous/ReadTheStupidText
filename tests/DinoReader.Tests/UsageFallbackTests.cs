@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
 using DinoReader.Core;
-using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
-using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
-using FallbackTally = ReadTheStupidText.Application.Usage.FallbackTally;
-using FallbackTotal = ReadTheStupidText.Application.Usage.FallbackTotal;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
+using FallbackTally = Sirous.Reading.Application.Usage.FallbackTally;
+using FallbackTotal = Sirous.Reading.Application.Usage.FallbackTotal;
 
 namespace DinoReader.Tests;
 

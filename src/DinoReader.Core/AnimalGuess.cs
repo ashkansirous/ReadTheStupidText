@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using ReadTheStupidText.Application.Reading;
+using Sirous.Reading.Application.Reading;
 
 namespace DinoReader.Core;
 

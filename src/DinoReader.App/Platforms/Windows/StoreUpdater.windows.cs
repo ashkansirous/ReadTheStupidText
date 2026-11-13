@@ -56,7 +56,7 @@ public static partial class StoreUpdater
 		{
 			// Whatever the Store APIs throw (no sign-in, unpackaged, bad handle), the caller falls back to the Store page.
 			Debug.WriteLine($"Dino Reader could not request the Store update: {ex.Message}");
-			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the Store page opens instead
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the Store page opens instead
 			return false;
 		}
 	}

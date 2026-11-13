@@ -1,10 +1,10 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using ReadTheStupidText.Application.AppConfig;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Crashes;
+using Sirous.Reading.Application.AppConfig;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Mobile.Shared;
+using Sirous.Reading.Mobile.Shared.Crashes;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -30,7 +30,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		_ocrPacks = ocrPacks;
 		_installer.Changed += OnInstallerChanged;
 #if DEBUG
-		_installer.DebugMarker = Shared.Testing.TestHookLog.Write; // Slice 204: the held marker the scripted check asserts on
+		_installer.DebugMarker = Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write; // Slice 204: the held marker the scripted check asserts on
 		UpdateTestHook.Install(); // Slice 217: chained after the commands registered before it
 #endif
 		AppUpdate.Shared.Changed += (_, _) => ShowUpdateIfRequired(); // raised on the main thread
@@ -54,7 +54,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => InvalidatePhoneVoices();
 		window.Resumed += (_, _) => _ = AppUpdate.Shared.RefreshAsync();
-		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
+		var resume = _services.GetRequiredService<Sirous.Reading.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
 		resume.Start();
 		window.Resumed += (_, _) => resume.NotifyForeground();
 		return window;
@@ -111,8 +111,8 @@ public partial class App : Microsoft.Maui.Controls.Application
 
 		try
 		{
-			var sink = services.GetService<ReadTheStupidText.Application.Usage.IFallbackSink>() ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
-			sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.UiLanguage, ReadTheStupidText.Application.Usage.FallbackReason.UiLanguageUnsupported);
+			var sink = services.GetService<Sirous.Reading.Application.Usage.IFallbackSink>() ?? Sirous.Reading.Application.Usage.NoFallbackSink.Instance;
+			sink.Report(Sirous.Reading.Application.Usage.FallbackArea.UiLanguage, Sirous.Reading.Application.Usage.FallbackReason.UiLanguageUnsupported);
 		}
 		catch (Exception)
 		{

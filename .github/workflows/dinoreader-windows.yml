@@ -17,9 +17,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/ReadTheStupidText.Domain/**'
-      - 'src/ReadTheStupidText.Application/**'
-      - 'src/ReadTheStupidText.Documents/**'
+      - 'src/Sirous.Reading.Domain/**'
+      - 'src/Sirous.Reading.Application/**'
+      - 'src/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'GitVersion.yml'
       - 'GitVersion.dino.yml'
@@ -33,10 +33,10 @@ on:
       - '.github/scripts/ship-targets.mjs'
       - 'src/DinoReader.App/**'
       - 'src/DinoReader.Core/**'
-      - 'src/ReadTheStupidText.Mobile.Shared/**'
-      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
-      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
-      - 'src/ReadTheStupidText.Infrastructure/**'
+      - 'src/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
+      - 'src/Sirous.Reading.Infrastructure/**'
       - '.github/workflows/dinoreader-windows.yml'
       - '.github/workflows/store-submit.yml'
       - '!**/*.md'
@@ -230,7 +230,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-${{ hashFiles('src/DinoReader.App/*.csproj', 'src/DinoReader.Core/*.csproj', 'src/ReadTheStupidText.Domain/*.csproj', 'src/ReadTheStupidText.Application/*.csproj', 'src/ReadTheStupidText.Documents/*.csproj', 'src/ReadTheStupidText.Infrastructure/*.csproj', 'src/ReadTheStupidText.Mobile.Shared/*.csproj', 'src/ReadTheStupidText.Mobile.Shared/*.props', 'Directory.Build.props') }}
+          key: nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-${{ hashFiles('src/DinoReader.App/*.csproj', 'src/DinoReader.Core/*.csproj', 'src/Sirous.Reading.Domain/*.csproj', 'src/Sirous.Reading.Application/*.csproj', 'src/Sirous.Reading.Documents/*.csproj', 'src/Sirous.Reading.Infrastructure/*.csproj', 'src/Sirous.Reading.Mobile.Shared/*.csproj', 'src/Sirous.Reading.Mobile.Shared/*.props', 'Directory.Build.props') }}
           restore-keys: |
             nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-
 

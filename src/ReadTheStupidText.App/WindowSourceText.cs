@@ -1,4 +1,4 @@
-using ReadTheStupidText.Domain.Activity;
+using Sirous.Reading.Domain.Activity;
 
 namespace ReadTheStupidText_App;
 
