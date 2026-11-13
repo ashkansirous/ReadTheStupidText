@@ -1,6 +1,6 @@
 ### Slice 359 — Dino: a drawn back-cover picture for every book, with the credits shown over it
 
-*Built 2026-11-13, merged (PR #1048). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below.*
+*Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below.*
 
 **Touches:** `content/dino/*/back-cover.jpg` (new), `content/dino/*/high-res/back-cover.jpg` (new, LFS), `content/dino/*/art.md`, `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson*.cs`, `src/DinoReader.Core/BackCover*.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/BackCoverPages.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Resources/Raw/testbooks/*.dino`, `.maestro/dino/back-cover*.yaml`, `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `tests/DinoReader.Tests/**`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`
 
@@ -168,7 +168,7 @@ No new strings.
 
 *Device run (Android emulator-5554, Dino Debug, 2026-11-13):* back-cover-picture (Three Little Pigs portrait, landscape, picture-only, text-only), back-cover-fa and back-cover-ar all PASS after the layout fix. The first run failed (portrait box over the characters, landscape overlay hid the picture, text-only flow wrong); fixed, screenshots checked by the coordinator.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 In `src/DinoReader.App/CLAUDE.md`: every Dino book has `content/dino/<book>/back-cover.jpg` (3:4, no words, drawn like the cover, checked against the book's story and its own pictures) and `high-res/back-cover.jpg` (LFS); the reader lays the credits over it (`BackCoverPages.cs`); only good-enough is exempt until it has one. (Slice 359: docs/plan/slices/359-dino-back-cover-picture.md)
 
