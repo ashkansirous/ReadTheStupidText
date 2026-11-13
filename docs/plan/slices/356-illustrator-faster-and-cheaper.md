@@ -144,6 +144,15 @@ Three findings files, all read to their last finding: `reviews/s356i-high.md` 9/
 - Fixed #10 (`reviews/s356i-medium.md`): a Create image chip already showing is deselected and re-picked through the menu in the same call (costs one extra click when the chip persists in a chat).
 - Fixed #2, #4-#9 (`reviews/s356i-medium.md`): ratio and chip re-checked just before sending, dry run documented as leaving the prompt filled, usage-tool turn and comment handling, group cap and step 1 wording reconciled between agent file and `SKILL.md` (3 per redraw group, at most 5 otherwise).
 - Fixed #1-#9 (`reviews/s356i-high.md`): exact `Deselect Images` chip match, composer-only attachment count, expected-count agreement with `__sendChecked`, focus check and one retry in the prompt fill, usage-tool header-comment and empty-run guards, step 1 reading wording, group-size wording, and the Work ticks made honest (finding 9).
+- `reviews/s356i-check2.md` (10 findings, second check pass over the check-pass fixes): all 10 skipped, no code changed after it.
+  - #1, #4: no Send button means `__attachmentCount` gives UNKNOWN and the area-based lookups fall back to the page. `__setupPicture`/`__sendChecked` still return `MISSING: composer area` before any send, so nothing is sent on a wrong match; the live paste check counted 1 with Send present.
+  - #2: `MISSING` instead of `REFUSED` for text-only with no Send: both stop the send and the agent goes click by click.
+  - #3: a throw from `__sendChecked` leaves the mark advanced; the agent treats a thrown call as a failed picture and starts a new chat (one prompt per chat), so the mark is not reused.
+  - #5: `ratioIs34` reads only the aria-label: the live check saw `Aspect ratio, 3:4` there.
+  - #6, #7: any `image/<type> <bytes>` result or `ok:` result counts. Line-up, sheets and retries are real Gemini pictures and count as such; per-picture numbers are a before/after comparison measured the same way on both sides.
+  - #8: zero or negative per-picture seconds only when a save comes before the first send (a sheet saved before the first page). It affects one row at most, and the median is reported.
+  - #9: test temp dirs and loose assertions: test hygiene only.
+  - #10: extra stale attachments: the agent text already says to remove a stray thumbnail before sending.
 
 #### For CLAUDE.md
 
