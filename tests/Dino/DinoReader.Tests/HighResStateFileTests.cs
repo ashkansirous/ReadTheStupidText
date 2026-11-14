@@ -60,6 +60,7 @@ public sealed class HighResStateFileTests : IDisposable
     [Fact]
     public void A_write_to_a_locked_file_returns_false_and_the_old_content_stays()
     {
+        Assert.SkipWhen(!OperatingSystem.IsWindows(), "Only Windows refuses to replace a file another handle holds open; Unix renames over it.");
         string path = File_("locked-write.json");
         File.WriteAllText(path, "{\"A\":3}");
 
