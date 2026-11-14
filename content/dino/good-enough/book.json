@@ -12,6 +12,16 @@
   "order": 0,
   "cast": [
     {
+      "name": "Carrot",
+      "voice": "puppy",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
       "name": "Hazelnut",
       "voice": "bee",
       "gender": "Female",
@@ -20,8 +30,31 @@
         "Bright",
         "Warm"
       ]
+    },
+    {
+      "name": "Referee",
+      "voice": "bear",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Crowd",
+      "voice": "giant",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Booming",
+        "Bright"
+      ]
     }
   ],
+  "animals": {
+    "Carrot": "Rabbit"
+  },
   "contentHash": "d174d1dfceaca2f92aeb233d777410034ec8980abc4d2b199d44caa14b9ebfe0",
   "textInPictures": true,
   "creditsByLanguage": {

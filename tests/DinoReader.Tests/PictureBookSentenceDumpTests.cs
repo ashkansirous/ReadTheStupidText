@@ -11,13 +11,13 @@ public sealed class PictureBookSentenceDumpTests
     [Theory]
     [InlineData("en")]
     [InlineData("fa")]
-    public void Good_Enough_dumps_in_order_with_one_speaker(string language)
+    public void Good_Enough_dumps_in_order_with_its_four_speakers(string language)
     {
         SentenceListing listing = SentenceDump.Build(Stem, SentenceDump.StoryOf(Stem), language);
 
         Assert.NotEmpty(listing.Sentences);
         Assert.Equal(Enumerable.Range(0, listing.Sentences.Count), listing.Sentences.Select(s => s.Index));
-        Assert.Equal(["Hazelnut"], listing.Sentences.Select(s => s.Speaker).Where(s => s is not null).Distinct());
+        Assert.Equal(["Carrot", "Crowd", "Hazelnut", "Referee"], listing.Sentences.Select(s => s.Speaker).OfType<string>().Distinct().Order());
         Assert.All(listing.Sentences, s => Assert.Equal(s.Speaker is null, s.Narrator));
     }
 
@@ -30,14 +30,18 @@ public sealed class PictureBookSentenceDumpTests
         Assert.Equal(0, listing.Sentences[0].Sentence);
     }
 
+    // The dialogue version (2026-11-13): Carrot, Hazelnut, the Crowd and the Referee speak their own lines.
     [Fact]
-    public void Good_Enough_has_19_pieces_17_narrator_and_2_Hazelnut()
+    public void Good_Enough_has_57_pieces_35_narrator_and_its_speakers_lines()
     {
         SentenceListing listing = SentenceDump.Build(Stem, SentenceDump.StoryOf(Stem), "en");
 
-        Assert.Equal(19, listing.Sentences.Count);
-        Assert.Equal(17, listing.Sentences.Count(s => s.Narrator));
-        Assert.Equal(2, listing.Sentences.Count(s => s.Speaker == "Hazelnut"));
+        Assert.Equal(57, listing.Sentences.Count);
+        Assert.Equal(35, listing.Sentences.Count(s => s.Narrator));
+        Assert.Equal(8, listing.Sentences.Count(s => s.Speaker == "Carrot"));
+        Assert.Equal(10, listing.Sentences.Count(s => s.Speaker == "Hazelnut"));
+        Assert.Equal(2, listing.Sentences.Count(s => s.Speaker == "Crowd"));
+        Assert.Equal(2, listing.Sentences.Count(s => s.Speaker == "Referee"));
     }
 
     [Fact]
