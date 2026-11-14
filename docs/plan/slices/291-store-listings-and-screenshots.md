@@ -31,6 +31,13 @@ Premise check on origin/main:
 - Not yet verified: a native German read of the App Store and Play de-DE text (machine-written).
 - Still open: item 3 (RTST Microsoft push), RTST parts of 1 and 4, 5 (screenshots), 6.
 
+## Dino Play production, 2026-11-14 (user: "update the store with the latest images and description, then open it in chrome to submit")
+
+- Item 6, Dino Play phone only: the 5 old en-GB phone screenshots replaced by the 3 in `docs/store-listings/screenshots/dino/phone` (1 shelf, 2 reading, 3 books), committed through a Play edit, read back equal by sha256. The other locales hold no images of their own and show the en-GB set. The user's request overrides the item 6 "phone and tablet together" decision for Dino Play; there was no tablet set live before, and none now.
+- Text: all 17 live Dino Play locales already equal the repo (title, short, full); nothing changed. The 13 translated `docs/store-listings/dino/<lang>.md` notes now say live on Play.
+- Icon live equals `play-store-512.png`; feature graphic left as is.
+- **Applied for production access** in the Play Console on 2026-11-14 22:08 (user pressed Apply after Claude filled the form from the repo and `dino_usage`: 19 active days, 5 countries, features used; tester feedback from Slices 150-154). Google reviews it, usually within 7 days, and emails the account owner. Two answers were guesses the user let stand: recruiting "Neither difficult or easy", first-year installs "0 - 10K". Next once approved: promote a build to the production track ([Dino dashboard](https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/app-dashboard)).
+
 ## Review notes (`reviews/pr-941-high.md`)
 
 - Applied #1: this note now says `index.html` is done; item 2 ticked.

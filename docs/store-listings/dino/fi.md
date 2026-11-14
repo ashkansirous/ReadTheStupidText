@@ -1,6 +1,6 @@
 # Store listing: Finnish (`fi`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Locales: Play `fi-FI`; App Store `fi`; Microsoft Store `fi`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"; the Finnish text writes "Google Play -kaupan" so no store name needs a case ending).
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `fi-FI`; App Store `fi`; Microsoft Store `fi`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"; the Finnish text writes "Google Play -kaupan" so no store name needs a case ending).
 
 Title (<= 30): Dino Book Reader
 Play short description (<= 80): Satuja ääneen luettuna, jokaiselle hahmolle oma ääni.

@@ -1,6 +1,6 @@
 # Store listing: Norwegian Bokmål (`nb`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Locales: Play `no-NO`; App Store `no`; Microsoft Store `nb` (Partner Center name to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `no-NO`; App Store `no`; Microsoft Store `nb` (Partner Center name to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
 Play short description (<= 80): Historier lest høyt, med en egen stemme til hver figur.
