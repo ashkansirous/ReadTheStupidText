@@ -1,17 +1,20 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 **Product:** Shared
 
-*In progress (2026-11-01): item 3 built.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
+*In progress (wave 2026-11-14), draft PR. Items 3 and 5 built earlier; this wave builds 1, 2, 4, 6, 7 (8 waits on a real crash after 1-2 ship).* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
 
 **Depends on:** none (Slice 227 built the reports).
-**Touches:** `.github/workflows/release.yml`, `.github/workflows/*ios*.yml`, `.github/CLAUDE.md`, `tools/crashes/**`,
-`src/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Sirous.Reading.Application/Crashes/**`,
-`src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/Android/**`,
-`src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/DinoLog.cs`, `src/DinoReader.App/App.xaml.cs`,
-`src/ReadTheStupidText.Mobile/App.xaml.cs`, `worker/crashes.ts`, `worker/crashes.test.mjs`, `worker/CLAUDE.md`,
-`tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/227-crash-reports.md`
+**Touches:** `.github/workflows/ios.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/workflows/android.yml`,
+`.github/workflows/dinoreader-android.yml`, `.github/workflows/release-shared.yml` (release-asset upload steps only),
+`.github/CLAUDE.md`, `tools/crashes/**`, `tools/CLAUDE.md`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Shared/Sirous.Reading.Application/Crashes/**`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/Crashes/**`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/**`,
+`src/Dino/DinoReader.App/DinoLog.cs`, `src/Dino/DinoReader.App/App.xaml.cs`,
+`src/Rtst/ReadTheStupidText.Mobile/App.xaml.cs`, `worker/crashes.ts`, `worker/crashes.test.mjs`, `worker/CLAUDE.md`,
+`tests/Shared/Shared.Tests/**`, `tests/Rtst/ReadTheStupidText.Tests/**`, `docs/plan/slices/227-crash-reports.md`
+(paths updated 2026-11-14 for the Slice 371 folder move; `release.yml` no longer exists)
 
 ## What the 2026-11-01 crashes showed was missing (checked that day)
 
@@ -53,6 +56,11 @@ priority", "add slices for adding anything missing from the crash report".
 - [ ] 6. **Report fields:** the binary UUID of the main executable and the build number in every report (so item 2 can
   match), available memory bucket and the app's own memory use at the time of the report, foreground/background
   state. Worker validation (`worker/crashes.ts`) accepts the new fields; tests.
+  Design changed after review check 2 (two strikes): build facts in launch-facts.json, run marker unchanged. The run marker
+  (`running.marker`) is as on main; `launch-facts.json` (version, build, UUID, start time) sits in the same folder, the old one
+  becomes `launch-facts.prev.json` at start, the UUID task rewrites only the current file under its own lock, and it is not deleted on
+  background (only on opt-out). Unclean exits and native reports about the previous launch read `.prev`; a UUID gap on the running build
+  takes the running binary's UUID. A report with no version is dropped by the Worker as before.
 - [ ] 7. **Android parity:** Android reports already carry managed exception names; add the same lines and fields
   (items 5-6) and keep the native `.so` symbols for sherpa/onnxruntime crashes (release asset, as item 1).
 - [ ] 8. Close Slice 227 item 9 here: once items 1-2 work, symbolicate the next new crash; builds before this slice
@@ -65,3 +73,17 @@ priority", "add slices for adding anything missing from the crash report".
   (`crash-test`, Slice 227) of that build to a C# method.
 - `pull-crashes.mjs` lists and downloads the 2026-11-01 reports with no token in `D:\secrets`.
 - Android emulator and iPhone: the rolling log of a test crash shows the page, Back and lifecycle lines.
+
+## From review
+
+- Skipped #9 (`reviews/s243-medium.md`): "Facts flattened into five parallel nullable wire fields kept in step in Wire, Serialize, FactsOf and the Worker's parseFacts. Scenario: a sixth fact added in one place is silently dropped; nest CrashFacts on the wire." - a wire-shape refactor with no failure shown today.
+- Skipped #9 (`reviews/s243-high.md`): "`inspectElf` indexes `sections[nameTable]` unchecked. ELF with more than 0xFF00 sections (e_shnum 0, e_shstrndx = SHN_XINDEX) silently gets a hash name; a corrupt header with `nameTable >= count` throws a TypeError surfacing as `::error::Cannot read properties of undefined`." - speculative: the input is only the two known package .so files; no failure path shown.
+- Third round (`reviews/s243-check.md` #1-#3, #5): which build a report belongs to is no longer guessed from a launch history (`LaunchHistory`, `launches.txt` and its time rule are gone). A managed crash and a user report read the running launch's version, build and UUID from memory (no wait, no file read in the crash hook); an unclean exit, and an Android native crash, take them from the crashed launch's own facts file (superseded after review check 2: `launch-facts.prev.json`, not the run marker, see item 6); an iOS MetricKit diagnostic takes version (`MXDiagnostic.applicationVersion`), build (`MXMetaData.applicationBuildVersion`) and the app binary's UUID from its own call-stack tree. A missing field is null, never another launch's value. `DiscardAll` deletes the marker.
+- Low follow-ups from `reviews/s243-medium2.md`, not fixed in this slice: #3 "FillUuid copies the running binary UUID when only the build number matches; build strings reused across rebuilds give the wrong dSYM." (release builds stamp a unique build number); #4 "Foreground flag set on Activated/Resumed, cleared only on Stopped; not Deactivated, one global flag for all windows." (appState is a coarse hint); #6 "Only 0xCAFEBABE fat magic handled; fat64 (0xCAFEBABF) gives null, and the first slice is used without a CPU-type check." (iOS app binaries are thin arm64). Fixed: #1 (launch-facts rotate only after a foreground launch), #2 (a MetricKit period end is no crash time: no previous-launch guess), #5 (iOS headroom 0 is unknown, no bucket), dead `uuidQueued` removed.
+- Third round #6 (`reviews/s243-check.md`): reversed after review check 2 #5 (production-only analytics): the Worker drops a report with no version again (400), nothing counted as `unknown`.
+- Third round #7 (`reviews/s243-check.md`): `collect-symbols.mjs` refuses an empty, missing or flag-like value instead of shifting the following flags.
+- Skipped #8 (`reviews/s243-check.md`): "AppTrace.cs:77, low: foreground flag only set by Activated/Resumed/Stopped; null on background cold start, Deactivated ignored." - a background cold start reports no foreground state; unknown is correct.
+
+## Waiting on the user
+
+- Parity difference for the user to decide (`reviews/s243-check.md` #4): Android has no per-process memory headroom API; `memoryHeadroom` on Android is system free RAM minus the low-memory threshold, on iOS os_proc_available_memory.

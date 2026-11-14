@@ -10,6 +10,8 @@ Slice 227: crash data (an unhandled error's type, message and stack, and a short
 own server when the app crashes: no identifier, not linked to the user, not used for tracking, purpose app functionality; it follows the same switch.
 Slice 250: Dino's counts carry a random session id made at each cold start, never reused for a later launch, held in memory and written only inside counts still waiting in the local send queue (gone once sent); never linked to the user. It is not declared as a Device ID: Apple's Device ID is
 a device-level id (such as the advertising identifier), and this one is not (coordinator decision, 2026-11-04; see STORE.md).
+Slice 346 Part D: books are bought through the App Store. To download a bought book the app sends the store's purchase proof (the StoreKit receipt and the book's product code) to dinoreader.sirous.uk in a request header; the server asks Apple whether the purchase is real
+and keeps neither the proof nor the answer (only a few minutes in memory), and it never sees a name, email or Apple account. Data that is sent only to serve the request and is not kept is not "collected" in Apple's sense, so no Purchases data type is declared; if the server ever stores a proof, declare NSPrivacyCollectedDataTypePurchaseHistory here first.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

@@ -40,7 +40,7 @@ public static class CrashKind
 /// </summary>
 /// <param name="App">A <see cref="CrashApp"/> value.</param>
 /// <param name="Platform">"android" or "ios".</param>
-/// <param name="Version">The app version (a stamped release).</param>
+/// <param name="Version">The app version (a stamped release); null for a native or unclean-exit report whose launch is not in the launch history (Slice 243: unknown, never guessed).</param>
 /// <param name="Channel">"store" or "testflight" (<see cref="InstallChannels.NameOf"/>).</param>
 /// <param name="Kind">A <see cref="CrashKind"/> value.</param>
 /// <param name="ExceptionType">The exception's type name, or the signal or reason for a native report; empty when unknown.</param>
@@ -50,9 +50,10 @@ public static class CrashKind
 /// <param name="Minute">The UTC time of the crash to the minute, "yyyy-MM-ddTHH:mmZ".</param>
 /// <param name="Device">The coarse device buckets, or null when they could not be read.</param>
 /// <param name="Session">Slice 250: Dino's usage session id (32 hex digits, random per launch, in memory and on disk only inside unsent queued counts) of the launch the report was made in, so its usage rows can be found; null for Read The Stupid Text, and for a report about an earlier launch (native, unclean exit).</param>
+/// <param name="Facts">Slice 243 item 6: the build number, the executable's UUID, the memory buckets and the foreground state; null when none could be read.</param>
 public sealed record CrashReport(
-    string App, string Platform, string Version, string Channel, string Kind,
-    string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device = null, string? Session = null);
+    string App, string Platform, string? Version, string Channel, string Kind,
+    string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device = null, string? Session = null, CrashFacts? Facts = null);
 
 /// <summary>The size caps of a report, in UTF-8 bytes (the Worker caps the same).</summary>
 public static class CrashReportLimits

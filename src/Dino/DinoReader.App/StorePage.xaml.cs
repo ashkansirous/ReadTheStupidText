@@ -108,7 +108,55 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>0 to 1, for the ring (mock S1c).</summary>
 	public double Progress => _progress;
 
-	public string ProgressText => string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
+	// Slice 346 E3: while the download waits for the store to catch up with the purchase the row says so (the shared "checking your purchases" text) instead of a stuck 0%.
+	public string ProgressText => _cancelling ? CancellingText : _waitingForStore ? AppResources.Wait_CheckingPurchases : string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
+
+	// Slice 346 review pass 6: after Cancel the row stays Downloading, disabled, showing the ring and a bare ellipsis (no new copy string) until the cancelled download has really ended; only then does it replan.
+	private const string CancellingText = "…";
+	private bool _waitingForStore;
+	private bool _cancelling;
+	private readonly DownloadCancelSlot _downloadCancel = new();
+
+	/// <summary>Slice 346 review #3: shown only while the download waits for the store to catch up with the purchase, so the long wait can be stopped; the row then waits for the download to end and returns to its state before the tap, with no error.</summary>
+	public bool IsWaitingForStore => _waitingForStore && IsDownloading && !_cancelling;
+
+	/// <summary>Starts a download of this row and returns the token its Cancel (<see cref="CancelDownload"/>) trips.</summary>
+	public CancellationToken BeginDownload()
+	{
+		Run++;
+		return _downloadCancel.Begin();
+	}
+
+	/// <summary>The number of the row's current download (Slice 346 review pass 7 #5): a wait report carries the number of the run that sent it, so a late report of an earlier run is ignored.</summary>
+	public int Run { get; private set; }
+
+	/// <summary>Slice 346 review (check2 #2, pass 5 #7): the end of this row's download (called from its <c>finally</c>, after the download's task ended) disposes only its own source. Both run on the UI thread.</summary>
+	public void EndDownload(CancellationToken own) => _downloadCancel.End(own);
+
+	/// <summary>Trips the running download and shows the disabled "cancelling" state; the row is freed by the download's own end, never here.</summary>
+	public void CancelDownload()
+	{
+		if (!IsDownloading || _cancelling)
+		{
+			return;
+		}
+
+		_cancelling = true;
+		_downloadCancel.Cancel();
+		Raise(nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
+	}
+
+	/// <summary>A wait report that arrives after the row left Downloading (a late report of a finished download) is ignored, so it cannot bring the wait label back over a final state.</summary>
+	public void SetWaitingForStore(bool waiting, int run)
+	{
+		if (!IsDownloading || run != Run)
+		{
+			return;
+		}
+
+		_waitingForStore = waiting;
+		Raise(nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
+	}
 
 	public ImageSource? Cover
 	{
@@ -135,9 +183,11 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	{
 		_state = state;
 		_progress = 0;
+		_waitingForStore = false;
+		_cancelling = false;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
 	}
 
 	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
@@ -768,6 +818,14 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 	}
 
+	private void OnCancelWaitTapped(object? sender, TappedEventArgs e)
+	{
+		if ((sender as BindableObject)?.BindingContext is StoreRow row)
+		{
+			row.CancelDownload();
+		}
+	}
+
 	private async void OnGetTapped(object? sender, TappedEventArgs e)
 	{
 		UiUsage.Tap(UiControls.Download); // Slice 352: the Get button of a store row
@@ -926,10 +984,12 @@ public partial class StorePage : ContentView, ICornerTabView
 		bool ageFilterSet = _band != StoreAgeBand.All;
 		bool authorFilterSet = _author is not null;
 		DownloadOutcome outcome = DownloadOutcome.Failed;
+		CancellationToken cancel = row.BeginDownload();
+		int run = row.Run;
 		try
 		{
 			await SettlePurchasesBehindWaitAsync();
-			outcome = await _client.DownloadAsync(row.Item, new Progress<double>(row.SetProgress), CancellationToken.None);
+			outcome = await _client.DownloadAsync(row.Item, new Progress<double>(row.SetProgress), cancel, new Progress<bool>(waiting => row.SetWaitingForStore(waiting, run)));
 		}
 		catch (Exception ex)
 		{
@@ -938,13 +998,32 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 		finally
 		{
+			row.EndDownload(cancel);
 			// Only a finished download shows Downloaded and is counted (Slice 134: which filters were set, not their values); a failed one offers Try again.
 			if (outcome == DownloadOutcome.Done)
 			{
 				_usage.RecordStoreDownload(row.Item, ageFilterSet, authorFilterSet);
 			}
 
-			await ShowDownloadResultAsync(row, outcome);
+			if (row.Run == run)
+			{
+				await ShowDownloadResultAsync(row, outcome); // an older run's end must not reset a row a newer run now owns (Slice 346 check4 #8)
+			}
+		}
+	}
+
+	// A storage error while asking counts as "not installed": the replan that follows corrects the row.
+	private async Task<bool> IsOnShelfAsync(StoreRow row)
+	{
+		try
+		{
+			return (await _client.InstalledIdsAsync()).Contains(row.Item.Id);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not read the shelf after a cancel: {ex.Message}");
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+			return false;
 		}
 	}
 
@@ -954,6 +1033,15 @@ public partial class StorePage : ContentView, ICornerTabView
 		if (outcome == DownloadOutcome.Done)
 		{
 			row.SetState(StoreRowState.Downloaded);
+			return;
+		}
+
+		if (outcome == DownloadOutcome.Cancelled)
+		{
+			// Slice 346 review pass 5 #5, pass 6: this runs only after the cancelled download has ended (the row stayed Downloading, disabled, until now), so no Get can have joined it.
+			// a cancel is not a failure; the row goes back to what is installed (Downloaded for a book already on the shelf, else Get), then the plan decides the rest, with no error
+			row.SetState(await IsOnShelfAsync(row) ? StoreRowState.Downloaded : StoreRowState.Get);
+			await ReplanRowsAsync();
 			return;
 		}
 

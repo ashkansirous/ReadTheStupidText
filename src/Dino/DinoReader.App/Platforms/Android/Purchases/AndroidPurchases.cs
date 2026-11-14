@@ -13,6 +13,9 @@ public sealed class AndroidPurchases : IBookPurchases
     private const string RedeemAddress = "https://play.google.com/redeem";
     private static readonly TimeSpan SetupTimeout = TimeSpan.FromSeconds(15);
 
+    // Slice 358: a product id that exists nowhere, queried alone by ProbeUnknownIdAsync and only when the real answer is empty. If Play lists it in unfetchedProductList the list works and the real ids are simply not served; if it does not, the list says nothing.
+    private const string ProbeProductId = "dino_probe_does_not_exist";
+
     private readonly PurchasesUpdates _updates = new();
     private readonly Dictionary<string, ProductDetails> _details = [];
     private BillingClient? _client;
@@ -127,6 +130,11 @@ public sealed class AndroidPurchases : IBookPurchases
             answer = await ListenerIfBetterAsync(client, query, productIds.Count, answer);
         }
 
+        if (answer.Result.ResponseCode == BillingResponseCode.Ok && (answer.ProductDetailsList?.Count ?? 0) == 0)
+        {
+            _ = ProbeUnknownIdAsync(client); // not awaited: a slow or hung probe never holds up prices or Buy
+        }
+
         foreach (ProductDetails details in answer.ProductDetailsList ?? [])
         {
             _details[details.ProductId] = details;
@@ -163,6 +171,22 @@ public sealed class AndroidPurchases : IBookPurchases
     {
         string unfetched = string.Join(",", (answer.UnfetchedProductList ?? []).Select(u => $"{u.ProductId}:{u.StatusCodeValue}"));
         PurchaseTrace.Line($"product details ({via}): code={answer.Result.ResponseCode} debug='{OneLine(answer.Result.DebugMessage)}' asked={asked} got={answer.ProductDetailsList?.Count ?? 0} unfetched={answer.UnfetchedProductList?.Count ?? 0} [{unfetched}]");
+    }
+
+    // Slice 358: only when the real answer has no details. One more query with ONLY a made-up id, to see whether Play lists unknown ids in unfetchedProductList. Its answer never reaches prices, _details or the UI.
+    private static async Task ProbeUnknownIdAsync(BillingClient client)
+    {
+        try
+        {
+            var probe = QueryProductDetailsParams.Product.NewBuilder().SetProductId(ProbeProductId).SetProductType(BillingClient.ProductType.Inapp).Build();
+            QueryProductDetailsResult answer = await client.QueryProductDetailsAsync(QueryProductDetailsParams.NewBuilder().SetProductList([probe]).Build());
+            TraceDetails("probe", 1, answer);
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: diagnostic probe only
+            PurchaseTrace.Line($"product details (probe): failed {ex.GetType().Name}");
+        }
     }
 
     private const int TraceMessageMax = 200;

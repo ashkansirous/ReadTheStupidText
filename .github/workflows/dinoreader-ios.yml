@@ -197,6 +197,32 @@ jobs:
           bash .github/scripts/check-ios-bundle.sh "$(find ipa-check/Payload -maxdepth 1 -name '*.app' | head -n 1)"
           rm -rf ipa-check
 
+      # Slice 243 item 1: keep the debug symbols of this exact build, so a crash log of it can be turned into method, file and line
+      # (tools/crashes/symbolicate.mjs finds them by image UUID). The Release publish makes the dSYMs (NoDSymUtil / NoSymbolStrip are
+      # left at their defaults); the script fails the job when the app's own dSYM is missing or its UUID is not the staged .ipa's executable
+      # (only dSYMs of images in the .ipa are kept), and both this step and the dSYM upload run before the .ipa is attached to the draft
+      # release, so a build without symbols is never published. Release assets, never Actions artifacts.
+      - name: Collect the dSYMs
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: |
+          set -euo pipefail
+          node tools/crashes/collect-symbols.mjs ios-dsyms --root "$(dirname "$PROJECT")/bin" --ipa "dist/DinoReader-${VERSION}.ipa" --version "$VERSION" --out dist/symbols | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The dSYMs go up before the .ipa: a failed dSYM upload fails the job with no .ipa on the release, so an .ipa never exists without its symbols.
+      - name: Upload the dSYMs to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if gh release upload "dino-v${VERSION}" dist/symbols/*.dSYM.zip --repo "${{ github.repository }}" --clobber; then
+              echo "dSYM upload succeeded on attempt ${attempt}"; exit 0
+            fi
+            echo "::warning::dSYM upload attempt ${attempt} failed"
+            [ "$attempt" -lt 5 ] && sleep $((attempt * 30))
+          done
+          echo "::error::dSYM upload failed after 5 attempts"; exit 1
+
       - name: Upload .ipa to the draft release
         if: ${{ env.SIGN_RELEASE == 'true' }}
         env:

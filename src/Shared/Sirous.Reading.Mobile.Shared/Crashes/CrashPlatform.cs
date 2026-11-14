@@ -28,6 +28,28 @@ internal static class CrashPlatform
 #endif
     }
 
+    /// <summary>The main executable's UUID (iOS only; null elsewhere).</summary>
+    public static string? BinaryUuid()
+    {
+#if IOS
+        return IosRuntimeFacts.BinaryUuid();
+#else
+        return null;
+#endif
+    }
+
+    /// <summary>The bytes the app can take before the system ends it (the same meaning on Android and iOS), or -1 when unknown.</summary>
+    public static long MemoryHeadroomBytes()
+    {
+#if ANDROID
+        return AndroidRuntimeFacts.MemoryHeadroomBytes();
+#elif IOS
+        return IosRuntimeFacts.MemoryHeadroomBytes();
+#else
+        return -1;
+#endif
+    }
+
     /// <summary>Starts the platform's own delivery of crash diagnostics (iOS MetricKit); <paramref name="deliver"/> is called on a background thread.</summary>
     public static void StartNativeDelivery(Action<NativeCrash> deliver)
     {
