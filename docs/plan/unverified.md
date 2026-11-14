@@ -388,6 +388,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
 - **You:** The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - **Device:** The window size on a real phone.
+- **Device:** The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt for dino-test:// links is tapped (prompt text, timing, locale), the `.ips` file naming, the Jetsam `largestProcess` field.
 
 ### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
 - **Device:** A translated title for a newly added store book on an installed app, with no app update.
@@ -626,6 +627,8 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
+- **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
+- **Device:** The tablet store-shot flows (`store-shot-tablet.yaml`, Dino and RTST) have never been run.
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
 - **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
