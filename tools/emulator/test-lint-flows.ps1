@@ -10,8 +10,10 @@ $fixtures = Join-Path $PSScriptRoot 'fixtures\lint'
 $failed = 0
 
 # Runs the lint in this process (a script's exit sets $LASTEXITCODE only); returns its exit code and the finding lines.
-function Invoke-Lint([string]$Path) {
-    $out = @(& $lint -Path $Path 6>&1 | ForEach-Object { "$_" })
+function Invoke-Lint([string]$Path, [string]$Manifest) {
+    $lintArgs = @{ Path = $Path }
+    if ($Manifest) { $lintArgs.Manifest = $Manifest }
+    $out = @(& $lint @lintArgs 6>&1 | ForEach-Object { "$_" })
     return [pscustomobject]@{ Exit = $LASTEXITCODE; Findings = @($out | Where-Object { $_ -notmatch '^lint-flows:' }) }
 }
 
@@ -20,8 +22,8 @@ function Assert-Equal([string]$Name, $Expected, $Actual) {
 }
 
 # Expects the fixture to report exactly these (line, text) findings, in order, and exit 1; no findings means exit 0.
-function Assert-Findings([string]$Fixture, $Expected) {
-    $result = Invoke-Lint (Join-Path $fixtures $Fixture)
+function Assert-Findings([string]$Fixture, $Expected, [string]$Manifest) {
+    $result = Invoke-Lint (Join-Path $fixtures $Fixture) $Manifest
     Assert-Equal "$Fixture exit code" $(if ($Expected.Count) { 1 } else { 0 }) $result.Exit
     Assert-Equal "$Fixture finding count" $Expected.Count $result.Findings.Count
     for ($i = 0; $i -lt [Math]::Min($Expected.Count, $result.Findings.Count); $i++) {
@@ -73,6 +75,14 @@ Assert-Findings 'launch-inline-quoted.yaml' @(New-Expect 5 'stopApp: false')
 Assert-Findings 'clearstate-item-comment.yaml' @()
 Assert-Findings 'launch-hook-stopapp-true.yaml' @(New-Expect 4 'stopApp: false')
 Assert-Findings 'launch-hook-stopapp-true-comment.yaml' @()
+
+# Slice 376 item 4 (Slice 354 item 3): a takeScreenshot missing from the contact-sheet manifest fails the lint, a listed one passes, and no manifest switches the rule off.
+$shotManifest = Join-Path $fixtures '..\shot-manifest.json'
+Assert-Findings 'shot-listed.yaml' @() $shotManifest
+Assert-Findings 'shot-unlisted.yaml' @(New-Expect 5 "takeScreenshot 'shot-fixture-unlisted' is not in shot-manifest.json") $shotManifest
+Assert-Findings 'shot-unlisted.yaml' @() (Join-Path $fixtures 'no-such-manifest.json')
+# A trailing comment and a quoted name are read (the quoted unlisted one is reported); the map form is reported, never skipped.
+Assert-Findings 'shot-forms.yaml' @((New-Expect 5 "takeScreenshot 'shot-fixture-quoted-unlisted' is not in shot-manifest.json"), (New-Expect 6 "takeScreenshot is not in the plain form")) $shotManifest
 
 # Slice 215: line endings. Written at run time (git would normalize a checked-in fixture): doubled CRs and mixed endings are findings, a clean CRLF or LF file is not.
 $endings = Join-Path ([IO.Path]::GetTempPath()) ('rtst-lint-endings-' + [guid]::NewGuid().ToString('N'))

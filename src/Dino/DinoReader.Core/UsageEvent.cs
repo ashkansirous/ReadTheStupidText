@@ -36,7 +36,7 @@ public static class UsageEventName
     // Slice 288: a reading that reached 30 s of played audio (one per reading). read_paused and read_stopped also carry Seconds.
     public const string BookListened = "book_listened";
 
-    // Slice 267: which voice a read used (detail: AudioPackUsage.ReadVoice), and how one pre-made audio pack download went (detail: started / done / failed:<kind>).
+    // Slice 267: which voice a read used (detail: AudioPackUsage.ReadVoice), and how one pre-made audio pack download went (detail: started / done / failed:<kind>; Count: the pack version it asked for, Slice 376 item 5).
     public const string ReadVoice = "read_voice";
     public const string AudioPackDownload = "audio_pack_download";
 

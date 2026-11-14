@@ -1,0 +1,7 @@
+appId: uk.sirous.dinoreader.dbg
+---
+- launchApp
+- takeScreenshot: shot-fixture-listed  # a trailing comment is read past
+- takeScreenshot: "shot-fixture-quoted-unlisted"
+- takeScreenshot:
+    path: shot-fixture-map-form
