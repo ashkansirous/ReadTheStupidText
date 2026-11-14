@@ -170,11 +170,29 @@ told apart, and the release build logs nothing about products. Only a Play-insta
   open: the binding's `QueryProductDetailsAsync` wrapper (Xamarin.Android.Google.BillingClient 9.1.0.2) not filling its lists, or Play
   returning an empty catalog for this app.
 
+### 1.128.1 from Play, internal track (2026-11-14 15:45)
+
+- The S21's Play account (ashkan.sirous@gmail.com) was on the internal "Main" list but had never accepted the internal-test
+  invite, so Play kept it on the closed "Early Access" build. The invite was accepted on the user's say-so ("fix my account to
+  get it from internal testing"); Play then offered 1.128.1 ("Internal Early Access").
+- Both queries come back empty: `product details (async): code=Ok debug='' asked=11 got=0 unfetched=0 []` and
+  `product details (listener callback): code=Ok debug=''`. The binding's async wrapper is ruled out: Play itself returns nothing.
+- Checked and correct: the 11 `productId`s the live store sends match the Console ids exactly; Goldilocks's `buy` option is
+  Active, Backwards compatible, 174 countries incl. UK GBP 0.89; the client is built with `EnableOneTimeProducts()` and queries
+  `ProductType.Inapp`; Play Store 54.1.11 is signed in as ashkan.sirous@gmail.com with Play country United Kingdom.
+- Not set: no email list is ticked under Console *License testing*
+  (https://play.google.com/console/u/0/developers/5892509739539100062/license-tester). Not documented as affecting the product list.
+- No Google source describes Ok with both lists empty. Third-party sources give up to 24 h for new products to be served; all 11
+  were last updated 2026-11-13.
+
 ## Open (cause of the empty answer)
 
 - [x] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
 - [x] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
-- [ ] Release it, re-run on the S21 from Play, and fix whichever side is empty.
+- [x] Release it, re-run on the S21 from Play: both sides empty (above).
+- [ ] Re-run on the S21 once the products are more than 24 h old (after 2026-11-15), to rule the catalog lag in or out.
+- [ ] Add one made-up product id to the query and log whether it comes back in `unfetchedProductList`; if it does not either, the
+  unfetched list says nothing and Play is not serving this app's catalog at all.
 
 ## Not yet verified
 
