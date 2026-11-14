@@ -190,9 +190,9 @@ told apart, and the release build logs nothing about products. Only a Play-insta
 - [x] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
 - [x] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
 - [x] Release it, re-run on the S21 from Play: both sides empty (above).
-- [ ] Re-run on the S21 once the products are more than 24 h old (after 2026-11-15), to rule the catalog lag in or out.
+- [x] ~~Re-run on the S21 once the products are more than 24 h old~~: not needed, the cause is found (1.129.0 below).
 - [ ] Once the cause is found and paid books show prices, remove the probe (`ProbeProductId`, `ProbeUnknownIdAsync`).
-- [ ] Add one made-up product id to the query and log whether it comes back in `unfetchedProductList`; if it does not either, the
+- [x] Add one made-up product id to the query and log whether it comes back in `unfetchedProductList`; if it does not either, the
   unfetched list says nothing and Play is not serving this app's catalog at all.
   Built: the real query and `BuyAsync`'s lookup are unchanged. Only when the final real answer is Ok with no product details, `AndroidPurchases.ProbeUnknownIdAsync` sends one more query holding only `ProbeProductId`, not awaited, and logs `product details (probe): code=... debug=... asked=1 got=... unfetched=... [id:status,...]`. Its answer never reaches prices, `_details` or the UI, and a throw is caught and logged, so it cannot change or delay what `QueryPricesAsync` returns. iOS needs no twin because `IosPurchases` already logs StoreKit's invalid product ids (`InvalidProducts`), which reports unknown ids.
 
@@ -204,15 +204,25 @@ told apart, and the release build logs nothing about products. Only a Play-insta
   line. Likely cause (code, plus the missing lines): the listener overload hands its BillingResult to the callback, so the details
   object's `Result` is null; `TraceDetails` read `answer.Result.ResponseCode`, threw, and `BookPurchases.ReadAsync` swallowed it
   (Debug-only log, `StoreFailed` fallback). So the listener's answer was never seen, and the probe never ran.
-- [ ] Fix: the listener path keeps the callback's own `BillingResult` next to the details (`DetailsAnswer`); the trace line and the
+- [x] Fix: the listener path keeps the callback's own `BillingResult` next to the details (`DetailsAnswer`); the trace line and the
   effective result used for the probe condition and `Failed` are the async answer's `Result`, or the listener callback's when the
   listener answer replaced it. A null `Result` counts as not ok (no "missing means Ok" rule). `DetailsListener` always completes its
   wait (try/finally). `BookPurchases.ReadAsync` writes the exception type and first stack frame to the Release log (`PurchaseTrace`).
   Re-run on the S21 from Play and read the `(listener)` and `(probe)` lines.
 
+### 1.129.0 from Play (2026-11-14 21:39): cause found, books can be bought
+
+- The user installed 1.129.0 from Play and reported "I installed it and it worked" (2026-11-14).
+- S21, 1.129.0 updated from Play's internal track, signed in as the license tester:
+  `product details (async): code=Ok debug='' asked=11 got=0 unfetched=0 []`, then
+  `product details (listener): code=Ok debug='' asked=11 got=11 unfetched=0 []` and
+  `the async wrapper is empty but the listener has details; using the listener's`.
+- Cause: the .NET binding's async `QueryProductDetailsAsync` wrapper returns an empty list even when Play has the products; the
+  listener overload gets all 11. The catalog, ids, license testing and the internal-test invite were not the cause of the empty list
+  (the invite and the tester list were real setup gaps on the S21 account, fixed the same day).
+- The probe never ran on 1.129.0, since the final answer was no longer empty.
+
 ## Not yet verified
 
-- The paid books show a price and Buy on a Play-installed phone (blocked by *Open* above).
-- The probe line on a Play-installed S21 (1.128.x+): whether Play lists the made-up id in unfetchedProductList.
 - iOS and Windows strips are only compiled, not run.
 - The translations of `Store_NotForSaleNow` are machine drafts.
