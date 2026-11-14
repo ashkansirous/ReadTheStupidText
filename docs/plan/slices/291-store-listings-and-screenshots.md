@@ -7,6 +7,14 @@
 
 **Touches, widened at claim (2026-11-14):** also `.github/scripts/store-listings.mjs` and its test (item 3: RTST English through the release listing script, as Slice 193 did for German), `.github/workflows/store-submit.yml` (only if the RTST English line needs it), `tools/emulator/store-screenshots.ps1` (new), `.maestro/dino/store-shot-*.yaml` and `.maestro/rtst/store-shot-*.yaml` (new), `docs/store-listings/screenshots/**` (new: the PNGs). Widened after review pass 1 (coordinator, 2026-11-14; parallel-check showed no other live work): `.maestro/dino/needs-file/store-shot-*.yaml` and `.maestro/rtst/needs-file/store-shot-*.yaml` (the flows moved there so normal runs skip them), `tools/emulator/test-store-screenshots.ps1` (new), `tools/emulator/lint-flows.ps1` (one line: skip `store-shot-*` in the contact-sheet listing check).
 
+## Claim notes (night 2026-11-14-1547 wave 4: iOS and tablet shots)
+
+*In progress (wave 2026-11-14, night 2026-11-14-1547 wave 4), draft PR.*
+
+- Scope: item 5's iPhone 6.9"/6.5" and iPad 13" shots of both apps from a new `store-screenshots.yml` (macOS simulator, dispatch-only, reusing `.github/scripts/ios-sim-*.sh` from Slice 244; plan-not-needed: 244), and the Play tablet shots on the `RTST_Tablet` AVD (`tools/emulator/new-avd.ps1 -Tablet`). The Microsoft Store desktop shot and the RTST control-panel retake stay open (Hyper-V VM needs over 8 GB free memory; 3.9 GB at the claim). Item 6 (uploads) waits for complete per-store sets, as decided in wave 3.
+- **Touches, widened at claim (wave 4):** also `.github/scripts/ios-sim-*.sh` (only to add a parameter, the 244 flow keeps working), `.maestro/dino/store-shot-ios-*.yaml` and `.maestro/rtst/store-shot-ios-*.yaml` (new), `.maestro/*/needs-file/store-shot-tablet.yaml`, `.github/scripts/ship-targets.test.mjs` (exclusions for new test-only files), `.github/workflows/release-rtst.yml` and `release-dino.yml` (path exclusions only), `tools/emulator/new-avd.ps1`, `tools/emulator/common.ps1`. The shots themselves stay outside the repo, under `<repo>-worktrees/reviews/s291-shots/`, as in wave 3 (the CI job hands them over the way `.github/CLAUDE.md` allows for Actions storage).
+- Parallel with Slice 378 (both edit `.github/workflows/*.yml`): accepted, because 378 changes only `uses:` version lines and `useConfigFile`/`track` inputs, while this slice adds a new workflow; a later merge takes the other side's lines mechanically. The new workflow uses the action majors 378 moves to.
+
 ## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
 
 Premise check on origin/main:
