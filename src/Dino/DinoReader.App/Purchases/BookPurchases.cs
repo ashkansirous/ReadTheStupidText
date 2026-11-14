@@ -97,7 +97,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            Debug.WriteLine($"Dino Reader could not read the store's purchases: {ex.Message}");
+            PurchaseTrace.Line($"could not read the store's purchases: {ex.GetType().Name} at {FirstFrame(ex)}"); // the Release log too: a throw here once hid a crash in the price query (Slice 358)
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
             if (NoteRead(HasInternet(), pricesFailed: true))
             {
@@ -110,6 +110,15 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         {
             _gate.Release();
         }
+    }
+
+    // One line: the first stack frame (code location, no user data), else the exception message flattened.
+    private static string FirstFrame(Exception ex)
+    {
+        string? frame = ex.StackTrace?.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+        string text = string.IsNullOrEmpty(frame) ? ex.Message : frame;
+        string flat = text.ReplaceLineEndings(" ");
+        return flat.Length > 200 ? flat[..200] : flat;
     }
 
     // A device with no internet is the calm "connect" case: no event for it (the store was not reached), whatever the platform answered.
