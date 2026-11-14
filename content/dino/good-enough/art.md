@@ -1,6 +1,6 @@
 # Good Enough: art record
 
-Bundled starter (`StarterBuilder.GoodEnoughId`, stem `good-enough`, file `good-enough.dino`, version 4), ages 5-8, author Ashkan Sirous.
+Bundled starter (`StarterBuilder.GoodEnoughId`, stem `good-enough`, file `good-enough.dino`, version 9, 11 pages, dialogue with Carrot, Hazelnut, Referee and Crowd, no words in pictures), ages 5-8, author Ashkan Sirous.
 The user's own picture book (Slice 94), built from its pictures and `content/dino/good-enough/lines.json`, not from a `story.md`.
 An original story, not a retelling. Present tense throughout (the printed pages are present tense; pages 8-10 match).
 
@@ -129,3 +129,23 @@ Canonical looks from the sheets: Hazelnut is a plainer grey squirrel with a crea
 - `characters/place-middle-rows.jpg`: middle rows, pitch clearly nearer (pages 5, 6).
 - `characters/place-front-row.jpg`: front row, low stone barrier wall, grass and a goal right behind it (pages 7, 8, 9, 11).
 - `characters/place-centre-circle.jpg`: standing in the centre circle with its white markings, stands close behind (page 10).
+
+## Accepted by the user
+
+The user, 2026-11-14, after the full set was reported: "do it. finish the work". Every file below is accepted; never redraw or save over one unless the user names that page (create-dino-story SKILL.md rule 3). Sizes are the untouched `high-res/` originals in bytes.
+
+| Page | File | Bytes | Where it came from |
+| --- | --- | --- | --- |
+| cover | high-res/cover.jpg | 2768088 | 2026-11-13 evening set (Gemini chat 58 of the recovery) |
+| 1 | high-res/1.jpg | 3268403 | 2026-11-13 evening set |
+| 2 | high-res/2.jpg | 3039291 | 2026-11-13 evening set |
+| 3 | high-res/3.jpg | 3196433 | 2026-11-14 new composition, line-up pasted, stadium in words |
+| 4 | high-res/4.jpg | 3160274 | 2026-11-13, the user's "OK" at 20:18 |
+| 5 | high-res/5.jpg | 3027137 | 2026-11-13, the user's "OK" at 20:18 |
+| 6 | high-res/6.jpg | 2851391 | 2026-11-13 evening set |
+| 7 | high-res/7.jpg | 2828174 | 2026-11-13 evening set |
+| 8 | high-res/8.jpg | 2538116 | 2026-11-14 round 2; passed review once background fans no longer had to match sheets |
+| 9 | high-res/9.jpg | 2546816 | 2026-11-14 round 2, passed review |
+| 10 | high-res/10.jpg | 2468832 | 2026-11-13 evening set |
+| 11 | high-res/11.jpg | 2899707 | 2026-11-13 evening set |
+| back-cover | high-res/back-cover.jpg | 2395946 | 2026-11-13 |

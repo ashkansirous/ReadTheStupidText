@@ -566,6 +566,30 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Contains("8620E996ACD6233280E3BC6A8B23C96E0DAF60E79DD4A73A7115FB23A89D7A1B", table[Books.IdOf("gingerbread-man")]);
     }
 
+    // The 10 story pages of Good Enough v8 (the back-cover credits page is not part of an installed copy), taken from the v8 starter at origin/main.
+    private static readonly string[] GoodEnoughV8Pages =
+    [
+        "Carrot and Hazelnut are best friends.\nToday is a very special day because\nthey are going to watch a big\nfootball match together!",
+        "They find their seats, but they\nare way in the back and can't\nsee the ball well.",
+        "Carrot wishes they could see\nbetter. Hazelnut suggests\nmoving down.",
+        "They wiggle through tall legs\nand move down a few rows.",
+        "Now they have a good view, but\nCarrot wants to get even closer.",
+        "Since nobody stops them, they\nkeep sneaking closer and closer.",
+        "They reach the very front row with\na great view, but Carrot keeps going.",
+        "Zoom, zoom, zoom! Carrot runs right past the front row, all the way onto the grass!",
+        "Uh-oh! Now they're right in the middle of the field! All the players stop and stare at them.",
+        "The referee walks them back to Row C. Carrot says sorry. \"The best seat,\" says Hazelnut, \"is the one where we're together!\"",
+    ];
+
+    [Fact]
+    public void IsEdited_AnUnchangedGoodEnoughV8Copy_IsNotEdited()
+    {
+        Story stored = Paged(GoodEnoughV8Pages);
+        Story bundled = Paged("Version nine text.");
+
+        Assert.False(StarterUpdate.IsEdited(Books.IdOf("good-enough"), stored, bundled));
+    }
+
     [Fact]
     public void CopyToKeep_PicksTheCopyHoldingTheBundledText()
     {
