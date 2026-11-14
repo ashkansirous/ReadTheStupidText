@@ -263,6 +263,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 362 | Dino: onboarding that shows what Dino can do (2026-11-13 mock): six required steps (language, story languages, first books, listen in every family language, record one character and hear yourself, grown-ups' corner tour and child's shelf), replacing the first run and the intro | built, not yet verified | #1076 | | [362-dino-onboarding-shows-what-dino-can-do.md](../slices/362-dino-onboarding-shows-what-dino-can-do.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
 | 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | built, not yet verified | #1048, #1097 | | [359-dino-back-cover-picture.md](../slices/359-dino-back-cover-picture.md) |
+| 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | built, not yet verified | #1101, #1113 | | [375-dino-two-picture-sizes.md](../slices/375-dino-two-picture-sizes.md) |
 
 ## Shared
 

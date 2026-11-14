@@ -1,7 +1,7 @@
 ### Slice 317 — Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows)
 **Product:** Shared
 
-*Parked: feedback loop, waits for the user (2026-11-08).* Found by the night 2026-11-08-0106 feedback loop ([note](../notes/2026-11-08-0106-feedback-loop.md)); repo code, so it is planned here and not built outside an implementation phase.
+*Parked 2026-11-14 (night 2026-11-14-1547, wave 1): the review gate does not converge on draft PR #1121 (branch `chore/317-leftovers`), which holds repo items 1, 3, 4 and 5. `reviews/s317-check.md`: high, the empty-builds prune throws; medium, shared builds are deleted, an exact adb text match, a 6-line retry window, `Tee-Object` under Stop. Item 6 was never built (it needed Slice 346 Part E's `StoreClient.cs`, merged as #1120, so it is unblocked now). Item 7's skip lines for Slice 315 are on the same branch. The ClaudeSkills half (item 2 and item 7's dead `died` writer) merged as ClaudeSkills PR #218 (6457de5b) and install.ps1 ran.* Found by the night 2026-11-08-0106 feedback loop ([note](../notes/2026-11-08-0106-feedback-loop.md)); repo code, so it is planned here and not built outside an implementation phase.
 
 **Touches:** `tools/emulator/build-cache.ps1`, `tools/emulator/**`, `tools/phone/**`, `.maestro/**`, `src/DinoReader.App/Testing/**`, `.github/workflows/release.yml`, `.github/workflows/store-submit.yml`
 

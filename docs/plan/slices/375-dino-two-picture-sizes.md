@@ -1,7 +1,7 @@
 ### Slice 375 — Dino: every picture in two sizes; agents look only at the small one; a high-res pack for tablets and Windows
 **Product:** Dino
 
-*Part A merged as PR #1101 (f5692138). Parts B, C, D merged as PR #1113 (3ccecadd, 2026-11-14 11:49Z); Not yet verified below.*
+*Built; merged as PR #1101 (f5692138, part A) and PR #1113 (3ccecadd, parts B-D, 2026-11-14 11:49Z). Not yet verified on a device: see below.*
 
 **Touches (parts B-D, paths after Slice 371; part A's are history):** `tools/dino/prepare-story-pictures.ps1`, `tools/dino/picture-review-copy.ps1`, `content/dino/lion-and-mouse/high-res/**`, `tools/dino/DinoReader.BookBuilder/**`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `worker/stories.ts`, `worker/download-keys.mjs`, `worker/download-keys.d.mts`, `worker/downloads.ts`, `worker/*.test.mjs` (stories, downloads, catalogue), `worker/CLAUDE.md`, `src/Dino/DinoReader.Core/PictureSize*.cs` (new), `src/Dino/DinoReader.Core/LandscapeLayout.cs` (read only, for `TabletShortSide`), `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/BookUpdater.cs`, `src/Dino/DinoReader.App/StagedBookUpdates.cs`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/HighResUpgrades*.cs` (new), `src/Dino/DinoReader.App/PictureSize*.cs` (new, platform device class), `src/Dino/DinoReader.App/Platforms/**` (device class only), `src/Dino/DinoReader.App/MauiProgram.cs` (DI), the `StoreItem` type's file, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/**`, `src/Dino/DinoReader.App/CLAUDE.md`
 
@@ -75,20 +75,20 @@ The Debug-only test books in `Resources/Raw/testbooks/` stay standard.
       4k guessed above, because it does not apply the viewer's own downscale; the ratio is 4:1 either way).
 
 ### B. Two packs built and uploaded
-- [ ] BookBuilder builds `<stem>.dino` (standard) and, when `high-res/` holds every page, cover and back cover,
+- [x] BookBuilder builds `<stem>.dino` (standard) and, when `high-res/` holds every page, cover and back cover,
       `<stem>.hd.dino` (pictures re-saved at JPEG 85 from the originals). `check` requires the two to carry the same
       text, audio and version.
-- [ ] `publish-store-books.mjs` uploads both; the story catalogue lists the high-res pack and its size when it exists.
+- [x] `publish-store-books.mjs` uploads both; the story catalogue lists the high-res pack and its size when it exists.
       `ship-targets.mjs` keeps `high-res/**` out of the app build but ships it to the store upload.
-- [ ] Worker: the download endpoint serves either pack (same entitlement check), with tests.
+- [x] Worker: the download endpoint serves either pack (same entitlement check), with tests.
 
 ### C. The app picks the size (Android, iOS and Windows in the same part)
-- [ ] One pure `PictureSizeChoice` (screen's shorter side, and connection kind) in Core, unit-tested.
-- [ ] Android: tablets (shorter side at least 600 dp) choose high-res. iOS: iPad chooses high-res. Windows: high-res.
-- [ ] Phones always get standard.
+- [x] One pure `PictureSizeChoice` (screen's shorter side, and connection kind) in Core, unit-tested.
+- [x] Android: tablets (shorter side at least 600 dp) choose high-res. iOS: iPad chooses high-res. Windows: high-res.
+- [x] Phones always get standard.
 
 ### D. Slow connection, swap later
-- [ ] On mobile data, a metered or a slow connection, a high-res device downloads standard first, marks the book
+- [x] On mobile data, a metered or a slow connection, a high-res device downloads standard first, marks the book
       "high-res pending", and swaps in the high-res pictures on Wi-Fi in the background (no loading screen; the open book
       is never swapped mid-read). Android and iOS, plus Windows' metered flag.
 
