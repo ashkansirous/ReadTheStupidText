@@ -37,6 +37,10 @@ Markers: `PAGE n` (Dino page swiped), `READ_START`, `ENGINE_READY ms`, `CHUNK_SY
 - `rtst/language-continue-two-step`: Continue relabels to "Start reading", the second tap opens the reader.
 - `rtst/needs-file/open-huge-text-file` (tag `needs-file`): a 36 MB text file from the system file picker must not crash and shows the "text was cut" note. **Precondition:** `adb -s emulator-5554 push big36.txt /sdcard/Download/big36.txt` (36 MB text). It sits in a subfolder because `run-flows.ps1` runs only the `*.yaml` files directly in an app folder, so default runs skip it; run it with `maestro --device emulator-5554 test .maestro/rtst/needs-file/open-huge-text-file.yaml`. It drives the picker by English labels, so it is Android-only and en-US only.
 
+## iOS simulator (Slice 244)
+
+`dino/ios-read-back-reread-background.yaml` also runs on a CI iOS simulator: dispatch `dinoreader-ios-sim.yml` (it swaps the flow's `appId` for the app's bundle id). Its mid-flow hooks go to the running app as `openLink` on the `dino-test://` URL on iOS (launch arguments are read once) and as `launchApp` with `stopApp: false` on Android, and `id:` on iOS matching MAUI's `AutomationId`; neither is confirmed yet (the workflow prints `maestro hierarchy` on a failure).
+
 ## Not covered yet
 
 Scan's photo fallback (camera), a fake pack-ready hook, Dino's intro wizard and store list. iOS flows are written platform-neutral but run only on a Mac simulator (later step, Actions quota).

@@ -1,0 +1,152 @@
+# Slice 244 item 1: the 2026-11 iOS crashes. Read a book, press Back mid-sentence, read again, change page while reading, background the app and return, three times in a row.
+# Platform-neutral ids; the hooks are sent per platform. The first launch passes launch arguments (both platforms). Every later hook goes to the running app: on Android as launchApp with stopApp: false, on iOS
+# as openLink on the app's dino-test:// URL (iOS reads launch arguments only once, so a later launchApp would restart the app and replace the Back and background lifecycle under test with cold starts).
+# It runs on the Android emulator (parity) and on the CI iOS simulator (dinoreader-ios-sim.yml, which copies it with the dev appId swapped for the bundle id and the expect-log lines removed).
+# Offline: test-store mode=offline stops the shelf installing premade audio packs from the live store mid-run, so the read is the app's own (a piece with no clip is shown for a beat) on every iteration.
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=1
+# expect-log: [Reading] left the page, read stopped
+appId: uk.sirous.dinoreader.dbg
+name: Read, Back, read again, change page, background and return, three times
+---
+- launchApp:
+    # No clearState: the app keeps its data (nothing here needs a clean install).
+    arguments:
+      cmd: test-store
+      mode: offline
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: skip-first-run
+            lang: en
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - openLink: "dino-test://skip-first-run?lang=en"
+      # iOS asks "Open in <app>?" for a custom-scheme link: Open is tapped only while that prompt's own text is on screen (never an app control labelled Open).
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- repeat:
+    times: 3
+    commands:
+      # Open and read; the Play control describes itself as Pause while the read is Playing.
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: open-book
+                  id: three-little-pigs
+                  play: "1"
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://open-book?id=three-little-pigs&play=1"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 30000
+      - extendedWaitUntil:
+          visible: Pause
+          timeout: 90000
+      # Back mid-sentence.
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
+      # Read again, then change page while the read goes on.
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: open-book
+                  id: three-little-pigs
+                  play: "1"
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://open-book?id=three-little-pigs&play=1"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 30000
+      - extendedWaitUntil:
+          visible: Pause
+          timeout: 90000
+      - swipe:
+          direction: LEFT
+      - assertVisible:
+          id: ReadingSurface
+      # Background the app while it reads, then bring it back (the state hook is the way back to the foreground).
+      - pressKey: home
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: state
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://state"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      # A dead app fails these waits: the app must still be running after every iteration.
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 30000
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
