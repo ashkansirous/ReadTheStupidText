@@ -7,7 +7,7 @@ description: Run the Farsi pronunciation review for one Dino Reader book (Slice 
 
 The user types how each Farsi word sounds, in Finglish, on a claude.ai review page. Their answers become the book's hidden
 "how to read" table: kids see plain Farsi, the voice reads the marked text (Slice 154,
-`docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md`; `speak:<lang>` rule in `src/DinoReader.Core/CLAUDE.md`).
+`docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md`; `speak:<lang>` rule in `src/Dino/DinoReader.Core/CLAUDE.md`).
 Arabic is out of scope (user, 2026-10-27).
 
 ## Rules the user set (do not relax)
@@ -44,7 +44,7 @@ Add a row when you publish a page and update it when its book merges (same PR as
 3. **Seed** words (with guesses), pages, prefilled answers (step "Prefill" above; note "from <book>"), page audio and
    alternatives. Seed and check the page in the order the user sees it, and only hand over the link once every word has a
    guess or a prefilled answer.
-   Audio: `tools/sound-words-test` (`engines.build_piper`, `regen_review_audio.render_webm`), voice `mana`, webm only,
+   Audio: `tools/dino/sound-words-test` (`engines.build_piper`, `regen_review_audio.render_webm`), voice `mana`, webm only,
    uploaded as artifact assets in one publish. Find dropped words with `regen_review_audio.py --probe`-style loudness checks.
 4. **Hand the link** to the caller with the count of new words to check.
 5. **Re-record on request.** While the user reviews, check `requests/regen` vs `requests/status` every few minutes
@@ -53,15 +53,15 @@ Add a row when you publish a page and update it when its book merges (same PR as
    pinned with `if_version`. Stop polling when the user says done or after 2 hours idle.
 6. **Done.** Pull answers and choices, run `build_marks_list.py` and `apply_marks.py` to write
    `content/dino/<stem>/translations/fa.marks.json` and `fa.speak.json` (`fa.json` never changes), then
-   `dotnet run --project tools/DinoReader.BookBuilder --disable-build-servers -- stamp <stem>`, `-- build <stem>`, `-- check`,
-   `dotnet test tests/DinoReader.Tests` (FarsiMarksTests) and the Android build (`-p:IncludeWindows=false`). One line in the
+   `dotnet run --project tools/dino/DinoReader.BookBuilder --disable-build-servers -- stamp <stem>`, `-- build <stem>`, `-- check`,
+   `dotnet test tests/Dino/DinoReader.Tests` (FarsiMarksTests) and the Android build (`-p:IncludeWindows=false`). One line in the
    Slice 154 file. Commit, PR (`--base main`, Summary + Test plan), merge when green with a merge commit. Store books then
    upload themselves (`publish-store` job); check its result.
 
 ## Local paths (this machine)
 
 - Python venv with numpy and the engines: `D:\ReadTheStupidText-worktrees\s154b\tmp\venv\Scripts\python`
-  (else `python -m venv` + `pip install -r tools/sound-words-test/requirements.txt`). Run scripts with `-I` and the tool dir on `sys.path`.
+  (else `python -m venv` + `pip install -r tools/dino/sound-words-test/requirements.txt`). Run scripts with `-I` and the tool dir on `sys.path`.
 - piper-fa pack: `D:/ReadTheStupidText-worktrees/s145-tmp/packs/x/piper-fa-2/piper-fa` (or `RTST_PIPER_FA_ROOT`).
 - Review data and audio go in the book's worktree `tmp/` (gitignored), never in a temp folder that can be cleaned, and never
   anywhere outside the worktree (no drive-root folders or junctions, not even to shorten paths).

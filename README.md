@@ -26,7 +26,7 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 **iOS:** the iOS app has the neural voice (after the pack download), camera scanning with on-device text recognition, background audio, fifteen languages of voices, the head start, per-language text recognition and localised permission prompts (translation is Android-only for now).
 
-**Dino Book Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence (on scanned or PDF stories it shows the real pages); and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It ships four starter stories, readable in any of the fifteen languages (your own stories translate on Android), lets grown-ups browse and download free curated stories from the in-app store (nothing about the user is sent), and saves or restores all stories as one backup file; a first run asks for the language. It works in fifteen languages, with right-to-left layout for Farsi and Arabic.
+**Dino Book Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/Dino/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence (on scanned or PDF stories it shows the real pages); and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It ships four starter stories, readable in any of the fifteen languages (your own stories translate on Android), lets grown-ups browse and download free curated stories from the in-app store (nothing about the user is sent), and saves or restores all stories as one backup file; a first run asks for the language. It works in fifteen languages, with right-to-left layout for Farsi and Arabic.
 
 ## Status
 
@@ -114,10 +114,10 @@ dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates
 
 ```bash
 # Build the app (its project references pull in and build the class libraries)
-dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
+dotnet build src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
 
 # Run the app
-dotnet run --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
+dotnet run --project src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
 ```
 
 > Build the **app project**, not `ReadTheStupidText.slnx`. The class libraries are
@@ -128,7 +128,7 @@ dotnet run --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:P
 
 The neural voice model is large and stored in **Git LFS**, so install
 [Git LFS](https://git-lfs.com/) (`git lfs install`) before cloning, or run
-`git lfs pull` after clone, so `src/ReadTheStupidText.App/VoiceModel/` holds the
+`git lfs pull` after clone, so `src/Rtst/ReadTheStupidText.App/VoiceModel/` holds the
 real model files (not pointers).
 
 ## Continuous integration

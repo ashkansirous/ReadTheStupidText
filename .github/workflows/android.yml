@@ -15,12 +15,12 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/Sirous.Reading.Domain/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/Sirous.Reading.Documents/**'
+      - 'src/Shared/Sirous.Reading.Domain/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
-      - 'src/SherpaOnnxVersion.props'
+      - 'src/Shared/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
       - '.github/workflows/release-shared.yml'
@@ -28,15 +28,15 @@ on:
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
-      - 'src/ReadTheStupidText.Mobile/**'
-      - '!src/ReadTheStupidText.Mobile/Platforms/**'
-      - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
-      - 'src/Sirous.Reading.Mobile.Shared/**'
-      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
-      - 'src/AndroidSherpaPackaging.props'
-      - 'src/AndroidRelease.props'
-      - 'src/AndroidProguard.cfg'
+      - 'src/Rtst/ReadTheStupidText.Mobile/**'
+      - '!src/Rtst/ReadTheStupidText.Mobile/Platforms/**'
+      - 'src/Rtst/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
+      - 'src/Shared/AndroidSherpaPackaging.props'
+      - 'src/Shared/AndroidRelease.props'
+      - 'src/Shared/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
@@ -78,7 +78,7 @@ jobs:
       # Signed builds only when cutting a release: on PRs the output would be
       # discarded (nothing uploads) and the secrets needlessly exposed.
       SIGN_RELEASE: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && inputs.release == true }}
-      PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
+      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
       VERSION: ${{ inputs.version }}
     steps:
       # No LFS: the Android package carries no voice model (Slice 50).
@@ -102,7 +102,7 @@ jobs:
 
       - name: Debug build (unsigned)
         if: ${{ env.SIGN_RELEASE != 'true' }}
-        run: dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+        run: dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
 
       # The Release packaging path differs from Debug (the sherpa natives once went missing
       # only in Release), so PR builds also package an unsigned Release .aab and check it.
@@ -110,7 +110,7 @@ jobs:
       - name: Release package check (unsigned .aab)
         if: ${{ env.SIGN_RELEASE != 'true' }}
         run: |
-          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
+          dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
           bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.readthestupidtext-Signed.aab
 
       - name: Decode upload keystore
@@ -126,7 +126,7 @@ jobs:
       - name: Release build (signed .aab)
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: >
-          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
           -f net10.0-android
           -c Release
           -p:AndroidPackageFormat=aab
@@ -151,7 +151,7 @@ jobs:
       - name: Release build (signed .apk)
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: >
-          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
           -f net10.0-android
           -c Release
           -p:AndroidPackageFormat=apk

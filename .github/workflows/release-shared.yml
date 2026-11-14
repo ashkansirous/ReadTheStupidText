@@ -265,7 +265,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: node .github/scripts/site-checks-needed.mjs
 
-  # The shared engine's tests (Slice 368, tests/Shared.Tests): both products ship the same Domain/Application/Infrastructure/Mobile.Shared
+  # The shared engine's tests (Slice 368, tests/Shared/Shared.Tests): both products ship the same Domain/Application/Infrastructure/Mobile.Shared
   # code, so ANY product output that builds needs them. Each product's run executes them, so a push that starts both products
   # (a core change) runs the shared suite twice, once per run (accepted in Slice 369: the two runs are independent). Every build lists the caller's `shared` job,
   # and this job failing or being skipped never lets a build through (the draft below needs `success`).
@@ -278,7 +278,7 @@ jobs:
     with:
       suite: shared
 
-  # RTST's own pure-logic tests and phone-script self-tests (Slice 128; tests/ReadTheStupidText.Tests). Gate every Windows/Android/iOS
+  # RTST's own pure-logic tests and phone-script self-tests (Slice 128; tests/Rtst/ReadTheStupidText.Tests). Gate every Windows/Android/iOS
   # build and so every RTST release.
   rtst-test:
     needs: version

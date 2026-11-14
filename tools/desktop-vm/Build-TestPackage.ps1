@@ -38,7 +38,7 @@ function Find-MsBuild {
 function Build-RtstMsix([string]$Dir) {
     $msbuild = Find-MsBuild
     # Slice 225 item 23: msbuild.exe has no --disable-build-servers (a dotnet CLI option): its twin is -nodeReuse:false plus no shared compiler.
-    & $msbuild (Join-Path $repoRoot 'src\ReadTheStupidText.App\ReadTheStupidText.App.csproj') -restore -nodeReuse:false -p:UseSharedCompilation=false -p:Configuration=Release -p:Platform=x64 `
+    & $msbuild (Join-Path $repoRoot 'src\Rtst\ReadTheStupidText.App\ReadTheStupidText.App.csproj') -restore -nodeReuse:false -p:UseSharedCompilation=false -p:Configuration=Release -p:Platform=x64 `
         "-p:ArtifactsPath=$buildArtifacts" -p:UseArtifactsOutput=true -p:RuntimeIdentifier=win-x64 -p:GenerateAppxPackageOnBuild=true "-p:AppxPackageDir=$Dir\\" `
         -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false
     if ($LASTEXITCODE -ne 0) { throw 'msbuild failed.' }
@@ -46,12 +46,12 @@ function Build-RtstMsix([string]$Dir) {
 
 # dotnet publish writes the package under the project's AppPackages folder; copy it (with Dependencies\x64) into the build folder.
 function Build-DinoMsix([string]$Dir) {
-    $packages = Join-Path $repoRoot 'src\DinoReader.App\AppPackages'
+    $packages = Join-Path $repoRoot 'src\Dino\DinoReader.App\AppPackages'
     Remove-Item $packages -Recurse -Force -ErrorAction SilentlyContinue
-    dotnet publish (Join-Path $repoRoot 'src\DinoReader.App') -f net10.0-windows10.0.19041.0 -c Release --artifacts-path $buildArtifacts --disable-build-servers -p:IncludeAndroid=false `
+    dotnet publish (Join-Path $repoRoot 'src\Dino\DinoReader.App') -f net10.0-windows10.0.19041.0 -c Release --artifacts-path $buildArtifacts --disable-build-servers -p:IncludeAndroid=false `
         -p:Platform=x64 -p:AppxPackageSigningEnabled=false -p:DinoTestBooks=true
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
-    if (-not (Test-Path $packages)) { throw "dotnet publish wrote no AppPackages folder under src\DinoReader.App." }
+    if (-not (Test-Path $packages)) { throw "dotnet publish wrote no AppPackages folder under src\Dino\DinoReader.App." }
     Copy-Item "$packages\*" $Dir -Recurse -Force
 }
 

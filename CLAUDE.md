@@ -6,7 +6,7 @@ the user's global instructions (which always apply). Area rules live in folder-s
 
 ## What this is
 
-**ReadTheStupidText** (RTST) is a Windows 11 tray utility that reads selected/copied text aloud; its description, naming and tray build/run are in `src/ReadTheStupidText.App/CLAUDE.md`.
+**ReadTheStupidText** (RTST) is a Windows 11 tray utility that reads selected/copied text aloud; its description, naming and tray build/run are in `src/Rtst/ReadTheStupidText.App/CLAUDE.md`.
 
 **Two more products share this repo.** The same RTST app ships on **Android** (and iOS) via
 **.NET MAUI**, reusing `Domain`/`Application` unchanged. **Dino Reader** is a second MAUI app (a
@@ -26,42 +26,42 @@ in the `update-docs` index pass. The numbered **Decisions** live in `docs/plan/d
 
 Read The Stupid Text:
 
-- `src/ReadTheStupidText.App/CLAUDE.md` — Windows tray, control panel, activity log, read paths, console/UIA limitation, self-contained Release, onnxruntime dedupe.
-- `src/ReadTheStupidText.Mobile/CLAUDE.md` — MAUI Android/iOS: namespace and `Application` gotchas, sherpa-onnx native `.so` packaging, voice packs, Scan, emulator and iOS compile notes.
+- `src/Rtst/ReadTheStupidText.App/CLAUDE.md` — Windows tray, control panel, activity log, read paths, console/UIA limitation, self-contained Release, onnxruntime dedupe.
+- `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md` — MAUI Android/iOS: namespace and `Application` gotchas, sherpa-onnx native `.so` packaging, voice packs, Scan, emulator and iOS compile notes.
 
 Dino Reader:
 
-- `src/DinoReader.App/CLAUDE.md` — Dino Reader app: icons, the design mock, story, reading and cast rules.
-- `src/DinoReader.App/Platforms/Windows/CLAUDE.md` — Dino Reader's Windows head: package identity, key hook, ListViewBase input, Hyper-V VM test.
-- `src/DinoReader.App/Testing/CLAUDE.md` — Dino Debug test hooks (`test-store`, `import-test-book`) and Maestro log markers.
-- `src/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
+- `src/Dino/DinoReader.App/CLAUDE.md` — Dino Reader app: icons, the design mock, story, reading and cast rules.
+- `src/Dino/DinoReader.App/Platforms/Windows/CLAUDE.md` — Dino Reader's Windows head: package identity, key hook, ListViewBase input, Hyper-V VM test.
+- `src/Dino/DinoReader.App/Testing/CLAUDE.md` — Dino Debug test hooks (`test-store`, `import-test-book`) and Maestro log markers.
+- `src/Dino/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
 - `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus), `dino-story-illustrator` (Gemini pictures, Sonnet, up to four in parallel, JS-only input, one `gemini-lock`) and `dino-story-reviewer` (Opus, after each; its pass is required to ship); the main thread only coordinates.
 - `.claude/skills/farsi-review-book/SKILL.md` — the Farsi pronunciation review, one book at a time (Slice 154): run it through the repo agent `farsi-review` (Sonnet); later books prefill the user's earlier answers.
 - `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text goes through the global `store-listing` agent (draft, then apply after the user approves).
 
 Shared:
 
-- `src/Sirous.Reading.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
-- `src/Sirous.Reading.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
-- `src/Sirous.Reading.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
+- `src/Shared/Sirous.Reading.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
+- `src/Shared/Sirous.Reading.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
+- `src/Shared/Sirous.Reading.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
 - `tools/CLAUDE.md` — device-test tooling: `-App auto`, the build cache, device limits, phone runs.
 - `tools/desktop-vm/CLAUDE.md` — the headless Hyper-V VM desktop tests: PowerShell script gotchas.
 - `.github/CLAUDE.md` — CI quota rules, `release-rtst.yml`/`release-dino.yml`/`release-shared.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
 
 ## Stack & conventions
 
-- **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 2.x** (the exact version is the `Microsoft.WindowsAppSDK` reference in `src/ReadTheStupidText.App/ReadTheStupidText.App.csproj`).
+- **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 2.x** (the exact version is the `Microsoft.WindowsAppSDK` reference in `src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj`).
 - Solution file is `ReadTheStupidText.slnx` (the XML `slnx` format — not `.sln`).
 - Always confirm Windows App SDK / WinUI / `H.NotifyIcon` APIs and versions via
   **context7** before writing code against them — versions move fast.
 - **sherpa-onnx and onnxruntime are one version on Android, iOS and Windows**, written only in
-  `src/SherpaOnnxVersion.props`; never pin either anywhere else (`.github/scripts/check-sherpa-pins.mjs`
+  `src/Shared/SherpaOnnxVersion.props`; never pin either anywhere else (`.github/scripts/check-sherpa-pins.mjs`
   and `SherpaVersionPinTests` fail on a stray pin). 2.x stays out until a non-GPL phonemizer exists.
   (Slice 245: docs/plan/slices/245-sherpa-onnx-one-version.md)
 
 ## Layered structure (one-direction dependencies)
 
-The shared projects are named `Sirous.Reading.{Domain,Application,Documents,Infrastructure,Mobile.Shared}` (folders under `src/`, namespaces the same); the diagram uses the short names. (Slice 370: docs/plan/slices/370-rename-shared-code.md)
+The shared projects are named `Sirous.Reading.{Domain,Application,Documents,Infrastructure,Mobile.Shared}` (folders under `src/Shared/`, namespaces the same); the diagram uses the short names. Folders are grouped by product (Slice 371): `src/Shared/`, `src/Rtst/` (App, Windows.Tray, Mobile), `src/Dino/` (DinoReader.App, DinoReader.Core), the same three under `tests/`, and Dino-only or RTST-only tooling in `tools/dino/` and `tools/rtst/`; the shared harnesses (`emulator`, `phone`, `desktop-vm`, `crashes`) stay in `tools/`. (Slice 371: docs/plan/slices/371-folders-by-product.md) (Slice 370: docs/plan/slices/370-rename-shared-code.md)
 
 ```
 App  →  Application  →  Domain
@@ -93,32 +93,32 @@ DinoReader.Core → Application, Domain
   have no Windows-only dependency (so not stuck in Infrastructure) — both
   Infrastructure (Windows) and Mobile (Android) reference this project and
   share the exact same extractors.
-- **DinoReader.Core** (`src/DinoReader.Core`) — pure dialogue library, references Application and Domain (details in its own file).
+- **DinoReader.Core** (`src/Dino/DinoReader.Core`) — pure dialogue library, references Application and Domain (details in its own file).
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; every platform downloads its voice as a pack
   (Slice 50; Windows since Slice 56, no model in the MSIX).
   Clipboard, UI Automation, startup task, OS integration.
-- **Windows.Tray** (`src/ReadTheStupidText.Windows.Tray`, `net10.0-windows`, Slice 128, Decision 135) — tray-only
+- **Windows.Tray** (`src/Rtst/ReadTheStupidText.Windows.Tray`, `net10.0-windows`, Slice 128, Decision 135) — tray-only
   Win32/UIA code: global hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe and
   the startup task. Only `App` references it, so a tray edit does not rebuild or ship Dino Reader (which shares
   Infrastructure). Their interfaces (`IHotkeyService`, ...) and the activity log stay in Application/Domain, used by
   `ReadAloudService`. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
-- **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/DinoReader.App`** — the
-  MAUI apps, sharing `src/Sirous.Reading.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/DinoReader.App/CLAUDE.md`).
+- **Mobile** (`src/Rtst/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/Dino/DinoReader.App`** — the
+  MAUI apps, sharing `src/Shared/Sirous.Reading.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/Dino/DinoReader.App/CLAUDE.md`).
 
 ## Build & run
 
-Build and run commands: RTST tray in `src/ReadTheStupidText.App/CLAUDE.md`, RTST Android/iOS in `src/ReadTheStupidText.Mobile/CLAUDE.md`, Dino Reader in `src/DinoReader.App/CLAUDE.md`. The solution is `ReadTheStupidText.slnx`.
+Build and run commands: RTST tray in `src/Rtst/ReadTheStupidText.App/CLAUDE.md`, RTST Android/iOS in `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md`, Dino Reader in `src/Dino/DinoReader.App/CLAUDE.md`. The solution is `ReadTheStupidText.slnx`.
 
 **Landing site, usage counts, story store, remote config.** The Cloudflare Worker `readthestupidtext` (`wrangler.jsonc`, `worker/`, `site/`) and its rules live in `worker/CLAUDE.md`; read it before touching the Worker, `site/`, usage counts or the Dino story store.
 
 ## Tests
 
-There are three test projects (xUnit v3). `tests/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows10.0.19041.0`),
-`tests/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards
-`FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/DinoReader.Tests`. A test whose
+There are three test projects (xUnit v3). `tests/Rtst/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows10.0.19041.0`),
+`tests/Shared/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards
+`FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/Dino/DinoReader.Tests`. A test whose
 subject only the RTST App, `Windows.Tray` or RTST `Mobile` reaches stays in `ReadTheStupidText.Tests`; anything Dino can
 reach goes in `Shared.Tests`. (Slice 368: docs/plan/slices/368-shared-tests-project.md) They cover the **pure** logic only — `PlaybackRate`, `SpeechTextChunker`,
 `SupertonicVoiceTable`, `ActivityLog`, and the `LocalSettingsStore` settings
@@ -128,14 +128,14 @@ are **not** unit-tested — they need package identity / a UI host; verify those
 running the app (VS **(Package)** profile). Run the suite with:
 
 ```bash
-dotnet test tests/Shared.Tests/Shared.Tests.csproj
-dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
+dotnet test tests/Shared/Shared.Tests/Shared.Tests.csproj
+dotnet test tests/Rtst/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
 ```
 
 Dino Reader's pure library has its own suite (xUnit v3, plain `net10.0`, runs on any OS):
 
 ```bash
-dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj
+dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj
 ```
 
 The `tests.yml` workflow (called by `release-shared.yml`, once per product run) runs them on every push/PR that
@@ -187,5 +187,5 @@ so a failing test blocks the release.
 - Every method does one thing; 3–30 lines.
 - A `catch` in `src/` either reports a fallback (a call with a `FallbackArea.` argument) or has
   `// no-fallback: <reason>` as the first line inside its brace. `FallbackGuardTests` enforces it with a
-  per-file baseline, `tests/Shared.Tests/FallbackGuardBaseline.txt`, that may only go down: lower a
+  per-file baseline, `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt`, that may only go down: lower a
   file's number when you mark or instrument a catch. (Slice 273: docs/plan/slices/273-fallback-events-everywhere.md)

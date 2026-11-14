@@ -221,7 +221,7 @@ function Remove-WorktreeRunMark([string]$Path) {
 # Slice 284 check pass 2: the dino-record key-R stage finds the app's microphone alerts by their text, read here from this worktree's English resx (the keys RecordPage.cs shows),
 # so a reworded alert never silently breaks the stage. The guest has no repo: the texts go over as one base64 JSON argument; a missing key is passed as an error the stage fails with.
 function Get-RecordAlertArgument {
-    $resx = Join-Path $PSScriptRoot '..\..\src\DinoReader.App\Resources\Strings\AppResources.resx'
+    $resx = Join-Path $PSScriptRoot '..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.resx'
     $keys = @{ NoMic = 'Rec_NoMicTitle'; Failed = 'Rec_Failed' }
     $payload = @{ Error = $null; NoMic = $null; Failed = $null }
     try {

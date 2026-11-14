@@ -23,8 +23,8 @@ $ErrorActionPreference = 'Stop'
 Set-EmulatorInstance (Resolve-EmulatorInstance $Instance)
 
 $apps = @{
-    rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Package = $script:EmulatorPackages.rtst }
-    dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Package = $script:DinoDevPackage }
+    rtst = @{ Project = 'src\Rtst\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Package = $script:EmulatorPackages.rtst }
+    dino = @{ Project = 'src\Dino\DinoReader.App\DinoReader.App.csproj'; Package = $script:DinoDevPackage }
 }
 $cfg = $apps[$App]
 $platform = Get-EmulatorBuildPlatform $App  # Dino: android-dbg, its own cache name (the APK carries the .dbg id)

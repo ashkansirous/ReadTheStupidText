@@ -63,13 +63,13 @@ The reviewer never reviews its own work and changes nothing. Its pass is require
 the illustrator's own step 5 check still runs on every candidate.
 
 Version bump (starters only; Slice 239): the writer bumps it when the text changes; the illustrator bumps it when only pictures change
-(`dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a starter changed without it).
+(`dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a starter changed without it).
 A **store book needs no stamp**: `publish-store` compares its content hash with the live store and uploads a changed book as live + 1. A store book is content only: it never edits `src/`, `tests/`
 or app files (its titles are `content/dino/<stem>/titles.json`, no row in `ShippedTitles.cs`; tests derive book counts from the folder), so its PR and merge run no test, no app build and no
 PR check, only the store upload. No book is bundled in the app any more (Slices 261, 265), so every book change, audio clips included, runs only the store upload. Deleting a store book's folder delists it on the next merge (packages stay).
-**A book reaches the store only with complete audio (Slice 277):** `dotnet run --project tools/DinoReader.BookBuilder -- check-audio <stem>` must print no gap (after `git lfs pull --include "content/dino/<stem>/audio/*/manifest.json" --exclude ""`):
+**A book reaches the store only with complete audio (Slice 277):** `dotnet run --project tools/dino/DinoReader.BookBuilder -- check-audio <stem>` must print no gap (after `git lfs pull --include "content/dino/<stem>/audio/*/manifest.json" --exclude ""`):
 a pack in every one of the 15 languages, a clip for every sentence the app reads, no clip for text that changed, no missing or empty clip file. The app has no device-voice fallback, so after any text
-change regenerate the clips with `tools/premade-audio` before the PR. `publish-store` and `tools/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
+change regenerate the clips with `tools/dino/premade-audio` before the PR. `publish-store` and `tools/dino/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
@@ -82,7 +82,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
   casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.
-- Give every character a voice choice in the `cast` of the book's `book.json` (Slice 156; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
+- Give every character a voice choice in the `cast` of the book's `book.json` (Slice 156; `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
 - **Back cover (Slice 237).** Every book ends on a silent credits page that is never read. The builder makes it from `book.json`: set `storyBy` (who wrote the story, names as written;
   `"traditional"` for a tale nobody owns) and `retold: true` for every book that is not the user's own. Own books: `storyBy` is the user's name (plus a co-author) and no `retold`.
   A classic needs its real original author, checked, never guessed (Potter, Aesop, Andersen, the Brothers Grimm...). The illustrator is Ashkan Sirous unless `illustration` says otherwise,
@@ -90,7 +90,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   **Slice 359: every book also gets a drawn back-cover picture** (one per book, no words in it, the middle left calm because the reader lays the credit lines over it): `content/dino/<stem>/back-cover.jpg`
   (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
   `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).
-- Translations: `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
+- Translations: `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
   translate into `content/dino/<stem>/translations/<lang>.json` (every language in `UiLanguage.Supported`, 14 besides English).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.
 
@@ -207,7 +207,7 @@ A chat that drew a wrong picture tends to repeat it when asked again: redo it in
 
 Before viewing or reviewing a book's high-res files, fetch them: they are ~130-byte LFS pointers until then. Run the command from the comment in `.lfsconfig`: `git lfs pull --include "content/dino/<book>/high-res/**" --exclude ""`.
 
-`gemini-take-download.ps1` writes `<name>.small.jpg` (896x1200, JPEG 85, `tools/picture-review-copy.ps1`) beside every saved picture, and the two always move, rename and get deleted together. Read the small copy (not the chat preview, never the whole full-size original) and check each item; when one item needs a closer look, open a full-size crop of that one place only and name the fault. Any fail means: say what
+`gemini-take-download.ps1` writes `<name>.small.jpg` (896x1200, JPEG 85, `tools/dino/picture-review-copy.ps1`) beside every saved picture, and the two always move, rename and get deleted together. Read the small copy (not the chat preview, never the whole full-size original) and check each item; when one item needs a closer look, open a full-size crop of that one place only and name the fault. Any fail means: say what
 is wrong, ask for that page again (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), and check the new one
 from the top. Compare outfits against the line-up picture, item by item (hat type, shirt or no shirt,
 trousers or none).
@@ -274,7 +274,7 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   Delete the stray download afterwards if it turns up late.
 - Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading its small copy (`cand-5.small.jpg`), and
   only then rename it to `cover.jpg`, `1.jpg`... (rename `cand-5.small.jpg` to `1.small.jpg` with it). Delete rejected candidates with their small copies.
-- Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
+- Then run `pwsh tools/dino/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
   path: `content/dino/<stem>`. It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,
   `<target>/cover.jpg` and `<target>/cover-thumb.jpg` (288x384, the small cover the store list fetches).
@@ -286,13 +286,13 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 
 ## 7. Build, test, upload
 
-- `dotnet run --project tools/DinoReader.BookBuilder -- build <stem>` writes `artifacts/store/<id>/` and, for a starter, rewrites
-  the Debug-only test book `src/DinoReader.App/Resources/Raw/testbooks/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
-  `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` for a **starter** (raises its version and stores the content hash; also add the old text's page hashes to
+- `dotnet run --project tools/dino/DinoReader.BookBuilder -- build <stem>` writes `artifacts/store/<id>/` and, for a starter, rewrites
+  the Debug-only test book `src/Dino/DinoReader.App/Resources/Raw/testbooks/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
+  `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` for a **starter** (raises its version and stores the content hash; also add the old text's page hashes to
   `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `check` fails otherwise and runs in CI. A store book is not stamped (Slice 239).
-- `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
+- `dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj` green.
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
-- After merge, `dino-store.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
+- After merge, `dino-store.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/dino/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
 
 ## 8. Check in the app

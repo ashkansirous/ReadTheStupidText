@@ -15,12 +15,12 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/Sirous.Reading.Domain/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/Sirous.Reading.Documents/**'
+      - 'src/Shared/Sirous.Reading.Domain/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
-      - 'src/SherpaOnnxVersion.props'
+      - 'src/Shared/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
       - '.github/workflows/release-shared.yml'
@@ -28,12 +28,12 @@ on:
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
-      - 'src/ReadTheStupidText.Mobile/**'
-      - '!src/ReadTheStupidText.Mobile/Platforms/**'
-      - 'src/ReadTheStupidText.Mobile/Platforms/iOS/**'
-      - 'src/Sirous.Reading.Mobile.Shared/**'
-      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
+      - 'src/Rtst/ReadTheStupidText.Mobile/**'
+      - '!src/Rtst/ReadTheStupidText.Mobile/Platforms/**'
+      - 'src/Rtst/ReadTheStupidText.Mobile/Platforms/iOS/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
       - '.github/scripts/ios-signing.sh'
       - '.github/scripts/testflight-upload.sh'
       - '.github/workflows/ios.yml'
@@ -70,8 +70,8 @@ jobs:
       # already published, the output would be discarded and the secrets needlessly
       # exposed.
       SIGN_RELEASE: ${{ inputs.sign == true }}
-      PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-ios/ios-arm64/publish
-      PROJECT: src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net10.0-ios/ios-arm64/publish
+      PROJECT: src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
       VERSION: ${{ inputs.version }}
     steps:
       # No LFS: the iOS package carries no voice model (Slice 50).

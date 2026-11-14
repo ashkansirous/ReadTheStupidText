@@ -43,12 +43,12 @@ on:
     # Later patterns override earlier ones: the shared Mobile.Shared root first, its Platforms folders out, then the three Dino
     # platform folders back in (the same order as the pull_request lists of dinoreader-*.yml).
     paths:
-      - 'src/Sirous.Reading.Domain/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/Sirous.Reading.Documents/**'
+      - 'src/Shared/Sirous.Reading.Domain/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
-      - 'src/SherpaOnnxVersion.props'
+      - 'src/Shared/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
       - '.github/workflows/release-shared.yml'
@@ -56,29 +56,29 @@ on:
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
       - 'GitVersion.dino.yml'
-      - 'src/DinoReader.App/**'
-      - 'src/DinoReader.Core/**'
-      - 'src/Sirous.Reading.Mobile.Shared/**'
-      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
-      - 'src/AndroidSherpaPackaging.props'
-      - 'src/AndroidRelease.props'
-      - 'src/AndroidProguard.cfg'
+      - 'src/Dino/DinoReader.App/**'
+      - 'src/Dino/DinoReader.Core/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
+      - 'src/Shared/AndroidSherpaPackaging.props'
+      - 'src/Shared/AndroidRelease.props'
+      - 'src/Shared/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/dinoreader-android.yml'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
-      - 'src/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
       - '.github/scripts/ios-signing.sh'
       - '.github/scripts/testflight-upload.sh'
       - '.github/scripts/check-ios-bundle.sh'
       - '.github/workflows/dinoreader-ios.yml'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
-      - 'src/Sirous.Reading.Infrastructure/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
+      - 'src/Shared/Sirous.Reading.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/dinoreader-windows.yml'
-      - 'tests/DinoReader.Tests/**'
-      - 'tools/DinoReader.BookBuilder/**'
+      - 'tests/Dino/DinoReader.Tests/**'
+      - 'tools/dino/DinoReader.BookBuilder/**'
       - '.github/workflows/dinoreader.yml'
       - '.github/workflows/release-dino.yml'
       - '!**/*.md'
@@ -132,7 +132,7 @@ jobs:
       release: ${{ needs.shared.outputs.android_signed == 'true' && needs.shared.outputs.proceed == 'true' }}
     secrets: inherit
 
-  # Dino Reader on iOS (Slice 67): the iOS twin of RTST's build for `src/DinoReader.App` (uk.sirous.dinoreader).
+  # Dino Reader on iOS (Slice 67): the iOS twin of RTST's build for `src/Dino/DinoReader.App` (uk.sirous.dinoreader).
   # The signed .ipa needs the five team-wide iOS secrets plus its own provisioning profile.
   build-dinoios:
     needs: shared
@@ -148,7 +148,7 @@ jobs:
       sign: ${{ needs.shared.outputs.ios_signed == 'true' && needs.shared.outputs.proceed == 'true' }}
     secrets: inherit
 
-  # Dino Reader on Windows (Slice 67): the Windows twin for `src/DinoReader.App`. Unsigned
+  # Dino Reader on Windows (Slice 67): the Windows twin for `src/Dino/DinoReader.App`. Unsigned
   # MSIX x64 + ARM64, so it needs no secrets and always uploads into the draft.
   build-dinowin:
     needs: shared

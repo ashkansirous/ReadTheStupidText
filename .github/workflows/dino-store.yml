@@ -12,11 +12,11 @@ on:
     paths:
       - 'content/dino/**'
       - '!content/dino/*/high-res/**'
-      - 'tools/DinoReader.BookBuilder/**'
-      - 'src/DinoReader.Core/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/DinoReader.App/ShippedTitles.cs'
-      - 'tools/upload-store-story.ps1'
+      - 'tools/dino/DinoReader.BookBuilder/**'
+      - 'src/Dino/DinoReader.Core/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Dino/DinoReader.App/ShippedTitles.cs'
+      - 'tools/dino/upload-store-story.ps1'
       - '.github/scripts/publish-store-books.mjs'
       - '.github/scripts/r2-wrangler.mjs'
       - '.github/workflows/dino-store.yml'
@@ -76,7 +76,7 @@ jobs:
           status=0
           # An LFS fetch failure is an infrastructure failure, not an audio gap: status is still written (no verdict file means nothing is published) and the failing step says which.
           if git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""; then
-            dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio --verdict "$RUNNER_TEMP/audio-verdict.json" || status=$?
+            dotnet run --project tools/dino/DinoReader.BookBuilder --configuration Release -- check-audio --verdict "$RUNNER_TEMP/audio-verdict.json" || status=$?
           else
             status=lfs
           fi
@@ -96,7 +96,7 @@ jobs:
           listen_failed=""
           skipped=0
           if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
-            dotnet build tools/DinoReader.BookBuilder --configuration Release
+            dotnet build tools/dino/DinoReader.BookBuilder --configuration Release
             # Slice 281: each pack also gets its listening track (build-listen joins the clips with ffmpeg and measures them with ffprobe); the runner image may not carry them. A failed install never blocks the zips, covers,
             # packages and meta.json: the tracks are then recorded as failed (the "Fail when a listening track could not be built" step fails the job at the end).
             have_ffmpeg=1
@@ -122,7 +122,7 @@ jobs:
               while read -r pair_stem language; do
                 [ "$pair_stem" = "$stem" ] || continue
                 if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" </dev/null \
-                  && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" --out "$stage" </dev/null; then
+                  && dotnet run --no-build --project tools/dino/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" --out "$stage" </dev/null; then
                   echo "audio pack built: $stem $language"
                   languages="${languages:+$languages,}$language"
                 else
@@ -136,7 +136,7 @@ jobs:
               # the error is named here and the job fails at the end.
               if [ "$book_ok" = 1 ] && [ -n "$languages" ]; then
                 if [ "$have_ffmpeg" = 1 ]; then
-                  dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-listen "$stem" --lang "$languages" --out "$stage" </dev/null \
+                  dotnet run --no-build --project tools/dino/DinoReader.BookBuilder --configuration Release -- build-listen "$stem" --lang "$languages" --out "$stage" </dev/null \
                     || listen_failed="$listen_failed $stem/$languages"
                 else
                   listen_failed="$listen_failed $stem/$languages(ffmpeg missing)"
@@ -158,7 +158,7 @@ jobs:
         id: build
         run: |
           status=0
-          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build --live "$RUNNER_TEMP/live-store.json" 2> >(tee "$RUNNER_TEMP/build-errors.txt" >&2) || status=$?
+          dotnet run --project tools/dino/DinoReader.BookBuilder --configuration Release -- build --live "$RUNNER_TEMP/live-store.json" 2> >(tee "$RUNNER_TEMP/build-errors.txt" >&2) || status=$?
           echo "status=$status" >> "$GITHUB_OUTPUT"
 
       # --delist on every run, so a delisting is never lost when a pending run is replaced: the script delists only pipeline-managed ids (live contentHash) with no content folder at all, refuses more than 3 or half the live list, and an invalid book is skipped, not delisted.

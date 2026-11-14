@@ -1,0 +1,168 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Android always; iOS only where it can be built (Decision 70, Slice 48). The iOS
+		     target needs a Mac (CI: macos-26), so it is added on macOS, or anywhere with
+		     -p:IncludeIos=true. Windows and Linux builds of this project (the Android CI
+		     job, a Windows developer's `dotnet build -f net10.0-android`) therefore never
+		     restore or evaluate the iOS target. The iOS CI job passes -p:IncludeAndroid=false so
+		     a macOS restore does not need the Android workload (a plain -p:TargetFrameworks=...
+		     would also flow into the referenced class libraries). -->
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+
+		<!-- Slice 305: Mobile.Shared's per-app switches (Dino Reader sets both false): this app links the speech engines and ML Kit. -->
+		<IncludeSpeechEngines>true</IncludeSpeechEngines>
+		<IncludeMlKit>true</IncludeMlKit>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>ReadTheStupidText.Mobile</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- Enable XAML source generation for faster build times and improved performance.
+		     This generates C# code from XAML at compile time instead of runtime inflation.
+		     To disable, remove this line.
+		     For individual files, you can override by setting Inflator metadata:
+		       <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
+		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<!-- Display name (user-facing; see CLAUDE.md naming convention) -->
+		<ApplicationTitle>Read The Stupid Text</ApplicationTitle>
+
+		<!-- App Identifier (Google Play package name — fixed once published) -->
+		<ApplicationId>uk.sirous.readthestupidtext</ApplicationId>
+
+		<!-- Versions -->
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- 28 (Android 9, 2018) is the product floor for every Android app in
+		     this repo (Decision 82). Google Play's automatic protection rejects
+		     bundles below 24, and 28 still reaches about 95% of active Play
+		     devices. Do not lower it. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
+
+		<!-- iOS 15.5 is ML Kit Translate's own floor (Slice 160); MAUI 10's is 15.0. It still covers every iPhone back to the 6s. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.5</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- App Icon: brand gradient (linear-gradient(135deg, #5B57E8, #3B82F6), matching the
+		     Windows tile assets in ReadTheStupidText.App/Assets) with the white glasses glyph
+		     as the adaptive-icon foreground. -->
+		<MauiIcon Include="Resources\AppIcon\appicon.png" ForegroundFile="Resources\AppIcon\appiconfg.png" Color="#4B63EE" />
+
+		<!-- Splash Screen: same white glasses glyph over the brand gradient midpoint. -->
+		<MauiSplashScreen Include="Resources\Splash\splash.png" Color="#4B63EE" BaseSize="128,128" />
+
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+
+		<!-- Custom Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+
+
+		<!-- No bundled voice model (Slice 50, Decision 61): the Supertonic-3 voice is a
+		     downloaded pack (see docs/voice-packs.md), so the APK/AAB carries no
+		     assets/VoiceModel/. -->
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<!-- The engine, the scanner and ML Kit text recognition live in Sirous.Reading.Mobile.Shared (Slice 58, 63).
+	     The sherpa-onnx native packaging is imported here too, because ExcludeAssets does not
+	     flow through a project reference (see AndroidSherpaPackaging.props). Android-only: the
+	     packages referenced below are the translation ones (this app's translation flow). -->
+	<Import Project="..\..\Shared\AndroidSherpaPackaging.props" />
+	<Import Project="..\..\Shared\AndroidRelease.props" />
+	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
+	<PropertyGroup><TestHookPlist>TestHooks.Rtst.plist</TestHookPlist></PropertyGroup>
+	<Import Project="..\..\Shared\Sirous.Reading.Mobile.Shared\Testing\TestHooks.props" />
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<!-- The document scanner, ML Kit text recognition and the onnxruntime binding moved to
+		     Mobile.Shared (Slice 63), so Dino Reader can scan too; they reach this app through the
+		     project reference. -->
+
+		<!-- Slice 54: ML Kit Language Identification (bundled model, so detection works with no
+		     Play services). ML Kit Translation (a ~30 MB model per language downloaded on first use;
+		     see PRIVACY.md) moved to Mobile.Shared with Dino Reader's translation (Slice 95). -->
+		<PackageReference Include="Xamarin.Google.MLKit.Language.Id" Version="117.0.6.9" />
+
+		<!-- Slice 305: Mobile.Shared references these with PrivateAssets="all", so they no longer flow to Dino Reader (which links no ML Kit and no onnxruntime);
+		     this app asks for them itself, at the same versions (SherpaOnnxVersion.props), to ship exactly what it did before. -->
+		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="$(MlKitDocumentScannerVersion)" />
+		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="$(MlKitTextRecognitionVersion)" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="$(MlKitGmsTasksVersion)" />
+		<PackageReference Include="Xamarin.Google.MLKit.Translate" Version="$(MlKitTranslateVersion)" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
+
+		<!-- The scanner and the text recognizer both pull Fragment.Ktx 1.8.8.1 while the MAUI
+		     graph resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails
+		     with duplicate classes. Pin the matching Ktx build. -->
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
+	</ItemGroup>
+
+	<!-- iOS neural voice and OCR native packaging (Slice 49, 55, 67): the managed sherpa-onnx binding,
+	     the SherpaOnnxC.xcframework fetch and the full onnxruntime package, shared with Dino Reader.
+	     The engine and OCR code itself lives in Sirous.Reading.Mobile.Shared. -->
+	<Import Project="..\..\Shared\Sirous.Reading.Mobile.Shared\IosSherpaPackaging.props" />
+
+	<!-- Slice 305: ML Kit Translate on iOS, referenced here because Mobile.Shared's own reference is PrivateAssets="all" (Dino Reader links none). Not in the simulator compile: the xcframework has no simulator slice. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator'))">
+		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="$(MlKitTranslateIosVersion)" />
+	</ItemGroup>
+
+	<!-- The privacy manifest App Store Connect requires; the iOS counterpart of the Android
+	     manifest. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+
+		<!-- Slice 55: the permission prompts (camera, photo library) in the fifteen app languages.
+		     Each language has a folder named like ar.lproj, as iOS expects; Info.plist stays the
+		     English fallback. -->
+		<BundleResource Include="Platforms\iOS\Resources\ar.lproj\InfoPlist.strings" LogicalName="ar.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\en.lproj\InfoPlist.strings" LogicalName="en.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\da.lproj\InfoPlist.strings" LogicalName="da.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fi.lproj\InfoPlist.strings" LogicalName="fi.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\sv.lproj\InfoPlist.strings" LogicalName="sv.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\nb.lproj\InfoPlist.strings" LogicalName="nb.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\nl.lproj\InfoPlist.strings" LogicalName="nl.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\de.lproj\InfoPlist.strings" LogicalName="de.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\es.lproj\InfoPlist.strings" LogicalName="es.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fa.lproj\InfoPlist.strings" LogicalName="fa.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fr.lproj\InfoPlist.strings" LogicalName="fr.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ja.lproj\InfoPlist.strings" LogicalName="ja.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\pt.lproj\InfoPlist.strings" LogicalName="pt.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ru.lproj\InfoPlist.strings" LogicalName="ru.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\zh-Hans.lproj\InfoPlist.strings" LogicalName="zh-Hans.lproj/InfoPlist.strings" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Mobile.Shared\Sirous.Reading.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
+	</ItemGroup>
+
+	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
+	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
+		<Error Text="ReadTheStupidText.Mobile has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />
+	</Target>
+
+</Project>

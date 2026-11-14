@@ -116,7 +116,7 @@ there are no Actions artifacts at all (Batch 8, Decision 52: the account's
 Local equivalent:
 
 ```powershell
-msbuild src/ReadTheStupidText.App/ReadTheStupidText.App.csproj `
+msbuild src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj `
   /restore /p:Configuration=Release /p:Platform=x64 `
   /p:GenerateAppxPackageOnBuild=true /p:AppxPackageDir=AppPackages\ `
   /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never `
@@ -427,7 +427,7 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
   `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early, waitStage` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139), then blob18 country, blob19 form factor, blob20 CPU architecture (Slice 166); double2 is the core bucket's lower bound (1/5/9) and double3 the RAM bucket's lower bound in GB (0/3/4/6/8), -1 when a build sent none, and blob11 `osMajor` is filled on every count.
-  `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
+  `tools/rtst/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
   is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 
 ## Third-party components and licenses
@@ -453,7 +453,7 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
 | `Microsoft.ML.OnnxRuntime` (iOS only) | the same binding plus its own static onnxruntime for PaddleOCR; sherpa-onnx's iOS framework does not export one | MIT |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
-| Fredoka, Andika, Vazirmatn fonts (Dino Book Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Book Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
+| Fredoka, Andika, Vazirmatn fonts (Dino Book Reader only, bundled in `src/Dino/DinoReader.App/Resources/Fonts/`) | Dino Book Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/Dino/DinoReader.App/Licenses/`) |
 
 No GPL/LGPL components ship in the package. There is one deliberate, scoped
 exception (Decision 63): the Persian voice is a Piper voice that needs the
@@ -495,7 +495,7 @@ Afghan-accented, not Farsi); `reza_ibrahim` (dataset page gone, Quran-recitation
 
 ### Dino Book Reader: animal recordings (Slice 255)
 
-The real animal sounds in `src/DinoReader.App/Resources/Raw/animal-sounds/` are Freesound sounds under **CC0** (public domain; no credit is required, listed anyway). Each was trimmed
+The real animal sounds in `src/Dino/DinoReader.App/Resources/Raw/animal-sounds/` are Freesound sounds under **CC0** (public domain; no credit is required, listed anyway). Each was trimmed
 and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bear, lion, rabbit and wolf have no recording and make no sound. (docs/plan/slices/255-dino-real-animal-sounds.md)
 
 | File | Sound, author, source |
@@ -519,9 +519,9 @@ and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bea
 ### Dino Book Reader: audio packs of a store book (Slice 246 B2)
 
 A store book may have premade narration, one **audio pack per book and language**: the zip `audio-<lang>-v<n>.zip` (`manifest.json` version 3 plus the clips it names, flat, stored) in the book's own R2 folder
-`dinoreader/stories/<id>/`, never inside the `.dino`. `dotnet run --project tools/DinoReader.BookBuilder -- build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` makes it into
+`dinoreader/stories/<id>/`, never inside the `.dino`. `dotnet run --project tools/dino/DinoReader.BookBuilder -- build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` makes it into
 `artifacts/store/<id>/` and records `{version, hash, bytes}` under `audioPacks` in the book's `audio-cast.json`; the version rises only when the content hash changes (clips are outside git, so the record is the
-baseline). `build` then lists the packs in `meta.json` as `"audio": {"<lang>": {"version": n, "bytes": b}}`, and `tools/upload-store-story.ps1` uploads the zips before `meta.json`. The pack is served at
+baseline). `build` then lists the packs in `meta.json` as `"audio": {"<lang>": {"version": n, "bytes": b}}`, and `tools/dino/upload-store-story.ps1` uploads the zips before `meta.json`. The pack is served at
 `GET /api/stories/<id>/audio/<lang>?v=<n>` (only the listed language and version; anything else is a 404) and `/api/stories` lists the packs on offer per story (`audio`, with `url`). A book without a pack, and every
 app build that never asks for one, behaves as before. (docs/plan/slices/246-dino-store-books-premade-audio.md)
 
@@ -815,7 +815,7 @@ needed (Decision 60); the packs folder is excluded from iCloud backup.
 ## Dino Book Reader on Windows (Slice 67)
 
 Dino Book Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
-package identity, the same developer account. The package is `src/DinoReader.App` (a MAUI WinUI head,
+package identity, the same developer account. The package is `src/Dino/DinoReader.App` (a MAUI WinUI head,
 `net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release-dino.yml`'s `build-dinowin` job
 as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
 `DinoReader.App_<x.y.z.0>_<arch>.msix`. Like Read The Stupid Text's, the Release package is built .NET
@@ -844,7 +844,7 @@ capability). Pictures are read on the device with `Windows.Media.Ocr`; PDFs are 
 **Third-party components and licenses.** Same stack as Read The Stupid Text (see the table above):
 `org.k2fsa.sherpa.onnx` (Apache-2.0) with the downloaded Supertonic-3 pack (Apache-2.0), `PdfPig`
 (Apache-2.0), `DocumentFormat.OpenXml` (MIT), Windows App SDK and .NET MAUI (MIT), and the bundled
-Fredoka, Andika and Vazirmatn fonts (SIL OFL 1.1, texts in `src/DinoReader.App/Licenses/`). No GPL/LGPL
+Fredoka, Andika and Vazirmatn fonts (SIL OFL 1.1, texts in `src/Dino/DinoReader.App/Licenses/`). No GPL/LGPL
 component ships in the package.
 
 **Store submission.** `store-submit-dino` in `release-dino.yml` calls `store-submit.yml` with
@@ -885,7 +885,7 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
 - **Slice 250 (Dino): playback events and a per-launch session id.** New counts `read_started`, `read_paused`, `read_resumed`, `read_stopped` (detail = one of nine closed reasons) and `book_left`; every Dino count also carries a random 128-bit session id (blob16) and its order in the session (double2). The id is made at each cold start, held in memory and written to disk only inside counts still waiting in the local send queue (gone once sent), never reused for a later launch, never tied to the install, device or person. **What Google and Apple say (web-research lookup 2026-11-04, official pages only):** Play (<https://support.google.com/googleplay/android-developer/answer/10787469>) defines "Device or other IDs" as "Identifiers that relate to an individual device, browser or app", "collect" as "transmitting data from your app off a user's device", and the in-memory ephemeral exception applies only when data is not transmitted off the device; the page does not say whether a non-persisted per-launch id "relates to" a device, browser or app. Apple (<https://developer.apple.com/app-store/app-privacy-details/>) defines Device ID as "the device's advertising identifier, or other device-level ID" and User ID as an "assigned user ID ... or other user- or account-level ID that can be used to identify a particular user or account"; "collect" is transmitting data off the device so it is accessible longer than needed to service the request in real time; the page does not say whether a per-launch id is a device- or user-level ID. The PrivacyInfo/NSPrivacyCollectedDataTypes pages could not be read. **Decision (coordinator, 2026-11-04):** a per-launch random id held only in memory is not a device-level id (Apple's Device ID means a device's advertising or other device-level id), and declaring Device ID in a Kids-category app invites review trouble. So **`PrivacyInfo.xcprivacy` of Dino does not declare `NSPrivacyCollectedDataTypeDeviceID`**, and the App Store privacy form gets no Device ID row. For **Play Data safety (Dino)** the page does not settle it, so the console wording is the owner's call, listed in the slice file under *Waiting on the user* (suggested: **Device or other IDs**, collected, not shared, optional, purpose Analytics, or no row if the owner judges the id is not one relating to a device, browser or app). The sentence "no device or other ids" in the Play row above stays true of the install and the device.
 - **Slice 267 (Dino): which voice a read used, and pack downloads.** New counts `read_voice` (book, language, detail `premade` or `device:<no_pack|pack_failed|text_mismatch|clip_missing>`) and `audio_pack_download` (store book, language, detail `started`, `done` or `failed:<network|size|unzip|clip>`). Closed lists only, no title, text or file name; the same lines reach the rolling log. No new data type: it is the same "App activity" (in-app actions) already declared, so no Play Data safety or App Store privacy answer changes; `site/dino/privacy.html` names the two counts. Queries: `docs/analytics/dino-voice-queries.md`.
 - **Slice 288 (Dino): listens and listening time.** New count `book_listened` (book, language, no detail; one per reading, sent the moment a reading has played 30 s), and a whole number `seconds` (0 to 86400; audio actually played since the last start or resume) on `read_paused`, `read_stopped` and `book_listened`; stored as `double5`. No new data type: it is the same "App activity" (in-app actions, **App interactions** / **Product Interaction**) already declared, a number per reading with no id and no time of day, so **no Play Data safety or App Store privacy answer changes** and `PrivacyInfo.xcprivacy` is unchanged; `site/dino/privacy.html` and `PRIVACY.md` name the new count.
-- `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
+- `tools/dino/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.
 
 ## Phone apps: crash reports (Slice 227)

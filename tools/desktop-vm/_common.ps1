@@ -369,7 +369,7 @@ function Get-PreflightMissing {
 
 # ---- Slice 215: a voice pack copied into the offline guest (-WithPack). The VM has no internet by design and the clean checkpoint has no pack, so the app would show "Preparing the voice".
 $script:PackManifestFile = 'pack.json'  # the manifest name PackConstants.ManifestFileName; tools\phone\common.ps1 has its own copy
-$script:PackCatalogFile = 'src\Sirous.Reading.Application\Reading\PackConstants.cs'
+$script:PackCatalogFile = 'src\Shared\Sirous.Reading.Application\Reading\PackConstants.cs'
 
 function Get-PackCatalogUrl {
     # The pinned packs.json URL, read from PackConstants.CatalogUrl so a bump of the pinned release is followed here.

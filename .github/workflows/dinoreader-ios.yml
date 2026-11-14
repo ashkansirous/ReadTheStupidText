@@ -1,7 +1,7 @@
 name: dinoreader-ios
 
 # Dino Reader iOS build (Slice 67). The twin of ios.yml for the second MAUI app,
-# `src/DinoReader.App` (bundle id uk.sirous.dinoreader, Apple team J4TBWA5379, App Store
+# `src/Dino/DinoReader.App` (bundle id uk.sirous.dinoreader, Apple team J4TBWA5379, App Store
 # Connect app 6825053435). `dotnet publish`, not xcodebuild. Entry points:
 #   * pull_request (own paths) / workflow_dispatch: the unsigned simulator compile check.
 #   * workflow_call from release-dino.yml with `sign` = true (release-draft reports that the five
@@ -17,26 +17,26 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/Sirous.Reading.Domain/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/Sirous.Reading.Documents/**'
+      - 'src/Shared/Sirous.Reading.Domain/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'GitVersion.yml'
       - 'GitVersion.dino.yml'
       - 'Directory.Build.props'
-      - 'src/SherpaOnnxVersion.props'
+      - 'src/Shared/SherpaOnnxVersion.props'
       - '.gitattributes'
       - '.github/workflows/release-shared.yml'
       - '.github/workflows/release-dino.yml'
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
-      - 'src/DinoReader.App/**'
-      - 'src/DinoReader.Core/**'
-      - 'src/Sirous.Reading.Mobile.Shared/**'
-      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
-      - 'src/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
+      - 'src/Dino/DinoReader.App/**'
+      - 'src/Dino/DinoReader.Core/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
       - '.github/scripts/ios-signing.sh'
       - '.github/scripts/testflight-upload.sh'
       - '.github/scripts/check-ios-bundle.sh'
@@ -74,8 +74,8 @@ jobs:
       # already published, the output would be discarded and the secrets needlessly
       # exposed.
       SIGN_RELEASE: ${{ inputs.sign == true }}
-      PUBLISH_DIR: src/DinoReader.App/bin/Release/net10.0-ios/ios-arm64/publish
-      PROJECT: src/DinoReader.App/DinoReader.App.csproj
+      PUBLISH_DIR: src/Dino/DinoReader.App/bin/Release/net10.0-ios/ios-arm64/publish
+      PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       VERSION: ${{ inputs.version }}
     steps:
       # No LFS: the iOS package carries no voice model (Slice 50).
@@ -130,7 +130,7 @@ jobs:
       # upload, so check the simulator .app for them on every PR.
       - name: Check the simulator bundle's icon and launch screen
         if: ${{ env.SIGN_RELEASE != 'true' }}
-        run: bash .github/scripts/check-ios-bundle.sh "$(find src/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' | head -n 1)"
+        run: bash .github/scripts/check-ios-bundle.sh "$(find src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' | head -n 1)"
 
       - name: Install signing certificate and profile
         id: signing

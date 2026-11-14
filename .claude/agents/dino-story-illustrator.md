@@ -94,7 +94,7 @@ the contact sheet live only in the working folder. Touch nothing else.
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
    - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed; add `-Untouched` for
      Slice 350 high-res pictures, which keeps the file byte for byte, and use the path it prints) waits for that download, moves it out of
-     `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it; exit 2 with `SAVED <path>; small copy failed: <reason>` means the picture IS saved: never retry the download, run `pwsh tools/picture-review-copy.ps1 <path>`). No clipboard and no real click,
+     `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it; exit 2 with `SAVED <path>; small copy failed: <reason>` means the picture IS saved: never retry the download, run `pwsh tools/dino/picture-review-copy.ps1 <path>`). No clipboard and no real click,
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
      route in SKILL.md step 6.
 5. Keep turns few and short (Slice 356): no `computer` screenshot after a successful script line (zoom or screenshot only on a
@@ -106,9 +106,9 @@ the contact sheet live only in the working folder. Touch nothing else.
    Record every attempt in the art record's table (`pages` mode: in `<out folder>/checks.md` instead).
 6. (`finish` and `all` only.) When every picture the book needs is accepted, copy the repo's current pictures for pages you didn't
    redraw, and `cover.jpg` if the cover wasn't redrawn (they sit in `<target>/pictures/` and `<target>/cover.jpg`), into the working folder (preparing re-encodes every file once more at JPEG q85, which is fine), run
-   `pwsh tools/prepare-story-pictures.ps1 <working folder> <target> <pageCount>`, then
+   `pwsh tools/dino/prepare-story-pictures.ps1 <working folder> <target> <pageCount>`, then
    `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`.
-7. (`finish` and `all` only.) If only pictures changed (no text change) in a STARTER (`"kind": "Starter"`; a store book needs no stamp, Slice 239), raise the book's version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
+7. (`finish` and `all` only.) If only pictures changed (no text change) in a STARTER (`"kind": "Starter"`; a store book needs no stamp, Slice 239), raise the book's version with `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
    that `check` compares). No text hash is needed.
 
 Rules:
