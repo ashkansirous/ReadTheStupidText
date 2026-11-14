@@ -272,6 +272,13 @@ public static class FallbackReason
     /// <summary>Slice 358 (area "store"): the platform store was reached but its price query ended in an error (Play response code not OK, StoreKit request failed or timed out, Windows Store error); the code is in the Debug log.</summary>
     public const string BillingError = "billing_error";
 
+    // Slice 346 part E.
+    /// <summary>Slice 346 E2 (area "store"): the Worker refused a paid book's files with 402 (no purchase proof sent) or a 400; the book stays "Try again".</summary>
+    public const string DownloadRefused = "download_refused";
+
+    /// <summary>Slice 346 E2 (area "store"): the Worker refused a paid book's files with 403 (the store says the purchase is not valid), after any retry for a purchase just made.</summary>
+    public const string PurchaseNotValid = "purchase_not_valid";
+
     // Slice 362.
     /// <summary>Slice 362 (area "library"): the grown-up's recorded try of the onboarding could not be deleted from a book; the next start retries.</summary>
     public const string OnboardingTryNotDeleted = "onboarding_try_not_deleted";
@@ -289,7 +296,7 @@ public static class FallbackReason
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
-        BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, OnboardingTryNotDeleted,
+        BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, DownloadRefused, PurchaseNotValid, OnboardingTryNotDeleted,
     ];
 }
 

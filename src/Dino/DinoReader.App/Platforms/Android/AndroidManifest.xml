@@ -3,7 +3,7 @@
 	<!-- Dino Reader is a children's app. Slice 305: it links no ML Kit (Mobile.Shared is built without it for Dino), so there is no MlKitInitProvider to remove from the merged manifest. -->
 	<application android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true">
 	</application>
-	<!-- Network is used only to download the books' pre-made audio and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92); text never leaves the device. -->
+	<!-- Network is used only to download the books' pre-made audio and, behind the grown-up gate, the story list and the stories a grown-up picks (Slice 92) and, for a bought book, Google Play's purchase token in a request header (Slice 346: kept by nobody, no account); text never leaves the device. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<!-- Slice 346: books can be bought through Google Play Billing, behind the grown-up gate and the remote switch (off at first). The app asks Play for prices and for what the account owns; the purchase token is

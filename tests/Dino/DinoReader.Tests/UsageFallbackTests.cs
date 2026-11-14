@@ -32,6 +32,8 @@ public sealed class UsageFallbackTests
     [InlineData("store", "update_check_failed")]
     [InlineData("store", "prices_missing")]
     [InlineData("store", "billing_error")]
+    [InlineData("store", "download_refused")]
+    [InlineData("store", "purchase_not_valid")]
     [InlineData("config", "config_cached")]
     [InlineData("config", "config_default")]
     [InlineData("ui_language", "ui_language_unsupported")]

@@ -327,14 +327,14 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// Downloads the story's package, reporting 0..1 progress, and imports it. A story already on the shelf is not fetched again, and a
 	/// second call for a story still downloading joins the first. On any failure nothing is left on the shelf.
 	/// </summary>
-	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel)
+	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore = null)
 	{
 		Task<DownloadOutcome> task;
 		lock (_inFlight)
 		{
 			if (!_inFlight.TryGetValue(item.Id, out task!))
 			{
-				task = RunDownloadAsync(item, progress, cancel);
+				task = RunDownloadAsync(item, progress, cancel, waitingForStore);
 				_inFlight[item.Id] = task;
 			}
 		}
@@ -380,7 +380,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		Debug.WriteLine($"Dino Reader store download error kind for {itemId}: {known}");
 	}
 
-	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel)
+	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore)
 	{
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"{item.Id}-{Guid.NewGuid():N}{PartExtension}");
 		_downloadErrors.TryRemove(item.Id, out _);
@@ -396,7 +396,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, StoryLanguages.Current().All);
 			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
 			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
-			PictureSize size = await FetchBookPackageAsync(item, PictureSizeFor(item), part, summed, cancel);
+			PictureSize size = await FetchBookPackageRetryingLagAsync(item, part, summed, waitingForStore, cancel);
 			if (!await ImportPackageAsync(part, item.Id))
 			{
 				return DownloadOutcome.Failed;
@@ -424,6 +424,19 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			TryDelete(part);
 		}
 	}
+
+	/// <summary>
+	/// Slice 346 E3: a 403 "purchase not valid" soon after this session's purchase of the book is the store lagging, so the fetch is tried again after growing pauses (<see cref="PurchaseLagRetry"/>) while the
+	/// row keeps showing its progress; only the last 403 (or a 403 for a book not just bought) reaches the caller. Nothing is reported for a retried 403.
+	/// </summary>
+	private Task<PictureSize> FetchBookPackageRetryingLagAsync(StoreItem item, string part, SummedProgress summed, IProgress<bool>? waitingForStore, CancellationToken cancel) =>
+		PurchaseLagRetry.RunAsync(
+			() => FetchBookPackageAsync(item, PictureSizeFor(item), part, summed, cancel),
+			ex => ex is StoreRefusedException { StatusCode: System.Net.HttpStatusCode.Forbidden }, // the Worker's 403 is its purchase-not-valid refusal (Slice 357: the status is the code); every other refusal or failure goes to the caller at once, and the book's stamp (this session's purchase) gates the retry; only a refusal that reaches the caller is reported (purchase_not_valid)
+			() => sales.Purchases.SinceBought(item.Products),
+			Task.Delay,
+			waiting => waitingForStore?.Report(waiting),
+			cancel);
 
 	/// <summary>
 	/// Slice 375: fetches the book's package as <paramref name="size"/> says (the high-res address for High, the standard one otherwise) and returns the size actually fetched: a high-res file the store
@@ -476,7 +489,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			// Slice 346 (check7 #7): only the store's own "this purchase is not valid" skips this book for good (the copy on the shelf stays). Anything else (no proof yet, a purchase the store has not synced,
 			// an unreadable code, "cannot verify" when the store or the Worker's keys are down) is not permanent: the run stops and the next scheduled check tries again.
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, definitive={ex.IsDefinitive}): {downloadUrl}");
-			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // a refusal (400/402/403) is the store answering; a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_unreachable
+			ReportFallback(ex); // a refusal (400/402/403) is the store answering (Slice 346 E2: its own reasons); a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_unreachable
 			TryDelete(part);
 			return new PackageFetch(null, ex.IsDefinitive, Refused: ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden);
 		}
@@ -484,7 +497,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			// The switch is off or unknown (check8 #5/#6): exactly what this did before Slice 346's switch work: skipped quietly, never marked permanent.
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}): {downloadUrl}");
-			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // not a refusal the store worded (Slice 346 E2 reasons are only for StoreRefusedException), so the same status is reported the same way on every path
 			TryDelete(part);
 			return new PackageFetch(null, false, Refused: true);
 		}
@@ -851,7 +864,15 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	// Slice 273 part C: the store could not be reached, so the shelf shows what it had (one row per session; the sink never throws). Only a network failure is store_unreachable:
 	// a full disk, a bad package or a malformed listing means the store answered, so it is store_failed (Slice 275).
 	private void ReportFallback(Exception ex) =>
-		Fallbacks.Report(FallbackArea.Store, IsUnreachable(ex) ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
+		Fallbacks.Report(FallbackArea.Store, IsWorkerRefusal(ex) ? RefusalReason(ex) : IsUnreachable(ex) ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
+
+	// Slice 346 review #6: only the statuses the Worker answers as a refusal (400, 402, 403) are refusals; any other status on a StoreRefusedException is classed like every other failure.
+	private static bool IsWorkerRefusal(Exception ex) =>
+		ex is StoreRefusedException { StatusCode: System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden };
+
+	// Slice 346 E2: a refused paid download leaves its own trace; 403 is the store saying the purchase is not valid, any other refusal (402 no proof, 400) is download_refused.
+	private static string RefusalReason(Exception ex) =>
+		ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.Forbidden } ? FallbackReason.PurchaseNotValid : FallbackReason.DownloadRefused;
 
 	private static bool IsUnreachable(Exception ex) =>
 		ex is HttpRequestException or TimeoutException or OperationCanceledException or IOException { InnerException: System.Net.Sockets.SocketException };

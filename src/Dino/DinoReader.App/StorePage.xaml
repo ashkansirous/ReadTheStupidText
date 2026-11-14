@@ -114,6 +114,13 @@
                                            SemanticProperties.Description="{Binding ProgressHint}">
                         <local:StoreProgressRing Progress="{Binding Progress}" VerticalOptions="Center" />
                         <Label Text="{Binding ProgressText}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}" VerticalOptions="Center" />
+                        <!-- Slice 346 review #3: the long wait for the store to catch up with a purchase can be stopped. -->
+                        <Label AutomationId="StoreRowCancelWait" IsVisible="{Binding IsWaitingForStore}" Text="{x:Static res:AppResources.Common_Cancel}" FontSize="14" TextColor="{StaticResource BrandEdge}"
+                               TextDecorations="Underline" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Common_Cancel}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCancelWaitTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </HorizontalStackLayout>
 
                     <!-- On the shelf: no fill, a green check. -->

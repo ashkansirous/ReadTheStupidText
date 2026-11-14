@@ -90,6 +90,8 @@ export const FALLBACK_REASONS = [
   "waiting_wifi", "pack_missing_on_play",
   // Slice 358: the platform store answered with no price for a paid book's product
   "prices_missing", "billing_error",
+  // Slice 346 E2: a paid book's files were refused (402/400, or 403 after any retry)
+  "download_refused", "purchase_not_valid",
   // Slice 362: the onboarding's recorded try could not be deleted
   "onboarding_try_not_deleted",
 ] as const;

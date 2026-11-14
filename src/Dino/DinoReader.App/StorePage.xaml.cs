@@ -108,7 +108,37 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>0 to 1, for the ring (mock S1c).</summary>
 	public double Progress => _progress;
 
-	public string ProgressText => string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
+	// Slice 346 E3: while the download waits for the store to catch up with the purchase the row says so (the shared "checking your purchases" text) instead of a stuck 0%.
+	public string ProgressText => _waitingForStore ? AppResources.Wait_CheckingPurchases : string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
+
+	private bool _waitingForStore;
+	private CancellationTokenSource? _downloadCancel;
+
+	/// <summary>Slice 346 review #3: shown only while the download waits for the store to catch up with the purchase, so the long wait can be stopped; the row then offers Try again.</summary>
+	public bool IsWaitingForStore => _waitingForStore && IsDownloading;
+
+	/// <summary>Starts a download of this row and returns the token its Cancel (<see cref="CancelDownload"/>) trips.</summary>
+	public CancellationToken BeginDownload()
+	{
+		_downloadCancel = new CancellationTokenSource();
+		return _downloadCancel.Token;
+	}
+
+	/// <summary>Slice 346 review (check2 #2): the end of this row's download (called from its <c>finally</c>) clears the field first and then disposes that source, so <see cref="CancelDownload"/> only ever reads a live one. Both run on the UI thread.</summary>
+	public void EndDownload()
+	{
+		CancellationTokenSource? finished = _downloadCancel;
+		_downloadCancel = null;
+		finished?.Dispose();
+	}
+
+	public void CancelDownload() => _downloadCancel?.Cancel();
+
+	public void SetWaitingForStore(bool waiting)
+	{
+		_waitingForStore = waiting;
+		Raise(nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
+	}
 
 	public ImageSource? Cover
 	{
@@ -135,9 +165,10 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	{
 		_state = state;
 		_progress = 0;
+		_waitingForStore = false;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
 	}
 
 	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
@@ -768,6 +799,14 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 	}
 
+	private void OnCancelWaitTapped(object? sender, TappedEventArgs e)
+	{
+		if ((sender as BindableObject)?.BindingContext is StoreRow row)
+		{
+			row.CancelDownload();
+		}
+	}
+
 	private async void OnGetTapped(object? sender, TappedEventArgs e)
 	{
 		UiUsage.Tap(UiControls.Download); // Slice 352: the Get button of a store row
@@ -926,10 +965,11 @@ public partial class StorePage : ContentView, ICornerTabView
 		bool ageFilterSet = _band != StoreAgeBand.All;
 		bool authorFilterSet = _author is not null;
 		DownloadOutcome outcome = DownloadOutcome.Failed;
+		CancellationToken cancel = row.BeginDownload();
 		try
 		{
 			await SettlePurchasesBehindWaitAsync();
-			outcome = await _client.DownloadAsync(row.Item, new Progress<double>(row.SetProgress), CancellationToken.None);
+			outcome = await _client.DownloadAsync(row.Item, new Progress<double>(row.SetProgress), cancel, new Progress<bool>(row.SetWaitingForStore));
 		}
 		catch (Exception ex)
 		{
@@ -938,6 +978,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 		finally
 		{
+			row.EndDownload();
 			// Only a finished download shows Downloaded and is counted (Slice 134: which filters were set, not their values); a failed one offers Try again.
 			if (outcome == DownloadOutcome.Done)
 			{
