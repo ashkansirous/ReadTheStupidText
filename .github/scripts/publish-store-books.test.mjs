@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { publishedStateFrom } from './r2-wrangler.mjs';
-import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, hdBytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 import { accessOf, applyAccessToBuiltMetas, refuseSharedProductIds, withAccess, paidSwitchOn, storeSafeOf } from './publish-store-books.mjs';
 
@@ -154,6 +154,60 @@ test('uploads go cover, package, then meta.json last', () => {
     assert.equal(uploadsFor({ id: A, version: 6 }, '/s/a', true)[2].key, `dinoreader/stories/${A}/meta.json`);
 });
 
+test('Slice 375 B: a book with a high-res package uploads cover, package, high-res package, then meta.json last', () => {
+    const names = uploadsFor({ id: A, version: 6 }, '/s/a', true, true).map((upload) => upload.name);
+    assert.deepEqual(names, ['cover.jpg', 'story-v6.dino', 'story-v6.hd.dino', 'meta.json']);
+    assert.deepEqual(uploadsFor({ id: A, version: 6 }, '/s/a', true, false).map((upload) => upload.name), ['cover.jpg', 'story-v6.dino', 'meta.json']);
+    assert.equal(uploadsFor({ id: A, version: 6 }, '/s/a', true, true)[2].key, `dinoreader/stories/${A}/story-v6.hd.dino`);
+});
+
+test('Slice 375 B: the high-res package goes up after the standard one and before meta.json, and a book without one sends none', () => {
+    withStore([{ id: A, version: 6, hd: true }, { id: B, version: 3 }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), []);
+        runUploads(plan, root, { put: (upload) => sent.push(upload.key), packageExists: () => false });
+        assert.deepEqual(sent.filter((key) => key.includes(A)), [`dinoreader/stories/${A}/cover.jpg`, `dinoreader/stories/${A}/story-v6.dino`, `dinoreader/stories/${A}/story-v6.hd.dino`, `dinoreader/stories/${A}/meta.json`]);
+        assert.equal(sent.filter((key) => key.includes(B)).some((key) => key.endsWith('.hd.dino')), false);
+    });
+});
+
+test('Slice 375 B: an existing high-res package is never overwritten, even when the standard one is new', () => {
+    withStore([{ id: A, version: 6, hd: true }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 5 }]);
+        runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: ({ key }) => key.endsWith('.hd.dino') });
+        assert.deepEqual(sent, ['cover.jpg', 'story-v6.dino', 'meta.json']);
+    });
+});
+
+test('Slice 375 B review #7: an existing high-res package in the bucket sets meta.json hdBytes to the bucket object size', () => {
+    withStore([{ id: A, version: 6, hd: true }], (root) => {
+        let metaText = '';
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 5 }]);
+        runUploads(plan, root, { put: (upload) => { if (upload.name === 'meta.json') metaText = readFileSync(upload.path, 'utf8'); }, packageExists: ({ key }) => key.endsWith('.hd.dino'), packageSize: () => 123456 });
+        assert.equal(JSON.parse(metaText).hdBytes, 123456);
+    });
+});
+
+test('Slice 375 B: a hashed book moved up to a free version takes its high-res package along', () => {
+    withStore([{ id: A, version: 6, hash: 'h', hd: true }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), []);
+        const done = runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: ({ key }) => key.endsWith('story-v6.dino') });
+        assert.deepEqual(done, [{ id: A, version: 7 }]);
+        assert.deepEqual(sent, ['cover.jpg', 'story-v7.dino', 'story-v7.hd.dino', 'meta.json']);
+        assert.ok(existsSync(join(root, A, 'story-v7.hd.dino')) && !existsSync(join(root, A, 'story-v6.hd.dino')));
+    });
+});
+
+test('Slice 375 B: the live state carries the live hdBytes when the live meta lists a high-res package, and no key otherwise', () => {
+    const metas = { [A]: JSON.stringify({ version: 3, contentHash: 'abc', bytes: 4096, hdBytes: 16384 }), [B]: JSON.stringify({ version: 2, contentHash: 'x', hdBytes: 'big' }) };
+    const state = liveStateOf([{ id: A, version: 3 }, { id: B, version: 2 }], (id) => metas[id] ?? null);
+    assert.equal(state[A].hdBytes, 16384);
+    assert.equal('hdBytes' in state[B], false);
+    assert.equal(hdBytesFromMeta(JSON.stringify({ hdBytes: 0 })), null);
+});
+
 test('liveFromApi reads the stories list and rejects anything else', () => {
     assert.deepEqual(liveFromApi({ schemaVersion: 1, stories: [{ id: A, version: 3, title: 'x' }] }), [{ id: A, version: 3, title: 'x', audio: null }]);
     assert.deepEqual(liveFromApi({ stories: [{ id: A, version: 3, audio: { fa: { version: 1 } } }] })[0].audio, { fa: { version: 1 } });
@@ -221,9 +275,10 @@ test('Slice 239: too many delistings at once (a broken checkout) is refused', ()
 
 function storeFolder(books) {
     const root = mkdtempSync(join(tmpdir(), 'store-books-'));
-    for (const { id, version, withPackage = true, cover = true, hash, audio, zips = [] } of books) {
+    for (const { id, version, withPackage = true, cover = true, hash, audio, zips = [], hd = false } of books) {
         mkdirSync(join(root, id));
-        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version, ...(hash ? { contentHash: hash } : {}), ...(audio ? { audio } : {}) }));
+        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version, ...(hash ? { contentHash: hash } : {}), ...(audio ? { audio } : {}), ...(hd ? { hdBytes: 20 } : {}) }));
+        if (hd) writeFileSync(join(root, id, `story-v${version}.hd.dino`), 'h');
         zips.forEach((zip) => writeFileSync(join(root, id, zip), 'z'));
         if (withPackage) writeFileSync(join(root, id, `story-v${version}.dino`), 'x');
         if (cover) writeFileSync(join(root, id, 'cover.jpg'), 'x');
@@ -647,9 +702,8 @@ test('Slice 277: a built book the check never judged is refused, and no pack is 
     assert.deepEqual(onlyCompleteBooks(books, new Set([B])).map((book) => book.stem), ['peter-rabbit']);
 });
 
-// Slice 350: the print-size pictures (content/dino/<book>/high-res/, Git LFS) reach neither a package nor the store.
-// The upload script reads only a book's book.json and audio-cast.json from content/ (checked below). The builder side
-// (BookHash and the picture list ignore a high-res/ folder) is a fixture test in tests/Dino/DinoReader.Tests/BookBuilderTests.cs.
+// Slice 350: the print-size pictures (content/dino/<book>/high-res/, Git LFS) never reach the standard package. Since Slice 375 B the builder packs a complete set into story-v<n>.hd.dino
+// (tests/Dino/DinoReader.Tests/HighResPackTests.cs); the upload script still reads only a book's book.json and audio-cast.json from content/ (checked below) and uploads the built folder's files.
 test('the upload script reads only named files inside a book folder, so high-res/ cannot reach the store', () => {
     const publish = readFileSync(new URL('./publish-store-books.mjs', import.meta.url), 'utf8');
     const contentReads = publish.split(/\r?\n/).filter((line) => /join\(CONTENT_ROOT/.test(line));

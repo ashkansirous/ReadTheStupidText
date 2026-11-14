@@ -575,7 +575,10 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 			return StageOutcome.Staged;
 		}
 
+		// Slice 375 D (review round 6 #1, #3): an update is always the standard package. The high-res one is fetched only by HighResUpgradeRunner, which cancels on a metered link and
+		// counts bad packages in the failure ledger, so a bad hd package can neither loop here nor block the update.
 		PackageFetch fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
+
 		if (fetch.File is not { } file)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: {(fetch.NotFound ? "package not in the store, skipped" : "download failed, run stopped")}");
@@ -585,6 +588,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		try
 		{
 			staged.Stage(item.Id, item.Version, file);
+			store.RecordStagedPictureSize(item.Id, item.Version, PictureSize.Standard); // Slice 375 D: a standard update forgets any remembered high-res staged size
 			Debug.WriteLine($"{LogTag} {item.Id}: v{item.Version} staged for the next start");
 			return StageOutcome.Staged;
 		}

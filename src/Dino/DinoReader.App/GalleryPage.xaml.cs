@@ -409,6 +409,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ShowScreen();
 		_ = OnboardingRoute.DeleteAbandonedTryAsync(_services); // Slice 362: a recorded try left behind (setup abandoned, or an earlier delete failed) is deleted now, under the store's one lock
 		_ = CleanOwnBooksAsync(); // started on its own, so a failing starter install or refresh never keeps it from running
+		_services.GetRequiredService<HighResUpgradeRunner>().Start(); // Slice 375 D: once per process; swaps high-res pictures in on Wi-Fi, in the background
 		try
 		{
 			// The starters are on the shelf before the first list is read (Slice 91); a later call is a no-op.

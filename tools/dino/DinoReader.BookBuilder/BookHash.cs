@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace DinoReader.BookBuilder;
 
 /// <summary>
-/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359; never <c>high-res/</c>), translations, and the parts of <c>book.json</c>
+/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359), the complete <c>high-res/</c> set of a store book (Slice 375 B), translations, and the parts of <c>book.json</c>
 /// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals). The version is not in it: <c>check</c> compares the hash with the one stored
 /// beside the version, so changing a book without <c>stamp</c> (which raises the version and stores the new hash) fails the check. Text files are hashed with LF line
 /// endings, so a Windows checkout and a Linux one agree.
@@ -23,6 +23,11 @@ internal static class BookHash
             Add(hash, Path.GetRelativePath(book.Dir, file).Replace('\\', '/'), Read(file));
         }
 
+        foreach (string file in HighResOf(book))
+        {
+            Add(hash, Path.GetRelativePath(book.Dir, file).Replace('\\', '/'), Encoding.UTF8.GetBytes(HighResPack.TryOid(file) ?? "no-oid")); // by LFS oid, so a run with or without `git lfs pull` gets one hash; a damaged pointer is named by the publish gate (HighResPack.BrokenPointerProblems), never a crash here
+        }
+
         return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
     }
 
@@ -35,6 +40,11 @@ internal static class BookHash
         files.AddRange(new[] { book.TitlesPath }.Where(File.Exists));
         return files;
     }
+
+    // Slice 375 B: a store book's complete high-res set is packed into its high-res pack, so it is part of the hash (a high-res-only change bumps the version); an incomplete set or a starter
+    // (never packed with high-res) adds nothing, so every hash made before the slice stays the same.
+    private static IEnumerable<string> HighResOf(BookFolder book) =>
+        book.Info.Kind == BookKind.Store && HighResPack.Find(book) is { } files ? files.All : [];
 
     // Only the files the build reads: the page pictures (*.jpg) and the translation tables (<lang>.json, <lang>.speak.json), never pieces.json or a stray Thumbs.db.
     private static IEnumerable<string> FilesIn(string folder, string extension, string? excludedName) =>

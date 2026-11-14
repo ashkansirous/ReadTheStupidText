@@ -8,8 +8,15 @@ public sealed record StoreItem(
     int? AgeMin = null, int? AgeMax = null, string? Author = null, IReadOnlyDictionary<string, string>? Titles = null,
     IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null,
     IReadOnlyList<StoreTag>? Tags = null, long? Bytes = null,
-    BookSale Sale = BookSale.Free, string? ProductId = null, IReadOnlyList<string>? UnlockedBy = null)
+    BookSale Sale = BookSale.Free, string? ProductId = null, IReadOnlyList<string>? UnlockedBy = null,
+    string? HdDownloadUrl = null, long? HdBytes = null)
 {
+    /// <summary>Slice 375: whether the store offers this version of the book as a high-res package too (older Workers and books without print-size pictures: no).</summary>
+    public bool HasHighRes => !string.IsNullOrWhiteSpace(HdDownloadUrl);
+
+    /// <summary>The size of the package a download fetches for <paramref name="size"/> (Slice 375): the high-res pack's for High when the listing knows it, else the standard one's (also for StandardThenHigh, which fetches standard first).</summary>
+    public long? BytesFor(PictureSize size) => size == PictureSize.High && HdBytes is > 0 ? HdBytes : Bytes;
+
     /// <summary>Slice 346: every store product that unlocks this book (its own plus each bundle that lists it); empty for a free book or an older Worker.</summary>
     public IReadOnlyList<string> Products => UnlockedBy ?? [];
 
@@ -99,7 +106,8 @@ public static class StoreCatalog
         return valid
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
                 ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio),
-                StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes), dto.Access == PaidAccess ? BookSale.Paid : BookSale.Free, ProductIdOf(dto.ProductId), ProductIdsOf(dto.UnlockedBy))
+                StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes), dto.Access == PaidAccess ? BookSale.Paid : BookSale.Free, ProductIdOf(dto.ProductId), ProductIdsOf(dto.UnlockedBy),
+                string.IsNullOrWhiteSpace(dto.HdDownloadUrl) ? null : dto.HdDownloadUrl.Trim(), BytesOf(dto.HdBytes))
             : null;
     }
 
@@ -213,6 +221,10 @@ public static class StoreCatalog
         public JsonElement? Tags { get; set; }
 
         public JsonElement? Bytes { get; set; }
+
+        public string? HdDownloadUrl { get; set; }
+
+        public JsonElement? HdBytes { get; set; }
 
         public string? Access { get; set; }
 

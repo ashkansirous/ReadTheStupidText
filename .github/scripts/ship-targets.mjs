@@ -22,7 +22,7 @@
  *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (dino-store.yml only; never ships an app)
  *   - Slice 239, 265: a change under content/dino/<book>/** (a new, changed or deleted folder; its text, pictures, translations and its Git LFS audio clips) maps to dinostore ONLY: no Dino suite,
  *     no app, no PR check workflow. There is no starter exception (Slice 261 moves the starters out of the app); a book's rebuilt .dino in the app is under DinoReader.App/** and ships the apps
- *   - Slice 350: content/dino/<book>/high-res/** (print-size pictures, Git LFS) -> nothing (carved out of the dinostore group's content/dino/)
+ *   - Slice 375 B: content/dino/<book>/high-res/** (print-size pictures, Git LFS) -> dinostore only (packed into the store book's high-res package; never an app, never a Dino suite)
  *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching), except a book's text (CONTENT_MARKDOWN: content/dino/<stem>/story.md)
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
@@ -216,8 +216,7 @@ export const GROUPS = {
             '.github/scripts/publish-store-books.mjs',
             '.github/scripts/r2-wrangler.mjs',
         ],
-        // Slice 350: the print-size pictures (Git LFS) are never built into a book or uploaded, so a change there ships nothing.
-        exclude: ['content/dino/*/high-res/**/*'],
+        // Slice 375 B: the print-size pictures (Git LFS) never enter an app build, but they are packed into the high-res package of a store book, so a change there selects the store upload group.
     },
     dinoreader: {
         include: [DINO_VERSION_CONFIG, 'src/Dino/DinoReader.Core/', 'tests/Dino/DinoReader.Tests/', 'tools/dino/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],

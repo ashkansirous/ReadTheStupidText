@@ -115,6 +115,11 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 			await library.DeleteAsync(story.Id);
 			RecordChoices.Forget(story.Id); // the remembered record choice goes with the book (Slice 279)
 			StarterStories.ForgetStoreInstall(story.SourceId);
+			if (story.SourceId is { } sourceId)
+			{
+				services.GetRequiredService<StagedBookUpdates>().DiscardHighRes(sourceId); // Slice 375 D: its upgrade entry and staged high-res file go with it
+			}
+
 			await DeletePacksAsync(story);
 			return DeleteOutcome.Deleted;
 		}

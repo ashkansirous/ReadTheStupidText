@@ -49,7 +49,7 @@ internal sealed record BookInfo(
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added,
-    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, string>? Titles = null, string? ContentHash = null, IReadOnlyList<string>? Tags = null, long? LiveBytes = null);
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, string>? Titles = null, string? ContentHash = null, IReadOnlyList<string>? Tags = null, long? LiveBytes = null, long? LiveHdBytes = null);
 
 /// <summary>One book's folder under <c>content/dino</c>: its files, its <c>book.json</c> and its text.</summary>
 internal sealed class BookFolder(string stem, string path, BookInfo info)

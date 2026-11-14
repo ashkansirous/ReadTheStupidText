@@ -72,7 +72,7 @@ const CASES = [
     ['an audio manifest only', ['content/dino/x-marks-the-treasure/audio/ja/manifest.json'], { dinostore: true }],
     ['audio clips of several books and languages', ['content/dino/good-enough/audio/fa/a.m4a', 'content/dino/tortoise-and-hare/audio/de/b.m4a', 'content/dino/tortoise-and-hare/audio-cast.json'], { dinostore: true }],
     ['a former starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/Dino/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
-    ['a high-res print picture ships nothing (Slice 350)', ['content/dino/lion-and-mouse/high-res/pictures/5.png', 'content/dino/lion-and-mouse/high-res/cover.png'], {}],
+    ['a high-res print picture selects the store upload only, never an app build (Slice 375 B)', ['content/dino/lion-and-mouse/high-res/5.jpg', 'content/dino/lion-and-mouse/high-res/cover.jpg'], { dinostore: true }],
     ['a high-res picture next to a page picture still ships the store book', ['content/dino/lion-and-mouse/high-res/pictures/5.png', 'content/dino/lion-and-mouse/pictures/5.jpg'], { dinostore: true }],
     ['a book folder that merely contains the words high-res elsewhere still ships', ['content/dino/lion-and-mouse/pictures/high-res.jpg'], { dinostore: true }],
     ['book art record is documentation', ['content/dino/x-marks-the-treasure/art.md'], {}],
@@ -732,7 +732,7 @@ test('dino-store.yml push paths cover every path of the dinostore group (one sou
     const probe = (entry) => (entry.endsWith('/') ? `${entry}sub/file.x` : entry);
     for (const entry of GROUPS.dinostore.include) assert.equal(pushRuns(paths, probe(entry)), true, `dinostore path not covered by dino-store.yml: ${entry}`);
     for (const extra of ['src/Dino/DinoReader.App/ShippedTitles.cs', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
-    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/high-res/cover.png'), false);
+    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/high-res/cover.jpg'), true, 'Slice 375 B: a high-res change is packed into the store book, so it runs the upload');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), true);
 });
 

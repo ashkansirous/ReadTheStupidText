@@ -4,7 +4,7 @@ namespace DinoReader.BookBuilder;
 
 /// <summary>What the live store holds for one story (Slice 239): its listed version (0 when it is not listed), the content hash its <c>meta.json</c> carries (null for a book published before the hash existed)
 /// and the highest <c>story-v&lt;n&gt;.dino</c> that exists in the bucket (0 when none), listed or not: a package left by a half-finished run or a delisted book must never be reused.</summary>
-internal sealed record LiveEntry(int Version, string? ContentHash, int MaxPackage = 0, long? Bytes = null);
+internal sealed record LiveEntry(int Version, string? ContentHash, int MaxPackage = 0, long? Bytes = null, long? HdBytes = null);
 
 /// <summary>
 /// Slice 239: which version a store book is built as. <c>publish-store</c> writes the live state (<c>--live</c> file: story id to version and hash) before the build; a book whose
@@ -31,6 +31,7 @@ internal static class StoreVersioning
         LiveEntry? entry = live is not null && live.TryGetValue(book.Info.Id, out LiveEntry? found) ? found : null;
         int version = Decide(book.Info.Version, hash, entry);
         long? liveBytes = entry is not null && version == entry.Version ? entry.Bytes : null; // Slice 260: same version = the live package stays, so its size is the listed one
-        return book.ToSpec() with { ContentHash = hash, Version = version, LiveBytes = liveBytes };
+        long? liveHdBytes = entry is not null && version == entry.Version ? entry.HdBytes : null; // Slice 375 B: the same for the high-res package
+        return book.ToSpec() with { ContentHash = hash, Version = version, LiveBytes = liveBytes, LiveHdBytes = liveHdBytes };
     }
 }

@@ -12,7 +12,10 @@ $targetWidth = 896
 $targetHeight = 1200
 $jpegQuality = 85L
 
-function Get-CropRectangle([int]$width, [int]$height) {
+$highResWidth = 1792   # the high-res pack's pictures (Slice 375 B): prepare-story-pictures.ps1 -HighRes
+$highResHeight = 2400
+
+function Get-CropRectangle([int]$width, [int]$height, [int]$targetWidth = $targetWidth, [int]$targetHeight = $targetHeight) {
   if ($width -eq $targetWidth -and $height -eq $targetHeight) { return [System.Drawing.Rectangle]::new(0, 0, $width, $height) }
   $cropWidth = [math]::Min($width, [int][math]::Floor($height * 3 / 4))
   $cropHeight = [math]::Min($height, [int][math]::Floor($width * 4 / 3))
@@ -22,7 +25,7 @@ function Get-CropRectangle([int]$width, [int]$height) {
 function Save-Prepared([string]$sourcePath, [string]$targetPath, [int]$maxWidth = $targetWidth, [int]$maxHeight = $targetHeight, [long]$quality = $jpegQuality) {
   $source = [System.Drawing.Image]::FromFile($sourcePath)
   try {
-    $crop = Get-CropRectangle $source.Width $source.Height
+    $crop = Get-CropRectangle $source.Width $source.Height $maxWidth $maxHeight
     $shrinks = $crop.Width -gt $maxWidth -or $crop.Height -gt $maxHeight
     $outWidth = if ($shrinks) { $maxWidth } else { $crop.Width }
     $outHeight = if ($shrinks) { $maxHeight } else { $crop.Height }
