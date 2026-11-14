@@ -18,7 +18,7 @@ public interface IMicRecorder
 	Task CancelAsync();
 }
 
-/// <summary>Plays one recorded page (Slice 111). <see cref="Play"/> calls <c>ended</c> once when the file played to its end, or <c>failed</c> once when it cannot be played (a corrupt or empty file), never after <see cref="Stop"/> or a newer <see cref="Play"/>; both run after the native player was released, on the main loop (UI dispatcher on Windows), never inside the native finished call.</summary>
+/// <summary>Plays one recorded page (Slice 111). <see cref="Play(string, Action, Action)"/> calls <c>ended</c> once when the file played to its end, or <c>failed</c> once when it cannot be played (a corrupt or empty file), never after <see cref="Stop"/> or a newer <see cref="Play(string, Action, Action)"/>; both run after the native player was released, on the main loop (UI dispatcher on Windows), never inside the native finished call.</summary>
 public interface IRecordingPlayer
 {
 	void Play(string path, Action ended, Action failed);

@@ -3,7 +3,7 @@ using Sirous.Reading.Application.Images;
 namespace Sirous.Reading.Mobile.Shared;
 
 /// <summary>
-/// The text recognizer the operating system provides, used by <see cref="LanguageImageTextExtractor"/>
+/// The text recognizer the operating system provides, used by <c>LanguageImageTextExtractor</c>
 /// while a language's OCR pack is missing or cannot run: ML Kit on Android, Apple Vision on iOS
 /// (Slice 55). Its coverage is a property of the platform, so each implementation says which
 /// languages it reads well.

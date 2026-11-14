@@ -73,8 +73,8 @@ public sealed class PackDownloadLogTests
 
         List<string> lines = await CaptureAsync(async () =>
         {
-            Assert.Equal(10, await guarded.ReadAsync(new byte[64]));
-            await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[64]));
+            Assert.Equal(10, await guarded.ReadAsync(new byte[64], TestContext.Current.CancellationToken));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[64], TestContext.Current.CancellationToken));
         });
 
         Assert.Contains("PACKDL stall pack=p-body phase=body bytes=1010", lines);

@@ -135,7 +135,7 @@ public class PictureTextBookTests
             await library.AddAsync(story);
             foreach (StoryPage page in story.Pages)
             {
-                await File.WriteAllBytesAsync(library.TryResolveFile(story.Id, page.ImageFile)!, [1, 2, 3]);
+                await File.WriteAllBytesAsync(library.TryResolveFile(story.Id, page.ImageFile)!, [1, 2, 3], TestContext.Current.CancellationToken);
             }
 
             using var package = new MemoryStream();

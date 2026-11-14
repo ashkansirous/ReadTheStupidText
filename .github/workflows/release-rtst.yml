@@ -335,12 +335,12 @@ jobs:
 
       - name: Publish to Play Store (internal testing)
         if: ${{ env.CAN_PUBLISH == 'true' }}
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: uk.sirous.readthestupidtext
           releaseFiles: play/*.aab
-          track: internal
+          tracks: internal
           status: completed
 
   # TestFlight upload (Decision 70) — only when iOS was rebuilt AND signed. The
@@ -360,7 +360,7 @@ jobs:
       VERSION: ${{ needs.shared.outputs.version }}
     steps:
       - name: Checkout (scripts only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: .github/scripts
 
@@ -386,7 +386,7 @@ jobs:
       # Slice 354 item 1: altool can say "UPLOAD SUCCEEDED" after a 500 on its completion call; ask App Store Connect whether the
       # build is there (waits up to 10 minutes for it to show) and fail the job when it never appears.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 

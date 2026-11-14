@@ -203,7 +203,7 @@ public class LanguageAttributionTests
 
         var quotes = result.Segments.Where(s => s.Kind == SegmentKind.Quote).ToList();
         Assert.Equal(["Hallo", "Tschüss,", "Gut"], quotes.Select(q => q.Text).ToArray());
-        Assert.Equal(["Peter", "Anna", "Peter"], quotes.Select(q => q.CharacterId).ToArray());
+        Assert.Equal(["Peter", "Anna", "Peter"], quotes.Select(q => q.CharacterId!).ToArray());
         Assert.Contains(result.Segments, s => s.Kind == SegmentKind.Narration && s.Text.Contains("Es war still"));
     }
 

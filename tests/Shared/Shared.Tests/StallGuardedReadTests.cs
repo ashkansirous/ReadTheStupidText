@@ -15,7 +15,7 @@ public sealed class StallGuardedReadTests
         using var hung = new HungStream();
         await using Stream guarded = StallGuardedRead.Wrap(hung, ShortStall);
 
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
 
         await hung.WaitForDisposeAsync();
     }
@@ -26,8 +26,8 @@ public sealed class StallGuardedReadTests
         using var hung = new HungStream { BlockOnDispose = true };
         Stream guarded = StallGuardedRead.Wrap(hung, ShortStall);
 
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
-        await guarded.DisposeAsync().AsTask().WaitAsync(LongWait); // the caller's own dispose must not touch the stuck stream
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
+        await guarded.DisposeAsync().AsTask().WaitAsync(LongWait, TestContext.Current.CancellationToken); // the caller's own dispose must not touch the stuck stream
 
         await hung.WaitForDisposeStartedAsync();
         hung.ReleaseDispose();
@@ -38,9 +38,9 @@ public sealed class StallGuardedReadTests
     {
         using var hung = new HungStream();
         await using Stream guarded = StallGuardedRead.Wrap(hung, ShortStall);
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
 
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class StallGuardedReadTests
         await using (Stream guarded = StallGuardedRead.Wrap(source, LongWait))
         {
             int read;
-            while ((read = await guarded.ReadAsync(buffer)) > 0)
+            while ((read = await guarded.ReadAsync(buffer, TestContext.Current.CancellationToken)) > 0)
             {
                 copy.Write(buffer, 0, read);
             }
@@ -82,7 +82,7 @@ public sealed class StallGuardedReadTests
         using var hung = new HungStream { ThrowOnDispose = true };
         await using Stream guarded = StallGuardedRead.Wrap(hung, ShortStall);
 
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
 
         await hung.WaitForDisposeAsync();
         hung.ThrowOnDispose = false; // so the test's own cleanup does not throw
@@ -94,7 +94,7 @@ public sealed class StallGuardedReadTests
         using var cooperative = new HungStream { Cooperative = true };
         await using Stream guarded = StallGuardedRead.Wrap(cooperative, ShortStall);
 
-        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16]));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[16], TestContext.Current.CancellationToken));
 
         Assert.True(cooperative.TokenWasCancelled);
     }

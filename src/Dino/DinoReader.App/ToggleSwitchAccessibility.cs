@@ -11,15 +11,23 @@ internal sealed class ToggleSwitchAccessibility(ToggleSwitch toggle) : AView.Acc
 
 	public override void OnInitializeAccessibilityNodeInfo(AView? host, AccessibilityNodeInfo? info)
 	{
-		base.OnInitializeAccessibilityNodeInfo(host, info);
-		if (info is null)
+		if (host is null || info is null)
 		{
-			return;
+			return; // Android never passes null here
 		}
 
+		base.OnInitializeAccessibilityNodeInfo(host, info);
 		info.ClassName = SwitchClassName;
 		info.Checkable = true;
-		info.Checked = toggle.IsOn;
+		if (OperatingSystem.IsAndroidVersionAtLeast(36))
+		{
+			info.CheckedState = toggle.IsOn ? CheckedState.True : CheckedState.False; // from API 36 CheckedState replaces the obsoleted Checked (isChecked() is derived from it)
+		}
+		else
+		{
+			info.Checked = toggle.IsOn;
+		}
+
 		info.ContentDescription = Microsoft.Maui.Controls.SemanticProperties.GetDescription(toggle);
 	}
 

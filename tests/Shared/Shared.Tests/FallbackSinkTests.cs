@@ -146,7 +146,7 @@ public sealed class FallbackSinkTests
         var sink = new RecordingSink();
         var takes = new Queue<SpokenTake>([Silence(), Tone()]);
 
-        await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, fallbacks: sink);
+        await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, fallbacks: sink, token: TestContext.Current.CancellationToken);
 
         Assert.Equal([(FallbackArea.Speech, FallbackReason.SilentRetake, (string?)null)], sink.Reports);
     }
@@ -157,7 +157,7 @@ public sealed class FallbackSinkTests
         var sink = new RecordingSink();
 
         await SilentOutputGuard.RescueAsync(
-            "Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Silence()), _ => { }, fallback: () => Task.FromResult<SpokenTake?>(Tone()), fallbacks: sink);
+            "Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Silence()), _ => { }, fallback: () => Task.FromResult<SpokenTake?>(Tone()), fallbacks: sink, token: TestContext.Current.CancellationToken);
 
         Assert.Equal([(FallbackArea.Speech, FallbackReason.SilentSibling, (string?)null)], sink.Reports);
     }
@@ -167,7 +167,7 @@ public sealed class FallbackSinkTests
     {
         var sink = new RecordingSink();
 
-        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Silence()), _ => { }, fallbacks: sink);
+        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Silence()), _ => { }, fallbacks: sink, token: TestContext.Current.CancellationToken);
 
         Assert.True(result.GaveUp);
         Assert.Equal([(FallbackArea.Speech, FallbackReason.SilentGaveUp, (string?)null)], sink.Reports);
@@ -178,7 +178,7 @@ public sealed class FallbackSinkTests
     {
         var sink = new RecordingSink();
 
-        await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Tone()), _ => { }, fallbacks: sink);
+        await SilentOutputGuard.RescueAsync("Ann.", "kokoro:am_liam", 1.0, () => Task.FromResult(Tone()), _ => { }, fallbacks: sink, token: TestContext.Current.CancellationToken);
 
         Assert.Empty(sink.Reports);
     }

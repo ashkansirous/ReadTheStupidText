@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # GitHub Actions only (Slice 378); NuGet and npm updates are Slice 379's.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

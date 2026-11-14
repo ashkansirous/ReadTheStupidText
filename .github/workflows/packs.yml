@@ -182,7 +182,7 @@ jobs:
       # Slice 265: no `lfs: true` here. Its fetch may not honour .lfsconfig's fetchexclude, and the Dino audio clips (~510 MB) must never download for a packs release,
       # so the voice model is pulled alone and the clip folders are excluded explicitly.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           lfs: false
 

@@ -523,7 +523,7 @@ public partial class ReaderPage : ContentPage
         VoiceModelPaths? pack = appLanguage ? _model.Paths : await ModelForLanguageAsync(language);
         bool downloading = VoiceRouting.DownloadingFor(
             _installer.State is PackInstallState.Resolving or PackInstallState.Downloading, TargetCode(), language);
-        var key = new PlanKey(language, _settings.VoiceId, pack?.RootDir, pack?.PackVersion, scopedReads, downloading, TargetCode());
+        var key = new PlanKey(language, _settings.VoiceId ?? string.Empty, pack?.RootDir, pack?.PackVersion, scopedReads, downloading, TargetCode());
         if (!atPlay && _planCache is { } cached && cached.Key == key)
         {
             return cached.Plan;

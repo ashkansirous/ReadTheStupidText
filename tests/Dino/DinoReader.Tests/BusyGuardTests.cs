@@ -10,7 +10,7 @@ public class BusyGuardTests
     {
         var guard = new BusyGuard();
 
-        await guard.WhenFreeAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await guard.WhenFreeAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -20,12 +20,12 @@ public class BusyGuardTests
         var release = new TaskCompletionSource();
         Task running = guard.RunAsync(() => release.Task);
 
-        Task waiting = guard.WhenFreeAsync();
+        Task waiting = guard.WhenFreeAsync(TestContext.Current.CancellationToken);
         Assert.False(waiting.IsCompleted);
 
         release.SetResult();
         await running;
-        await waiting.WaitAsync(TimeSpan.FromSeconds(5));
+        await waiting.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         bool ranAfter = false;
         await guard.RunAsync(() => { ranAfter = true; return Task.CompletedTask; });
         Assert.True(ranAfter);
@@ -70,7 +70,7 @@ public class BusyGuardTests
 
         release.SetResult();
         await running;
-        await Task.WhenAll(first, second, third).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(first, second, third).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(3, done);
         Assert.Equal(1, maxInside);
@@ -97,7 +97,7 @@ public class BusyGuardTests
         Task waiting = guard.WhenFreeAsync(cancel.Token);
         cancel.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting.WaitAsync(TimeSpan.FromSeconds(5)));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         release.SetResult();
         await running;
     }

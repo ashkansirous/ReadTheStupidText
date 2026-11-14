@@ -268,5 +268,5 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     }
 
     private static HashSet<string> DownloadedLanguages(Java.Lang.Object? models) =>
-        models?.JavaCast<Java.Util.ISet>()?.ToEnumerable<TranslateRemoteModel>().Select(m => m.Language).OfType<string>().ToHashSet() ?? [];
+        models?.JavaCast<Java.Util.ISet>()?.ToEnumerable<TranslateRemoteModel>().Select(m => m?.Language).OfType<string>().ToHashSet() ?? [];
 }

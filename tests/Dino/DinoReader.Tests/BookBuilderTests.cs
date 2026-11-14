@@ -312,7 +312,7 @@ public sealed class BookBuilderTests : IDisposable
     {
         BookFolder book = TinyBook("One.");
         Books.WriteInfo(book.Dir, book.Info with { Tags = ["Hot", "Popular", "Recommended", "New"] });
-        Assert.Equal(["Hot", "Popular", "Recommended", "New"], Books.ReadInfo(book.Dir).Tags);
+        Assert.Equal(["Hot", "Popular", "Recommended", "New"], Books.ReadInfo(book.Dir).Tags!);
 
         Books.WriteInfo(book.Dir, book.Info with { Tags = ["Hot", "Hot"] });
         Assert.Contains("repeats Hot", Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message);

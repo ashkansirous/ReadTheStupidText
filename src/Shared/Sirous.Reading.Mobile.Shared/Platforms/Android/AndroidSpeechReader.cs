@@ -186,9 +186,12 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
         _engineReady = null;
     }
 
+    // ForLanguageTag wants BCP-47 ("pt-BR"); an "en_US"-style code would parse as the undetermined locale.
+    private static string ToLanguageTag(string code) => code.Replace('_', '-');
+
     private bool IsLanguageSpeakable(string code)
     {
-        using var locale = new JavaLocale(code);
+        using var locale = JavaLocale.ForLanguageTag(ToLanguageTag(code));
         return _tts?.IsLanguageAvailable(locale) >= LanguageAvailableResult.Available;
     }
 
@@ -205,7 +208,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
             return;
         }
 
-        using var locale = new JavaLocale(_readingLanguage);
+        using var locale = JavaLocale.ForLanguageTag(ToLanguageTag(_readingLanguage));
         if (_tts.SetLanguage(locale) < LanguageAvailableResult.Available)
         {
             _fallbacks.Report(activityId, FallbackArea.Speech, FallbackReason.PhoneLanguageMissing, _readingLanguage); // Slice 273 part B: the device voice reads the text instead (speak path only; a read the composite counted adds nothing)

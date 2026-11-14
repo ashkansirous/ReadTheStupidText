@@ -25,7 +25,7 @@ public interface IDocumentScanner
     Task<IReadOnlyList<string>> ScanAsync(int maxPages) => ScanAsync();
 
     /// <summary>
-    /// Best-effort warm-up so the first <see cref="ScanAsync"/> finds the scanner ready. Never
+    /// Best-effort warm-up so the first <see cref="ScanAsync()"/> finds the scanner ready. Never
     /// throws.
     /// </summary>
     Task PrepareAsync();

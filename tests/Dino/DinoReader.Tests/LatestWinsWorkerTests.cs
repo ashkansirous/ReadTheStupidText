@@ -22,7 +22,7 @@ public class LatestWinsWorkerTests
         worker.Use("ru");
         worker.Use("ar");
         gate.SetResult();
-        await finished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await finished.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(["fa", "ar"], served);
     }
@@ -41,7 +41,7 @@ public class LatestWinsWorkerTests
 
         worker.Use("fa");
         worker.Use("ar");
-        await done.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await done.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Single(errors);
     }

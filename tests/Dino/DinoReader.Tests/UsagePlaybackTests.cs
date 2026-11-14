@@ -93,7 +93,7 @@ public partial class UsagePlaybackTests
 
         string json = UsageBatch.ToJson([plain, stamped]);
 
-        Assert.Equal(1, Regex.Matches(json, "\"session\"").Count);
+        Assert.Single(Regex.Matches(json, "\"session\""));
         Assert.Contains($"\"session\":\"{session.Id}\",\"seq\":1", json);
         UsageEvent back = UsageBatch.ParseQueue(UsageBatch.QueueToJson([stamped]))[0];
         Assert.Equal(session.Id, back.Session);

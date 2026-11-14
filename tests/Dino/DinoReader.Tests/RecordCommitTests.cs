@@ -179,7 +179,7 @@ public sealed class RecordCommitTests
             await library.StoreRecordingFileAsync(story.Id, oldName, path => File.WriteAllTextAsync(path, "old"));
             await library.StoreRecordingFileAsync(story.Id, newName, path => File.WriteAllTextAsync(path, "new"));
             await library.StoreRecordingFileAsync(story.Id, "rec-9-0123abcd.m4a", path => File.WriteAllTextAsync(path, "stray"));
-            await File.WriteAllTextAsync(library.TryResolveFile(story.Id, "notes.txt")!, "keep");
+            await File.WriteAllTextAsync(library.TryResolveFile(story.Id, "notes.txt")!, "keep", TestContext.Current.CancellationToken);
             Story saved = StoryRecordings.WithClip(story, key, new PageRecording("en", 2, newName));
 
             await library.UpdateAsync(saved);
@@ -188,7 +188,7 @@ public sealed class RecordCommitTests
                 await library.DeleteFileAsync(story.Id, replaced);
             }
 
-            Assert.Equal("new", await File.ReadAllTextAsync(library.TryResolveFile(story.Id, newName)!));
+            Assert.Equal("new", await File.ReadAllTextAsync(library.TryResolveFile(story.Id, newName)!, TestContext.Current.CancellationToken));
             Assert.False(File.Exists(library.TryResolveFile(story.Id, oldName)));
             Assert.True(File.Exists(library.TryResolveFile(story.Id, "rec-9-0123abcd.m4a"))); // a file no clip names is never swept
             Assert.True(File.Exists(library.TryResolveFile(story.Id, "notes.txt")));

@@ -13,7 +13,7 @@ internal enum TestStoreMode
 	Slow,
 	Stall,
 	Offline,
-	/// <summary>Slice 271: the same list as Ok, but <see cref="UnknownTagStem"/> lists a tag name this build does not know next to a known one (a newer store's), so a flow sees the unknown one dropped with no badge and no error.</summary>
+	/// <summary>Slice 271: the same list as Ok, but <c>UnknownTagStem</c> lists a tag name this build does not know next to a known one (a newer store's), so a flow sees the unknown one dropped with no badge and no error.</summary>
 	UnknownTag,
 	/// <summary>Slice 357: the list is served as in Ok, but every book download is refused with that HTTP status and no body (as the Worker does), so a flow sees the row's own text per status.</summary>
 	Status402,

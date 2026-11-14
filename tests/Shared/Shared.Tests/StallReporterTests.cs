@@ -84,7 +84,7 @@ public class StallReporterTests
         reporter.Changed += (_, stalled) => raised.Add(stalled);
 
         Task<string> waiting = reporter.WatchAsync(arrival.Task, CancellationToken.None);
-        arrival.SetCanceled();
+        arrival.SetCanceled(TestContext.Current.CancellationToken);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting);
         Assert.Equal([true, false], raised);

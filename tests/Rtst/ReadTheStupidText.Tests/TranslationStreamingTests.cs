@@ -218,7 +218,7 @@ public class TranslationStreamingTests
         var translator = new BlockTranslator();
         TranslationStream stream = Plan(translator, "One. Two. Three. Four.");
 
-        List<string> blocks = await Collect(stream);
+        List<string> blocks = await Collect(stream, TestContext.Current.CancellationToken);
 
         Assert.Equal(["[One. Two.]", "[Three. Four.]"], blocks);
         Assert.Equal(TranslationOutcome.Translated, stream.Outcome);
@@ -230,7 +230,7 @@ public class TranslationStreamingTests
         var translator = new BlockTranslator { HangOnCall = 1 };
         TranslationStream stream = Plan(translator, "One. Two. " + new string('b', 700) + ". Three. " + new string('c', 700) + ".", TimeSpan.FromMilliseconds(50));
 
-        List<string> blocks = await Collect(stream);
+        List<string> blocks = await Collect(stream, TestContext.Current.CancellationToken);
 
         Assert.True(blocks.Count >= 3);
         Assert.StartsWith("[", blocks[0]);

@@ -119,8 +119,8 @@ public sealed class SilentOutputGuardTests
 
     private static Task<RescueResult> Rescue(
         string text, Func<Task<SpokenTake>> generate, List<string> lines, Func<Task<SpokenTake?>>? fallback = null,
-        CancellationToken token = default, IFallbackSink? sink = null, bool quietCheck = true) =>
-        SilentOutputGuard.RescueAsync(text, "piper:fa-mana", 1.0, generate, lines.Add, token, fallback, fallbacks: sink, quietCheck: quietCheck);
+        CancellationToken? token = null, IFallbackSink? sink = null, bool quietCheck = true) =>
+        SilentOutputGuard.RescueAsync(text, "piper:fa-mana", 1.0, generate, lines.Add, token ?? TestContext.Current.CancellationToken, fallback, fallbacks: sink, quietCheck: quietCheck);
 
     private sealed class ReasonSink : IFallbackSink
     {
@@ -222,8 +222,8 @@ public sealed class SilentOutputGuardTests
     {
         int checkedCalls = 0;
         int plainCalls = 0;
-        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-mana", 1.0, true, _ => { checkedCalls++; return Task.FromResult(Hiss(900)); }, _ => { });
-        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-ganji", 1.0, false, _ => { plainCalls++; return Task.FromResult(Hiss(900)); }, _ => { });
+        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-mana", 1.0, true, _ => { checkedCalls++; return Task.FromResult(Hiss(900)); }, _ => { }, TestContext.Current.CancellationToken);
+        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-ganji", 1.0, false, _ => { plainCalls++; return Task.FromResult(Hiss(900)); }, _ => { }, TestContext.Current.CancellationToken);
         Assert.Equal(SilentOutputGuard.ExtraTakes + 1, checkedCalls);
         Assert.Equal(1, plainCalls);
     }
@@ -340,7 +340,7 @@ public sealed class SilentOutputGuardTests
     {
         var lines = new List<string>();
         SpokenTake barelyShort = Tone(120, padMs: 100);
-        await SilentOutputGuard.RescueAsync("Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(barelyShort), lines.Add);
+        await SilentOutputGuard.RescueAsync("Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(barelyShort), lines.Add, TestContext.Current.CancellationToken);
         string line = Assert.Single(lines);
         Assert.Contains("gave up", line);
         Assert.Matches(@"voiced ms 1(19|20)/1(19|20)/1(19|20),", line);
@@ -384,7 +384,7 @@ public sealed class SilentOutputGuardTests
         var lines = new List<string>();
         RescueResult result = await SilentOutputGuard.RescueAsync(
             "Hello", liam.Id, 1.0, () => Task.FromResult(new SpokenTake([], Rate)), lines.Add,
-            fallback: () => Task.FromResult<SpokenTake?>(Tone(300)));
+            fallback: () => Task.FromResult<SpokenTake?>(Tone(300)), token: TestContext.Current.CancellationToken);
         Assert.False(result.GaveUp);
         Assert.Matches(@", sibling (29\d|300)\b", Assert.Single(lines));
     }
@@ -395,7 +395,7 @@ public sealed class SilentOutputGuardTests
         var lines = new List<string>();
         var debug = new List<string>();
         RescueResult result = await SilentOutputGuard.RescueAsync(
-            "Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(Tone(170, padMs: 100)), lines.Add, debug: debug.Add);
+            "Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(Tone(170, padMs: 100)), lines.Add, debug: debug.Add, token: TestContext.Current.CancellationToken);
         Assert.False(result.GaveUp);
         Assert.Empty(lines);
         string line = Assert.Single(debug);
@@ -408,7 +408,7 @@ public sealed class SilentOutputGuardTests
     public async Task FirstTakeWellOverTheFloorLogsNothing()
     {
         var lines = new List<string>();
-        await SilentOutputGuard.RescueAsync("Hello", "v", 1.0, () => Task.FromResult(Tone(400)), lines.Add);
+        await SilentOutputGuard.RescueAsync("Hello", "v", 1.0, () => Task.FromResult(Tone(400)), lines.Add, TestContext.Current.CancellationToken);
         Assert.Empty(lines);
     }
 
@@ -423,7 +423,7 @@ public sealed class SilentOutputGuardTests
         RescueResult result = await SilentOutputGuard.RescueUnitAsync(
             "Pip ran away. تق!", "v", 1.0, true,
             phrase => Task.FromResult(new SpokenTake(Tone(500).Samples.Select(v => v).ToArray(), rates.Dequeue())),
-            _ => { });
+            _ => { }, TestContext.Current.CancellationToken);
         Assert.Equal(22050, result.Take.SampleRate);
     }
 }
