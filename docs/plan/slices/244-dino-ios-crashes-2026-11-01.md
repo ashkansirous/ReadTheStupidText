@@ -1,7 +1,15 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
-*In progress: workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack), an audio-backed run and the iPhone 8 run are open.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*In progress (wave 2026-11-14, night 2026-11-14-1547 wave 4: audio-backed simulator run), draft PR.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack), an audio-backed run and the iPhone 8 run are open.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+
+**Touches:** `.maestro/dino/ios-read-audio.yaml` (new), `.github/workflows/dinoreader-ios-sim.yml`, `.github/scripts/ios-sim-*.sh` (only if the flow needs a parameter), `.github/scripts/ship-targets.test.mjs` (only if a new test-only file needs an exclusion), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`
+
+## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
+
+- No test hook installs a real audio pack offline (TestStore.cs:122-131 builds a 4-byte fake clip for gingerbread-man `sv` only; `import-test-book` imports text only), so the audio-backed run uses the live store: a new flow `.maestro/dino/ios-read-audio.yaml` with `test-store mode=off`, which fetches a real `audio-<lang>-v<n>.zip` through `/api/stories` (AudioPackStore.cs:597), then 3 rounds of read, Back, re-read, background, as the Not yet verified line asks. The workflow gets a `flow` dispatch input (default stays the current flow).
+- Production-only analytics: the run is a Debug simulator build; the builder confirms from the code that a Debug build sends no usage event or crash report, before the first run. The run reads the live store and downloads one pack (read only, no live state changed).
+- The run is dispatched on the branch (`gh workflow run dinoreader-ios-sim.yml --ref fix/244-sim-audio -f flow=...`) before merge; its result goes into item 6.
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
