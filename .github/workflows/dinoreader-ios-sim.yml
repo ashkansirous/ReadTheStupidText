@@ -8,8 +8,16 @@ name: dinoreader-ios-sim
 # crash report. Its boot/install/collect steps are .github/scripts/ios-sim-*.sh, reused by Slice 291.
 # Zero Actions artifacts (Batch 8): evidence goes to the job log and summary only.
 
+# The flow input (Slice 244, audio-backed run) picks another flow under .maestro/dino/; the default is the flow above.
+# .maestro/dino/ios-read-audio.yaml reads the book with its real audio pack from the live store (read only).
 on:
   workflow_dispatch:
+    inputs:
+      flow:
+        description: 'Maestro flow to run (a .yaml under .maestro/dino/)'
+        required: false
+        type: string
+        default: '.maestro/dino/ios-read-back-reread-background.yaml'
 
 permissions:
   contents: read
@@ -21,10 +29,24 @@ jobs:
     env:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64
-      FLOW: .maestro/dino/ios-read-back-reread-background.yaml
+      FLOW: ${{ inputs.flow || '.maestro/dino/ios-read-back-reread-background.yaml' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # The input is untrusted text: it must be a file directly under .maestro/dino/ before any step uses it.
+      - name: Check the flow input
+        run: |
+          set -euo pipefail
+          case "$FLOW" in
+            .maestro/dino/*.yaml) ;;
+            *) echo "::error::flow must be a .yaml directly under .maestro/dino/, got: $FLOW"; exit 1 ;;
+          esac
+          case "${FLOW#.maestro/dino/}" in
+            */*|*..*) echo "::error::flow must not contain a further path or '..': $FLOW"; exit 1 ;;
+          esac
+          test -f "$FLOW" || { echo "::error::no such flow file: $FLOW"; exit 1; }
+          echo "flow: $FLOW"
 
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
@@ -130,6 +152,32 @@ jobs:
           rc=0
           bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/flow-start" || rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # Audio-backed flow only (a flow with a '# expect-clips' header line): did a real pack clip play? The proof is the flow itself: it waits until the reading page's sound pill
+      # (ReadingAudioStatus, shown only while the current piece has no clip) is gone, so a read on the device voice fails the flow. This step only adds the log counts: the app's test-hook
+      # log is Console output on iOS and may not reach the unified log, and the rolling log file is not written in a Debug build (crash reporting is off there), so there is no file to read;
+      # a missing line is therefore a warning, not proof the clip never played.
+      - name: Check the pack clips played
+        if: always()
+        run: |
+          set -uo pipefail
+          if ! grep -q '^# expect-clips' "$FLOW"; then
+            echo "flow $FLOW has no '# expect-clips' header: no clip check."
+            exit 0
+          fi
+          if [ -z "${SIM_UDID:-}" ] || [ -z "${PROCESS_NAME:-}" ]; then
+            echo "::warning::No simulator or app was set up: nothing to check."
+            exit 0
+          fi
+          LOG="$(xcrun simctl spawn "$SIM_UDID" log show --last 60m --style compact --predicate "process == \"$PROCESS_NAME\"" 2>&1 || true)"
+          CLIPS="$(grep -c 'premade clip plays' <<<"$LOG" || true)"
+          FETCH="$(grep -c 'HOOK fetch-audio-pack ok' <<<"$LOG" || true)"
+          echo "premade clip lines: ${CLIPS:-0}; fetch-audio-pack ok lines: ${FETCH:-0}"
+          { echo "### Audio-backed run"; echo "- fetch-audio-pack ok lines: ${FETCH:-0}"; echo "- premade clip lines: ${CLIPS:-0}"; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${CLIPS:-0}" = "0" ] || [ "${FETCH:-0}" = "0" ]; then
+            echo "::error::Expected clip markers missing from the app log (premade clip lines: ${CLIPS:-0}; fetch-audio-pack ok lines: ${FETCH:-0}): the pack was not fetched or the clip never played."
+            exit 1
+          fi
 
       - name: Fail when the flow failed or the app crashed
         if: always()

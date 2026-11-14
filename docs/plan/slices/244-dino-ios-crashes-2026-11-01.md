@@ -1,9 +1,11 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
-*In progress: workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack), an audio-backed run and the iPhone 8 run are open.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*Built in wave 4 (2026-11-14), PR #1147; open: the iPhone 8 run, item 6.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack); simulator run 3 (audio-backed) passed 2026-11-14.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
+
+**Touches (wave 4, audio-backed simulator run):** `.maestro/dino/ios-read-audio.yaml` (new), `.github/workflows/dinoreader-ios-sim.yml`, `.github/scripts/ios-sim-*.sh` (only if the flow needs a parameter), `.github/scripts/ship-targets.test.mjs` (only if a new test-only file needs an exclusion), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`
 
 **Depends on:** none. Slice 243 adds the dSYM and log lines that would prove a cause; this slice does not wait for it
 and works from the evidence below plus reproduction.
@@ -14,6 +16,23 @@ and works from the evidence below plus reproduction.
 `src/Shared/Sirous.Reading.Application/**/SpeechTextChunker.cs`, `tests/Dino/DinoReader.Tests/**`, `tests/Shared/Shared.Tests/**`,
 `src/Dino/DinoReader.App/CLAUDE.md`, `.maestro/dino/**`, `.maestro/README.md`, `.github/workflows/dinoreader-ios-sim.yml` (new),
 `.github/scripts/ios-sim-*.sh` (new), `.github/CLAUDE.md`, `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`; widened after review pass 2 (coordinator, 2026-11-14): `.github/workflows/release-rtst.yml` and `.github/workflows/release-dino.yml` (path exclusions for the new test-only files), `.github/scripts/ship-targets.test.mjs` (its `RTST_EXTRA_NEGATIONS` list names the two new exclusions)
+
+## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
+
+- No test hook installs a real audio pack offline (TestStore.cs:122-131 builds a 4-byte fake clip for gingerbread-man `sv` only; `import-test-book` imports text only), so the audio-backed run uses the live store: a new flow `.maestro/dino/ios-read-audio.yaml` with `test-store mode=off`, which fetches a real `audio-<lang>-v<n>.zip` through `/api/stories` (AudioPackStore.cs:597), then 3 rounds of read, Back, re-read, background, as the Not yet verified line asks. The workflow gets a `flow` dispatch input (default stays the current flow).
+- Production-only analytics: the run is a Debug simulator build; the builder confirms from the code that a Debug build sends no usage event or crash report, before the first run. The run reads the live store and downloads one pack (read only, no live state changed).
+- The run is dispatched on the branch (`gh workflow run dinoreader-ios-sim.yml --ref fix/244-sim-audio -f flow=...`) before merge; its result goes into item 6.
+- The clip proof is in the flow, not the log (review `reviews/s244c-high.md` #2-4): each round waits until the sound pill `ReadingAudioStatus` is gone (shown only while a piece has no clip), so a device-voice read fails the flow. The step "Check the pack clips played" in the workflow (for flows with `# expect-clips`) fails on 0 clip lines or 0 fetch-ok lines (changed after review: first warning-only, then made a failure; the hook log is Console output on iOS, which `log show` reads, and the rolling log file is not written in a Debug build).
+- Skipped #5 (`reviews/s244c-high.md`): "The 6 s 'let the clip play' wait is an optional extendedWaitUntil on a never-existing id used as a sleep" - low, triaged out by the caller.
+- Skipped #6 (`reviews/s244c-high.md`): "Depends on live store listing three-little-pigs with a Farsi pack; nothing checks it" - low, triaged out; the pill wait now fails the flow if no pack installs.
+- Skipped #8 (`reviews/s244c-high.md`): "`log show --last 60m` not scoped to flow start" - low, triaged out by the caller.
+- Applied #1 (`reviews/s244c-medium.md`): after the 6 s play wait each round now also has `assertNotVisible: id ReadingAudioStatus`.
+- Skipped #2 (`reviews/s244c-medium.md`): ""Check the pack clips played" only warns on zero clip lines; never fails the job." - repeat of high #2/#3: a Debug iOS build writes no readable app log (TestHookLog.iOS.cs:6 writes Console only), so the proof is the pill, not the log.
+- Skipped #3 (`reviews/s244c-medium.md`): "extendedWaitUntil on invented id `PremadeAudioNeverShown`, optional, used as a 6 s sleep; no check a clip is playing." - low, triaged out by the caller; the new pill assertion after it is the clip check.
+- Skipped #4 (`reviews/s244c-medium.md`): "Depends on live store listing `three-little-pigs` with Farsi pack; header hard-codes audio-fa-v3.zip (~1.6 MB), stale on next bump" - low, triaged out by the caller.
+- Skipped #5 (`reviews/s244c-medium.md`): "Default flow path duplicated in input default and `|| '...'` fallback of FLOW env; can drift." - low, triaged out by the caller.
+- Skipped #6 (`reviews/s244c-medium.md`): "Log window is `log show --last 60m`, not scoped to flow start" - low, triaged out by the caller.
+- Skipped #7 (`reviews/s244c-medium.md`): "Input validation rejects any `..` and does not check leading `-` or whitespace; failure appears far from cause." - low, triaged out by the caller.
 
 ## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
 
@@ -73,7 +92,7 @@ Premise check on origin/main corrected the slice:
 
 ## Work
 
-- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); an audio-backed simulator run and the iPhone 8 run are open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
+- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); the audio-backed simulator run 3 passed 2026-11-14 (run 43646782384); only the iPhone 8 run is open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
   the user's iPhone 8 when it is free: read, press Back mid-sentence, read again, change page while reading, background
   the app while reading. Same flows on the Android emulator (parity). Record what crashes.
 - [x] 2. **Layout crash:** find every iOS place that builds an attributes dictionary or attributed string (our code and
@@ -87,7 +106,7 @@ Premise check on origin/main corrected the slice:
 - [x] 5. **`0xdead10cc`** (investigated, not fixed, cause unproven): find files held open across suspension (rolling log writer, crash run marker, settings,
   any SQLite); close or flush them on background (`UIApplication.DidEnterBackground`) or wrap the write in a background
   task. Same review on Android for its equivalents.
-- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until an audio-backed run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243.)
+- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until the iPhone 8 run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243. With audio playing, 3 rounds on the simulator (run 3, 2026-11-14) showed no crash, no Jetsam and no .ips; the three causes stay unproven because the simulator is not memory-limited.)
 
 ## Verification
 
@@ -137,6 +156,12 @@ Premise check on origin/main corrected the slice:
 - Item 1, run 1 (2026-11-14 21:07Z, run 43639865693): no crash, no .ips, no Jetsam; the flow stopped on the "Dino needs an update" page (the hierarchy showed "Dino needs an update" and "Open the App Store"), so the ids' visibility could not be judged because the update page was the only screen. The cause is likely, not proven: the Debug build's ApplicationDisplayVersion 1.0 is below the live iOS minVersion (the update-page check is at `App.xaml.cs:334`), but no log printed the live minVersion or the installed version. Fix: the sim workflow builds with `-p:ApplicationDisplayVersion=99.0.0 -p:ApplicationVersion=99` and prints the booted device (`simctl list devices booted`). Run 2 confirmed the version stamp cleared the update page.
 - Item 1, run 2 (2026-11-14 21:29-21:35Z, run 43642530390, branch `fix/244-sim-version`, iOS 26.5 simulator "rtst-sim"; the device type was not printed): flow exit 0, "Repeat 3 times... COMPLETED" (read, Back mid-sentence, re-read, change page, background and return); the `dino-test://` hooks were delivered 4 times via `openLink`; the "Open in" prompt never appeared (the conditional step was skipped); 0 .ips, 0 Jetsam. But the app log shows `fallback premade_audio:no_pack ... count=78`: the offline test store gave the book no audio pack, so playback was not exercised. So run 2 proves the harness and the Back / re-read / background navigation on iOS without a crash; it does not reproduce or clear the audio-path crashes. Item 1 stays open: a simulator run where the book has its audio pack (a test hook that installs a book with its pack offline, e.g. `import-test-book` per `src/Dino/DinoReader.App/Testing/CLAUDE.md`, or the online test store), then 3 rounds; and the iPhone 8 run (the user's device).
 
+### Built 2026-11-14 (wave 4): audio-backed simulator run
+
+- `.maestro/dino/ios-read-audio.yaml`: live store, Farsi Three Little Pigs with the real pack (audio-fa v3), 3 rounds of read, Back, re-read, change page, background; the sound pill `ReadingAudioStatus` must vanish each round. `dinoreader-ios-sim.yml` gets a `flow` input and the step "Check the pack clips played", which fails on 0 clip lines or 0 fetch-ok lines for flows with `# expect-clips`.
+- A Debug simulator build sends no usage event and no crash report (`UsageGate.cs:44`, `:56`, `UsageEligibility.cs:100-103`, `CrashReporter.cs:520-528`), so the run adds no production analytics.
+- Item 1, run 3 (run 43646782384, branch `fix/244-sim-audio`, f4c3cc27): success; `premade clip lines: 36; fetch-audio-pack ok lines: 1`; `crash reports for DinoReader.App: 0`. Playback was exercised with the real pack and nothing crashed, but a simulator is not memory-limited, so the three causes stay unproven; item 6 and the iPhone 8 run stay open.
+
 ## Checks run
 
 - DinoReader.Tests 1941, ReadTheStupidText.Tests 2002 (2 skipped); Android builds of both apps; iOS compiles of both.
@@ -173,6 +198,15 @@ Files are outside the repo (`D:/ReadTheStupidText-worktrees/reviews/`); all read
 - Skipped #1 (`reviews/s244b-medium.md`): "hardcoded 99.0.0/99 only clears the gate while live minVersion stays below 99" - low; same as high #1.
 - Skipped #2 (`reviews/s244b-medium.md`): "new device-listing step is diagnostic only; does not prove the 99.0.0 version took effect" - low; run 2 showed the update page gone.
 - Review files read: `s244b-high.md` 5/5, `s244b-medium.md` 3/3.
+- Wave 4 (audio-backed run): `reviews/s244c-high.md` (9 findings) applied 1, 2, 3, 4, 7, 9; `reviews/s244c-medium.md` (7) applied 1; the other findings of both have their reasons in the wave 4 claim notes above. `reviews/s244c-check.md` (7) applied none, per the coordinator:
+- Skipped #1 (`reviews/s244c-check.md`): "but the code does exit 1. Fix the comment." - low (stale comment); the run and the failing clip count settle it.
+- Skipped #2 (`reviews/s244c-check.md`): "`notVisible: ReadingAudioStatus` passes before the pill renders, so a device-voice read can pass." - third round on the pill wait; the run plus the failing clip count settle it.
+- Skipped #3 (`reviews/s244c-check.md`): "the 6 s wait on a never-present id is a sleep, not an assertion" - low.
+- Skipped #4 (`reviews/s244c-check.md`): "`# expect-log:` lines are stripped on iOS; only the log-count step enforces markers." - low.
+- Skipped #5 (`reviews/s244c-check.md`): "fetch-audio-pack is fire-and-forget; a slow download shows as a flow failure." - low.
+- Skipped #6 (`reviews/s244c-check.md`): "is skipped when an earlier step fails, leaving the app in Farsi" - low.
+- Skipped #7 (`reviews/s244c-check.md`): "near copy of ios-read-back-reread-background.yaml; the platform-split runFlow blocks are repeated" - low.
+- Review files read: `s244c-high.md` 9/9, `s244c-medium.md` 7/7, `s244c-check.md` 7/7.
 - Deviation: the medium fixer reworded four older 2026-11-02 lines from the word for skipping to "Left as is" so that the review-skip check passes. They were not new decisions.
 
 ## For CLAUDE.md (lifted 2026-11-02)
@@ -186,7 +220,6 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 
 - The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt, the `.ips` file naming, the Jetsam `largestProcess` field.
-- An audio-backed iOS simulator run: the book installed with its audio pack (a test hook such as `import-test-book`, or the online test store), then 3 rounds of read, Back, re-read, background. Run 2 had `premade_audio:no_pack`, so playback was not exercised.
 - No new NSDictionary or `0xdead10cc` crash for a week after release (`tools/crashes`).
 - The window size on a real phone.
 - The 3-window on a sub-3 GB device.
