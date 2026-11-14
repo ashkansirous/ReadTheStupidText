@@ -24,6 +24,15 @@ public sealed class PictureSizeChoiceTests
     }
 
     [Theory]
+    [InlineData(PictureNetwork.Unmetered, false)]
+    [InlineData(PictureNetwork.Limited, true)]
+    [InlineData(PictureNetwork.None, false)]
+    public void ShouldStopHighRes_StopsOnlyOnALimitedLink_NeverOnABlipOrAnUnmeteredOne(PictureNetwork network, bool expected)
+    {
+        Assert.Equal(expected, PictureSizeChoice.ShouldStopHighRes(network));
+    }
+
+    [Theory]
     [InlineData(PictureDevicePlatform.Android, 411, false, PictureDeviceClass.Phone)]
     [InlineData(PictureDevicePlatform.Android, 599.9, false, PictureDeviceClass.Phone)]
     [InlineData(PictureDevicePlatform.Android, 600, false, PictureDeviceClass.Tablet)]

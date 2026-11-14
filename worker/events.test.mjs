@@ -837,6 +837,18 @@ test("count and deviceCount are kept only for fallback and read_voice and droppe
   assert.deepEqual(env.points.map((p) => p.doubles.slice(2, 4)), [[-1, -1], [-1, -1], [7, 0]]);
 });
 
+test("Slice 376 item 5: audio_pack_download keeps its count (the pack version) as double3, a malformed one is dropped from the row", async () => {
+  const env = recorder();
+  const events = [
+    { ...shelfEvent, name: "audio_pack_download", detail: "failed:missing", count: 2 },
+    { ...shelfEvent, name: "audio_pack_download", detail: "done" },
+    { ...shelfEvent, name: "audio_pack_download", detail: "started", count: -3 },
+    { ...shelfEvent, name: "audio_pack_download", detail: "done", count: 2, deviceCount: 7 },
+  ];
+  await handleEvents(post({ events }), env, on);
+  assert.deepEqual(env.points.map((p) => p.doubles.slice(2, 4)), [[2, -1], [-1, -1], [-1, -1], [2, -1]]);
+});
+
 // ---- Slice 288: listens and played seconds -----------------------------------------------------------------------------
 
 test("book_listened is a book count with no detail, from a shelf or own book, never about no book", () => {

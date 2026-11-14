@@ -174,7 +174,7 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
   language-change rule's `IntroWizardPage` wording goes with Slice 362. The honoured-only-if-installed rule for the child's pick stays: "Read in {0}" appears only when
   that audio is on the phone. No hard rule (privacy, store, parity) clashes: iOS and Android share the code.
 
-*Changed while building:* the `premade_audio:waiting_wifi` fallback exists but has no emitter (the Wi-Fi wait is gone), so its post-release count will read zero; `pack_missing_on_play` is the live one. Debug hooks added: `force-pack-failure`, `pack-repair`, `remove-audio-pack`. The saved store listing (`store-listing.json`, `KnownListing`, `PackExpectation`) came from review rounds 3-5, see the Expectation rule above. Device flows (emulator-5554, logs in `D:/ReadTheStupidText-worktrees/reviews/w53-device/s360-run1/`, `s360-run2/`, `s360-run3/`): `dino-landscape-gate` PASS (hold, no VIBRATE `PermissionException`); `reading-sound-getting` and `reading-sound-retry-on-open` PASS (run 2, cache ae67c7099028); `reading-sound-no-internet` and `reading-sound-failed-404` PASS (run 3, cache af6412669b6c). Earlier failures were flow setup (pack already installed at launch, a forced network failure blocking the real install, a log marker the app never wrote), not app bugs.
+*Changed while building:* the `premade_audio:waiting_wifi` fallback exists but has no emitter (the Wi-Fi wait is gone), so its post-release count will read zero; `pack_missing_on_play` is the live one. Debug hooks added: `force-pack-failure`, `pack-repair`, `remove-audio-pack`. The saved store listing (`store-listing.json`, `KnownListing`, `PackExpectation`) came from review rounds 3-5, see the Expectation rule above. Device flows (emulator-5554, logs in `D:/ReadTheStupidText-worktrees/reviews/w53-device/s360-run1/`, `s360-run2/`, `s360-run3/`): `dino-landscape-gate` PASS (hold, no VIBRATE `PermissionException`); `reading-sound-getting` and `reading-sound-retry-on-open` PASS (run 2, on the build with cache key ae67c7099028); `reading-sound-no-internet` and `reading-sound-failed-404` PASS (run 3, on the build with cache key af6412669b6c). Earlier failures were flow setup (pack already installed at launch, a forced network failure blocking the real install, a log marker the app never wrote), not app bugs.
 
 *From review:* `reviews/s360-check6.md` (check pass 6 on the remove-audio-pack hook, the OnTick log lines and the four reading-sound flows): no findings.
 - Skipped #9 (`reviews/s360-high.md`): "Convention and dead code - LOW" (long `ShowAudioStatus`, magic strings in `PackRepairHook`, `SoundStatusPillState.From`, Preparing/WaitingForInternet pill kinds, `RunIncludes`, `Reading_GettingSound`, `FallbackReason.WaitingWifi`) - style only; `waiting_wifi` is kept because the Log item names it, and it has no emitter now (the Wi-Fi wait is gone), so its Verification count will read zero.
@@ -204,7 +204,7 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
 - Real airplane mode on a phone (the flows force offline by a Debug hook).
 - Add a language on mobile data only: every shelf book's pack for it downloads with no question.
 - After release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
-- Worker serving one version behind, live, after the batched release deploys.
+- Worker serving one version behind, live, after a Workers Builds deployment of main.
 
 #### For CLAUDE.md (lifted 2026-11-13)
 

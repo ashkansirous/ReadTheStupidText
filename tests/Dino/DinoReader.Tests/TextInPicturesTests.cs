@@ -91,29 +91,41 @@ public class TextInPicturesTests
     }
 
     [Fact]
-    public void The_book_flag_is_applied_wherever_a_package_is_built()
+    public void No_shipped_book_is_flagged_so_every_built_package_lacks_the_flag()
     {
+        Assert.All(Books.All, b => Assert.NotEqual(true, b.Info.TextInPictures));
         Story built = StarterBuilder.WithTranslations(
             new Story(StarterBuilder.GoodEnoughId, "Good Enough", "en", DateTimeOffset.UnixEpoch, [new StoryPage("a")], [], CoverStyle.Colour, 0, string.Empty),
             StarterBuilder.GoodEnoughStem);
-        Assert.True(built.TextInPictures);
+        Assert.False(built.TextInPictures);
     }
 
     [Fact]
-    public void The_flag_is_read_from_book_json_for_Good_Enough_only()
-    {
-        Assert.True(Books.Folder(StarterBuilder.GoodEnoughStem).Info.TextInPictures);
-        Assert.False(Books.Folder("goldilocks").Info.TextInPictures == true);
-    }
-
-    [Fact]
-    public async Task Every_built_good_enough_package_has_the_flag()
+    public async Task Good_Enough_is_not_flagged_in_its_built_package()
     {
         await StarterBuilder.InScratchAsync(async library =>
         {
             var built = await StarterBuilder.BuildAllAsync(library, f => f == StarterBuilder.GoodEnoughFile);
-            Assert.True(built.Single().Story.TextInPictures);
+            Assert.False(built.Single().Story.TextInPictures);
         });
+    }
+
+    [Fact]
+    public void A_book_json_with_the_flag_is_still_read_as_flagged()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "dino-tip-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, BookFolder.StoryFile), "One.");
+            string json = File.ReadAllText(Path.Combine(Books.ContentRoot(), "goldilocks", BookFolder.BookFile));
+            File.WriteAllText(Path.Combine(dir, BookFolder.BookFile), json.TrimEnd().TrimEnd('}') + ", \"textInPictures\": true }");
+            Assert.True(Books.ReadInfo(dir).TextInPictures);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
     }
 
     [Fact]

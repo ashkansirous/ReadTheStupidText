@@ -387,7 +387,7 @@ public sealed class UsageCounter
 		};
 #if DEBUG
 		// Slice 320 item 7: a Debug-only line per count that reached the queue, with the seq it was given (the line in RecordLogged is written before sampling, so it has none), so a flow reads the sequence on a device. Nothing is sent from here.
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch} screen={stamped.Screen} detail={stamped.Detail}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch} screen={stamped.Screen} detail={stamped.Detail}{(stamped.Count is null ? "" : $" count={stamped.Count}")}"); // Slice 376 item 5: count (an audio_pack_download's pack version) only for a count that reached the queue
 #endif
 		return stamped;
 	}
@@ -407,9 +407,11 @@ public sealed class UsageCounter
 			Stamp(UsageEvent.ForNoBook(name, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) with { Count = count }));
 
 	/// <summary>Slice 267: queues a count about one store book by its package id (never its title), in <paramref name="language"/>, with a closed <paramref name="detail"/> (an audio pack download's outcome).</summary>
-	public void RecordShelfBook(string name, string bookId, string language, string detail) =>
+	public void RecordShelfBook(string name, string bookId, string language, string detail, int? count = null)
+	{
 		_sender.Enqueue((sampleRate, now) => UsageEvent.ForShelfBook(
-			name, bookId, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) is { } count ? Stamp(count) : null);
+			name, bookId, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) is { } counted ? Stamp(count is null ? counted : counted with { Count = count }) : null);
+	}
 
 	/// <summary>Queues a count about a store story (by its id, never its title) with the store filters in use.</summary>
 	public void RecordStoreDownload(StoreItem item, bool ageFilterSet, bool authorFilterSet) =>

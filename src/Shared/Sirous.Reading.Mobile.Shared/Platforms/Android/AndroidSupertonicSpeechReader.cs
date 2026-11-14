@@ -1260,9 +1260,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
+            string spoken = FarsiEzafe.ForModel(model, text);
+#if DEBUG
+            Testing.FarsiEzafeProbe.Note(text, spoken); // Slice 376 item 3: a Debug marker for the RTST Farsi flow
+#endif
             return singleThread
-                ? WithSingleThread(engine, twin => twin.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId))
-                : engine.Tts.Tts.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId);
+                ? WithSingleThread(engine, twin => twin.Generate(spoken, pace, speakerId))
+                : engine.Tts.Tts.Generate(spoken, pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };

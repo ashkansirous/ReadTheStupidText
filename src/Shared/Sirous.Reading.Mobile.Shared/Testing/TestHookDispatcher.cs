@@ -45,6 +45,12 @@ public sealed class TestHookDispatcher
 	/// </summary>
 	public static Func<TestHookCommand, string?>? AppCommands { get; set; }
 
+	/// <summary>
+	/// Slice 376 item 2: asked by <c>skip-first-run</c> when a language is already stored (the install is past first run). The app clears any persisted first-run or onboarding
+	/// state that would still show it again on the next launch, and says so in the hook log; it returns whether the skip is done. Null: past first run is a no-op, as before.
+	/// </summary>
+	public static Func<bool>? PastFirstRunSkip { get; set; }
+
 	/// <summary>The launch-argument names the app's own commands take (iOS reads only listed keys), set next to <see cref="AppCommands"/>.</summary>
 	public static IReadOnlyList<string> AppLaunchKeys { get; set; } = [];
 
@@ -200,7 +206,7 @@ public sealed class TestHookDispatcher
 	// Runs the app's own first-run completion, so the culture, the voice pack and the root end up as after a real first run.
 	// Already past first run is a no-op that still counts as done; a first run that could not complete (no window yet) is a failure.
 	private bool Skip(TestHookCommand command) =>
-		_settings.Language is not null || _completeFirstRun(command.Get(LanguageKey, DefaultLanguage));
+		_settings.Language is not null ? PastFirstRunSkip?.Invoke() ?? true : _completeFirstRun(command.Get(LanguageKey, DefaultLanguage));
 
 	private string Stop()
 	{

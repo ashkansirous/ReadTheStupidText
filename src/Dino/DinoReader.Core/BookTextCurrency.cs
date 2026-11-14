@@ -20,6 +20,13 @@ public static class BookTextCurrency
         var wanted = new HashSet<string>(candidates, StringComparer.OrdinalIgnoreCase);
         return decisions.Where(d => d.Action != BookUpdateAction.Skip && wanted.Contains(d.Id)).Select(d => d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// Slice 317 item 6 (313 check 3 #2): the weekly check must not fetch again, and report a failure again, for a book already given up for this store version (the listing pass already skips it).
+    /// An update decision for a book given up for the version in <paramref name="storeVersionOf"/> becomes a skip as not in the store; every other decision is unchanged.
+    /// </summary>
+    public static IReadOnlyList<BookUpdateDecision> SkipGivenUp(IReadOnlyList<BookUpdateDecision> decisions, Func<string, int?> storeVersionOf, Func<string, int, bool> isGivenUp) =>
+        decisions.Select(d => d.Action == BookUpdateAction.Update && storeVersionOf(d.Id) is { } version && isGivenUp(d.Id, version) ? d with { Action = BookUpdateAction.Skip, Skip = BookUpdateSkip.NotInStore } : d).ToList();
 }
 
 /// <summary>

@@ -133,13 +133,26 @@ public sealed class AudioPackStoreTests : IDisposable
         using var cancel = new CancellationTokenSource();
         AudioPackStore store = Store(new FakeFetcher(Zip()) { OnFetch = cancel.Cancel });
         var details = new List<string>();
-        store.Outcome += (_, _, detail) => details.Add(detail);
+        store.Outcome += (_, _, detail, _) => details.Add(detail);
 
         PackInstall result = await store.InstallAsync(Book, "fa", Info(Zip()), null, cancel.Token);
 
         Assert.Equal(PackInstall.Cancelled, result);
         Assert.Equal([AudioPackUsage.PackStarted, AudioPackUsage.PackCancelled], details);
         Assert.False(store.FailedThisLaunch(Book, "fa"));
+    }
+
+    [Fact]
+    public async Task Install_EveryOutcomeCarriesThePackVersionAskedFor()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        var versions = new List<int>();
+        store.Outcome += (_, _, _, version) => versions.Add(version);
+
+        await store.InstallAsync(Book, "fa", Info(zip, 3), null, CancellationToken.None);
+
+        Assert.Equal([3, 3], versions); // started, done
     }
 
     [Fact]
@@ -469,6 +482,21 @@ public sealed class AudioPackStoreTests : IDisposable
         Assert.Equal(1.0, seen.Last(), 3);
     }
 
+    [Fact]
+    public void SummedProgress_ResetBook_RestartsTheBarForTheStandardFetchAfterAStoppedHighResOne()
+    {
+        var seen = new List<double>();
+        var summed = new SummedProgress(new SyncProgress<double>(seen.Add), 0);
+
+        summed.Book(600, 1000);
+        summed.ResetBook();
+        summed.Book(100, 200);
+
+        Assert.Equal(0.6, seen[0], 3);
+        Assert.Equal(0.0, seen[1], 3);
+        Assert.Equal(0.5, seen[2], 3);
+    }
+
     private sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
     {
         public void Report(T value) => report(value);
@@ -485,7 +513,7 @@ public sealed class AudioPackStoreTests : IDisposable
         byte[] zip = Zip();
         AudioPackStore store = Store(new FakeFetcher(zip));
         var outcomes = new List<string>();
-        store.Outcome += (_, _, detail) => outcomes.Add(detail);
+        store.Outcome += (_, _, detail, _) => outcomes.Add(detail);
 
         PackInstall result = await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None, new FailingAudioPackFetcher(new FakeFetcher(zip), kind));
 
@@ -527,7 +555,7 @@ public sealed class AudioPackStoreTests : IDisposable
         byte[] zip = Zip();
         AudioPackStore store = Store(new FakeFetcher(zip));
         var outcomes = new List<string>();
-        store.Outcome += (_, _, detail) => outcomes.Add(detail);
+        store.Outcome += (_, _, detail, _) => outcomes.Add(detail);
         using var cancel = new CancellationTokenSource();
 
         var reachedStall = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

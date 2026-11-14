@@ -532,7 +532,9 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 
 	private async Task<bool> StageAllAsync(IReadOnlyList<BookUpdateDecision> decisions, IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
-		foreach (BookUpdateDecision decision in decisions.Where(d => d.Action == BookUpdateAction.Update))
+		Func<string, int?> storeVersionOf = id => items.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase))?.Version;
+		IReadOnlyList<BookUpdateDecision> toStage = BookTextCurrency.SkipGivenUp(decisions, storeVersionOf, BookTextFailures.IsGivenUp); // Slice 317 item 6: a given-up book is not fetched and reported Failed again every week
+		foreach (BookUpdateDecision decision in toStage.Where(d => d.Action == BookUpdateAction.Update))
 		{
 			cancel.ThrowIfCancellationRequested();
 			StoreItem item = items.First(i => string.Equals(i.Id, decision.Id, StringComparison.OrdinalIgnoreCase));

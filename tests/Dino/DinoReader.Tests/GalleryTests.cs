@@ -225,8 +225,8 @@ public sealed class FileStoryLibraryTests : IDisposable
         Story story = Make("Once", 1);
         await library.AddAsync(story);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => library.AddAsync(story));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => library.UpdateAsync(Make("Never saved", 2)));
+        await Assert.ThrowsAsync<ShelfRaceException>(() => library.AddAsync(story));
+        await Assert.ThrowsAsync<ShelfRaceException>(() => library.UpdateAsync(Make("Never saved", 2)));
     }
 
     [Fact]

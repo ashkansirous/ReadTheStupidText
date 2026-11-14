@@ -5,6 +5,9 @@ namespace DinoReader.Core;
 /// <summary>Raised when a <c>.dino</c> package cannot be read or must not be imported (Slice 91, Decision 94).</summary>
 public sealed class StoryPackageException(string message, Exception? inner = null) : Exception(message, inner);
 
+/// <summary>Slice 377 item 16: the shelf changed under a swap or an import (a book already there, or gone). It is the shelf's race, never a fault of the package being applied; still an <see cref="InvalidOperationException"/> for every older catch.</summary>
+public sealed class ShelfRaceException(string message) : InvalidOperationException(message);
+
 /// <summary>One picture or cover inside a package: its plain file name and a way to open its bytes.</summary>
 public sealed record PackageFile(string Name, Func<Stream> Open);
 

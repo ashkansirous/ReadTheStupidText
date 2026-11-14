@@ -114,6 +114,6 @@ books exist, which are free, which are paid and how much.
 
 #### Not yet verified
 
-- Live `/books` and the workers.dev `/dino/books` after the batched release deploys: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.
+- Live `/books` and the workers.dev `/dino/books` after a Workers Builds deployment of main: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.
 - Native read of the 14 non-English translations of the page text.
 - Switched-on check after the paid books store setup (Slice 346 Part D).

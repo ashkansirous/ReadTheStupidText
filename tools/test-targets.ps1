@@ -138,12 +138,23 @@ function Get-FastCheckBuilds([string[]]$Changed) {
     return @($buildCommands.Keys | Where-Object { $runs -contains $_ })
 }
 
+# Slice 376 item 4: a flow edit or a manifest edit runs the flow lint and the contact-sheet self-test (a takeScreenshot with no manifest entry failed only in CI, PR #1097).
+$flowSelfTestPattern = '^(\.maestro/|tools/emulator/(screenshot-frames\.json|contact-sheet\.ps1|test-contact-sheet\.ps1|lint-flows\.ps1|test-lint-flows\.ps1|common\.ps1)$|tools/emulator/fixtures/)'
+$flowSelfTestCommands = @('pwsh -NoProfile -Command ./tools/emulator/lint-flows.ps1', 'pwsh -NoProfile -Command ./tools/emulator/test-lint-flows.ps1', 'pwsh -NoProfile -Command ./tools/emulator/test-contact-sheet.ps1')
+
+function Get-FastCheckSelfTests([string[]]$Changed) {
+    if ($Changed -contains $unknown -or @($Changed | Where-Object { $_ -match $flowSelfTestPattern }).Count -gt 0) { return $flowSelfTestCommands }
+    return @()
+}
+
 function Write-FastChecks([string[]]$Changed) {
     $builds = @(Get-FastCheckBuilds $Changed)
     $tests = @(Get-FastCheckTests $Changed)
+    $selfTests = @(Get-FastCheckSelfTests $Changed)
     foreach ($app in $builds) { Write-Output $buildCommands[$app] }
     foreach ($project in $tests) { Write-Output "dotnet test tests/$($testGroups[$project])/$project/$project.csproj" }
-    if ($builds.Count + $tests.Count -eq 0) { Write-Host 'No build or unit-test project is touched by this change (test tooling and docs only).' }
+    foreach ($command in $selfTests) { Write-Output $command }
+    if ($builds.Count + $tests.Count + $selfTests.Count -eq 0) { Write-Host 'No build or unit-test project is touched by this change (test tooling and docs only).' }
     elseif ($builds | Where-Object { $_ -like '*-android' }) { Write-Host 'note: where only the maui-android workload is installed, add -p:IncludeWindows=false to the Android builds.' }
 }
 
