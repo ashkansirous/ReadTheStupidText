@@ -11,7 +11,6 @@ on:
     branches: [main]
     paths:
       - 'content/dino/**'
-      - '!content/dino/*/high-res/**'
       - 'tools/dino/DinoReader.BookBuilder/**'
       - 'src/Dino/DinoReader.Core/**'
       - 'src/Shared/Sirous.Reading.Application/**'
@@ -152,6 +151,24 @@ jobs:
           echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
           echo "listen_failed=${listen_failed# }" >> "$GITHUB_OUTPUT"
           # No retry loop. A failed book is left out here (publish-store-books.mjs prunes its unbuilt packs from meta.json), every other book still builds and uploads, and the always() step below fails the job at the end.
+
+      # Slice 375 B: a book with a complete high-res/ folder is built with its high-res package, so those pictures (Git LFS, .lfsconfig keeps them out of a checkout) are fetched here, and only these.
+      # The cache holds .git/lfs keyed by the oids of the high-res files (`git lfs ls-files -l` reads the pointers, no download), so LFS bandwidth is spent once per change, not per daily run.
+      # A failed pull fails the job before anything is uploaded; and build --live skips and names a book whose high-res files are still pointers, never publishing it as standard only.
+      - name: Work out the high-res cache key
+        id: highreskey
+        run: |
+          git lfs install --local
+          echo "key=high-res-lfs-$(git lfs ls-files -l -I 'content/dino/*/high-res/**' | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the high-res pictures cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: ${{ steps.highreskey.outputs.key }}
+
+      - name: Fetch the high-res pictures
+        run: git lfs pull --include "content/dino/*/high-res/**" --exclude ""
 
       # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
       - name: Build the store books

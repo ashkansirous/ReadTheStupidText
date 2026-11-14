@@ -61,6 +61,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<OldVoicePacksCleanup>(); // Slice 278 part B review: deletes the old voice packs once, started at launch
 		builder.Services.AddSingleton<OwnBooksCleanup>(); // Slice 278 A3: deletes the families' own books once, started by GalleryPage.OnAppearing, once per app run
 		builder.Services.AddSingleton<StarterStories>();
+		builder.Services.AddSingleton<HighResUpgrades>(); // Slice 375 D: the books waiting for their high-res pack
+		builder.Services.AddSingleton<PictureSizeSource>(); // Slice 375 C: this device's class and connection for the picture size
+		builder.Services.AddSingleton<HighResUpgradeRunner>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
 		builder.Services.AddSingleton(services => CreateAudioPackStore(services));
 		builder.Services.AddSingleton(_ => new SwitchablePurchases(PlatformPurchases.Create())); // Slice 346: the platform store (Play Billing, StoreKit, Windows Store); the Debug hook swaps a fake in
