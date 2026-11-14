@@ -33,22 +33,25 @@ export const WANTED = [
 ];
 
 /** Pure: the KEY=value lines of a secrets.env (comment and blank lines skipped). */
-export function parseEnv(text) {
+export function parseEnv(text, strictNames = WANTED_KEYS) {
     const entries = {};
     for (const line of text.split(/\r?\n/)) {
         const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
-        if (match) entries[match[1]] = unquote(match[2], match[1]);
+        if (match) entries[match[1]] = unquote(match[2], match[1], strictNames.has(match[1]));
     }
     return entries;
 }
 
+/** Every key a wanted secret is read from (`NAME` or `NAME_FILE`): only these may stop a run on a malformed line; any other line is ignored as before. */
+const WANTED_KEYS = new Set(WANTED.flatMap(({ sources }) => sources));
+
 /** Pure: a value that starts with a quote is the text up to the matching close quote and everything after it (a trailing comment) is ignored, so no quote is uploaded to the Worker; a value that opens a quote and never closes it is a truncated line and throws (naming the secret, never its value); an unquoted value ends at ` # comment`. */
-export function unquote(raw, name = 'a secret') {
+export function unquote(raw, name = 'a secret', strict = true) {
     const trimmed = raw.trim();
     const quote = trimmed[0];
     const quoted = quote === '"' || quote === "'";
     const close = quoted ? trimmed.indexOf(quote, 1) : -1;
-    if (quoted && close < 0) throw new Error(`${name} opens a quote it never closes (a truncated line?); fix the secrets file`);
+    if (quoted && close < 0 && strict) throw new Error(`${name} opens a quote it never closes (a truncated line?); fix the secrets file`);
     if (close > 0) return trimmed.slice(1, close);
     return trimmed.replace(/\s+#.*$/, '').trim(); // an unquoted value ends at ` # comment`; a space or CR left on it would be uploaded
 }

@@ -18,6 +18,10 @@ test('Slice 346 review pass 5 #3: a quoted value ends at its close quote and a t
     assert.deepEqual(parseEnv('A="abc" # note\nB=\'x y\'#z\nC="a#b"\nE=""'), { A: 'abc', B: 'x y', C: 'a#b', E: '' });
 });
 
+test('Slice 346 review check4 #2: a malformed line for a secret the script does not upload is ignored, as before', () => {
+    assert.equal(parseEnv('OTHER_PASS=\'abc\nAPPLE_IAP_KEY_ID=K').APPLE_IAP_KEY_ID, 'K');
+});
+
 test('Slice 346 review pass 7 #7: an opening quote that never closes is an error naming the secret, not its value', () => {
     assert.throws(() => parseEnv('APPLE_IAP_KEY_ID="ABC123'), (error) => /APPLE_IAP_KEY_ID/.test(error.message) && !error.message.includes('ABC123'));
 });

@@ -1005,7 +1005,25 @@ public partial class StorePage : ContentView, ICornerTabView
 				_usage.RecordStoreDownload(row.Item, ageFilterSet, authorFilterSet);
 			}
 
-			await ShowDownloadResultAsync(row, outcome);
+			if (row.Run == run)
+			{
+				await ShowDownloadResultAsync(row, outcome); // an older run's end must not reset a row a newer run now owns (Slice 346 check4 #8)
+			}
+		}
+	}
+
+	// A storage error while asking counts as "not installed": the replan that follows corrects the row.
+	private async Task<bool> IsOnShelfAsync(StoreRow row)
+	{
+		try
+		{
+			return (await _client.InstalledIdsAsync()).Contains(row.Item.Id);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not read the shelf after a cancel: {ex.Message}");
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+			return false;
 		}
 	}
 
@@ -1021,7 +1039,8 @@ public partial class StorePage : ContentView, ICornerTabView
 		if (outcome == DownloadOutcome.Cancelled)
 		{
 			// Slice 346 review pass 5 #5, pass 6: this runs only after the cancelled download has ended (the row stayed Downloading, disabled, until now), so no Get can have joined it.
-			row.SetState(StoreRowState.Get); // a cancel is not a failure; the row goes back to what the plan says it was before the tap, with no error
+			// a cancel is not a failure; the row goes back to what is installed (Downloaded for a book already on the shelf, else Get), then the plan decides the rest, with no error
+			row.SetState(await IsOnShelfAsync(row) ? StoreRowState.Downloaded : StoreRowState.Get);
 			await ReplanRowsAsync();
 			return;
 		}
