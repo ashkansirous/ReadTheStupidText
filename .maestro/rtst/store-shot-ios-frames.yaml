@@ -1,0 +1,84 @@
+# Slice 291 item 5 (iOS part): the App Store screenshots of Read The Stupid Text, taken by .github/scripts/ios-sim-store-shots.sh (store-screenshots.yml) on an iPhone 6.9", an iPhone 6.5" and an iPad 13" simulator.
+# The same frames as the Play shots (.maestro/rtst/needs-file/store-shot-phone.yaml): home, a pasted text in the review page, the reading page and Settings. A fresh install always starts the supertonic-3 pack download, so the flow waits for its banner (required), then up to 5 minutes for it to go, and the shots show the pack installed.
+# The script swaps the appId line for the app's bundle id and renames store-rtst-ios-<n>-<screen> to store-rtst-<device>-<n>-<screen>. Run by name only: a normal run-flows.ps1 run skips store-shot-* flows.
+# Every hook is a launch argument (iOS reads them on each fresh launch), so no openLink is needed.
+appId: uk.sirous.readthestupidtext
+name: Store screenshots, Read The Stupid Text, iOS
+---
+- launchApp:
+    # clearState: wipes the voice pack and own books; fine here, a fresh simulator install makes every run the same, lang: en applies and the pack is downloaded again.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- assertVisible:
+    id: PlayButton
+# The first run downloads the voice pack; wait for its banner to show first (required: a fresh install always starts the download), then for it to go (up to 5 minutes). notVisible alone passes at once while the banner is still hidden.
+- extendedWaitUntil:
+    visible:
+      id: PackStatusLabel
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: PackStatusLabel
+    timeout: 300000
+- takeScreenshot: store-rtst-ios-1-home
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Read any text aloud with natural voices. Select it, copy it or paste it here, and listen instead of staring at a screen."
+- hideKeyboard:
+    optional: true
+- takeScreenshot: store-rtst-ios-2-review
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+# The review editor is gone before the sentence is looked for, so it cannot match on the review page mid-transition.
+- extendedWaitUntil:
+    notVisible:
+      id: ReviewEditor
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      # The pasted sentence itself, after the reading page is up.
+      text: "Read any text aloud with natural voices.*"
+    timeout: 15000
+- takeScreenshot: store-rtst-ios-3-reading
+- stopApp
+- launchApp:
+    # launchApp-restart: back to a clean home so the Settings button is on screen whatever the reader was doing.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+# Relaunch without clearState: the pack is already installed, so the banner stays hidden; only wait for it to be gone (the first launch, a fresh install, is the one that requires it visible).
+- extendedWaitUntil:
+    notVisible:
+      id: PackStatusLabel
+    timeout: 300000
+- tapOn:
+    id: SettingsButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SpeedPresets
+    timeout: 10000
+- takeScreenshot: store-rtst-ios-4-settings
