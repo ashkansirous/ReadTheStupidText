@@ -1,9 +1,20 @@
 # Slice 291 — Store listings and screenshots for both apps on Play, App Store and Microsoft Store
 **Product:** Shared
 
-*In progress (wave 2026-11-08), PR #941 merged (08e1d63a): item 2 and the repo listing text of items 1 and 3 only (no store push, no screenshots); the rest stays open.* **Wave scope (2026-11-08):** this wave's PR touches only `docs/store-listings/**`, `site/dino/privacy.html`, `site/dino/index.html` (same age range) and this file. **Park note (2026-11-07, night run wave 5):** parked: the Play "Manage store presence" grant (user: later) and the App Store legal values (user: not tonight), per the User answers 2026-11-07. Blocks pushing the listings. Store text and images, no app code. Moves the listing bullets out of plan.md's *Outstanding work* (the Play "out of date" bullet, the App Store go-live bullet, the stale RTST Microsoft Store English listing from Slice 193's live read, the Slice 194 screenshot retake).
+*Built in part 2026-11-14 (items 1, 2 done; 3 built, read-back pending; 5 Android phone shots done; 4 and 6 open), draft PR, not merged.* *Wave 2026-11-08: PR #941 merged (08e1d63a): item 2 and the repo listing text of items 1 and 3 only (no store push, no screenshots); the rest stays open.* **Wave scope (2026-11-08):** this wave's PR touches only `docs/store-listings/**`, `site/dino/privacy.html`, `site/dino/index.html` (same age range) and this file. **Park note (2026-11-07, night run wave 5):** parked: the Play "Manage store presence" grant (user: later) and the App Store legal values (user: not tonight), per the User answers 2026-11-07. Blocks pushing the listings. Store text and images, no app code. Moves the listing bullets out of plan.md's *Outstanding work* (the Play "out of date" bullet, the App Store go-live bullet, the stale RTST Microsoft Store English listing from Slice 193's live read, the Slice 194 screenshot retake).
 
 **Touches:** `docs/store-listings/**`, `STORE.md`, `site/dino/privacy.html`, `site/dino/index.html`, `.github/workflows/store-screenshots.yml` (new: macOS simulator screenshots), `tools/emulator/screenshot-frames.json`, `tools/desktop-vm/checks/rtst-panel-screenshot.ps1`, `docs/plan/slices/291-store-listings-and-screenshots.md`
+
+**Touches, widened at claim (2026-11-14):** also `.github/scripts/store-listings.mjs` and its test (item 3: RTST English through the release listing script, as Slice 193 did for German), `.github/workflows/store-submit.yml` (only if the RTST English line needs it), `tools/emulator/store-screenshots.ps1` (new), `.maestro/dino/store-shot-*.yaml` and `.maestro/rtst/store-shot-*.yaml` (new), `docs/store-listings/screenshots/**` (new: the PNGs). Widened after review pass 1 (coordinator, 2026-11-14; parallel-check showed no other live work): `.maestro/dino/needs-file/store-shot-*.yaml` and `.maestro/rtst/needs-file/store-shot-*.yaml` (the flows moved there so normal runs skip them), `tools/emulator/test-store-screenshots.ps1` (new), `tools/emulator/lint-flows.ps1` (one line: skip `store-shot-*` in the contact-sheet listing check).
+
+## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
+
+Premise check on origin/main:
+- Item 1: RTST Play text still says "No account and no analytics" (`docs/store-listings/appstore-rtst.md:4` calls it stale; `en.md:29` has the corrected usage-counts text). The Play grant blocker is gone: Slice 193 committed RTST Play de-DE through the API on 2026-11-14 ("The Play API works for this service account since Slice 374"). So item 1's RTST push runs tonight through the `store-listing` agent (read live, diff, apply, read back), every RTST Play locale that carries the stale sentence.
+- Item 3: `store-listings.mjs:9,165` leaves English as pushed by hand and builds 13 languages plus RTST German (`store-submit.yml:229`). Tonight: add RTST English (from `docs/store-listings/en.md`) to the script the same way as German, so it reaches Partner Center with the next RTST release; the read-back after that release goes to *Not yet verified*. Partner Center through Chrome is not used at night.
+- Item 4: the App Store declarations stay with the user (User answers 2026-11-07); nothing is written to App Store Connect except screenshots for the open versions if item 6 gets that far.
+- Item 5: none of the screenshot files exist yet. Play phone and tablet shots come from the Android emulator (scripted Maestro flows, test hooks, a warm headless emulator); iPhone 6.9"/6.5" and iPad 13" shots come from `store-screenshots.yml`, built after Slice 244 merges and reusing its `.github/scripts/ios-sim-*.sh`. The Microsoft Store desktop shot needs the Hyper-V VM; free memory was 3.1 GB at the wave start (under the 8 GB rule), so it stays open.
+- Item 6: upload only after the coordinator has looked at every shot's small copy; Play upload through the API with a read-back; App Store screenshots only onto the versions in `PREPARE_FOR_SUBMISSION` (nothing submitted).
 
 ## Built this wave (2026-11-08)
 
@@ -39,6 +50,21 @@
 - Applied #6: `docs/store-listings/dino/appstore.md` no longer points at `play.md` and says the age range is fixed in the repo text, the store push still open.
 - Skipped #3 (`reviews/pr-941-medium.md`): "voice pack size not verified against packs.yml" - packs.yml caps voice packs at 100 MB and Kokoro at 150 MB, so "up to about 150 MB" is a true upper bound
 
+## From review (`reviews/s291-high.md`)
+
+- Applied #1-#4, #7, #8, #10 per the wave ledger (the exact edits are in the diff; the findings asked for): #1 the dot-source guard fixed so the pure functions load; #2 `-Form` checked against the emulator serial; #3 the reading-shot wait on something only true while reading; #4 a wait for the pack download banner before the home and settings shots; #7 stale comments and the `store-submit.yml` language count updated for RTST English; #8 one shared English-listing helper in `store-listings.mjs`; #10 shot lookup limited to this run's instance folders.
+- Skipped #9 (`reviews/s291-high.md`): "The new en.md test pins the exact short-description string and specific long-description phrases" - the test checks the usage-counts bullet on purpose: that sentence is what item 3 ships.
+- Applied #5/#6 by moving the four `store-shot-*` flows to `.maestro/<app>/needs-file/` (run by name only) and exempting `store-shot-*` flows from the manifest rule in `tools/emulator/lint-flows.ps1` (one line, outside the first Touches lines); the eight manifest entries were removed again.
+
+## From review (`reviews/s291-medium.md`)
+
+- Applied #1 (optional wait for the banner, then notVisible), #3 (RTST `en` goes only to a listing named exactly `en-us` or `en`; otherwise one warning names the English listings found), #5 (the store shot copied is the PNG named exactly after the flow's shot, newer than the run start, with a non-zero pixel size) and #8 (the review editor must be gone before the sentence is waited for).
+- Skipped #2 (`reviews/s291-medium.md`): "line-for-line copy of phone flow (Dino pair too); selector edits must be made in four files and will drift" - low; one flow per form is how the other flows here are written, and the shot names carry the form.
+- Skipped #4 (`reviews/s291-medium.md`): "extra-English warning recomputes keys after listingTarget may have created a listing" - low; with #3 no English listing is ever created, so the keys cannot differ.
+- Skipped #6 (`reviews/s291-medium.md`): "-NoBuild with no cached build exits 6 without printing the fix command" - low; run-flows.ps1 already prints its own build-cache message before exit 6.
+- Skipped #7 (`reviews/s291-medium.md`): "exemption skips every file named store-shot-*, including Dino" - low; the four store-shot flows are the only ones with that name and the self-test names them.
+- Skipped #9 (`reviews/s291-medium.md`): "test pins exact marketing copy; wording edits break it" - duplicate of #9 in `reviews/s291-high.md`, skipped there for the same reason.
+
 ## From review (`reviews/pr-941-check1-medium.md`)
 
 - Applied #1: `de.md` now has its own Microsoft Store download note (translation of `en.md`) and its stale "left out" drafting note is rewritten.
@@ -47,8 +73,52 @@
 - Skipped #4 (`reviews/pr-941-check1-medium.md`): "not checked against real pack sizes" (the 150 MB claim) - packs.yml caps voice packs at 100 MB and Kokoro at 150 MB, an upper bound
 - Skipped #5 (`reviews/pr-941-check1-medium.md`): "new Microsoft Store notes are unreviewed machine translations meant for direct paste" - native review of the translated notes goes to Not yet verified below
 
+## From review (`reviews/s291-check.md`)
+
+- Applied #1 (new-language images come from en-us, else en, else the first en-*; English text still goes only to en-us or en), #3, #4 (old shot PNGs are deleted before the run; no time filter), #7, #8.
+- Skipped #2 (`reviews/s291-check.md`): "Pack-banner wait can pass before banner appears (8 s optional visible, then notVisible passes at once)" - the coordinator looks at every shot before any upload, so a banner in a shot is caught there; the device run decides (third round on this wait).
+- Skipped #5 (`reviews/s291-check.md`): "PNGs are copied only after the whole flow, and exit 1 on a failed flow copies none" - low.
+- Skipped #6 (`reviews/s291-check.md`): "When both en-us and en exist only en-us is written; en stays stale with just a warning" - low; a warning is enough while en-us is the listing Partner Center shows.
+
+## From review (`reviews/s291-check3.md`)
+
+- Applied #1, #2, #3 (first launch `clearState: true`, required 30 s wait for the banner, then notVisible 300000 ms).
+- Skipped #4 (`reviews/s291-check3.md`): "A failed or offline pack state also leaves the label visible, so the flow waits the full 300 s (twice) and fails with a bare timeout" - low.
+- Skipped #5 (`reviews/s291-check3.md`): "Remove-OldStoreShots deletes shots from the shared per-instance maestro-home/maestro-out before the run; a failed run leaves them gone" - low, unconfirmed.
+- Skipped #6 (`reviews/s291-check3.md`): "The expect-log marker is checked after a flow that may wait up to 10 min; if logcat rolled, the run fails and copies no PNG though all shots exist" - low, unconfirmed.
+- Skipped #7 (`reviews/s291-check3.md`): "The flow forces PORTRAIT on the tablet; if the tablet listing should be landscape, every Dino tablet PNG has the wrong orientation" - low, unconfirmed.
+
+## From review (`reviews/s291-check2.md`)
+
+- Skipped #1 (`reviews/s291-check2.md`): "waits 120 s for PackStatusLabel to vanish" - settled by the device runs (wait now 300 s, see Changed while building).
+- Skipped #2 (`reviews/s291-check2.md`): "regex wait on the whole pasted sentence against one element" - low; the RTST phone run passed and each shot was looked at.
+- Skipped #3 (`reviews/s291-check2.md`): "SpeedPresets may sit below the fold in the Settings ScrollView" - the RTST phone run passed and shot 4 (settings) was looked at.
+- Skipped #4 (`reviews/s291-check2.md`): "a locked file throws under ErrorActionPreference Stop and aborts the run" - low.
+- Skipped #5 (`reviews/s291-check2.md`): "a run missing one shot still copies the others" - decided by the device run: all shots came out and the coordinator looked at each one.
+- Skipped #6 (`reviews/s291-check2.md`): "only en-us is overwritten; warnOtherEnglish only logs" - repeats check #6, skipped there.
+- Skipped #7 (`reviews/s291-check2.md`): "line-for-line copy of the phone flow; fixes must be made twice" - low; same as medium #2.
+- Skipped #8 (`reviews/s291-check2.md`): "the two rules can disagree (matters for Dino only)" - low; the four store-shot flows are the only files with that name.
+
+## From review (`reviews/s291-check4.md`)
+
+- Skipped #1 (`reviews/s291-check4.md`): "the notVisible PackStatusLabel wait passes on the first poll" - low; the pack was installed by shot 3, so a banner in shot 4 is unlikely, and the coordinator looks at every shot.
+- Skipped #2 (`reviews/s291-check4.md`): "Offline emulator or pack server error keeps the banner visible" - low; it fails loudly and repeats check3 #4.
+- Skipped #3 (`reviews/s291-check4.md`): "fails if the banner shows for less than a poll" - low; after clearState a download runs for minutes, so it is not reachable on the emulator path.
+
+## Changed while building
+
+- Item 1 done 2026-11-14 (wave 62): RTST Play, 17 live locales read. Only en-US carried the stale "no analytics" line; two committed Play edits (the usage-counts bullet from `en.md` lines 28-29, and the Google Play download note from `en.md`), read back equal, 1349 characters. The other 16 locales were already current. Dino Play was done 2026-11-13.
+- Item 3 built: RTST English is added to `.github/scripts/store-listings.mjs`. It is strict: written only to an `en-us` or `en` listing, otherwise skipped with a warning; the image source for new languages keeps en-us, en, then the first en-*. It reaches Partner Center with the next RTST release; item 3 stays open until the read-back after that release.
+- Item 5, Android phone built: flows `.maestro/{dino,rtst}/needs-file/store-shot-{phone,tablet}.yaml`, `tools/emulator/store-screenshots.ps1` (and `test-store-screenshots.ps1`), PNGs in `docs/store-listings/screenshots/dino/phone` (1-shelf, 2-reading, 3-books) and `rtst/phone` (1-home, 2-review, 3-reading, 4-settings). Emulator runs 2026-11-14 on emulator-5554: Dino phone PASS (69 s), RTST phone PASS (225 s, clearState, pack downloaded in the run). The coordinator looked at every shot's contact sheet: clean. Still open in item 5: Play tablet (no second emulator: 3.6 GB free RAM, the 8 GB rule), iPhone and iPad (`store-screenshots.yml` reusing Slice 244's ios-sim scripts, now on main), Microsoft Store desktop (VM, same RAM reason), and the RTST Windows control-panel retake.
+- Item 6 decision (coordinator, 2026-11-14): no upload tonight. Uploads go per store once its full set exists (Play phone and tablet together), so a live listing never gets a half-replaced set.
+
+- Item 5, RTST store-shot flows (phone and tablet): the pack wait is 300000 ms (was 120000). The emulator run 2026-11-14 20:37-20:41Z failed at `notVisible id: PackStatusLabel`; logcat showed the pack still downloading, `PACKDL progress pack=supertonic-3 bytes=37510341` at 20:40:08 rising about 1.1 MB/s to `bytes=113614848` at 20:41:18. The first launch is back on `clearState: true` (check3 #1, #2: without it `TestHookDispatcher.cs:209` ignores `lang` when a language is already set, and kept data lets text from an earlier run into shots 1 and 2); a fresh install always starts the download, so the flow then requires `PackStatusLabel` visible (30 s, no longer optional) before `notVisible` with 300000 ms, and the shots show the voice pack installed. The relaunch before the Settings shot keeps the data and only waits for the banner to be gone.
+- Item 5, Dino store-shot flows (phone and tablet): the Store shot is dropped and the Books shot renumbered to `-3-books`. The phone run passed, but shot 3 (Store tab) showed blank beige cover boxes (the Debug test store has no covers). `store-dino-phone-3-store.png` is deleted and `store-dino-phone-4-books.png` is renamed `store-dino-phone-3-books.png`.
+
 ## Not yet verified
 
+- Partner Center RTST English read-back after the next RTST release (item 3).
+- The tablet store-shot flows (`store-shot-tablet.yaml`, Dino and RTST) have never been run.
 - A native speaker reads the translated Microsoft Store notes and usage-counts bullets in `de es fr pt ar fa ja ru zh` before the Partner Center push.
 
 ## Why
@@ -64,7 +134,7 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 
 ## Work
 
-- [ ] 1. Play, both apps: correct the RTST analytics sentence, the Dino age range (3 to 9) and language count (read from the app), through the `store-listing` agent (draft, diff against live, apply, read back). **Needs the service account `auto-deploy-to-google-play@read-the-stupid-text.iam.gserviceaccount.com` to have "Manage store presence" on both apps** (Play Console, Users and permissions). Granting it from Claude's Chrome was refused by the auto-mode permission check on 2026-11-07, so it is the user's one click, or an allow from the user. Until then `edits.commit` returns 403 (Slice 193).
+- [x] 1. (Dino Play 2026-11-13, RTST Play 2026-11-14) Play, both apps: correct the RTST analytics sentence, the Dino age range (3 to 9) and language count (read from the app), through the `store-listing` agent (draft, diff against live, apply, read back). **Needs the service account `auto-deploy-to-google-play@read-the-stupid-text.iam.gserviceaccount.com` to have "Manage store presence" on both apps** (Play Console, Users and permissions). Granting it from Claude's Chrome was refused by the auto-mode permission check on 2026-11-07, so it is the user's one click, or an allow from the user. Until then `edits.commit` returns 403 (Slice 193).
 - [x] 2. `site/dino/privacy.html` (and `site/dino/index.html`): "3 to 8" becomes "3 to 9".
 - [ ] 3. Microsoft Store, RTST English: replace the stale listing with the current text (`docs/store-listings/en.md`, checked against the live listing first). Partner Center through Chrome (Claude's work), as in Slice 193.
 - [ ] 4. App Store go-live text for both apps from the two drafts: confirm the five values with the user in one question, check the age-rating enum names and Kids-category rules against Apple's docs on the first API write, apply through the App Store Connect API.

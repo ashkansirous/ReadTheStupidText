@@ -223,7 +223,8 @@ function Get-ManifestShots {
 }
 
 function Test-ScreenshotListed([string]$File, [int]$Index, [string]$Code) {
-    if ($null -eq $script:ManifestShots -or $File -match '[\\/]rtst[\\/]') { return }
+    # A store-shot-* flow (Slice 291 item 5: the Play store screenshots, run by name through store-screenshots.ps1) has no design mock to lay out beside, so it is not in the manifest either.
+    if ($null -eq $script:ManifestShots -or $File -match '[\\/]rtst[\\/]' -or $File -match '[\\/]needs-file[\\/]store-shot-') { return }
     if ($Code -notmatch '^\s*-\s+takeScreenshot\s*:(.*)$') { return }
     # A name with a trailing comment or in quotes is read; the map form (path:) is not, so it is a problem rather than a silent skip.
     $rest = ($Matches[1] -replace '\s+#.*$', '').Trim()
