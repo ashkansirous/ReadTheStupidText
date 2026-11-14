@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  APPS, LANGUAGES, buildListings, listingsFolder, findListingKey, mergeListings, parseDino, parseRtst, sectionBody, validateListing, labelValue,
+  APPS, LANGUAGES, languagesFor, buildListings, listingsFolder, findListingKey, mergeListings, parseDino, parseRtst, sectionBody, validateListing, labelValue,
 } from './store-listings.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -157,13 +157,42 @@ test('mergeListings matches existing casing and refuses a submission without a p
 });
 
 for (const app of Object.values(APPS)) {
-  test(`the committed ${app} listing files build all ${Object.keys(LANGUAGES).length} languages within the limits`, () => {
+  test(`the committed ${app} listing files build all ${Object.keys(languagesFor(app)).length} languages within the limits`, () => {
     const folder = listingsFolder(ROOT, app);
     const { listings, errors } = buildListings(app, (stem) => readFileSync(join(folder, `${stem}.md`), 'utf8'));
     assert.deepEqual(errors, []);
-    assert.equal(Object.keys(listings).length, Object.keys(LANGUAGES).length);
+    assert.equal(Object.keys(listings).length, Object.keys(languagesFor(app)).length);
   });
 }
+
+test('German is built for RTST only, never for Dino (Slice 193)', () => {
+  assert.equal(languagesFor(APPS.rtst).de, 'de');
+  assert.equal(languagesFor(APPS.dino).de, undefined);
+});
+
+test('the committed RTST German listing parses from its sectioned layout within the limits (Slice 193)', () => {
+  const l = parseRtst(readFileSync(join(listingsFolder(ROOT, APPS.rtst), 'de.md'), 'utf8'));
+  assert.deepEqual(validateListing(l), []);
+  assert.equal(l.title, 'Read The Stupid Text');
+  assert.equal(l.keywords.length, 7);
+  assert.ok(l.keywords.every((k) => k.length > 0 && !k.includes('(')), 'keywords are plain terms');
+  assert.ok(l.shortDescription.length > 0 && !l.shortDescription.includes('\n'));
+  assert.ok(l.description.startsWith(`${l.shortDescription}\n\n`), 'description starts with the short text');
+  assert.ok(l.description.includes('Microsoft Store') || l.description.includes('Windows'), 'has the Microsoft download note');
+  assert.ok(!l.description.includes('Google Play'));
+});
+
+test('sectioned search terms accept numbered, parenthesis and bullet lists and drop a trailing note', () => {
+  const doc = (terms) => `## Search terms\n\n${terms}\n`;
+  assert.deepEqual(parseRtst(doc('1) a\n2) b')).keywords, ['a', 'b']);
+  assert.deepEqual(parseRtst(doc('- a\n* b')).keywords, ['a', 'b']);
+  assert.deepEqual(parseRtst(doc('1. a (main term)')).keywords, ['a']);
+});
+
+test('the sectioned layout reports missing search terms', () => {
+  const l = parseRtst('## Short description (x)\n\nKurz\n\n## Long description\n\nL\n\n## Microsoft Store only: n\n\nN\n');
+  assert.deepEqual(validateListing(l), ['missing keywords']);
+});
 
 test('no committed Dino Microsoft Store description still names Google Play, in any language (Slice 377 item 2)', () => {
   const folder = listingsFolder(ROOT, APPS.dino);
