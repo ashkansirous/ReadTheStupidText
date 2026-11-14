@@ -1,7 +1,7 @@
 # Slice 371 — Folders grouped by product: src, tests and tools
 **Product:** Shared
 
-**Parked (night 2026-11-13-1149, wave 7):** not started. Its own rule needs no other worktree with changes; worktree `gedlg` (`feat/ge-dialogue`, Good Enough redraw, live at 23:55Z) changes 474 files, one of them `tests/DinoReader.Tests/PictureBookSentenceDumpTests.cs`, and the primary checkout holds another session's untracked `src/DinoReader.Core/AppliedOnce.cs`, `tests/DinoReader.Tests/AppliedOnceTests.cs` and `src/DinoReader.BookSample/`. Run it once those are merged or cleared.
+**Parked (night 2026-11-13-1149, wave 7):** not started. Its own rule needs no other worktree with changes; worktree `gedlg` (`feat/ge-dialogue`, Good Enough redraw, live at 23:55Z) changes 474 files, one of them `tests/DinoReader.Tests/PictureBookSentenceDumpTests.cs`, and the primary checkout holds another session's untracked `src/DinoReader.Core/AppliedOnce.cs`, `tests/DinoReader.Tests/AppliedOnceTests.cs` and `src/DinoReader.BookSample/`. Run it once those are merged or cleared. Correction (feedback loop 2026-11-13-1149): the two `AppliedOnce` files are empty files from 2026-11-08 and `BookSample/` is 12 pictures from 2026-10-23 (Slice 157's known leftover), so they are stale and the move may leave them where they are; only `gedlg` is a real blocker. Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night checks again.
 
 *Planned 2026-11-13.* Last of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 2 of 5). Runs only when no other PR or worktree with changes is open (it moves almost every file); after Slice 370.
 

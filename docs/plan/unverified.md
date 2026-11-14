@@ -573,7 +573,7 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
 - **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
-- **Device:** On the S21: `book-end` on Dino with the fixture pack (run 2026-11-13: not finished, still playing at 521 s of its 900 s window when the 590 s agent timeout ended the run; the 420 s catalogue estimate is too low for the S21), `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (run 2026-11-13 FAILED as a check bug: parsed flags 0x800 lack FLAG_AUTO_CANCEL 0x10, so `Get-NotificationFlagsFromText` reads the wrong field of Samsung's record; fix and rerun in Slice 372).
+- **Device:** On the S21: `run-checks -Prepare -App dino`. (`book-end` and `paused-notification-repost` passed on the S21 in Slice 372's run 2, PR #1077; removed by the 2026-11-13-1149 feedback loop.)
 - **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
 
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
@@ -584,7 +584,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
 
 ### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
-- **Device:** `paused-notification-repost` has never run on a phone: the `flags=0x` parsing of dumpsys is unproven.
 - **Device:** That a later edit clears the Review pick on the reader page: no flow step yet.
 
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))

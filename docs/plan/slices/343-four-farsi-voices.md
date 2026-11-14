@@ -7,6 +7,8 @@
 
 *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
+*Park note (night 2026-11-13-1149):* parked by wave 5 because the 3 extra-ezafe items have no text fix (the piper-fa VITS model adds the ezafe itself) and the second listen needs an interactive session (Artifact page; WAVs in `reviews/s342-ezafe/`). Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night retries it.
+
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
 **Touches:** `docs/plan/slices/343-four-farsi-voices.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
