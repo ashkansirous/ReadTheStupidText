@@ -36,7 +36,7 @@ public sealed class NlLanguageDetector : ILanguageDetector
             return null;
         }
 
-        return new DetectedLanguage(PrimarySubtag(dominant.GetConstant().ToString()), ConfidenceOf(recognizer, dominant));
+        return dominant.GetConstant() is { } tag ? new DetectedLanguage(PrimarySubtag(tag.ToString()), ConfidenceOf(recognizer, dominant)) : null;
     }
 
     // "zh-Hans" -> "zh", "pt-BR" -> "pt": the same primary-subtag form Android reports.
@@ -50,6 +50,6 @@ public sealed class NlLanguageDetector : ILanguageDetector
     private static float ConfidenceOf(NLLanguageRecognizer recognizer, NLLanguage dominant)
     {
         NSDictionary<NSString, NSNumber> hypotheses = recognizer.GetNativeLanguageHypotheses(MaxHypotheses);
-        return hypotheses[dominant.GetConstant()]?.FloatValue ?? 0;
+        return dominant.GetConstant() is { } key ? hypotheses[key]?.FloatValue ?? 0 : 0;
     }
 }

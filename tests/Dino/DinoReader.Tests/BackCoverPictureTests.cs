@@ -134,12 +134,12 @@ public class BackCoverPictureTests
             Story story = Make(WithPicture);
             await library.AddAsync(story);
             byte[] bytes = [0xFF, 0xD8, 0xFF, 0x01];
-            await File.WriteAllBytesAsync(library.TryResolveFile(story.Id, BackCover.PictureName)!, bytes);
+            await File.WriteAllBytesAsync(library.TryResolveFile(story.Id, BackCover.PictureName)!, bytes, TestContext.Current.CancellationToken);
             using var package = new MemoryStream();
             await StoryPackageWriter.WriteAsync(story, library, package);
 
             Story imported = await StoryPackageReader.ImportAsync(new MemoryStream(package.ToArray()), new FileStoryLibrary(folder + "-in"));
-            Assert.Equal(bytes, await File.ReadAllBytesAsync(new FileStoryLibrary(folder + "-in").TryResolveFile(imported.Id, imported.BackCover!.PictureFile)!));
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(new FileStoryLibrary(folder + "-in").TryResolveFile(imported.Id, imported.BackCover!.PictureFile)!, TestContext.Current.CancellationToken));
 
             using var bare = new MemoryStream();
             await StoryPackageWriter.WriteAsync(story, new FileStoryLibrary(folder + "-empty"), bare);

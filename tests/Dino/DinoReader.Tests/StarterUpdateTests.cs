@@ -642,7 +642,7 @@ public sealed class StarterUpdateTests : IDisposable
         package.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(package);
         using var reader = new StreamReader(zip.GetEntry(StoryPackageManifest.ManifestFileName)!.Open());
-        Assert.Equal(2, StoryPackageManifest.Parse(await reader.ReadToEndAsync()).Version);
+        Assert.Equal(2, StoryPackageManifest.Parse(await reader.ReadToEndAsync(TestContext.Current.CancellationToken)).Version);
         Assert.Null(StoryPackageManifest.Parse("{\"schemaVersion\":1,\"id\":\"0123456789abcdef0123456789abcdef\",\"title\":\"T\",\"language\":\"en\"}").Version);
     }
 
@@ -665,7 +665,7 @@ public sealed class StarterUpdateTests : IDisposable
             using var zip = new System.IO.Compression.ZipArchive(file);
             using var reader = new StreamReader(zip.GetEntry(StoryPackageManifest.ManifestFileName)!.Open());
 
-            Assert.Equal(StarterBuilder.StarterVersions[fileName], StoryPackageManifest.Parse(await reader.ReadToEndAsync()).Version);
+            Assert.Equal(StarterBuilder.StarterVersions[fileName], StoryPackageManifest.Parse(await reader.ReadToEndAsync(TestContext.Current.CancellationToken)).Version);
         }
     }
 }

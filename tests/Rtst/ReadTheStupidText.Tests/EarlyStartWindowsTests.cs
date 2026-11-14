@@ -139,7 +139,7 @@ public class EarlyStartWindowsTests
             new FakeTranslator("x") { ModelReady = false }, new FakeDetector("fr"), settings, new SilentLog(), installer, new FakeNetwork(unmetered));
 
         Assert.Null(await subject.PlanEarlyAsync(French, CancellationToken.None));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         Assert.Equal(downloadStarts, packs.Downloads > 0);
     }

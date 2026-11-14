@@ -27,7 +27,7 @@ internal static class IosAttributes
 		if (AttributeFallback.SourceFor(named is not null) == FontSource.System)
 		{
 			ReportFontFallbackOnce();
-			return UIFont.SystemFontOfSize((nfloat)usable);
+			return UIFont.SystemFontOfSize((nfloat)usable)!;
 		}
 
 		return named!;

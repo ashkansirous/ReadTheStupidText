@@ -114,12 +114,12 @@ public class UsageServiceTests
         await service.RecordAsync(Read);
 
         Task waiting = service.FlushAsync();
-        await Task.Delay(150);
+        await Task.Delay(150, TestContext.Current.CancellationToken);
 
         Assert.False(waiting.IsCompleted);
 
         transport.Gate.SetResult();
-        await Task.WhenAll(running, waiting).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(running, waiting).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(2, transport.Batches.Sum(CountEvents));
         Assert.Equal(0, service.QueuedCount);

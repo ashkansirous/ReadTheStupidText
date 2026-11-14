@@ -473,15 +473,15 @@ public sealed class StoreStoryTests : IDisposable
         await library.AddAsync(story);
         string source = Path.Combine(_root, "source-cover.jpg");
         byte[] picture = [0xFF, 0xD8, 1, 2, 3, 0xFF, 0xD9];
-        await File.WriteAllBytesAsync(source, picture);
+        await File.WriteAllBytesAsync(source, picture, TestContext.Current.CancellationToken);
 
         Story covered = await StarterBuilder.WithPictureCoverAsync(story, source, library);
 
         Assert.Equal(CoverStyle.Picture, covered.CoverStyle);
         Assert.Throws<InvalidOperationException>(() => StoreBuilder.CoverBytes(covered, spec, library));
         string thumb = Path.Combine(_root, "thumb.jpg");
-        await File.WriteAllBytesAsync(thumb, [0xFF, 0xD8, 9, 0xFF, 0xD9]);
-        Assert.Equal(await File.ReadAllBytesAsync(thumb), StoreBuilder.CoverBytes(covered, spec, library, thumb));
+        await File.WriteAllBytesAsync(thumb, [0xFF, 0xD8, 9, 0xFF, 0xD9], TestContext.Current.CancellationToken);
+        Assert.Equal(await File.ReadAllBytesAsync(thumb, TestContext.Current.CancellationToken), StoreBuilder.CoverBytes(covered, spec, library, thumb));
         Assert.Same(story, await StarterBuilder.WithPictureCoverAsync(story, null, library));
         Assert.Equal(CoverStyle.Colour, story.CoverStyle);
     }

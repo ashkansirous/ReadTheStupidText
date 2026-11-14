@@ -43,15 +43,15 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -162,7 +162,7 @@ jobs:
           echo "key=high-res-lfs-$(git lfs ls-files -l -I 'content/dino/*/high-res/**' | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Restore the high-res pictures cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .git/lfs
           key: ${{ steps.highreskey.outputs.key }}

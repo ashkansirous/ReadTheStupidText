@@ -1,7 +1,11 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using Foundation;
 using StoreKit;
 using UIKit;
+
+// StoreKit 1 is obsoleted from iOS 18; this exception holds until the purchases move to StoreKit 2.
+#pragma warning disable CA1422
 
 namespace DinoReader;
 
@@ -65,6 +69,7 @@ public sealed class IosPurchases : IBookPurchases
     }
 
     // Apple's own "Redeem Code" sheet exists from iOS 14; the web address is the fallback and also what a TestFlight tester reaches.
+    [UnsupportedOSPlatform("maccatalyst")] // the redemption sheet is iOS only; this app has no Mac Catalyst head
     public async Task<bool> RedeemCodeAsync()
     {
         if (OperatingSystem.IsIOSVersionAtLeast(14))

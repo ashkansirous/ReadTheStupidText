@@ -76,11 +76,11 @@ jobs:
     steps:
       # No LFS: the iOS package carries no voice model (Slice 50).
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # iOS pins the SDK feature band its workload set needs (see the workload step).
       - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.401'
 

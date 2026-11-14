@@ -16,10 +16,10 @@ public class SingleModelCallTests
         using var cancel = new CancellationTokenSource();
         Task first = single.RunAsync("fa", start, cancel.Token);
         cancel.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => first.WaitAsync(Limit));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => first.WaitAsync(Limit, TestContext.Current.CancellationToken));
         Task second = single.RunAsync("fa", start, CancellationToken.None);
         release.SetResult();
-        await second.WaitAsync(Limit);
+        await second.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(1, starts);
     }
 
@@ -43,12 +43,12 @@ public class SingleModelCallTests
         using var cancel = new CancellationTokenSource();
         Task first = single.RunAsync("fa", () => { Interlocked.Increment(ref starts); return release.Task; }, cancel.Token);
         cancel.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => first.WaitAsync(Limit));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => first.WaitAsync(Limit, TestContext.Current.CancellationToken));
         Task other = single.RunAsync("de", () => { Interlocked.Increment(ref starts); return Task.CompletedTask; }, CancellationToken.None);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Equal(1, starts);
         release.SetResult();
-        await other.WaitAsync(Limit);
+        await other.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(2, starts);
     }
 }

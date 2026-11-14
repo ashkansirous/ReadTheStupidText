@@ -99,7 +99,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout (release scripts)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             .github/scripts

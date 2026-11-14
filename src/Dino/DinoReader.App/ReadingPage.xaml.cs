@@ -976,7 +976,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		Modes.OnPicture = FloatingHeader;
 		BackButton.BackgroundColor = FloatingHeader ? _theme.TextCard.WithAlpha(ChipAlpha) : Colors.Transparent;
 		BackButton.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = BackChipSize / 2 };
-		BackButton.Shadow = FloatingHeader ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null;
+		BackButton.Shadow = FloatingHeader ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null!;
 		ApplyLanguageChrome();
 	}
 

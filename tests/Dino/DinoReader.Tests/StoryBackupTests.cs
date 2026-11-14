@@ -146,7 +146,7 @@ public sealed class StoryBackupTests : IDisposable
         Assert.Equal((0, 1, 0), (result.Added, result.Merged, result.Damaged));
         Assert.Equal(new MissingBook(b.SourceId!, "B"), Assert.Single(result.Missing!));
         Assert.Single(await target.ListAsync());
-        Assert.Equal("bak-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!));
+        Assert.Equal("bak-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public sealed class StoryBackupTests : IDisposable
         Story back = (await target.GetAsync(downloaded.Id))!;
         Assert.Equal([1], StoryRecordings.RecordedPages(back));
         Assert.Equal(ReadingMode.PictureOnly, back.PreferredMode);
-        Assert.Equal("bak-a", await File.ReadAllTextAsync(target.TryResolveFile(downloaded.Id, StoryRecordings.FileNameOf(1))!));
+        Assert.Equal("bak-a", await File.ReadAllTextAsync(target.TryResolveFile(downloaded.Id, StoryRecordings.FileNameOf(1))!, TestContext.Current.CancellationToken));
         Assert.False(await StoryBackupReader.ApplyToBookAsync(new MemoryStream(backup), target, StoryIds.New()));
     }
 
@@ -241,7 +241,7 @@ public sealed class StoryBackupTests : IDisposable
         Assert.Null(result.Missing);
         Assert.Equal(b.SourceId, Assert.Single(added).SourceId);
         Assert.Equal(2, (await target.ListAsync()).Count);
-        Assert.Equal("old-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!));
+        Assert.Equal("old-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!, TestContext.Current.CancellationToken));
         Assert.Equal(0, (await StoryBackupReader.RestoreAsync(new MemoryStream(old), target)).Added); // restoring twice adds nothing
         Assert.Equal(2, (await target.ListAsync()).Count);
     }
@@ -282,7 +282,7 @@ public sealed class StoryBackupTests : IDisposable
         Assert.Equal((0, 1, 0), (result.Added, result.Merged, result.Damaged));
         Assert.Equal(b.SourceId, Assert.Single(result.Missing!).Id);
         Assert.Single(await target.ListAsync()); // B's book files were not imported
-        Assert.Equal("old-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!));
+        Assert.Equal("old-a", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, StoryRecordings.FileNameOf(1))!, TestContext.Current.CancellationToken));
 
         await target.AddAsync(Make("B", b.SourceId));
         Assert.True(await StoryBackupReader.ApplyToBookAsync(new MemoryStream(old), target, b.SourceId!));

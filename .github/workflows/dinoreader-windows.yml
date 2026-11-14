@@ -72,20 +72,19 @@ jobs:
       version: ${{ steps.gitversion.outputs.majorMinorPatch }}
     steps:
       - name: Checkout (full history + tags — GitVersion needs them)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v4.5.0
+        uses: gittools/actions/gitversion/setup@v4.7.0
         with:
           versionSpec: '6.x'
 
       - name: Determine version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v4.5.0
+        uses: gittools/actions/gitversion/execute@v4.7.0
         with:
-          useConfigFile: true
           configFilePath: GitVersion.dino.yml
 
   build:
@@ -110,7 +109,7 @@ jobs:
       WORKLOAD_SET: '10.0.402'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Slice 240: the SDK and its MAUI workload are installed into a job-local folder and that whole
       # folder is cached, so a hit skips the 300 MB SDK download and the ~200 s workload install.
@@ -132,7 +131,7 @@ jobs:
 
       - name: Restore the cached .NET SDK and workloads
         id: dotnet-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}\dotnet
           key: ${{ env.DOTNET_DIR_KEY }}
@@ -170,7 +169,7 @@ jobs:
 
       - name: Set up .NET 10
         if: steps.dotnet-valid.outputs.valid != 'true'
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.SDK_VERSION }}
 
@@ -217,7 +216,7 @@ jobs:
       # files in the folder.
       - name: Save the .NET SDK and workloads
         if: steps.workload-install.outcome == 'success'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         continue-on-error: true
         with:
           path: ${{ runner.temp }}\dotnet
@@ -227,7 +226,7 @@ jobs:
       # Windows build restores are hashed, so an unrelated project edit does not start a new entry.
       - name: Restore NuGet packages cache
         id: nuget-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-${{ hashFiles('src/Dino/DinoReader.App/*.csproj', 'src/Dino/DinoReader.Core/*.csproj', 'src/Shared/Sirous.Reading.Domain/*.csproj', 'src/Shared/Sirous.Reading.Application/*.csproj', 'src/Shared/Sirous.Reading.Documents/*.csproj', 'src/Shared/Sirous.Reading.Infrastructure/*.csproj', 'src/Shared/Sirous.Reading.Mobile.Shared/*.csproj', 'src/Shared/Sirous.Reading.Mobile.Shared/*.props', 'Directory.Build.props') }}
@@ -263,7 +262,7 @@ jobs:
       # Saved only after a good publish and only on an exact miss (a hit would be refused anyway).
       - name: Save NuGet packages cache
         if: success() && steps.nuget-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         continue-on-error: true
         with:
           path: ~/.nuget/packages

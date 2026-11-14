@@ -75,8 +75,8 @@ public sealed class StoryPackageTests : IDisposable
         Assert.Equal(story.Cast, stored.Cast);
         Assert.True(stored.Cast[0].Edited);
         Assert.Equal(story.Pages.Select(p => p.Text), stored.Pages.Select(p => p.Text));
-        Assert.Equal("page-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "page-1.jpg")!));
-        Assert.Equal("cover-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "cover-ab12cd34.jpg")!));
+        Assert.Equal("page-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "page-1.jpg")!, TestContext.Current.CancellationToken));
+        Assert.Equal("cover-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "cover-ab12cd34.jpg")!, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public sealed class StoryPackageTests : IDisposable
         Story story = Make(StoryIds.New());
         string existing = target.TryResolveFile(story.Id, "other.jpg")!;
         Directory.CreateDirectory(target.FolderOf(story.Id));
-        await File.WriteAllTextAsync(existing, "keep");
+        await File.WriteAllTextAsync(existing, "keep", TestContext.Current.CancellationToken);
         PackageFile broken = new("page-1.jpg", () => throw new IOException("disk"));
 
         await Assert.ThrowsAsync<IOException>(() => target.ImportAsync(story, [broken]));

@@ -135,7 +135,7 @@ public sealed class ParentRecordingTests : IDisposable
         Assert.Equal(["rec-1.m4a", "rec-3.m4a"], EntryNames(package).Where(StoryRecordings.IsRecordingFileName).Order());
         Assert.Equal([0, 2], imported.Recordings!.Keys.Order());
         Assert.True(imported.UseRecordings);
-        Assert.Equal("audio-3", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "rec-3.m4a")!));
+        Assert.Equal("audio-3", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "rec-3.m4a")!, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public sealed class ParentRecordingTests : IDisposable
         await library.StoreRecordingAsync(story.Id, 1, path => File.WriteAllTextAsync(path, "first"));
         await library.StoreRecordingAsync(story.Id, 1, path => File.WriteAllTextAsync(path, "second"));
         string file = library.TryResolveFile(story.Id, "rec-2.m4a")!;
-        Assert.Equal("second", await File.ReadAllTextAsync(file));
+        Assert.Equal("second", await File.ReadAllTextAsync(file, TestContext.Current.CancellationToken));
 
         await library.DeleteFileAsync(story.Id, "story.json");
         Assert.NotNull(await library.GetAsync(story.Id));
@@ -240,7 +240,7 @@ public sealed class ParentRecordingTests : IDisposable
 
         await Assert.ThrowsAsync<IOException>(() => library.StoreRecordingAsync(story.Id, 0, _ => throw new IOException("disk")));
 
-        Assert.Equal("keep", await File.ReadAllTextAsync(library.TryResolveFile(story.Id, "rec-1.m4a")!));
+        Assert.Equal("keep", await File.ReadAllTextAsync(library.TryResolveFile(story.Id, "rec-1.m4a")!, TestContext.Current.CancellationToken));
         Assert.Equal(["rec-1.m4a", "story.json"], Directory.GetFiles(library.FolderOf(story.Id)).Select(Path.GetFileName).Order());
     }
 

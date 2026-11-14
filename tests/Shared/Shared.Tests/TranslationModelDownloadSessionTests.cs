@@ -44,7 +44,7 @@ public class TranslationModelDownloadSessionTests
     public async Task A_good_attempt_is_done()
     {
         using var session = Session(new FakeNetwork(), _ => Task.CompletedTask);
-        await session.RunAsync(CancellationToken.None).WaitAsync(Limit);
+        await session.RunAsync(CancellationToken.None).WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -52,7 +52,7 @@ public class TranslationModelDownloadSessionTests
     public async Task A_failure_with_internet_stays_failed()
     {
         using var session = Session(new FakeNetwork(), _ => throw new InvalidOperationException("x"));
-        await Assert.ThrowsAsync<TranslationModelUnavailableException>(() => session.RunAsync(CancellationToken.None).WaitAsync(Limit));
+        await Assert.ThrowsAsync<TranslationModelUnavailableException>(() => session.RunAsync(CancellationToken.None).WaitAsync(Limit, TestContext.Current.CancellationToken));
         Assert.Equal(TranslationDownloadState.Failed, session.Snapshot.State);
     }
 
@@ -64,7 +64,7 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         network.Change(true, NetworkProfile.WiFi);
-        await run.WaitAsync(Limit);
+        await run.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -76,10 +76,10 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         network.Change(true, NetworkProfile.Cellular);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.WaitingForInternet, session.Snapshot.State);
         session.Retry();
-        await run.WaitAsync(Limit);
+        await run.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -91,7 +91,7 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         network.Change(true, NetworkProfile.WiFi);
-        TranslationModelUnavailableException failure = await Assert.ThrowsAsync<TranslationModelUnavailableException>(() => run.WaitAsync(Limit));
+        TranslationModelUnavailableException failure = await Assert.ThrowsAsync<TranslationModelUnavailableException>(() => run.WaitAsync(Limit, TestContext.Current.CancellationToken));
         Assert.Equal("storage full", failure.InnerException?.Message);
         Assert.Equal(TranslationDownloadState.Failed, session.Snapshot.State);
     }
@@ -112,10 +112,10 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         network.Change(true, NetworkProfile.WiFi);
-        await Task.Delay(300);
+        await Task.Delay(300, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.WaitingForInternet, session.Snapshot.State);
         network.Change(true, NetworkProfile.WiFi);
-        await run.WaitAsync(Limit);
+        await run.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -144,7 +144,7 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         session.Retry();
-        await run.WaitAsync(Limit);
+        await run.WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -157,14 +157,14 @@ public class TranslationModelDownloadSessionTests
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         Assert.True(session.WaitedTotal >= TimeSpan.Zero);
         session.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit, TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task A_slow_download_with_internet_is_not_a_stall()
     {
         using var session = new TranslationModelDownloadSession("mlkit-fa", (_, _) => Task.Delay(400), new FakeNetwork(), false, TimeSpan.FromMilliseconds(120));
-        await session.RunAsync(CancellationToken.None).WaitAsync(Limit);
+        await session.RunAsync(CancellationToken.None).WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Done, session.Snapshot.State);
     }
 
@@ -181,10 +181,10 @@ public class TranslationModelDownloadSessionTests
         Task run = session.RunAsync(CancellationToken.None);
         await WaitUntilAsync(session, TranslationDownloadState.WaitingForInternet);
         session.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit, TestContext.Current.CancellationToken));
         network.Change(true, NetworkProfile.WiFi);
         session.Retry();
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Equal(TranslationDownloadState.Cancelled, session.Snapshot.State);
         Assert.Equal(1, attempts);
     }
@@ -200,9 +200,9 @@ public class TranslationModelDownloadSessionTests
         }, new FakeNetwork(), false);
         using var cts = new CancellationTokenSource();
         Task run = session.RunAsync(cts.Token);
-        await started.Task.WaitAsync(Limit);
+        await started.Task.WaitAsync(Limit, TestContext.Current.CancellationToken);
         cts.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(Limit, TestContext.Current.CancellationToken));
         Assert.Equal(TranslationDownloadState.Cancelled, session.Snapshot.State);
     }
 
@@ -223,7 +223,7 @@ public class TranslationModelDownloadSessionTests
                 reported.TrySetResult();
             }
         };
-        await session.RunAsync(CancellationToken.None).WaitAsync(Limit);
+        await session.RunAsync(CancellationToken.None).WaitAsync(Limit, TestContext.Current.CancellationToken);
         Assert.True(reported.Task.IsCompletedSuccessfully);
     }
 

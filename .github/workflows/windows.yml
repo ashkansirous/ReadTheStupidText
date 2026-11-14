@@ -67,20 +67,20 @@ jobs:
       version: ${{ steps.gitversion.outputs.majorMinorPatch }}
     steps:
       - name: Checkout (full history + tags — GitVersion needs them)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v4.5.0
+        uses: gittools/actions/gitversion/setup@v4.7.0
         with:
           versionSpec: '6.x'
 
       - name: Determine version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v4.5.0
+        uses: gittools/actions/gitversion/execute@v4.7.0
         with:
-          useConfigFile: true
+          configFilePath: GitVersion.yml
 
   build:
     timeout-minutes: 90   # a stuck release build ends after 90 min (user, 2026-11-02)
@@ -103,10 +103,10 @@ jobs:
     steps:
       # No LFS: the MSIX carries no voice model (Slice 56); voices download as packs at runtime.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job
 
@@ -114,7 +114,7 @@ jobs:
         run: dotnet --version
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the
       # Store requires revision 0). Anchored to line start and the self-closing

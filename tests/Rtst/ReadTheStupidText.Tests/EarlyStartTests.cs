@@ -346,7 +346,7 @@ public class EarlyStartCoordinatorTests
         await early.ChooseTranslate();
         early.CancelAll();
         Task settled = early.SettleChosenAsync();
-        await voiceStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await voiceStarted.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 
         Assert.False(settled.IsCompleted);
         Assert.False(voiceToken.IsCancellationRequested);
@@ -372,7 +372,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromSeconds(30));
 
         early.ChooseRead();
-        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(["Un. Deux."], probe.VoicedOriginal); // two sentences: the read takes them as its first chunk
     }
@@ -389,7 +389,7 @@ public class EarlyStartCoordinatorTests
         early.Discard();
 
         Assert.True(probe.OriginalToken.IsCancellationRequested);
-        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -399,7 +399,7 @@ public class EarlyStartCoordinatorTests
         var early = new EarlyStartCoordinator();
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromSeconds(30));
 
-        EarlyTranslation? result = await early.ChooseTranslate().WaitAsync(TimeSpan.FromSeconds(5));
+        EarlyTranslation? result = await early.ChooseTranslate().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal(["Un. Deux. Trois."], probe.Translated);
@@ -494,7 +494,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromMilliseconds(300));
 
         early.Restart("Autre texte. Fin.", "fr", "en", probe.Jobs(), TimeSpan.Zero);
-        await Task.Delay(400);
+        await Task.Delay(400, TestContext.Current.CancellationToken);
 
         Assert.Equal(["Autre texte. Fin."], probe.VoicedOriginal);
         Assert.Equal(["Autre texte. Fin."], probe.Translated);

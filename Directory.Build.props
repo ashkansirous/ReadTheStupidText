@@ -7,4 +7,12 @@
 		<MauiVersion>10.0.130</MauiVersion>
 	</PropertyGroup>
 
+	<!-- Warnings that can hide a real bug fail the build in every project (Slice 378): not awaited, platform-version
+	     calls, obsoleted-on-a-platform calls, nullability, test calls without the test's cancellation token, bad crefs.
+	     Fix the code or add the platform attribute; never suppress. A list, not TreatWarningsAsErrors, so a new SDK's
+	     new warning cannot break a release overnight. Slice 379 widens it. -->
+	<PropertyGroup>
+		<WarningsAsErrors>$(WarningsAsErrors);CS4014;CA1416;CA1422;nullable;xUnit1051;CS1574;CS0419</WarningsAsErrors>
+	</PropertyGroup>
+
 </Project>

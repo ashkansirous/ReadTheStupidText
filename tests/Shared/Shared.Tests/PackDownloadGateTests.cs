@@ -11,11 +11,11 @@ public class PackDownloadGateTests
         using IDisposable first = await PackDownloadGate.EnterAsync("gate-test-same", CancellationToken.None);
 
         Task<IDisposable> second = PackDownloadGate.EnterAsync("gate-test-same", CancellationToken.None);
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         Assert.False(second.IsCompleted);
 
         first.Dispose();
-        using IDisposable entered = await second.WaitAsync(TimeSpan.FromSeconds(5));
+        using IDisposable entered = await second.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class PackDownloadGateTests
     {
         using IDisposable first = await PackDownloadGate.EnterAsync("gate-test-a", CancellationToken.None);
 
-        using IDisposable other = await PackDownloadGate.EnterAsync("gate-test-b", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
+        using IDisposable other = await PackDownloadGate.EnterAsync("gate-test-b", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.NotNull(other);
     }
@@ -39,6 +39,6 @@ public class PackDownloadGateTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting);
 
         first.Dispose();
-        using IDisposable next = await PackDownloadGate.EnterAsync("gate-test-cancel", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
+        using IDisposable next = await PackDownloadGate.EnterAsync("gate-test-cancel", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 }
