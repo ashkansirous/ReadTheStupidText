@@ -166,6 +166,26 @@ jobs:
       upload: ${{ needs.shared.outputs.proceed == 'true' }}
     secrets: inherit
 
+  # Slice 354 item 2: a build job that ends `cancelled` while the run itself was not cancelled is almost always a job that
+  # never got a runner (a macOS runner that did not come). This job only names it and fails the run; the retry is
+  # rerun-no-runner.yml (one `gh run rerun --job` per no-runner job, same commit and matrix).
+  name-cancelled-builds-dino:
+    needs: [shared, build-dinowin, build-dinoapp, build-dinoios]
+    if: ${{ !cancelled() && contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Name the cancelled build jobs
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          cancelled=$(jq -r 'to_entries[] | select(.value.result == "cancelled") | .key' <<< "$NEEDS" | paste -sd, -)
+          echo "::error::Build job(s) ended cancelled while the run was not cancelled (no runner took them): ${cancelled}."
+          echo "### Build job cancelled (no runner): ${cancelled}" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
   # Publishes the Dino draft (creating the dino-v<x.y.z> tag at the merge commit) only when every platform this change
   # touched built successfully; never marked "latest".
   release-publish-dino:
@@ -315,3 +335,29 @@ jobs:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
         run: bash .github/scripts/testflight-upload.sh "testflight/DinoReader-${VERSION}.ipa"
+
+      # Slice 354 item 1: altool can say "UPLOAD SUCCEEDED" after a 500 on its completion call; ask App Store Connect whether the
+      # build is there (waits up to 10 minutes for it to show) and fail the job when it never appears.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read the uploaded build number
+        id: ipa
+        run: |
+          set -euo pipefail
+          ipa="testflight/DinoReader-${VERSION}.ipa"
+          # Exactly Payload/<name>.app/Info.plist: a wildcard would also match the plists of frameworks and plug-ins inside the app.
+          plist=$(unzip -Z1 "$ipa" | grep -E '^Payload/[^/]+\.app/Info\.plist$')
+          [ "$(wc -l <<< "$plist")" -eq 1 ] || { echo "::error::Expected exactly one top-level app Info.plist in the ipa, found: ${plist}"; exit 1; }
+          unzip -p "$ipa" "$plist" > "$RUNNER_TEMP/Info.plist"
+          echo "build=$(plutil -extract CFBundleVersion raw -o - "$RUNNER_TEMP/Info.plist")" >> "$GITHUB_OUTPUT"
+
+      - name: Confirm App Store Connect received the build
+        env:
+          BUILD_NUMBER: ${{ steps.ipa.outputs.build }}
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: node .github/scripts/asc-confirm-build.mjs dino "$VERSION" "$BUILD_NUMBER"

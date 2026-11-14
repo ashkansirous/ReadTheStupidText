@@ -11,6 +11,14 @@
 # expect-log: HOOK pack-repair ok online
 appId: uk.sirous.dinoreader.dbg
 name: No internet shows the card, with Read in only when another language's sound is on the phone
+# Runs after the flow pass or fail, so a failure never leaves the app in another language for the next flow (usage-context asserts uiLang=en).
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the flow installs the one pack it needs.

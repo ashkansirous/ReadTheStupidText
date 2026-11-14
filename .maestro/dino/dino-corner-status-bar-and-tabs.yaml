@@ -9,6 +9,12 @@ appId: uk.sirous.dinoreader.dbg
 name: Corner status bar icons are light and tab labels are whole
 onFlowComplete:
   - setOrientation: PORTRAIT
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud.
