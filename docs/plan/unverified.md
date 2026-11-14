@@ -385,6 +385,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iPhone: pre-made audio rate and playback, and a real store download fetching live packs.
 
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
+- **Device:** The audio-backed flow `ios-read-audio.yaml` passes reliably on main: two runs on main failed for harness reasons, no app crash (43649148563 StoryTile 60 s wait timed out after skip-first-run; 43650858536 Maestro `XCUITestServerError` Unreachable); the branch run 43646782384 passed.
 - **You:** The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - **Device:** The window size on a real phone.
 - **Device:** The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt for dino-test:// links is tapped (prompt text, timing, locale), the `.ips` file naming, the Jetsam `largestProcess` field.
@@ -503,6 +504,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 378: Build warnings gate ([slice](slices/378-build-warnings-gate.md))
+- **Device:** The scan-crop fix on an API 28-30 emulator image: no Android 9-11 system image is installed, and no flow scans a real page, so a scan flow is needed as well.
+- **Device:** The first release run after merge: no Node 20 warnings, `tracks:` accepted by upload-google-play v1.1.5, GitTools v4.7.0 `configFilePath` (including `windows.yml`'s restored config), setup-node v7 caching.
+- **Device:** A TestFlight build with the gate on.
+- **Device:** Android 36 `ToggleSwitch` `CheckedState` (`ToggleSwitchAccessibility.cs`).
 
 ### Slice 317: Feedback loop 2026-11-08-0106 leftovers ([slice](slices/317-feedback-loop-2026-11-08-0106-leftovers.md))
 - Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).
@@ -627,7 +634,7 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 - **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
-- **Device:** The tablet store-shot flows (`store-shot-tablet.yaml`, Dino and RTST) have never been run.
+- **Device:** The iOS store shots, first run on main (43650776897): a look at each Dino iPhone 6.9"/6.5" shot; the Dino iPad 13" flow (`Tap on id: ReadingBack... FAILED`) and the RTST flows on all three devices (`PackStatusLabel is not visible... FAILED`) failed.
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
 - **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).

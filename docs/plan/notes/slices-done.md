@@ -379,6 +379,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 371 | Tidy by product 6/6: src, tests and tools folders grouped by product | built | #1109 | | [371-folders-by-product.md](../slices/371-folders-by-product.md) |
 | 342 | Listening page: Farsi voice pack | built (#1098); second listen waits for an interactive session | #1098 | | [342-farsi-voice-pack.md](../slices/342-farsi-voice-pack.md) |
 | 376 | Feedback loop 2026-11-13-1149 leftovers (Dino Store submit 401, skip-first-run hook, RTST Farsi flow, selftest mapping, pack version in counts, Worker doc wording, two ClaudeSkills checks) | built | #1130 | | [376-feedback-loop-2026-11-13-1149-leftovers.md](../slices/376-feedback-loop-2026-11-13-1149-leftovers.md) |
+| 378 | Build warnings gate: current GitHub Actions (no Node 20), warnings that fail the build, Android 9-11 scan crop fix | built | #1146 | | [378-build-warnings-gate.md](../slices/378-build-warnings-gate.md) |
 
 ## Batch ordering notes
 
