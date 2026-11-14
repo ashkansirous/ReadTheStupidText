@@ -1,6 +1,8 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
 **Product:** Shared
 
+*In progress (wave 2026-11-14), draft PR: the store pushes. Store listing pushes are now an `autoMode.environment` entry in the user's settings.*
+
 *Parked: drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.* Moved back to `planned` by the 2026-11-13-1149 feedback loop (park reason kept here); a night run is denied again unless the user adds an autoMode allow line for store listing pushes (see that note's *Waiting on the user*).
 
 **Touches:** `docs/store-listings/**` (new: one file per language for Dino under `docs/store-listings/dino/<lang>.md`; RTST's existing `docs/store-listings/<lang>.md` files completed, new `da.md`, `fi.md`, `sv.md`, `nb.md`, `nl.md`), `docs/plan/slices/374-store-listings-13-languages.md`, `docs/plan/unverified.md`
