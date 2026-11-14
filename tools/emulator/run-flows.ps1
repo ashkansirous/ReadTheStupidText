@@ -129,6 +129,18 @@ function Save-FlowLogcat([string]$FlowName) {
     } catch { Write-Host "LOGCAT could not be kept for ${FlowName}: $($_.Exception.Message)" }
 }
 
+# Slice 317 item 3: a failed Maestro run keeps its whole stderr and stdout next to the flow's logcat. The failure line quotes only the last 5 lines of each stream, so a Maestro
+# Kotlin error (Slice 316's pack-failure-network, whose text was lost) can be read in full afterwards.
+function Save-MaestroOutput([string]$FlowName, $Run) {
+    try {
+        $dir = Join-Path $script:StateDir "logcat-i$Instance"
+        $null = New-Item -ItemType Directory -Force $dir
+        $path = Join-Path $dir "$App-$FlowName.maestro.log"
+        Set-Content -Path $path -Value ("--- stderr ---`n$($Run.Stderr)`n--- stdout ---`n$($Run.Stdout)") -Encoding UTF8
+        Write-Host "MAESTRO output kept for ${FlowName}: $path"
+    } catch { Write-Host "MAESTRO output could not be kept for ${FlowName}: $($_.Exception.Message)" }
+}
+
 # Returns the expected texts still missing from the marker log after the timeout.
 function Wait-LogMarkers([string[]]$Expected) {
     $deadline = (Get-Date).AddSeconds($LogTimeoutSeconds)
@@ -382,7 +394,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File, [bool]$Cyc
     $exit = $run.ExitCode
     $phasesLine = Get-FlowPhasesLine $File.BaseName $startedAt $sw.Elapsed.TotalSeconds
     $problem = $null
-    if ($exit -ne 0) { $problem = Format-MaestroFailure $run.Stderr $run.Stdout }
+    if ($exit -ne 0) { $problem = Format-MaestroFailure $run.Stderr $run.Stdout; Save-MaestroOutput $File.BaseName $run }
     else {
         $missing = Wait-LogMarkers @(Get-ExpectedLogs $File.FullName)
         if ($missing.Count -gt 0) { $problem = "Missing log marker(s) under tag ${logTag}: " + ($missing -join '; ') }
@@ -400,10 +412,19 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File, [bool]$Cyc
         $crashLog = if ($logs.Crash.Trim()) { $logs.Crash } else { $run.CrashLog }   # a failed adb read after the kill must not hide the crash the watch saw
         $crash = @(Find-AppCrashLines $crashLog $logs.Anr $packages[$App])
     }
+    # Slice 317 item 4: a `# needs: voice` flow on an emulator that never started a read is skipped with a line, not reported as a failure (a crash or a killed Maestro is still a failure).
+    # Review fix 1+2: skipped only when the emulator has no TTS engine (probed over adb) AND no ENGINE_READY; the result is NotRun (counted as not run, never PASS).
+    $notRun = $null
+    $needsVoice = @(Get-FlowNeeds $File.FullName) -contains 'voice'
+    if ($problem -and $needsVoice -and $crash.Count -eq 0 -and -not $run.Killed -and -not $run.RunnerStuck -and (Test-NoVoiceSkip @('voice') (Get-TestLog) (Test-NoTtsEngine (Get-EmulatorTtsServices)))) {
+        $notRun = Format-NoVoiceSkipLine $File.BaseName
+        Write-Host $notRun
+        $problem = $null
+    }
     if ($run.Killed) { $problem += "`nMaestro was killed by the crash watch as soon as the app crashed (Slice 247)." }
     if ($run.RunnerStuck) { $problem += "`n" + (Format-RunnerStuckLine $run.StuckPid $script:CrashKillWaitSeconds) }
     if ($crash.Count -gt 0) { $problem += "`nAPP CRASH/ANR during the flow:`n" + (($crash | ForEach-Object { "  $_" }) -join "`n") }
-    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; CrashLog = $crashLog; NotRun = $null; Phases = $phasesLine; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = [bool]$run.RunnerStuck; StuckPid = [int]$run.StuckPid; RetryLogs = @() }
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; CrashLog = $crashLog; NotRun = $notRun; Phases = $phasesLine; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = [bool]$run.RunnerStuck; StuckPid = [int]$run.StuckPid; RetryLogs = @() }
 }
 
 # Slice 247 item e: Maestro runs as a child process; every 2 s the crash buffer is read for this app, and a crash kills the whole Maestro tree (maestro.bat, cmd, java), so a launch
@@ -609,7 +630,7 @@ try {
             }
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
             $r = Invoke-FlowCrashRetry $maestro $file
-            Write-Host ("{0,-5} {1} ({2:n1} s){3}" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds, $(if ($r.Retried) { ' [crash-retried]' } else { '' }))
+            Write-Host ("{0,-5} {1} ({2:n1} s){3}" -f $(if ($r.Problem) { 'FAIL' } elseif ($r.NotRun) { 'SKIP' } else { 'PASS' }), $r.Name, $r.Seconds, $(if ($r.Retried) { ' [crash-retried]' } else { '' }))
             if ($r.Phases) { Write-Host $r.Phases }
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
             $reason = Get-RunStopReason $r   # Slice 301: a stuck Maestro tree (it may still hold the device) or a crash ends the run; the stuck one is named as that, never as an app crash
@@ -623,7 +644,7 @@ try {
         Restore-DialogGuard; Stop-Activity $activity
     }
     $failed = @($results | Where-Object { $_.Problem }).Count
-    $notRun = @($results | Where-Object { $_.NotRun }).Count
+    $notRun = @($results | Where-Object { $_.NotRun -and $_.NotRun -notlike 'SKIP *' }).Count   # Round 2: a no-voice skip does not fail the run; any other not-run flow does
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
     foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
     foreach ($retrySummary in @(Format-RetrySummary $results.ToArray())) { Write-Host $retrySummary }

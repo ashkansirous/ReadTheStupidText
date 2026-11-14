@@ -77,14 +77,18 @@ const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
  * it); the store flag is measured from the newest one.
  */
 export const STORE_TAG_PREFIX = 'rtst-store-v';
+/** Slice 317 item 5: Dino Reader's twin, pushed by release-dino.yml's `store-submit-dino-mark` job after a successful Microsoft Store submission. Not a `dino-v` tag. */
+export const DINO_STORE_TAG_PREFIX = 'dino-store-v';
 
 /**
  * Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries.
- * `store` (RTST only): the marker-tag prefix, the flag measured from it and the flag a pending submission switches on.
+ * `store` (both products since Slice 317): the marker-tag prefix, the flag measured from it and the flag a pending submission switches on. `configuredEnv` (optional): the variable that must be set
+ * for the product's Store submit to exist at all; when it is empty nothing ever creates a marker, so the marker logic is off and the flag follows the release diff only (Slice 317 review fix 6).
  */
 export const PRODUCTS = {
     rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'], store: { prefix: STORE_TAG_PREFIX, flag: 'windowsstore', buildFlag: 'windows' } },
-    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'] },
+    // Slice 317 item 5: Dino's Store submission is `dinowin`'s MSIX, so the marker-measured flag is `dinowin` itself (it is also the flag that builds the MSIX).
+    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'], store: { prefix: DINO_STORE_TAG_PREFIX, flag: 'dinowin', configuredEnv: 'DINOREADER_STORE_APP_ID' } },
 };
 
 /** Targets that publish content and never cut a release, so a major-bump token on their files must not rebuild the product (Slice 158). */
@@ -445,7 +449,8 @@ export function releaseWorkflows(changedFiles) {
 /** The files changed since the product's last store marker tag, or undefined (no marker, or the diff failed: the flag then follows the release diff). */
 function storeChangesFor(name, cwd) {
     if (!PRODUCTS[name].store) return undefined;
-    const { prefix } = PRODUCTS[name].store;
+    const { prefix, configuredEnv } = PRODUCTS[name].store;
+    if (configuredEnv && !process.env[configuredEnv]) { console.log(`ship-targets (${name}): ${configuredEnv} is not set (no Store submit), the store flag follows the release diff.`); return undefined; }
     const storeBase = previousReleaseTag(prefix, cwd);
     if (!storeBase) { console.log(`ship-targets (${name}): no ${prefix}* tag yet, the store flag follows the release diff.`); return undefined; }
     const files = changedFilesSince(storeBase, cwd);

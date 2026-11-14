@@ -634,6 +634,68 @@ test('Slice 222: the marker job never moves or adds an older marker', () => {
     assert.doesNotMatch(job, /--force|-X PATCH/);
 });
 
+// ---- Slice 317 item 5: Dino's Microsoft Store marker (`dino-store-v<x.y.z>`), the twin of RTST's ----
+
+const DINO_APP_FILE = 'src/Dino/DinoReader.App/App.xaml.cs';
+process.env.DINOREADER_STORE_APP_ID = 'test-store-app-id'; // the Dino Store submit exists, so its markers count (the review-fix-6 test unsets it)
+
+test('Slice 317: a Dino release whose Store submission failed is resubmitted by the next release that runs, even one that changes no Dino Windows file (release-dino starts only on a Dino or core path push or a dispatch)', () => {
+    const next = plan([], []);
+    next.dino.storeChangedFiles = [DINO_APP_FILE]; // the last dino-store-v marker is older than this change
+    const flags = shipTargetsPerProduct({ plans: next });
+    assert.equal(flags.dinowin, true);
+    assert.equal(shipTargetsPerProduct({ plans: plan([], []) }).dinowin, false); // the old behaviour: nothing changed in this release, nothing is submitted
+});
+
+test('Slice 317: nothing Dino-Windows since the last Dino Store submission submits nothing', () => {
+    const plans = plan([], []);
+    plans.dino.storeChangedFiles = ['content/dino/lion-and-mouse/story.md'];
+    assert.equal(shipTargetsPerProduct({ plans }).dinowin, false);
+});
+
+test('Slice 317: the Dino marker tag is not a dino-v release tag, and the newest one wins', () => {
+    assert.equal(newestAppTag(['dino-store-v1.90.0', 'dino-v1.88.2'], PRODUCTS.dino.prefix), 'dino-v1.88.2');
+    assert.equal(newestAppTag(['dino-store-v1.88.0', 'dino-store-v1.90.0', 'dino-v1.88.2'], PRODUCTS.dino.store.prefix), 'dino-store-v1.90.0');
+});
+
+test('Slice 317 review fix 6 (git): with DINOREADER_STORE_APP_ID unset the Dino marker logic is off and the flag follows the release diff only', () => {
+    withRepo((dir, commit) => {
+        commit('README.txt', 'dino-v1.0.0', 'dino-store-v1.0.0', 'rtst-v1.0.0');
+        commit(DINO_APP_FILE, 'dino-v1.1.0'); // no dino-store-v1.1.0 marker
+        commit('content/dino/lion-and-mouse/story.md');
+        const saved = process.env.DINOREADER_STORE_APP_ID;
+        try {
+            delete process.env.DINOREADER_STORE_APP_ID;
+            assert.equal(planFor('dino', 'DINO_VERSION_UNSET', dir).storeChangedFiles, undefined);
+            process.env.DINOREADER_STORE_APP_ID = 'abc';
+            assert.ok(planFor('dino', 'DINO_VERSION_UNSET', dir).storeChangedFiles.includes(DINO_APP_FILE));
+        } finally {
+            if (saved === undefined) delete process.env.DINOREADER_STORE_APP_ID; else process.env.DINOREADER_STORE_APP_ID = saved;
+        }
+    });
+});
+
+test('Slice 317 (git): a Dino app change in a release with no marker is submitted by the next Dino release', () => {
+    withRepo((dir, commit) => {
+        commit('README.txt', 'dino-v1.0.0', 'dino-store-v1.0.0', 'rtst-v1.0.0');
+        commit(DINO_APP_FILE, 'dino-v1.1.0'); // released, but no dino-store-v1.1.0: the submission failed
+        commit('content/dino/lion-and-mouse/story.md');
+        const { plans, flags } = flagsFor(dir);
+        assert.deepEqual(plans.dino.changedFiles, ['content/dino/lion-and-mouse/story.md']);
+        assert.deepEqual(plans.dino.storeChangedFiles.sort(), ['content/dino/lion-and-mouse/story.md', DINO_APP_FILE]);
+        assert.equal(flags.dinowin, true);
+    });
+});
+
+test('Slice 317: the Dino marker job mirrors the RTST one (never moves or adds an older marker)', () => {
+    const job = readFileSync(`${WORKFLOWS_DIR}release-dino.yml`, 'utf8').split('store-submit-dino-mark:')[1].split('play-submit-dino:')[0];
+    assert.match(job, /needs\.store-submit-dino\.result == 'success'/);
+    assert.match(job, /MARKER_TAG: dino-store-v/);
+    assert.match(job, /existing" = "\$sha"/);
+    assert.match(job, /not adding an older marker/);
+    assert.doesNotMatch(job, /--force|-X PATCH/);
+});
+
 // ---- "Changed after merge" (Slice 239): the store upload is its own workflow, the release workflows ignore store-book folders ----
 /** GitHub glob: `**` crosses folders (also a lone `**`), `*` stays inside one. (matchesPattern's `**` is for the narrower patterns of GROUPS.) */
 function globMatches(file, pattern) {

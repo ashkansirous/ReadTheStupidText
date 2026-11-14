@@ -250,6 +250,7 @@ jobs:
           PRODUCT: ${{ inputs.product }}
           VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
           FORCE_ALL: ${{ inputs.force_all && 'true' || 'false' }}
+          DINOREADER_STORE_APP_ID: ${{ vars.DINOREADER_STORE_APP_ID }}   # empty: Dino has no Store submit, so ship-targets ignores the dino-store-v markers
         run: node .github/scripts/ship-targets.mjs
 
       # Slice 239: whether release-rtst.yml's advisory `site-checks` runs (a push that only changes content/dino/** skips it).

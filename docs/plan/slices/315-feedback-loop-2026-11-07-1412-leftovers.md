@@ -65,6 +65,23 @@
 - Skipped #3 (`reviews/pr-942-check3-medium.md`): "unconfirmed Maestro honours MAESTRO_OPTS java.io.tmpdir" - the emulator run saw Maestro's 6 files removed from the per-run folder.
 - Skipped #5 (`reviews/pr-942-check3-medium.md`): "dot-sources all of common.ps1 (and lease-common) for one helper" - `tools/phone/test-duplicate-functions.ps1` checks `tools/` for clashing function names.
 
+*ClaudeSkills half* (the findings of ClaudeSkills #189 that were left alone, files `D:/ClaudeSkills-worktrees/reviews/rtst-315-*.md`, recorded here by Slice 317 item 7; the other findings of those files were applied in #189):
+
+- Skipped #6 (`reviews/rtst-315-medium.md`): "Script-heredoc detection only knows literal" interpreters - low, the guard is advisory; it covers the interpreters the index agents were seen using.
+- Skipped #7 (`reviews/rtst-315-medium.md`): "The open-batch [skip ci] denial reads only the literal --subject text" - low; a merge command that hides the marker in a shell variable is denied and the coordinator reruns it with the literal text.
+- Skipped #6 (`reviews/rtst-315-check1-medium.md`): "firstReason checks only first quoted string" - by design since item 21: the reason is the first double-quoted string outside backticks, so a skip line puts its reason first and a later quoted word is not read.
+- Skipped #2 (`reviews/rtst-315-check2-medium.md`): "firstReason takes the first double-quoted string after stripping backticks" - the same design as check1 #6 (item 21).
+- Skipped #3 (`reviews/rtst-315-check2-medium.md`): "open-batch check denies merge before reading the PR" - low and unconfirmed in the finding itself; the denial applies only while a batch file is under 24 h old and the merge command can carry the marker in its subject.
+- Skipped #1 (`reviews/rtst-315-check3-medium.md`): "branch is dead code" - the reviewer was right: Slice 317 item 7 removed the `elseif ($failure)` branch and the `died` status from `run-all-waves.ps1` (the catch writes `failed` for every exception, so the finally block never saw an error), with a test that no `died` stamp remains. The "died-status trace" in *Not yet verified* below is therefore the `stopped` stamp plus the next night's "killed" line.
+- Skipped #2 (`reviews/rtst-315-check3-medium.md`): "an interrupted driver (Ctrl-C, stray exit) is stamped" stopped - by design: a clean early exit is an ended state with `driver ended early without an error` in `stopReason`; only a driver killed before its finally block runs is reported as killed by the next night.
+- Skipped #3 (`reviews/rtst-315-check3-medium.md`): "the stop-file branch is reachable only if interrupted after a stop file was seen" - that is the case it is for; the stop-file tests in `run-all-waves.test.mjs` end the driver on a stop file and read `status.json`.
+- Skipped #4 (`reviews/rtst-315-check3-medium.md`): "matches before resolve()" - low, advisory hook only: only a suppressed advisory results from a spelling such as `/tmp/../x`.
+- Skipped #5 (`reviews/rtst-315-check3-medium.md`): "isScratchPath resolves relative paths against hook cwd, ignoring a leading" cd - low, advisory only; wrong advisory in either direction, never a block.
+- Skipped #1 (`reviews/rtst-315-check4-medium.md`): "git timeout/error falls back to cwd" - low, advisory hook only; fails open only when git is unhealthy.
+- Skipped #2 (`reviews/rtst-315-check4-medium.md`): "successful git with empty stdout stores" an empty root - low, advisory hook only, same git-unhealthy case as #1.
+- Skipped #3 (`reviews/rtst-315-check4-medium.md`): "a timeout is cached as null for the process life with no retry" - low; the hook runs one process per call, so the cache lives for one command only.
+- Skipped #4 (`reviews/rtst-315-check4-medium.md`): "test lacks throw/empty-stdout/subdirectory-cwd cases" - low, the paths the cases would cover are the advisory-only ones above.
+
 ## Waiting on the user
 
 - Item 30: ClaudeSkills #173's `ps-command-guard` hook was removed from the branch; wiring a hook into `home/settings.json` needs the user's own yes.
@@ -72,4 +89,4 @@
 #### Not yet verified
 
 - Item 11: the Slice 308 `paused-notification` check re-run on the phone (none connected that night).
-- The first night with the disk-free preflight and the `died`-status trace (items 2 and 3).
+- The first night with the disk-free preflight and the end-status trace (items 2 and 3; there is no `died` status, Slice 317 item 7 removed it: an exception is `failed`, a clean early exit `stopped`, a killed driver is named by the next night).

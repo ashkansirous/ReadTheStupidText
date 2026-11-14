@@ -246,6 +246,48 @@ jobs:
       product_id: ${{ vars.DINOREADER_STORE_APP_ID }}
     secrets: inherit
 
+  # Slice 317 item 5: the twin of release-rtst.yml's `store-submit-mark` (Slice 218). After a successful Store submission, mark the
+  # released commit with a `dino-store-v<x.y.z>` tag. ship-targets measures `dinowin` (the flag that builds and submits the MSIX) from the
+  # newest such tag, not from the last release, so a Dino release whose submission failed (HTTP 500 from the Ingestion API, run 42449477730),
+  # was skipped or was cancelled is submitted by the next Dino release. The first run has no marker and falls back to the release diff;
+  # the first successful submission creates it.
+  store-submit-dino-mark:
+    needs: [shared, store-submit-dino]
+    if: needs.store-submit-dino.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the marker tag
+    steps:
+      - name: Tag the submitted release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: dino-v${{ needs.shared.outputs.version }}
+          MARKER_TAG: dino-store-v${{ needs.shared.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Idempotent: a re-run of this job (or of the whole run) finds its tag already there.
+          sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq .object.sha)
+          # Only a 404 means "no such tag"; any other API failure (rate limit, 5xx, auth) fails the job.
+          marker_sha() {
+            local out
+            if out=$(gh api "repos/${{ github.repository }}/git/ref/tags/${MARKER_TAG}" --jq .object.sha 2>&1); then printf '%s' "$out"; return 0; fi
+            case "$out" in *"Not Found"*|*"HTTP 404"*) return 0 ;; esac
+            echo "$out" >&2; return 1
+          }
+          existing=$(marker_sha)
+          if [ "$existing" = "$sha" ]; then echo "${MARKER_TAG} already marks ${sha}"; exit 0; fi
+          # A marker only ever moves forward (Slice 222): one per version, never moved, and never an older one after a newer one.
+          if [ -n "$existing" ]; then echo "::warning::${MARKER_TAG} already marks ${existing}, not ${sha}; leaving it where it is."; exit 0; fi
+          newest=$(gh api --paginate "repos/${{ github.repository }}/git/matching-refs/tags/dino-store-v" --jq '.[].ref' | sed 's#^refs/tags/dino-store-v##' | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "${MARKER_TAG#dino-store-v}" | sort -V | tail -n 1)" != "${MARKER_TAG#dino-store-v}" ]; then
+            echo "::warning::dino-store-v${newest} is newer than ${MARKER_TAG}; not adding an older marker."; exit 0
+          fi
+          if ! gh api "repos/${{ github.repository }}/git/refs" -f "ref=refs/tags/${MARKER_TAG}" -f "sha=${sha}"; then
+            # A concurrent run may have created it (422 "Reference already exists"): fine if it marks the same commit.
+            [ "$(marker_sha)" = "$sha" ] || { echo "::error::could not create ${MARKER_TAG}"; exit 1; }
+          fi
+          echo "Marked ${MARKER_TAG} at ${sha}"
+
   # Dino Reader's Google Play internal-testing upload (Slice 58) - only when Dino Reader was
   # rebuilt, signed, and its OWN service account exists. A no-op until then: the app must first
   # be created in Play Console (uk.sirous.dinoreader), and its very first release on a track

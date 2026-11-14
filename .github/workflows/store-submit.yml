@@ -251,9 +251,21 @@ jobs:
           #
           # Slice 374: --noCommit uploads the package into the new draft but does not send it for certification yet. The next step
           # puts the repo's 13-language listing text into that same draft and commits it, so the release is ONE submission.
-          msstore publish "out\$($env:PACKAGE).msixbundle" `
-            -id "${{ inputs.product_id }}" -ut 300 -v --noCommit
-          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed ($LASTEXITCODE)" }
+          #
+          # Slice 317 item 5: one retry after a minute when the CLI's output names a 5xx from the Store service (release run 42449477730: HTTP 500
+          # InternalServerError on "Retrieving existing Submission" after 55 s). A 4xx or any other failure fails at once. store-submit-retry.mjs decides.
+          $publishLog = "publish-output.txt"
+          for ($attempt = 1; $attempt -le 2; $attempt++) {
+            msstore publish "out\$($env:PACKAGE).msixbundle" `
+              -id "${{ inputs.product_id }}" -ut 300 -v --noCommit 2>&1 | Tee-Object -FilePath $publishLog
+            if ($LASTEXITCODE -eq 0) { break }
+            node .github/scripts/store-submit-retry.mjs $publishLog
+            $transient = ($LASTEXITCODE -eq 0)
+            if ($attempt -ge 2 -or -not $transient) { throw "msstore publish failed (attempt $attempt of 2, transient=$transient)" }
+            $wait = [int](node .github/scripts/store-submit-retry.mjs --wait-seconds)
+            Write-Host "::warning::msstore publish failed with a 5xx from the Store service; retrying once in $wait s."
+            Start-Sleep -Seconds $wait
+          }
 
       # Slice 374 (items 4 and 5): every release carries the listing text committed in docs/store-listings (RTST) or
       # docs/store-listings/dino (Dino). `submission get` returns the draft that `publish --noCommit` just made (package included);

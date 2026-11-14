@@ -112,6 +112,12 @@ jobs:
       - name: Emulator build-key self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-build-key.ps1
 
+      - name: Build cache prune self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-build-prune.ps1
+
+      - name: No-voice flow skip self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-no-voice-skip.ps1
+
       - name: Dialog guard and closure-scope self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-dialog-guard.ps1
 

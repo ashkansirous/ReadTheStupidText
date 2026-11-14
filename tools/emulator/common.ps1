@@ -217,7 +217,8 @@ function Format-FlowsSummary([string]$App, [object[]]$Results, [double]$Seconds)
     $failed = @($Results | Where-Object { $_.Problem }).Count
     $notRun = @($Results | Where-Object { $_.NotRun }).Count
     $passed = $Results.Length - $failed - $notRun
-    $why = if (@($Results | Where-Object { Test-RunnerStuck $_ }).Count -gt 0) { 'runner stuck' } else { 'app crashed' }
+    $skipped = @($Results | Where-Object { $_.NotRun -like 'SKIP *' }).Count   # Round 2: only a no-voice skip is labelled so, next to the real counts
+    $why = if (@($Results | Where-Object { Test-RunnerStuck $_ }).Count -gt 0) { 'runner stuck' } elseif ($skipped -gt 0 -and $skipped -eq $notRun -and $failed -eq 0) { 'skipped, no voice' } elseif ($skipped -gt 0) { "app crashed; $skipped skipped, no voice" } else { 'app crashed' }
     return ('{0}: {1} passed, {2} failed, {3} not run ({4}) in {5:n1} s.' -f $App, $passed, $failed, $notRun, $why, $Seconds)
 }
 
@@ -441,6 +442,29 @@ function Test-LogMarkerCanMatch([string]$Marker) {
         if (Test-LogMarker $line $Marker) { return $true }
     }
     return $false
+}
+
+# Slice 317 item 4: a flow whose header says `# needs: voice` reads text aloud. On an emulator with no voice no read ever starts, so the engine's ENGINE_READY marker never appears and the
+# flow fails at a marker or a screen: that is a missing voice, not a bug in the feature the flow checks. Pure: $Needs are the flow's `# needs:` values, $Log the RTST-TEST log of the run.
+$script:NoVoiceEngineMarker = 'ENGINE_READY'
+# Review fix 1: the missing marker alone is not proof (a UI regression before the read tap gives the same log), so the emulator itself must also have no TTS engine.
+# Round 2: $TtsServices is the output of `adb shell cmd package query-services -a android.intent.action.TTS_SERVICE`. "No engine" is true ONLY when adb answered with exactly "No services found";
+# empty output (a timeout returns $null), an error text or anything else is "unknown" and never skips a flow, so a real failure is never downgraded.
+$script:NoTtsServicesAnswer = 'No services found'
+function Test-NoTtsEngine([string]$TtsServices) {
+    return ("$TtsServices".Trim() -ieq $script:NoTtsServicesAnswer)
+}
+
+function Test-NoVoiceSkip([string[]]$Needs, [string]$Log, [bool]$EmulatorHasNoTtsEngine) {
+    return (@($Needs) -contains 'voice') -and $EmulatorHasNoTtsEngine -and -not (Test-LogMarker $Log $script:NoVoiceEngineMarker)
+}
+
+function Get-EmulatorTtsServices {
+    return "$(Invoke-AdbBounded @('-s', $script:Serial, 'shell', 'cmd', 'package', 'query-services', '-a', 'android.intent.action.TTS_SERVICE'))"
+}
+
+function Format-NoVoiceSkipLine([string]$FlowName) {
+    return "SKIP ${FlowName}: no voice on this emulator (no TTS engine installed and no $($script:NoVoiceEngineMarker) marker in the RTST-TEST log), so the flow could not read aloud; this is not a failure of the feature it checks."
 }
 
 # Slice 315 item 1: the Maestro CLI (Java) copies the dev app's APK (69-97 MB) to %TEMP%\tmp<digits>.apk about once per clearState and never deletes it (207 files, 16 GB in one day).
