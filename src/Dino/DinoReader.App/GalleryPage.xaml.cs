@@ -343,9 +343,10 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		{
 			applied = await RebuildShelfAsync();
 		}
-		catch (OperationCanceledException) when (Handler is null)
+		catch (OperationCanceledException ex) when (Handler is null && ex.InnerException is not TimeoutException)
 		{
-			// no-fallback: the page was torn down (its handler is gone) while the pass ran, so a cancel here is the teardown, not a failure; the shelf stays pending
+			// no-fallback: the page was torn down (its handler is gone) while the pass ran, so a cancel here is the teardown, not a failure; the shelf stays pending.
+			// An HttpClient timeout (TaskCanceledException wrapping a TimeoutException) is never silent, handler or not: it reports below.
 		}
 		catch (Exception ex)
 		{

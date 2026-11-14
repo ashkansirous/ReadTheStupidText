@@ -464,7 +464,7 @@ function Test-FlowSkipped($Result) {
 }
 
 # Review round 2: one transient "No services found" (package service not yet up) must not skip every needs-voice flow with exit 0. $Probe returns adb's answer; both probes, $WaitSeconds apart, must say no engine.
-$script:NoTtsProbeWaitSeconds = 4
+$script:NoTtsProbeWaitSeconds = 10
 function Test-NoTtsEngineConfirmed([scriptblock]$Probe, [int]$WaitSeconds = $script:NoTtsProbeWaitSeconds) {
     if (-not (Test-NoTtsEngine (& $Probe))) { return $false }
     if ($WaitSeconds -gt 0) { Start-Sleep -Seconds $WaitSeconds }

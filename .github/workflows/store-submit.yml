@@ -258,31 +258,11 @@ jobs:
           # Slice 374: --noCommit uploads the package into the new draft but does not send it for certification yet. The next step
           # puts the repo's 13-language listing text into that same draft and commits it, so the release is ONE submission.
           #
-          # Slice 317 item 5: one retry after a minute when the CLI's output names a 5xx from the Store service (release run 42449477730: HTTP 500
-          # InternalServerError on "Retrieving existing Submission" after 55 s). A 4xx or any other failure fails at once. store-submit-retry.mjs decides.
-          # The CLI's stderr must not abort the step before the retry check reads the log: native-command errors are not terminating around the call.
-          $publishLog = "publish-output.txt"
-          for ($attempt = 1; $attempt -le 2; $attempt++) {
-            $priorErrorAction = $ErrorActionPreference
-            $priorNativeErrorAction = $PSNativeCommandUseErrorActionPreference
-            $ErrorActionPreference = 'Continue'
-            $PSNativeCommandUseErrorActionPreference = $false
-            try {
-              msstore publish "out\$($env:PACKAGE).msixbundle" `
-                -id "${{ inputs.product_id }}" -ut 300 -v --noCommit 2>&1 | Tee-Object -FilePath $publishLog
-              $publishExit = $LASTEXITCODE
-            } finally {
-              $ErrorActionPreference = $priorErrorAction
-              $PSNativeCommandUseErrorActionPreference = $priorNativeErrorAction
-            }
-            if ($publishExit -eq 0) { break }
-            node .github/scripts/store-submit-retry.mjs $publishLog
-            $transient = ($LASTEXITCODE -eq 0)
-            if ($attempt -ge 2 -or -not $transient) { throw "msstore publish failed (attempt $attempt of 2, transient=$transient)" }
-            $wait = [int](node .github/scripts/store-submit-retry.mjs --wait-seconds)
-            Write-Host "::warning::msstore publish failed with a 5xx from the Store service; retrying once in $wait s."
-            Start-Sleep -Seconds $wait
-          }
+          # Slice 317 item 5 (design changed after check 2, two strikes): `msstore publish` is never re-run automatically (it creates a
+          # submission, so a second run could make a second one); a failure here fails the job. Only the commit below is retried once.
+          msstore publish "out\$($env:PACKAGE).msixbundle" `
+            -id "${{ inputs.product_id }}" -ut 300 -v --noCommit
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed ($LASTEXITCODE)" }
 
       # Slice 374 (items 4 and 5): every release carries the listing text committed in docs/store-listings (RTST) or
       # docs/store-listings/dino (Dino). `submission get` returns the draft that `publish --noCommit` just made (package included);
@@ -313,6 +293,14 @@ jobs:
           }
           if ($listingsOk) { Write-Host "Listing text merged into the draft." }
           # Always commit the draft: a release must never end with an uncommitted submission. This one stays loud.
+          # Slice 317 item 5: one retry after 60 s when the commit fails (the Ingestion API answered 5xx in run 42449477730 and 502 in run 43530984548).
+          # `submission publish` commits the app's existing pending draft and never creates a submission, so running it twice is safe: a second run on an
+          # already committed or missing draft fails cleanly (see the slice file for what the CLI docs say).
           msstore submission publish $id
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::msstore submission publish failed ($LASTEXITCODE); retrying once in 60 s."
+            Start-Sleep -Seconds 60
+            msstore submission publish $id
+          }
           if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed ($LASTEXITCODE)" }
           "committed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append   # Slice 317: the caller's marker job tags only on this
