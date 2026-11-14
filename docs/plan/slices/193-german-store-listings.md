@@ -1,7 +1,7 @@
 ### Slice 193 — German store listings for both apps
 **Product:** Shared
 
-*Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
+*In progress (wave 2026-11-14, night 2026-11-14-1547 wave 2), draft PR: RTST Play de-DE push and RTST Partner Center German.* *Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
 
 **Touches:** `docs/store-listings/de.md` (new, Read The Stupid Text), `docs/store-listings/dino/de.md` (new, Dino), `STORE.md` (where listings are kept), `docs/plan/slices/193-german-store-listings.md`.
 
