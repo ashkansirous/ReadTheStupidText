@@ -255,6 +255,9 @@ public class CrashFactsTests
 
         LaunchFacts? facts = LaunchFactsChoice.ForNativeExit(LaunchA.AddMinutes(30), null, previous, running);
 
+        Assert.Null(LaunchFactsChoice.ForNativeExit(LaunchB, null, previous, running)); // at or after the running launch's start: not the previous launch's
+        Assert.Null(LaunchFactsChoice.ForNativeExit(LaunchB.AddMinutes(5), null, previous, running));
+
         Assert.Equal(previous, facts);
     }
 

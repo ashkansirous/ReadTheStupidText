@@ -9,5 +9,6 @@ namespace Sirous.Reading.Mobile.Shared.Crashes;
 /// <param name="Stack">The call stack or trace, capped when the report is built.</param>
 /// <param name="Time">When it happened (iOS MetricKit: the end of the period the payload covers, not the crash itself).</param>
 /// <param name="PeriodStart">iOS MetricKit only: the start of that period, so a crash already reported by the app can be matched to the diagnostic; null elsewhere.</param>
-/// <param name="Launch">The build the crashed launch ran, when the system's own description names it (iOS MetricKit: the payload's metadata and binary images); null otherwise (the reporter then uses the run marker for Android, or nothing).</param>
-internal sealed record NativeCrash(string Kind, string Type, string Message, string Stack, DateTimeOffset Time, DateTimeOffset? PeriodStart = null, LaunchFacts? Launch = null);
+/// <param name="Launch">The build the crashed launch ran, when the system's own description names it (iOS MetricKit: the payload's metadata and binary images); null otherwise (the reporter then uses the previous launch's facts file for an Android exit, or nothing).</param>
+/// <param name="ExitTime">Android only: the moment the system ended the process, so the exit can be matched to the previous launch. Null for every MetricKit diagnostic (a crash or hang), which takes only its own facts, never the previous launch's.</param>
+internal sealed record NativeCrash(string Kind, string Type, string Message, string Stack, DateTimeOffset Time, DateTimeOffset? PeriodStart = null, LaunchFacts? Launch = null, DateTimeOffset? ExitTime = null);

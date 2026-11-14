@@ -444,7 +444,7 @@ public static partial class CrashReporter
     }
 
     private static CrashReport? FromNative(NativeCrash crash, string tail) =>
-        context is null ? null : CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), LaunchFactsChoice.ForNativeExit(crash.PeriodStart is null ? crash.Time : null, crash.Launch, previousLaunch, thisLaunch)), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
+        context is null ? null : CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), LaunchFactsChoice.ForNativeExit(crash.ExitTime, crash.Launch, previousLaunch, thisLaunch)), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
 
     /// <summary>Slice 250: Dino sets this to read its usage session id; Read The Stupid Text leaves it null and its reports carry none. Read at the moment a report about this launch is made.</summary>
     public static Func<string?>? SessionProvider { get; set; }

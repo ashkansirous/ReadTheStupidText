@@ -29,7 +29,8 @@ public static class LaunchFactsChoice
         if (IsEmpty(reported))
         {
             // exitTime is null when the system gave no time of the crash itself (a MetricKit period end is not one): no guess, no previous facts
-            return exitTime is { } time && previous?.Since is { } since && time >= since ? FillUuid(previous, running) : null;
+            // the exit must fall inside the previous launch: not before it started, and before the running launch started (a later one is of an unkept launch or this one)
+            return exitTime is { } time && previous?.Since is { } since && running?.Since is { } runningSince && time >= since && time < runningSince ? FillUuid(previous, running) : null;
         }
 
         return FillUuid(reported, running);
