@@ -115,3 +115,10 @@ The Debug-only test books in `Resources/Raw/testbooks/` stay standard.
 
 #### Not yet verified
 - A real illustrator run using the small copy (tonight's Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
+
+## Parts B-D: parked (night 2026-11-14-0726, wave 1)
+
+- Built on draft PR #1113 (commit 15828aa9, branch `feat/375-two-picture-sizes`, worktree `s375`), pushed, not merged.
+- The review gate did not converge: the high, medium and check passes 1-3 were each fixed (one redesign: a single HighResOutcome rule after two strikes on failure handling). Check pass 4 (`reviews/s375bd-check4.md`) still has 4 medium correctness findings: 1 an unknown swap error retries forever; 2 the iOS first snapshot reads Limited; 6 a kill between import and the entry write loses the upgrade; 8 the hd files in the content hash make phones re-download an unchanged standard pack.
+- Next: apply check4 findings 1, 2, 3, 6, 7; decide 8 (likely hash the hd files separately so phones keep their pack); then one check pass, the emulator choice flows, merge. Earlier passes: `reviews/s375bd-high.md`, `-medium`, `-check`, `-check2`, `-check3`.
+- Chosen without asking: "slow connection" means not unmetered (no speed is measured). Lion and Mouse's 17 high-res pictures were re-saved at JPEG 85 (0.52-0.86 MB each; hd pack 11.4 MB).
