@@ -50,9 +50,10 @@ the contact sheet live only in the working folder. Touch nothing else.
    Never re-read any of them per page (Slice 356: the context re-read on every turn is what the run costs).
 2. Characters: if `content/dino/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
-   Every character in any picture is drawn first, background groups included (fans, players, villagers: one sheet per
-   named group, each member front and back), and the line-up shows the whole cast side by side at true relative size,
-   front and back (SKILL.md, *Character chat*). Never let Gemini invent a background character on a page.
+   Sheets and the line-up cover the named characters only, at true relative size; background extras (fans, players,
+   villagers) get no sheets and are described in words in each page prompt (SKILL.md, *Character chat*; the user reversed
+   the background-sheet rule on 2026-11-14). Before redrawing a lost or missing page, look for its earlier pictures in the
+   Gemini chat history first (SKILL.md rule 3, *Recover before you redraw*).
 3. Pages: one prompt per Gemini chat: every picture gets its own new chat (Slice 350; a redo also gets a new chat; only a small patch of a bad result may continue a chat, and only while that chat stays at or under 3 picture requests), each started by pasting the line-up and spelling
    out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200).
    The picture sequence (Slice 356) is: new chat (or open), health check, paste sequence (step 4), `__setupPicture`, `__waitForPicture`,
