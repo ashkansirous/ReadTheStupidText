@@ -50,6 +50,12 @@ public static class PictureSizeChoice
     }
 
     /// <summary>
+    /// Slice 377 item 16: whether a high-res download in flight is stopped for the connection it now sees (<paramref name="network"/> is read from the network access and the connection profiles). Only a limited
+    /// (metered) link stops it; no connection at all is a blip (a Wi-Fi roam), left to the download's own stall timeout, and an unmetered link carries on.
+    /// </summary>
+    public static bool ShouldStopHighRes(PictureNetwork network) => network == PictureNetwork.Limited;
+
+    /// <summary>
     /// The device class of the running device: Android by the screen's shorter side in dp (at least <see cref="LandscapeLayout.TabletShortSide"/>), iOS by the idiom, Windows is a desktop.
     /// <paramref name="shortSideDp"/> is read from the display, not the window.
     /// </summary>
