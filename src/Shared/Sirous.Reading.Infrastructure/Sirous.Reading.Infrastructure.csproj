@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\SherpaOnnxVersion.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+    <ProjectReference Include="..\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
+  </ItemGroup>
+
+  <!-- Expose internal pure logic (SpeechTextChunker, SupertonicVoiceTable, the
+       settings-migration resolver) to the unit-test project. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
+    <InternalsVisibleTo Include="Shared.Tests" />
+  </ItemGroup>
+
+  <!-- Local neural TTS engine (sherpa-onnx runtime, Apache-2.0) running the
+       Supertonic-3 voice model. The managed package transitively pulls the
+       per-RID native runtimes; only the build RID's DLLs are copied to output. -->
+  <ItemGroup>
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" />
+  </ItemGroup>
+
+  <!-- Offline translation (Slice 75): Opus-MT (Marian) ONNX models run on onnxruntime. Only the
+       MANAGED binding here: the native onnxruntime.dll is the one sherpa-onnx ships (1.28.2 for sherpa-onnx 1.13.8, checked on the built onnxruntime.dll; not on NuGet, so the binding is OnnxRuntimeVersion 1.28.0), so the
+       version must match the bundled native one, as in Mobile.Shared. Bump both together.
+       Microsoft.ML.Tokenizers (MIT) reads the pack's SentencePiece model. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+  </ItemGroup>
+
+  <!-- Diagnostic logging: Serilog rolling-file sink for the per-day system log.
+       The structured input log is hand-written (see ActivityInputLog). -->
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

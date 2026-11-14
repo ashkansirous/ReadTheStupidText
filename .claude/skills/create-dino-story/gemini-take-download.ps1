@@ -10,7 +10,7 @@
 # Both modes then write <name>.small.jpg beside the picture (896x1200, JPEG 85; Slice 375): the copy agents look at.
 # With -Untouched the original stays byte for byte. A move or rename of the picture moves <name>.small.jpg with it.
 # Exit codes: 0 saved with its small copy; 1 nothing saved (no download, save failed; the error says where the file is);
-# 2 the picture IS saved but the small copy failed ("SAVED <path>; small copy failed: <reason>"): never retry the download, run pwsh tools/picture-review-copy.ps1 <path>.
+# 2 the picture IS saved but the small copy failed ("SAVED <path>; small copy failed: <reason>"): never retry the download, run pwsh tools/dino/picture-review-copy.ps1 <path>.
 param(
   [Parameter(Mandatory = $true)][string]$Path,
   [int]$WaitSeconds = 30,
@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
-. (Join-Path $PSScriptRoot '..\..\..\tools\picture-review-copy.ps1')   # New-ReviewCopy, the one resize function (Slice 375)
+. (Join-Path $PSScriptRoot '..\..\..\tools\dino\picture-review-copy.ps1')   # New-ReviewCopy, the one resize function (Slice 375)
 
 $saveQuality = 95L
 $freshSeconds = 120
@@ -68,7 +68,7 @@ function Save-AsJpeg([System.IO.FileInfo]$source, [string]$file) {
 function Write-SmallCopy([string]$file) {
   try { Write-Host "Small copy $(New-ReviewCopy $file) (look at this, never at the full-size original)" }
   catch {
-    [Console]::Error.WriteLine("ERROR: saved $file but no small copy: $($_.Exception.Message). Run: pwsh tools/picture-review-copy.ps1 $file")
+    [Console]::Error.WriteLine("ERROR: saved $file but no small copy: $($_.Exception.Message). Run: pwsh tools/dino/picture-review-copy.ps1 $file")
     $script:smallCopyFailed = $true
     $script:savedPath = $file
     $script:smallCopyReason = $_.Exception.Message

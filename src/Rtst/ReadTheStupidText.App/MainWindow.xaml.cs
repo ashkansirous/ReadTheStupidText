@@ -1,0 +1,576 @@
+using Sirous.Reading.Application.Activity;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Logging;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Startup;
+using Sirous.Reading.Domain.Reading;
+using Microsoft.UI.Dispatching;
+using Microsoft.Windows.AppLifecycle;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
+
+namespace ReadTheStupidText_App;
+
+/// <summary>
+/// Hosts the notification-area icon and its flyout, and owns the window handle
+/// the global hotkey is registered against. The window itself is never shown.
+/// </summary>
+public sealed partial class MainWindow : Window
+{
+    private static string PlayLabel => UiStrings.Get("Menu_Play");
+    private static string PauseLabel => UiStrings.Get("Menu_Pause");
+    private static string QuitLabel => UiStrings.Get("Menu_Quit");
+    private static string AutoReadSelectionLabel => UiStrings.Get("Menu_AutoReadSelection");
+    private static string AutoReadCopyLabel => UiStrings.Get("Menu_AutoReadCopy");
+    private static string StartupLabel => UiStrings.Get("Menu_Startup");
+    private static string VoiceLabel => UiStrings.Get("Menu_Voice");
+    private static string ActivityLogLabel => UiStrings.Get("Menu_ActivityLog");
+    private static string UploadFileLabel => UiStrings.Get("Menu_ReadFile");
+    private static string LanguageLabel => UiStrings.Get("Menu_VoiceLanguage");
+
+    private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
+    private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
+
+    private readonly ReadAloudService _readAloud;
+    private readonly IHotkeyService _hotkey;
+    private readonly IClipboardMonitor _clipboardMonitor;
+    private readonly IStartupService _startup;
+    private readonly IActivityLog _activityLog;
+    private readonly ILogFolder _logFolder;
+    private readonly ISettingsStore _settings;
+    private readonly VoicePackSetup _packSetup;
+    private readonly ISystemLog _systemLog;
+    private readonly WindowsUpdate _update;
+    private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
+
+    // The tray menu runs in H.NotifyIcon's default PopupMenu mode, which only
+    // invokes each item's Command (never the WinUI Click event), so every item
+    // is wired through one of these.
+    private readonly RelayCommand _togglePlayPauseCommand;
+    private readonly RelayCommand _toggleAutoReadSelectionCommand;
+    private readonly RelayCommand _toggleAutoReadCopyCommand;
+    private readonly RelayCommand _toggleStartupCommand;
+    private readonly RelayCommand _setSpeedCommand;
+    private readonly RelayCommand _setVoiceCommand;
+    private readonly RelayCommand _toggleControlPanelCommand;
+    private readonly RelayCommand _showActivityLogCommand;
+    private readonly RelayCommand _uploadFileCommand;
+    private readonly RelayCommand _showLanguageCommand;
+    private readonly RelayCommand _toggleTranslateCommand;
+    private readonly RelayCommand _quitCommand;
+
+    private readonly ControlPanelWindow _controlPanel;
+    private readonly ReadingTextBoxWindow _readingTextBox;
+    private ActivityLogWindow? _logWindow;
+    private LanguageWindow? _languageWindow;
+
+    private MenuFlyout? _flyout;
+    private MenuFlyoutItem? _playPauseItem;
+    private ToggleMenuFlyoutItem? _autoReadSelectionItem;
+    private ToggleMenuFlyoutItem? _autoReadCopyItem;
+    private ToggleMenuFlyoutItem? _startupItem;
+    private ToggleMenuFlyoutItem? _translateItem;
+    private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
+    private readonly List<ToggleMenuFlyoutItem> _voiceItems = new();
+
+    // The current rate surfaced as a menu item when it isn't one of the presets
+    // (e.g. 1.05x picked from the panel slider), and where the speed group starts.
+    private ToggleMenuFlyoutItem? _customSpeedItem;
+    private int _speedStartIndex;
+
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings, VoicePackSetup packSetup, ISystemLog systemLog, WindowsUpdate update)
+    {
+        _readAloud = readAloud;
+        _hotkey = hotkey;
+        _clipboardMonitor = clipboardMonitor;
+        _startup = startup;
+        _activityLog = activityLog;
+        _logFolder = logFolder;
+        _settings = settings;
+        _packSetup = packSetup;
+        _systemLog = systemLog;
+        _update = update;
+
+        // The left-click control panel shares the same services as the tray menu,
+        // so both surfaces read and write the same state; the settings store also
+        // persists the panel's dragged position.
+        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings, packSetup, update);
+
+        // A read refused because an update is required (Slice 217) reopens the panel on the update notice.
+        _update.ReadBlocked += (_, _) => _controlPanel.ShowForUpdate();
+
+        // An update that becomes required mid-read stops that read, since the panel's own controls are greyed (Slice 217).
+        _update.Changed += (_, _) => StopReadIfUpdateRequired();
+
+        // Created eagerly (not lazily on first toggle), like the control panel:
+        // it needs to keep tracking ReadTextChanged/ChunkChanged from launch so
+        // reopening it later immediately reflects whatever is currently reading
+        // (Decision 45), not just what starts after the first open.
+        _readingTextBox = new ReadingTextBoxWindow(_readAloud);
+
+        _togglePlayPauseCommand = new RelayCommand(_ => _ = _readAloud.PlayPauseOrReadAsync());
+        _toggleAutoReadSelectionCommand = new RelayCommand(_ => ToggleAutoReadSelection());
+        _toggleAutoReadCopyCommand = new RelayCommand(_ => ToggleAutoReadCopy());
+        _toggleStartupCommand = new RelayCommand(_ => _ = ToggleStartupAsync());
+        _setSpeedCommand = new RelayCommand(p => ApplySpeed((PlaybackRate)p!));
+        _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
+        _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
+        _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
+        _uploadFileCommand = new RelayCommand(_ => _ = UploadFileUnlessUpdateRequiredAsync());
+        _showLanguageCommand = new RelayCommand(_ => ShowLanguageWindow());
+        _toggleTranslateCommand = new RelayCommand(_ => _readAloud.TranslateEnabled = !_readAloud.TranslateEnabled);
+        _quitCommand = new RelayCommand(_ => Quit());
+
+        InitializeComponent();
+        Title = ProductInfo.Name;
+
+        _uiSettings.ColorValuesChanged += OnColorValuesChanged;
+
+        TrayIcon.ToolTipText = UiStrings.Format("Tray_Tooltip", ProductInfo.Name);
+        _flyout = BuildTrayMenu();
+        TrayIcon.ContextFlyout = _flyout;
+        TrayIcon.LeftClickCommand = _toggleControlPanelCommand;
+        TrayIcon.NoLeftClickDelay = true;
+        TrayIcon.ForceCreate();
+
+        // Surface a non-preset persisted speed (e.g. 1.05x) as its own menu item.
+        UpdateSpeedChecks(_readAloud.Speed);
+
+        // ForceCreate renders the light icon declared in XAML first; only then
+        // adapt to the current taskbar theme (and keep it in sync afterwards).
+        // Doing this after creation avoids generating a blank icon while the
+        // image is still loading.
+        UpdateTrayIconForTheme();
+
+        // The startup-task state is read asynchronously; reflect it on the toggle
+        // once known (well before the user can open the tray menu).
+        _ = RefreshStartupStateAsync();
+
+        _readAloud.StateChanged += OnStateChanged;
+
+        // Either surface can change these; keep the tray menu's checkmarks in
+        // sync when the change comes from the control panel.
+        _readAloud.SpeedChanged += OnSpeedChanged;
+        _readAloud.VoiceChanged += OnVoiceChanged;
+        _readAloud.AutoReadOnSelectionChanged += OnAutoReadOnSelectionChanged;
+        _readAloud.AutoReadOnCopyChanged += OnAutoReadOnCopyChanged;
+        _readAloud.VoicesChanged += OnVoicesChanged;
+        _controlPanel.StartupStateChanged += OnPanelStartupChanged;
+        _readAloud.TranslateEnabledChanged += OnTranslateEnabledChanged;
+        _controlPanel.RestartRequested += (_, _) => RestartApp();
+
+        // The control panel's activity-log button reuses the tray's single-instance
+        // log window, so the host opens it.
+        _controlPanel.ActivityLogRequested += (_, _) => ShowActivityLog();
+
+        // The control panel's Upload button shares the tray menu's file picker,
+        // so the host owns showing it too.
+        _controlPanel.UploadFileRequested += (_, _) => _ = UploadFileUnlessUpdateRequiredAsync();
+
+        // The control panel's 4th CONTROLS toggle shows/hides the reading text box,
+        // and the text box's own ✕ hides it too — keep the toggle in sync either way.
+        _controlPanel.ReadingTextBoxRequested += (_, _) => _readingTextBox.Toggle();
+        _readingTextBox.ReadingVisibilityChanged += (_, open) => _controlPanel.SetReadingTextBoxOpen(open);
+
+        nint handle = WindowNative.GetWindowHandle(this);
+        _hotkey.Register(handle);
+
+        // The clipboard listener shares this never-shown window's handle; it's the
+        // auto-read path for the console and other apps with no UIA selection.
+        _clipboardMonitor.Register(handle);
+    }
+
+    // The neural voices download after launch; the menu is built before they
+    // exist (no Voice submenu), so rebuild it once they're ready.
+    private void OnVoicesChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            _flyout = BuildTrayMenu();
+            TrayIcon.ContextFlyout = _flyout;
+            UpdateSpeedChecks(_readAloud.Speed);
+            _ = RefreshStartupStateAsync();
+        });
+
+    private void OnColorValuesChanged(Windows.UI.ViewManagement.UISettings sender, object args)
+    {
+        _dispatcher.TryEnqueue(UpdateTrayIconForTheme);
+    }
+
+    private void UpdateTrayIconForTheme()
+    {
+        var bg = _uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+        bool isDark = bg.R < 128;
+        TrayIcon.IconSource = new BitmapImage(isDark ? DarkTrayIconUri : LightTrayIconUri);
+    }
+
+    private MenuFlyout BuildTrayMenu()
+    {
+        var flyout = new MenuFlyout();
+
+        // The menu can be rebuilt (e.g. when neural voices arrive); start the
+        // tracked-item lists fresh so they don't accumulate stale entries.
+        _speedItems.Clear();
+        _voiceItems.Clear();
+        _customSpeedItem = null;
+
+        _autoReadSelectionItem = new ToggleMenuFlyoutItem
+        {
+            Text = AutoReadSelectionLabel,
+            IsChecked = _readAloud.AutoReadOnSelection,
+            Command = _toggleAutoReadSelectionCommand,
+        };
+        flyout.Items.Add(_autoReadSelectionItem);
+
+        _autoReadCopyItem = new ToggleMenuFlyoutItem
+        {
+            Text = AutoReadCopyLabel,
+            IsChecked = _readAloud.AutoReadOnCopy,
+            Command = _toggleAutoReadCopyCommand,
+        };
+        flyout.Items.Add(_autoReadCopyItem);
+
+        // IsChecked is corrected by RefreshStartupStateAsync once the OS reports
+        // the real state; starting unchecked avoids a misleading flash.
+        _startupItem = new ToggleMenuFlyoutItem
+        {
+            Text = StartupLabel,
+            IsChecked = false,
+            Command = _toggleStartupCommand,
+        };
+        flyout.Items.Add(_startupItem);
+
+        if (_readAloud.CanTranslate)
+        {
+            _translateItem = new ToggleMenuFlyoutItem
+            {
+                Text = UiStrings.Get("Menu_Translate"),
+                IsChecked = _readAloud.TranslateEnabled,
+                Command = _toggleTranslateCommand,
+            };
+            flyout.Items.Add(_translateItem);
+        }
+
+        flyout.Items.Add(new MenuFlyoutSeparator());
+
+        _playPauseItem = new MenuFlyoutItem { Text = PlayLabel, Command = _togglePlayPauseCommand };
+        flyout.Items.Add(_playPauseItem);
+        flyout.Items.Add(new MenuFlyoutSeparator());
+
+        _speedStartIndex = flyout.Items.Count;
+        foreach (PlaybackRate preset in SpeedPresets.All)
+        {
+            flyout.Items.Add(CreateSpeedItem(preset));
+        }
+
+        MenuFlyoutSubItem? voiceMenu = BuildVoiceSubmenu();
+        if (voiceMenu is not null)
+        {
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            flyout.Items.Add(voiceMenu);
+        }
+
+        flyout.Items.Add(new MenuFlyoutSeparator());
+        flyout.Items.Add(new MenuFlyoutItem { Text = ActivityLogLabel, Command = _showActivityLogCommand });
+        flyout.Items.Add(new MenuFlyoutItem { Text = UploadFileLabel, Command = _uploadFileCommand });
+        flyout.Items.Add(new MenuFlyoutItem { Text = LanguageLabel, Command = _showLanguageCommand });
+        flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
+
+        return flyout;
+    }
+
+    private void StopReadIfUpdateRequired()
+    {
+        if (_update.Required)
+        {
+            _readAloud.CancelRead();
+        }
+    }
+
+    // While an update is required (Slice 217) the tray's file entry only reopens the panel on the update notice
+    // (Play is refused inside ReadAloudService, which does the same); this also keeps the file picker from opening.
+    private async Task UploadFileUnlessUpdateRequiredAsync()
+    {
+        if (_update.Required)
+        {
+            _update.NotifyReadBlocked();
+            return;
+        }
+
+        await UploadFileAsync();
+    }
+
+    // Opens (or focuses) the live activity-log window. Single instance; recreated
+    // after the user closes it.
+    private void ShowActivityLog()
+    {
+        if (_logWindow is null)
+        {
+            _logWindow = new ActivityLogWindow(_activityLog, _logFolder);
+            _logWindow.Closed += (_, _) => _logWindow = null;
+        }
+
+        _logWindow.Activate();
+    }
+
+    /// <summary>
+    /// Opens (or focuses) the language window: the first-run choice, reopened from the tray to change the
+    /// language or retry a failed voice download (Slice 56). Single instance, recreated after it closes.
+    /// </summary>
+    public void ShowLanguageWindow()
+    {
+        if (_languageWindow is null)
+        {
+            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog, RestartApp, WindowPlacer.Fallbacks); // the app's one fallback sink (set at start-up)
+            _languageWindow.Closed += (_, _) => _languageWindow = null;
+        }
+
+        _languageWindow.Activate();
+    }
+
+    // Opens the standard file picker (widens as more extractors land — .txt,
+    // .pdf, and .docx so far) and reads the chosen file, superseding any
+    // active read (Decision 34). This hidden window's handle owns the picker
+    // like every other Win32/WinRT surface it already hosts (hotkey,
+    // clipboard listener).
+    private async Task UploadFileAsync()
+    {
+        var picker = new FileOpenPicker();
+        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        picker.FileTypeFilter.Add(".txt");
+        picker.FileTypeFilter.Add(".pdf");
+        picker.FileTypeFilter.Add(".docx");
+
+        Windows.Storage.StorageFile? file = await picker.PickSingleFileAsync();
+        if (file is null)
+        {
+            return;
+        }
+
+        await _readAloud.ReadFileAsync(file.Path);
+    }
+
+    // The Voice submenu lists the installed Windows voices (an open set), with a
+    // checkmark on the current one. Returns null when no voices are installed so
+    // the menu isn't cluttered with an empty submenu.
+    private MenuFlyoutSubItem? BuildVoiceSubmenu()
+    {
+        IReadOnlyList<VoiceInfo> voices = _readAloud.InstalledVoices;
+        if (voices.Count == 0)
+        {
+            return null;
+        }
+
+        var submenu = new MenuFlyoutSubItem { Text = VoiceLabel };
+        string? currentId = _readAloud.CurrentVoiceId;
+        foreach (VoiceInfo voice in voices)
+        {
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = PackSetupText.VoiceName(voice),
+                Tag = voice.Id,
+                IsChecked = voice.Id == currentId,
+                Command = _setVoiceCommand,
+                CommandParameter = voice.Id,
+            };
+            _voiceItems.Add(item);
+            submenu.Items.Add(item);
+        }
+
+        return submenu;
+    }
+
+    // The menu offers preset rates only (it's a native menu — no slider); the
+    // fine 0.05 control lives in the panel. ToggleMenuFlyoutItem is used rather
+    // than RadioMenuFlyoutItem because the PopupMenu builder only renders a
+    // checkmark for toggle items and doesn't enforce radio exclusivity, so
+    // UpdateSpeedChecks manages which preset is checked.
+    private ToggleMenuFlyoutItem CreateSpeedItem(PlaybackRate preset)
+    {
+        var item = new ToggleMenuFlyoutItem
+        {
+            Text = preset.ToDisplayLabel(),
+            Tag = preset,
+            IsChecked = preset == _readAloud.Speed,
+            Command = _setSpeedCommand,
+            CommandParameter = preset,
+        };
+        _speedItems.Add(item);
+        return item;
+    }
+
+    // The checkmarks are updated by the *Changed handlers, so both this and the
+    // control panel converge on the same state.
+    private void ToggleAutoReadSelection() =>
+        _readAloud.AutoReadOnSelection = !_readAloud.AutoReadOnSelection;
+
+    private void ToggleAutoReadCopy() =>
+        _readAloud.AutoReadOnCopy = !_readAloud.AutoReadOnCopy;
+
+    private async Task RefreshStartupStateAsync()
+    {
+        bool enabled = await _startup.IsEnabledAsync();
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+    }
+
+    private async Task ToggleStartupAsync()
+    {
+        if (_startupItem is null)
+        {
+            return;
+        }
+
+        // Reflect the actual resulting state: enabling can be refused by the user
+        // (disabled in Task Manager) or by policy.
+        bool enabled = await _startup.SetEnabledAsync(!_startupItem.IsChecked);
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+    }
+
+    private void SetStartupChecked(bool enabled)
+    {
+        if (_startupItem is not null)
+        {
+            _startupItem.IsChecked = enabled;
+        }
+    }
+
+    // Apply* just drive the service; the corresponding *Changed event updates the
+    // menu checkmarks, so a change made in the control panel is reflected here too.
+    private void ApplySpeed(PlaybackRate speed) => _readAloud.SetSpeed(speed);
+
+    private void ApplyVoice(string voiceId) => _readAloud.SetVoice(voiceId);
+
+    private void OnSpeedChanged(object? sender, PlaybackRate speed) =>
+        _dispatcher.TryEnqueue(() => UpdateSpeedChecks(speed));
+
+    // A preset is checked only when the current rate exactly matches it; a fine
+    // 0.05 value chosen in the panel gets its own item at the top of the group.
+    private void UpdateSpeedChecks(PlaybackRate speed)
+    {
+        bool isPreset = SpeedPresets.All.Contains(speed);
+        SyncCustomSpeedItem(speed, isPreset);
+        foreach (ToggleMenuFlyoutItem item in _speedItems)
+        {
+            item.IsChecked = item.Tag is PlaybackRate s && s == speed;
+        }
+    }
+
+    // Shows the current rate as a checked item above the presets when it isn't a
+    // preset, and removes that item once a preset is selected again.
+    private void SyncCustomSpeedItem(PlaybackRate speed, bool isPreset)
+    {
+        if (_flyout is null)
+        {
+            return;
+        }
+
+        if (isPreset)
+        {
+            if (_customSpeedItem is not null)
+            {
+                _flyout.Items.Remove(_customSpeedItem);
+                _customSpeedItem = null;
+            }
+
+            return;
+        }
+
+        if (_customSpeedItem is null)
+        {
+            _customSpeedItem = new ToggleMenuFlyoutItem { Command = _setSpeedCommand };
+            _flyout.Items.Insert(_speedStartIndex, _customSpeedItem);
+        }
+
+        _customSpeedItem.Text = speed.ToDisplayLabel();
+        _customSpeedItem.Tag = speed;
+        _customSpeedItem.CommandParameter = speed;
+        _customSpeedItem.IsChecked = true;
+    }
+
+    private void OnVoiceChanged(object? sender, string voiceId) =>
+        _dispatcher.TryEnqueue(() => UpdateVoiceChecks(voiceId));
+
+    private void UpdateVoiceChecks(string voiceId)
+    {
+        foreach (ToggleMenuFlyoutItem item in _voiceItems)
+        {
+            item.IsChecked = item.Tag is string id && id == voiceId;
+        }
+    }
+
+    private void OnAutoReadOnSelectionChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_autoReadSelectionItem is not null)
+            {
+                _autoReadSelectionItem.IsChecked = enabled;
+            }
+        });
+
+    private void OnAutoReadOnCopyChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_autoReadCopyItem is not null)
+            {
+                _autoReadCopyItem.IsChecked = enabled;
+            }
+        });
+
+    private void OnTranslateEnabledChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_translateItem is not null)
+            {
+                _translateItem.IsChecked = enabled;
+            }
+        });
+
+    // A language change is applied to every window by relaunching: x:Uid text is set once per window.
+    // Restart only returns when it did not happen (AppRestartFailureReason): then the language applies at
+    // the next launch, and the user is told so.
+    private void RestartApp()
+    {
+        try
+        {
+            var reason = AppInstance.Restart(string.Empty);
+            _systemLog.Warning($"restart for the language change did not happen ({reason})");
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: logged and the person is told (notification); the change applies at the next launch
+            _systemLog.Warning("restart for the language change failed", null, ex);
+        }
+
+        TrayIcon.ShowNotification(ProductInfo.Name, UiStrings.Get("Restart_Failed"));
+    }
+
+    private void OnPanelStartupChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+
+    private void Quit()
+    {
+        _hotkey.Dispose();
+        _clipboardMonitor.Dispose();
+        TrayIcon.Dispose();
+        _controlPanel.Close();
+        _readingTextBox.Shutdown();
+        _logWindow?.Close();
+        Application.Current.Exit();
+    }
+
+    private void OnStateChanged(object? sender, PlaybackState state)
+    {
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_playPauseItem is not null)
+            {
+                _playPauseItem.Text = state == PlaybackState.Playing ? PauseLabel : PlayLabel;
+            }
+        });
+    }
+}

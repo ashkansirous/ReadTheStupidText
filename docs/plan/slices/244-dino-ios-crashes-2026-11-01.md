@@ -8,13 +8,13 @@ figuring out what can have cause the crashes today and yesterday and fixing them
 **Depends on:** none. Slice 243 adds the dSYM and log lines that would prove a cause; this slice does not wait for it
 and works from the evidence below plus reproduction.
 **Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/Story*.cs`,
-`src/DinoReader.App/Platforms/iOS/**`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`,
-`src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs`,
-`src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader*.cs`,
-`src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/**/SpeechTextChunker.cs`,
+`src/DinoReader.App/Platforms/iOS/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`,
+`src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs`,
+`src/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader*.cs`,
+`src/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Sirous.Reading.Application/**/SpeechTextChunker.cs`,
 `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
 
-**Touches, widened at claim (premise check, 2026-11-01 night):** also `src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs` and `IosTextLineSource.cs` (named; covered by `Platforms/iOS/**`), `src/ReadTheStupidText.Mobile.Shared/**/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosBackgroundDownloader.cs`, `.maestro/dino/**` (an Android emulator flow), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`.
+**Touches, widened at claim (premise check, 2026-11-01 night):** also `src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs` and `IosTextLineSource.cs` (named; covered by `Platforms/iOS/**`), `src/Sirous.Reading.Mobile.Shared/**/MobileVoicePackService.cs`, `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosBackgroundDownloader.cs`, `.maestro/dino/**` (an Android emulator flow), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`.
 
 ## Claim notes (coordinator, night 2026-11-01-2355)
 
@@ -126,9 +126,9 @@ Files are outside the repo (`D:/ReadTheStupidText-worktrees/reviews/`); all read
 ## For CLAUDE.md (lifted 2026-11-02)
 
 - Never dispose a `UIFont` obtained from MAUI's `IFontManager`: it is a shared cached instance (`src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs`). (Slice 244: docs/plan/slices/244-dino-ios-crashes-2026-11-01.md)
-- Speech generation on both readers runs through `GenerationWindowPlan` (`src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs`); change the window logic there, not per reader. (Slice 244: docs/plan/slices/244-dino-ios-crashes-2026-11-01.md)
+- Speech generation on both readers runs through `GenerationWindowPlan` (`src/Sirous.Reading.Application/Reading/SpeechTextChunker.cs`); change the window logic there, not per reader. (Slice 244: docs/plan/slices/244-dino-ios-crashes-2026-11-01.md)
 
-Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`.
+Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.Reading.Mobile.Shared/CLAUDE.md`.
 
 ## Not yet verified
 

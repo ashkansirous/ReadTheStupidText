@@ -1,0 +1,884 @@
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using Sirous.Reading.Application;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Net;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Usage;
+
+namespace Sirous.Reading.Mobile.Shared;
+
+/// <summary>
+/// Android implementation of <see cref="IVoicePackService"/> (Slice 50). Packs live
+/// under <c>AppDataDirectory/packs/&lt;id&gt;/</c>. A download streams into
+/// <c>&lt;id&gt;-&lt;version&gt;.zip.partial</c> (resumed with an HTTP Range request; keyed by
+/// version so a republished pack never resumes onto stale bytes), is sha256-verified,
+/// extracted to a scratch folder, validated against its <c>pack.json</c>, and only
+/// then moved into place, so a kill at any point never leaves a half-installed pack
+/// that <see cref="GetInstalledPath"/> would trust. A verified zip left by a killed
+/// install is installed on the next run instead of being downloaded again. The whole
+/// pipeline runs off the UI thread; the retry/resume decisions are the pure,
+/// unit-tested <see cref="PackRetryPolicy"/>.
+/// </summary>
+public sealed class MobileVoicePackService : IVoicePackService
+{
+    private const string PacksFolder = "packs";
+    private const string ExtractingSuffix = ".extracting";
+    private const string RemovingSuffix = ".removing";
+    private const int CopyBufferBytes = 81920;
+    private const int FileBufferBytes = 81920;
+
+    private static readonly TimeSpan CatalogTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan StallTimeout = PackStallWatch.StallTimeout;
+    private static readonly HttpClient Http = new();
+
+    public event EventHandler? InstalledPacksChanged;
+
+    private IReadOnlyList<PackInfo>? _catalog;
+    private DateTime _catalogFetchedUtc;
+
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public MobileVoicePackService(IFallbackSink? fallbacks = null)
+    {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
+        PackVersionFolders.DeleteOldVersions(PacksRoot()); // app start: nothing holds the folders of old versions yet
+    }
+
+    public async Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(CatalogTimeout);
+            string json = await Http.GetStringAsync(PackConstants.CatalogUrl, timeout.Token).ConfigureAwait(false);
+            _catalog = PackCatalogParser.Parse(json);
+            PackDownloadHost.NoteCatalog(_catalog); // Slice 208: the notifications name a pack's language and size
+            _catalogFetchedUtc = DateTime.UtcNow;
+            return new PackCatalogResult(PackDownloadResult.Ok, _catalog);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+        {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
+            PackDownloadOutcome failed = ClassifyFailure(ex);
+            return PackCatalogResult.Failure(failed.Status, failed.ServerAnswer);
+        }
+    }
+
+    public Task<PackCatalogResult> GetCatalogCachedAsync(TimeSpan maxAge, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PackInfo>? cached = _catalog;
+        bool fresh = cached is not null && DateTime.UtcNow - _catalogFetchedUtc <= maxAge;
+        return fresh ? Task.FromResult(new PackCatalogResult(PackDownloadResult.Ok, cached!)) : GetCatalogAsync(cancellationToken);
+    }
+
+    public string? GetInstalledPath(string packId) => LoadInstalled(packId)?.Folder;
+
+    // Every complete pack folder under the packs root. Scratch (.extracting) folders and
+    // anything that is not a valid pack id are skipped, as is a folder whose manifest
+    // names a different pack.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() => InstalledPacks(PackKind.Voice);
+
+    // OCR packs (Slice 52) are installed, validated and listed exactly like voice packs.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => InstalledPacks(PackKind.Ocr);
+
+    // Dino's storyteller packs (Slice 114): listed apart from the voice packs so the text reader never sees one.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledStorytellerPacks() => InstalledPacks(PackKind.Storyteller);
+
+    public bool SupportsStorytellerPacks => true;
+
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoiceAndStorytellerPacks() =>
+        InstalledPacks(kind => kind is PackKind.Voice or PackKind.Storyteller);
+
+    // Removes the whole pack (every version) and raises InstalledPacksChanged. The folder is first renamed out of the way: a rename fails as
+    // a whole when a loaded model still holds a file (Windows), leaving the pack intact, where a half-finished delete would leave it broken.
+    // Only the cast screen calls it, behind the grown-up gate, after it stopped the reader.
+    public bool Uninstall(string packId)
+    {
+        if (!PackNaming.IsValidId(packId))
+        {
+            return false;
+        }
+
+        string folder = Path.Combine(PacksRoot(), packId);
+        if (!Directory.Exists(folder))
+        {
+            return false;
+        }
+
+        string removing = folder + RemovingSuffix;
+        try
+        {
+            DeleteQuietly(removing);
+            Directory.Move(folder, removing);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: false is returned and the caller tells the person the pack could not be removed
+            System.Diagnostics.Debug.WriteLine($"Could not remove pack '{packId}': {ex.Message}");
+            return false;
+        }
+
+        InstalledPacksChanged?.Invoke(this, EventArgs.Empty);
+        DeleteQuietly(removing);
+        return true;
+    }
+
+    // The renamed folder is not a pack id, so no scan sees it; a delete that fails is retried by the next removal of this pack.
+    private static void DeleteQuietly(string folder)
+    {
+        try
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: best-effort cleanup delete of a folder
+            System.Diagnostics.Debug.WriteLine($"Could not delete '{folder}': {ex.Message}");
+        }
+    }
+
+    private IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) => InstalledPacks(k => k == kind);
+
+    private IReadOnlyList<InstalledVoicePack> InstalledPacks(Func<PackKind, bool> wanted) =>
+        Directory.EnumerateDirectories(PacksRoot())
+            .Select(folder => Path.GetFileName(folder))
+            .Where(PackNaming.IsValidId)
+            .Select(LoadInstalled)
+            .OfType<InstalledVoicePack>()
+            .Where(p => wanted(p.Manifest.Kind))
+            .ToList();
+
+    private InstalledVoicePack? LoadInstalled(string packId)
+    {
+        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId), _fallbacks);
+        string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
+        if (!File.Exists(manifestPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            PackManifest manifest = PackManifest.Parse(File.ReadAllText(manifestPath));
+            bool complete = manifest.Id == packId
+                && manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0
+                && !HasBrokenTokens(packId, manifest, folder); // Slice 201: a pack sherpa would abort on is not installed
+            return complete ? new InstalledVoicePack(folder, manifest) : null;
+        }
+        catch (FormatException)
+        {
+            if (PackVersionFolders.FirstReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); } // Slice 275: a pack with an unreadable manifest counts as not installed, so it is offered for download again
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            if (PackVersionFolders.FirstReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); } // Slice 275: an unreadable pack counts as not installed, so it is offered for download again
+            // An unreadable pack is skipped, not fatal: the others stay usable.
+            System.Diagnostics.Debug.WriteLine($"Skipping voice pack '{packId}': {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken) =>
+        (await DownloadWithAnswerAsync(packId, progress, cancellationToken).ConfigureAwait(false)).Status;
+
+    // Slice 357: the server's answer is part of the returned outcome of this very run, so a later run of the same pack cannot change it.
+    public async Task<PackDownloadOutcome> DownloadWithAnswerAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
+        if (LoadInstalled(packId) is { } installed && !UpgradeAvailable(installed))
+        {
+            PackDownloadHost.ClearPaused(packId); // already there: a notice left from before has nothing to ask any more
+            progress?.Report(1);
+            return new PackDownloadOutcome(PackDownloadResult.Ok);
+        }
+
+        return await RunWithKeepAliveAsync(packId, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    // Slice 183: a foreground service (Android) holds the process and the network while the phone is locked. The user's Cancel on its notification
+    // also stops this run; the caller's own token stays what ends a run the caller asked to stop.
+    private async Task<PackDownloadOutcome> RunWithKeepAliveAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        using var notificationCancel = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var cancelListener = new NotificationCancelListener(packId, notificationCancel);
+        if (!PackResumeScope.IsAutomatic)
+        {
+            _ = PackDownloadHost.AskNotification?.Invoke(packId); // never awaited: the download does not wait for the question; never asked for an automatic restart
+        }
+
+        using IPackKeepAliveScope? keepAlive = BeginKeepAlive(packId);
+        double? lastFraction = null;
+        var scoped = new InlineProgress(value =>
+        {
+            lastFraction = value;
+            keepAlive?.Progress(value);
+            progress?.Report(value);
+        });
+
+        PackDownloadHost.RunStarted(packId, byPerson: !PackResumeScope.IsAutomatic); // Slice 233: the notice goes at every run start; only a person's resume ends the pause episode, so a failed automatic retry posts again silently
+
+        // Hash, extract and copy are heavy: keep all of it off the UI thread.
+        try
+        {
+            PackDownloadOutcome outcome = await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
+            SettlePausedNotice(packId, outcome.Status, lastFraction);
+            return outcome;
+        }
+        catch (OperationCanceledException) when (notificationCancel.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            PackDownloadHost.ClearPaused(packId);
+            throw new PackCancelledByNotificationException(packId); // the caller's token did not fire: it was the notification's Cancel
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            PackDownloadHost.ClearPaused(packId); // the person stopped it: nothing is paused
+            throw;
+        }
+        catch (Exception ex) when (IsResumableFailure(ex))
+        {
+            PackDownloadHost.Paused(packId, lastFraction, PackDownloadHost.PausedReasonTransport); // a network stop or an HttpClient timeout; the platform decides whether a notice is due (background only)
+            throw;
+        }
+        catch (Exception)
+        {
+            PackDownloadHost.ClearPaused(packId); // nothing the person can finish by tapping: no notice
+            throw;
+        }
+    }
+
+    private static bool IsResumableFailure(Exception ex) =>
+        ex is OperationCanceledException or HttpRequestException or System.Net.Sockets.SocketException or TimeoutException;
+
+    // Slice 208: the notice is decided where the run ends. Finished or a failure nothing can resume clears it; a stop that waiting or the network can
+    // end (Offline, Failed) posts it, and the platform posts only when the app is not in the foreground (PausedNoticePolicy, the same rule on both).
+    private static void SettlePausedNotice(string packId, PackDownloadResult result, double? lastFraction)
+    {
+        if (PackResumePolicy.IsResumableResult(result))
+        {
+            PackDownloadHost.Paused(packId, lastFraction, result == PackDownloadResult.Offline ? PackDownloadHost.PausedReasonOffline : PackDownloadHost.PausedReasonFailed);
+            return;
+        }
+
+        PackDownloadHost.ClearPaused(packId);
+    }
+
+    /// <summary>
+    /// Launch scan for half-finished downloads (Slice 208). This service owns the pack files, so the scan asks it, under the gate that starts every
+    /// download, whether a pack is in flight or queued: such a pack is never touched. A partial nothing wants is deleted under that gate (a delete and a
+    /// start cannot interleave), after the wanted set is read again, together with the iOS resume sidecar; a partial that is not clearly the
+    /// catalog's version of a wanted pack is kept. Nothing is downloaded here: <see cref="StalePartialScan.Resumable"/> lists the wanted packs whose partial
+    /// the caller's normal start entry finishes (Wi-Fi rule, consent and the person's cancel apply there). Needs the catalog (none: every partial stays).
+    /// Never throws.
+    /// </summary>
+    /// <param name="languages">Asked again just before each delete: the languages the settings want right now.</param>
+    public async Task<StalePartialScan> ScanStalePartialsAsync(Func<IReadOnlyCollection<string>> languages, CancellationToken cancellationToken)
+    {
+        try
+        {
+            List<FoundPartial> partials = FindPartials();
+            if (partials.Count == 0)
+            {
+                return StalePartialScan.Empty;
+            }
+
+            PackCatalogResult catalog = await GetCatalogCachedAsync(StalePartialCatalogAge, cancellationToken).ConfigureAwait(false);
+            if (catalog.Status != PackDownloadResult.Ok)
+            {
+                return StalePartialScan.Empty;
+            }
+
+            IReadOnlyList<StalePartialDecision> decisions = StalePartialDecider.DecideAll(partials, catalog.Packs, languages());
+            int deleted = await DeleteUnwantedAsync(decisions, catalog.Packs, languages, cancellationToken).ConfigureAwait(false);
+            string[] resumable = [.. decisions.Where(d => d.Action == StalePartialAction.Resume).Select(d => d.PackId)];
+            foreach (string packId in resumable)
+            {
+                PackDownloadHost.LogService(StalePartialResumeMarker, packId);
+            }
+
+            return new StalePartialScan(deleted, resumable);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // no-fallback: the stale-partial scan is housekeeping; an empty result only leaves the partials for the next launch
+            Debug.WriteLine($"Stale partial scan failed: {ex.Message}");
+            return StalePartialScan.Empty;
+        }
+    }
+
+    private static readonly TimeSpan StalePartialCatalogAge = TimeSpan.FromHours(6);
+
+    private static List<FoundPartial> FindPartials()
+    {
+        var found = new List<FoundPartial>();
+        try
+        {
+            foreach (string file in Directory.EnumerateFiles(PacksRoot()).Where(f => f.EndsWith(PackNaming.PartialSuffix, StringComparison.Ordinal)))
+            {
+                found.Add(new FoundPartial(Path.GetFileName(file), new FileInfo(file).Length));
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: housekeeping listing; no partials found only means nothing is cleaned or resumed this time
+            Debug.WriteLine($"Could not list partial downloads: {ex.Message}");
+        }
+
+        return found;
+    }
+
+    private static async Task<int> DeleteUnwantedAsync(
+        IEnumerable<StalePartialDecision> decisions, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages, CancellationToken cancellationToken)
+    {
+        int deleted = 0;
+        foreach (StalePartialDecision decision in decisions.Where(d => d.Action == StalePartialAction.Delete))
+        {
+            if (await TryDeleteIdleAsync(decision, packs, languages).ConfigureAwait(false))
+            {
+                deleted++;
+            }
+        }
+
+        return deleted;
+    }
+
+    // The pack is taken through the same per-pack gate every download enters: a pack in flight (or queued ahead of us) holds it, so we leave it alone, and once
+    // we hold it nothing can start this pack until the file is gone. Under the gate the file and the wanted set are read again.
+    private static async Task<bool> TryDeleteIdleAsync(
+        StalePartialDecision decision, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages)
+    {
+        IDisposable? gate = PackDownloadGate.TryEnter(decision.PackId);
+        if (gate is null)
+        {
+            return false; // in flight or held by another caller: not ours to delete
+        }
+
+        using (gate)
+        {
+            return await DeleteHeldAsync(decision, packs, languages).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<bool> DeleteHeldAsync(StalePartialDecision decision, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages)
+    {
+        string path = Path.Combine(PacksRoot(), decision.FileName);
+        try
+        {
+            if (!File.Exists(path) || await PackDownloadHost.HasLiveTransferAsync(path).ConfigureAwait(false))
+            {
+                return false; // gone already, or a background transfer (iOS) still writes it
+            }
+
+            var fresh = new FoundPartial(decision.FileName, new FileInfo(path).Length);
+            if (StalePartialDecider.DecideAll([fresh], packs, languages()) is not [{ Action: StalePartialAction.Delete }])
+            {
+                return false; // the settings or the file changed since the scan began
+            }
+
+            File.Delete(path);
+            PackDownloadHost.DiscardTransferLeftovers(path);
+            PackDownloadHost.LogService(StalePartialDeleteMarker, decision.PackId);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: best-effort cleanup delete of a stale partial; false means kept
+            Debug.WriteLine($"Could not delete the partial of '{decision.PackId}': {ex.Message}");
+            return false;
+        }
+    }
+
+    internal const string StalePartialResumeMarker = "stale-partial resume";
+    internal const string StalePartialDeleteMarker = "stale-partial delete";
+
+    // Subscribes to the notification's Cancel for one pack; disposing it unsubscribes, whatever way the run ends.
+    private sealed class NotificationCancelListener : IDisposable
+    {
+        private readonly string _packId;
+        private readonly CancellationTokenSource _cancel;
+
+        public NotificationCancelListener(string packId, CancellationTokenSource cancel)
+        {
+            _packId = packId;
+            _cancel = cancel;
+            PackDownloadHost.CancelRequested += OnCancelRequested;
+        }
+
+        public void Dispose() => PackDownloadHost.CancelRequested -= OnCancelRequested;
+
+        private void OnCancelRequested(string id)
+        {
+            if (id != _packId)
+            {
+                return;
+            }
+
+            try
+            {
+                _cancel.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // no-fallback: cancelling a run that already ended is a no-op
+                // The run already ended and disposed its source: nothing left to cancel.
+            }
+        }
+    }
+
+    // Null where the platform has no keep-alive. The caller's token also stops when the user taps Cancel on the notification.
+    private static IPackKeepAliveScope? BeginKeepAlive(string packId)
+    {
+        if (PackDownloadHost.KeepAlive is not { } host)
+        {
+            return null;
+        }
+
+        try
+        {
+            IPackKeepAliveScope scope = host.Begin(packId);
+            PackDownloadHost.LogService(PackDownloadHost.StartAction, packId);
+            return new LoggedScope(scope, packId);
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: the keep-alive is optional; the download runs without it and logs start-refused
+            PackDownloadHost.LogService("start-refused", ex.GetType().Name); // best effort: the download runs without a keep-alive
+            return null;
+        }
+    }
+
+    private sealed class LoggedScope(IPackKeepAliveScope inner, string packId) : IPackKeepAliveScope
+    {
+        public void Progress(double fraction) => inner.Progress(fraction);
+
+        public void Dispose()
+        {
+            inner.Dispose();
+            PackDownloadHost.LogService(PackDownloadHost.StopAction, packId);
+        }
+    }
+
+    // An installed pack is re-downloaded only when the catalog we last fetched lists a newer version
+    // of it. The old pack stays in use until the new one has verified and been installed.
+    private bool UpgradeAvailable(InstalledVoicePack installed) =>
+        _catalog?.FirstOrDefault(p => p.Id == installed.Manifest.Id) is { } listed
+        && PackVersions.IsNewer(listed.Version, installed.Manifest.Version);
+
+#if DEBUG
+    private static readonly object ForcedFailureLock = new();
+    private static HttpErrorKind? _forcedFailure;
+    private static string? _forcedFailureLanguage;
+
+    /// <summary>Slice 373: Debug-only. The next download of the voice pack serving <paramref name="language"/> fails as if the server answered this kind (NotFound = 404, anything else the general server text); one-shot, and any other pack downloads for real.</summary>
+    public static void ForceNextFailure(HttpErrorKind kind, string language)
+    {
+        lock (ForcedFailureLock)
+        {
+            _forcedFailure = kind;
+            _forcedFailureLanguage = language;
+        }
+    }
+
+    // Takes the armed failure only when this pack serves the language it was armed for; every other pack leaves it armed.
+    private static HttpErrorKind? TakeForcedFailure(PackInfo pack)
+    {
+        lock (ForcedFailureLock)
+        {
+            if (_forcedFailure is null || _forcedFailureLanguage is null || !pack.Languages.Contains(_forcedFailureLanguage, StringComparer.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            HttpErrorKind? taken = _forcedFailure;
+            _forcedFailure = null;
+            _forcedFailureLanguage = null;
+            return taken;
+        }
+    }
+#endif
+
+    private async Task<PackDownloadOutcome> DownloadOffUiThreadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        PackCatalogResult catalog = _catalog is null
+            ? await GetCatalogAsync(cancellationToken).ConfigureAwait(false)
+            : new PackCatalogResult(PackDownloadResult.Ok, _catalog);
+        if (catalog.Status != PackDownloadResult.Ok)
+        {
+            return new PackDownloadOutcome(catalog.Status, catalog.ServerAnswer);
+        }
+
+        PackInfo? pack = catalog.Packs.FirstOrDefault(p => p.Id == packId);
+        if (pack is null)
+        {
+            return new PackDownloadOutcome(PackDownloadResult.Failed);
+        }
+
+#if DEBUG
+        if (pack.Kind == PackKind.Voice && TakeForcedFailure(pack) is { } forced)
+        {
+            Testing.TestHookLog.Write($"PACKDL forced-failure pack={pack.Id} kind={forced}"); // Slice 373: proves the hook's branch ran
+            return new PackDownloadOutcome(PackDownloadResult.Failed, forced);
+        }
+#endif
+
+        PackDownloadOutcome outcome = await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+        if (outcome.Status == PackDownloadResult.Ok)
+        {
+            InstalledPacksChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        return outcome;
+    }
+
+    // The outcome of the last attempt is returned whole, so its server answer (if any) is the one the failed run shows.
+    private async Task<PackDownloadOutcome> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        long started = Stopwatch.GetTimestamp();
+        for (int attempt = 1; ; attempt++)
+        {
+            PackDownloadOutcome outcome = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+            if (!PackRetryPolicy.ShouldRetry(outcome.Status, attempt))
+            {
+                LogOutcome(pack, attempt, outcome.Status, started);
+                return outcome;
+            }
+
+            TimeSpan backoff = PackRetryPolicy.Backoff(attempt);
+            PackDownloadLog.Retry(pack.Id, attempt, outcome.Status, backoff);
+            await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static void LogOutcome(PackInfo pack, int attempt, PackDownloadResult result, long started)
+    {
+        if (result == PackDownloadResult.Ok)
+        {
+            PackDownloadLog.Done(pack.Id, pack.SizeBytes, Stopwatch.GetElapsedTime(started));
+        }
+        else
+        {
+            PackDownloadLog.Failed(pack.Id, attempt, result);
+        }
+    }
+
+    private async Task<PackDownloadOutcome> TryDownloadOnceAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        string zipPath = ZipPath(pack);
+        try
+        {
+            if (!await HasVerifiedZipAsync(pack, zipPath, cancellationToken).ConfigureAwait(false)
+                && await FetchZipAsync(pack, zipPath, progress, cancellationToken).ConfigureAwait(false) is { } failure)
+            {
+                return new PackDownloadOutcome(failure);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+        {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
+            return ClassifyFailure(ex);
+        }
+
+        return new PackDownloadOutcome(InstallVerifiedZip(pack, zipPath, progress, cancellationToken));
+    }
+
+    // A verified zip survives only if an earlier run was killed between verify and install.
+    private static async Task<bool> HasVerifiedZipAsync(PackInfo pack, string zipPath, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(zipPath))
+        {
+            return false;
+        }
+
+        if (await HashMatchesAsync(zipPath, pack.Sha256, cancellationToken).ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        File.Delete(zipPath);
+        return false;
+    }
+
+    // Returns null when the verified zip is in place, otherwise the failure.
+    private static async Task<PackDownloadResult?> FetchZipAsync(PackInfo pack, string zipPath, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        if (Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.None)
+        {
+            return PackDownloadResult.Offline;
+        }
+
+        string partial = zipPath + PackNaming.PartialSuffix;
+        await DownloadBodyAsync(pack, partial, progress, cancellationToken).ConfigureAwait(false);
+        if (!await HashMatchesAsync(partial, pack.Sha256, cancellationToken).ConfigureAwait(false))
+        {
+            File.Delete(partial);
+            return PackDownloadResult.HashMismatch;
+        }
+
+        File.Move(partial, zipPath, overwrite: true);
+        return null;
+    }
+
+    private static PackDownloadResult InstallVerifiedZip(PackInfo pack, string zipPath, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        try
+        {
+            Install(pack, zipPath, cancellationToken);
+            DeleteOrphans(pack, cancellationToken);
+            progress?.Report(1);
+            return PackDownloadResult.Ok;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
+            return PackErrorClassifier.ClassifyInstall(ex);
+        }
+    }
+
+    // Offline wins only when the OS says there is no network at all at failure time
+    // (Android's handler surfaces Java exceptions that don't always look like sockets).
+    // ConstrainedInternet (captive portal) and Local still have a route, so they fall
+    // through to the exception classifier and a transient failure is retried; Unknown
+    // means the OS cannot tell, so the exception itself is the better evidence.
+    // Slice 357: the server's answer is kept only when the failure is not reported as Offline, so the result and the answer always agree.
+    private static PackDownloadOutcome ClassifyFailure(Exception exception)
+    {
+        if (Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.None)
+        {
+            return new PackDownloadOutcome(PackDownloadResult.Offline);
+        }
+
+        return new PackDownloadOutcome(PackErrorClassifier.Classify(exception), PackErrorClassifier.ClassifyHttp(exception));
+    }
+
+    private static async Task DownloadBodyAsync(PackInfo pack, string partial, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        long existing = File.Exists(partial) ? new FileInfo(partial).Length : 0;
+        long offset = PackRetryPolicy.ResumeOffset(existing, pack.SizeBytes);
+        if (offset == 0 && existing > 0)
+        {
+            File.Delete(partial);
+        }
+
+        if (offset == pack.SizeBytes)
+        {
+            return; // body already complete; only verification is left
+        }
+
+        PackDownloadLog.Start(pack.Id, offset);
+
+        if (PackDownloadHost.BodyFetcher is { } fetcher)
+        {
+            await fetcher.FetchAsync(pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        using GuardedResponse response = await StallGuardedRead.SendAsync(Http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(StallTimeout), cancellationToken, new DownloadTag(pack.Id, offset)).ConfigureAwait(false);
+        await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static HttpRequestMessage BuildBodyRequest(PackInfo pack, long offset)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
+        if (offset > 0)
+        {
+            PackDownloadLog.Range(pack.Id, offset);
+            request.Headers.Range = new RangeHeaderValue(offset, null);
+        }
+
+        return request;
+    }
+
+    private static async Task StreamBodyAsync(GuardedResponse guarded, PackInfo pack, string partial, long offset, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        HttpResponseMessage response = guarded.Message;
+        if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+        {
+            File.Delete(partial); // stale partial: the next attempt starts clean
+            throw new IOException("The partial download no longer matches the pack.");
+        }
+
+        response.EnsureSuccessStatusCode();
+        bool resumed = response.StatusCode == HttpStatusCode.PartialContent;
+        long written = resumed ? offset : 0; // a 200 means the server ignored Range: restart
+        Func<Stream, Stream>? wrapInner = null;
+#if DEBUG
+        wrapInner = PackDownloadThrottle.WrapForStallHook(pack.Id); // Slice 241: the stall-pack-network test hook hangs one read under the guard
+#endif
+        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken, new DownloadTag(pack.Id, written), wrapInner).ConfigureAwait(false);
+        await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, FileBufferBytes, useAsync: true);
+#if DEBUG
+        try
+        {
+            await CopyWithStallGuardAsync(body, file, pack, written, progress, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            PackDownloadThrottle.ClearStall(pack.Id); // a stall request that found no read to hang must not survive this download
+        }
+#else
+        await CopyWithStallGuardAsync(body, file, pack, written, progress, cancellationToken).ConfigureAwait(false);
+#endif
+    }
+
+    private static async Task CopyWithStallGuardAsync(Stream source, Stream destination, PackInfo pack, long written, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        long totalBytes = pack.SizeBytes;
+        byte[] buffer = new byte[CopyBufferBytes];
+        int lastPercent = -1;
+        var progressGate = new PackProgressLogGate(PackStallWatch.ProgressInterval);
+#if DEBUG
+        bool throttled = PackDownloadThrottle.IsOn();
+        PackDownloadThrottle.ClearDrop();
+#endif
+        while (true)
+        {
+#if DEBUG
+            PackDownloadThrottle.ThrowIfDropRequested();
+#endif
+            int read = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            if (read == 0)
+            {
+                return;
+            }
+
+            await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+#if DEBUG
+            if (throttled)
+            {
+                await PackDownloadThrottle.PauseAsync(read, cancellationToken).ConfigureAwait(false);
+            }
+#endif
+            written += read;
+            if (progressGate.ShouldLog(Stopwatch.GetTimestamp()))
+            {
+                PackDownloadLog.Progress(pack.Id, written); // Slice 241: a silent log beside a file that does not grow is the bug, not a quiet download
+            }
+
+            lastPercent = ReportWhenPercentChanges(progress, written, totalBytes, lastPercent);
+        }
+    }
+
+    private static int ReportWhenPercentChanges(IProgress<double>? progress, long written, long totalBytes, int lastPercent)
+    {
+        int percent = (int)Math.Min(100, written * 100 / totalBytes);
+        if (percent != lastPercent)
+        {
+            progress?.Report(percent / 100.0);
+        }
+
+        return percent;
+    }
+
+    private static async Task<bool> HashMatchesAsync(string path, string expectedSha256, CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, FileBufferBytes, useAsync: true);
+        byte[] hash = await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
+        return string.Equals(expectedSha256.Trim(), Convert.ToHexString(hash), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void Install(PackInfo pack, string verifiedZip, CancellationToken cancellationToken)
+    {
+        string scratch = Path.Combine(PacksRoot(), pack.Id + ExtractingSuffix);
+        DeleteDirectoryIfExists(scratch);
+        try
+        {
+            ZipFile.ExtractToDirectory(verifiedZip, scratch);
+            cancellationToken.ThrowIfCancellationRequested();
+            string payload = LocatePayload(scratch);
+            ValidatePayload(pack, payload);
+            PackVersionFolders.Install(payload, Path.Combine(PacksRoot(), pack.Id), pack.Version);
+        }
+        finally
+        {
+            // A flat zip's payload IS the scratch folder and was just moved away.
+            DeleteDirectoryIfExists(scratch);
+        }
+    }
+
+    private static void DeleteDirectoryIfExists(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, recursive: true);
+        }
+    }
+
+    // Removes this pack's zips and partials (any version) once it is installed.
+    // Matching is exact (<id>-<version>.zip[.partial]) so another pack whose id
+    // merely starts with this one's is never touched.
+    private static void DeleteOrphans(PackInfo pack, CancellationToken cancellationToken)
+    {
+        foreach (string file in Directory.EnumerateFiles(PacksRoot()))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (PackNaming.IsOrphanFileName(Path.GetFileName(file), pack.Id))
+            {
+                File.Delete(file);
+            }
+        }
+    }
+
+    // The zip has one top-level folder holding pack.json; accept a flat zip too.
+    private static string LocatePayload(string scratch)
+    {
+        string[] folders = Directory.GetDirectories(scratch);
+        bool nested = folders.Length == 1 && File.Exists(Path.Combine(folders[0], PackConstants.ManifestFileName));
+        return nested ? folders[0] : scratch;
+    }
+
+    // True when an installed pack's tokens.txt would abort sherpa (Slice 201). Slice 303: an installed pack that fails the
+    // check also reports a fallback (once per pack folder per run), so a release build leaves a trace; the Debug marker lets a device check tell "rejected" from "missing".
+    private bool HasBrokenTokens(string packId, PackManifest manifest, string folder)
+    {
+        if (manifest.BrokenTokenFoldersIn(folder).Count == 0)
+        {
+            return false;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"RTST_PACK_TOKENS_REJECTED pack={packId} version={manifest.Version}");
+        if (PackVersionFolders.FirstTokensReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); }
+        return true;
+    }
+
+    private static void ValidatePayload(PackInfo pack, string payload)
+    {
+        string manifestPath = Path.Combine(payload, PackConstants.ManifestFileName);
+        PackManifest manifest = PackManifest.Parse(File.ReadAllText(manifestPath));
+        if (manifest.Id != pack.Id || manifest.MissingFiles(f => File.Exists(Path.Combine(payload, f))).Count > 0)
+        {
+            throw new InvalidDataException("The downloaded pack does not match its manifest.");
+        }
+
+        if (manifest.BrokenTokenFoldersIn(payload).Count > 0)
+        {
+            throw new InvalidDataException("The downloaded pack has a tokens.txt the speech engine cannot read.");
+        }
+    }
+
+    /// <summary>The folder every pack lives in (created if needed); also read by the iOS backup exclusion.</summary>
+    internal static string PacksRoot()
+    {
+#if WINDOWS
+        // Windows (Slice 67): the package's LocalCacheFolder, never the cloud-backed LocalFolder, as the
+        // Read The Stupid Text app keeps its packs (Slice 56).
+        string root = Path.Combine(FileSystem.Current.CacheDirectory, PacksFolder);
+#else
+        string root = Path.Combine(FileSystem.Current.AppDataDirectory, PacksFolder);
+#endif
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    // Keyed by id AND version so a republished pack never resumes onto stale bytes.
+    private static string ZipPath(PackInfo pack)
+    {
+        return Path.Combine(PacksRoot(), PackNaming.ZipFileName(pack.Id, pack.Version));
+    }
+}

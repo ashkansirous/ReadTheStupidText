@@ -158,8 +158,61 @@ told apart, and the release build logs nothing about products. Only a Play-insta
 - Run 1 (`reviews/w54-358-emu/`): `store-payment-required`, `store-server-errors` and `paid-books` PASS; `store-not-for-sale` FAIL because the Debug offline fake did not reach the Connectivity rule. Fixed: the fake's offline flag drives `HasInternet` in `DINO_TEST_BOOKS` builds.
 - Run 2 (`reviews/w54-358-emu/run2/`): `store-not-for-sale` PASS, markers `[StoreSale] row state=ConnectToBuy`, then `[Purchases] prices missing count=1 of=1` and `[StoreSale] row state=NotForSaleNow`. No layout-check ok line was printed (not counted as a pass).
 
+### Play-installed run (2026-11-14, user bug report "the books cannot be bought on android yet")
+
+- S21, Dino Reader 1.127.0 installed from Play (installer `com.android.vending`), online, Store tab: logcat
+  `[Purchases] product details: code=Ok asked=11 got=0 unfetched=0`, three times. Every paid row shows the red strip.
+- dino_usage: 1.127.0 Android sent one `store:prices_missing` at 08:08 (the user's own phone), no `billing_error` on any version.
+- Play Console (Chrome): the 11 one-time products are listed, one active option each; the payments profile shows a bank account and no
+  warning, so the earlier "bank check pending" guess is not supported.
+- Billing 8+ docs say every product Play cannot return comes back in `unfetchedProductList` with a status code, so Ok with 0 details
+  and 0 unfetched is not a documented answer (https://developer.android.com/google/play/billing/release-notes). The cause is still
+  open: the binding's `QueryProductDetailsAsync` wrapper (Xamarin.Android.Google.BillingClient 9.1.0.2) not filling its lists, or Play
+  returning an empty catalog for this app.
+
+### 1.128.1 from Play, internal track (2026-11-14 15:45)
+
+- The S21's Play account (ashkan.sirous@gmail.com) was on the internal "Main" list but had never accepted the internal-test
+  invite, so Play kept it on the closed "Early Access" build. The invite was accepted on the user's say-so ("fix my account to
+  get it from internal testing"); Play then offered 1.128.1 ("Internal Early Access").
+- Both queries come back empty: `product details (async): code=Ok debug='' asked=11 got=0 unfetched=0 []` and
+  `product details (listener callback): code=Ok debug=''`. The binding's async wrapper is ruled out: Play itself returns nothing.
+- Checked and correct: the 11 `productId`s the live store sends match the Console ids exactly; Goldilocks's `buy` option is
+  Active, Backwards compatible, 174 countries incl. UK GBP 0.89; the client is built with `EnableOneTimeProducts()` and queries
+  `ProductType.Inapp`; Play Store 54.1.11 is signed in as ashkan.sirous@gmail.com with Play country United Kingdom.
+- Not set: no email list is ticked under Console *License testing*
+  (https://play.google.com/console/u/0/developers/5892509739539100062/license-tester). Not documented as affecting the product list.
+- No Google source describes Ok with both lists empty. Third-party sources give up to 24 h for new products to be served; all 11
+  were last updated 2026-11-13.
+
+## Open (cause of the empty answer)
+
+- [x] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
+- [x] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
+- [x] Release it, re-run on the S21 from Play: both sides empty (above).
+- [ ] Re-run on the S21 once the products are more than 24 h old (after 2026-11-15), to rule the catalog lag in or out.
+- [ ] Once the cause is found and paid books show prices, remove the probe (`ProbeProductId`, `ProbeUnknownIdAsync`).
+- [ ] Add one made-up product id to the query and log whether it comes back in `unfetchedProductList`; if it does not either, the
+  unfetched list says nothing and Play is not serving this app's catalog at all.
+  Built: the real query and `BuyAsync`'s lookup are unchanged. Only when the final real answer is Ok with no product details, `AndroidPurchases.ProbeUnknownIdAsync` sends one more query holding only `ProbeProductId`, not awaited, and logs `product details (probe): code=... debug=... asked=1 got=... unfetched=... [id:status,...]`. Its answer never reaches prices, `_details` or the UI, and a throw is caught and logged, so it cannot change or delay what `QueryPricesAsync` returns. iOS needs no twin because `IosPurchases` already logs StoreKit's invalid product ids (`InvalidProducts`), which reports unknown ids.
+
+### 1.128.2 from Play (2026-11-14 17:11) and a bug of my own
+
+- License testing: a new email list "License - Ashkan only" (ashkan.sirous@gmail.com only) is ticked; Main and Second are not (user
+  OK 2026-11-14 "yes and yes"). Re-run right after: no change.
+- 1.128.2 logs the async line and `product details (listener callback): code=Ok`, then nothing: no `(listener)` line and no probe
+  line. Likely cause (code, plus the missing lines): the listener overload hands its BillingResult to the callback, so the details
+  object's `Result` is null; `TraceDetails` read `answer.Result.ResponseCode`, threw, and `BookPurchases.ReadAsync` swallowed it
+  (Debug-only log, `StoreFailed` fallback). So the listener's answer was never seen, and the probe never ran.
+- [ ] Fix: the listener path keeps the callback's own `BillingResult` next to the details (`DetailsAnswer`); the trace line and the
+  effective result used for the probe condition and `Failed` are the async answer's `Result`, or the listener callback's when the
+  listener answer replaced it. A null `Result` counts as not ok (no "missing means Ok" rule). `DetailsListener` always completes its
+  wait (try/finally). `BookPurchases.ReadAsync` writes the exception type and first stack frame to the Release log (`PurchaseTrace`).
+  Re-run on the S21 from Play and read the `(listener)` and `(probe)` lines.
+
 ## Not yet verified
 
-- The real cause on a Play-installed phone: the Release trace line `Dino Reader product details: code= asked= got= unfetched=` settles it.
+- The paid books show a price and Buy on a Play-installed phone (blocked by *Open* above).
+- The probe line on a Play-installed S21 (1.128.x+): whether Play lists the made-up id in unfetchedProductList.
 - iOS and Windows strips are only compiled, not run.
 - The translations of `Store_NotForSaleNow` are machine drafts.

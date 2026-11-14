@@ -3,7 +3,8 @@
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=16
 # expect-log: PAGE 16
-# expect-log: BACKCOVER shown lines=4 picture=drawn
+# expect-log: BACKCOVER shown lines=4 picture=drawn card=300
+# expect-log: BACKCOVER modes visible=no
 appId: uk.sirous.dinoreader.dbg
 name: Back cover after the last page
 ---
@@ -44,3 +45,7 @@ name: Back cover after the last page
 - assertVisible: "October 2026"
 - assertNotVisible:
     id: StoryText
+# Slice 359 item 6: the view switch is hidden on the back cover (picture + text is this book's default view); the credits are the cream card in the middle of the picture (screenshot checked against mock BC1).
+- assertNotVisible:
+    id: ReadingModes
+- takeScreenshot: back-cover-portrait

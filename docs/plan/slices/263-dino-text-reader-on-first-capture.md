@@ -53,7 +53,7 @@ Parked by night 2026-11-04-1441 wave 3 (not claimed): waits for the user's pick 
 
 - Capturing a Farsi, Arabic, Russian, Japanese or Chinese page reads no text on Android (Farsi and Arabic also on iPhone); see *Measured and found* below. Fixing it means downloadable page readers (the `ocr-*` packs Read The Stupid Text uses). Not asked for; recorded so it is not lost.
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`, `src/ReadTheStupidText.Mobile.Shared/Ocr/**`, `src/ReadTheStupidText.Mobile.Shared/Platforms/**`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/capture-reader-download.yaml` (new), `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`, `docs/plan/slices/263-dino-text-reader-on-first-capture.md`.
+**Touches:** `src/Sirous.Reading.Mobile.Shared/Sirous.Reading.Mobile.Shared.csproj`, `src/Sirous.Reading.Mobile.Shared/Ocr/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/**`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/capture-reader-download.yaml` (new), `src/Sirous.Reading.Mobile.Shared/CLAUDE.md`, `docs/plan/slices/263-dino-text-reader-on-first-capture.md`.
 
 ## Decisions (user, 2026-11-04, RefineScope)
 

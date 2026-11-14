@@ -1,0 +1,1057 @@
+using System.Globalization;
+using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Application.Usage;
+using ReadTheStupidText.Mobile.Resources.Strings;
+using Sirous.Reading.Mobile.Shared.ModelDownload;
+using Sirous.Reading.Mobile.Shared.Network;
+using Sirous.Reading.Mobile.Shared.Usage;
+using Sirous.Reading.Mobile.Shared.Waiting;
+using AndroidPlatform = Microsoft.Maui.Controls.PlatformConfiguration.Android;
+
+namespace ReadTheStupidText.Mobile;
+
+/// <summary>
+/// Wizard page 2, "Check the text" (Slice 101, Decision 105): almost all text box, editable. Reached from the
+/// capture wizard's Done, from Text from a file, and from Edit and long-press Paste on the main page. When the
+/// text is in another language than the app's and the phone can translate it, a ticked checkbox turns the big
+/// button into "Translate and read": the text is replaced by its translation (a missing ML Kit model downloads
+/// first) and the main page shows and reads it, so what is on screen is what is heard. Back changes nothing.
+/// </summary>
+public partial class ReviewPage : ContentPage
+{
+    private const double TranslatingOpacity = 0.55;
+    private const double DisabledOpacity = 0.45;
+    private const double TranslatingTextAlpha = 0.45;
+    private const string DisabledBorder = "#1C000000";
+    private const string UntickedBorder = "#59000000";
+    private const string LightEditorText = "#1F2027";
+    private const string DetectNowMarker = "READ detect-now";
+    private const string TranslatedMarker = "READ detect-now translated"; // Slice 211: the read that detected at Play really translated
+    private const string PlainTranslatedMarker = "READ translated"; // Slice 209: any read that really translated (the tick was set on a shown row)
+
+    private readonly ReviewHandOff _handOff;
+    private readonly ISettingsStore _settings;
+    private readonly ITranslator? _translator;
+    private readonly ILanguageDetector? _detector;
+    private readonly RtstUsage _usage;
+    private readonly EarlyStartVoice _earlyVoice;
+    private readonly IPackUpdateNetwork _network;
+
+    // Early start (Slice 139): the head of the text is voiced, and translated when it is foreign, while the person decides.
+    // Typing waits for one second of quiet in all: the detection's own wait, then this rest.
+    private static readonly TimeSpan EarlyIdleAfterDetection = TimeSpan.FromMilliseconds(400);
+    private readonly EarlyStartCoordinator _early = new();
+    private TimeSpan _earlyDelay;
+
+    // The pair the translate offer was last counted for on this text, so typing does not count it again (Slice 137).
+    private string? _offeredPair;
+
+    // The pair translate_chosen was last counted for on this text, so a retry after a failed translation is still one decision.
+    private string? _chosenPair;
+
+    private ReviewTextState _state = new(string.Empty);
+    private string _failedBannerText = string.Empty;
+    private bool _originalCut; // the original (Show original) was cut to the editor limit too
+    private string? _detected;
+    private bool _detectionSettled; // a detection pass finished (or none is possible) for the text in the box
+    private bool _detectedNow; // this Play detected at once (Slice 211): only for the debug marker of the translated read
+    private bool _detectingNow; // Play started a detection of its own and waits for it (Slice 211)
+    private bool _optionShown;
+    private bool _ticked = true;
+    private bool _translating;
+    private bool _leaving;
+    private bool _finishing; // waiting for the chosen side's early voice before handing the text over
+    private bool _handedOver; // the text went to the main page: the chosen early work lives on there
+    private bool _settleLeft; // the page was left (Back) while it waited, as opposed to Cancel on the overlay
+    private CancellationTokenSource? _settleCts;
+    private static readonly TimeSpan EarlySettleLimit = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan DetectNowLimit = TimeSpan.FromSeconds(5); // Play's own detection: past this it reads plainly (Slice 211)
+    private bool _settingText;
+    private CancellationTokenSource? _detectCts;
+    private CancellationTokenSource? _translateCts;
+    private readonly PackResumeWatcher _resume;
+    private readonly WaitController _wait;
+    private readonly WaitOverlay _overlay;
+    private readonly WaitThemeFollower _overlayTheme;
+    private Task? _inFlightCall; // the platform call a Cancel abandoned (or the one running now): a new translate waits for it
+    private Task? _earlyCall; // the same for the early translation's calls, kept apart so neither flow overwrites the other's
+    private readonly SingleModelCall _modelCall = new(); // one platform model download in flight per page, whichever flow asks
+    private TranslationDownloadWait? _earlyDownloadView; // the early translation's download display, to show when the tap's wait begins
+    private bool _earlyStale; // the page was left: its early work was stopped, and a return without a new request starts it over
+
+    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, EarlyStartVoice earlyVoice, IPackUpdateNetwork network, PackResumeWatcher resume, ITranslator? translator = null, ILanguageDetector? detector = null)
+    {
+        InitializeComponent();
+        FlowDirection = FlowDirection.LeftToRight;
+        _handOff = handOff;
+        _settings = settings;
+        _usage = usage;
+        _earlyVoice = earlyVoice;
+        _network = network;
+        _resume = resume;
+        _translator = translator;
+        _detector = detector;
+        _overlay = ReaderPage.CreateWaitOverlay();
+        TextBoxContent.Children.Add(_overlay);
+        _wait = new WaitController(_overlay);
+        _overlayTheme = new WaitThemeFollower(_wait, _overlay);
+        _wait.CancelRequested += OnWaitCancelRequested;
+        ApplyStaticTexts();
+        RenderTick();
+        RenderReadButton();
+    }
+
+    // Cancel on the overlay: while waiting for the voice it abandons the read and stays on the page, else it stops the translation.
+    private void OnWaitCancelRequested()
+    {
+        if (_detectingNow)
+        {
+            _detectCts?.Cancel(); // Play's own detection: stay on the page with the text as it is
+            return;
+        }
+
+        if (_finishing)
+        {
+            _settleCts?.Cancel();
+            return;
+        }
+
+        _translateCts?.Cancel();
+    }
+
+    private string TargetCode() => AppLanguages.Code(AppLanguageSetting.Current(_settings));
+
+    private void ApplyStaticTexts()
+    {
+        TextFlow.ForUi(TitleLabel, AppResources.Review_Title);
+        TextFlow.ForUi(PasteLabel, AppResources.Reader_PasteButton);
+        TextFlow.ForUi(ShowOriginalLink, AppResources.Review_ShowOriginal);
+        SemanticProperties.SetDescription(BackButton, AppResources.Common_Back);
+        SemanticProperties.SetDescription(PasteButton, AppResources.Reader_PasteButton);
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        Microsoft.Maui.Controls.Application.Current!.On<AndroidPlatform>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+        if (_handOff.TakeRequest() is { } request)
+        {
+            ApplyRequest(request);
+        }
+        else if (_earlyStale && !_leaving)
+        {
+            RestartEarlyWork(); // back on this page with the same text: what the tap chose or the leaving stopped starts over
+        }
+
+        _earlyStale = false;
+        _handedOver = false;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        Microsoft.Maui.Controls.Application.Current!.On<AndroidPlatform>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Pan);
+        _overlayTheme.Detach();
+    }
+
+    // Cancels only when the page is really left (Back, hardware back, Read), not when the app goes to the background.
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+    {
+        base.OnNavigatedFrom(args);
+        _detectCts?.Cancel();
+        _detectCts = null; // a cancelled Play wait must not re-arm detection on a page that was left
+        _translateCts?.Cancel();
+        AbortSettle();
+        if (_handedOver)
+        {
+            _early.CancelAll(); // the text was handed over: a side the tap chose keeps going for the read
+        }
+        else
+        {
+            _early.Discard(); // left without reading: nothing prepared is wanted, and it must not hold the translator or the voice
+        }
+
+        _earlyStale = true;
+    }
+
+    private void ApplyRequest(ReviewRequest request)
+    {
+        (string text, bool cut) = EditorTextLimit.Cap(request.Text);
+        (string? original, _originalCut) = request.Original is null ? (null, false) : EditorTextLimit.Cap(request.Original); // Show original sets the editor too
+        SetState(new ReviewTextState(text, original), TimeSpan.Zero);
+        ShowFailedBanner(request.FailedPages, request.ReadPages);
+        ShowCutBanner(cut);
+        if (string.IsNullOrEmpty(request.Text))
+        {
+            TextEditor.Focus();
+        }
+    }
+
+    // Slice 148: a text too long for the native editor is cut and the page says so, in the same note the failed pages use.
+    private void ShowCutBanner(bool cut)
+    {
+        if (!cut)
+        {
+            return;
+        }
+
+        string cutText = AppResources.Format(AppResources.Review_TextCut, EditorTextLimit.MaxCharacters.ToString("N0", CultureInfo.CurrentCulture));
+        TextFlow.ForUi(FailedLabel, string.IsNullOrEmpty(_failedBannerText) ? cutText : $"{_failedBannerText} {cutText}");
+        FailedBanner.IsVisible = true;
+    }
+
+    private void ShowFailedBanner(IReadOnlyList<int>? failed, IReadOnlyList<int>? read)
+    {
+        if (failed is not { Count: > 0 })
+        {
+            return;
+        }
+
+        string failedText = AppResources.Format(failed.Count == 1 ? AppResources.Review_FailedOne : AppResources.Review_FailedMany, ScannedText.FormatPageNumbers(failed));
+        _failedBannerText = $"{failedText} {HereText(read)}".TrimEnd();
+        TextFlow.ForUi(FailedLabel, _failedBannerText);
+        FailedBanner.IsVisible = true;
+    }
+
+    private static string HereText(IReadOnlyList<int>? read) => read is not { Count: > 0 }
+        ? string.Empty
+        : AppResources.Format(read.Count == 1 ? AppResources.Review_HereOne : AppResources.Review_HereMany, ScannedText.FormatPageNumbers(read));
+
+    // Replaces what the box holds (a request, Paste, Show original) and looks at its language afresh.
+    private void SetState(ReviewTextState state, TimeSpan detectDelay)
+    {
+        _state = state;
+        _settingText = true;
+        try
+        {
+            TextEditor.Text = state.Text;
+        }
+        finally
+        {
+            _settingText = false;
+        }
+
+        TextEditor.FlowDirection = TextFlow.ContentDirection(state.Text);
+        ShowOriginalLink.IsVisible = state.HasOriginal;
+        FailedBanner.IsVisible = false;
+        _failedBannerText = string.Empty; // the banner is rebuilt from this, never appended to what is on screen
+        _detected = null;
+        _offeredPair = null;
+        _chosenPair = null;
+        ScheduleDetection(state.Text, detectDelay);
+    }
+
+    private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (_settingText)
+        {
+            return;
+        }
+
+        _state = _state.Edited(e.NewTextValue ?? string.Empty);
+        TextEditor.FlowDirection = TextFlow.ContentDirection(_state.Text);
+        _detected = null;
+        ScheduleDetection(_state.Text, TypingDetectDelay());
+    }
+
+    // Slice 211: a Debug launch can hold detection off (cmd hold-detection) so a flow's Play always comes before it.
+    private static TimeSpan TypingDetectDelay()
+    {
+#if DEBUG
+        if (Testing.RtstTestCommands.HoldDetection)
+        {
+            return TimeSpan.FromMinutes(10);
+        }
+#endif
+        return ReaderPage.DetectDebounce;
+    }
+
+    // ---- The text's language and the translate checkbox -------------------------------------
+
+    // Detection runs whenever a detector exists: the voice follows the text's language even when the phone
+    // cannot translate. The translator only gates the checkbox (RefreshTranslateOption). Always refreshes once.
+    private void ScheduleDetection(string text, TimeSpan delay)
+    {
+        _detectCts?.Cancel();
+        _early.Discard();
+        _earlyVoice.Reset();
+        _earlyDelay = delay > TimeSpan.Zero ? EarlyIdleAfterDetection : TimeSpan.Zero;
+        _detectionSettled = false;
+        RefreshTranslateOption();
+        if (_detector is null || string.IsNullOrWhiteSpace(text))
+        {
+            _detected = null;
+            _detectionSettled = true;
+            StartEarlyWork();
+            return;
+        }
+
+        _detectCts = new CancellationTokenSource();
+        _ = DetectAfterDelayAsync(text, delay, _detectCts.Token);
+    }
+
+    private async Task DetectAfterDelayAsync(string text, TimeSpan delay, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(delay, token);
+            DetectedLanguage? found = await _detector!.DetectAsync(TranslationFlow.DetectionSample(text), token);
+            await ApplyDetectionAsync(TranslationFlow.SourceFromDetection(found), token);
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: newer text; its own pass decides
+            return; // newer text: its own pass decides
+        }
+        catch (Exception)
+        {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: no translation is offered
+            await ApplyDetectionAsync(null, token); // a failed detection only hides the checkbox
+        }
+    }
+
+    // Applied on the main thread, and only if no newer text or translation has superseded this pass.
+    // False when it was superseded and applied nothing.
+    private Task<bool> ApplyDetectionAsync(string? detected, CancellationToken token) => MainThread.InvokeOnMainThreadAsync(() =>
+    {
+        if (token.IsCancellationRequested || _translating)
+        {
+            return false;
+        }
+
+        _detected = detected;
+        _detectionSettled = true;
+        RefreshTranslateOption();
+        StartEarlyWork();
+        return true;
+    });
+
+    private void RefreshTranslateOption()
+    {
+        string target = TargetCode();
+        bool canTranslate = _detected is not null && _translator is { IsAvailable: true } translator && translator.SupportsPair(_detected, target);
+        _optionShown = ReviewDecisions.ShowTranslateOption(_detected, target, canTranslate);
+        TranslateRow.IsVisible = _optionShown;
+        if (_optionShown)
+        {
+            CountTranslateOffered(_detected!, target);
+            TextFlow.ForUi(TranslateTitle, AppResources.Format(AppResources.Review_TranslateTo, LanguageName(target)));
+            TextFlow.ForUi(TranslateCaption, AppResources.Format(AppResources.Review_LooksLike, LanguageName(_detected!)));
+            SemanticProperties.SetDescription(TranslateRow, TranslateTitle.Text);
+        }
+
+        RenderReadButton();
+    }
+
+    // Named in the UI language ("French" in an English app), as the mock shows.
+    private static string LanguageName(string code)
+    {
+        try
+        {
+            string name = CultureInfo.GetCultureInfo(code).DisplayName;
+            return string.IsNullOrWhiteSpace(name) ? code : name;
+        }
+        catch (CultureNotFoundException)
+        {
+            // no-fallback: a label only; the language code is shown as it is
+            return code;
+        }
+    }
+
+    private void OnTranslateRowTapped(object? sender, TappedEventArgs e) => SetTick(!_ticked);
+
+    // The tick's one path: the row's tap and the Debug set-translate hook (Slice 209). False when a translation or hand-over is running and the tick cannot change.
+    private bool SetTick(bool ticked)
+    {
+        if (_translating || _finishing)
+        {
+            return false;
+        }
+
+        _ticked = ticked;
+        RenderTick();
+        RenderReadButton();
+        return true;
+    }
+
+#if DEBUG
+    /// <summary>Slice 209: the set-translate hook sets the Translate tick for the text on screen, as a tap on the row would.</summary>
+    internal bool TrySetTick(bool ticked) => SetTick(ticked);
+
+    /// <summary>True when the Translate row is shown (foreign text and a model), the only state in which a user can tick it.</summary>
+    internal bool TranslateAvailable => _optionShown;
+#endif
+
+    private void RenderTick()
+    {
+        TickBox.BackgroundColor = _ticked ? Brand() : Colors.Transparent;
+        TickBox.Stroke = new SolidColorBrush(_ticked ? Brand() : Color.FromArgb(UntickedBorder));
+        TickMark.IsVisible = _ticked;
+    }
+
+    private void RenderReadButton()
+    {
+        bool translates = ReviewDecisions.TranslatesOnRead(_optionShown, _ticked);
+        TextFlow.ForUi(ReadLabel, translates ? AppResources.Review_TranslateAndRead : AppResources.Review_Read);
+        bool blocked = _translating || string.IsNullOrWhiteSpace(_state.Text);
+        ReadButton.Opacity = _translating ? TranslatingOpacity : blocked ? DisabledOpacity : 1;
+        ReadButton.InputTransparent = blocked;
+    }
+
+    // ---- Header, Paste and Show original ----------------------------------------------------
+
+    private async void OnBackTapped(object? sender, TappedEventArgs e) => await LeaveAsync();
+
+    private async Task LeaveAsync()
+    {
+        if (_leaving)
+        {
+            return;
+        }
+
+        _leaving = true;
+        _detectCts?.Cancel(); // Play's wait for the detection must not go on to read
+        _translateCts?.Cancel();
+        AbortSettle();
+        await Shell.Current.GoToAsync(AppShell.BackRoute);
+    }
+
+    private async void OnPasteTapped(object? sender, TappedEventArgs e)
+    {
+        if (_translating || _finishing)
+        {
+            return;
+        }
+
+        try
+        {
+            string? text = await Clipboard.Default.GetTextAsync();
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                (string capped, bool cut) = EditorTextLimit.Cap(text);
+                _originalCut = false;
+                SetState(new ReviewTextState(capped), TimeSpan.Zero);
+                ShowCutBanner(cut);
+            }
+        }
+        catch (Exception)
+        {
+            // no-fallback: the person is told the paste failed; no default text is used
+            await DisplayAlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage, AppResources.Common_Ok, FlowDirection.LeftToRight);
+        }
+    }
+
+    private void OnShowOriginalTapped(object? sender, TappedEventArgs e)
+    {
+        if (!_translating && !_finishing && _state.HasOriginal)
+        {
+            SetState(_state.ShowOriginal(), TimeSpan.Zero);
+            ShowCutBanner(_originalCut); // the editor holds the capped original: keep telling the person
+        }
+    }
+
+    // ---- Read and Translate and read --------------------------------------------------------
+
+    private async void OnReadTapped(object? sender, TappedEventArgs e)
+    {
+        if (_translating || _leaving || _finishing || _detectingNow || string.IsNullOrWhiteSpace(_state.Text))
+        {
+            return;
+        }
+
+        string tappedText = _state.Text;
+        bool detectedNow = _detectedNow = ReviewDecisions.NeedsDetectionAtRead(_detector is not null, _detectionSettled, tappedText);
+        if (detectedNow && !await DetectNowAsync())
+        {
+            return; // Cancel, or the text changed meanwhile: the person taps again
+        }
+
+        if (detectedNow && (_leaving || _state.Text != tappedText))
+        {
+            _wait.End(); // left the page or edited while the detection finished: nothing may start
+            return;
+        }
+
+        if (ReviewDecisions.TranslatesOnRead(_optionShown, _ticked))
+        {
+            await TranslateAndFinishAsync(); // the wait of the detection (if any) carries on as the translation's
+            return;
+        }
+
+        _wait.End(); // no-op unless Play's detection wait is still up
+        _early.ChooseRead();
+
+        // A text that reads as foreign again (option shown) is no longer the translation its Original came from.
+        await FinishAsync(_state.Text, _optionShown ? null : _state.Original, ReviewDecisions.ReadLanguage(false, _detected, TargetCode()));
+    }
+
+    // Slice 211: Play before the idle delay ran detects at once and then decides as a later Play would. Under 500 ms nothing
+    // shows; longer shows the "preparing the voice" wait with Cancel (the language picks the voice). A failed detection reads
+    // plainly, as it always did. True leaves that wait running for the caller: the translation re-words it, a plain read ends it.
+    // False (wait ended) when Cancel was tapped or the text changed (the person's next tap decides).
+    private async Task<bool> DetectNowAsync()
+    {
+        string text = _state.Text;
+        _detectCts?.Cancel(); // the idle delay: its detection is done here instead
+        CancellationTokenSource cts = _detectCts = new CancellationTokenSource();
+        CancellationToken token = cts.Token;
+        _detectingNow = true;
+        bool succeeded = false;
+        _wait.Begin(WaitStage.PreparingVoice, AppResources.Wait_PreparingVoice, canCancel: true);
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            string? found = await DetectSafelyAsync(text, token);
+            token.ThrowIfCancellationRequested(); // new text cancels this token (ScheduleDetection), so no text check is needed
+            _earlyDelay = TimeSpan.Zero; // the person is waiting: no idle rest before the early work
+            if (!await ApplyDetectionAsync(found, token))
+            {
+                RescheduleAfterCancel(text, cts); // superseded or cancelled meanwhile: nothing was applied
+                return false;
+            }
+
+            LogDetectNow(clock.ElapsedMilliseconds);
+            succeeded = true;
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: cancellation; the detection is scheduled again
+            RescheduleAfterCancel(text, cts);
+            return false;
+        }
+        finally
+        {
+            _detectingNow = false;
+            if (!succeeded)
+            {
+                _wait.End();
+            }
+        }
+    }
+
+    // Cancel on the overlay leaves the page looking at the text again, after its usual idle rest. Not when new text already
+    // scheduled its own pass (it replaced the token source) or the page is being left (nothing may start on an abandoned page).
+    private void RescheduleAfterCancel(string text, CancellationTokenSource cts)
+    {
+        if (ReferenceEquals(_detectCts, cts) && !_leaving && !_earlyStale)
+        {
+            ScheduleDetection(text, ReaderPage.DetectDebounce);
+        }
+    }
+
+    private async Task<string?> DetectSafelyAsync(string text, CancellationToken token)
+    {
+        using var limited = CancellationTokenSource.CreateLinkedTokenSource(token);
+        limited.CancelAfter(DetectNowLimit);
+        try
+        {
+            return TranslationFlow.SourceFromDetection(await _detector!.DetectAsync(TranslationFlow.DetectionSample(text), limited.Token));
+        }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: timed out, so the text is read plainly
+            return null; // timed out: read plainly, as a failed detection does
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: rethrown
+            throw;
+        }
+        catch (Exception)
+        {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: no translation is offered
+            return null; // a failed detection only hides the checkbox
+        }
+    }
+
+    private static void LogDetectNow(long milliseconds) => LogMarker($"{DetectNowMarker} {milliseconds}");
+
+    private static void LogMarker(string line)
+    {
+        System.Diagnostics.Debug.WriteLine(line);
+#if DEBUG
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+#endif
+    }
+
+    private async Task TranslateAndFinishAsync()
+    {
+        string source = _detected!;
+        string target = TargetCode();
+        _detectCts?.Cancel();
+        _translateCts = new CancellationTokenSource();
+        CancellationToken token = _translateCts.Token;
+        CountTranslateChosen(source, target);
+        ReviewTextState before = _state;
+        Task<EarlyTranslation?> earlyTask = _early.ChooseTranslate();
+        SetTranslating(true);
+        try
+        {
+            string translated = await TranslateAsync(source, target, earlyTask, token);
+            if (!token.IsCancellationRequested)
+            {
+                _state = _state.Translated(translated);
+                LogMarker(PlainTranslatedMarker);
+                if (_detectedNow)
+                {
+                    LogMarker(TranslatedMarker);
+                }
+
+                _wait.End(); // the page is about to leave: no "Translating..." with a live Cancel meanwhile
+                await FinishAsync(translated, _state.Original, ReviewDecisions.ReadLanguage(true, source, target), before);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: Cancel or leaving the page; the original text stays
+            if (!_leaving)
+            {
+                RestartEarlyWork(); // Cancel on the wait overlay: the original text stays, so its early work starts over
+            }
+
+            return; // left the page, or Cancel on the wait overlay: the original text stays
+        }
+        catch (Exception ex)
+        {
+            if (ex is not TranslationModelUnavailableException { FallbackReported: true })
+            {
+                _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationError, source); // Slice 273 part D: the original is read; a download failure was counted where it happened
+            }
+
+            _wait.End(); // gone before the alert, not behind it
+            if (!_leaving)
+            {
+                RestartEarlyWork(); // the translation choice is withdrawn: nothing of it keeps running
+            }
+
+            await ReadOriginalAfterFailureAsync(source, target);
+        }
+        finally
+        {
+            SetTranslating(false);
+        }
+    }
+
+    // The wait overlay names the stage: the download whenever the model is not on the phone yet. Cancel returns at once
+    // (WaitAsync), even when the platform call does not look at the token; that call is remembered, so a new translate
+    // waits for it to settle instead of starting a second download or translation of the same pair beside it.
+    private async Task<string> TranslateAsync(string source, string target, Task<EarlyTranslation?> earlyTask, CancellationToken token)
+    {
+        string text = _state.Text;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        EarlyTranslation? early = await AwaitEarlyTranslationAsync(source, target, text, earlyTask, token);
+        if (early is null)
+        {
+            return await TranslateTextAsync(text, source, target, early: false, token);
+        }
+
+        string rest = early.Split.Remainder;
+        if (rest.Length == 0)
+        {
+            CountTiming(UsageStage.Translate, UsageOutcome.Done, clock.Elapsed, source, target, early: true); // the early work was all of it
+            return early.TranslatedHead;
+        }
+
+        return early.Joined(await TranslateTextAsync(rest, source, target, early: true, token));
+    }
+
+    private async Task<string> TranslateTextAsync(string text, string source, string target, bool early, CancellationToken token)
+    {
+        ITranslator translator = _translator!;
+        _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        await SettleAbandonedCallAsync(token);
+        bool downloading = !await Tracked(translator.IsModelReadyAsync(source, target), token);
+        if (downloading)
+        {
+            _wait.Begin(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), canCancel: true, AppResources.Review_FirstTimeOnly);
+            await FetchModelTimedAsync(translator, source, target, token);
+        }
+
+        if (!downloading || translator is IModelPreparer)
+        {
+            _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        }
+
+        string translated = await TimedAsync(UsageStage.Translate, source, target, early, () => Tracked(TranslationFlow.TranslateAsync(translator, text, source, target, token), token));
+        return string.IsNullOrWhiteSpace(translated)
+            ? throw new TranslationModelUnavailableException("The translation was empty.")
+            : translated;
+    }
+
+    // Remembers the platform call and returns a task that gives up when Cancel is tapped, leaving the call itself running.
+    private Task<T> Tracked<T>(Task<T> call, CancellationToken token)
+    {
+        _inFlightCall = call;
+        return call.WaitAsync(token);
+    }
+
+    private Task<T> TrackedEarly<T>(Task<T> call, CancellationToken token)
+    {
+        _earlyCall = call;
+        return call.WaitAsync(token);
+    }
+
+    private Task TrackedEarly(Task call, CancellationToken token)
+    {
+        _earlyCall = call;
+        return call.WaitAsync(token);
+    }
+
+    private Task Tracked(Task call, CancellationToken token)
+    {
+        _inFlightCall = call;
+        return call.WaitAsync(token);
+    }
+
+    // A call Cancel abandoned may still be downloading; its result is ignored, but a new one starts only after it ends.
+    private async Task SettleAbandonedCallAsync(CancellationToken token)
+    {
+        await SettleAsync(_inFlightCall, token);
+        await SettleAsync(_earlyCall, token);
+    }
+
+    private static async Task SettleAsync(Task? abandoned, CancellationToken token)
+    {
+        if (abandoned is null || abandoned.IsCompleted)
+        {
+            return;
+        }
+
+        try
+        {
+            await abandoned.WaitAsync(token);
+        }
+        catch (Exception) when (!token.IsCancellationRequested)
+        {
+            // no-fallback: waits for an abandoned call to settle; its outcome does not matter
+            // the abandoned call failed or was cancelled: it has settled, which is all this wait needed
+        }
+    }
+
+    // The translator could not be fetched or failed: the original is read, with one short line saying why.
+    private async Task ReadOriginalAfterFailureAsync(string source, string target)
+    {
+        if (_leaving)
+        {
+            return;
+        }
+
+        await DisplayAlertAsync(AppResources.Review_Title, AppResources.Review_TranslateFailed, AppResources.Common_Ok, FlowDirection.LeftToRight);
+        _early.ChooseRead(); // the original is read: its early work keeps going after the page is left
+        await FinishAsync(_state.Text, null, ReviewDecisions.ReadLanguage(false, source, target));
+    }
+
+    // The chosen side's early work is awaited, never dropped: the reader's own start cancels a preparation still running,
+    // so the read would begin cold. What ended is in the sentence cache.
+    // False when the wait was abandoned (Cancel on the overlay, or the page was left): the text is not handed over.
+    private async Task<bool> SettleChosenEarlyWorkAsync()
+    {
+        Task chosen = _early.SettleChosenAsync();
+        if (chosen.IsCompleted)
+        {
+            return true;
+        }
+
+        _finishing = true;
+        _settleLeft = false;
+        TextEditor.IsReadOnly = true; // the text on screen is the text being handed over
+        _settleCts = new CancellationTokenSource();
+        _wait.Begin(WaitStage.PreparingVoice, AppResources.Wait_PreparingVoice, canCancel: true);
+        try
+        {
+            await chosen.WaitAsync(EarlySettleLimit, _settleCts.Token);
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            // no-fallback: a slow engine only means the read starts without waiting longer
+            return true; // slow engine: read now rather than keep the person waiting
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: Cancel on the wait overlay
+            return false;
+        }
+        finally
+        {
+            _wait.End();
+            _finishing = false;
+            TextEditor.IsReadOnly = false;
+            _settleCts.Dispose();
+            _settleCts = null;
+        }
+    }
+
+    // Back (or the system back) while waiting: the page is left, so the wait ends and nothing is handed over.
+    private void AbortSettle()
+    {
+        if (!_finishing)
+        {
+            return;
+        }
+
+        _settleLeft = true;
+        _settleCts?.Cancel();
+    }
+
+    private async Task<bool> FinishAsync(string text, string? original, string? language, ReviewTextState? undo = null)
+    {
+        if (!await SettleChosenEarlyWorkAsync() || _leaving || _settleLeft)
+        {
+            AbandonFinish(undo);
+            return false;
+        }
+
+        _handedOver = true;
+        _handOff.Finish(new ReviewResult(text, original, language));
+        await LeaveAsync();
+        return true;
+    }
+
+    // Cancel on the wait overlay stays on the page with the text it had; the side the tap chose is withdrawn, so both start over.
+    private void AbandonFinish(ReviewTextState? undo)
+    {
+        if (undo is not null)
+        {
+            _state = undo;
+        }
+
+        if (!_leaving && !_settleLeft)
+        {
+            RestartEarlyWork();
+        }
+    }
+
+    // ---- Early start (Slice 139) ------------------------------------------------------------
+
+    // Voices the head of the text, and translates then voices the head of its translation when the checkbox is offered, so
+    // the first sound and the first translation are already done when the person taps. The tap picks a side (Read or
+    // Translate and read) and the other side stops. None of it is counted: only what the tap starts is.
+    // The early work starts over at once (no idle rest) after a Translate and read that was cancelled or failed.
+    private void RestartEarlyWork()
+    {
+        _early.Discard();
+        _earlyDelay = TimeSpan.Zero;
+        StartEarlyWork();
+    }
+
+    private void StartEarlyWork()
+    {
+        string text = _state.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _early.Discard();
+            return;
+        }
+
+        string target = TargetCode();
+        string? source = _optionShown ? _detected : null;
+        string language = VoiceRouting.ReadingLanguage(false, target, _settings.TranslateSourceLanguage, _detected, text);
+        var jobs = new EarlyStartJobs(
+            (head, token) => _earlyVoice.VoiceAsync(head, language, token),
+            source is null || _translator is null ? null : (span, token) => TranslateHeadEarlyAsync(source, target, span, token),
+            (voiced, token) => _earlyVoice.VoiceAsync(voiced, target, token));
+        _early.Restart(text, source, target, jobs, _earlyDelay);
+    }
+
+    // A model that is not on the phone downloads early only on an unmetered network; on mobile data it waits for the tap,
+    // whose wait overlay then names the download.
+    private async Task<string?> TranslateHeadEarlyAsync(string source, string target, EarlySplit span, CancellationToken token)
+    {
+        ITranslator translator = _translator!;
+        await SettleAbandonedCallAsync(token); // never beside a call that was abandoned for the same pair
+        bool ready = await TrackedEarly(translator.IsModelReadyAsync(source, target), token);
+        if (!ready && !_network.AllowsAutomaticUpdate)
+        {
+            return null;
+        }
+
+        if (!ready && translator is IModelPreparer preparer)
+        {
+            await DownloadModelEarlyAsync(preparer, source, target, token);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate start ({source}->{target}, {span.Head.Length} chars)");
+        string? translated = await TrackedEarly(TranslationFlow.TranslateAsync(translator, span.Head, source, target, token), token);
+        System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate done ({source}->{target}, ok={translated is not null}, cancelled={token.IsCancellationRequested})");
+        return translated;
+    }
+
+    // The early translation of this very text and pair, joined in if it finished or is still running; null when there is none,
+    // so the whole text is translated as before. A download still running behind it is named by the overlay.
+    private async Task<EarlyTranslation?> AwaitEarlyTranslationAsync(string source, string target, string text, Task<EarlyTranslation?> earlyTask, CancellationToken token)
+    {
+        if (!earlyTask.IsCompleted)
+        {
+            await ShowStageWhileEarlyRunsAsync(source, target, token);
+        }
+
+        EarlyTranslation? early = await Tracked(earlyTask, token);
+        return early is not null && early.Matches(text, source, target) ? early : null;
+    }
+
+    private async Task ShowStageWhileEarlyRunsAsync(string source, string target, CancellationToken token)
+    {
+        bool downloading;
+        try
+        {
+            downloading = !await Tracked(_translator!.IsModelReadyAsync(source, target), token);
+        }
+        catch (Exception) when (!token.IsCancellationRequested)
+        {
+            // no-fallback: the early work is an optimisation only; the wait overlay stays as it is
+            return; // the early work is only an optimization: no stage named, the wait overlay stays as it is
+        }
+
+        if (downloading)
+        {
+            _wait.Begin(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), canCancel: true, AppResources.Review_FirstTimeOnly);
+            _earlyDownloadView?.TakeOver(); // the early download may already be waiting for the internet: it now owns the wait and shows that look at once
+        }
+        else
+        {
+            _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        }
+    }
+
+    // ---- Anonymous counts (Slice 137) -------------------------------------------------------
+
+    // Once per loaded text and pair: the checkbox appearing, not every re-detection while the person types.
+    private void CountTranslateOffered(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_offeredPair == pair)
+        {
+            return;
+        }
+
+        _offeredPair = pair;
+        _usage.Record(context => UsageEvents.TranslateOffered(context, source, target));
+    }
+
+    private void CountTranslateChosen(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_chosenPair == pair)
+        {
+            return;
+        }
+
+        _chosenPair = pair;
+        _usage.Record(context => UsageEvents.TranslateChosen(context, source, target));
+    }
+
+    // The wait for the ML Kit model on its own, when the translator can fetch it apart from translating; otherwise the download is part of the translate stage.
+    // The download runs in a session (Slice 187): with no internet it waits and carries on by itself instead of failing.
+    private async Task FetchModelTimedAsync(ITranslator translator, string source, string target, CancellationToken token)
+    {
+        if (translator is IModelPreparer preparer)
+        {
+            TranslationModelDownloadSession session = NewDownloadSession(preparer, source, target);
+            using (session)
+            {
+                // the time spent waiting for the internet is not download time: it would skew the production stage durations
+                await TimedAsync(UsageStage.ModelDownload, source, target, early: false, async () =>
+                {
+                    await RunDownloadSessionAsync(session, source, token);
+                    return true;
+                }, () => session.WaitedTotal);
+            }
+        }
+    }
+
+    private TranslationModelDownloadSession NewDownloadSession(IModelPreparer preparer, string source, string target)
+    {
+        string packKey = TranslationModelDownloadSession.PackKey(source, target);
+        return ConnectivityTranslationNetwork.NewSession(
+            packKey, (_, attemptToken) => _modelCall.RunAsync(packKey, () => preparer.EnsureModelAsync(source, target, attemptToken), attemptToken), _resume);
+    }
+
+    private async Task RunDownloadSessionAsync(TranslationModelDownloadSession session, string source, CancellationToken token)
+    {
+        using var view = new TranslationDownloadWait(_wait, session, DownloadTexts(source));
+        view.Show();
+        await session.RunAsync(token);
+    }
+
+    // The early translation's model download goes through a session too, so a tap meanwhile shows the waiting look (Slice 187).
+    private async Task DownloadModelEarlyAsync(IModelPreparer preparer, string source, string target, CancellationToken token)
+    {
+        using TranslationModelDownloadSession session = NewDownloadSession(preparer, source, target);
+        using var view = new TranslationDownloadWait(_wait, session, DownloadTexts(source), owner: false); // the tap's view takes the controller over
+        _earlyDownloadView = view;
+        try
+        {
+            await session.RunAsync(token);
+        }
+        finally
+        {
+            _earlyDownloadView = null;
+        }
+    }
+
+    private static TranslationDownloadTexts DownloadTexts(string source) => new(
+        LanguageName(source), AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), AppResources.Review_FirstTimeOnly,
+        AppResources.Wait_WaitingInternet, AppResources.Wait_WaitingWifi, AppResources.Wait_WaitingPercent, AppResources.Wait_WaitingNoPercent, AppResources.Wait_Retry);
+
+    // Times one wait and counts it with how it ended, then lets the result or the error through unchanged.
+    private async Task<T> TimedAsync<T>(string stage, string source, string target, bool early, Func<Task<T>> work, Func<TimeSpan>? excluded = null)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            T result = await work();
+            CountTiming(stage, UsageOutcome.Done, clock.Elapsed - Excluded(excluded), source, target, early);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: counts the timing and rethrows
+            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed - Excluded(excluded), source, target, early);
+            throw;
+        }
+        catch (Exception)
+        {
+            // no-fallback: counts the timing and rethrows
+            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed - Excluded(excluded), source, target, early);
+            throw;
+        }
+    }
+
+    private static TimeSpan Excluded(Func<TimeSpan>? excluded) => excluded?.Invoke() ?? TimeSpan.Zero;
+
+    private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target, bool early) =>
+        _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target, early));
+
+    // ---- The translating look (R7) ----------------------------------------------------------
+
+    private void SetTranslating(bool translating)
+    {
+        _translating = translating;
+        TextEditor.IsReadOnly = translating;
+        TextEditor.TextColor = translating
+            ? EditorTextColor().WithAlpha((float)TranslatingTextAlpha)
+            : EditorTextColor();
+        TextBox.StrokeThickness = translating ? 1 : 2;
+        TextBox.Stroke = translating ? new SolidColorBrush(Color.FromArgb(DisabledBorder)) : new SolidColorBrush(Brand());
+        TranslateRow.Opacity = translating ? TranslatingOpacity : 1;
+        TranslateCaption.IsVisible = !translating;
+        ReadButton.Opacity = translating ? TranslatingOpacity : 1;
+        ReadButton.InputTransparent = translating;
+        if (!translating)
+        {
+            _wait.End();
+            RenderReadButton();
+        }
+    }
+
+    private static Color Brand() => (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"];
+
+    private static Color EditorTextColor() =>
+        ThemeColors.IsDark() ? ThemeColors.Get(ThemeColors.TextPrimaryDarkKey) : Color.FromArgb(LightEditorText);
+}

@@ -11,6 +11,6 @@ Your caller gives you the worktree path, the slice file, the questions and the c
 language), and optionally the lines to read.
 
 - Renders from Gemini use `--batch` (the normal route's 100/day cap is used up); never try the normal route first.
-- Never change app code, packs or releases; write only the slice file's decisions and files under the ignored `tools/voice-listen/out/` folder.
+- Never change app code, packs or releases; write only the slice file's decisions and files under the ignored `tools/dino/voice-listen/out/` folder.
 - Report in at most 8 lines: the page link, each question's pick, notes, skipped candidates.
 - Before your final report, stop every loop and process you started and delete the venv and WAVs. End with `released: …`.

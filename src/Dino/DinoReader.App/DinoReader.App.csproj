@@ -1,0 +1,166 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Dino Reader (Batch 10, Slice 58, Decision 72): a kids' book reader, a second MAUI app in
+	     this repo. Android always; iOS only where it can be built (Slice 67), with the same
+	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj: net10.0-ios is added on
+	     macOS or with -p:IncludeIos=true, so Windows and Linux builds never need Xcode, and the
+	     iOS CI job passes -p:IncludeAndroid=false. net10.0-windows10.0.19041.0 (Slice 67) is added on
+	     Windows only (an MSIX; no tray, no hotkey), and -p:IncludeWindows=false drops it. -->
+	<PropertyGroup>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' == ''">net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>DinoReader</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<ApplicationTitle>Dino Book Reader</ApplicationTitle>
+
+		<!-- Google Play package name — fixed once published. -->
+		<ApplicationId>uk.sirous.dinoreader</ApplicationId>
+
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- 28 (Android 9, 2018) is the product floor for every Android app in this repo
+		     (Decision 82). Do not lower it. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
+
+		<!-- iOS 15.5 was ML Kit Translate's own floor (Slice 160); Dino no longer links it (Slice 305) but keeps the floor so no device is dropped by this change. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.5</SupportedOSPlatformVersion>
+
+		<!-- Slice 305: Dino calls no speech engine, no scan and no translation, so Mobile.Shared builds without sherpa-onnx, onnxruntime and ML Kit for it
+		     (passed to the ProjectReference below): none of their packages, native libraries or manifest entries reach the Android, iOS or Windows packages. -->
+		<IncludeSpeechEngines>false</IncludeSpeechEngines>
+		<IncludeMlKit>false</IncludeMlKit>
+	</PropertyGroup>
+
+	<!-- Windows (Slice 67): a packaged MSIX like Read The Stupid Text's. The Release package is built .NET
+	     self-contained so the Store sees no undisclosed .NET dependency (certification 10.2.4.1); the Windows
+	     App SDK stays framework-dependent (the Store delivers it). Debug stays framework-dependent. Packaged
+	     apps are not trimmed. Package identity and the tile/splash art are in Platforms\Windows\Package.appxmanifest. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<WindowsPackageType>MSIX</WindowsPackageType>
+		<ApplicationManifest>Platforms/Windows/app.manifest</ApplicationManifest>
+		<SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+		<!-- Set here, not on the command line: a global RuntimeIdentifier also flows into Mobile.Shared and
+		     makes the package payload list its .pdb twice (APPX1101). CI passes only -p:Platform. -->
+		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+	</PropertyGroup>
+	<!-- The ready-made "Book hug" tile, store and splash art, copied from docs/design/dino-reader/icons/windows.
+	     Deliberately NO <MauiIcon>: it would generate different art over these. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<Content Include="Platforms\Windows\Assets\*.png" Link="Assets\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- iOS app icon (Slice 67): the ready-made "Book hug" asset catalog (iOS 18 light/dark/tinted
+	     1024s), copied from docs/design/dino-reader/icons/ios, never regenerated. Deliberately NO
+	     <MauiIcon> for the same reason as Android: it would generate a different icon. The legacy
+	     sizes are unused because the deployment target uses single-size icons, which actool expands.
+	     The catalog is declared explicitly as ImageAsset items linked at Assets.xcassets\ and named by
+	     AppIcon: leaning on the SDK's default items shipped it as a raw folder with no Assets.car or
+	     CFBundleIconName, and App Store Connect rejected v1.33.0 (90022, 90023, 90713). -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+		<AppIcon>AppIcon</AppIcon>
+	</PropertyGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<!-- The privacy manifest App Store Connect requires. -->
+		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+		<!-- Drop the SDK's default items for the catalog (their Link keeps the Platforms\iOS\Resources\
+		     prefix, which the old XSAppIconAssets plist key never matched), then add it back linked at Assets.xcassets\. -->
+		<BundleResource Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
+		<ImageAsset Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
+		<ImageAsset Include="Platforms\iOS\Resources\Assets.xcassets\**\*.*" Link="Assets.xcassets\%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- App icon: deliberately NO <MauiIcon>. MauiIcon generates a mipmap/appicon adaptive icon
+	     and rewrites the manifest's android:icon, which would overwrite the ready-made "Book hug"
+	     set in Platforms/Android/Resources/mipmap-*. Those folders are picked up as Android
+	     resources by convention and AndroidManifest.xml points at @mipmap/ic_launcher(_round). -->
+	<ItemGroup>
+		<!-- Fonts (SIL OFL 1.1, licences in Licenses/ and STORE.md): bundled, never fetched at runtime. -->
+		<MauiFont Include="Resources\Fonts\*" />
+		<!-- The gallery's top-bar app icon (copied from docs/design/dino-reader/icons/android/play-store-512.png). -->
+		<MauiImage Include="Resources\Images\dino_icon.png" BaseSize="40,40" />
+		<!-- Slice 143: the app icon at the wait overlay's 84 size (dino_icon is a 40 base and would blur). -->
+		<MauiImage Include="Resources\Images\dino_wait.png" BaseSize="84,84" />
+		<!-- Slice 261: no book is bundled in the app any more (a fresh install picks its first books from the store). The four former starter packages are test books that only a Debug build carries
+		     (Testing/TestBooks, the import-test-book hook and the test store); a Release build has no testbooks asset. Flat names, because the Windows package drops the folder.
+		     The Windows VM test package (Release, no Debug hooks) is built with -p:DinoTestBooks=true: that carries the assets too and makes the test store the default list (tools/desktop-vm). The Store and CI builds never set it. -->
+		<MauiAsset Condition="'$(Configuration)' == 'Debug' Or '$(DinoTestBooks)' == 'true'" Include="Resources\Raw\testbooks\*.dino" LogicalName="%(Filename)%(Extension)" />
+		<!-- Slice 255: the animals' real recordings (CC0, credits in STORE.md), flat names for the same reason: animal-pig.m4a, opened by ReadingClips.cs. -->
+		<MauiAsset Include="Resources\Raw\animal-sounds\*.m4a" LogicalName="animal-%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<!-- Slice 261: DINO_TEST_BOOKS compiles the test books and the test store in (Debug, or a Release package built with -p:DinoTestBooks=true for the Windows VM checks); DINO_TEST_STORE_ON also makes
+	     the test store the default list, because that package has no Debug hooks to switch it on. A Store or CI build sets neither. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' Or '$(DinoTestBooks)' == 'true'">
+		<DefineConstants>$(DefineConstants);DINO_TEST_BOOKS</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(DinoTestBooks)' == 'true'">
+		<DefineConstants>$(DefineConstants);DINO_TEST_STORE_ON</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Slice 132: Play's in-app update (the forced "Please update" page uses its immediate flow). -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.20" />
+		<!-- Slice 346: Google Play Billing (paid books, off by the remote switch until the products exist). -->
+		<PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
+	</ItemGroup>
+
+	<!-- Slice 305: no AndroidSherpaPackaging.props and no IosSherpaPackaging.props here any more: Mobile.Shared is built with IncludeSpeechEngines=false for Dino, so no sherpa-onnx or onnxruntime
+	     package reaches the Android and iOS builds and there is nothing to neutralise. Only the Windows head still gets the engine, through Infrastructure (below). -->
+	<Import Project="..\..\Shared\AndroidRelease.props" />
+	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
+	<PropertyGroup><TestHookPlist>TestHooks.Dino.plist</TestHookPlist></PropertyGroup>
+	<Import Project="..\..\Shared\Sirous.Reading.Mobile.Shared\Testing\TestHooks.props" />
+
+	<!-- Same fix as the RTST App: the Windows App SDK pulls WinML, whose onnxruntime.dll collides with
+	     sherpa-onnx's version-matched one at the package root (APPX1101). Still needed on the Windows head only: Mobile.Shared's Windows target
+	     references Infrastructure (the logging the head uses), and Infrastructure brings sherpa-onnx and its DLLs. It goes when that logging leaves Infrastructure. -->
+	<Target Name="RemoveWinMlOnnxRuntimeDuplicate" AfterTargets="GetPackagingOutputs" BeforeTargets="_ComputeAppxPackagePayload" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ItemGroup>
+			<PackagingOutputs Remove="@(PackagingOutputs)" Condition="'%(FileName)%(Extension)' == 'onnxruntime.dll' and $([System.String]::Copy('%(FullPath)').Replace('\','/').ToLowerInvariant().Contains('/microsoft.windows.ai.machinelearning/'))" />
+		</ItemGroup>
+	</Target>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Mobile.Shared\Sirous.Reading.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there); Slice 305: and which engines this app links -->
+		<ProjectReference Include="..\..\Shared\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
+		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
+	</ItemGroup>
+
+	<!-- Windows: MAUI's resizetizer adds the fonts to the MSIX payload and publish\ only. Win2D (WindowsTextMeasurer)
+	     loads them from the registered layout (the build output folder), so copy them there too. -->
+	<Target Name="DinoFontsToLayout" AfterTargets="_CollectMauiFontItems" Condition="'$(_ResizetizerIsWindowsAppSdk)' == 'True'">
+		<ItemGroup>
+			<ContentWithTargetPath Update="@(_MauiFontCopied)" CopyToOutputDirectory="PreserveNewest" TargetPath="%(Filename)%(Extension)" DinoFont="true" />
+		</ItemGroup>
+		<Warning Condition="'@(_MauiFontCopied)' != '' And '@(ContentWithTargetPath->HasMetadata('DinoFont'))' == ''" Text="DinoFontsToLayout matched no font item: the fonts will not be in the Windows layout and text measuring falls back to a default font." />
+	</Target>
+
+	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
+	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
+		<Error Text="DinoReader.App has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />
+	</Target>
+
+</Project>

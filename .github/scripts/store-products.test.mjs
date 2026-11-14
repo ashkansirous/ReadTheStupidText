@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import {
     ALL_STORES, MANUAL_STEPS, Outcome, Store, activateBody, addOnProductIds, appleAvailabilityBody, appleLocalizationBody, applePriceScheduleBody, appleProductBody, applyStore,
     findApplePricePoint, googleAssertion, createAppleProduct, createPlayProduct, PlayStage, playProductStage, parseServiceAccount, applePricePointId, applePagePath, microsoftNextUrl, microsoftAddOnBody, paidBooksFrom, parseArgs, planLines, playHasUsPrice, playProductBody, playUsdPrice, productIdProblem, readContentEntries,
-    appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull,
+    appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull, isNonJsonBody,
 } from './store-products.mjs';
 
 const SCRIPT = fileURLToPath(new URL('./store-products.mjs', import.meta.url));
@@ -197,8 +197,49 @@ test('Slice 346 review #2: a Play product that is created but not active is acti
     assert.equal(await createPlayProduct('t', BOOK, request({ status: 200, ok: true, json: { purchaseOptions: [{ purchaseOptionId: 'buy', state: 'ACTIVE' }] } })), Outcome.Exists);
     assert.deepEqual(log, ['GET oneTimeProducts/uk.sirous.dinoreader.book.goldilocks']);
     log.length = 0;
-    assert.equal(await createPlayProduct('t', BOOK, request({ status: 404, ok: false, json: null })), Outcome.Created);
+    assert.equal(await createPlayProduct('t', BOOK, request({ status: 404, ok: false, json: { error: { code: 404, status: 'NOT_FOUND' } } })), Outcome.Created);
     assert.ok(log.some((line) => line.startsWith('PATCH onetimeproducts/')) && log.some((line) => line.includes('batchUpdateStates')));
+});
+
+test('Slice 346 review pass 7 #6: a 200 HTML page for the create or the activate is an error, never "Created"', async () => {
+    const html = { status: 200, ok: true, json: null, empty: false, nonJson: true, head: '<html>login</html>' };
+    const request = (failing) => async (_token, method, path) => {
+        if (method === 'GET') return { status: 404, ok: false, json: { error: { code: 404 } } };
+        if (path.startsWith('pricing')) return okJson({ convertedRegionPrices: { US: { price: playUsdPrice() } } });
+        return path.includes(failing) ? html : okJson({});
+    };
+    await assert.rejects(() => createPlayProduct('t', BOOK, request('onetimeproducts/')), /create product: answer is not JSON/);
+    await assert.rejects(() => createPlayProduct('t', BOOK, request('batchUpdateStates')), /activate the buy option: answer is not JSON/);
+});
+
+test('Slice 346 E4: a non-JSON answer to the product lookup (Google\'s HTML 404 of a wrong route) fails loudly and never creates', async () => {
+    const log = [];
+    const request = async (_token, method, path) => {
+        log.push(`${method} ${path.split('?')[0]}`);
+        return { status: 404, ok: false, json: null, empty: false, nonJson: true, head: '<html>Not Found</html>' };
+    };
+    await assert.rejects(() => createPlayProduct('t', BOOK, request), /not JSON \(status 404, first 80 chars: "<html>Not Found<\/html>"\)/);
+    assert.deepEqual(log, ['GET oneTimeProducts/uk.sirous.dinoreader.book.goldilocks']);
+});
+
+test('Slice 346 E4 (review #7): an empty body on the product lookup is not the wrong-route trap, so the product is created as before', async () => {
+    const log = [];
+    const request = async (_token, method, path) => {
+        log.push(`${method} ${path.split('?')[0]}`);
+        if (method === 'GET') return { status: 404, ok: false, json: null, empty: true, nonJson: false };
+        if (path === 'pricing:convertRegionPrices') return { status: 200, ok: true, json: { convertedRegionPrices: { US: { price: { currencyCode: 'USD', units: '3' } } } }, empty: false };
+        return { status: 200, ok: true, json: {}, empty: false };
+    };
+    assert.equal(await createPlayProduct('t', BOOK, request), Outcome.Created);
+    assert.ok(log.some((line) => line.startsWith('PATCH onetimeproducts/')), 'the product was created, so the lookup was not treated as a wrong route');
+});
+
+test('Slice 346 review #3: only a body with content that is not JSON is non-JSON; empty and a real JSON null are not', () => {
+    assert.equal(isNonJsonBody('<html>404</html>'), true);
+    assert.equal(isNonJsonBody(''), false);
+    assert.equal(isNonJsonBody('  \n'), false);
+    assert.equal(isNonJsonBody('null'), false);
+    assert.equal(isNonJsonBody('{"error":{}}'), false);
 });
 
 test('Slice 346 review #6: a bad service account JSON names only the variable, never any of its text', () => {

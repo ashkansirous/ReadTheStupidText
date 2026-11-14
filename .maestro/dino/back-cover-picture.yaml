@@ -1,9 +1,12 @@
-# Slice 359: the back cover is the book's drawn picture with the credit lines over its middle (Three Little Pigs has back-cover.jpg), never voiced, in every reading mode and in landscape.
-# The log marker says which page was drawn: picture=drawn is the picture page, picture=live would be Slice 237's page without a picture (a failing run shows that line instead).
-# Nothing is played (no play=1). The credits are found by their English text, so this runs in English; the pictures are taken for the by-eye check of the centred lines on the drawing.
+# Slice 359 item 6: the back cover is the book's drawn picture filling the stage with the credits on one cream card in the middle of it (Three Little Pigs has back-cover.jpg), never voiced,
+# in portrait (card 300 wide, mock BC1), landscape 852 x 393 (card 340 wide, mock BC2) and in every view (picture only, picture + text, text only); the view switch is hidden on it in all of them.
+# The log marker says which page was drawn: picture=drawn is the picture page, picture=live would be Slice 237's page without a picture (a failing run shows that line instead); card= is the card's width.
+# Nothing is played (no play=1). The credits are found by their English text, so this runs in English; the screenshots are the by-eye check against BC1 and BC2 (the card in the middle of the picture).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=16
-# expect-log: BACKCOVER shown lines=4 picture=drawn
+# expect-log: BACKCOVER shown lines=4 picture=drawn card=300
+# expect-log: BACKCOVER shown lines=4 picture=drawn card=340
+# expect-log: BACKCOVER modes visible=no
 appId: uk.sirous.dinoreader.dbg
 name: Back cover picture with the credits over it
 # Runs after the flow pass or fail, so a failure never leaves the phone sideways for the flows after it.
@@ -48,6 +51,8 @@ onFlowComplete:
 - assertVisible: "Retold for young readers by Ashkan Sirous"
 - assertVisible: "Illustration: Ashkan Sirous"
 - assertVisible: "October 2026"
+- assertNotVisible:
+    id: ReadingModes
 - takeScreenshot: back-cover-picture-portrait
 # Sideways: the picture and the credits are laid out again on the same page.
 - setOrientation: LANDSCAPE_LEFT
@@ -57,6 +62,8 @@ onFlowComplete:
     timeout: 10000
 - assertVisible: "A traditional tale"
 - assertVisible: "October 2026"
+- assertNotVisible:
+    id: ReadingModes
 - takeScreenshot: back-cover-picture-landscape
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
@@ -89,4 +96,6 @@ onFlowComplete:
 - assertVisible:
     id: BackCover
 - assertVisible: "Illustration: Ashkan Sirous"
+- assertNotVisible:
+    id: ReadingModes
 - takeScreenshot: back-cover-picture-text-only

@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ReadTheStupidText.Tests</RootNamespace>
+    <!-- Matches Infrastructure's TFM so it can be referenced; the tests exercise
+         only pure logic and never load the WinRT/native engine. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Pure BCL helper from the Android-only Mobile project, compiled in (Slice 53). -->
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.Mobile\UiCulture.cs" Link="Mobile\UiCulture.cs" />
+    <!-- Pure open-order rule for ReaderPage (Slice 304). -->
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.Mobile\ReaderOpenOrder.cs" Link="Mobile\ReaderOpenOrder.cs" />
+    <!-- Pure BCL language-tag helper from the WinUI App project, compiled in (Slice 57). -->
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.App\UiLanguageTag.cs" Link="App\UiLanguageTag.cs" />
+    <!-- Pure language-row text rule of the WinUI App project (Slice 373). -->
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.App\PackRowText.cs" Link="App\PackRowText.cs" />
+    <!-- Pack status composers and the state enum, to check the localized copy covers every state.
+         The neutral (English) resx is embedded so AppResources resolves. -->
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.Mobile\LocalizedPackStatus.cs" Link="Mobile\LocalizedPackStatus.cs" />
+    <Compile Include="..\..\..\src\Rtst\ReadTheStupidText.Mobile\Resources\Strings\AppResources.cs" Link="Mobile\AppResources.cs" />
+    <Compile Include="..\..\..\src\Shared\Sirous.Reading.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
+    <EmbeddedResource Include="..\..\..\src\Rtst\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
+    <!-- Slice 368: every other Mobile.Shared link moved to tests/Shared/Shared.Tests with its tests. PackStatusText uses PackInstallState,
+         which lives in VoicePackInstaller.cs (also linked in Shared.Tests; two assemblies, no reference between them), and that file
+         refers to MAUI's MainThread, so the test stand-in is linked from there too. -->
+    <Compile Include="..\..\Shared\Shared.Tests\MainThreadStub.cs" Link="Mobile\MainThreadStub.cs" />
+    <Compile Include="..\..\..\src\Shared\Sirous.Reading.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
+    <Compile Include="..\..\..\src\Shared\Sirous.Reading.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
+    <Compile Include="..\..\..\src\Shared\Sirous.Reading.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
+    <Compile Include="..\..\..\src\Shared\Sirous.Reading.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Shared\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Shared\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\Shared\Sirous.Reading.Infrastructure\Sirous.Reading.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

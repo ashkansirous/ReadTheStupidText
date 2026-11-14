@@ -1,0 +1,598 @@
+using DinoReader.Core;
+using DinoReader.Resources.Strings;
+using Microsoft.Maui.Controls.Shapes;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Domain.Reading;
+
+namespace DinoReader;
+
+/// <summary>The rows of the white cards on the add and edit screens (mock 9 and 8b): a title, a value or control at the end, an optional chevron.</summary>
+public static class SettingsRows
+{
+	private const double RowHeight = 50;
+	private const double RowPadding = 14;
+	private const double RowFontSize = 14.5;
+	private const double ChevronSize = 14;
+
+	/// <summary>The "On" or "Off" a Settings row shows for a switch.</summary>
+	internal static string OnOff(bool on) => on ? AppResources.Settings_On : AppResources.Settings_Off;
+
+	/// <summary>Changes the value text of a <see cref="NavRow"/> in place (its button's name follows it); the row is not rebuilt.</summary>
+	public static void SetNavValue(Grid row, string value)
+	{
+		Label? valueLabel = NavValueLabel(row);
+		if (valueLabel is not null)
+		{
+			valueLabel.Text = value;
+		}
+	}
+
+	public static Label ValueLabel(string text) => new()
+	{
+		Text = text,
+		FontSize = RowFontSize,
+		FontAttributes = FontAttributes.Bold,
+		TextColor = DinoTokens.Get(DinoTokens.Body),
+		HorizontalTextAlignment = TextAlignment.End,
+		VerticalOptions = LayoutOptions.Center,
+	};
+
+	public static IconView Chevron() => new()
+	{
+		Kind = IconKind.Chevron,
+		Color = DinoTokens.Get(DinoTokens.Muted),
+		Size = ChevronSize,
+		StrokeWidth = 1.6,
+		VerticalOptions = LayoutOptions.Center,
+	};
+
+	/// <summary>One row: <paramref name="title"/> at the start, <paramref name="end"/> after it, a chevron when <paramref name="tapped"/> is given.</summary>
+	public static Grid Row(string title, View end, Func<Task>? tapped, BusyGuard busy)
+	{
+		Grid row = NewRowGrid(RowHeight);
+		row.Add(new Label { Text = title, FontSize = RowFontSize, VerticalOptions = LayoutOptions.Center }, FirstColumn);
+		row.Add(end, FirstColumn + 1);
+		if (tapped is not null)
+		{
+			row.Add(Chevron(), FirstColumn + 2);
+			Button button = AddRowButton(row, NameOf(title, (end as Label)?.Text), tapped, busy, endInteractive: !IsDecoration(end));
+			if (end is Label valueLabel)
+			{
+				FollowValue(button, title, valueLabel);
+			}
+		}
+
+		return row;
+	}
+
+	private static string NameOf(string title, string? value) => string.IsNullOrEmpty(value) ? title : OwnScript.Pair(title, value);
+
+	// The value changes after the row is built (the story language, a setting), so the button's accessible name follows it.
+	private static void FollowValue(Button button, string title, Label valueLabel)
+	{
+		valueLabel.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == Label.TextProperty.PropertyName)
+			{
+				SemanticProperties.SetDescription(button, NameOf(title, valueLabel.Text));
+			}
+		};
+	}
+
+	// Slice 226: what the row button's name already carries (labels, chevron, tag, spacer). Anything else is a control (Switch, Picker) and stays reachable.
+	private static bool IsDecoration(View view) => view is Label or IconView or Border or BoxView;
+
+	// Slice 205: the row's padding is two fixed columns, not Grid.Padding, so the button over the row covers the padding strips too.
+	private const int FirstColumn = 1;
+
+	/// <summary>
+	/// Slice 226: adds <paramref name="child"/> to the row's content columns: slot 0 is the title column, 1 the value, 2 the chevron. A caller must
+	/// use this and never a raw column index, because the first column is the row's left padding.
+	/// </summary>
+	public static void AddInRow(Grid row, View child, int slot)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegative(slot);
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(slot, ChevronSlot);
+		row.Add(child, FirstColumn + slot);
+	}
+
+	private const int ChevronSlot = 2;
+
+	private static Grid NewRowGrid(double minHeight, double padding = RowPadding) => new()
+	{
+		MinimumHeightRequest = minHeight,
+		ColumnDefinitions =
+		[
+			new ColumnDefinition(new GridLength(padding)),
+			new ColumnDefinition(GridLength.Star),
+			new ColumnDefinition(GridLength.Auto),
+			new ColumnDefinition(GridLength.Auto),
+			new ColumnDefinition(new GridLength(padding)),
+		],
+		ColumnSpacing = 8,
+	};
+
+	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
+
+	private const double NavRowHeight = 50; // frame W1: rows are at least 50 high with 16 at each side
+	private const double NavRowPadding = 16;
+	private const double NavTitleSize = 15;
+	private const double NavValueSize = 14.5;
+	private const double NavValueMaxWidth = 170;
+	private const double NavCardRadius = 18;
+	private const double HeadingSize = 12;
+	private const double HeadingSpacing = 1;
+	private const double TagHeight = 22;
+
+	/// <summary>
+	/// A Settings list row (Slice 172, mock frame 80): a 15 px label, the current value (or a tag) in bold muted text, and a chevron.
+	/// <paramref name="value"/> is null for a row that shows none; <paramref name="tagText"/> shows a pill instead and is announced with the title.
+	/// </summary>
+	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null, string? automationId = null)
+	{
+		Grid row = NewRowGrid(NavRowHeight, NavRowPadding);
+		row.Add(OwnScript.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
+		if (tagText is not null)
+		{
+			row.Add(Tag(tagText), FirstColumn + 1);
+		}
+		else if (value is not null)
+		{
+			row.Add(NavValue(value), FirstColumn + 1);
+		}
+
+		row.Add(Chevron(), FirstColumn + 2);
+		Button button = AddRowButton(row, NameOf(title, tagText ?? value), tapped, busy, endInteractive: false, automationId);
+		FollowNavValue(row, button, title);
+		return row;
+	}
+
+	// Slice 226: a NavRow's value (or the text inside its tag) can be changed in place; the button's name follows it as Row()'s does.
+	private static void FollowNavValue(Grid row, Button button, string title)
+	{
+		Label? valueLabel = NavValueLabel(row);
+		if (valueLabel is not null)
+		{
+			FollowValue(button, title, valueLabel);
+		}
+	}
+
+	// The label that shows a NavRow's value: the second label, or the text inside the tag when the row carries one.
+	private static Label? NavValueLabel(Grid row) =>
+		row.Children.OfType<Label>().Skip(1).FirstOrDefault() ?? (row.Children.OfType<Border>().FirstOrDefault()?.Content as Label);
+
+	/// <summary>
+	/// Slice 205: a transparent Button over the whole row, so it is a real control (UI Automation Invoke on Windows, focus and Enter or Space
+	/// from a keyboard, TalkBack and VoiceOver "button") named with the title and the current value. A Grid with only a tap gesture has none of
+	/// that. The row's own labels, chevron and tag are hidden from the accessibility tree so the name is read once; a control at the end
+	/// (Switch, Picker) stays reachable, and then the button covers only the padding and title columns so it cannot take the control's taps.
+	/// A test finds the row by <paramref name="automationId"/> (Maestro <c>id:</c>), not by text: the button has no text of its own, so the
+	/// platform hover and press states cannot draw the title a second time.
+	/// </summary>
+	private static Button AddRowButton(Grid row, string name, Func<Task> tapped, BusyGuard busy, bool endInteractive, string? automationId = null)
+	{
+		foreach (View child in row.Children.OfType<View>().Where(IsDecoration))
+		{
+			AutomationProperties.SetIsInAccessibleTree(child, false);
+		}
+
+		RowButtonChrome.EnsureRegistered();
+		var button = new RowButton
+		{
+			AutomationId = automationId,
+			BackgroundColor = Colors.Transparent,
+			BorderWidth = 0,
+			CornerRadius = 0,
+			Padding = 0,
+			MinimumHeightRequest = 0,
+			HorizontalOptions = LayoutOptions.Fill,
+			VerticalOptions = LayoutOptions.Fill,
+		};
+		SemanticProperties.SetDescription(button, name);
+		UiUsage.Press(button, UiControls.SettingsRow, async () => await busy.RunAsync(tapped)); // Slice 352: which row is the screen that opens next
+		// Grid.Add(view, column, row) writes the span as 1, so the span is set after adding.
+		row.Add(button, 0);
+		Grid.SetColumnSpan(button, endInteractive ? FirstColumn + 1 : row.ColumnDefinitions.Count);
+		return button;
+	}
+
+	private static Label NavValue(string text) => OwnScript.InOwnScript(new Label
+	{
+		Text = text,
+		FontSize = NavValueSize,
+		FontAttributes = FontAttributes.Bold,
+		TextColor = DinoTokens.Get(DinoTokens.Body),
+		HorizontalTextAlignment = TextAlignment.End,
+		VerticalOptions = LayoutOptions.Center,
+		MaximumWidthRequest = NavValueMaxWidth,
+		LineBreakMode = LineBreakMode.TailTruncation,
+		MaxLines = 1,
+	});
+
+	/// <summary>The small coral pill on a row ("New version").</summary>
+	public static Border Tag(string text) => new()
+	{
+		HeightRequest = TagHeight,
+		Padding = new Thickness(8, 0),
+		StrokeThickness = 0,
+		BackgroundColor = DinoTokens.Get(DinoTokens.Coral),
+		VerticalOptions = LayoutOptions.Center,
+		StrokeShape = new RoundRectangle { CornerRadius = TagHeight / 2 },
+		Content = new Label { Text = text, FontSize = HeadingSize, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
+	};
+
+	/// <summary>A white card of rows with hairlines between them.</summary>
+	public static Border RowsCard(IEnumerable<View> rows)
+	{
+		var stack = new VerticalStackLayout();
+		foreach (View row in rows)
+		{
+			if (stack.Children.Count > 0)
+			{
+				stack.Children.Add(Divider());
+			}
+
+			stack.Children.Add(row);
+		}
+
+		return new Border { BackgroundColor = Colors.White, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = NavCardRadius }, Content = stack };
+	}
+
+	/// <summary>An upper-case group heading above a card (mock 80, "Reading", "This phone").</summary>
+	public static Label GroupHeading(string text, string? automationId = null)
+	{
+		var label = new Label
+		{
+			AutomationId = automationId,
+			Text = text.ToUpperInvariant(),
+			FontSize = HeadingSize,
+			FontAttributes = FontAttributes.Bold,
+			CharacterSpacing = HeadingSpacing,
+			TextColor = DinoTokens.Get(DinoTokens.Muted),
+			Margin = new Thickness(4, 6, 4, 0),
+		};
+		SemanticProperties.SetHeadingLevel(label, SemanticHeadingLevel.Level2);
+		return label;
+	}
+
+}
+
+/// <summary>The transparent full-row Button of a settings row; a type of its own so the platform chrome reset below touches no other Button.</summary>
+public sealed class RowButton : Button;
+
+/// <summary>
+/// Slice 205 review: strips the platform Button chrome off a <see cref="RowButton"/> (Android MaterialButton insets, minimum size and
+/// elevation; Windows padding, border, corner radius and minimum size) so it covers the whole row with no dead strips. The press
+/// ripple (Android) and the hover, pressed and focus visuals (Windows) are kept: they are the row's feedback.
+/// </summary>
+internal static class RowButtonChrome
+{
+	private static bool _registered;
+
+	public static void EnsureRegistered()
+	{
+		if (_registered)
+		{
+			return;
+		}
+
+		_registered = true;
+		Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping(nameof(RowButtonChrome), (handler, view) =>
+		{
+			if (view is RowButton)
+			{
+				Reset(handler);
+			}
+		});
+	}
+
+	private static void Reset(Microsoft.Maui.Handlers.IButtonHandler handler)
+	{
+#if ANDROID
+		if (handler.PlatformView is Google.Android.Material.Button.MaterialButton button)
+		{
+			button.SetPadding(0, 0, 0, 0);
+			button.InsetTop = 0;
+			button.InsetBottom = 0;
+			button.SetMinimumHeight(0);
+			button.SetMinimumWidth(0);
+			button.SetMinHeight(0);
+			button.SetMinWidth(0);
+			button.StateListAnimator = null;
+			button.Elevation = 0;
+			button.TranslationZ = 0;
+		}
+#elif WINDOWS
+		if (handler.PlatformView is Microsoft.UI.Xaml.Controls.Button button)
+		{
+			button.Padding = new Microsoft.UI.Xaml.Thickness(0);
+			button.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+			button.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
+			button.MinHeight = 0;
+			button.MinWidth = 0;
+		}
+#endif
+	}
+}
+
+/// <summary>The grown-up's app-wide "Animal sounds" switch (Slice 152, Decision 157): on when nothing is stored. The per-book <c>Story.AnimalSoundsOn</c> is kept in the format but ignored.</summary>
+public static class AnimalSoundsPreference
+{
+	private const string Key = "dino.animal.sounds";
+
+	public static bool Load()
+	{
+		try
+		{
+			return Preferences.Default.Get(Key, true);
+		}
+		catch (Exception)
+		{
+			AnimalSoundsPreference.ReportUnsaved(Sirous.Reading.Application.Usage.FallbackArea.Config); // Slice 275: a value of another type under this key, or a preferences store that cannot be read, is treated as missing (on)
+			return true;
+		}
+	}
+
+	public static void Save(bool on) => Preferences.Default.Set(Key, on);
+
+	/// <summary>Counts a preference that could not be read or written (the sounds then follow the default, on).</summary>
+	public static void ReportUnsaved(string area) =>
+		DinoFallbacks.Report(area, Sirous.Reading.Application.Usage.FallbackReason.PreferenceUnsaved);
+}
+
+/// <summary>
+/// The "Animal sounds" card of the grown-up settings (Slice 152, mock Batch 31 frame 70): a title, a helper line and a switch, on by default,
+/// between the Reading speed and "Help make Dino better" cards. One setting for every book.
+/// </summary>
+public static class AnimalSoundsCard
+{
+	private const double CardRadius = 18;
+	private const double CardMinHeight = 64;
+	private const double CardPadding = 14;
+	private const double TitleSize = 15;
+	private const double HelperSize = 12.5;
+
+	private static void SaveQuietly(bool on)
+	{
+		UiUsage.Setting(UiSettings.AnimalSounds, UiSettings.OnOff(on)); // Slice 352
+		try
+		{
+			AnimalSoundsPreference.Save(on);
+		}
+		catch (Exception)
+		{
+			AnimalSoundsPreference.ReportUnsaved(Sirous.Reading.Application.Usage.FallbackArea.Config); // Slice 275: the switch still shows the choice, but after a restart the sounds follow the default (on)
+		}
+	}
+
+	public static Border Build()
+	{
+		var toggle = new ToggleSwitch { IsOn = AnimalSoundsPreference.Load(), AccessibleName = AppResources.Settings_AnimalSounds_Title, VerticalOptions = LayoutOptions.Center };
+		toggle.Toggled += (_, _) => SaveQuietly(toggle.IsOn); // no-tap-count: SaveQuietly counts the changed setting (UiUsage.Setting)
+		var text = new VerticalStackLayout
+		{
+			Spacing = 2,
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				OwnScript.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold }),
+				OwnScript.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) }),
+			},
+		};
+		var row = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 12 };
+		row.Add(text, 0);
+		row.Add(toggle, 1);
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
+			MinimumHeightRequest = CardMinHeight,
+			Padding = CardPadding,
+			Content = row,
+		};
+	}
+}
+
+/// <summary>
+/// The "Help make Dino better" card of the grown-up settings (Slice 133, Decision 141, mock frame 62): its own white card with a title, a
+/// helper line saying what is counted, and the usage-counts switch. On by default; off sends nothing. A grown-up page puts it in its column of cards.
+/// </summary>
+public static class UsageCountsCard
+{
+	private const double CardRadius = 18;
+	private const double CardMinHeight = 64;
+	private const double CardPadding = 14;
+	private const double TitleSize = 15;
+	private const double HelperSize = 12.5;
+
+	public static Border Build(UsageCounter counter)
+	{
+		var toggle = new ToggleSwitch { IsOn = counter.Enabled, AccessibleName = AppResources.Usage_Title, VerticalOptions = LayoutOptions.Center };
+		toggle.Toggled += (_, _) =>
+		{
+			counter.Enabled = toggle.IsOn;
+			UiUsage.Setting(UiSettings.UsageCounts, UiSettings.OnOff(toggle.IsOn)); // Slice 352: only "on" ever reaches the queue; turning counting off clears it and the gate refuses what follows
+		};
+		var text = new VerticalStackLayout
+		{
+			Spacing = 2,
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				new Label { Text = AppResources.Usage_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold },
+				new Label { Text = AppResources.Usage_Helper, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) },
+			},
+		};
+		var row = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 12 };
+		row.Add(text, 0);
+		row.Add(toggle, 1);
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
+			MinimumHeightRequest = CardMinHeight,
+			Padding = CardPadding,
+			Content = row,
+		};
+	}
+}
+
+/// <summary>
+/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed and a slider from ReadingSpeed.Min to ReadingSpeed.Max
+/// in 0.05 steps. One setting for the whole app; pre-made clips and recordings are played at it, a change taking effect from the next clip
+/// (Slice 278 part B: there is no voice to play a sample with, so the Play button is gone). A page puts it in its column of cards.
+/// </summary>
+public static class ReadingSpeedCard
+{
+	private const double CardRadius = 18;
+	private const double CardPadding = 14;
+	private const double TitleSize = 15;
+	private const double HelperSize = 12.5;
+	private const double ValueSize = 17;
+	private const double ValueMinWidth = 44;
+	private const double SliderHeight = 44;
+	private const double EndLabelSize = 12;
+	private const double StepsPerUnit = 1 / ReadingSpeed.Step;
+	private const double SnapTolerance = 1e-9;
+
+	public static Border Build()
+	{
+		double current = ReadingSpeedPreference.Load().Value;
+		Label value = ValueLabel(current);
+		var column = new VerticalStackLayout { Spacing = 10, Children = { TopRow(value), Slider(current, value), EndsRow() } };
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
+			Padding = CardPadding,
+			Content = column,
+		};
+	}
+
+	private static Label ValueLabel(double current) => new()
+	{
+		Text = Display(current),
+		FontSize = ValueSize,
+		FontAttributes = FontAttributes.Bold,
+		TextColor = DinoTokens.Get(DinoTokens.Brand),
+		MinimumWidthRequest = ValueMinWidth,
+		HorizontalTextAlignment = TextAlignment.End,
+		VerticalOptions = LayoutOptions.Center,
+	};
+
+	private static Grid TopRow(Label value)
+	{
+		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 10 };
+		top.Add(TitleBlock(), 0);
+		top.Add(value, 1);
+		return top;
+	}
+
+	private static Grid EndsRow()
+	{
+		var ends = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		ends.Add(EndLabel(AppResources.Speed_EndSlow), 0);
+		ends.Add(EndLabel(AppResources.Format(AppResources.Speed_Value, ReadingSpeed.Max)), 1);
+		return ends;
+	}
+
+	private static string Display(double speed) => AppResources.Format(AppResources.Speed_Value, speed);
+
+	private static VerticalStackLayout TitleBlock() => new()
+	{
+		Spacing = 2,
+		VerticalOptions = LayoutOptions.Center,
+		Children =
+		{
+			new Label { Text = AppResources.Speed_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold },
+			new Label { Text = AppResources.Speed_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) },
+		},
+	};
+
+	private static Label EndLabel(string text) => new() { Text = text, FontSize = EndLabelSize, TextColor = DinoTokens.Get(DinoTokens.Muted) };
+
+	// The slider sits in a ContentView so the Unloaded subscription is on a MauiView, never on the slider itself (Slice 274: iOS KVO crash).
+	private static ContentView Slider(double current, Label value)
+	{
+		var slider = new Slider
+		{
+			Minimum = ReadingSpeed.Min,
+			Maximum = ReadingSpeed.Max,
+			Value = current,
+			HeightRequest = SliderHeight,
+			MinimumTrackColor = DinoTokens.Get(DinoTokens.Brand),
+			MaximumTrackColor = DinoTokens.Get(DinoTokens.BrandTint),
+			ThumbColor = DinoTokens.Get(DinoTokens.Brand),
+		};
+		SemanticProperties.SetDescription(slider, Described(current));
+		var host = new ContentView { Content = slider };
+		WireSlider(slider, host, value);
+		return host;
+	}
+
+	// A drag commits once when it ends; any other change (TalkBack, keyboard) commits at once. A drag that never reports its end
+	// (page torn down) is closed on Unloaded so the flag cannot stay set.
+	private static void WireSlider(Slider slider, ContentView host, Label value)
+	{
+		bool dragging = false;
+		slider.DragStarted += (_, _) => dragging = true;
+		slider.DragCompleted += (_, _) =>
+		{
+			dragging = false;
+			Commit(slider);
+		};
+		host.Unloaded += (_, _) =>
+		{
+			if (dragging)
+			{
+				dragging = false;
+				Commit(slider);
+			}
+		};
+		slider.ValueChanged += (_, e) =>
+		{
+			if (!Snap(slider, e.NewValue))
+			{
+				return;
+			}
+
+			value.Text = Display(slider.Value);
+			SemanticProperties.SetDescription(slider, Described(slider.Value));
+			if (!dragging)
+			{
+				Commit(slider);
+			}
+		};
+	}
+
+	// The title plus the spoken value, so a screen reader says "Reading speed, 1x" rather than a raw percentage.
+	private static string Described(double speed) => $"{AppResources.Speed_Title}, {Display(speed)}";
+
+	// Puts the thumb on a step; false when it had to move (the move raises ValueChanged again).
+	private static bool Snap(Slider slider, double raw)
+	{
+		PlaybackRate rate = ReadingSpeed.Clamp(Math.Round(raw * StepsPerUnit) / StepsPerUnit);
+		if (Math.Abs(slider.Value - rate.Value) <= SnapTolerance)
+		{
+			return true;
+		}
+
+		slider.Value = rate.Value;
+		return false;
+	}
+
+	// Saves the speed once the thumb settles, not on every tick of a drag (the next clip is played at it).
+	private static void Commit(Slider slider)
+	{
+		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
+		double before = ReadingSpeedPreference.Load().Value;
+		ReadingSpeedPreference.Save(rate);
+		if (UiSettings.SpeedBucketChanged(before, rate.Value))
+		{
+			UiUsage.Setting(UiSettings.ReadingSpeed, UiSettings.SpeedBucketOf(rate.Value)); // Slice 352: a bucket, never the exact number, and only when the bucket changed
+		}
+	}
+}

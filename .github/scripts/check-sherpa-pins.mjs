@@ -1,12 +1,12 @@
 // Slice 245: sherpa-onnx and onnxruntime are one version on every platform, written once in
-// src/SherpaOnnxVersion.props. This fails when a pin anywhere else in the repo differs from it (or
+// src/Shared/SherpaOnnxVersion.props. This fails when a pin anywhere else in the repo differs from it (or
 // redefines the property), so Android, iOS and Windows cannot drift apart again.
 //   node .github/scripts/check-sherpa-pins.mjs        (from the repo root; reads git ls-files)
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-export const VERSION_PROPS_PATH = 'src/SherpaOnnxVersion.props';
+export const VERSION_PROPS_PATH = 'src/Shared/SherpaOnnxVersion.props';
 
 // Build, workflow, requirements and script files; documentation (md, docs/) may quote old versions.
 const SCANNED_EXTENSIONS = /\.(csproj|props|targets|yml|yaml|txt|sh|ps1|mjs|py|json|cfg|toml)$/;

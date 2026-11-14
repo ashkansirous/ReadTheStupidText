@@ -4,6 +4,8 @@
 //   GET /api/stories                  the list of complete stories (60 s listing cache)
 //   GET /api/stories/<id>/cover       the cover picture
 //   GET /api/stories/<id>/download    the newest package; add ?v=<n> for that version, which is cached for a day
+//                                     Slice 375 B: add &size=hd for the high-res package (story-v<n>.hd.dino, behind the same entitlement gate); `standard` is the default, any other size is a 400,
+//                                     and a book whose folder holds no high-res file at that version is a 404
 //   GET /api/stories/<id>/audio/<lang>?v=<n>   Slice 246 B2: the audio pack of that book language (audio-<lang>-v<n>.zip), only when meta.json's `audio` lists exactly
 //                                     that language and version and the zip is in the folder; a missing or different ?v= is a 404. Immutable per version, cached for a day
 //   GET /api/stories/<id>/listen/<lang>?v=<n>   Slice 281: the one listening track of that book language (listen-<lang>-v<n>.m4a, audio/mp4, inline, Range for smart speakers), only when meta.json's
@@ -28,6 +30,8 @@ import {
   VERSIONED_CACHE,
   storyCoverKey,
   storyFolder,
+  storyHdPackageFileName,
+  storyHdPackageKey,
   storyMetaKey,
   storyPackageFileName,
   storyPackageKey,
@@ -45,6 +49,11 @@ const DOWNLOAD_SEGMENT = "download";
 const AUDIO_SEGMENT = "audio";
 const LISTEN_SEGMENT = "listen";
 const VERSION_PARAM = "v";
+const SIZE_PARAM = "size";
+
+/** Slice 375 B: the package sizes `?size=` may name. Standard is the default (no parameter). */
+export const PACKAGE_SIZES = ["standard", "hd"] as const;
+type PackageSize = (typeof PACKAGE_SIZES)[number];
 
 /** The list response format; the app reads `stories` and ignores fields it does not know. */
 export const LIST_SCHEMA_VERSION = 1;
@@ -66,6 +75,7 @@ const MAX_TITLE_LANGUAGES = 20;
 const LANGUAGE_CODE = /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
+const HD_PACKAGE_FILE = /^story-v(\d+)\.hd\.dino$/;
 const AUDIO_FILE = /^audio-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.zip$/;
 const LISTEN_FILE = /^listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
 const MAX_AUDIO_LANGUAGES = 40;
@@ -118,6 +128,8 @@ export interface StoryMeta {
   readonly tags: readonly StoreTag[];
   /** Slice 260: the size of the `story-v<n>.dino` package in bytes; null when absent or not a positive integer. */
   readonly bytes: number | null;
+  /** Slice 375 B: the size of the `story-v<n>.hd.dino` high-res package in bytes; null when meta does not list one. */
+  readonly hdBytes: number | null;
   /** Slice 346: free or paid, and the store product id of a paid book (null when it has none). */
   readonly access: BookAccess;
   readonly productId: string | null;
@@ -141,12 +153,16 @@ export interface StoryEntry {
   readonly audio?: Readonly<Record<string, AudioPackInfo>> | null;
   /** Slice 360: the versions of each language's audio pack the folder holds (older ones stay in the bucket), so a phone holding the listing from one version ago still gets its pack; absent = none known. */
   readonly heldAudio?: Readonly<Record<string, readonly number[]>>;
+  /** Slice 375 B: the versions of `story-v<n>.hd.dino` the folder holds; absent = none known. The list offers the high-res package only for the listed version when meta lists `hdBytes` too. */
+  readonly heldHd?: readonly number[];
 }
 
 interface Folder {
   hasMeta: boolean;
   hasCover: boolean;
   versions: number[];
+  /** Slice 375 B: the versions of `story-v<n>.hd.dino` in the folder. */
+  hdVersions: number[];
   audio: Record<string, number[]>;
   /** Slice 281: the versions of each language's `listen-<lang>-v<n>.m4a` track in the folder. */
   listen: Record<string, number[]>;
@@ -184,8 +200,15 @@ export function packageVersionOf(file: string): number | null {
   return POSITIVE_INTEGER.test(digits) ? Number(digits) : null;
 }
 
+/** Slice 375 B: the version a `story-v<n>.hd.dino` file name carries, or null for any other name. */
+export function hdPackageVersionOf(file: string): number | null {
+  const match = HD_PACKAGE_FILE.exec(file);
+  const digits = match?.[1] ?? "";
+  return POSITIVE_INTEGER.test(digits) ? Number(digits) : null;
+}
+
 function emptyFolder(): Folder {
-  return { hasMeta: false, hasCover: false, versions: [], audio: {}, listen: {} };
+  return { hasMeta: false, hasCover: false, versions: [], hdVersions: [], audio: {}, listen: {} };
 }
 
 /** Groups listed keys by story id; keys that are not a story file are ignored. */
@@ -196,6 +219,8 @@ export function groupFolders(keys: readonly string[]): Map<string, Folder> {
     if (parsed === null) continue;
     const folder = folders.get(parsed.id) ?? emptyFolder();
     const version = packageVersionOf(parsed.file);
+    const hdVersion = hdPackageVersionOf(parsed.file);
+    if (hdVersion !== null) folder.hdVersions.push(hdVersion);
     const audio = audioPackOf(parsed.file);
     if (audio !== null) (folder.audio[audio.language] ??= []).push(audio.version);
     const listen = listenTrackOf(parsed.file);
@@ -320,6 +345,7 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     audio: parseAudio(raw["audio"]),
     tags: parseTags(raw["tags"]),
     bytes: positiveIntegerOrNull(raw["bytes"]),
+    hdBytes: positiveIntegerOrNull(raw["hdBytes"]),
     access: parseAccess(raw["access"]),
     productId: parseProductId(raw["productId"]),
   };
@@ -374,6 +400,19 @@ export interface ListItem {
   readonly unlockedBy: readonly string[];
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
+  /** Slice 375 B: the high-res package's link and size; the keys are absent unless meta lists `hdBytes` and the folder holds `story-v<version>.hd.dino`. Old apps ignore them. */
+  readonly hdDownloadUrl?: string;
+  readonly hdBytes?: number;
+}
+
+/** Slice 375 B: whether the list offers the high-res package: meta lists its size AND the folder holds the file at the listed version (a listed pack nobody uploaded is not offered). */
+export function offersHd(entry: StoryEntry): boolean {
+  return entry.meta.hdBytes !== null && entry.heldHd?.includes(entry.version) === true;
+}
+
+function hdItem(entry: StoryEntry, base: string): { hdDownloadUrl: string; hdBytes: number } | Record<string, never> {
+  if (!offersHd(entry) || entry.meta.hdBytes === null) return {};
+  return { hdDownloadUrl: `${base}${DOWNLOAD_SEGMENT}?${VERSION_PARAM}=${entry.version}&${SIZE_PARAM}=hd`, hdBytes: entry.meta.hdBytes };
 }
 
 function audioItem(base: string, language: string, pack: AudioPackInfo): AudioPackInfo & { url: string; listenUrl?: string } {
@@ -414,6 +453,7 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     unlockedBy: entry.meta.access === "paid" ? productsUnlocking(entry.id, entry.meta.productId) : [],
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
+    ...hdItem(entry, base),
   };
 }
 
@@ -452,7 +492,7 @@ async function readMeta(bucket: R2Bucket, id: string): Promise<StoryMeta | null>
 async function entryFor(bucket: R2Bucket, id: string, folder: Folder): Promise<StoryEntry | null> {
   const meta = await readMeta(bucket, id);
   const version = meta === null ? null : offeredVersion(meta, folder.versions);
-  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder), heldAudio: folder.audio };
+  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder), heldAudio: folder.audio, heldHd: folder.hdVersions };
 }
 
 async function buildEntries(bucket: R2Bucket): Promise<StoryEntry[]> {
@@ -555,6 +595,30 @@ function serveDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, ve
   return serve(request, bucket, packageFile(entry.id, version ?? entry.version), version === null ? NO_CACHE : VERSIONED_CACHE);
 }
 
+function hdPackageFile(id: string, version: number): ServedFile {
+  return {
+    key: storyHdPackageKey(id, version),
+    contentType: PACKAGE_CONTENT_TYPE,
+    fileName: storyHdPackageFileName(version),
+    disposition: "attachment",
+    unavailable: ErrorCode.StoryUnavailable,
+  };
+}
+
+/** Slice 375 B: the `?size=` of a download request: standard when absent, `invalid` for any name outside PACKAGE_SIZES. */
+function requestedSize(url: URL): PackageSize | "invalid" {
+  const text = url.searchParams.get(SIZE_PARAM);
+  if (text === null) return "standard";
+  return (PACKAGE_SIZES as readonly string[]).includes(text) ? (text as PackageSize) : "invalid";
+}
+
+// Slice 375 B: the high-res package of one version, only when the folder holds that file (a missing one is a 404, never a fall back to the standard pack: the app asked for these pictures).
+function serveHdDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, version: number | null, serve: ObjectServer): Promise<Response> {
+  const wanted = version ?? entry.version;
+  if (entry.heldHd?.includes(wanted) !== true) return Promise.resolve(statusOnly(404));
+  return serve(request, bucket, hdPackageFile(entry.id, wanted), version === null ? NO_CACHE : VERSIONED_CACHE);
+}
+
 // Slice 246 B2: the pack of one book language at one version. Both must be what meta.json lists and the folder holds (entry.audio), so a stale or guessed pair is a 404.
 // Slice 360: the one version just below the listed one is served too when the folder still holds it (a phone with the listing from before the last re-render asks for it, and used to get a 404).
 function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, serve: ObjectServer): Promise<Response> {
@@ -597,7 +661,10 @@ function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, s
   if (version === "invalid" || (segment !== COVER_SEGMENT && segment !== DOWNLOAD_SEGMENT)) {
     return Promise.resolve(statusOnly(404));
   }
-  return segment === COVER_SEGMENT ? serveCover(request, bucket, entry, serve) : serveDownload(request, bucket, entry, version, serve);
+  if (segment === COVER_SEGMENT) return serveCover(request, bucket, entry, serve);
+  const size = requestedSize(new URL(request.url));
+  if (size === "invalid") return Promise.resolve(badRequest(`Unknown picture size. Use ${PACKAGE_SIZES.join(" or ")}.`));
+  return size === "hd" ? serveHdDownload(request, bucket, entry, version, serve) : serveDownload(request, bucket, entry, version, serve);
 }
 
 // Slice 346: the files of a paid book (package, audio packs, listening track; not the cover or the list) need a purchase proof while

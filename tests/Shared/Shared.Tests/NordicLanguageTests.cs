@@ -1,0 +1,73 @@
+using System.Text.RegularExpressions;
+using Sirous.Reading.Application.Images;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Translation;
+using Sirous.Reading.Infrastructure.Translation;
+
+namespace ReadTheStupidText.Tests;
+
+public class NordicLanguageTests
+{
+    [Theory]
+    [InlineData("Jeg har ikke noe å si, og hva skjer med henne etter at han kom, sa seg selv.", "nb")]
+    [InlineData("Jeg har ikke noget at sige, og hvad sker der med hende efter han kom, sagde hun.", "da")]
+    [InlineData("Jag har inte något att säga, och vad händer med hennes vän från byn, sa han.", "sv")]
+    public void ScandinavianSamplesAreToldApart(string text, string expected)
+    {
+        Assert.Equal(expected, ScriptLanguageDetector.Detect(text)?.Tag);
+    }
+
+    [Theory]
+    [InlineData("Ik denk dat die man het niet weet.")]
+    [InlineData("Die jongen was ook met ons naar het huis.")]
+    [InlineData("Der er en mand, der ikke ved det.")]
+    [InlineData("Jag tror att den där mannen inte vet det.")]
+    [InlineData("Jeg tror at den mannen ikke vet det.")]
+    public void ShortDutchDanishSwedishAndNorwegianSamplesAreNotGerman(string text)
+    {
+        Assert.NotEqual("de", ScriptLanguageDetector.Detect(text)?.Tag);
+    }
+
+    [Fact]
+    public void AClearGermanSentenceIsGerman()
+    {
+        Assert.Equal("de", ScriptLanguageDetector.Detect("Ich habe nicht gesehen, dass der Hund auch mit dem Ball spielt, aber er ist nur müde.")?.Tag);
+    }
+
+    [Theory]
+    [InlineData("no")]
+    [InlineData("nn")]
+    [InlineData("NO")]
+    public void LegacyNorwegianTagsAreBokmalEverywhere(string tag)
+    {
+        Assert.True(new VoiceAvailability([tag], []).CanPhoneRead("nb"));
+        Assert.True(new VoiceAvailability(["nb"], []).CanPhoneRead(tag));
+        Assert.Equal(TextScript.Latin, ScriptDetector.ScriptOf(tag));
+        Assert.Equal("no", EngineLanguageCodes.ToEngine(tag));
+    }
+
+    [Fact]
+    public void NaturallyReadableMatchesTheShippedPacks()
+    {
+        string workflow = ReadPacksWorkflow();
+        string supertonic = Regex.Match(workflow, @"SUPERTONIC_LANGUAGES:\s*'([^']+)'").Groups[1].Value;
+        var shipped = supertonic.Split(',').Append("fa").Append("nb").Append("zh").Order().ToList();
+
+        var readable = PackConstants.NaturallyReadable.Select(AppLanguages.Code).Order().ToList();
+
+        Assert.Equal(shipped, readable);
+        Assert.Contains($"entry \"$NORWEGIAN_ID\" nb ", workflow);
+    }
+
+    private static string ReadPacksWorkflow()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, ".github", "workflows", "packs.yml")))
+        {
+            dir = dir.Parent;
+        }
+
+        Assert.True(dir is not null, "packs.yml not found above the test output; run from a full checkout");
+        return File.ReadAllText(Path.Combine(dir.FullName, ".github", "workflows", "packs.yml"));
+    }
+}

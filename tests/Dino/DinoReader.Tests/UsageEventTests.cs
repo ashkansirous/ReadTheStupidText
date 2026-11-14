@@ -1,0 +1,373 @@
+using System.Text.RegularExpressions;
+using DinoReader.Core;
+using Sirous.Reading.Application.Reading;
+using UsageBuckets = Sirous.Reading.Application.Usage.UsageBuckets;
+using UsageWaitStage = Sirous.Reading.Application.Usage.UsageWaitStage;
+
+namespace DinoReader.Tests;
+
+public class UsageEventTests
+{
+    private const string PackageId = "0123456789abcdef0123456789abcdef";
+    private static readonly DateTimeOffset Now = new(2026, 10, 25, 23, 59, 0, TimeSpan.FromHours(2));
+
+    private static Story StoryWith(string? sourceId, string language = "en") =>
+        new("local-id", "A private title", language, Now, [], [], CoverStyle.FirstPage, 0, string.Empty, SourceId: sourceId);
+
+    [Theory]
+    [InlineData("0123456789abcdef0123456789abcdef")]
+    [InlineData("01234567-89AB-CDEF-0123-456789ABCDEF")]
+    public void A_shelf_book_is_counted_by_its_package_id(string sourceId)
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(sourceId, "nb"), true, 0.5, "1.42.0", AppPlatform.Android, Now);
+
+        Assert.Equal(new UsageEvent("book_opened", PackageId, "nb", "shelf", false, "1.42.0", "android", "2026-10-25", 0.5), count);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not-an-id")]
+    public void An_own_book_is_counted_as_own_with_no_id_or_title(string? sourceId)
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookFinished, StoryWith(sourceId), true, 1, "1.0", AppPlatform.Windows, Now);
+
+        Assert.Equal("own", count.Book);
+        Assert.Equal("own", count.Source);
+        Assert.DoesNotContain("private", UsageBatch.ToJson([count]), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("local-id", UsageBatch.ToJson([count]), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_book_with_an_id_that_is_not_from_the_starters_or_the_store_is_counted_as_own()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), false, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal("own", count.Book);
+        Assert.Equal("own", count.Source);
+        Assert.DoesNotContain(PackageId, UsageBatch.ToJson([count]), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_day_is_the_utc_date_and_nothing_finer()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(null), false, 1, "1.0", AppPlatform.Ios, new DateTimeOffset(2026, 10, 26, 0, 30, 0, TimeSpan.FromHours(2)));
+
+        Assert.Equal("2026-10-25", count.Day);
+    }
+
+    [Fact]
+    public void The_batch_body_carries_the_device_object_when_given_and_nothing_about_a_model()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);
+        var device = new Sirous.Reading.Application.Usage.DeviceContext(15, "phone", "arm64", "5-8", "<3");
+
+        string json = UsageBatch.ToJson([count], device);
+
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        System.Text.Json.JsonElement sent = document.RootElement.GetProperty("device");
+        Assert.Equal(["15", "phone", "arm64", "5-8", "<3"], new[] { "osMajor", "formFactor", "arch", "cores", "ram" }.Select(name => sent.GetProperty(name).ToString()));
+        Assert.DoesNotContain("model", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void The_batch_body_carries_only_the_named_fields_in_camel_case()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);
+
+        string json = UsageBatch.ToJson([count]);
+
+        Assert.Equal(
+            """{"schemaVersion":1,"events":[{"name":"book_opened","book":"0123456789abcdef0123456789abcdef","language":"en","source":"shelf","hasRecording":false,"version":"1.42.0","platform":"android","day":"2026-10-25","sampleRate":0.5,"detail":""}]}""",
+            json);
+    }
+
+    [Fact]
+    public void A_stored_queue_round_trips_and_a_damaged_one_is_empty()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookFinished, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);
+
+        Assert.Equal([count], UsageBatch.ParseQueue(UsageBatch.QueueToJson([count])));
+        Assert.Empty(UsageBatch.ParseQueue("{broken"));
+        Assert.Empty(UsageBatch.ParseQueue(null));
+    }
+
+    [Theory]
+    [InlineData(true, 0.25, 0.10, true)]
+    [InlineData(true, 0.25, 0.25, false)]
+    [InlineData(true, 1.0, 0.999, true)]
+    [InlineData(true, 0.0, 0.0, false)]
+    [InlineData(false, 1.0, 0.0, false)]
+    public void A_launch_is_counted_only_when_telemetry_is_on_and_the_roll_is_under_the_rate(bool enabled, double rate, double roll, bool expected) =>
+        Assert.Equal(expected, UsageBatch.Samples(new TelemetryConfig(enabled, rate), roll));
+
+    [Fact]
+    public void The_default_config_counts_nothing() => Assert.False(UsageBatch.Samples(AppConfig.Default.Telemetry, 0));
+
+    [Theory]
+    [InlineData(true, true, "age+author")]
+    [InlineData(true, false, "age")]
+    [InlineData(false, true, "author")]
+    [InlineData(false, false, "none")]
+    public void Store_filters_are_counted_as_set_or_not_never_by_value(bool age, bool author, string expected) =>
+        Assert.Equal(expected, UsageDetail.StoreFilters(age, author));
+
+    [Theory]
+    [InlineData(0, "1")]
+    [InlineData(1, "1")]
+    [InlineData(2, "2-5")]
+    [InlineData(5, "2-5")]
+    [InlineData(6, "6-10")]
+    [InlineData(10, "6-10")]
+    [InlineData(11, "11+")]
+    [InlineData(40, "11+")]
+    public void Recorded_pages_are_a_bucket_not_a_count(int recorded, string expected) =>
+        Assert.Equal(expected, UsageDetail.PagesBucket(recorded));
+
+    [Fact]
+    public void A_store_download_is_counted_by_package_id_language_and_filters()
+    {
+        UsageEvent? count = UsageEvent.ForShelfBook(UsageEventName.StoreDownload, "01234567-89AB-CDEF-0123-456789ABCDEF", "nb", UsageDetail.StoreAge, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(new UsageEvent("store_download", PackageId, "nb", "shelf", false, "1.0", "android", "2026-10-25", 1, "age"), count);
+        Assert.Null(UsageEvent.ForShelfBook(UsageEventName.StoreDownload, "My Story", "en", UsageDetail.StoreNoFilter, 1, "1.0", AppPlatform.Android, Now));
+    }
+
+    [Fact]
+    public void A_count_about_no_book_names_none_and_carries_only_its_detail()
+    {
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.ReadingLanguageChanged, "nb", "en", 0.5, "1.0", AppPlatform.Ios, Now);
+
+        Assert.Equal(new UsageEvent("reading_language_changed", "none", "nb", "none", false, "1.0", "ios", "2026-10-25", 0.5, "en"), count);
+    }
+
+    [Fact]
+    public void A_recording_count_keeps_the_book_rule_and_adds_the_bucket()
+    {
+        UsageEvent shelf = UsageEvent.For(UsageEventName.RecordingMade, StoryWith(PackageId), true, 1, "1.0", AppPlatform.Android, Now, UsageDetail.PagesTwoToFive);
+        UsageEvent own = UsageEvent.For(UsageEventName.RecordingMade, StoryWith(PackageId), false, 1, "1.0", AppPlatform.Android, Now, UsageDetail.PagesOne);
+
+        Assert.Equal((PackageId, "2-5"), (shelf.Book, shelf.Detail));
+        Assert.Equal(("own", "1"), (own.Book, own.Detail));
+    }
+
+    [Fact]
+    public void A_queue_stored_before_Slice_134_reads_with_an_empty_detail()
+    {
+        const string old = """[{"name":"book_opened","book":"own","language":"en","source":"own","hasRecording":false,"version":"1.0","platform":"android","day":"2026-10-25","sampleRate":1}]""";
+
+        Assert.Equal(string.Empty, Assert.Single(UsageBatch.ParseQueue(old)).Detail);
+    }
+
+    [Fact]
+    public void A_wait_count_is_about_no_book_and_carries_stage_and_bucket_in_its_detail()
+    {
+        string detail = UsageDetail.Wait(UsageWaitStage.Of(WaitStage.Stalled), UsageBuckets.Duration(TimeSpan.FromSeconds(3)));
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.WaitShown, UsageEvent.NoLanguage, detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("wait_shown", "none", "none", "stalled:2-5"), (count.Name, count.Book, count.Source, count.Detail));
+        Assert.Equal("und", count.Language);
+    }
+
+    [Fact]
+    public void An_intro_step_count_is_about_no_book_and_names_the_step_and_what_was_done()
+    {
+        string detail = UsageDetail.IntroStepAction(IntroSteps.Record, tried: true);
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.IntroStep, "en", detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("intro_step", "none", "none", "record:tried"), (count.Name, count.Book, count.Source, count.Detail));
+        Assert.Equal("add:skipped", UsageDetail.IntroStepAction(IntroSteps.Add, tried: false));
+    }
+
+    [Fact]
+    public void The_intro_has_four_steps_in_order_with_no_store_or_add_step_and_a_saved_index_outside_them_means_it_is_not_running()
+    {
+        Assert.Equal(["places", "read", "record", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
+        Assert.False(IntroSteps.IsStep(-1));
+        Assert.False(IntroSteps.IsStep(IntroSteps.Count));
+        Assert.True(IntroSteps.IsStep(IntroSteps.Count - 1));
+    }
+
+    [Fact]
+    public void A_count_can_name_the_language_it_was_read_in_instead_of_the_books_own()
+    {
+        UsageEvent read = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId, "en"), true, 1, "1.42.0", AppPlatform.Android, Now, language: "fa");
+        UsageEvent plain = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId, "en"), true, 1, "1.42.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("fa", "shelf"), (read.Language, read.Source));
+        Assert.Equal("en", plain.Language);
+    }
+
+    [Fact]
+    public void A_story_languages_count_is_about_no_book_with_the_count_and_where_it_was_set()
+    {
+        string detail = UsageDetail.StoryLanguages(2, UsageDetail.LanguagesFromSettings);
+        UsageEvent set = UsageEvent.ForNoBook(UsageEventName.StoryLanguagesSet, "en", detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("story_languages_set", "none", "none", "2:settings"), (set.Name, set.Book, set.Source, set.Detail));
+        Assert.Equal("3:intro", UsageDetail.StoryLanguages(3, UsageDetail.LanguagesFromIntro));
+    }
+
+    [Fact]
+    public void The_Worker_takes_exactly_the_story_language_counts_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+
+        foreach (string name in new[] { UsageEventName.StoryLanguagesSet, UsageEventName.StoryLanguageAdded, UsageEventName.StoryLanguageSwitched, UsageEventName.VoicePackDownload })
+        {
+            Assert.Contains($"  {name}: {{", source);
+        }
+
+        Assert.Contains($"PACK_OUTCOMES = [\"{UsageDetail.PackDone}\", \"{UsageDetail.PackFailed}\", \"{UsageDetail.PackCancelled}\"]", source);
+        Assert.Contains($"STORY_LANGUAGE_WHERE = [\"{UsageDetail.LanguagesFromIntro}\", \"{UsageDetail.LanguagesFromSettings}\"]", source);
+    }
+
+    [Theory]
+    [InlineData(0, 2)]
+    [InlineData(1, 2)]
+    [InlineData(2, 3)]
+    [InlineData(3, 3)]
+    [InlineData(-1, -1)]
+    [InlineData(4, -1)]
+    public void An_intro_saved_with_four_steps_resumes_at_the_same_step_in_the_four_without_the_store_and_add(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.FromLegacy(saved));
+        Assert.Equal("record", IntroSteps.NameAt(IntroSteps.FromLegacy(0)));
+        Assert.Equal("languages", IntroSteps.NameAt(IntroSteps.FromLegacy(3)));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(2, 2)]
+    [InlineData(3, 2)]
+    [InlineData(4, 3)]
+    [InlineData(5, 3)]
+    [InlineData(-1, -1)]
+    [InlineData(6, -1)]
+    public void An_intro_saved_with_six_steps_drops_the_store_and_add_steps_and_lands_a_saved_add_step_on_languages(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.FromSixSteps(saved));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(3, 3)]
+    [InlineData(4, 3)]
+    [InlineData(5, 3)]
+    [InlineData(99, 3)]
+    [InlineData(-1, -1)]
+    [InlineData(-7, -1)]
+    public void A_saved_step_outside_the_list_is_clamped_to_a_valid_step_and_minus_one_stays_and_a_five_step_add_or_languages_lands_on_languages(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.Clamp(saved));
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_intro_steps_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"INTRO_STEPS = \[(?<names>[^\]]*)\]");
+        string[] worker = Regex.Matches(list.Groups["names"].Value, "\"([a-z_]+)\"").Select(m => m.Groups[1].Value).ToArray();
+
+        // Slice 261 and 278: the store and add steps are retired, but apps released before them still send "store:tried" and "add:tried", so the Worker keeps the names.
+        // Slice 362: the new first run's six steps are listed too.
+        Assert.Equal(Enumerable.Range(0, IntroSteps.Count).Select(i => IntroSteps.NameAt(i)!).Append(IntroSteps.Store).Append(IntroSteps.Add).Concat(IntroSteps.Onboarding).Order(), worker.Order());
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_waits_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"WAIT_STAGES = \[(?<names>[^\]]*)\]");
+
+        Assert.True(list.Success);
+        string[] inWorker = Regex.Matches(list.Groups["names"].Value, "\"(?<name>[a-z_]+)\"").Select(m => m.Groups["name"].Value).ToArray();
+        Assert.Equal(UsageWaitStage.All.Order(), inWorker.Order());
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_apps_supported_reading_languages()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"READING_LANGUAGES = \[(?<codes>[^\]]*)\]");
+
+        Assert.True(list.Success);
+        string[] inWorker = Regex.Matches(list.Groups["codes"].Value, "\"(?<code>[a-z]+)\"").Select(m => m.Groups["code"].Value).ToArray();
+        Assert.Equal(UiLanguage.Supported.Order(), inWorker.Order());
+    }
+
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ReadTheStupidText.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir?.FullName ?? throw new DirectoryNotFoundException("Repo root (ReadTheStupidText.slnx) not found.");
+    }
+
+    [Fact]
+    public void RestoredBook_IsCountedAsRestoreWithItsPageBucket_OnlyWhenItHasNoSource()
+    {
+        Story own = StoryWith(null) with { Pages = [new StoryPage("a"), new StoryPage("b"), new StoryPage("c")] };
+
+        Assert.Equal("restore:2-5", UsageDetail.RestoredBook(own));
+        Assert.Null(UsageDetail.RestoredBook(own with { SourceId = PackageId }));
+    }
+
+    [Theory]
+    [InlineData("pdf", 1, "pdf:1")]
+    [InlineData("docx", 5, "docx:2-5")]
+    [InlineData("txt", 10, "txt:6-10")]
+    [InlineData("photo", 11, "photo:11+")]
+    [InlineData("scan", 2, "scan:2-5")]
+    [InlineData("typed", 3, "typed:2-5")]
+    [InlineData("restore", 4, "restore:2-5")]
+    [InlineData("restore", 1, "restore:1")]
+    public void OwnBookAddedJoinsKindAndPageBucket(string kind, int pages, string expected)
+    {
+        Assert.Equal(expected, UsageDetail.OwnBookAdded(kind, pages));
+    }
+
+    [Fact]
+    public void OwnBookWithNoPagesOrOnlyHandWrittenPagesIsTyped()
+    {
+        Assert.Equal(UsageDetail.KindTyped, OwnBookKind.Of([]));
+        Assert.Equal(UsageDetail.KindTyped, OwnBookKind.Of([null, null]));
+    }
+
+    [Fact]
+    public void OwnBookFromOneSourceKeepsItsKind()
+    {
+        Assert.Equal(UsageDetail.KindPdf, OwnBookKind.Of([UsageDetail.KindPdf, UsageDetail.KindPdf, UsageDetail.KindPdf]));
+    }
+
+    [Fact]
+    public void OwnBookFromTwoSourcesOrWithHandWrittenPagesBesideAnImportIsMixed()
+    {
+        Assert.Equal(UsageDetail.KindMixed, OwnBookKind.Of([UsageDetail.KindPhoto, UsageDetail.KindDocx]));
+        Assert.Equal(UsageDetail.KindMixed, OwnBookKind.Of([UsageDetail.KindPdf, null, UsageDetail.KindPdf]));
+    }
+
+    [Fact]
+    public void PageKeepsItsOriginThroughEditsAndOnlyDeletedPagesLeaveTheCount()
+    {
+        PageDraft kept = PageDraft.ForPicture("a.jpg", origin: UsageDetail.KindPdf).WithText("x").Rotated(1);
+        Assert.Equal(UsageDetail.KindPdf, kept.Origin);
+        Assert.Equal(UsageDetail.KindPdf, OwnBookKind.Of([kept.Origin]));
+        Assert.Null(PageDraft.ForText("typed").Origin);
+    }
+
+    [Theory]
+    [InlineData(UsageEventName.BookOpened, true, false)]
+    [InlineData(UsageEventName.BookFinished, true, false)]
+    [InlineData(UsageEventName.BookOpened, false, true)]
+    [InlineData(UsageEventName.BookFinished, false, true)]
+    [InlineData(UsageEventName.IntroStep, true, true)]
+    public void ADemoReadCountsNoBookOpenOrFinish(string eventName, bool demoRead, bool counts)
+    {
+        Assert.Equal(counts, DemoReadCounting.Counts(eventName, demoRead));
+    }
+}

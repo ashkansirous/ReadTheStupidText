@@ -56,9 +56,9 @@ $Rates = @(ConvertTo-RateList $Rates)
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
 
 $apps = @{
-    rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
+    rtst = @{ Project = 'src\Rtst\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
         Listen = 'the voice reads the passage smoothly: no clicks, no robotic stretching, no cut-off words, no pause in the middle of a sentence' }
-    dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Id = 'uk.sirous.dinoreader'; Scheme = 'dino-test'
+    dino = @{ Project = 'src\Dino\DinoReader.App\DinoReader.App.csproj'; Id = 'uk.sirous.dinoreader'; Scheme = 'dino-test'
         Listen = "the voice (a real test-book page, read per character through Dino's own reader) sounds like a warm storyteller: no clicks, no cut-off words, no pause in the middle of a sentence" }
 }
 $cfg = $apps[$App]

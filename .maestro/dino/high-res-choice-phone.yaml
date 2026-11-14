@@ -1,0 +1,29 @@
+# Slice 375 C: a phone always takes the standard pack. open-book downloads lion-and-mouse from the live store through the store client's own download (the code path under test) and the
+# Debug-only [HighRes] marker names the decision. Run on the phone emulator (instance 1 or 2). Against a build from before the slice the marker never appears, so the flow fails there.
+# Needs the book's high-res pack to be live in the store (uploaded by dino-store.yml after this slice merges); with no pack live the marker says highres=False and this flow fails.
+# expect-log: HOOK skip-first-run ok
+# expect-log: [HighRes] choice
+# expect-log: device=Phone
+# expect-log: highres=True size=Standard
+appId: uk.sirous.dinoreader.dbg
+name: A phone takes the standard pack of a book that has a high-res one
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books, the high-res upgrade list); fine here: the flow downloads one book fresh so the choice is made.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: lion-and-mouse
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 120000

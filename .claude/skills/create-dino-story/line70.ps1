@@ -28,7 +28,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
-. (Join-Path $PSScriptRoot '..\..\..\tools\picture-review-copy.ps1')   # Slice 375: the guide is drawn on the 896x1200 small copy, never the full-size original
+. (Join-Path $PSScriptRoot '..\..\..\tools\dino\picture-review-copy.ps1')   # Slice 375: the guide is drawn on the 896x1200 small copy, never the full-size original
 
 function Get-OutPath([string]$picturePath, [string]$outDir) {
     $dir = if ($outDir) { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($outDir) } else { Split-Path -Parent $picturePath }

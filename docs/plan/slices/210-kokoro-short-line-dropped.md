@@ -3,7 +3,7 @@
 
 *Built 2026-10-30, verification criterion not met (see below).* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md): a 5-character line in `kokoro:am_liam` was not read, with `gave up (voice kokoro:am_liam, 5 chars)`. Investigate first, then fix by what the evidence shows.
 
-**Touches:** `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Application/Reading/SiblingVoice.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs` (log line only), `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader.Synthesis.cs` (log line only), `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs` (log line only), `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/210-kokoro-short-line-dropped.md`
+**Touches:** `src/Sirous.Reading.Application/Reading/SilentOutputGuard.cs`, `src/Sirous.Reading.Application/Reading/SiblingVoice.cs`, `src/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs` (log line only), `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader.Synthesis.cs` (log line only), `src/Sirous.Reading.Infrastructure/Reading/NeuralSentenceSource.cs` (log line only), `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/210-kokoro-short-line-dropped.md`
 
 #### What the code says (2026-10-30, ground-in-code)
 

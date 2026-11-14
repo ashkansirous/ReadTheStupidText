@@ -50,9 +50,10 @@ the contact sheet live only in the working folder. Touch nothing else.
    Never re-read any of them per page (Slice 356: the context re-read on every turn is what the run costs).
 2. Characters: if `content/dino/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
-   Every character in any picture is drawn first, background groups included (fans, players, villagers: one sheet per
-   named group, each member front and back), and the line-up shows the whole cast side by side at true relative size,
-   front and back (SKILL.md, *Character chat*). Never let Gemini invent a background character on a page.
+   Sheets and the line-up cover the named characters only, at true relative size; background extras (fans, players,
+   villagers) get no sheets and are described in words in each page prompt (SKILL.md, *Character chat*; the user reversed
+   the background-sheet rule on 2026-11-14). Before redrawing a lost or missing page, look for its earlier pictures in the
+   Gemini chat history first (SKILL.md rule 3, *Recover before you redraw*).
 3. Pages: one prompt per Gemini chat: every picture gets its own new chat (Slice 350; a redo also gets a new chat; only a small patch of a bad result may continue a chat, and only while that chat stays at or under 3 picture requests), each started by pasting the line-up and spelling
    out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200).
    The picture sequence (Slice 356) is: new chat (or open), health check, paste sequence (step 4), `__setupPicture`, `__waitForPicture`,
@@ -94,7 +95,7 @@ the contact sheet live only in the working folder. Touch nothing else.
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
    - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed; add `-Untouched` for
      Slice 350 high-res pictures, which keeps the file byte for byte, and use the path it prints) waits for that download, moves it out of
-     `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it; exit 2 with `SAVED <path>; small copy failed: <reason>` means the picture IS saved: never retry the download, run `pwsh tools/picture-review-copy.ps1 <path>`). No clipboard and no real click,
+     `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it; exit 2 with `SAVED <path>; small copy failed: <reason>` means the picture IS saved: never retry the download, run `pwsh tools/dino/picture-review-copy.ps1 <path>`). No clipboard and no real click,
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
      route in SKILL.md step 6.
 5. Keep turns few and short (Slice 356): no `computer` screenshot after a successful script line (zoom or screenshot only on a
@@ -104,11 +105,12 @@ the contact sheet live only in the working folder. Touch nothing else.
    `<file>` is in your out folder, never in the repo) and read the `.line70.png` it writes (beside the candidate, next to its `.small.jpg`; the path is printed) (drawn on the small copy): any part of any character (feet, tail, a held berry) below the red line fails. A fail: write why, ask again
    (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename the picture to `cover.jpg` / `<page>.jpg` and its `.small.jpg` to `cover.small.jpg` / `<page>.small.jpg` in the working folder, never one without the other (Slice 350 high-res pictures keep the extension `-Untouched` gave them, are never prepared or re-encoded, and go to `content/dino/<book>/high-res/` as the slice's part D says). Small copies stay in the working/scratch folder: never copy or move a `.small.jpg` into `high-res/` or the book folder (`.gitignore` blocks `content/dino/**/*.small.jpg`); only the originals go there.
    Record every attempt in the art record's table (`pages` mode: in `<out folder>/checks.md` instead).
+   Never draw or save a page listed in `art.md`'s `## Accepted by the user` list unless your brief names that page as one the user asked to redo; if a brief asks for one, stop and report it. Before saving over any existing picture, copy the old file to `<working folder>/previous/<name>` (SKILL.md rule 3).
 6. (`finish` and `all` only.) When every picture the book needs is accepted, copy the repo's current pictures for pages you didn't
    redraw, and `cover.jpg` if the cover wasn't redrawn (they sit in `<target>/pictures/` and `<target>/cover.jpg`), into the working folder (preparing re-encodes every file once more at JPEG q85, which is fine), run
-   `pwsh tools/prepare-story-pictures.ps1 <working folder> <target> <pageCount>`, then
+   `pwsh tools/dino/prepare-story-pictures.ps1 <working folder> <target> <pageCount>`, then
    `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`.
-7. (`finish` and `all` only.) If only pictures changed (no text change) in a STARTER (`"kind": "Starter"`; a store book needs no stamp, Slice 239), raise the book's version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
+7. (`finish` and `all` only.) If only pictures changed (no text change) in a STARTER (`"kind": "Starter"`; a store book needs no stamp, Slice 239), raise the book's version with `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
    that `check` compares). No text hash is needed.
 
 Rules:

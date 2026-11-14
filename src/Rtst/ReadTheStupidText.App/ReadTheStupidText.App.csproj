@@ -1,0 +1,113 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>ReadTheStupidText_App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
+    <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Ship every packaged visual asset (all tile/logo/splash/store scale and
+       targetsize variants, plus tray/app icons). Superseded and Store-gallery
+       art is kept in the repo-root unused\ folder (outside this project's
+       packaged cone) so it never enters the MSIX payload or the PRI index. -->
+  <ItemGroup>
+    <Content Include="Assets\*.png" />
+    <Content Include="Assets\*.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!-- No voice model ships in the package (Slice 56, Decision 61): the first-run language choice downloads
+       a voice pack into the package's LocalCache (Infrastructure WindowsVoicePackService). The model files
+       in VoiceModel\ now only feed the manual packs workflow (.github/workflows/packs.yml), so they are
+       deliberately not Content and never enter the MSIX. -->
+
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <!--
+    Microsoft.Windows.SDK.BuildTools.WinApp adds first-class support for
+    `dotnet run` on packaged WinUI apps: it hooks the .NET CLI Run target to
+    register a debug identity via the winapp CLI and launch the app with
+    package identity (AUMID).
+    Set <EnableWinAppRunSupport>false</EnableWinAppRunSupport> in a
+    <PropertyGroup> above to opt out.
+  -->
+  <ItemGroup>
+    <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.3.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
+    <ProjectReference Include="..\..\Shared\Sirous.Reading.Infrastructure\Sirous.Reading.Infrastructure.csproj" />
+    <ProjectReference Include="..\ReadTheStupidText.Windows.Tray\ReadTheStupidText.Windows.Tray.csproj" />
+  </ItemGroup>
+
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <!-- Publish Properties -->
+  <PropertyGroup>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <!-- Bundle the .NET runtime into the shipped (Release) MSIX so the package
+         carries no external .NET dependency. A framework-dependent Store MSIX
+         only gets the Windows App SDK runtime auto-installed by the Store — the
+         .NET runtime is NOT delivered, which failed Store certification 10.2.4.1
+         (undisclosed dependency on non-integrated software: .NET). Publishing
+         .NET self-contained removes the dependency entirely, so no description
+         disclosure is needed and users install nothing. Scoped to non-Debug so
+         the inner dev loop (Debug / `dotnet run`) stays framework-dependent and
+         fast. WindowsAppSDKSelfContained is deliberately left off — the Store
+         still delivers the Windows App SDK framework package. -->
+    <SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
+    <!-- Even when self-contained, packaged WinUI apps aren't trimmed
+         (reflection-heavy XAML), so keep trimming off. -->
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <!--
+    The Windows App SDK pulls Microsoft.Windows.AI.MachineLearning (WinML), which
+    bundles its own onnxruntime.dll. sherpa-onnx ships an onnxruntime.dll matched
+    to its native C-API. Both land at the package root → APPX1101 duplicate
+    payload. We don't use WinML, and sherpa needs its version-matched runtime, so
+    drop the WinML copy before it's copied to output / the MSIX payload.
+  -->
+  <Target Name="RemoveWinMlOnnxRuntimeDuplicate"
+          AfterTargets="GetPackagingOutputs"
+          BeforeTargets="_ComputeAppxPackagePayload">
+    <ItemGroup>
+      <PackagingOutputs Remove="@(PackagingOutputs)"
+        Condition="'%(FileName)%(Extension)' == 'onnxruntime.dll' and $([System.String]::Copy('%(FullPath)').Replace('\','/').ToLowerInvariant().Contains('/microsoft.windows.ai.machinelearning/'))" />
+    </ItemGroup>
+  </Target>
+</Project>

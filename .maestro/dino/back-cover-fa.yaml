@@ -5,7 +5,8 @@
 # expect-log: HOOK set-language ok fa
 # expect-log: HOOK open-book opened page=16
 # expect-log: PAGE 16
-# expect-log: BACKCOVER shown lines=4 picture=drawn
+# expect-log: BACKCOVER shown lines=4 picture=drawn card=300
+# expect-log: BACKCOVER modes visible=no
 appId: uk.sirous.dinoreader.dbg
 name: Back cover after the last page (Farsi, by id)
 # Runs after the flow pass or fail, so a failure never leaves the app in Farsi for the flows that wait on English labels.
@@ -60,4 +61,7 @@ onFlowComplete:
     timeout: 10000
 - assertNotVisible:
     id: StoryText
+# Slice 359 item 6: the view switch is hidden on the back cover; the cream card sits in the middle of the picture, same size as in English, text right to left, Persian digits (screenshot checked against mock BC3).
+- assertNotVisible:
+    id: ReadingModes
 - takeScreenshot: back-cover-fa

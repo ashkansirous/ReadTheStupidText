@@ -5,6 +5,7 @@
 //   dinoreader/stories/<id>/meta.json                   a free story (Slice 92), uploaded last
 //   dinoreader/stories/<id>/cover.jpg
 //   dinoreader/stories/<id>/story-v<n>.dino             the .dino package, version n
+//   dinoreader/stories/<id>/story-v<n>.hd.dino          Slice 375 B: the same package with the 1792x2400 pictures (only for a book that has them)
 
 export const Product = {
   ReadTheStupidText: "readthestupidtext",
@@ -49,6 +50,17 @@ export function storyPackageFileName(version) {
 
 export function storyPackageKey(id, version) {
   return `${storyFolder(id)}${storyPackageFileName(version)}`;
+}
+
+// Slice 375 B: the high-res package of the same version, story-v<n>.hd.dino, present only for a book with a complete high-res/ folder.
+export const STORY_HD_PACKAGE_SUFFIX = ".hd.dino";
+
+export function storyHdPackageFileName(version) {
+  return `${STORY_PACKAGE_PREFIX}${version}${STORY_HD_PACKAGE_SUFFIX}`;
+}
+
+export function storyHdPackageKey(id, version) {
+  return `${storyFolder(id)}${storyHdPackageFileName(version)}`;
 }
 
 // Shared by downloads.ts and stories.ts (stories.ts can import values only from this file; see its header).

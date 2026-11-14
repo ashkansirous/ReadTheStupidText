@@ -12,7 +12,7 @@ name: store-submit
 # guard) — an `on: release:` trigger here would silently never fire. See the
 # comment on release-rtst.yml's `store-submit` job.
 #
-# `msstore publish` (see the last step) discards any still-pending draft
+# `msstore publish` (see the last steps; since Slice 374 with --noCommit, then the listing step commits it) discards any still-pending draft
 # submission and creates a fresh one from the newest package each time it
 # runs (documented CLI behavior), so a burst of quick releases just
 # collapses to the latest one reaching certification, never an old one
@@ -81,11 +81,19 @@ env:
 jobs:
   submit:
     runs-on: windows-latest
+    # Slice 374: `msstore publish`, `submission get/update/publish` all act on the app's ONE pending draft, so two runs for the same
+    # product (a manual dispatch during a release) must never interleave. Queued, never cancelled: a cancel after --noCommit would
+    # leave an uncommitted draft.
+    concurrency:
+      group: store-submit-${{ inputs.product_id }}
+      cancel-in-progress: false
     steps:
       - name: Checkout (release scripts)
         uses: actions/checkout@v4
         with:
-          sparse-checkout: .github/scripts
+          sparse-checkout: |
+            .github/scripts
+            docs/store-listings
 
       # Slice 127: the two apps must never swap listings. STORE_PRODUCT_ID is Read The Stupid Text's.
       - name: Check the product id matches the package
@@ -184,6 +192,10 @@ jobs:
 
       - name: Set up the Microsoft Store CLI
         uses: microsoft/microsoft-store-apppublisher@v1.4
+        with:
+          # Slice 374: pinned. The listing step needs `submission update --payload` (v0.4.3+) and `--output-stream` with pure-JSON
+          # `submission get` output on stdout (v0.4.4); an unpinned "latest" has already changed behaviour under this file once.
+          version: 'v0.4.4'
 
       - name: Configure Store credentials
         shell: pwsh
@@ -203,6 +215,15 @@ jobs:
             --sellerId ${{ secrets.SELLER_ID }} `
             --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
             --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
+
+      # Slice 374: build and validate the 13 listings offline BEFORE `publish --noCommit` creates the draft, so a missing file or an
+      # over-limit text fails here, when nothing is pending, and never leaves an uncommitted draft behind.
+      - name: Check the repo's listing text
+        shell: pwsh
+        run: |
+          $app = switch ($env:PACKAGE) { 'ReadTheStupidText.App' { 'rtst' } 'DinoReader.App' { 'dino' } default { throw "Unknown package $($env:PACKAGE)" } }
+          node .github/scripts/store-listings.mjs --app $app | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "The $app store listing files are invalid ($LASTEXITCODE)" }
 
       - name: Publish the update to the Store
         shell: pwsh
@@ -227,5 +248,40 @@ jobs:
           # -v: on an upload failure the CLI's console output is a hardcoded
           # generic "Error while uploading the application package." with the
           # real exception only reaching the logger, which -v surfaces.
+          #
+          # Slice 374: --noCommit uploads the package into the new draft but does not send it for certification yet. The next step
+          # puts the repo's 13-language listing text into that same draft and commits it, so the release is ONE submission.
           msstore publish "out\$($env:PACKAGE).msixbundle" `
-            -id "${{ inputs.product_id }}" -ut 300 -v
+            -id "${{ inputs.product_id }}" -ut 300 -v --noCommit
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed ($LASTEXITCODE)" }
+
+      # Slice 374 (items 4 and 5): every release carries the listing text committed in docs/store-listings (RTST) or
+      # docs/store-listings/dino (Dino). `submission get` returns the draft that `publish --noCommit` just made (package included);
+      # store-listings.mjs changes only the title, short description, description and search terms of the 13 languages
+      # and keeps pricing, packages, images and the en/de listings as they are; `submission update` sends the whole object back
+      # (it replaces the submission, which is why the merge starts from the draft); `submission publish` commits that one submission.
+      # The product id check above already pairs the package with its own app, so the two apps cannot swap listings.
+      - name: Put the repo's listing text into the submission and commit it
+        shell: pwsh
+        run: |
+          $id = "${{ inputs.product_id }}"
+          # Best-effort: the listing text is a nice-to-have, so any failure here (get, merge, update) only warns, and the draft the
+          # package is in is still committed below. A failed `update` is a single PUT and leaves the draft unchanged.
+          # --output-stream stderr keeps the CLI's progress markup out of the JSON on stdout (msstore-cli v0.4.4).
+          $listingsOk = $false
+          try {
+            $app = switch ($env:PACKAGE) { 'ReadTheStupidText.App' { 'rtst' } 'DinoReader.App' { 'dino' } default { throw "Unknown package $($env:PACKAGE)" } }
+            msstore submission get $id --output-stream stderr | Out-File -Encoding utf8 draft.json
+            if ($LASTEXITCODE -ne 0) { throw "msstore submission get failed ($LASTEXITCODE)" }
+            node .github/scripts/store-listings.mjs --app $app --submission draft.json --out merged.json
+            if ($LASTEXITCODE -ne 0) { throw "Merging the $app listings failed ($LASTEXITCODE)" }
+            msstore submission update $id --payload merged.json
+            if ($LASTEXITCODE -ne 0) { throw "msstore submission update failed ($LASTEXITCODE)" }
+            $listingsOk = $true
+          } catch {
+            Write-Host "::warning::Store listing text was not updated for this release: $($_.Exception.Message)"
+          }
+          if ($listingsOk) { Write-Host "Listing text merged into the draft." }
+          # Always commit the draft: a release must never end with an uncommitted submission. This one stays loud.
+          msstore submission publish $id
+          if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed ($LASTEXITCODE)" }

@@ -217,17 +217,27 @@ export function topFrame(report) {
   const lines = stack.split("\n").map((l) => l.trim());
   const first = lines.find((l) => l.startsWith("at ")) ?? lines.find((l) => l.length > 0);
   if (!first) return "(no stack)";
-  return first.replace(/^at\s+/, "").replace(/\(.*$/, "").replace(/\s+in\s+.*$/, "").slice(0, FRAME_LIMIT);
+  return normalizeRenamed(first.replace(/^at\s+/, "").replace(/\(.*$/, "").replace(/\s+in\s+.*$/, "")).slice(0, FRAME_LIMIT);
+}
+
+// Slice 370: five projects were renamed from ReadTheStupidText.* to Sirous.Reading.*; a leading new name counts as the old one, so one crash is one group across the release boundary.
+// The RTST app's own ReadTheStupidText.Mobile / .App / .Windows.Tray keep their names and are not touched.
+// Matched anywhere at a namespace boundary (start, or after "at ", "<", ",", "[", space), so generic arguments and assembly names in a type key map too.
+const RENAMED_PROJECT = /(?<![\w.])Sirous\.Reading\.(Domain|Application|Documents|Infrastructure|Mobile\.Shared)(?!\w)/g;
+
+export function normalizeRenamed(name) {
+  return String(name ?? "").replace(RENAMED_PROJECT, "ReadTheStupidText.$1");
 }
 
 export function groupReports(reports) {
   const groups = new Map();
   for (const report of reports) {
-    const key = `${report.kind} | ${report.exceptionType} | ${topFrame(report)}`;
+    const key = `${report.kind} | ${normalizeRenamed(report.exceptionType)} | ${topFrame(report)}`;
     const group = groups.get(key) ?? { key, count: 0, platforms: {}, versions: {}, channels: {}, newest: report };
     group.count += 1;
     group.platforms[report.platform] = (group.platforms[report.platform] ?? 0) + 1;
-    group.versions[report.version] = (group.versions[report.version] ?? 0) + 1;
+    const version = report.version ?? "unknown"; // a native or unclean-exit report whose launch the app could not identify has none (Slice 243)
+    group.versions[version] = (group.versions[version] ?? 0) + 1;
     group.channels[report.channel] = (group.channels[report.channel] ?? 0) + 1;
     if (String(report.minute) > String(group.newest.minute)) group.newest = report;
     groups.set(key, group);
@@ -270,7 +280,7 @@ export function codeOf(report) {
 
 export function userReportLine(report) {
   const code = codeOf(report) ?? "(no code)";
-  return `${code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code}  ${report.minute}  ${report.platform} ${report.version} ${report.channel}  country ${report.country ?? "?"}${report.session ? `  session ${report.session}` : ""}`;
+  return `${code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code}  ${report.minute}  ${report.platform} ${report.version ?? "unknown"} ${report.channel}  country ${report.country ?? "?"}${report.session ? `  session ${report.session}` : ""}`;
 }
 
 // One report in full: its fields, then the whole log tail.

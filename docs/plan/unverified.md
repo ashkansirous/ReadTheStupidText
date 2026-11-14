@@ -6,6 +6,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Read The Stupid Text
 
+### Slice 342: Farsi ezafe override ([slice](slices/342-farsi-voice-pack.md), [343](slices/343-four-farsi-voices.md))
+- **You:** second listen to `D:\ReadTheStupidText-worktrees\reviews\s342-ezafe\fa-ganji_adabi-1-after.wav`: it should say "hale shoma" (and the other 11 WAVs there, four voices x three lines, should sound as before).
+- **You (open, no fix found):** "sobh yek" (Ganji, Gyro) and "daftar kharid" (Gyro) still get an extra ezafe: no text mark changes espeak's phonemes for them.
+- **Device:** the ezafe on a device (Android, iOS, Windows) needs a flow that installs `piper-fa` and synthesises a Farsi page with no audio pack; the 2026-11-13 device run did not reach it (no RTST Farsi read flow; Dino flows play premade clips).
+- **Device (follow-up bug):** the Dino flows `farsi-speaker-first-join` and `premade-audio-past-roar` fail on main, unrelated to the ezafe (stuck on onboarding after skip-first-run lang=fa; a real fa audio pack replaced `fixture-13.m4a` after `pm clear`).
+
 ### Slice 373: RTST voice rows RT1 and RT2 ([slice](slices/373-rtst-voice-rows-rt1-rt2.md))
 - VM check `rtst-language-rows` not run: free memory 7 GB was under the 8 GB the VM needs, so the VM was not started.
 - The Windows failed row (not downloaded line, error line, Retry): the VM has no forced-failure hook on Windows.
@@ -71,6 +77,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 375: Dino: every picture in two sizes ([slice](slices/375-dino-two-picture-sizes.md))
+
+- **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
+- **Device:** parts B-D (merged #1113 on review and unit tests, no device run): a tablet on Wi-Fi gets a store book at standard size, then the high-res pack swaps in at the next cold start; a phone stays standard; on mobile data no hd download starts and one in flight is cancelled.
+
 ### Slice 362: Dino onboarding shows what Dino can do ([slice](slices/362-dino-onboarding-shows-what-dino-can-do.md))
 
 - **Device:** `onboarding-tablet`: no tablet instance.
@@ -125,6 +136,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** older installed apps showing the picture page.
 - **Device:** Good Enough's back cover (after its text-free redraw, Slice 350 part E, and its text rewrite).
 - **Device:** the store upload of the 11 store books and their new versions on the live store.
+- **Device:** item 6: `layout-check` (the four back-cover flows carry no layout-check header).
+- **Device:** item 6: the Read again glyph on the back cover (screens show the play triangle; no flow asserts it).
+- **Device:** item 6: the tablet and Windows 360 card.
+- **Device:** item 6: Windows head build.
+- **Device:** item 6: iOS on a device.
+- **Device:** item 6: the text-only view screenshot was not reviewed.
+- **Device:** item 6: the Farsi/Arabic author line wraps "Ashkan / Sirous" in the 300 card (check against BC3).
 
 ### Slice 355: Dino: a public web page listing every store book, free or paid, and the price ([slice](slices/355-dino-web-catalogue.md))
 - **Device:** Live `/books` and the workers.dev `/dino/books` after the batched release deploys: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.
@@ -166,6 +184,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** the switch-on store page against the real Worker.
 - **You:** the Microsoft Store ID flow against a live store.
 - **Device:** E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
+- **Device:** Part E on a device (merged #1120 on review and unit tests): on a Windows, Android and iOS paid row, the store row's wait and Cancel hold until the run ends, and a 403 `purchase-not-valid` after a real purchase is retried on the 3-30 s schedule (about 84 s) instead of showing "Try again" at once; a refused paid download reaches analytics as `download_refused` / `purchase_not_valid`.
 
 ### Slice 340: Listening page: Mid-book speed change on a phone ([slice](slices/340-mid-book-speed-change-on-a-phone.md))
 - **Device:** Fix 1 on a device: Settings > Reading speed slider runs 0.8x-1.2x with the left label "0.8x", on Android, iOS and the Windows head, and a book reads at 0.8x at the low end. Android phone emulator, 2026-11-09: `settings-reading-speed-row.yaml` passed and shows "0.8x · slow"; iOS (**You**, no Mac), Windows and the 0.8x reading are still open.
@@ -485,10 +504,24 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 243: Crash reports: everything missing to explain a crash ([slice](slices/243-crash-report-gaps.md))
+- **Device:** a Release iOS build in CI attaches the dSYM zip to its GitHub Release; `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2, merged #1122 on unit tests and review only).
+- **Device:** the rolling log of a test crash on the Android emulator and an iPhone shows the page, Back and lifecycle lines, and the report carries the new build, UUID, memory and foreground fields (items 5-7).
+
+### Slice 371: Folders grouped by product ([slice](slices/371-folders-by-product.md))
+- **Device:** Windows VM run (`tools/desktop-vm`) from the new paths.
+
+### Slice 370: Give the shared code a neutral name ([slice](slices/370-rename-shared-code.md))
+
+- iOS simulator upgrade test (old build, setting, pack, install the renamed build over it): no Mac available.
+- Release, R8 and aab builds of both Android apps (only Debug manifests and builds were compared).
+- CI iOS builds on `main` after the merge (only compile checks ran locally).
+
 ### Slice 374: Store listings in 13 more languages ([slice](slices/374-store-listings-13-languages.md))
 
 Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
 
+- **Release:** Microsoft Store listings in 13 languages reach both apps' Store pages after the next release (read back with `msstore submission get <id>` after the first release run that calls `store-submit.yml`; check the keys, `pt-br`, no duplicate `fr`/`fr-fr`, and that the run's log shows no `::warning::` from the listing step). Built, not yet run live.
 - **You:** native read of the Arabic store listings (`ar`).
 - **You:** native read of the Chinese (Simplified) store listings (`zh`).
 - **You:** native read of the Danish store listings (`da`).
@@ -550,7 +583,7 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
 - **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
-- **Device:** On the S21: `book-end` on Dino with the fixture pack (run 2026-11-13: not finished, still playing at 521 s of its 900 s window when the 590 s agent timeout ended the run; the 420 s catalogue estimate is too low for the S21), `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (run 2026-11-13 FAILED as a check bug: parsed flags 0x800 lack FLAG_AUTO_CANCEL 0x10, so `Get-NotificationFlagsFromText` reads the wrong field of Samsung's record; fix and rerun in Slice 372).
+- **Device:** On the S21: `run-checks -Prepare -App dino`. (`book-end` and `paused-notification-repost` passed on the S21 in Slice 372's run 2, PR #1077; removed by the 2026-11-13-1149 feedback loop.)
 - **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
 
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
@@ -561,7 +594,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
 
 ### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
-- **Device:** `paused-notification-repost` has never run on a phone: the `flags=0x` parsing of dumpsys is unproven.
 - **Device:** That a later edit clears the Review pick on the reader page: no flow step yet.
 
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))

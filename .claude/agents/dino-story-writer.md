@@ -46,12 +46,12 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    books are not free to share and never carry it (user, 2026-11-01).
    Say in your report who you credited and how you know.
    Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in the `cast` of the book's `book.json`
-   (matched by character name; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
+   (matched by character name; `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
    are the same in every language, and one the language lacks falls back to the closest traits), the gender, an age (`Baby`/`Child`/`Young`/`Adult`/`Old`), what it is when
    it is not an animal (`CharacterBeing`; null for an animal, whose kind is in `animals`) and one to three voice qualities. Pick the roster character that sounds like the
    character (a seagull is a duckling, not a mummy), no two characters of a book on one id, and the suggestion's gender the character's. Record each choice and why in the book's art
    record under "Voices". Raise a starter's version; a store book needs none (set `"version": 1` in a new one: `publish-store` versions it from its content hash, Slice 239).
-4. Translations: dump the pieces (`dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`, which writes `content/dino/<stem>/translations/pieces.json`) and translate
+4. Translations: dump the pieces (`dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-pieces <stem>`, which writes `content/dino/<stem>/translations/pieces.json`) and translate
    every new or reworded piece into `content/dino/<stem>/translations/<lang>.json` (every language in `UiLanguage.Supported`, 14 besides English). Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
@@ -63,11 +63,11 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    letter. Show loudness with lowercase, repetition and punctuation ("empty, empty, empty!"). (Freddy
    review, night 2026-11-01-2355.)
    A store book also gets `content/dino/<stem>/titles.json`: its title in every other language (`{ "ar": "...", "da": "..." }`, the codes of the translation files, none blank). Never add a row to
-   `src/DinoReader.App/ShippedTitles.cs` for a store book, and never edit `src/`, `tests/` or any app file for one (Slice 239): a store book is content only, so its merge runs only the store upload.
-5. Changing an existing starter's text (a store book needs no stamp): raise its version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash that CI's `check` compares; if only pictures change the illustrator stamps it), and for a starter add the shipped text's page hash to
+   `src/Dino/DinoReader.App/ShippedTitles.cs` for a store book, and never edit `src/`, `tests/` or any app file for one (Slice 239): a store book is content only, so its merge runs only the store upload.
+5. Changing an existing starter's text (a store book needs no stamp): raise its version with `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash that CI's `check` compares; if only pictures change the illustrator stamps it), and for a starter add the shipped text's page hash to
    `StarterUpdate.EarlierPageTextHashes` (computed from the shipped `.dino` before any rebuild, recipe in
    dino-storytelling section 5).
-6. Run `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`. A failure that only says the picture
+6. Run `dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj`. A failure that only says the picture
    count no longer matches the page count is expected until the illustrator runs: say so. Fix anything else.
 
 Report in at most 12 lines, no tables: the page count; the pages needing a new picture; any classic-tale

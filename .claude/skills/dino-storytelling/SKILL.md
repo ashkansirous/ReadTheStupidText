@@ -77,12 +77,12 @@ number, the one action, who is in it with a count, where, and time of day. Then 
 - The translations are keyed by sentence (piece). **Moving page breaks or splitting a paragraph keeps
   every existing translation**; only new or reworded sentences need translating into every language in `UiLanguage.Supported` (14 besides English)
   (`content/dino/<stem>/translations/<lang>.json`; dump the pieces with
-  `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`).
+  `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-pieces <stem>`).
 - Reword a sentence only when it must change, since each reworded sentence costs 14 translations.
 - A new page count needs one picture per page. Reuse an earlier picture only when it shows exactly that
   page's one action. Otherwise draw it again.
 - Every book ends on a silent back cover made from `storyBy`/`retold` in `book.json` (Slice 237): credit the real original author, or `"traditional"`; never write credits into the story text.
-- Raise the version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (`book.json`'s `version` and content hash) and add the old text's page
+- Raise the version with `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` (`book.json`'s `version` and content hash) and add the old text's page
   hashes to `StarterUpdate.EarlierPageTextHashes` for a starter, so installed copies update.
   Get the old hash before rebuilding: `StarterUpdate.PageTextHash` is SHA-256 over the page texts joined
   with `"\n\n"` (two newline characters, `Story.PageSeparator`). Compute it from the currently shipped .dino's `story.json` (`Pages[].Text`).

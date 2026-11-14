@@ -1,0 +1,659 @@
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Sirous.Reading.Application.Input;
+using Sirous.Reading.Application.Reading;
+using Sirous.Reading.Application.Settings;
+using Sirous.Reading.Application.Startup;
+using Sirous.Reading.Application.Usage;
+using Sirous.Reading.Domain.Activity;
+using Sirous.Reading.Domain.Reading;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
+using Microsoft.UI.Text;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Shapes;
+using Windows.Graphics;
+using WinRT.Interop;
+
+namespace ReadTheStupidText_App;
+
+/// <summary>
+/// The left-click control panel — the "Media Card" design (Decision 20): a
+/// brand-gradient "now reading" header (waveform + status + transport) over a Fluent
+/// settings list. A borderless, always-on-top window pinned above every other window:
+/// it stays open until the user closes it (✕) or toggles the tray icon — it does not
+/// dismiss on click-away (Decision 12 kept). The app keeps running in the tray; Quit
+/// lives only in the right-click menu. Every control reads live state on open and
+/// writes through the shared services, so it stays in sync with the tray menu.
+/// </summary>
+public sealed partial class ControlPanelWindow : Window
+{
+    // Segoe Fluent transport glyphs.
+    private const string PlayGlyph = "";
+    private const string PauseGlyph = "";
+
+    // A generous fallback height (effective pixels) used until the content's real height is
+    // measured; scaled to device pixels. The width comes from RootGrid.Width (XAML), the one source.
+    private const int FallbackHeight = 520;
+    private const int LogicalMargin = 12;
+    private const double DesignWidth = 376; // RootGrid.Width in the XAML; used if that width is ever not a usable number
+
+    private readonly ReadAloudService _readAloud;
+    private readonly IStartupService _startup;
+    private readonly ISettingsStore _settings;
+    private readonly VoicePackSetup _packSetup;
+    private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private readonly Brush _onIconBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
+    private Storyboard? _waveform;
+
+    // Header-drag state: the screen cursor and window position captured when the drag
+    // begins, so each move applies the raw cursor delta to the window (screen pixels,
+    // not element-relative coords, which would jitter as the window moves under it).
+    private bool _dragging;
+    private PointInt32 _dragStartCursor;
+    private PointInt32 _dragStartWindow;
+
+    // Suppresses control events while the panel is being populated from state,
+    // so refreshing the UI does not echo back as a user change. Starts true so
+    // the slider's initial coercion to its minimum (0.5) during XAML load isn't
+    // mistaken for a user change and persisted over the real default (1x).
+    private bool _refreshing = true;
+
+    // The content's measured height (effective pixels), known after first layout.
+    private double? _measuredHeight;
+
+    /// <summary>Raised after the user changes the startup state from the panel,
+    /// so the tray menu's matching toggle can be updated.</summary>
+    public event EventHandler<bool>? StartupStateChanged;
+
+    /// <summary>Raised when the activity-log button is clicked; the host owns the
+    /// single activity-log window, so it handles opening/focusing it.</summary>
+    public event EventHandler? ActivityLogRequested;
+
+    /// <summary>Raised when the Upload button is clicked; the host owns showing
+    /// the file picker (Decision 34).</summary>
+    public event EventHandler? UploadFileRequested;
+
+    /// <summary>Raised when the reading-text-box toggle is clicked; the host owns
+    /// the single text box window, so it handles showing/hiding it (Slice 37).</summary>
+    public event EventHandler? ReadingTextBoxRequested;
+
+    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings, VoicePackSetup packSetup, WindowsUpdate update)
+    {
+        _packSetup = packSetup;
+        _readAloud = readAloud;
+        _startup = startup;
+        _settings = settings;
+
+        InitializeComponent();
+        Title = ProductInfo.Name;
+        RootGrid.FlowDirection = FlowDirection.LeftToRight; // layout never mirrors (Slice 88)
+        SystemBackdrop = new MicaBackdrop();
+        _waveform = (Storyboard)RootGrid.Resources["WaveformStoryboard"];
+        ConfigurePresenter();
+        LoadVoices();
+        InitLanguageAndTranslation();
+        InitUsageSwitch();
+        InitWaitRow();
+        InitUpdateNotice(update);
+
+        RootGrid.Loaded += OnRootLoaded;
+
+        // The icon toggles' colours are set as local brushes in code, so they don't
+        // follow {ThemeResource} automatically — re-apply them when the theme flips.
+        RootGrid.ActualThemeChanged += OnActualThemeChanged;
+
+        _readAloud.StateChanged += OnPlaybackStateChanged;
+        _readAloud.GeneratingChanged += OnGeneratingChanged;
+        _readAloud.ProgressChanged += OnProgressChanged;
+        _readAloud.TimingChanged += OnTimingChanged;
+
+        // Neural voices arrive after the model loads; rebuild the picker then.
+        _readAloud.VoicesChanged += OnVoicesChanged;
+        _packSetup.Changed += OnPackSetupChanged;
+    }
+
+    // The download's progress shows in the picker's status line while the natural voice is not ready.
+    private void OnPackSetupChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(UpdateVoiceStatus);
+
+    private void UpdateVoiceStatus() =>
+        TextFlow.ForUi(VoiceStatus, PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress, _packSetup.FailureKind));
+
+    private void OnVoicesChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            LoadVoices();
+            if (AppWindow.IsVisible)
+            {
+                PositionPanel();
+            }
+        });
+
+    /// <summary>Opens the panel if hidden, hides it if shown (tray left-click).</summary>
+    public void Toggle()
+    {
+        if (AppWindow.IsVisible)
+        {
+            Hide();
+        }
+        else
+        {
+            ShowPanel();
+        }
+    }
+
+    private void ConfigurePresenter()
+    {
+        var presenter = OverlappedPresenter.Create();
+        presenter.IsResizable = false;
+        presenter.IsMaximizable = false;
+        presenter.IsMinimizable = false;
+        presenter.IsAlwaysOnTop = true;
+        presenter.SetBorderAndTitleBar(hasBorder: true, hasTitleBar: false);
+        AppWindow.SetPresenter(presenter);
+        AppWindow.IsShownInSwitchers = false;
+    }
+
+    // The picker lists the pack's natural voices plus the "Windows voice". Until a pack is ready the
+    // Windows voice is the only entry, so the row shows the download status instead (Slice 56).
+    /// <summary>One picker entry: the voice and the (localized) name shown for it.</summary>
+    public sealed record VoiceChoice(VoiceInfo Voice, string Name);
+
+    private void LoadVoices()
+    {
+        bool ready = _readAloud.VoicesReady;
+
+        VoiceCombo.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
+        VoiceStatus.Visibility = ready ? Visibility.Collapsed : Visibility.Visible;
+        UpdateVoiceStatus();
+
+        if (ready)
+        {
+            _refreshing = true;
+            VoiceCombo.ItemsSource = _readAloud.InstalledVoices.Select(v => new VoiceChoice(v, PackSetupText.VoiceName(v))).ToList();
+            SelectCurrentVoice();
+            _refreshing = false;
+        }
+    }
+
+    private void ShowPanel()
+    {
+        RefreshState();
+        PositionPanel();
+        AppWindow.Show();
+        Activate();
+        OnPanelVisibilityChanged();
+    }
+
+    private void Hide()
+    {
+        AppWindow.Hide();
+        OnPanelVisibilityChanged();
+    }
+
+    // Once the content has laid out we know its true height; remember it and
+    // re-fit the window so nothing is clipped (the overflow fix).
+    private void OnRootLoaded(object sender, RoutedEventArgs e)
+    {
+        MeasureContent();
+        if (AppWindow.IsVisible)
+        {
+            PositionPanel();
+        }
+    }
+
+    // Remembers the laid-out content height. A measure that yields nothing usable never replaces an earlier one;
+    // placing before the first Loaded uses the fixed height, which is ordinary and not reported (Slice 273 part D).
+    private void MeasureContent()
+    {
+        double height = RootGrid.DesiredSize.Height;
+        if (height > 0)
+        {
+            _measuredHeight = height;
+        }
+    }
+
+    // Sizes the panel to its content and places it, on the monitor of its target point, via the one shared routine:
+    // at the user's last-dragged position (clamped to that work area) or pinned bottom-right by the tray.
+    private void PositionPanel()
+    {
+        PointInt32? saved = _settings.PanelPosition is { } p ? new PointInt32(p.X, p.Y) : null;
+        WindowPlacer.Place(AppWindow, RootGrid.Width, _measuredHeight ?? FallbackHeight, DesignWidth, LogicalMargin, saved);
+    }
+
+    // Header pointer-drag (Slice 24, Decision 31): drag the borderless panel by its
+    // gradient header. Child controls (buttons, slider, pill) handle their own pointer
+    // input and mark it handled, so a drag only starts on the header's empty areas.
+    private void OnHeaderPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(HeaderBorder).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        GetCursorPos(out POINT cursor);
+        _dragStartCursor = new PointInt32(cursor.X, cursor.Y);
+        _dragStartWindow = AppWindow.Position;
+        _dragging = HeaderBorder.CapturePointer(e.Pointer);
+        e.Handled = _dragging;
+    }
+
+    private void OnHeaderPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        GetCursorPos(out POINT cursor);
+        AppWindow.Move(new PointInt32(
+            _dragStartWindow.X + (cursor.X - _dragStartCursor.X),
+            _dragStartWindow.Y + (cursor.Y - _dragStartCursor.Y)));
+        e.Handled = true;
+    }
+
+    private void OnHeaderPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_dragging)
+        {
+            HeaderBorder.ReleasePointerCapture(e.Pointer);
+            e.Handled = true;
+        }
+    }
+
+    // Ending the drag — on button release the capture is lost, which fires here.
+    // Persists the final position so the panel reopens where the user left it.
+    private void OnHeaderPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        _dragging = false;
+        PointInt32 position = AppWindow.Position;
+        _settings.PanelPosition = new PanelPosition(position.X, position.Y);
+    }
+
+    private void RefreshState()
+    {
+        _refreshing = true;
+        UpdateSpeed(_readAloud.Speed);
+        SelectCurrentVoice();
+        SetSelectionToggle(_readAloud.AutoReadOnSelection);
+        SetCopyToggle(_readAloud.AutoReadOnCopy);
+        RefreshLanguageAndTranslation();
+        _refreshing = false;
+
+        ApplyPlaybackState(_readAloud.State);
+        _ = RefreshStartupAsync();
+    }
+
+    private void UpdateSpeed(PlaybackRate rate)
+    {
+        SpeedSlider.Value = rate.Value;
+        SpeedPill.Text = rate.ToDisplayLabel();
+        UpdatePresetHighlight(rate);
+    }
+
+    // The three compact icon toggles carry a hover tooltip naming the control and
+    // its current state (the design's "· on" / "· off" tooltips).
+    private void SetSelectionToggle(bool on)
+    {
+        AutoReadSelectionToggle.IsChecked = on;
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
+        ToolTipService.SetToolTip(AutoReadSelectionToggle,
+            UiStrings.Format("Tip_AutoReadSelection", OnOff(on)));
+    }
+
+    private void SetCopyToggle(bool on)
+    {
+        AutoReadCopyToggle.IsChecked = on;
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
+        ToolTipService.SetToolTip(AutoReadCopyToggle,
+            UiStrings.Format("Tip_AutoReadCopy", OnOff(on)));
+    }
+
+    private void SetStartupToggleTooltip(bool on) =>
+        ToolTipService.SetToolTip(StartupToggle,
+            UiStrings.Format("Tip_Startup", OnOff(on)));
+
+    private static string OnOff(bool on) => UiStrings.Get(on ? "Toggle_On" : "Toggle_Off");
+
+    // Off = card fill + hairline border + muted (grey) icon; on = accent fill +
+    // white icon. Set explicitly (rather than via visual states) so toggling off
+    // reliably returns the icon to grey. Brushes are resolved from the active
+    // theme dictionary so they stay correct in light and dark. The icons are now
+    // stroked line glyphs, so the colour drives Stroke rather than Foreground.
+    private void ApplyToggleVisual(ToggleButton toggle, Shape icon, bool on)
+    {
+        toggle.Background = ThemeBrush(on ? "PanelAccent" : "PanelCard");
+        toggle.BorderBrush = ThemeBrush(on ? "PanelAccent" : "PanelStroke");
+        icon.Stroke = on ? _onIconBrush : ThemeBrush("PanelText2");
+    }
+
+    private void OnActualThemeChanged(FrameworkElement sender, object args)
+    {
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, AutoReadSelectionToggle.IsChecked == true);
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, AutoReadCopyToggle.IsChecked == true);
+        ApplyToggleVisual(StartupToggle, StartupIcon, StartupToggle.IsChecked == true);
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, ReadingTextBoxToggle.IsChecked == true);
+    }
+
+    // Pulls a panel brush from the active light/dark theme dictionary by key.
+    private Brush ThemeBrush(string key)
+    {
+        string theme = RootGrid.ActualTheme == ElementTheme.Dark ? "Dark" : "Light";
+        var dictionary = (ResourceDictionary)RootGrid.Resources.ThemeDictionaries[theme];
+        return (Brush)dictionary[key];
+    }
+
+    private void SelectCurrentVoice()
+    {
+        string? currentId = _readAloud.CurrentVoiceId;
+        VoiceCombo.SelectedItem = (VoiceCombo.ItemsSource as IEnumerable<VoiceChoice>)?.FirstOrDefault(c => c.Voice.Id == currentId);
+    }
+
+    private async Task RefreshStartupAsync()
+    {
+        bool enabled = await _startup.IsEnabledAsync();
+        _dispatcher.TryEnqueue(() => SetStartupSwitch(enabled));
+    }
+
+    private void SetStartupSwitch(bool enabled)
+    {
+        _refreshing = true;
+        StartupToggle.IsChecked = enabled;
+        ApplyToggleVisual(StartupToggle, StartupIcon, enabled);
+        SetStartupToggleTooltip(enabled);
+        _refreshing = false;
+    }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Hide();
+
+    private void OnPlayPauseClick(object sender, RoutedEventArgs e)
+    {
+        if (_wait?.Current is { CanCancel: true }) // during a wait the button is Cancel (Batch 29 W2)
+        {
+            _wait.CancelRead?.Invoke();
+            return;
+        }
+
+        _ = _readAloud.PlayPauseOrReadAsync();
+    }
+
+    private void OnSkipBackClick(object sender, RoutedEventArgs e) => _ = _readAloud.SkipBackwardAsync();
+
+    private void OnSkipForwardClick(object sender, RoutedEventArgs e) => _ = _readAloud.SkipForwardAsync();
+
+    private void OnActivityLogClick(object sender, RoutedEventArgs e) =>
+        ActivityLogRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnUploadFileClick(object sender, RoutedEventArgs e) =>
+        UploadFileRequested?.Invoke(this, EventArgs.Empty);
+
+    // Reveal/hide the fine speed slider; the chevron flips and the panel re-fits
+    // its height since the content grew or shrank.
+    private void OnSpeedPillToggled(object sender, RoutedEventArgs e)
+    {
+        bool expanded = SpeedPillToggle.IsChecked == true;
+        SpeedRevealPanel.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        SpeedChevronRotate.Angle = expanded ? 180 : 0;
+        RefitToContent();
+    }
+
+    // Re-measures the content (its height changed) and re-fits the window so the
+    // bottom-right pin stays flush against the work area with nothing clipped.
+    private void RefitToContent()
+    {
+        RootGrid.UpdateLayout();
+        MeasureContent();
+        if (AppWindow.IsVisible)
+        {
+            PositionPanel();
+        }
+    }
+
+    private void OnSpeedSliderChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (_refreshing)
+        {
+            return;
+        }
+
+        var rate = new PlaybackRate(e.NewValue);
+        SpeedPill.Text = rate.ToDisplayLabel();
+        UpdatePresetHighlight(rate);
+        _readAloud.SetSpeed(rate);
+    }
+
+    // A quick-preset chip sets the slider, which flows through OnSpeedSliderChanged
+    // to update the pill, the highlight, and the service. Clicking the active chip
+    // is a no-op (the value doesn't change).
+    private void OnSpeedPresetClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tag } && SpeedPreset.TryParse(tag, out PlaybackRate preset))
+        {
+            SpeedSlider.Value = preset.Value;
+        }
+    }
+
+    // Highlights the chip whose rate matches the current value; the others revert to
+    // the translucent off look. The active chip is solid white with blue, bold text.
+    private void UpdatePresetHighlight(PlaybackRate rate)
+    {
+        foreach (var child in SpeedPresetRow.Children)
+        {
+            if (child is Button { Tag: string tag } button && SpeedPreset.TryParse(tag, out _))
+            {
+                ApplyPresetVisual(button, SpeedPreset.IsCurrent(tag, rate));
+            }
+        }
+    }
+
+    private void ApplyPresetVisual(Button button, bool active)
+    {
+        button.Background = active ? _onIconBrush : (Brush)RootGrid.Resources["HeaderPresetFill"];
+        button.Foreground = active ? (Brush)RootGrid.Resources["HeaderPresetActiveText"] : (Brush)RootGrid.Resources["HeaderText"];
+        button.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
+    }
+
+    private void OnVoiceSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_refreshing || VoiceCombo.SelectedItem is not VoiceChoice choice)
+        {
+            return;
+        }
+
+        _readAloud.SetVoice(choice.Voice.Id);
+    }
+
+    private void OnAutoReadSelectionToggled(object sender, RoutedEventArgs e)
+    {
+        bool on = AutoReadSelectionToggle.IsChecked == true;
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
+        ToolTipService.SetToolTip(AutoReadSelectionToggle,
+            UiStrings.Format("Tip_AutoReadSelection", OnOff(on)));
+        if (!_refreshing)
+        {
+            _readAloud.AutoReadOnSelection = on;
+        }
+    }
+
+    private void OnAutoReadCopyToggled(object sender, RoutedEventArgs e)
+    {
+        bool on = AutoReadCopyToggle.IsChecked == true;
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
+        ToolTipService.SetToolTip(AutoReadCopyToggle,
+            UiStrings.Format("Tip_AutoReadCopy", OnOff(on)));
+        if (!_refreshing)
+        {
+            _readAloud.AutoReadOnCopy = on;
+        }
+    }
+
+    private void OnStartupToggled(object sender, RoutedEventArgs e)
+    {
+        bool on = StartupToggle.IsChecked == true;
+        ApplyToggleVisual(StartupToggle, StartupIcon, on);
+        SetStartupToggleTooltip(on);
+        if (!_refreshing)
+        {
+            _ = ApplyStartupAsync(on);
+        }
+    }
+
+    private void OnReadingTextBoxToggled(object sender, RoutedEventArgs e)
+    {
+        bool on = ReadingTextBoxToggle.IsChecked == true;
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, on);
+        SetReadingTextBoxToggleTooltip(on);
+        if (!_refreshing)
+        {
+            ReadingTextBoxRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void SetReadingTextBoxToggleTooltip(bool on) =>
+        ToolTipService.SetToolTip(ReadingTextBoxToggle,
+            UiStrings.Format("Tip_ReadingTextBox", OnOff(on)));
+
+    /// <summary>Reflects the text box window's actual shown/hidden state (it can
+    /// change from its own ✕, not just this toggle), so the two stay in sync.</summary>
+    public void SetReadingTextBoxOpen(bool open)
+    {
+        _refreshing = true;
+        ReadingTextBoxToggle.IsChecked = open;
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, open);
+        SetReadingTextBoxToggleTooltip(open);
+        _refreshing = false;
+    }
+
+    // Reflects the actual resulting state (enabling can be refused by the user
+    // or policy) and notifies the tray menu so its toggle agrees.
+    private async Task ApplyStartupAsync(bool requested)
+    {
+        bool enabled = await _startup.SetEnabledAsync(requested);
+        _dispatcher.TryEnqueue(() =>
+        {
+            SetStartupSwitch(enabled);
+            StartupStateChanged?.Invoke(this, enabled);
+        });
+    }
+
+    private void OnGeneratingChanged(object? sender, bool generating)
+    {
+        // The argument is ignored on purpose: events from different threads can arrive out
+        // of order, so the dispatcher callback re-reads the service's current value.
+        _dispatcher.TryEnqueue(() => SetGenerating(_readAloud.IsGeneratingAudio));
+    }
+
+    // Swaps the play/pause glyph for a spinner while a read is synthesizing its
+    // first audio (Slice 46). The flag lives in ReadAloudService; this only mirrors it.
+    private void SetGenerating(bool generating)
+    {
+        bool waiting = _wait?.Current is not null; // the wait shows in this same slot, with Cancel (Batch 29 W2)
+        var face = PlayButtonFace.For(generating, waiting, _wait?.Current?.CanCancel == true);
+        PlayPauseRing.IsActive = face.ShowSpinner;
+        PlayPauseRing.Visibility = face.ShowSpinner ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseIcon.Visibility = face.ShowPlayPause ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseCancelIcon.Visibility = face.ShowCancel ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
+        _dispatcher.TryEnqueue(() => ApplyPlaybackState(state));
+
+    // Drives every state-dependent header element together: the play/pause glyph,
+    // the dynamic status line, and the waveform animation. Progress is cleared when
+    // idle so the bar reads empty on Ready.
+    private void ApplyPlaybackState(PlaybackState state)
+    {
+        PlayPauseIcon.Glyph = state == PlaybackState.Playing ? PauseGlyph : PlayGlyph;
+        TextFlow.ForUi(StatusText, _wait?.Current?.Line ?? DescribeStatus(state));
+        SetWaveformPlaying(state == PlaybackState.Playing);
+        if (state == PlaybackState.Idle)
+        {
+            SetProgress(0);
+            SetTiming(new ReadTiming(TimeSpan.Zero, null));
+        }
+    }
+
+    // The status line is composed here (presentation), from the structured read
+    // source the service exposes: clipboard reads name no window; selection reads
+    // name the foreground app when known.
+    private string DescribeStatus(PlaybackState state)
+    {
+        if (UpdateRequired)
+        {
+            return UiStrings.Get("Status_UpdatePaused");
+        }
+
+        var line = ReadStatusLine.For(
+            state, _readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard, _readAloud.CurrentReadWindow?.App);
+        return line.Kind switch
+        {
+            ReadStatusKind.Paused => UiStrings.Get("Status_Paused"),
+            ReadStatusKind.ReadingClipboard => UiStrings.Get("Status_ReadingClipboard"),
+            ReadStatusKind.ReadingSelection => UiStrings.Get("Status_ReadingSelection"),
+            ReadStatusKind.ReadingSelectionFrom => UiStrings.Format("Status_ReadingSelectionFrom", line.App!),
+            _ => UiStrings.Get("Status_Ready"),
+        };
+    }
+
+    private void SetWaveformPlaying(bool playing)
+    {
+        if (_waveform is null)
+        {
+            return;
+        }
+
+        if (playing)
+        {
+            _waveform.Begin();
+        }
+        else
+        {
+            _waveform.Stop();
+        }
+    }
+
+    private void OnProgressChanged(object? sender, double progress) =>
+        _dispatcher.TryEnqueue(() => SetProgress(progress));
+
+    // The progress bar is two star-weighted columns (fill / rest); the thumb sits
+    // at their boundary. Display-only — seeking is out of scope (Decision 21).
+    private void SetProgress(double progress)
+    {
+        double fill = Math.Clamp(progress, 0, 1);
+        ProgressFillColumn.Width = new GridLength(fill, GridUnitType.Star);
+        ProgressRestColumn.Width = new GridLength(1 - fill, GridUnitType.Star);
+    }
+
+    private void OnTimingChanged(object? sender, ReadTiming timing) =>
+        _dispatcher.TryEnqueue(() => SetTiming(timing));
+
+    private void SetTiming(ReadTiming timing) => TimerText.Text = ReadTimingFormatter.Format(timing);
+
+    // The current cursor position in physical screen pixels — the same space as
+    // AppWindow.Position, so drag deltas apply directly without DPI conversion.
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out POINT point);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+}

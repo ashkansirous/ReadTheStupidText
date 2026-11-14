@@ -1,5 +1,5 @@
-src/ReadTheStupidText.App/VoiceModel/*.onnx filter=lfs diff=lfs merge=lfs -text
-src/ReadTheStupidText.App/VoiceModel/*.bin filter=lfs diff=lfs merge=lfs -text
+src/Rtst/ReadTheStupidText.App/VoiceModel/*.onnx filter=lfs diff=lfs merge=lfs -text
+src/Rtst/ReadTheStupidText.App/VoiceModel/*.bin filter=lfs diff=lfs merge=lfs -text
 # Slice 265: the Dino pre-made audio clips and their manifests live in Git LFS (.lfsconfig keeps them out of normal fetches).
 content/dino/*/audio/** filter=lfs diff=lfs merge=lfs -text
 # Slice 350: the print-size Dino pictures (kept exactly as Gemini made them) are LFS objects too, and never part of a book or the store.
