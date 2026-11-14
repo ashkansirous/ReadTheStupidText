@@ -14,6 +14,14 @@ test('Slice 346 review (check2 #7): unquoted values are trimmed and lose a trail
     assert.deepEqual(parseEnv('A=ABC123 \nB=xyz  # note\nC="a # b"\nD=x#y'), { A: 'ABC123', B: 'xyz', C: 'a # b', D: 'x#y' });
 });
 
+test('Slice 346 review pass 5 #3: a quoted value ends at its close quote and a trailing comment is ignored', () => {
+    assert.deepEqual(parseEnv('A="abc" # note\nB=\'x y\'#z\nC="a#b"\nE=""'), { A: 'abc', B: 'x y', C: 'a#b', E: '' });
+});
+
+test('Slice 346 review pass 7 #7: an opening quote that never closes is an error naming the secret, not its value', () => {
+    assert.throws(() => parseEnv('APPLE_IAP_KEY_ID="ABC123'), (error) => /APPLE_IAP_KEY_ID/.test(error.message) && !error.message.includes('ABC123'));
+});
+
 test('Slice 346 E5: the Apple key is read from its *_FILE entry, and the Play key from the DINOREADER_ name', () => {
     const reads = [];
     const { values, missing } = resolveSecrets({ ...PLAIN, APPLE_IAP_KEY_P8_FILE: 'dinoreader/key.p8' }, ROOT, (path) => { reads.push(path); return '-----BEGIN-----\n'; }, () => true);
@@ -63,7 +71,7 @@ test('Slice 346 review #5: a banner around the secret list does not hide it, and
     const banner = ' wrangler 4.0\n-------\n[{"name":"APPLE_IAP_KEY_ID","type":"secret_text"}]\nUpdate available\n';
     assert.equal(namesMissingFrom(banner).includes('APPLE_IAP_KEY_ID'), false);
     assert.equal(namesMissingFrom(banner).length, WANTED.length - 1);
-    assert.deepEqual(parseEnv('A="x y"\nB=\'z\'\nC=plain\nD="odd\nE={"k":1}'), { A: 'x y', B: 'z', C: 'plain', D: '"odd', E: '{"k":1}' });
+    assert.deepEqual(parseEnv('A="x y"\nB=\'z\'\nC=plain\nE={"k":1}'), { A: 'x y', B: 'z', C: 'plain', E: '{"k":1}' });
 });
 
 test('Slice 346 review #6: one missing source means no secret is put at all, and a file named ..foo is inside the root', () => {
@@ -101,6 +109,12 @@ test('Slice 346 review #9: a failed wrangler run prints its exit code and one re
     const leaked = 'Invalid value MIIEvQIBADANBgkqhkiG9w0BAQEFAASC for secret\nsecond line with more MIIEvQIBADANBgkqhkiG9w0BAQEFAASC';
     const text = describeFailure(1, leaked);
     assert.match(text, /^exit code 1: /);
-    assert.ok(!text.includes('MIIEvQ') && !text.includes('second line'));
+    assert.ok(!text.includes('MIIEvQ'));
     assert.equal(describeFailure(7, ''), 'exit code 7');
+});
+
+test('Slice 346 review pass 6 #8: every shown stderr line has the secret values of any length removed', () => {
+    const text = describeFailure(1, 'bad value S3cr3t here\nline two: abc and K\nline three\nline four tail', ['S3cr3t', 'abc\nK']);
+    assert.ok(!text.includes('S3cr3t') && !text.includes('abc') && !/\bK\b/.test(text));
+    assert.ok(text.includes('line three') && !text.includes('line four'));
 });

@@ -318,6 +318,7 @@ function appleToken({ keyId, issuerId, privateKeyPem }) {
 }
 
 function must(response, what) {
+    if (response.ok && response.nonJson === true) throw nonJsonError(what, response); // a 200 HTML page (a gateway or captive portal) is not a success
     if (!response.ok) {
         const detail = response.json?.errors?.[0]?.detail ?? response.json?.errors?.[0]?.title ?? `HTTP ${response.status}`;
         throw new Error(`${what}: ${detail}`);
@@ -425,6 +426,14 @@ async function googleToken() {
     return (await response.json()).access_token;
 }
 
+/** How much of a non-JSON answer an error shows (an HTML 404 of a wrong route, a gateway or captive-portal page all land here). */
+const NON_JSON_HEAD_CHARS = 80;
+
+/** Pure: the error for an answer that has content but is not JSON (status and the first characters, so the cause can be told from a wrong route). */
+function nonJsonError(what, response) {
+    return new Error(`${what}: answer is not JSON (status ${response.status}, first ${NON_JSON_HEAD_CHARS} chars: ${JSON.stringify(response.head ?? '')})`);
+}
+
 async function playRequest(token, method, path, body) {
     const response = await fetch(`${PLAY_API}/${PACKAGE_NAME}/${path}`, {
         method,
@@ -433,7 +442,7 @@ async function playRequest(token, method, path, body) {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const text = await response.text();
-    return { status: response.status, ok: response.ok, json: jsonOrNull(text), empty: text.trim() === '', nonJson: isNonJsonBody(text) };
+    return { status: response.status, ok: response.ok, json: jsonOrNull(text), empty: text.trim() === '', nonJson: isNonJsonBody(text), head: text.slice(0, NON_JSON_HEAD_CHARS) };
 }
 
 /** Pure: where a Play product stands from its GET answer: no buy option (`missing`), a buy option that is not live (`inactive`), or live (`active`). */
@@ -456,7 +465,7 @@ export async function createPlayProduct(token, book, request = playRequest) {
     if (!existing.ok && existing.status !== HTTP_NOT_FOUND) throw new Error(`look up product: HTTP ${existing.status}`);
     // Slice 346 E4: Play's own answers are JSON, a 404 included; an HTML page (a wrong route answers Google's HTML 404) must never read as "no such product", or an existing product would be "created" again.
     // An empty body (a 200 or 204 with nothing in it) is an answer too, as before; only a body that has content and is not JSON is the wrong-route trap.
-    if (existing.nonJson === true) throw new Error(`look up product: HTTP ${existing.status} with a non-JSON answer (wrong route? the read route is oneTimeProducts)`);
+    if (existing.nonJson === true) throw nonJsonError('look up product', existing);
     const stage = existing.ok ? playProductStage(existing.json) : PlayStage.Missing;
     if (stage === PlayStage.Active) return Outcome.Exists;
     if (stage === PlayStage.Inactive) {

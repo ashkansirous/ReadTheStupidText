@@ -28,9 +28,9 @@
     <!-- The own-books cleanup's decision and failure handling (Slice 278 A3): plain .NET, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\OwnBooksCleanupRun.cs" Link="Linked\OwnBooksCleanupRun.cs" />
     <Compile Include="..\..\..\src\Dino\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
-    <!-- Slice 346 E3: the retry pauses for a 403 just after a purchase: plain .NET, tested on the real file. -->
+    <!-- Slice 346 E3: the retry schedule for a 403 on a paid download, and the row's cancel slot: plain .NET, tested on the real files. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\PurchaseLagRetry.cs" Link="Linked\PurchaseLagRetry.cs" />
-    <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\PurchaseStamps.cs" Link="Linked\PurchaseStamps.cs" />
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\DownloadCancelSlot.cs" Link="Linked\DownloadCancelSlot.cs" />
     <!-- The pure rules of the Debug-only forced book update (Slice 225 item 16). -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />
     <!-- The usage session (Slice 250): plain .NET, so its id, sequence and roll are tested on the real file. -->

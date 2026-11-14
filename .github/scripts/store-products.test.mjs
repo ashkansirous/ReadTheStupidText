@@ -201,13 +201,24 @@ test('Slice 346 review #2: a Play product that is created but not active is acti
     assert.ok(log.some((line) => line.startsWith('PATCH onetimeproducts/')) && log.some((line) => line.includes('batchUpdateStates')));
 });
 
+test('Slice 346 review pass 7 #6: a 200 HTML page for the create or the activate is an error, never "Created"', async () => {
+    const html = { status: 200, ok: true, json: null, empty: false, nonJson: true, head: '<html>login</html>' };
+    const request = (failing) => async (_token, method, path) => {
+        if (method === 'GET') return { status: 404, ok: false, json: { error: { code: 404 } } };
+        if (path.startsWith('pricing')) return okJson({ convertedRegionPrices: { US: { price: playUsdPrice() } } });
+        return path.includes(failing) ? html : okJson({});
+    };
+    await assert.rejects(() => createPlayProduct('t', BOOK, request('onetimeproducts/')), /create product: answer is not JSON/);
+    await assert.rejects(() => createPlayProduct('t', BOOK, request('batchUpdateStates')), /activate the buy option: answer is not JSON/);
+});
+
 test('Slice 346 E4: a non-JSON answer to the product lookup (Google\'s HTML 404 of a wrong route) fails loudly and never creates', async () => {
     const log = [];
     const request = async (_token, method, path) => {
         log.push(`${method} ${path.split('?')[0]}`);
-        return { status: 404, ok: false, json: null, empty: false, nonJson: true };
+        return { status: 404, ok: false, json: null, empty: false, nonJson: true, head: '<html>Not Found</html>' };
     };
-    await assert.rejects(() => createPlayProduct('t', BOOK, request), /non-JSON answer/);
+    await assert.rejects(() => createPlayProduct('t', BOOK, request), /not JSON \(status 404, first 80 chars: "<html>Not Found<\/html>"\)/);
     assert.deepEqual(log, ['GET oneTimeProducts/uk.sirous.dinoreader.book.goldilocks']);
 });
 

@@ -37,16 +37,19 @@ export function parseEnv(text) {
     const entries = {};
     for (const line of text.split(/\r?\n/)) {
         const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
-        if (match) entries[match[1]] = unquote(match[2]);
+        if (match) entries[match[1]] = unquote(match[2], match[1]);
     }
     return entries;
 }
 
-/** Pure: a value wrapped in one pair of matching quotes (`NAME="value"`, `NAME='value'`) is the text inside them, so no quote is uploaded to the Worker. */
-export function unquote(raw) {
+/** Pure: a value that starts with a quote is the text up to the matching close quote and everything after it (a trailing comment) is ignored, so no quote is uploaded to the Worker; a value that opens a quote and never closes it is a truncated line and throws (naming the secret, never its value); an unquoted value ends at ` # comment`. */
+export function unquote(raw, name = 'a secret') {
     const trimmed = raw.trim();
     const quote = trimmed[0];
-    if (trimmed.length >= 2 && (quote === '"' || quote === "'") && trimmed.at(-1) === quote) return trimmed.slice(1, -1);
+    const quoted = quote === '"' || quote === "'";
+    const close = quoted ? trimmed.indexOf(quote, 1) : -1;
+    if (quoted && close < 0) throw new Error(`${name} opens a quote it never closes (a truncated line?); fix the secrets file`);
+    if (close > 0) return trimmed.slice(1, close);
     return trimmed.replace(/\s+#.*$/, '').trim(); // an unquoted value ends at ` # comment`; a space or CR left on it would be uploaded
 }
 
@@ -134,17 +137,26 @@ export function parseMode(args) {
     throw new Error(`Unknown arguments: ${args.join(' ')} (use --apply, --verify or nothing for a dry run)`);
 }
 
-/** Pure: what may be printed of a failed wrangler run: its exit code and the first stderr line with every long token-like run replaced, never the stderr as it came (an error that echoes its input would leak a secret fragment). */
-export function describeFailure(status, stderr) {
-    const firstLine = (stderr ?? '').split('\n').find((line) => line.trim() !== '') ?? '';
-    const redacted = firstLine.replace(/[A-Za-z0-9+/=_.-]{12,}/g, '[redacted]').trim().slice(0, 120);
+const REDACTED = '[redacted]';
+const FAILURE_LINES_SHOWN = 3;
+
+/** Pure: `text` with every occurrence of any secret value (and of each line of a multi-line one) of any length replaced, longest first so a short value inside a long one cannot leave a fragment. */
+export function redactValues(text, values) {
+    const pieces = values.flatMap((value) => [value, ...String(value).split(/\r?\n/)]).filter((piece) => piece !== '');
+    return [...new Set(pieces)].sort((a, b) => b.length - a.length).reduce((out, piece) => out.split(piece).join(REDACTED), text);
+}
+
+/** Pure: what may be printed of a failed wrangler run: its exit code and the first few stderr lines, each with the secret values (`values`, any length) and every long token-like run replaced, never the stderr as it came (an error that echoes its input would leak a secret fragment). */
+export function describeFailure(status, stderr, values = []) {
+    const lines = (stderr ?? '').split('\n').filter((line) => line.trim() !== '').slice(0, FAILURE_LINES_SHOWN);
+    const redacted = lines.map((line) => redactValues(line, values).replace(/[A-Za-z0-9+/=_.-]{12,}/g, REDACTED).trim().slice(0, 120)).join(' | ');
     return redacted ? `exit code ${status}: ${redacted}` : `exit code ${status}`;
 }
 
 function wrangler(args, input) {
     const result = spawnSync('npx', ['--no-install', 'wrangler', ...args, '--config', WRANGLER_CONFIG], { input, encoding: 'utf8', shell: process.platform === 'win32', stdio: ['pipe', 'pipe', 'pipe'] });
     if (result.error) return { ok: false, out: '', err: `could not start wrangler: ${result.error.code ?? 'spawn error'}` }; // npx missing: not the secret's fault
-    return { ok: result.status === 0, out: result.stdout ?? '', err: describeFailure(result.status, result.stderr) };
+    return { ok: result.status === 0, out: result.stdout ?? '', err: describeFailure(result.status, result.stderr, input === undefined ? [] : [input]) };
 }
 
 /** Puts the secrets in order and stops at the first failed put (a later put on top of a failed one could leave a mismatched pair on the Worker). Returns { failed, set, notSet } name lists; `putOne(name, value)` answers { ok, err }. */

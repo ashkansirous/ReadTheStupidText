@@ -384,6 +384,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	{
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"{item.Id}-{Guid.NewGuid():N}{PartExtension}");
 		_downloadErrors.TryRemove(item.Id, out _);
+		bool imported = false; // set when THIS run's import finished: a cancel after that still leaves the book on the shelf (Slice 346 review pass 7 #2, #3: no storage lookup inside the catch)
 		try
 		{
 			if ((await InstalledIdsAsync()).Contains(item.Id))
@@ -402,15 +403,16 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 				return DownloadOutcome.Failed;
 			}
 
+			imported = true;
+
 			// The size is recorded only for a copy that is on the shelf. A kill between the import and this line leaves a high-res copy recorded as standard, which the next upgrade pass swaps once more: harmless.
 			RecordPictureSize(item.Id, item.Version, size);
-			await InstallPacksAsync(item, wanted, summed, cancel); // audio is optional: it never fails or rolls back the book
-			return DownloadOutcome.Done;
+			return await FinishAfterImportAsync(item, wanted, summed, cancel);
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
-			// no-fallback: the grown-up cancelled the download
-			return DownloadOutcome.Cancelled;
+			// no-fallback: the grown-up cancelled the download; a book this run imported before the cancel counts as downloaded (Slice 346 review pass 6 #4)
+			return imported ? DownloadOutcome.Done : DownloadOutcome.Cancelled;
 		}
 		catch (Exception ex) when (IsNetworkFailure(ex) || ex is StoreStorageException or StoryPackageException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException)
 		{
@@ -425,15 +427,29 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 	}
 
+	// Once the book is on the shelf it stays: the optional audio packs never fail it, and a cancel during them (or after the import) leaves the book installed, so the row shows it as installed (Slice 346 review pass 5 #5).
+	private async Task<DownloadOutcome> FinishAfterImportAsync(StoreItem item, IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted, SummedProgress summed, CancellationToken cancel)
+	{
+		try
+		{
+			await InstallPacksAsync(item, wanted, summed, cancel); // audio is optional: it never fails or rolls back the book
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the book is imported; the grown-up's cancel only stops the optional audio
+		}
+
+		return DownloadOutcome.Done;
+	}
+
 	/// <summary>
-	/// Slice 346 E3: a 403 "purchase not valid" soon after this session's purchase of the book is the store lagging, so the fetch is tried again after growing pauses (<see cref="PurchaseLagRetry"/>) while the
-	/// row keeps showing its progress; only the last 403 (or a 403 for a book not just bought) reaches the caller. Nothing is reported for a retried 403.
+	/// Slice 346 E3 (design changed after review pass 5): a 403 "purchase not valid" on a paid download is the store lagging behind the purchase (the app only offers a download for a book the store already says is owned),
+	/// so the fetch is tried again on the fixed schedule of <see cref="PurchaseLagRetry"/> (3, 6, 10, 15, 20, 30 s) while the row shows its wait; only the last 403 reaches the caller. Nothing is reported for a retried 403.
 	/// </summary>
 	private Task<PictureSize> FetchBookPackageRetryingLagAsync(StoreItem item, string part, SummedProgress summed, IProgress<bool>? waitingForStore, CancellationToken cancel) =>
 		PurchaseLagRetry.RunAsync(
 			() => FetchBookPackageAsync(item, PictureSizeFor(item), part, summed, cancel),
-			ex => ex is StoreRefusedException { StatusCode: System.Net.HttpStatusCode.Forbidden }, // the Worker's 403 is its purchase-not-valid refusal (Slice 357: the status is the code); every other refusal or failure goes to the caller at once, and the book's stamp (this session's purchase) gates the retry; only a refusal that reaches the caller is reported (purchase_not_valid)
-			() => sales.Purchases.SinceBought(item.Products),
+			ex => waitingForStore is not null && IsPurchaseNotValid(ex), // opt-in: only a caller that shows the wait (with Cancel) retries; restore, updates and tests fail at once as on main. Every other refusal or failure goes to the caller at once; only a refusal that reaches the caller is reported (purchase_not_valid)
 			Task.Delay,
 			waiting => waitingForStore?.Report(waiting),
 			cancel);
@@ -872,7 +888,11 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 	// Slice 346 E2: a refused paid download leaves its own trace; 403 is the store saying the purchase is not valid, any other refusal (402 no proof, 400) is download_refused.
 	private static string RefusalReason(Exception ex) =>
-		ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.Forbidden } ? FallbackReason.PurchaseNotValid : FallbackReason.DownloadRefused;
+		IsPurchaseNotValid(ex) ? FallbackReason.PurchaseNotValid : FallbackReason.DownloadRefused;
+
+	// The one rule for "the store says this purchase is not valid": the Worker's 403 (Slice 357: the status is the code), used by the retry and by the reason reported.
+	private static bool IsPurchaseNotValid(Exception ex) =>
+		ex is StoreRefusedException { StatusCode: System.Net.HttpStatusCode.Forbidden };
 
 	private static bool IsUnreachable(Exception ex) =>
 		ex is HttpRequestException or TimeoutException or OperationCanceledException or IOException { InnerException: System.Net.Sockets.SocketException };

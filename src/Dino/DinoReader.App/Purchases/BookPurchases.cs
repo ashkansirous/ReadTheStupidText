@@ -13,7 +13,6 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private PurchaseSnapshot _snapshot = PurchaseSnapshot.Empty;
-    private readonly PurchaseStamps _stamps = new();
 
     /// <summary>Raised after a read that changed the snapshot, on whatever thread ran it; a subscriber that touches UI marshals itself.</summary>
     public event EventHandler? Changed;
@@ -60,21 +59,9 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
 
         Debug.WriteLine($"Dino Reader purchase of {productId} ended: {outcome}");
-        if (outcome == BuyOutcome.Bought)
-        {
-            _stamps.NoteBought(productId); // Slice 346 E3: the store can lag, so a 403 soon after this is retried
-        }
-        else if (outcome == BuyOutcome.Pending)
-        {
-            _stamps.NotePending(productId); // a slow payment of this run: the listener's later "owned" is its completion and is stamped then
-        }
-
         await ReadAsync(items, restore: false, interactive: false, cancel);
         return outcome;
     }
-
-    /// <summary>How long ago this session saw a purchase of any of the products complete, or null when it did not or the last one is older than <see cref="PurchaseLagRetry.Window"/> (memory only: a purchase made in an earlier run is not "just bought").</summary>
-    public TimeSpan? SinceBought(IEnumerable<string> products) => _stamps.SinceBought(products);
 
     /// <summary>Opens the store's redeem screen; false when there is none.</summary>
     public async Task<bool> RedeemCodeAsync()
@@ -213,7 +200,6 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
 
         PurchaseSnapshot before = _snapshot;
-        _stamps.NoteRead(read.Owned, read.Pending); // only a Pending purchase of this run that is now owned is stamped; a Restore or a sync finding an older purchase stamps nothing
         Interlocked.Exchange(ref _readAt, Stopwatch.GetTimestamp());
         _snapshot = read with { Prices = BookAccess.KeepPrices(before.Prices, read.Prices) };
 #if DEBUG

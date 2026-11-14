@@ -1,56 +1,50 @@
 namespace DinoReader;
 
 /// <summary>
-/// Slice 346 E3: the store can lag behind a purchase the grown-up just made, so the Worker's 403 "purchase not valid" in the first minutes is retried after a pause instead of failing the book at once.
-/// The Worker keeps an "owns nothing" answer for 30 s (<c>NOT_OWNED_CACHE_MS</c> in worker/entitlements/gate.ts, keyed by the proof), so every pause is longer than that: each retry then reaches the store
-/// instead of the cached 403. Pure: the caller says how long ago the purchase completed and how many retries it already made.
+/// Slice 346 E3: the store can lag behind a purchase the grown-up just made, so the Worker's 403 "purchase not valid" on a paid download is retried on a short fixed schedule instead of failing the
+/// book at once. The app only offers a download for a book the store already says is owned, so a 403 there is store lag; it is retried every time, with no memory of when the purchase was made.
+/// Pure: the caller passes the work, the delay and what to show while waiting.
 /// </summary>
 public static class PurchaseLagRetry
 {
-    /// <summary>After this long since the purchase a 403 is taken at its word.</summary>
-    public static readonly TimeSpan Window = TimeSpan.FromMinutes(5);
+    /// <summary>The fixed pauses before each retry (seconds 3, 6, 10, 15, 20, 30: about 84 s in all); after the last one the refusal goes to the caller.</summary>
+    public static readonly IReadOnlyList<TimeSpan> Pauses =
+        [TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(6), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(30)];
 
-    /// <summary>The Worker's negative cache (30 s) plus a margin; every retry waits this long.</summary>
-    public static readonly TimeSpan Pause = TimeSpan.FromSeconds(35);
+    /// <summary>The number of retries after the first try.</summary>
+    public static int MaxRetries => Pauses.Count;
 
-    /// <summary>Seven pauses of 35 s: the last retry starts about 245 s after the first 403, inside <see cref="Window"/>.</summary>
-    public const int MaxRetries = 7;
-
-    /// <summary>The pause before the next try, or null when the purchase is unknown or older than <see cref="Window"/> or the tries are used up.</summary>
-    public static TimeSpan? NextPause(TimeSpan? sincePurchase, int retriesDone)
-    {
-        if (sincePurchase is not { } since || since > Window || retriesDone < 0 || retriesDone >= MaxRetries)
-        {
-            return null;
-        }
-
-        return Pause;
-    }
+    /// <summary>The pause before the next try, or null when the tries are used up.</summary>
+    public static TimeSpan? NextPause(int retriesDone) =>
+        retriesDone >= 0 && retriesDone < Pauses.Count ? Pauses[retriesDone] : null;
 
     /// <summary>
-    /// Runs <paramref name="attempt"/>; when it throws what <paramref name="isLag"/> accepts and the purchase is still inside the window, tells <paramref name="waiting"/> (true), waits the pause with
+    /// Runs <paramref name="attempt"/>; when it throws what <paramref name="isLag"/> accepts and a retry is left, tells <paramref name="waiting"/> (true), waits the pause with
     /// <paramref name="delay"/> and tries again, then tells it false once the wait is over. Any other exception, or the last one, goes to the caller.
     /// </summary>
-    public static async Task<T> RunAsync<T>(Func<Task<T>> attempt, Func<Exception, bool> isLag, Func<TimeSpan?> sincePurchase, Func<TimeSpan, CancellationToken, Task> delay, Action<bool> waiting, CancellationToken cancel)
+    public static async Task<T> RunAsync<T>(Func<Task<T>> attempt, Func<Exception, bool> isLag, Func<TimeSpan, CancellationToken, Task> delay, Action<bool> waiting, CancellationToken cancel)
     {
         for (int retries = 0; ; retries++)
         {
+            TimeSpan pause;
             try
             {
                 return await attempt();
             }
-            catch (Exception ex) when (isLag(ex) && NextPause(sincePurchase(), retries) is not null)
+            catch (Exception ex) when (isLag(ex) && NextPause(retries) is { } next)
             {
-                // no-fallback: a refusal just after the purchase is the store lagging; it is retried, and only the refusal that finally reaches the caller is reported by the caller
-                waiting(true);
-                try
-                {
-                    await delay(Pause, cancel);
-                }
-                finally
-                {
-                    waiting(false);
-                }
+                // no-fallback: a refusal that may be the store lagging is retried; only the refusal that finally reaches the caller is reported by the caller
+                pause = next;
+            }
+
+            waiting(true);
+            try
+            {
+                await delay(pause, cancel);
+            }
+            finally
+            {
+                waiting(false);
             }
         }
     }
