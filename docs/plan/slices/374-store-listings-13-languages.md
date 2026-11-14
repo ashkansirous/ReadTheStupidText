@@ -1,7 +1,7 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
 **Product:** Shared
 
-*Partly built (wave 2026-11-14, PR #1110): Google Play (both apps, 15 locales) and App Store (Dino 1.81.1, RTST 1.76.1, 14 locales, Farsi not offered by Apple; versions not submitted) pushed and read back equal. Parked: the Microsoft Store part (item 4 and Partner Center in item 5) waits for a Partner Center submission credential (an Entra app with `MS_SUBMISSION_TENANT_ID`, `MS_SUBMISSION_CLIENT_ID`, `MS_SUBMISSION_CLIENT_SECRET`), which only the user can create, or an interactive session with the user's signed-in Chrome.*
+*Partly built (wave 2026-11-14, merged as PR #1110 (7e709c31); parked, see plan.md): Google Play (both apps, 15 locales) and App Store (Dino 1.81.1, RTST 1.76.1, 14 locales, Farsi not offered by Apple; versions not submitted) pushed and read back equal. Parked: the Microsoft Store part (item 4 and Partner Center in item 5) waits for a Partner Center submission credential (an Entra app with `MS_SUBMISSION_TENANT_ID`, `MS_SUBMISSION_CLIENT_ID`, `MS_SUBMISSION_CLIENT_SECRET`), which only the user can create, or an interactive session with the user's signed-in Chrome.*
 
 *Earlier (history): drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.* Moved back to `planned` by the 2026-11-13-1149 feedback loop (park reason kept here); a night run is denied again unless the user adds an autoMode allow line for store listing pushes (see that note's *Waiting on the user*).
 

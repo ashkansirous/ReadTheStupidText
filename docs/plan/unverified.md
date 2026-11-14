@@ -502,6 +502,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 371: Folders grouped by product ([slice](slices/371-folders-by-product.md))
+- **Device:** iOS builds of both apps from the new folders (no Mac; CI builds them on the PR or at the first release).
+- **Device:** Windows VM run (`tools/desktop-vm`) from the new paths.
+- **Release:** first merge's release run ids through the moved paths (Verification line 4).
+
 ### Slice 370: Give the shared code a neutral name ([slice](slices/370-rename-shared-code.md))
 
 - iOS simulator upgrade test (old build, setting, pack, install the renamed build over it): no Mac available.
