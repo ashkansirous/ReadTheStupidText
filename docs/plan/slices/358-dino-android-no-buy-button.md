@@ -191,11 +191,14 @@ told apart, and the release build logs nothing about products. Only a Play-insta
 - [x] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
 - [x] Release it, re-run on the S21 from Play: both sides empty (above).
 - [ ] Re-run on the S21 once the products are more than 24 h old (after 2026-11-15), to rule the catalog lag in or out.
+- [ ] Once the cause is found and paid books show prices, remove the probe (`ProbeProductId`, `ProbeUnknownIdAsync`).
 - [ ] Add one made-up product id to the query and log whether it comes back in `unfetchedProductList`; if it does not either, the
   unfetched list says nothing and Play is not serving this app's catalog at all.
+  Built: the real query and `BuyAsync`'s lookup are unchanged. Only when the final real answer is Ok with no product details, `AndroidPurchases.ProbeUnknownIdAsync` sends one more query holding only `ProbeProductId`, not awaited, and logs `product details (probe): code=... debug=... asked=1 got=... unfetched=... [id:status,...]`. Its answer never reaches prices, `_details` or the UI, and a throw is caught and logged, so it cannot change or delay what `QueryPricesAsync` returns. iOS needs no twin because `IosPurchases` already logs StoreKit's invalid product ids (`InvalidProducts`), which reports unknown ids.
 
 ## Not yet verified
 
 - The paid books show a price and Buy on a Play-installed phone (blocked by *Open* above).
+- The probe line on a Play-installed S21 (1.128.x+): whether Play lists the made-up id in unfetchedProductList.
 - iOS and Windows strips are only compiled, not run.
 - The translations of `Store_NotForSaleNow` are machine drafts.
