@@ -2,16 +2,10 @@
 **Product:** Dino
 
 *In progress (wave 2026-11-14, night 2026-11-14-1547 wave 4: audio-backed simulator run), draft PR.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack), an audio-backed run and the iPhone 8 run are open.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
-
-**Touches:** `.maestro/dino/ios-read-audio.yaml` (new), `.github/workflows/dinoreader-ios-sim.yml`, `.github/scripts/ios-sim-*.sh` (only if the flow needs a parameter), `.github/scripts/ship-targets.test.mjs` (only if a new test-only file needs an exclusion), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`
-
-## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
-
-- No test hook installs a real audio pack offline (TestStore.cs:122-131 builds a 4-byte fake clip for gingerbread-man `sv` only; `import-test-book` imports text only), so the audio-backed run uses the live store: a new flow `.maestro/dino/ios-read-audio.yaml` with `test-store mode=off`, which fetches a real `audio-<lang>-v<n>.zip` through `/api/stories` (AudioPackStore.cs:597), then 3 rounds of read, Back, re-read, background, as the Not yet verified line asks. The workflow gets a `flow` dispatch input (default stays the current flow).
-- Production-only analytics: the run is a Debug simulator build; the builder confirms from the code that a Debug build sends no usage event or crash report, before the first run. The run reads the live store and downloads one pack (read only, no live state changed).
-- The run is dispatched on the branch (`gh workflow run dinoreader-ios-sim.yml --ref fix/244-sim-audio -f flow=...`) before merge; its result goes into item 6.
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
+
+**Touches (wave 4, audio-backed simulator run):** `.maestro/dino/ios-read-audio.yaml` (new), `.github/workflows/dinoreader-ios-sim.yml`, `.github/scripts/ios-sim-*.sh` (only if the flow needs a parameter), `.github/scripts/ship-targets.test.mjs` (only if a new test-only file needs an exclusion), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`
 
 **Depends on:** none. Slice 243 adds the dSYM and log lines that would prove a cause; this slice does not wait for it
 and works from the evidence below plus reproduction.
@@ -22,6 +16,23 @@ and works from the evidence below plus reproduction.
 `src/Shared/Sirous.Reading.Application/**/SpeechTextChunker.cs`, `tests/Dino/DinoReader.Tests/**`, `tests/Shared/Shared.Tests/**`,
 `src/Dino/DinoReader.App/CLAUDE.md`, `.maestro/dino/**`, `.maestro/README.md`, `.github/workflows/dinoreader-ios-sim.yml` (new),
 `.github/scripts/ios-sim-*.sh` (new), `.github/CLAUDE.md`, `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`; widened after review pass 2 (coordinator, 2026-11-14): `.github/workflows/release-rtst.yml` and `.github/workflows/release-dino.yml` (path exclusions for the new test-only files), `.github/scripts/ship-targets.test.mjs` (its `RTST_EXTRA_NEGATIONS` list names the two new exclusions)
+
+## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
+
+- No test hook installs a real audio pack offline (TestStore.cs:122-131 builds a 4-byte fake clip for gingerbread-man `sv` only; `import-test-book` imports text only), so the audio-backed run uses the live store: a new flow `.maestro/dino/ios-read-audio.yaml` with `test-store mode=off`, which fetches a real `audio-<lang>-v<n>.zip` through `/api/stories` (AudioPackStore.cs:597), then 3 rounds of read, Back, re-read, background, as the Not yet verified line asks. The workflow gets a `flow` dispatch input (default stays the current flow).
+- Production-only analytics: the run is a Debug simulator build; the builder confirms from the code that a Debug build sends no usage event or crash report, before the first run. The run reads the live store and downloads one pack (read only, no live state changed).
+- The run is dispatched on the branch (`gh workflow run dinoreader-ios-sim.yml --ref fix/244-sim-audio -f flow=...`) before merge; its result goes into item 6.
+- The clip proof is in the flow, not the log (review `reviews/s244c-high.md` #2-4): each round waits until the sound pill `ReadingAudioStatus` is gone (shown only while a piece has no clip), so a device-voice read fails the flow. The log-count step stays warning-only: the hook log is Console output on iOS and the rolling log file is not written in a Debug build.
+- Skipped #5 (`reviews/s244c-high.md`): "The 6 s 'let the clip play' wait is an optional extendedWaitUntil on a never-existing id used as a sleep" - low, triaged out by the caller.
+- Skipped #6 (`reviews/s244c-high.md`): "Depends on live store listing three-little-pigs with a Farsi pack; nothing checks it" - low, triaged out; the pill wait now fails the flow if no pack installs.
+- Skipped #8 (`reviews/s244c-high.md`): "`log show --last 60m` not scoped to flow start" - low, triaged out by the caller.
+- Applied #1 (`reviews/s244c-medium.md`): after the 6 s play wait each round now also has `assertNotVisible: id ReadingAudioStatus`.
+- Skipped #2 (`reviews/s244c-medium.md`): ""Check the pack clips played" only warns on zero clip lines; never fails the job." - repeat of high #2/#3: a Debug iOS build writes no readable app log (TestHookLog.iOS.cs:6 writes Console only), so the proof is the pill, not the log.
+- Skipped #3 (`reviews/s244c-medium.md`): "extendedWaitUntil on invented id `PremadeAudioNeverShown`, optional, used as a 6 s sleep; no check a clip is playing." - low, triaged out by the caller; the new pill assertion after it is the clip check.
+- Skipped #4 (`reviews/s244c-medium.md`): "Depends on live store listing `three-little-pigs` with Farsi pack; header hard-codes audio-fa-v3.zip (~1.6 MB), stale on next bump" - low, triaged out by the caller.
+- Skipped #5 (`reviews/s244c-medium.md`): "Default flow path duplicated in input default and `|| '...'` fallback of FLOW env; can drift." - low, triaged out by the caller.
+- Skipped #6 (`reviews/s244c-medium.md`): "Log window is `log show --last 60m`, not scoped to flow start" - low, triaged out by the caller.
+- Skipped #7 (`reviews/s244c-medium.md`): "Input validation rejects any `..` and does not check leading `-` or whitespace; failure appears far from cause." - low, triaged out by the caller.
 
 ## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
 
