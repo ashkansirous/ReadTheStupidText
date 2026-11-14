@@ -1,7 +1,7 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
-*Built in wave 4 (2026-11-14), PR #1147; open: the iPhone 8 run, item 6.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack); simulator run 3 (audio-backed) passed 2026-11-14.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*Wave 4 (2026-11-14) merged as PR #1147 (8f0b3962); open: the iPhone 8 run, item 6.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack); simulator run 3 (audio-backed) passed 2026-11-14.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
@@ -202,6 +202,7 @@ Files are outside the repo (`D:/ReadTheStupidText-worktrees/reviews/`); all read
 - Skipped #1 (`reviews/s244c-check.md`): "but the code does exit 1. Fix the comment." - low (stale comment); the run and the failing clip count settle it.
 - Skipped #2 (`reviews/s244c-check.md`): "`notVisible: ReadingAudioStatus` passes before the pill renders, so a device-voice read can pass." - third round on the pill wait; the run plus the failing clip count settle it.
 - Skipped #3 (`reviews/s244c-check.md`): "the 6 s wait on a never-present id is a sleep, not an assertion" - low.
+- After merge (2026-11-14): two runs of the audio-backed flow on main failed for harness reasons, no app crash and no crash report: 43649148563 (StoryTile 60 s wait timed out after skip-first-run) and 43650858536 (Maestro `XCUITestServerError` Unreachable). The slice stays open: the iPhone 8 run, item 6.
 - Skipped #4 (`reviews/s244c-check.md`): "`# expect-log:` lines are stripped on iOS; only the log-count step enforces markers." - low.
 - Skipped #5 (`reviews/s244c-check.md`): "fetch-audio-pack is fire-and-forget; a slow download shows as a flow failure." - low.
 - Skipped #6 (`reviews/s244c-check.md`): "is skipped when an earlier step fails, leaving the app in Farsi" - low.
@@ -218,6 +219,7 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 
 ## Not yet verified
 
+- The audio-backed flow `ios-read-audio.yaml` passes reliably on main: after the merge two runs on main failed for harness reasons, with no app crash (run 43649148563: the StoryTile 60 s wait timed out after skip-first-run; run 43650858536: Maestro `XCUITestServerError` Unreachable). The run on the branch (43646782384) passed.
 - The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt, the `.ips` file naming, the Jetsam `largestProcess` field.
 - No new NSDictionary or `0xdead10cc` crash for a week after release (`tools/crashes`).

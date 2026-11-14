@@ -1,7 +1,7 @@
 # Slice 378 — Build warnings gate: current GitHub Actions, warnings that fail the build, and the Android 9-11 scan crop bug
 **Product:** Shared
 
-*Built wave 4 (night 2026-11-14-1547), PR #1146, not merged. Device run 2026-11-14 on emulator-5554 passed the two checks that touch this slice; the API 28-30 scan check and the first release run are not yet verified.*
+*Built wave 4 (night 2026-11-14-1547), merged as PR #1146 (255bda6d). Device run 2026-11-14 on emulator-5554 passed the two checks that touch this slice; the API 28-30 scan check and the first release run are not yet verified.*
 
 **Touches:** `src/**/*.cs` and `tests/**/*.cs` (only to fix warnings on the gate list, item 4), `.github/actionlint.yaml`, `.github/workflows/*.yml`, `.github/dependabot.yml` (new), `.github/CLAUDE.md`, `Directory.Build.props`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidPixelImageLoader.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidSpeechReader.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/AndroidCrashHooks.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/IDocumentScanner.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Ocr/IBuiltInTextRecognizer.cs`, `tests/Shared/Shared.Tests/VoicePackSetupTests.cs`, `tests/Shared/Shared.Tests/KokoroNanRescueTests.cs`, `tests/Dino/DinoReader.Tests/AudioPackStoreTests.cs`, `tests/Dino/DinoReader.Tests/BackCoverPictureTests.cs`, `tests/Dino/DinoReader.Tests/BookBuilderTests.cs`, `tests/Dino/DinoReader.Tests/LanguageAttributionTests.cs`, `tests/Dino/DinoReader.Tests/RecordSplitTests.cs`, `tests/Dino/DinoReader.Tests/UsagePlaybackTests.cs`, `docs/plan/slices/378-build-warnings-gate.md`
 
