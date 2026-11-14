@@ -1,20 +1,37 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
-*Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*In progress (wave 2026-11-14), draft PR.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
 **Depends on:** none. Slice 243 adds the dSYM and log lines that would prove a cause; this slice does not wait for it
 and works from the evidence below plus reproduction.
-**Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/Story*.cs`,
-`src/DinoReader.App/Platforms/iOS/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`,
-`src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs`,
-`src/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader*.cs`,
-`src/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Sirous.Reading.Application/**/SpeechTextChunker.cs`,
-`tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches (current layout after Slice 371, set at claim 2026-11-14):** `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `src/Dino/DinoReader.App/Reading*.cs`, `src/Dino/DinoReader.App/Story*.cs`,
+`src/Dino/DinoReader.App/Platforms/iOS/**`, `src/Dino/DinoReader.App/Testing/**`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/**`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader*.cs`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Shared/Sirous.Reading.Mobile.Shared/**/MobileVoicePackService.cs`,
+`src/Shared/Sirous.Reading.Application/**/SpeechTextChunker.cs`, `tests/Dino/DinoReader.Tests/**`, `tests/Shared/Shared.Tests/**`,
+`src/Dino/DinoReader.App/CLAUDE.md`, `.maestro/dino/**`, `.maestro/README.md`, `.github/workflows/dinoreader-ios-sim.yml` (new),
+`.github/scripts/ios-sim-*.sh` (new), `.github/CLAUDE.md`, `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`
 
-**Touches, widened at claim (premise check, 2026-11-01 night):** also `src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs` and `IosTextLineSource.cs` (named; covered by `Platforms/iOS/**`), `src/Sirous.Reading.Mobile.Shared/**/MobileVoicePackService.cs`, `src/Sirous.Reading.Mobile.Shared/Platforms/iOS/IosBackgroundDownloader.cs`, `.maestro/dino/**` (an Android emulator flow), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`.
+## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
+
+Premise check on origin/main: nothing boots an iOS simulator or runs a flow on iOS (`dinoreader-ios.yml:127,133` only compile and
+bundle-check the `iossimulator-arm64` app; zero Actions artifacts, Batch 8). `.maestro/README.md:42` says the flows are written
+platform-neutral but run only on a Mac simulator "later". Dino has `AutomationId`s and an iOS test-hook entry (launch arguments as
+user defaults, `dino-test://`). Some flows use Android-only ids (`android:id/button2`). The repo is public, so macOS minutes are free
+(`.github/CLAUDE.md:5`); the user allowed simulator CI runs for this slice (User answers 2026-11-01).
+
+**Design (item 1, simulator flow):** a new `workflow_dispatch`-only workflow `.github/workflows/dinoreader-ios-sim.yml` on the same
+macOS image and toolchain as `dinoreader-ios.yml`: build the Debug `iossimulator-arm64` Dino app, boot one iPhone simulator (the
+smallest-memory iPhone the image has), install the app, install Maestro, run one platform-neutral flow
+(`.maestro/dino/ios-read-back-reread-background.yaml`: open a book through the test hook, read, Back mid-sentence, read again,
+change page while reading, background and return, three times), then save the simulator's crash reports
+(`~/Library/Logs/DiagnosticReports`) and a filtered `log show` of the app into the job log and step summary. No artifacts. The job
+fails when the flow fails or a crash report for the app appears. Its shared boot/install/Maestro steps go into
+`.github/scripts/ios-sim-*.sh` so Slice 291's store screenshots reuse them. Run it a few times (not a loop) and write what it shows
+into item 6 (proven vs likely). The iPhone 8 run stays in *Not yet verified*.
 
 ## Claim notes (coordinator, night 2026-11-01-2355)
 
