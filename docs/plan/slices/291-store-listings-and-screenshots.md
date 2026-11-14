@@ -7,6 +7,21 @@
 
 **Touches, widened at claim (2026-11-14):** also `.github/scripts/store-listings.mjs` and its test (item 3: RTST English through the release listing script, as Slice 193 did for German), `.github/workflows/store-submit.yml` (only if the RTST English line needs it), `tools/emulator/store-screenshots.ps1` (new), `.maestro/dino/store-shot-*.yaml` and `.maestro/rtst/store-shot-*.yaml` (new), `docs/store-listings/screenshots/**` (new: the PNGs). Widened after review pass 1 (coordinator, 2026-11-14; parallel-check showed no other live work): `.maestro/dino/needs-file/store-shot-*.yaml` and `.maestro/rtst/needs-file/store-shot-*.yaml` (the flows moved there so normal runs skip them), `tools/emulator/test-store-screenshots.ps1` (new), `tools/emulator/lint-flows.ps1` (one line: skip `store-shot-*` in the contact-sheet listing check).
 
+## Claim notes (night 2026-11-14-1547 wave 4: iOS and tablet shots)
+
+*Built 2026-11-14 (wave 4), PR #1148, not merged. The iOS shots are not yet taken (the workflow can be dispatched only after merge); Play phone and tablet sets are done.*
+
+- Scope: item 5's iPhone 6.9"/6.5" and iPad 13" shots of both apps from a new `store-screenshots.yml` (macOS simulator, dispatch-only, reusing `.github/scripts/ios-sim-*.sh` from Slice 244; plan-not-needed: 244), and the Play tablet shots on the `RTST_Tablet` AVD (`tools/emulator/new-avd.ps1 -Tablet`). The Microsoft Store desktop shot and the RTST control-panel retake stay open (Hyper-V VM needs over 8 GB free memory; 3.9 GB at the claim). Item 6 (uploads) waits for complete per-store sets, as decided in wave 3.
+- **Touches, widened at claim (wave 4):** also `.github/scripts/ios-sim-*.sh` (only to add a parameter, the 244 flow keeps working), `.maestro/dino/store-shot-ios-*.yaml` and `.maestro/rtst/store-shot-ios-*.yaml` (new), `.maestro/*/needs-file/store-shot-tablet.yaml`, `.github/scripts/ship-targets.test.mjs` (exclusions for new test-only files), `.github/workflows/release-rtst.yml` and `release-dino.yml` (path exclusions only), `tools/emulator/new-avd.ps1`, `tools/emulator/common.ps1`, `tools/emulator/test-contact-sheet.ps1` (one line: skip `store-shot-*` flows when listing taken shots; CI selftests failure on PR 1148). (Corrected 2026-11-14: this note first said the shots stay outside the repo. The phone shots are committed under `docs/store-listings/screenshots/`, so the tablet shots are too. The iOS shots come from the CI job as a draft release, handed over the way `.github/CLAUDE.md` allows for Actions storage.)
+- Tablet shots (review `reviews/s291c-high.md` #7, scope note, answered): the Play tablet flows, `Get-StoreShotInstance` and `new-avd.ps1 -Tablet` already exist on main, so wave 4 adds no tablet code; the tablet shots are a device run after the reviews (`install-debug.ps1 -App <app> -Instance tablet`, then `store-screenshots.ps1 -App <app> -Form tablet`).
+- Applied (`reviews/s291c-high.md`): #1 (`|| true` on the pattern grep in `ios-sim-boot.sh`), #2 (no `run_flow` after a failed `prepare_flow`), #3 (Dino Books-tab wait), #4 (draft tag now includes `GITHUB_RUN_ATTEMPT`). (`reviews/s291c-medium.md`): #1 (collect shots from `$PWD` too), #3 (RTST waits for `PackStatusLabel` before `notVisible`). Read: high 7/7, medium 5/5.
+- Skipped #5 (`reviews/s291c-high.md`): "the RTST supertonic-3 pack is downloaded three times per run" - low, and the dispatch-only job's cost is accepted; no change to the clearState flow.
+- Skipped #6 (`reviews/s291c-high.md`): "waiting on `text: Read any text aloud with natural voices.*` depends on how ReadingText splits or highlights spans" - low, speculative; the ReadingText id wait stays first and the text match is the intended check.
+- Skipped #2 (`reviews/s291c-medium.md`): "After openLink to the grown-up Books tab, waits on StoryTile, which is already visible on the shelf, so it can pass before navigation; the books shot may catch a transition." - third round on this wait; the first CI run and a look at each shot decide.
+- Skipped #4 (`reviews/s291c-medium.md`): "If ios-sim-boot.sh fails after creating the simulator, udid is empty and cleanup is skipped; shots-<label> simulators leak on reused runners." - low; CI runners are fresh macOS VMs.
+- Skipped #5 (`reviews/s291c-medium.md`): "'Hand the shots over' runs with if: always(), so a partial set (one device) is published as a draft with no incomplete marker." - low; the summary lists every problem and the shots go to a draft only.
+- Parallel with Slice 378 (both edit `.github/workflows/*.yml`): accepted, because 378 changes only `uses:` version lines and `useConfigFile`/`track` inputs, while this slice adds a new workflow; a later merge takes the other side's lines mechanically. The new workflow uses the action majors 378 moves to.
+
 ## Claim notes (wave 2026-11-14, night 2026-11-14-1547 wave 3)
 
 Premise check on origin/main:
@@ -112,11 +127,35 @@ Premise check on origin/main:
 - Skipped #2 (`reviews/s291-check4.md`): "Offline emulator or pack server error keeps the banner visible" - low; it fails loudly and repeats check3 #4.
 - Skipped #3 (`reviews/s291-check4.md`): "fails if the banner shows for less than a poll" - low; after clearState a download runs for minutes, so it is not reachable on the emulator path.
 
+## From review (`reviews/s291c-check2.md`)
+
+- Applied #1 (the iOS relaunch no longer requires PackStatusLabel visible; only the notVisible wait stays).
+- Skipped #2 (`reviews/s291c-check2.md`): "with no set -e and pipeline status unchecked" low; a failed boot fails loudly at install.
+- Skipped #3 (`reviews/s291c-check2.md`): "collect_shots also searches $PWD for <name>.png, names reused across the three devices" low; CI runners are fresh and the size check catches a wrong picture.
+- Skipped #4 (`reviews/s291c-check2.md`): "publishes the draft release even when the shots step failed" low; the release is a draft the coordinator looks at.
+- Skipped #5 (`reviews/s291c-check2.md`): "After openLink dino-test://enter-grown-up?tab=books the wait is on StoryTile" low; already deferred to the first CI run.
+- Skipped #6 (`reviews/s291c-check2.md`): "If boot fails partway, udid is empty and shoot_device returns without simctl delete" low; matters only on reused runners.
+
+## From review (`reviews/s291c-check3.md`)
+
+- Skipped #1 (`reviews/s291c-check3.md`): "One 300 s wait covers the pack download, repeated per fresh simulator" this cost was accepted: each device is a fresh install, and the wait proves the pack is in before the shots.
+- Skipped #2 (`reviews/s291c-check3.md`): "After relaunch, notVisible wait on PackStatusLabel passes at once" the pack is already installed after the relaunch, so no banner is expected. The Settings shot waits on its own element (line ~85).
+- Skipped #3 (`reviews/s291c-check3.md`): "failed prepare_flow does not skip run_flow" this is not true of the code: `ios-sim-store-shots.sh:126-128` is an `if ! prepare_flow ... elif run_flow` chain (applied in high #2). The cleanup runs after each device (`:134-135`).
+- Skipped #4 (`reviews/s291c-check3.md`): "if: always() hand-over publishes a draft release with partial set" repeats medium #5 and check2 #4. The release is a draft, and the coordinator looks at every shot before item 6.
+- Skipped #5 (`reviews/s291c-check3.md`): "collect_shots also searches $PWD" repeats check2 #3: CI runners are fresh, and the size check catches a wrong picture.
+- Skipped #6 (`reviews/s291c-check3.md`): "Wait after tapping Books tab is on StoryTile" repeats medium #2 and check2 #5. The first CI run and a look at the shot decide it.
+- Skipped #7 (`reviews/s291c-check3.md`): "with no exit-status" repeats check2 #2 (low).
+- Skipped #8 (`reviews/s291c-check3.md`): "leaks the simulator" low. It matters only on reused runners.
+
 ## Changed while building
 
 - Item 1 done 2026-11-14 (wave 62): RTST Play, 17 live locales read. Only en-US carried the stale "no analytics" line; two committed Play edits (the usage-counts bullet from `en.md` lines 28-29, and the Google Play download note from `en.md`), read back equal, 1349 characters. The other 16 locales were already current. Dino Play was done 2026-11-13.
 - Item 3 built: RTST English is added to `.github/scripts/store-listings.mjs`. It is strict: written only to an `en-us` or `en` listing, otherwise skipped with a warning; the image source for new languages keeps en-us, en, then the first en-*. It reaches Partner Center with the next RTST release; item 3 stays open until the read-back after that release.
 - Item 5, Android phone built: flows `.maestro/{dino,rtst}/needs-file/store-shot-{phone,tablet}.yaml`, `tools/emulator/store-screenshots.ps1` (and `test-store-screenshots.ps1`), PNGs in `docs/store-listings/screenshots/dino/phone` (1-shelf, 2-reading, 3-books) and `rtst/phone` (1-home, 2-review, 3-reading, 4-settings). Emulator runs 2026-11-14 on emulator-5554: Dino phone PASS (69 s), RTST phone PASS (225 s, clearState, pack downloaded in the run). The coordinator looked at every shot's contact sheet: clean. Still open in item 5: Play tablet (no second emulator: 3.6 GB free RAM, the 8 GB rule), iPhone and iPad (`store-screenshots.yml` reusing Slice 244's ios-sim scripts, now on main), Microsoft Store desktop (VM, same RAM reason), and the RTST Windows control-panel retake.
+- Item 5, wave 4 built (PR #1148): `.github/workflows/store-screenshots.yml` (dispatch-only, macOS, both apps, iPhone 6.9"/6.5" and iPad 13", draft release `store-shots-<app>-<run id>-<attempt>` as the hand-over; the high reviewer checked the accepted pixel sizes against Apple's screenshot-specifications page), `.github/scripts/ios-sim-store-shots.sh`, `SIM_DEVICE_PATTERNS` in `ios-sim-boot.sh`, `.maestro/{dino,rtst}/store-shot-ios-frames.yaml`, `run-flows` and `lint-flows.ps1` skip store-shot flows, `release-rtst.yml` path exclusions.
+- Item 5, Play tablet shots done 2026-11-14 on `RTST_Tablet`: Dino PASS, 3 shots (66.8 s); RTST PASS, 4 shots (156.2 s). Committed under `docs/store-listings/screenshots/{dino,rtst}/tablet/`. The coordinator looked at the contact sheet: clean, pack installed, no keyboard. The status bar shows icons, same as the phone shots (demo mode is a follow-up for both). **The Play set (phone and tablet) is now complete.**
+- Environment finding (2026-11-14): the first tablet run failed preflight because the machine `JAVA_HOME` points at a removed JDK (`C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot`). The rerun set `JAVA_HOME=C:\Users\ashka\.jdks\openjdk-26.0.1` for the process only.
+- Still open in item 5: iPhone and iPad shots (CI, after merge), the Microsoft Store desktop shot and the RTST control-panel retake (VM; free memory 6 GB, under the 8 GB rule). Item 6 uploads wait for the full per-store sets; Play's is complete, App Store and Microsoft Store are not.
 - Item 6 decision (coordinator, 2026-11-14): no upload tonight. Uploads go per store once its full set exists (Play phone and tablet together), so a live listing never gets a half-replaced set.
 
 - Item 5, RTST store-shot flows (phone and tablet): the pack wait is 300000 ms (was 120000). The emulator run 2026-11-14 20:37-20:41Z failed at `notVisible id: PackStatusLabel`; logcat showed the pack still downloading, `PACKDL progress pack=supertonic-3 bytes=37510341` at 20:40:08 rising about 1.1 MB/s to `bytes=113614848` at 20:41:18. The first launch is back on `clearState: true` (check3 #1, #2: without it `TestHookDispatcher.cs:209` ignores `lang` when a language is already set, and kept data lets text from an earlier run into shots 1 and 2); a fresh install always starts the download, so the flow then requires `PackStatusLabel` visible (30 s, no longer optional) before `notVisible` with 300000 ms, and the shots show the voice pack installed. The relaunch before the Settings shot keeps the data and only waits for the banner to be gone.
@@ -125,8 +164,13 @@ Premise check on origin/main:
 ## Not yet verified
 
 - Partner Center RTST English read-back after the next RTST release (item 3).
-- The tablet store-shot flows (`store-shot-tablet.yaml`, Dino and RTST) have never been run.
+- The iOS store shots: `store-screenshots.yml` is new and can be dispatched only after merge (`gh workflow run store-screenshots.yml -f app=both`); the first run and a look at each iPhone 6.9"/6.5" and iPad 13" shot are still to do.
 - A native speaker reads the translated Microsoft Store notes and usage-counts bullets in `de es fr pt ar fa ja ru zh` before the Partner Center push.
+
+#### For CLAUDE.md
+
+- Run emulator tooling with a live JDK: if the machine `JAVA_HOME` points at a removed JDK, `tools/emulator` preflight fails; set `JAVA_HOME` for the process to an installed JDK. (Slice 291: docs/plan/slices/291-store-listings-and-screenshots.md)
+- iOS store screenshots come only from `.github/workflows/store-screenshots.yml` (dispatch-only, macOS); `store-shot-*` flows are skipped by `run-flows` and `lint-flows.ps1`, and `release-rtst.yml` excludes their paths. (Slice 291: docs/plan/slices/291-store-listings-and-screenshots.md)
 
 ## Why
 
@@ -145,8 +189,9 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 - [x] 2. `site/dino/privacy.html` (and `site/dino/index.html`): "3 to 8" becomes "3 to 9".
 - [ ] 3. Microsoft Store, RTST English: replace the stale listing with the current text (`docs/store-listings/en.md`, checked against the live listing first). Partner Center through Chrome (Claude's work), as in Slice 193.
 - [ ] 4. App Store go-live text for both apps from the two drafts: confirm the five values with the user in one question, check the age-rating enum names and Kids-category rules against Apple's docs on the first API write, apply through the App Store Connect API.
-- [ ] 5. Screenshots, every store: iPhone 6.5-6.9" and iPad 13" (a macOS CI simulator job, `store-screenshots.yml`; Android and iOS are the same app, so Dino and RTST get the same frames); Play phone and tablet (emulator, `tools/emulator/screenshot-frames.json`); Microsoft Store desktop (VM). Retake the RTST control-panel shot from Slice 194 with the voice pack installed, signed in as a normal user and no watermark.
-- [ ] 6. Upload the screenshots with the listings (Play API, App Store Connect API, Partner Center), read each store back.
+- [ ] 5. (Android phone and tablet done 2026-11-14; iOS workflow built, not yet run; Microsoft Store and RTST control panel open) Screenshots, every store: iPhone 6.5-6.9" and iPad 13" (a macOS CI simulator job, `store-screenshots.yml`; Android and iOS are the same app, so Dino and RTST get the same frames); Play phone and tablet (emulator, `tools/emulator/screenshot-frames.json`); Microsoft Store desktop (VM). Retake the RTST control-panel shot from Slice 194 with the voice pack installed, signed in as a normal user and no watermark.
+- [ ] 6. Upload the screenshots with the listings (Play API, App Store Connect API, Partner Center), read each store back. Before the Play upload, check Play's current size and aspect-ratio rule: the phone shots are 1080x2400 (2.22:1) and `reviews/s291c-check.md` #1 says Play may cap the long side at twice the short side (not checked against Play's docs); the tablet shots are 1600x2560 (1.6:1).
+- From review (`reviews/s291c-check.md`): applied #5 (the rule above no longer names a user path); #1 recorded under item 6. Skipped #2 (`reviews/s291c-check.md`): "accepts any non-zero PNG size" the upload step checks the rule first (item 6), so a size check here would need another review round tonight for a step that does not run tonight; #3 (`reviews/s291c-check.md`): "one 1600x2560 set" low, the status-bar demo-mode follow-up from wave 3 covers the icons; #4 (`reviews/s291c-check.md`): "tablet PNGs are still untracked" the commit includes them.
 
 ## Verification
 

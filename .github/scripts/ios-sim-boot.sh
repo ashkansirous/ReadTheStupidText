@@ -5,6 +5,8 @@
 # Usage: ios-sim-boot.sh
 #   SIM_DEVICE_NAME  name of the simulator to create (default rtst-sim)
 #   SIM_DEVICE_TYPE  a CoreSimulator device-type id; unset = the smallest iPhone this image's runtime accepts
+#   SIM_DEVICE_PATTERNS  Slice 291: ';'-separated case-insensitive regexes of device-type NAMES, tried in order (an iPhone Pro Max or an iPad Pro 13-inch
+#                    for a store screenshot); within one pattern the newest type the runtime accepts wins. Used when SIM_DEVICE_TYPE is unset.
 # Prints `udid=<UDID>` as its last line, and appends SIM_UDID=<UDID> to $GITHUB_ENV when that is set.
 set -euo pipefail
 
@@ -22,12 +24,24 @@ candidate_device_types() {
   xcrun simctl list devicetypes | grep -E '^iPhone ' | grep -vE 'Pro|Plus|Max|Air' | sed -E 's/.*\((com\.apple\.CoreSimulator\.SimDeviceType\.[^)]+)\)$/\1/'
 }
 
+# Slice 291: the device types whose NAME matches one of SIM_DEVICE_PATTERNS, pattern by pattern, newest first (`simctl list devicetypes` is oldest first).
+pattern_device_types() {
+  local pattern
+  while IFS= read -r pattern; do
+    [ -n "$pattern" ] || continue
+    xcrun simctl list devicetypes | grep -iE "^($pattern) \(" | sed '1!G;h;$!d' | sed -E 's/.*\((com\.apple\.CoreSimulator\.SimDeviceType\.[^)]+)\)$/\1/' || true
+  done < <(echo "$SIM_DEVICE_PATTERNS" | tr ';' '\n')
+}
+
 # Creates the simulator from the first device type the runtime accepts; prints the UDID.
 create_simulator() {
-  local runtime="$1" type udid
+  local runtime="$1" type udid source=candidate_device_types
   if [ -n "${SIM_DEVICE_TYPE:-}" ]; then
     xcrun simctl create "$NAME" "$SIM_DEVICE_TYPE" "$runtime"
     return
+  fi
+  if [ -n "${SIM_DEVICE_PATTERNS:-}" ]; then
+    source=pattern_device_types
   fi
   while IFS= read -r type; do
     if udid=$(xcrun simctl create "$NAME" "$type" "$runtime" 2>"$ERR_FILE"); then
@@ -36,15 +50,15 @@ create_simulator() {
       return
     fi
     echo "simctl create refused $type: $(cat "$ERR_FILE")" >&2
-  done < <(candidate_device_types)
-  echo "no iPhone device type accepted by $runtime" >&2
+  done < <($source)
+  echo "no device type accepted by $runtime ($source)" >&2
   return 1
 }
 
 RUNTIME="$(newest_ios_runtime)"
 echo "runtime: $RUNTIME" >&2
 echo "device types the image has:" >&2
-xcrun simctl list devicetypes | grep -E '^iPhone ' >&2 || true
+xcrun simctl list devicetypes | grep -E '^(iPhone|iPad) ' >&2 || true
 
 UDID="$(create_simulator "$RUNTIME")"
 xcrun simctl boot "$UDID"
