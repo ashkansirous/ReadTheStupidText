@@ -60,6 +60,8 @@ on:
         value: ${{ jobs.version.outputs.dinoios }}
       dinowin:
         value: ${{ jobs.version.outputs.dinowin }}
+      dinowin_store:
+        value: ${{ jobs.version.outputs.dinowin_store }}
       site_checks:
         description: 'RTST only: true when the advisory site checks should run for this push.'
         value: ${{ jobs.version.outputs.site_checks }}
@@ -97,6 +99,7 @@ jobs:
       dinoapp: ${{ steps.targets.outputs.dinoapp }}
       dinoios: ${{ steps.targets.outputs.dinoios }}
       dinowin: ${{ steps.targets.outputs.dinowin }}
+      dinowin_store: ${{ steps.targets.outputs.dinowinstore }}
       site_checks: ${{ steps.site.outputs.site_checks }}
     steps:
       # workflow_dispatch can be started on any branch; only main may release.
@@ -250,6 +253,7 @@ jobs:
           PRODUCT: ${{ inputs.product }}
           VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
           FORCE_ALL: ${{ inputs.force_all && 'true' || 'false' }}
+          DINOREADER_STORE_APP_ID: ${{ vars.DINOREADER_STORE_APP_ID }}   # empty: Dino has no Store submit, so ship-targets ignores the dino-store-v markers
         run: node .github/scripts/ship-targets.mjs
 
       # Slice 239: whether release-rtst.yml's advisory `site-checks` runs (a push that only changes content/dino/** skips it).

@@ -63,6 +63,28 @@ public sealed class BookTextCurrencyTests
     }
 
     [Fact]
+    public void The_weekly_stage_skips_a_book_given_up_for_that_store_version_and_keeps_every_other_decision()
+    {
+        // Slice 317 item 6: a permanent 404 was fetched and reported Failed again on every weekly check.
+        var decisions = new List<BookUpdateDecision>
+        {
+            new("gone", BookUpdateAction.Update),
+            new("newer", BookUpdateAction.Update),
+            new("fine", BookUpdateAction.Update),
+            new("edited", BookUpdateAction.Skip, BookUpdateSkip.Edited),
+        };
+        Func<string, int?> storeVersion = id => id switch { "gone" => 6, "newer" => 7, "fine" => 3, _ => null };
+        Func<string, int, bool> givenUp = (id, version) => (id == "gone" && version == 6) || (id == "newer" && version == 6);
+
+        IReadOnlyList<BookUpdateDecision> result = BookTextCurrency.SkipGivenUp(decisions, storeVersion, givenUp);
+
+        Assert.Equal(new BookUpdateDecision("gone", BookUpdateAction.Skip, BookUpdateSkip.NotInStore), result[0]);
+        Assert.Equal(BookUpdateAction.Update, result[1].Action); // given up for 6, the store is at 7 now: tried again
+        Assert.Equal(BookUpdateAction.Update, result[2].Action);
+        Assert.Equal(decisions[3], result[3]);
+    }
+
+    [Fact]
     public void A_pack_made_for_newer_text_is_not_fetched_while_the_text_is_behind()
     {
         // Freddy, 2026-11-07: v5 text on the phone, a pack made for v6 in the store. The pack waits; the text goes first.

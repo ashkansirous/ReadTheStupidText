@@ -206,7 +206,7 @@ function Save-BuildMeta([string]$Dir, [string]$App, [string]$Platform, [string]$
     $inputs = if ($recorded) { @($recorded.Inputs) } else { @() }
     $tree = if ($recorded) { $recorded.Tree } else { $null }
     # inputsRecorded = $false marks a record that failed (git error, or the tree changed since the key): an empty list there is "unknown", not "no inputs".
-    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); built = (Get-Date).ToString('o'); tree = $tree; inputs = $inputs; inputsRecorded = [bool]$recorded } |
+    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); worktreePath = $script:ToolsRepoRoot; built = (Get-Date).ToString('o'); tree = $tree; inputs = $inputs; inputsRecorded = [bool]$recorded } |
         ConvertTo-Json | Set-Content (Join-Path $Dir $script:BuildMetaFile)
 }
 
@@ -224,7 +224,52 @@ function Remove-OldBuilds([string]$App, [string]$Platform) {
     } | Sort-Object LastWriteTime -Descending | Select-Object -Skip $script:KeepBuildsPerWorktree
     # A build killed half way leaves its temp folder behind (an APK or MSIX each); an hour is longer than any build.
     $stale = $dirs | Where-Object { $_.Name -match "^$prefix\.building-" -and $_.LastWriteTime -lt (Get-Date).AddHours(-1) }
-    foreach ($dir in @($old) + @($stale) | Where-Object { $_ }) { Remove-Item $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+    $doomed = @(foreach ($dir in (@($old) + @($stale))) { if ($dir) { $dir } })
+    foreach ($dir in $doomed) { Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+    $removed = $doomed.Count + (Remove-AbandonedBuilds)
+    # Measuring walks every file of the cache (tens of GB), so the summary prints only when something was pruned.
+    if ($removed -gt 0) { Write-BuildCacheSummary }
+}
+
+# Slice 317 item 1: the keep-newest-3 rule above only ever ran for the worktree that was building, so the builds of a worktree that was
+# removed (merged, gone) kept their newest copies for ever (31 GB on 2026-11-08). Design changed after review check 1 (two strikes): a build is abandoned only by AGE,
+# when nothing has used it for $script:AbandonedBuildDays (a reuse bumps LastWriteTime in Find-CachedBuild, so a live build never ages out).
+# A worktree that is gone is not a reason: another live worktree may reuse its build.
+$script:AbandonedBuildDays = 14
+
+# $Builds are objects with Name and LastWriteTime; nulls are ignored.
+function Select-AbandonedBuilds($Builds, [datetime]$Now) {
+    return @(@($Builds) | Where-Object { $_ -and $_.LastWriteTime -lt $Now.AddDays(-$script:AbandonedBuildDays) })
+}
+
+# $CacheRoot defaults to the real cache; test-build-prune.ps1 passes a temp folder. Returns how many builds it removed.
+function Remove-AbandonedBuilds([string]$CacheRoot = '') {
+    $root = if ($CacheRoot) { $CacheRoot } else { Join-Path (Get-WorktreesRoot) '_builds' }
+    if (-not (Test-Path $root)) { return 0 }
+    $builds = @(foreach ($dir in Get-ChildItem $root -Directory) {
+        if (-not (Test-Path (Join-Path $dir.FullName $script:BuildMetaFile))) { continue }  # packs and half-built temp folders are not build records
+        [pscustomobject]@{ Name = $dir.Name; Path = $dir.FullName; LastWriteTime = $dir.LastWriteTime }
+    })
+    $doomed = @(Select-AbandonedBuilds $builds (Get-Date))
+    foreach ($build in $doomed) {
+        Write-Host "Build cache: removing $($build.Name) (unused for $($script:AbandonedBuildDays) days)."
+        Remove-Item -LiteralPath $build.Path -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    return $doomed.Count
+}
+
+function Get-BuildCacheBytes {
+    $root = Join-Path (Get-WorktreesRoot) '_builds'
+    if (-not (Test-Path $root)) { return 0 }
+    $sum = (Get-ChildItem $root -Recurse -File -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+    return [int64]$sum
+}
+
+# Printed after every build's prune: the size of the whole cache, so growth shows up in a run before it fills the drive.
+function Write-BuildCacheSummary {
+    $root = Join-Path (Get-WorktreesRoot) '_builds'
+    $count = @(Get-ChildItem $root -Directory -ErrorAction SilentlyContinue).Count
+    Write-Host ("Build cache: {0:N1} GB in {1} folders ({2})" -f ((Get-BuildCacheBytes) / 1GB), $count, $root)
 }
 
 # The newest cached build of this app and platform (any key), or $null. For callers that must not make a build when the current inputs have none.
