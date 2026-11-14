@@ -116,7 +116,7 @@ test('findListingKey matches case-insensitively and by language', () => {
   assert.equal(findListingKey(['FR'], 'fr'), 'FR');
   assert.equal(findListingKey(['fr-ca', 'fr-fr'], 'fr'), 'fr-fr');
   assert.equal(findListingKey(['pt-br', 'pt-pt'], 'pt-br'), 'pt-br');
-  assert.equal(findListingKey(['en-us', 'pt-pt'], 'pt-br'), 'pt-pt');
+  assert.equal(findListingKey(['en-us', 'pt-pt'], 'pt-br'), undefined);
   assert.equal(findListingKey(['en-us'], 'pt-br'), undefined);
   assert.equal(findListingKey(['fr-ca', 'fr-be'], 'fr'), undefined);
   assert.equal(findListingKey(['pt'], 'pt-br'), 'pt');
@@ -164,3 +164,20 @@ for (const app of Object.values(APPS)) {
     assert.equal(Object.keys(listings).length, Object.keys(LANGUAGES).length);
   });
 }
+
+test('no committed Dino Microsoft Store description still names Google Play, in any language (Slice 377 item 2)', () => {
+  const folder = listingsFolder(ROOT, APPS.dino);
+  const { listings } = buildListings(APPS.dino, (stem) => readFileSync(join(folder, `${stem}.md`), 'utf8'));
+  for (const [code, entry] of Object.entries(listings)) {
+    assert.ok(!entry.baseListing.description.includes('Google Play'), `${code} still names Google Play`);
+    assert.ok(entry.baseListing.description.includes('Microsoft Store'), `${code} never names the Microsoft Store`);
+  }
+});
+
+test('a pt-br build does not overwrite an existing pt-pt listing', () => {
+  const sub = { Pricing: { PriceId: 'Free' }, Listings: { 'en-us': { BaseListing: { Images: [1] } }, 'pt-pt': { BaseListing: { Title: 'europeu' } } } };
+  const built = { 'pt-br': { baseListing: { title: 'T', shortDescription: 'S', description: 'D', keywords: ['k'] } } };
+  const out = mergeListings(sub, built).submission;
+  assert.equal(out.Listings['pt-pt'].BaseListing.Title, 'europeu');
+  assert.equal(out.Listings['pt-br'].BaseListing.Title, 'T');
+});

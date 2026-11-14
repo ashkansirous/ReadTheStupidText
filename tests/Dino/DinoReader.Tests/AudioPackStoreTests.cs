@@ -469,6 +469,21 @@ public sealed class AudioPackStoreTests : IDisposable
         Assert.Equal(1.0, seen.Last(), 3);
     }
 
+    [Fact]
+    public void SummedProgress_ResetBook_RestartsTheBarForTheStandardFetchAfterAStoppedHighResOne()
+    {
+        var seen = new List<double>();
+        var summed = new SummedProgress(new SyncProgress<double>(seen.Add), 0);
+
+        summed.Book(600, 1000);
+        summed.ResetBook();
+        summed.Book(100, 200);
+
+        Assert.Equal(0.6, seen[0], 3);
+        Assert.Equal(0.0, seen[1], 3);
+        Assert.Equal(0.5, seen[2], 3);
+    }
+
     private sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
     {
         public void Report(T value) => report(value);

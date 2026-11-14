@@ -27,6 +27,10 @@ public sealed class PictureSizeSource(IPackUpdateNetwork network)
 
 	private void RaiseConnectionChanged() => ConnectionChanged?.Invoke(this, EventArgs.Empty);
 
+	/// <summary>Slice 377 item 16: a token cancelled when the connection is, or becomes, one <paramref name="shouldStop"/> says stops the work (checked once at once, then on every change).</summary>
+	public ConnectionCancelScope WatchConnection(Func<PictureNetwork, bool> shouldStop, CancellationToken outer) =>
+		new(() => shouldStop(Network()), handler => ConnectionChanged += handler, handler => ConnectionChanged -= handler, outer);
+
 	private const int DeviceUnread = -1;
 
 	private int _deviceCode = DeviceUnread; // the cached PictureDeviceClass, read once at start-up

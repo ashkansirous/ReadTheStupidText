@@ -81,6 +81,10 @@ env:
 jobs:
   submit:
     runs-on: windows-latest
+    # Slice 377 item 2: a hung msstore call must end the job, not hold the per-product queue below for GitHub's 6 hours. The two msstore steps carry their own,
+    # shorter limits (the job limit is only the outer net), so a slow upload ends in the publish step, never in the middle of the commit steps; the last step
+    # reports loudly when the job ends before the draft was committed.
+    timeout-minutes: 90
     # Slice 374: `msstore publish`, `submission get/update/publish` all act on the app's ONE pending draft, so two runs for the same
     # product (a manual dispatch during a release) must never interleave. Queued, never cancelled: a cancel after --noCommit would
     # leave an uncommitted draft.
@@ -226,6 +230,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "The $app store listing files are invalid ($LASTEXITCODE)" }
 
       - name: Publish the update to the Store
+        id: publish
+        timeout-minutes: 40
         shell: pwsh
         run: |
           # One submission carrying both architectures via the bundle.
@@ -262,6 +268,8 @@ jobs:
       # (it replaces the submission, which is why the merge starts from the draft); `submission publish` commits that one submission.
       # The product id check above already pairs the package with its own app, so the two apps cannot swap listings.
       - name: Put the repo's listing text into the submission and commit it
+        id: commit
+        timeout-minutes: 30
         shell: pwsh
         run: |
           $id = "${{ inputs.product_id }}"
@@ -285,3 +293,12 @@ jobs:
           # Always commit the draft: a release must never end with an uncommitted submission. This one stays loud.
           msstore submission publish $id
           if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed ($LASTEXITCODE)" }
+
+      # Slice 377 item 2: the package is in the draft but the commit step did not finish (timed out, cancelled or failed): the release never reached
+      # certification. Say so as an error annotation; the next `msstore publish` (a re-run, or the next release) discards that draft and starts a fresh one.
+      - name: Report a draft that was not committed
+        if: ${{ always() && steps.publish.outcome == 'success' && steps.commit.outcome != 'success' }}
+        shell: pwsh
+        run: |
+          Write-Host "::error::The Store draft for $($env:PACKAGE) holds the package but was NOT committed for certification (the commit step ended '${{ steps.commit.outcome }}'). Re-run this workflow for the same tag to submit it."
+          exit 1
