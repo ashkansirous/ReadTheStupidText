@@ -464,8 +464,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			try
 			{
-				await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
-				return size;
+				if (await FetchHighResWhileUnmeteredAsync(item, part, summed, cancel))
+				{
+					return size;
+				}
+
+				size = PictureSize.Standard;
 			}
 			catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
 			{
@@ -477,6 +481,34 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 		await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
 		return size;
+	}
+
+	/// <summary>
+	/// Slice 377 item 16: fetches the high-res pack, but stops it when the link turns metered mid-download (a first install chose high-res on an unmetered link). Returns true when the pack arrived whole,
+	/// false when the metered link stopped it and the caller fetches the standard pack instead; a grown-up's cancel still throws.
+	/// </summary>
+	private async Task<bool> FetchHighResWhileUnmeteredAsync(StoreItem item, string part, SummedProgress summed, CancellationToken cancel)
+	{
+		if (pictureSize is null)
+		{
+			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			return true;
+		}
+
+		using var meteredStop = pictureSize.WatchConnection(PictureSizeChoice.ShouldStopHighRes, cancel); // only a limited link stops it: a roam or a blip with no connection is left to the stall timeout
+		try
+		{
+			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), meteredStop.Token, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			return true;
+		}
+		catch (OperationCanceledException) when (meteredStop.StoppedByConnection && !cancel.IsCancellationRequested)
+		{
+			// no-fallback: the link turned metered while the high-res pack downloaded; the standard pack is fetched instead (the upgrade pass brings the high-res one on an unmetered link)
+			HighResLog.Write($"{item.Id} v{item.Version}: link turned metered during the high-res download, standard instead");
+			TryDelete(part); // review round 2 #7: the partial high-res file must not linger, nor be read as the standard pack's bytes
+			summed.ResetBook(); // the standard pack has its own size: the bar starts over from it
+			return false;
+		}
 	}
 
 	/// <summary>

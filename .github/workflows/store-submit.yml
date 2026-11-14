@@ -226,7 +226,7 @@ jobs:
             --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
             --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
 
-      # Slice 374: build and validate the 13 listings offline BEFORE `publish --noCommit` creates the draft, so a missing file or an
+      # Slice 374: build and validate the listings (13 languages, 14 for RTST with de) offline BEFORE `publish --noCommit` creates the draft, so a missing file or an
       # over-limit text fails here, when nothing is pending, and never leaves an uncommitted draft behind.
       - name: Check the repo's listing text
         shell: pwsh
@@ -262,7 +262,7 @@ jobs:
           # real exception only reaching the logger, which -v surfaces.
           #
           # Slice 374: --noCommit uploads the package into the new draft but does not send it for certification yet. The next step
-          # puts the repo's 13-language listing text into that same draft and commits it, so the release is ONE submission.
+          # puts the repo's listing text (13 languages, 14 for RTST with de) into that same draft and commits it, so the release is ONE submission.
           #
           # Slice 317 item 5 (design changed after check 2, two strikes): `msstore publish` is never re-run automatically (it creates a
           # submission, so a second run could make a second one); a failure here fails the job. Only the commit below is retried once.
@@ -272,8 +272,8 @@ jobs:
 
       # Slice 374 (items 4 and 5): every release carries the listing text committed in docs/store-listings (RTST) or
       # docs/store-listings/dino (Dino). `submission get` returns the draft that `publish --noCommit` just made (package included);
-      # store-listings.mjs changes only the title, short description, description and search terms of the 13 languages
-      # and keeps pricing, packages, images and the en/de listings as they are; `submission update` sends the whole object back
+      # store-listings.mjs changes only the title, short description, description and search terms of the built languages
+      # (13; RTST also de) and keeps pricing, packages, images, the en listings and Dino's de listing as they are; `submission update` sends the whole object back
       # (it replaces the submission, which is why the merge starts from the draft); `submission publish` commits that one submission.
       # The product id check above already pairs the package with its own app, so the two apps cannot swap listings.
       - name: Put the repo's listing text into the submission and commit it

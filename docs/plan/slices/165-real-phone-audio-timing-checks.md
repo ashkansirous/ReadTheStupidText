@@ -13,7 +13,7 @@ reuses the hooks and the `RTST-TEST` logcat markers).
 
 The emulator can't tell whether the neural voice sounds right, or how fast it really runs on a phone CPU (and the
 x86_64 emulator may have no neural engine at all, Slice 161). Those checks belong on the user's own phone, over
-**wireless adb only, never USB** (the user's global rule).
+**the S21: USB first, else wireless adb** (the user's global rule since 2026-11-13; this slice's phone scripts still accept wireless serials only, see Slice 308).
 
 ## Work
 

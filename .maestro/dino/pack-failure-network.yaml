@@ -61,11 +61,11 @@ name: A dropped pack download shows the failure and the next launch retries
 - extendedWaitUntil:
     visible: "Your child can switch between these.*"
     timeout: 10000
-# The failed line shows once the three tries are used up (about 45 s of waits).
+# Slice 360 makes one try per pack, so the failed line is already in the card state when the page opens; 60 s is generous (the old 120 s covered the removed 15 s / 30 s waits).
 - extendedWaitUntil:
     visible:
       id: ShelfAudioFailed-sv
-    timeout: 120000
+    timeout: 60000
 # launchApp-restart: the failure switch lives in the process, so a restart is the "next launch" that fetches the pack (a pack failed twice in a launch is not tried again until then).
 - launchApp:
     arguments:

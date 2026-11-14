@@ -136,38 +136,13 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 	// A download in flight is cancelled the moment the connection stops being unmetered (the pass then ends as cancelled; the next trigger tries again), not only checked between books.
 	private async Task DownloadWhileUnmeteredAsync(IReadOnlyList<StoreItem> due, CancellationToken cancel)
 	{
-		using var leftUnmetered = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-		void OnChanged(object? sender, EventArgs e)
+		using var leftUnmetered = pictures.WatchConnection(network => network != PictureNetwork.Unmetered, cancel);
+		foreach (StoreItem item in due)
 		{
-			if (pictures.Network() == PictureNetwork.Unmetered)
+			if (pictures.Network() != PictureNetwork.Unmetered || !await UpgradeOneAsync(item, leftUnmetered.Token))
 			{
 				return;
 			}
-
-			try
-			{
-				leftUnmetered.Cancel();
-			}
-			catch (ObjectDisposedException)
-			{
-				// no-fallback: the pass already ended, nothing is left to cancel
-			}
-		}
-
-		pictures.ConnectionChanged += OnChanged;
-		try
-		{
-			foreach (StoreItem item in due)
-			{
-				if (pictures.Network() != PictureNetwork.Unmetered || !await UpgradeOneAsync(item, leftUnmetered.Token))
-				{
-					return;
-				}
-			}
-		}
-		finally
-		{
-			pictures.ConnectionChanged -= OnChanged;
 		}
 	}
 

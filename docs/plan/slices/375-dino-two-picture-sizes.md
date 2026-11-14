@@ -169,6 +169,13 @@ The Debug-only test books in `Resources/Raw/testbooks/` stay standard.
 - Skipped #1 and #2 (`reviews/s375bd-check5.md`): a 404 counts once per pass with no delay (three quick triggers give that version up), and a bad id re-downloads and rejects the hd pack each pass. Low; follow-up for the next Dino slice.
 
 
+*Review leftovers of #1113, handled in Slice 377 item 16 (from `reviews/s375bd-check6.md`):*
+
+- Fixed: #1 (`StagedBookUpdates.cs`, a shelf-race `InvalidOperationException` is now a transient end, not a `BadPackage` count) and #6 (`StoreClient.FetchHighResWhileUnmeteredAsync` stops the high-res download when the link turns metered and fetches the standard pack; Debug log line "link turned metered during the high-res download"). Both are in the MAUI App project, so no unit test reaches them; check on a device: start a first install on an unmetered link, turn the link metered mid-download, expect the standard pack and the log line.
+- Skipped #7 (`FirstBooksPage.cs:260`, `StoreItem.Bytes` carries the high-res size): low, display only, the size line is meant to count the pack this device will fetch (a comment says so); the decision per item is re-read at download time anyway.
+- Skipped #9 (`tools/dino/DinoReader.BookBuilder/BookHash.cs:27`, magic string `"no-oid"`): low, a build-tool sentinel that only feeds a hash; outside the Slice 377 Touches, so left for the next edit of that file.
+- Already recorded above as skipped: #2, #3, #4, #5, #8, #10 (low).
+
 ## Parts B-D: parked (night 2026-11-14-0726, wave 1)
 
 *Park record (history): parts B-D were then finished by the interactive session and merged as PR #1113 (3ccecadd, 2026-11-14 11:49Z).*

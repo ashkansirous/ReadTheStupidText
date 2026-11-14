@@ -269,6 +269,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 193 | German store listings for both apps | built | #1128 | — | [193-german-store-listings.md](../slices/193-german-store-listings.md) |
 | 9 | Local neural voices (sherpa-onnx + Supertonic-3) | built | — | — | [09-local-neural-voices.md](../slices/09-local-neural-voices.md) |
 | 14 | MIT license + Conventional-Commits auto-release | built | — | #57 | [14-mit-license-conventional-commits-auto-release.md](../slices/14-mit-license-conventional-commits-auto-release.md) |
 | 34 | Android CI: build + signed AAB, internal testing track | built | — | — | [34-android-ci-build-signed-aab-internal.md](../slices/34-android-ci-build-signed-aab-internal.md) |

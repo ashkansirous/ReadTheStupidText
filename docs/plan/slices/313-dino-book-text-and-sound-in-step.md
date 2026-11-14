@@ -56,23 +56,34 @@ Android, iOS and Windows share this code; all three get it.
 *Changed while building:* work item B's second bullet (the reading page picks the pack whose hashes match the shown text) and the two-packs idea are not built: the store's pack entry carries no book version. Instead a pack is never installed ahead of its text (the text sync runs before the pack plan).
 
 *From review:* high (`reviews/313-high.md`): findings 1-10 applied.
-- Skipped #11 (`reviews/313-high.md`): "the reading page uses the one whose manifest hashes match the shown text" (the two-packs bullet of B): not built because the store's pack entry carries no book version; a pack is never installed ahead of its text instead.
+- Skipped #11 (`reviews/313-high.md`): "the reading page uses the one whose manifest hashes match" (the two-packs bullet of B): not built because the store's pack entry carries no book version; a pack is never installed ahead of its text instead.
 
 *From review:* medium (`reviews/313-medium.md`): 1, 2, 5, 6, 8 applied.
 - Skipped #3 (`reviews/313-medium.md`): "A failed baseline fetch (decisions null) counts toward the 3-strike give-up": replaced by the simplified give-up above (the counter is gone, a failed baseline is retried at the next listing pass).
-- Skipped #4 (`reviews/313-medium.md`): "records a permanent \"store has no package\" failure whenever StageOneAsync returned true": replaced by the simplified give-up (only a 404 / not-in-store gives up for that store version).
+- Skipped #4 (`reviews/313-medium.md`): "StageResultAsync records a permanent": replaced by the simplified give-up (only a 404 / not-in-store gives up for that store version).
 - Skipped #7 (`reviews/313-medium.md`): "records a permanent failure and deletes the staged entry; transient faults": replaced by the simplified give-up (an unexpected exception is retryable, the staged entry stays).
 
 *From review:* check pass (`reviews/313-check.md`): 4, 6, 9 applied.
 - #4: the staged-update refresh handler catches every exception and reports a fallback (`GalleryPage.OnBookUpdateStaged`), coalescing kept.
 - #6: `StagedBookUpdates` remembers a swap nobody heard (`TakeUnheardSwap`); `ShelfAudioPacks.Resume` plans the packs again for it, past the throttle.
 - #9: `BookUpdater.StageOneAsync` (weekly check) gives up on a 404 like the listing pass.
-- Skipped 1, 2, 3, 5, 7, 8 (low or by design: retries are throttled to listing passes; a 404 give-up resets on the next store version).
+- Skipped #1 (`reviews/313-check.md`): "Catch-all keeps staged entry for non-StoryPackage/InvalidData exceptions" - low: an unexpected exception is retryable by design, retries are throttled to listing passes.
+- Skipped #2 (`reviews/313-check.md`): "NeedsDownloadAsync builds a full PlanAsync, then SyncBehindAsync builds it again" - low: a second hash pass, no wrong result.
+- Skipped #3 (`reviews/313-check.md`): "NeedsDownloadAsync runs InstallOnceAsync/PlanAsync outside the one-run lock" - low: a stale answer only changes the Wi-Fi gate for one pass.
+- Skipped #5 (`reviews/313-check.md`): "Bad-package branch deletes the entry with no retry signal" - low: the next listing pass downloads again.
+- Skipped #7 (`reviews/313-check.md`): "Final marker is an optional wait for an id that never exists" - low: the flow's other markers carry the assertions.
+- Skipped #8 (`reviews/313-check.md`): "Any 404 gives the book up permanently for that store version" - by design: a 404 give-up resets on the next store version.
 
 *From review:* check pass 2 (`reviews/313-check2.md`): 1-4 applied.
-- #1 and #2: the `_swapUnheard` / `TakeUnheardSwap` flag of check #6 is removed (it raced and skipped `TextChanged`). `DinoApp`'s constructor resolves `ShelfAudioPacks` first, so its `StagedBookUpdates.Swapped` subscription exists before any apply; every swap reaches `TextChanged()` (live run: PlanAgain; otherwise a quiet run past the throttle).
+- #1 and #2: the `_swapUnheard` / `TakeUnheardSwap` flag of check #6 is removed (it raced and so missed `TextChanged`). `DinoApp`'s constructor resolves `ShelfAudioPacks` first, so its `StagedBookUpdates.Swapped` subscription exists before any apply; every swap reaches `TextChanged()` (live run: PlanAgain; otherwise a quiet run past the throttle).
 - #3: the weekly check's 404 give-up (`BookUpdater.StageOneAsync`) also reports `book_update:failed` and an `UpdateCheckFailed` fallback.
 - #4: `GalleryPage.OnBookUpdateStaged` lets `OperationCanceledException` pass silently (no pass after it); any other failure is reported per pass, so a queued `_stagedRefreshAgain` pass still runs.
+
+*From review:* check pass 3 (`reviews/313-check3.md`): 1 and 2 applied by Slice 317 item 6 (a timeout cancel is reported like any failure; the weekly check no longer fetches a given-up book again).
+- Skipped #3 (`reviews/313-check3.md`): "Eager resolve in the DinoApp constructor runs the same constructors GalleryPage resolves later" - info, speculative: no cycle, light work.
+- Skipped #4 (`reviews/313-check3.md`): "`_staged` is assigned and never read (dead field)" - nit: no behaviour.
+- Skipped #5 (`reviews/313-check3.md`): "no shared state today" - info: no shared state today.
+- Skipped #6 (`reviews/313-check3.md`): "A swap before ShelfAudioPacks exists would lose the Swapped event" - info: the DinoApp constructor resolve closes it for the app path.
 
 *Fast checks:* `DinoReader.Tests` 3860 passed (1 skipped), Dino Android build, `FallbackGuard` 47/47, worker events tests 79/79.
 

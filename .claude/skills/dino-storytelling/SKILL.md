@@ -85,6 +85,7 @@ number, the one action, who is in it with a count, where, and time of day. Then 
 - Raise the version with `dotnet run --project tools/dino/DinoReader.BookBuilder -- stamp <stem>` (`book.json`'s `version` and content hash) and add the old text's page
   hashes to `StarterUpdate.EarlierPageTextHashes` for a starter, so installed copies update.
   Get the old hash before rebuilding: `StarterUpdate.PageTextHash` is SHA-256 over the page texts joined
-  with `"\n\n"` (two newline characters, `Story.PageSeparator`). Compute it from the currently shipped .dino's `story.json` (`Pages[].Text`).
+  with `"\n\n"` (two newline characters, `Story.PageSeparator`). Compute it from the currently shipped .dino's `story.json` (`Pages[].Text`), leaving out the last page, the back-cover credits page
+  that the loader strips (`StoryJson.SplitBackCover`); hashing it too gives a value that never matches an installed copy.
 
 Then illustrate it with the `create-dino-story` skill.

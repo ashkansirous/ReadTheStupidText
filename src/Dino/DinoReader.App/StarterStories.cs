@@ -245,7 +245,7 @@ public sealed class StarterStories(IStoryLibrary library)
 		await RemoveDuplicatesAsync(package, id);
 		// Read again after the duplicates were removed: the copy listed before may be the one that was deleted.
 		Story stored = (await library.ListAsync()).FirstOrDefault(s => string.Equals(s.SourceId, id, StringComparison.OrdinalIgnoreCase))
-			?? throw new InvalidOperationException("The book left the shelf during the swap.");
+			?? throw new ShelfRaceException("The book left the shelf during the swap.");
 		return await ReplaceUnlessEditedAsync(package, stored, version, strict: true);
 	}
 

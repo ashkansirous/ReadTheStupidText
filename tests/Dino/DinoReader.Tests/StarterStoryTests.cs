@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DinoReader.BookBuilder;
 using Sirous.Reading.Domain.Reading;
 using DinoReader.Core;
@@ -56,7 +57,7 @@ public sealed class StarterStoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GoodEnough_OpensWithTenPicturePagesAndTheCoverPhoto()
+    public async Task GoodEnough_OpensWithElevenPicturePagesAndTheCoverPhoto()
     {
         var library = new FileStoryLibrary(_root);
         await using FileStream file = File.OpenRead(Path.Combine(StarterBuilder.StartersFolder(), StarterBuilder.GoodEnoughFile));
@@ -64,9 +65,9 @@ public sealed class StarterStoryTests : IDisposable
         Story story = await StoryPackageReader.ImportAsync(file, library);
 
         Assert.Equal(StarterBuilder.GoodEnoughId, story.SourceId);
-        Assert.Equal(10, story.Pages.Count);
+        Assert.Equal(11, story.Pages.Count);
         Assert.All(story.Pages, p => Assert.NotNull(library.TryResolveFile(story.Id, p.ImageFile)));
-        Assert.All(story.Pages.Take(7), p => Assert.NotEmpty(p.Lines!));
+        Assert.All(story.Pages, p => Assert.Empty(p.Lines ?? []));
         Assert.Equal(CoverStyle.Picture, story.CoverStyle);
         Assert.StartsWith(Story.CoverFilePrefix + "-", story.CoverFile);
         Assert.True(File.Exists(library.TryResolveFile(story.Id, story.CoverFile)));
@@ -74,15 +75,16 @@ public sealed class StarterStoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GoodEnough_PagesWithLinesAreTheirLinesJoined()
+    public async Task GoodEnough_PagesCarryTheirTextFromLinesJson()
     {
         Story story = await ImportGoodEnoughAsync();
+        string json = File.ReadAllText(Path.Combine(Books.ContentRoot(), StarterBuilder.GoodEnoughStem, "lines.json"));
+        string[] expected = JsonDocument.Parse(json).RootElement.GetProperty("pages").EnumerateArray().Select(p => p.GetProperty("text").GetString()!).ToArray();
 
-        Assert.All(story.Pages.Take(7), p => Assert.Equal(string.Join("\n", p.Lines!.Select(l => l.Text)), p.Text));
-        Assert.All(story.Pages.Skip(7), p => Assert.Null(p.Lines));
+        Assert.Equal(expected, story.Pages.Select(p => p.Text));
     }
 
-    // Only Hazelnut speaks ("says Hazelnut", page 10); Carrot has no quoted line, so the caster finds no Carrot character (reported in Slice 94). The book suggests her voice (Slice 156).
+    // The cast has four members (Carrot, Hazelnut, Referee and Crowd, each with quoted lines); Hazelnut's own voice is checked here (Slice 156).
     [Fact]
     public async Task GoodEnough_HazelnutIsACharacterWithAVoiceOfHerOwn()
     {
