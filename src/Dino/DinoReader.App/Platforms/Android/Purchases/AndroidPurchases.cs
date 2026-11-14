@@ -121,8 +121,12 @@ public sealed class AndroidPurchases : IBookPurchases
         var products = productIds.Select(id => QueryProductDetailsParams.Product.NewBuilder().SetProductId(id).SetProductType(BillingClient.ProductType.Inapp).Build()).ToList();
         QueryProductDetailsParams query = QueryProductDetailsParams.NewBuilder().SetProductList(products).Build();
         QueryProductDetailsResult answer = await client.QueryProductDetailsAsync(query);
-        // Slice 358: Play's answer, so a run can tell "not ok", "ok but empty" and "no price in the details" apart (BookPurchases reports prices_missing for the products left without a price).
-        PurchaseTrace.Line($"product details: code={answer.Result.ResponseCode} asked={productIds.Count} got={answer.ProductDetailsList?.Count ?? 0} unfetched={answer.UnfetchedProductList?.Count ?? 0}"); // the Release log, not Debug only
+        TraceDetails("async", productIds.Count, answer);
+        if ((answer.ProductDetailsList?.Count ?? 0) == 0)
+        {
+            answer = await ListenerIfBetterAsync(client, query, productIds.Count, answer);
+        }
+
         foreach (ProductDetails details in answer.ProductDetailsList ?? [])
         {
             _details[details.ProductId] = details;
@@ -133,6 +137,65 @@ public sealed class AndroidPurchases : IBookPurchases
         }
 
         return (prices, answer.Result.ResponseCode != BillingResponseCode.Ok); // any non-OK code is a failed query (BookPurchases reports billing_error when the device has internet; the code is in the trace line above); OK with no price is prices_missing
+    }
+
+    // Only when the async answer has no details: asks again through the listener overload; the listener's answer (code included) replaces the async one only when it has details.
+    private static async Task<QueryProductDetailsResult> ListenerIfBetterAsync(BillingClient client, QueryProductDetailsParams query, int asked, QueryProductDetailsResult asyncAnswer)
+    {
+        QueryProductDetailsResult? viaListener = await QueryViaListenerAsync(client, query);
+        if (viaListener is null)
+        {
+            return asyncAnswer;
+        }
+
+        TraceDetails("listener", asked, viaListener);
+        if ((viaListener.ProductDetailsList?.Count ?? 0) == 0)
+        {
+            return asyncAnswer;
+        }
+
+        PurchaseTrace.Line("product details: the async wrapper is empty but the listener has details; using the listener's");
+        return viaListener;
+    }
+
+    // Slice 358: Play's answer, so a run can tell "not ok", "ok but empty" and "no price in the details" apart (BookPurchases reports prices_missing for the products left without a price). Codes, counts and product ids only. The Release log, not Debug only.
+    private static void TraceDetails(string via, int asked, QueryProductDetailsResult answer)
+    {
+        string unfetched = string.Join(",", (answer.UnfetchedProductList ?? []).Select(u => $"{u.ProductId}:{u.StatusCodeValue}"));
+        PurchaseTrace.Line($"product details ({via}): code={answer.Result.ResponseCode} debug='{OneLine(answer.Result.DebugMessage)}' asked={asked} got={answer.ProductDetailsList?.Count ?? 0} unfetched={answer.UnfetchedProductList?.Count ?? 0} [{unfetched}]");
+    }
+
+    private const int TraceMessageMax = 200;
+
+    // One line, capped, so a multi-line Play message cannot split the [Purchases] log line.
+    private static string OneLine(string? text)
+    {
+        string flat = string.Join(' ', (text ?? string.Empty).Split(['\r', '\n', '\'', '\t'], StringSplitOptions.RemoveEmptyEntries));
+        return flat.Length > TraceMessageMax ? flat[..TraceMessageMax] : flat;
+    }
+
+    // The same query through the listener overload, to rule the async wrapper in or out; null when Play does not answer in time or the client is gone.
+    private static async Task<QueryProductDetailsResult?> QueryViaListenerAsync(BillingClient client, QueryProductDetailsParams query)
+    {
+        var done = new TaskCompletionSource<QueryProductDetailsResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            client.QueryProductDetails(query, new DetailsListener(done));
+        }
+        catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException)
+        {
+            // no-fallback: a diagnostic second query; the async answer already stands, so a lost client changes nothing for the refresh
+            PurchaseTrace.Line($"product details (listener): query threw {ex.GetType().Name}");
+            return null;
+        }
+
+        if (await Task.WhenAny(done.Task, Task.Delay(SetupTimeout)) != done.Task)
+        {
+            PurchaseTrace.Line("product details (listener): no answer within the timeout");
+            return null;
+        }
+
+        return await done.Task;
     }
 
     private static async Task<(HashSet<string> Owned, HashSet<string> Pending, Dictionary<string, string> Proofs, bool Ok)> QueryOwnedAsync(BillingClient client)
@@ -183,6 +246,15 @@ public sealed class AndroidPurchases : IBookPurchases
     {
         var answer = await client.QueryPurchasesAsync(query);
         return answer.Result.ResponseCode == BillingResponseCode.Ok ? answer.Purchases : null;
+    }
+
+    private sealed class DetailsListener(TaskCompletionSource<QueryProductDetailsResult> done) : Java.Lang.Object, IProductDetailsResponseListener
+    {
+        public void OnProductDetailsResponse(BillingResult result, QueryProductDetailsResult details)
+        {
+            PurchaseTrace.Line($"product details (listener callback): code={result.ResponseCode} debug='{OneLine(result.DebugMessage)}'");
+            done.TrySetResult(details);
+        }
     }
 
     private sealed class AcknowledgeListener : Java.Lang.Object, IAcknowledgePurchaseResponseListener

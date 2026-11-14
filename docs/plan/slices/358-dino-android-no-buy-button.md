@@ -172,8 +172,8 @@ told apart, and the release build logs nothing about products. Only a Play-insta
 
 ## Open (cause of the empty answer)
 
-- [ ] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
-- [ ] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
+- [x] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
+- [x] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
 - [ ] Release it, re-run on the S21 from Play, and fix whichever side is empty.
 
 ## Not yet verified
