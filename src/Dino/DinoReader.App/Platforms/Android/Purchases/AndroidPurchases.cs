@@ -123,19 +123,20 @@ public sealed class AndroidPurchases : IBookPurchases
 
         var products = productIds.Select(id => QueryProductDetailsParams.Product.NewBuilder().SetProductId(id).SetProductType(BillingClient.ProductType.Inapp).Build()).ToList();
         QueryProductDetailsParams query = QueryProductDetailsParams.NewBuilder().SetProductList(products).Build();
-        QueryProductDetailsResult answer = await client.QueryProductDetailsAsync(query);
+        QueryProductDetailsResult asyncAnswer = await client.QueryProductDetailsAsync(query);
+        DetailsAnswer answer = new(asyncAnswer, asyncAnswer.Result);
         TraceDetails("async", productIds.Count, answer);
-        if ((answer.ProductDetailsList?.Count ?? 0) == 0)
+        if ((answer.Details.ProductDetailsList?.Count ?? 0) == 0)
         {
             answer = await ListenerIfBetterAsync(client, query, productIds.Count, answer);
         }
 
-        if (answer.Result.ResponseCode == BillingResponseCode.Ok && (answer.ProductDetailsList?.Count ?? 0) == 0)
+        if (IsOk(answer.Result) && (answer.Details.ProductDetailsList?.Count ?? 0) == 0)
         {
             _ = ProbeUnknownIdAsync(client); // not awaited: a slow or hung probe never holds up prices or Buy
         }
 
-        foreach (ProductDetails details in answer.ProductDetailsList ?? [])
+        foreach (ProductDetails details in answer.Details.ProductDetailsList ?? [])
         {
             _details[details.ProductId] = details;
             if (details.GetOneTimePurchaseOfferDetails()?.FormattedPrice is { } price)
@@ -144,20 +145,20 @@ public sealed class AndroidPurchases : IBookPurchases
             }
         }
 
-        return (prices, answer.Result.ResponseCode != BillingResponseCode.Ok); // any non-OK code is a failed query (BookPurchases reports billing_error when the device has internet; the code is in the trace line above); OK with no price is prices_missing
+        return (prices, !IsOk(answer.Result)); // any non-OK code is a failed query (BookPurchases reports billing_error when the device has internet; the code is in the trace line above); OK with no price is prices_missing
     }
 
     // Only when the async answer has no details: asks again through the listener overload; the listener's answer (code included) replaces the async one only when it has details.
-    private static async Task<QueryProductDetailsResult> ListenerIfBetterAsync(BillingClient client, QueryProductDetailsParams query, int asked, QueryProductDetailsResult asyncAnswer)
+    private static async Task<DetailsAnswer> ListenerIfBetterAsync(BillingClient client, QueryProductDetailsParams query, int asked, DetailsAnswer asyncAnswer)
     {
-        QueryProductDetailsResult? viaListener = await QueryViaListenerAsync(client, query);
+        DetailsAnswer? viaListener = await QueryViaListenerAsync(client, query);
         if (viaListener is null)
         {
             return asyncAnswer;
         }
 
         TraceDetails("listener", asked, viaListener);
-        if ((viaListener.ProductDetailsList?.Count ?? 0) == 0)
+        if ((viaListener.Details.ProductDetailsList?.Count ?? 0) == 0)
         {
             return asyncAnswer;
         }
@@ -167,11 +168,22 @@ public sealed class AndroidPurchases : IBookPurchases
     }
 
     // Slice 358: Play's answer, so a run can tell "not ok", "ok but empty" and "no price in the details" apart (BookPurchases reports prices_missing for the products left without a price). Codes, counts and product ids only. The Release log, not Debug only.
-    private static void TraceDetails(string via, int asked, QueryProductDetailsResult answer)
+    private static void TraceDetails(string via, int asked, DetailsAnswer answer)
     {
-        string unfetched = string.Join(",", (answer.UnfetchedProductList ?? []).Select(u => $"{u.ProductId}:{u.StatusCodeValue}"));
-        PurchaseTrace.Line($"product details ({via}): code={answer.Result.ResponseCode} debug='{OneLine(answer.Result.DebugMessage)}' asked={asked} got={answer.ProductDetailsList?.Count ?? 0} unfetched={answer.UnfetchedProductList?.Count ?? 0} [{unfetched}]");
+        QueryProductDetailsResult details = answer.Details;
+        string unfetched = string.Join(",", (details.UnfetchedProductList ?? []).Select(u => $"{u.ProductId}:{u.StatusCodeValue}"));
+        string code = answer.Result?.ResponseCode.ToString() ?? NoResultCode;
+        PurchaseTrace.Line($"product details ({via}): code={code} debug='{OneLine(answer.Result?.DebugMessage)}' asked={asked} got={details.ProductDetailsList?.Count ?? 0} unfetched={details.UnfetchedProductList?.Count ?? 0} [{unfetched}]");
     }
+
+    private const string NoResultCode = "none";
+
+    // Slice 358: the listener overload hands its BillingResult to the callback, and the details object's own Result is null there
+    // (reading it threw and silently ended the refresh on 1.128.1-1.128.2). So every answer carries the BillingResult it really came with.
+    private sealed record DetailsAnswer(QueryProductDetailsResult Details, BillingResult? Result);
+
+    // A missing result is not ok: only a real Ok code is.
+    private static bool IsOk(BillingResult? result) => result?.ResponseCode == BillingResponseCode.Ok;
 
     // Slice 358: only when the real answer has no details. One more query with ONLY a made-up id, to see whether Play lists unknown ids in unfetchedProductList. Its answer never reaches prices, _details or the UI.
     private static async Task ProbeUnknownIdAsync(BillingClient client)
@@ -180,7 +192,7 @@ public sealed class AndroidPurchases : IBookPurchases
         {
             var probe = QueryProductDetailsParams.Product.NewBuilder().SetProductId(ProbeProductId).SetProductType(BillingClient.ProductType.Inapp).Build();
             QueryProductDetailsResult answer = await client.QueryProductDetailsAsync(QueryProductDetailsParams.NewBuilder().SetProductList([probe]).Build());
-            TraceDetails("probe", 1, answer);
+            TraceDetails("probe", 1, new DetailsAnswer(answer, answer.Result));
         }
         catch (Exception ex)
         {
@@ -199,9 +211,9 @@ public sealed class AndroidPurchases : IBookPurchases
     }
 
     // The same query through the listener overload, to rule the async wrapper in or out; null when Play does not answer in time or the client is gone.
-    private static async Task<QueryProductDetailsResult?> QueryViaListenerAsync(BillingClient client, QueryProductDetailsParams query)
+    private static async Task<DetailsAnswer?> QueryViaListenerAsync(BillingClient client, QueryProductDetailsParams query)
     {
-        var done = new TaskCompletionSource<QueryProductDetailsResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var done = new TaskCompletionSource<DetailsAnswer?>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             client.QueryProductDetails(query, new DetailsListener(done));
@@ -272,12 +284,23 @@ public sealed class AndroidPurchases : IBookPurchases
         return answer.Result.ResponseCode == BillingResponseCode.Ok ? answer.Purchases : null;
     }
 
-    private sealed class DetailsListener(TaskCompletionSource<QueryProductDetailsResult> done) : Java.Lang.Object, IProductDetailsResponseListener
+    private sealed class DetailsListener(TaskCompletionSource<DetailsAnswer?> done) : Java.Lang.Object, IProductDetailsResponseListener
     {
         public void OnProductDetailsResponse(BillingResult result, QueryProductDetailsResult details)
         {
-            PurchaseTrace.Line($"product details (listener callback): code={result.ResponseCode} debug='{OneLine(result.DebugMessage)}'");
-            done.TrySetResult(details);
+            try
+            {
+                PurchaseTrace.Line($"product details (listener callback): code={result?.ResponseCode.ToString() ?? NoResultCode} debug='{OneLine(result?.DebugMessage)}'");
+            }
+            catch (Exception ex)
+            {
+                // no-fallback: the trace line is diagnostic only; nothing may escape into Play's callback thread, and the answer below is still delivered
+                Debug.WriteLine($"Dino Reader could not trace the listener callback: {ex.GetType().Name}");
+            }
+            finally
+            {
+                done.TrySetResult(details is null ? null : new DetailsAnswer(details, result));
+            }
         }
     }
 
