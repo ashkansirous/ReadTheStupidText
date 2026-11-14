@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-  Self-test for Slice 317 item 1: Select-AbandonedBuilds picks the builds whose recorded worktree path is gone and the builds nobody used for 14 days,
-  and never one used in the last 24 hours. Pure logic, no build, no device. Run in pwsh and powershell 5.1.
+  Self-test for Slice 317 item 1: Select-AbandonedBuilds picks only the builds nobody used for 14 days (a gone worktree is no reason), ignores nulls,
+  and an empty cache prunes nothing and does not throw. Pure logic, no build, no device. Run in pwsh and powershell 5.1.
 #>
 $ErrorActionPreference = 'Stop'
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME = [IO.Path]::GetTempPath() }
@@ -25,8 +25,10 @@ $builds = @(
     [pscustomobject]@{ Name = 'no-path-recent'; WorktreePath = $null; LastWriteTime = $now.AddDays(-3) }
 )
 $picked = @(Select-AbandonedBuilds $builds $now | ForEach-Object { $_.Name })
-Assert-Equal 'abandoned builds (a build used in the last 24 h is never picked)' 'live-old,gone-old-ish,old-and-used-never-path' ($picked -join ',')
+Assert-Equal 'abandoned builds: only age counts, a gone worktree path does not' 'live-old,old-and-used-never-path' ($picked -join ',')
 Assert-Equal 'an empty cache selects nothing' 0 @(Select-AbandonedBuilds @() $now).Count
+Assert-Equal 'a null list selects nothing' 0 @(Select-AbandonedBuilds $null $now).Count
+Assert-Equal 'a list holding one null selects nothing' 0 @(Select-AbandonedBuilds @($null) $now).Count
 
 # The deleting path, on a temp cache folder.
 $cache = Join-Path ([IO.Path]::GetTempPath()) ("rtst-prune-test-" + [guid]::NewGuid().ToString('N'))
@@ -46,9 +48,13 @@ try {
     New-FakeBuild 'no-path-stale' '{"worktree":"s317"}' 30
     New-FakeBuild 'unreadable-meta' '{not json' 30
     New-FakeBuild 'pack-no-record' $null 30
-    $null = Remove-AbandonedBuilds $cache 6>$null
+    $removed = Remove-AbandonedBuilds $cache 6>$null
     $left = @(Get-ChildItem $cache -Directory | ForEach-Object { $_.Name } | Sort-Object)
-    Assert-Equal 'deleting path: gone path (not used today) and stale go; recent, unreadable and pack stay' 'gone-but-used-today,live-recent,no-path-recent,pack-no-record,unreadable-meta' ($left -join ',')
+    Assert-Equal 'deleting path: only the 30-day-old records go (a gone worktree path alone does not); the pack folder (no record) stays' 'gone-but-used-today,gone-worktree,live-recent,no-path-recent,pack-no-record' ($left -join ',')
+    Assert-Equal 'it returns how many it removed' 3 $removed
+    $empty = Join-Path $cache 'nothing-here'
+    $null = New-Item -ItemType Directory -Force $empty
+    Assert-Equal 'a cache with no build records removes nothing and does not throw' 0 (Remove-AbandonedBuilds $empty 6>$null)
 }
 finally {
     if (Test-Path $cache) { Remove-Item $cache -Recurse -Force -ErrorAction SilentlyContinue }

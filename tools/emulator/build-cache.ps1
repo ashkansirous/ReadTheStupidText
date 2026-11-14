@@ -224,40 +224,38 @@ function Remove-OldBuilds([string]$App, [string]$Platform) {
     } | Sort-Object LastWriteTime -Descending | Select-Object -Skip $script:KeepBuildsPerWorktree
     # A build killed half way leaves its temp folder behind (an APK or MSIX each); an hour is longer than any build.
     $stale = $dirs | Where-Object { $_.Name -match "^$prefix\.building-" -and $_.LastWriteTime -lt (Get-Date).AddHours(-1) }
-    foreach ($dir in @($old) + @($stale) | Where-Object { $_ }) { Remove-Item $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
-    Remove-AbandonedBuilds
-    Write-BuildCacheSummary
+    $doomed = @(foreach ($dir in (@($old) + @($stale))) { if ($dir) { $dir } })
+    foreach ($dir in $doomed) { Remove-Item -LiteralPath $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+    $removed = $doomed.Count + (Remove-AbandonedBuilds)
+    # Measuring walks every file of the cache (tens of GB), so the summary prints only when something was pruned.
+    if ($removed -gt 0) { Write-BuildCacheSummary }
 }
 
 # Slice 317 item 1: the keep-newest-3 rule above only ever ran for the worktree that was building, so the builds of a worktree that was
-# removed (merged, gone) kept their newest copies for ever (31 GB on 2026-11-08). Review fix 1: a build is abandoned when the worktree PATH recorded in its build.json
-# no longer exists, or when nothing has used it for $script:AbandonedBuildDays (a reuse bumps LastWriteTime in Find-CachedBuild, so a live build never ages out).
-# A build used in the last $script:RecentBuildHours hours is never pruned: another worktree may have just reused it. A record with no path (written before this fix) is pruned by age only.
+# removed (merged, gone) kept their newest copies for ever (31 GB on 2026-11-08). Design changed after review check 1 (two strikes): a build is abandoned only by AGE,
+# when nothing has used it for $script:AbandonedBuildDays (a reuse bumps LastWriteTime in Find-CachedBuild, so a live build never ages out).
+# A worktree that is gone is not a reason: another live worktree may reuse its build.
 $script:AbandonedBuildDays = 14
-$script:RecentBuildHours = 24
 
-# $Builds are objects with Name, WorktreePath (from build.json, may be empty) and LastWriteTime.
+# $Builds are objects with Name and LastWriteTime; nulls are ignored.
 function Select-AbandonedBuilds($Builds, [datetime]$Now) {
-    return @($Builds | Where-Object {
-        if ($_.LastWriteTime -gt $Now.AddHours(-$script:RecentBuildHours)) { return $false }
-        ($_.LastWriteTime -lt $Now.AddDays(-$script:AbandonedBuildDays)) -or ($_.WorktreePath -and -not (Test-Path -LiteralPath $_.WorktreePath))
-    })
+    return @(@($Builds) | Where-Object { $_ -and $_.LastWriteTime -lt $Now.AddDays(-$script:AbandonedBuildDays) })
 }
 
-# $CacheRoot defaults to the real cache; test-build-prune.ps1 passes a temp folder.
+# $CacheRoot defaults to the real cache; test-build-prune.ps1 passes a temp folder. Returns how many builds it removed.
 function Remove-AbandonedBuilds([string]$CacheRoot = '') {
     $root = if ($CacheRoot) { $CacheRoot } else { Join-Path (Get-WorktreesRoot) '_builds' }
-    if (-not (Test-Path $root)) { return }
-    $builds = foreach ($dir in Get-ChildItem $root -Directory) {
-        $meta = Join-Path $dir.FullName $script:BuildMetaFile
-        if (-not (Test-Path $meta)) { continue }  # packs and half-built temp folders are not build records
-        try { $json = Get-Content $meta -Raw | ConvertFrom-Json } catch { continue }
-        [pscustomobject]@{ Name = $dir.Name; Path = $dir.FullName; WorktreePath = $json.worktreePath; LastWriteTime = $dir.LastWriteTime }
+    if (-not (Test-Path $root)) { return 0 }
+    $builds = @(foreach ($dir in Get-ChildItem $root -Directory) {
+        if (-not (Test-Path (Join-Path $dir.FullName $script:BuildMetaFile))) { continue }  # packs and half-built temp folders are not build records
+        [pscustomobject]@{ Name = $dir.Name; Path = $dir.FullName; LastWriteTime = $dir.LastWriteTime }
+    })
+    $doomed = @(Select-AbandonedBuilds $builds (Get-Date))
+    foreach ($build in $doomed) {
+        Write-Host "Build cache: removing $($build.Name) (unused for $($script:AbandonedBuildDays) days)."
+        Remove-Item -LiteralPath $build.Path -Recurse -Force -ErrorAction SilentlyContinue
     }
-    foreach ($build in (Select-AbandonedBuilds @($builds) (Get-Date))) {
-        Write-Host "Build cache: removing $($build.Name) (its worktree is gone, or unused for $($script:AbandonedBuildDays) days)."
-        Remove-Item $build.Path -Recurse -Force -ErrorAction SilentlyContinue
-    }
+    return $doomed.Count
 }
 
 function Get-BuildCacheBytes {

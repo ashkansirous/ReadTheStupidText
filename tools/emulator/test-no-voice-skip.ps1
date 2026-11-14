@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-  Self-test for Slice 317 item 4: a `# needs: voice` flow is skipped with a "no voice" line only when the RTST-TEST log has no ENGINE_READY marker;
-  a flow without the need, or a log with the marker, is never skipped. Pure logic, no device. Run in pwsh and powershell 5.1.
+  Self-test for Slice 317 item 4: a `# needs: voice` flow is skipped (before it runs) only when adb's TTS query contains "No services found";
+  a flow without the need, or an emulator with an engine or an unknown answer, is never skipped. Pure logic, no device. Run in pwsh and powershell 5.1.
 #>
 $ErrorActionPreference = 'Stop'
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME = [IO.Path]::GetTempPath() }
@@ -11,14 +11,15 @@ function Assert-Equal([string]$Name, $Expected, $Actual) {
     if ("$Expected" -ne "$Actual") { $script:failed++; Write-Host "FAIL: $Name expected [$Expected] got [$Actual]" }
 }
 
-$voiceless = "I RTST-TEST: HOOK skip-first-run ok`nI RTST-TEST: READ_REQUESTED"
-$spoke = "$voiceless`nI RTST-TEST: ENGINE_READY 812`nI RTST-TEST: READ_START"
-Assert-Equal 'voice flow, no engine marker, no TTS engine: skipped' $true (Test-NoVoiceSkip @('voice') $voiceless $true)
-Assert-Equal 'voice flow, no engine marker but the emulator HAS a TTS engine: a failure, not a skip' $false (Test-NoVoiceSkip @('voice') $voiceless $false)
-Assert-Equal 'voice flow, engine ready: not skipped' $false (Test-NoVoiceSkip @('voice') $spoke $true)
-Assert-Equal 'flow without the need: not skipped' $false (Test-NoVoiceSkip @('cellular-only') $voiceless $true)
-Assert-Equal 'no needs at all: not skipped' $false (Test-NoVoiceSkip @() $voiceless $true)
-Assert-Equal 'empty log, voice flow, no engine: skipped' $true (Test-NoVoiceSkip @('voice', 'screen-cycle') '' $true)
+Assert-Equal 'voice flow, no TTS engine: skipped' $true (Test-NoVoiceSkip @('voice') $true)
+Assert-Equal 'voice flow, the emulator HAS a TTS engine: runs' $false (Test-NoVoiceSkip @('voice') $false)
+Assert-Equal 'flow without the need: not skipped' $false (Test-NoVoiceSkip @('cellular-only') $true)
+Assert-Equal 'no needs at all: not skipped' $false (Test-NoVoiceSkip @() $true)
+Assert-Equal 'several needs including voice, no engine: skipped' $true (Test-NoVoiceSkip @('voice', 'screen-cycle') $true)
+Assert-Equal 'one helper decides skipped: a SKIP result' $true (Test-FlowSkipped ([pscustomobject]@{ NotRun = 'SKIP a: no voice' }))
+Assert-Equal 'one helper decides skipped: another not-run reason is not a skip' $false (Test-FlowSkipped ([pscustomobject]@{ NotRun = 'app crashed in x' }))
+Assert-Equal 'one helper decides skipped: a pass is not a skip' $false (Test-FlowSkipped ([pscustomobject]@{ NotRun = $null }))
+Assert-Equal 'extra adb line before the answer still counts' $true (Test-NoTtsEngine "WARNING: linker something`r`nNo services found`r`n")
 Assert-Equal 'unknown (adb timeout or empty output): no skip' $false (Test-NoTtsEngine '')
 Assert-Equal 'unknown (adb timeout returns null): no skip' $false (Test-NoTtsEngine $null)
 Assert-Equal 'adb error text: no skip' $false (Test-NoTtsEngine 'error: device offline')

@@ -254,11 +254,22 @@ jobs:
           #
           # Slice 317 item 5: one retry after a minute when the CLI's output names a 5xx from the Store service (release run 42449477730: HTTP 500
           # InternalServerError on "Retrieving existing Submission" after 55 s). A 4xx or any other failure fails at once. store-submit-retry.mjs decides.
+          # The CLI's stderr must not abort the step before the retry check reads the log: native-command errors are not terminating around the call.
           $publishLog = "publish-output.txt"
           for ($attempt = 1; $attempt -le 2; $attempt++) {
-            msstore publish "out\$($env:PACKAGE).msixbundle" `
-              -id "${{ inputs.product_id }}" -ut 300 -v --noCommit 2>&1 | Tee-Object -FilePath $publishLog
-            if ($LASTEXITCODE -eq 0) { break }
+            $priorErrorAction = $ErrorActionPreference
+            $priorNativeErrorAction = $PSNativeCommandUseErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            $PSNativeCommandUseErrorActionPreference = $false
+            try {
+              msstore publish "out\$($env:PACKAGE).msixbundle" `
+                -id "${{ inputs.product_id }}" -ut 300 -v --noCommit 2>&1 | Tee-Object -FilePath $publishLog
+              $publishExit = $LASTEXITCODE
+            } finally {
+              $ErrorActionPreference = $priorErrorAction
+              $PSNativeCommandUseErrorActionPreference = $priorNativeErrorAction
+            }
+            if ($publishExit -eq 0) { break }
             node .github/scripts/store-submit-retry.mjs $publishLog
             $transient = ($LASTEXITCODE -eq 0)
             if ($attempt -ge 2 -or -not $transient) { throw "msstore publish failed (attempt $attempt of 2, transient=$transient)" }

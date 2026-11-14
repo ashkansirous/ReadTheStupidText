@@ -253,14 +253,14 @@ test('newestAppTag and bumpKind only see their own product prefix (Slice 130)', 
 });
 
 const NO_RTST = { windows: false, windowsstore: false, android: false, ios: false };
-const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
+const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false, dinowinstore: false };
 const plan = (rtstFiles, dinoFiles) => ({ rtst: { changedFiles: rtstFiles, bump: 'other' }, dino: { changedFiles: dinoFiles, bump: 'other' } });
 
 test('per product: each product reads only the changes since its own tag', () => {
     const dinoOnly = ['src/Dino/DinoReader.App/App.xaml'];
     const rtstOnly = ['src/Rtst/ReadTheStupidText.App/App.xaml.cs'];
     // RTST was tagged after the Dino change, Dino after the RTST one: each sees only its own.
-    assert.deepEqual(shipTargetsPerProduct({ plans: plan([], dinoOnly) }), { ...NO_RTST, ...NO_DINO, dinoapp: true, dinoios: true, dinowin: true });
+    assert.deepEqual(shipTargetsPerProduct({ plans: plan([], dinoOnly) }), { ...NO_RTST, ...NO_DINO, dinoapp: true, dinoios: true, dinowin: true, dinowinstore: true });
     assert.deepEqual(shipTargetsPerProduct({ plans: plan(rtstOnly, []) }), { ...NO_RTST, ...NO_DINO, windows: true, windowsstore: true });
 });
 
@@ -278,7 +278,7 @@ test('per product: a major bump or force_all builds that product (or both) only'
     const majorDino = shipTargetsPerProduct({ plans });
     assert.deepEqual([majorDino.windows, majorDino.dinoapp, majorDino.dinoreader], [false, true, true]);
     assert.equal(shipTargetsPerProduct({ plans: plan([], []), forceAll: true }).windowsstore, true);
-    assert.equal(Object.keys(shipTargetsPerProduct({ plans: plan([], []) })).length, 9);
+    assert.equal(Object.keys(shipTargetsPerProduct({ plans: plan([], []) })).length, 10);
 });
 
 // ---- pull_request.paths parity: each workflow mirrors its GROUPS rows ----
@@ -643,14 +643,27 @@ test('Slice 317: a Dino release whose Store submission failed is resubmitted by 
     const next = plan([], []);
     next.dino.storeChangedFiles = [DINO_APP_FILE]; // the last dino-store-v marker is older than this change
     const flags = shipTargetsPerProduct({ plans: next });
-    assert.equal(flags.dinowin, true);
-    assert.equal(shipTargetsPerProduct({ plans: plan([], []) }).dinowin, false); // the old behaviour: nothing changed in this release, nothing is submitted
+    assert.deepEqual([flags.dinowinstore, flags.dinowin], [true, true]); // the pending submit is the submit flag; it also turns the MSIX build on (like RTST's windowsstore -> windows)
+    const idle = shipTargetsPerProduct({ plans: plan([], []) });
+    assert.deepEqual([idle.dinowinstore, idle.dinowin], [false, false]); // nothing changed in this release, nothing is submitted
 });
 
-test('Slice 317: nothing Dino-Windows since the last Dino Store submission submits nothing', () => {
+test('Slice 317: nothing Dino-Windows since the last Dino Store submission submits nothing and builds no MSIX', () => {
     const plans = plan([], []);
     plans.dino.storeChangedFiles = ['content/dino/lion-and-mouse/story.md'];
-    assert.equal(shipTargetsPerProduct({ plans }).dinowin, false);
+    const flags = shipTargetsPerProduct({ plans });
+    assert.deepEqual([flags.dinowinstore, flags.dinowin], [false, false]);
+});
+
+test('Slice 317 review fix 9: after a successful submit (marker at HEAD, empty diff) a later release builds the MSIX only for its own Dino Windows change', () => {
+    const cleared = plan([], ['src/Dino/DinoReader.Core/Parser.cs']);
+    cleared.dino.storeChangedFiles = [];
+    const own = shipTargetsPerProduct({ plans: cleared });
+    assert.deepEqual([own.dinowinstore, own.dinowin], [true, true]); // its own change builds and submits
+    const rtstOnly = plan(['src/Rtst/ReadTheStupidText.App/X.cs'], []);
+    rtstOnly.dino.storeChangedFiles = [];
+    const flags = shipTargetsPerProduct({ plans: rtstOnly });
+    assert.deepEqual([flags.dinowinstore, flags.dinowin], [false, false]); // a cleared marker no longer forces the MSIX build
 });
 
 test('Slice 317: the Dino marker tag is not a dino-v release tag, and the newest one wins', () => {
@@ -886,8 +899,8 @@ test('per product plan: PRODUCT=dino plans only Dino (the RTST tag is never read
 
 test('per product plan: a Dino plan sets only the Dino targets, force_all and a major bump stay inside the product', () => {
     const dinoOnly = shipTargetsPerProduct({ plans: { dino: { changedFiles: ['src/Dino/DinoReader.App/X.cs'], bump: 'other' } } });
-    assert.deepEqual(Object.keys(dinoOnly).sort(), [...PRODUCTS.dino.targets].sort());
-    assert.deepEqual([dinoOnly.dinoapp, dinoOnly.dinoios, dinoOnly.dinowin], [true, true, true]);
+    assert.deepEqual(Object.keys(dinoOnly).sort(), [...PRODUCTS.dino.targets, PRODUCTS.dino.store.flag].sort()); // the targets plus the submit flag (Slice 317 item 5)
+    assert.deepEqual([dinoOnly.dinoapp, dinoOnly.dinoios, dinoOnly.dinowin, dinoOnly.dinowinstore], [true, true, true, true]);
     const forced = shipTargetsPerProduct({ plans: { rtst: { changedFiles: [], bump: 'other' } }, forceAll: true });
     assert.deepEqual(Object.keys(forced).sort(), [...PRODUCTS.rtst.targets].sort());
     assert.deepEqual([forced.windows, forced.android, forced.ios, forced.windowsstore], [true, true, true, true]);

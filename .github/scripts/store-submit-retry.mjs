@@ -16,22 +16,26 @@ const SERVER_ERROR_NAMES = /\b(InternalServerError|BadGateway|ServiceUnavailable
 // "HTTP 500", "HTTP/1.1 503", "HTTP/2 502", "status code ...: 500": the version may carry a dot or a digit, so `\D` alone would stop inside "HTTP/2".
 const SERVER_ERROR_STATUS = /\b(?:HTTP(?:\/\d(?:\.\d)?)?|status(?: code)?)\b[^\d\n]{0,60}\b5\d\d\b/i;
 
-/** How many of the last non-empty lines count as the command's final error. `-v` logs every request (an Azure Blob "Status: 503" that a retry then cured), so the whole log is never searched. */
-export const FINAL_LINES = 6;
-
-/** The last few non-empty lines of the output: the final status/exit text of the failed command. */
-export function finalLines(output) {
-    const lines = String(output ?? '').split(/\r?\n/).filter(line => line.trim() !== '');
-    return lines.slice(-FINAL_LINES).join('\n');
-}
-
 /** The one stage that may be retried: the CLI looks up the app's existing submission before it creates anything, so a 5xx here has changed nothing in the Store. */
 export const RETRYABLE_STAGE = /Retrieving existing Submission/i;
 
-/** True only when the CLI's final lines name a 5xx from the Store service (by name or by an HTTP status) raised while "Retrieving existing Submission". Every other 5xx (an upload, a commit) may have left a draft behind and fails as before. */
+/** Stages that come after the lookup and may leave a draft behind: when one of them follows the lookup in the log, the failure is not the lookup's. */
+const LATER_STAGES = /\b(Uploading|Creating|Committing|Publishing)\b/i;
+
+/**
+ * Design changed after review check 1 (two strikes): the WHOLE captured log is searched (a fixed window of last lines lost the marker to `-v` output or a stack trace), but only the text from the
+ * LAST "Retrieving existing Submission" on counts, so a 5xx an earlier request logged and then cured (an Azure Blob "Status: 503") is never read as this failure.
+ */
+export function lastStageText(output) {
+    const text = String(output ?? '');
+    const at = text.search(new RegExp(`${RETRYABLE_STAGE.source}(?![\\s\\S]*${RETRYABLE_STAGE.source})`, 'i'));
+    return at < 0 ? '' : text.slice(at);
+}
+
+/** True only when the log's last "Retrieving existing Submission" is followed by a 5xx from the Store service (by name or by an HTTP status) and by no later stage. Every other 5xx (an upload, a commit) fails as before. */
 export function isTransientStoreError(output) {
-    const text = finalLines(output);
-    return RETRYABLE_STAGE.test(text) && (SERVER_ERROR_NAMES.test(text) || SERVER_ERROR_STATUS.test(text));
+    const tail = lastStageText(output);
+    return tail !== '' && !LATER_STAGES.test(tail) && (SERVER_ERROR_NAMES.test(tail) || SERVER_ERROR_STATUS.test(tail));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

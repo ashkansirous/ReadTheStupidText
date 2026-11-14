@@ -340,6 +340,11 @@ function Restore-FontScale([string]$Previous) {
     & $script:Adb -s $script:Serial shell settings delete system font_scale | Out-Null
 }
 
+# Slice 317 item 4: the result of a `# needs: voice` flow skipped on an emulator with no TTS engine; NotRun, so it is never counted as PASS.
+function New-NoVoiceSkipResult([System.IO.FileInfo]$File) {
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = 0.0; Problem = $null; Crash = @(); CrashLog = ''; NotRun = (Format-NoVoiceSkipLine $File.BaseName); Phases = ''; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() }
+}
+
 # The result of a flow whose setup failed before Maestro ran: the same shape Invoke-FlowBody returns, with the setup error as its problem.
 function New-FlowSetupFailure([System.IO.FileInfo]$File, [string]$Message) {
     return [pscustomobject]@{ Name = $File.BaseName; Seconds = 0.0; Problem = "Setup failed before the flow ran: $Message"; Crash = @(); CrashLog = ''; NotRun = $null; Phases = ''; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() }
@@ -412,15 +417,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File, [bool]$Cyc
         $crashLog = if ($logs.Crash.Trim()) { $logs.Crash } else { $run.CrashLog }   # a failed adb read after the kill must not hide the crash the watch saw
         $crash = @(Find-AppCrashLines $crashLog $logs.Anr $packages[$App])
     }
-    # Slice 317 item 4: a `# needs: voice` flow on an emulator that never started a read is skipped with a line, not reported as a failure (a crash or a killed Maestro is still a failure).
-    # Review fix 1+2: skipped only when the emulator has no TTS engine (probed over adb) AND no ENGINE_READY; the result is NotRun (counted as not run, never PASS).
-    $notRun = $null
-    $needsVoice = @(Get-FlowNeeds $File.FullName) -contains 'voice'
-    if ($problem -and $needsVoice -and $crash.Count -eq 0 -and -not $run.Killed -and -not $run.RunnerStuck -and (Test-NoVoiceSkip @('voice') (Get-TestLog) (Test-NoTtsEngine (Get-EmulatorTtsServices)))) {
-        $notRun = Format-NoVoiceSkipLine $File.BaseName
-        Write-Host $notRun
-        $problem = $null
-    }
+    $notRun = $null   # a no-voice skip never reaches here: such a flow is skipped before it runs (New-NoVoiceSkipResult, Slice 317 item 4)
     if ($run.Killed) { $problem += "`nMaestro was killed by the crash watch as soon as the app crashed (Slice 247)." }
     if ($run.RunnerStuck) { $problem += "`n" + (Format-RunnerStuckLine $run.StuckPid $script:CrashKillWaitSeconds) }
     if ($crash.Count -gt 0) { $problem += "`nAPP CRASH/ANR during the flow:`n" + (($crash | ForEach-Object { "  $_" }) -join "`n") }
@@ -620,6 +617,7 @@ try {
         $myNames = @($splitPlan.First)
         if (@($splitPlan.Second).Count -gt 0 -and -not $secondRun) { $myNames += @($splitPlan.Second) }   # emulator 2 did not come up: its flows run here
         $results = New-Object System.Collections.Generic.List[object]
+        $noTtsEngine = Test-NoTtsEngine (Get-EmulatorTtsServices)   # Slice 317 item 4: probed once; a `# needs: voice` flow is skipped before it runs when the emulator has no TTS engine
         $crashedIn = $null
         $stopLine = ''
         foreach ($file in @($files | Where-Object { $myNames -contains $_.BaseName })) {
@@ -629,7 +627,7 @@ try {
                 continue
             }
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
-            $r = Invoke-FlowCrashRetry $maestro $file
+            $r = if (Test-NoVoiceSkip @(Get-FlowNeeds $file.FullName) $noTtsEngine) { New-NoVoiceSkipResult $file } else { Invoke-FlowCrashRetry $maestro $file }
             Write-Host ("{0,-5} {1} ({2:n1} s){3}" -f $(if ($r.Problem) { 'FAIL' } elseif ($r.NotRun) { 'SKIP' } else { 'PASS' }), $r.Name, $r.Seconds, $(if ($r.Retried) { ' [crash-retried]' } else { '' }))
             if ($r.Phases) { Write-Host $r.Phases }
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
@@ -644,7 +642,7 @@ try {
         Restore-DialogGuard; Stop-Activity $activity
     }
     $failed = @($results | Where-Object { $_.Problem }).Count
-    $notRun = @($results | Where-Object { $_.NotRun -and $_.NotRun -notlike 'SKIP *' }).Count   # Round 2: a no-voice skip does not fail the run; any other not-run flow does
+    $notRun = @($results | Where-Object { $_.NotRun -and -not (Test-FlowSkipped $_) }).Count   # a no-voice skip does not fail the run; any other not-run flow does (the same Test-FlowSkipped the summary uses)
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
     foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
     foreach ($retrySummary in @(Format-RetrySummary $results.ToArray())) { Write-Host $retrySummary }

@@ -47,6 +47,16 @@ test('a 5xx earlier in a verbose log is ignored when the command then failed wit
     assert.equal(isTransientStoreError(verbose + '\n' + STAGE + '\nError: Response status code does not indicate success: 500 (InternalServerError).'), true);
 });
 
+test('the marker far above the error (verbose output or a stack trace after it) is still found', () => {
+    const trace = Array.from({ length: 40 }, (_, i) => `   at Microsoft.Store.Frame${i}()`);
+    const log = [STAGE, 'Error: Response status code does not indicate success: 500 (InternalServerError).', ...trace].join('\n');
+    assert.equal(isTransientStoreError(log), true);
+});
+
+test('a 5xx after a later stage (an upload) is not the lookup\'s failure', () => {
+    assert.equal(isTransientStoreError([STAGE, 'Uploading package...', 'GatewayTimeout'].join('\n')), false);
+});
+
 test('the wait is one minute', () => {
     assert.equal(RETRY_WAIT_SECONDS, 60);
 });

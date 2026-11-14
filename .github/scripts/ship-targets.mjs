@@ -87,8 +87,9 @@ export const DINO_STORE_TAG_PREFIX = 'dino-store-v';
  */
 export const PRODUCTS = {
     rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'], store: { prefix: STORE_TAG_PREFIX, flag: 'windowsstore', buildFlag: 'windows' } },
-    // Slice 317 item 5: Dino's Store submission is `dinowin`'s MSIX, so the marker-measured flag is `dinowin` itself (it is also the flag that builds the MSIX).
-    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'], store: { prefix: DINO_STORE_TAG_PREFIX, flag: 'dinowin', configuredEnv: 'DINOREADER_STORE_APP_ID' } },
+    // Slice 317 item 5 (design changed after review check 1, two strikes): the same build/submit split as RTST. `dinowinstore` (not a release-diff target: shipTargetsPerProduct adds it) is the submit flag, `dinowin` the
+    // build flag; `measure` names the shipTargets flag whose release-diff value `dinowinstore` starts from. A pending submission turns the build on, and the marker tag the successful submit pushes ends it.
+    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'], store: { prefix: DINO_STORE_TAG_PREFIX, flag: 'dinowinstore', buildFlag: 'dinowin', measure: 'dinowin', configuredEnv: 'DINOREADER_STORE_APP_ID' } },
 };
 
 /** Targets that publish content and never cut a release, so a major-bump token on their files must not rebuild the product (Slice 158). */
@@ -413,9 +414,9 @@ function writeOutputs(targets) {
  * submission was skipped, failed or cancelled is submitted by the next release. A pending RTST Store
  * submission also needs the MSIX built and released, so it turns `windows` on.
  */
-function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag }) {
+function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag, measure = flag }) {
     const sinceStore = shipTargets({ changedFiles: plan.storeChangedFiles, bump: plan.bump, forceAll });
-    merged[flag] = merged[flag] || sinceStore[flag];
+    merged[flag] = merged[flag] || sinceStore[measure];
     if (buildFlag) merged[buildFlag] = merged[buildFlag] || merged[flag];
 }
 
@@ -429,6 +430,7 @@ export function shipTargetsPerProduct({ plans, forceAll = false }) {
     for (const [name, product] of Object.entries(PRODUCTS).filter(([name]) => plans[name])) {
         const all = shipTargets({ ...plans[name], forceAll });
         product.targets.forEach((target) => { merged[target] = all[target]; });
+        if (product.store?.measure) merged[product.store.flag] = all[product.store.measure];   // a submit flag that is not a release-diff target starts from the build flag's diff value
         if (product.store && plans[name].storeChangedFiles) applySinceLastStore(merged, plans[name], forceAll, product.store);
     }
     return merged;

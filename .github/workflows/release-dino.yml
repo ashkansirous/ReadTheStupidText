@@ -237,7 +237,7 @@ jobs:
     if: >-
       !cancelled()
       && needs.release-publish-dino.outputs.released == 'true'
-      && needs.shared.outputs.dinowin == 'true'
+      && needs.shared.outputs.dinowin_store == 'true'
       && vars.DINOREADER_STORE_APP_ID != ''
     uses: ./.github/workflows/store-submit.yml
     with:
@@ -247,8 +247,8 @@ jobs:
     secrets: inherit
 
   # Slice 317 item 5: the twin of release-rtst.yml's `store-submit-mark` (Slice 218). After a successful Store submission, mark the
-  # released commit with a `dino-store-v<x.y.z>` tag. ship-targets measures `dinowin` (the flag that builds and submits the MSIX) from the
-  # newest such tag, not from the last release, so a Dino release whose submission failed (HTTP 500 from the Ingestion API, run 42449477730),
+  # released commit with a `dino-store-v<x.y.z>` tag. ship-targets measures `dinowinstore` (the submit flag; a pending one also turns the `dinowin` build on, like RTST's `windowsstore`) from the
+  # newest such tag, not from the last release; the tag this job pushes after a successful submit ends the pending state, so a Dino release whose submission failed (HTTP 500 from the Ingestion API, run 42449477730),
   # was skipped or was cancelled is submitted by the next Dino release. The first run has no marker and falls back to the release diff;
   # the first successful submission creates it.
   store-submit-dino-mark:
