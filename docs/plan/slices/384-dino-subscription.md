@@ -55,6 +55,13 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   with the prices and trial above. `.github/scripts/store-products.mjs` should do as much as the store APIs allow;
   only what no API can set goes to the user, one step at a time with direct links.
 
+## Store listing switch (Slice 291 item 10, 2026-11-14)
+
+- The live Play text is `docs/store-listings/dino/play.md` (four free, buy each book once). The subscription text
+  is written in advance in `docs/store-listings/dino/play-subscription.md` and is pushed **only when this slice is
+  live on Play** (same for the App Store and Microsoft versions, written from it then, with the EULA and privacy
+  links Apple requires). The switch is the last work item here; record its date in Slice 291 item 10.
+
 ## Work
 
 Smallest end-to-end first: Android subscription unlocking one paid book, server-checked.
