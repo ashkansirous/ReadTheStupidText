@@ -1,7 +1,9 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
 **Product:** Shared
 
-*Parked: drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.* Moved back to `planned` by the 2026-11-13-1149 feedback loop (park reason kept here); a night run is denied again unless the user adds an autoMode allow line for store listing pushes (see that note's *Waiting on the user*).
+*Partly built (wave 2026-11-14, PR #1110): Google Play (both apps, 15 locales) and App Store (Dino 1.81.1, RTST 1.76.1, 14 locales, Farsi not offered by Apple; versions not submitted) pushed and read back equal. Parked: the Microsoft Store part (item 4 and Partner Center in item 5) waits for a Partner Center submission credential (an Entra app with `MS_SUBMISSION_TENANT_ID`, `MS_SUBMISSION_CLIENT_ID`, `MS_SUBMISSION_CLIENT_SECRET`), which only the user can create, or an interactive session with the user's signed-in Chrome.*
+
+*Earlier (history): drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.* Moved back to `planned` by the 2026-11-13-1149 feedback loop (park reason kept here); a night run is denied again unless the user adds an autoMode allow line for store listing pushes (see that note's *Waiting on the user*).
 
 **Touches:** `docs/store-listings/**` (new: one file per language for Dino under `docs/store-listings/dino/<lang>.md`; RTST's existing `docs/store-listings/<lang>.md` files completed, new `da.md`, `fi.md`, `sv.md`, `nb.md`, `nl.md`), `docs/plan/slices/374-store-listings-13-languages.md`, `docs/plan/unverified.md`
 
@@ -23,11 +25,11 @@ A French or Japanese parent searching the store sees an English page for an app 
 
 ## Work
 
-- [ ] 1. Read every live listing first (ASC API, Play API, Partner Center) for both apps and record per store which locales exist. Check each store's supported locale list in its own docs (Apple's App Store Connect localizations, Play's listing languages, Partner Center's): a language a store cannot list (Farsi on the App Store, for one, to be checked) is written down here and skipped there, never mapped to another language.
-- [ ] 2. Dino, smallest end-to-end first: French on Play (write `docs/store-listings/dino/fr.md`, push, read back). Then the other 12 languages on Play.
-- [ ] 3. Dino App Store: the 13 languages on version 1.81.1 (description, keywords within 100 bytes per locale, promotional text, subtitle within 30). Read back. Do not submit the version.
-- [ ] 4. Dino Microsoft Store: the 13 languages into the next Partner Center submission (listing only; never a submission that discards a pending draft), committed, read back from the submission.
-- [ ] 5. RTST: complete `ar es fa fr ja pt ru zh` against the current `en.md`, add `da fi sv nb nl`, push to Play, App Store (version 1.76.1, not submitted) and Partner Center the same way, read back.
+- [x] 1. Read every live listing first (ASC API, Play API, Partner Center) for both apps and record per store which locales exist. Check each store's supported locale list in its own docs (Apple's App Store Connect localizations, Play's listing languages, Partner Center's): a language a store cannot list (Farsi on the App Store, for one, to be checked) is written down here and skipped there, never mapped to another language.
+- [x] 2. Dino, smallest end-to-end first: French on Play (write `docs/store-listings/dino/fr.md`, push, read back). Then the other 12 languages on Play.
+- [x] 3. Dino App Store: the 13 languages on version 1.81.1 (description, keywords within 100 bytes per locale, promotional text, subtitle within 30). Read back. Do not submit the version.
+- [ ] 4. (WAITING: no Partner Center submission credential) Dino Microsoft Store: the 13 languages into the next Partner Center submission (listing only; never a submission that discards a pending draft), committed, read back from the submission.
+- [x] 5. (Google Play and App Store done; Partner Center waiting, see Push results) RTST: complete `ar es fa fr ja pt ru zh` against the current `en.md`, add `da fi sv nb nl`, push to Play, App Store (version 1.76.1, not submitted) and Partner Center the same way, read back.
 - [ ] 6. Play's and Apple's store keywords and short texts are written for each language, not translated word for word (store search terms people actually type, e.g. "Gute-Nacht-Geschichten", not a literal "bedtime stories").
 - [ ] 7. Each language gets one line in `docs/plan/unverified.md`: native read of the Dino and RTST listings in that language.
 
@@ -52,3 +54,14 @@ Pushes not done: the night session's store push was denied by the auto mode clas
 
 - Each store's listing for each app, read back through its API (Partner Center from the submission), equals the repo text in all 15 languages the store supports.
 - A language a store does not support is named in this file with the store's own doc as evidence.
+
+## Push results (2026-11-14, apply run)
+
+Live read first (2026-11-14): Play Dino en-GB, de-DE; Play RTST en-US. ASC Dino 1.81.1 en-US, de-DE; ASC RTST 1.76.1 en-US (description empty, left as it was), de-DE. Both versions `PREPARE_FOR_SUBMISSION`, still not submitted. No denial by any permission check.
+
+- **Google Play, Dino:** pushed and read back equal (title, short, full description): fr-FR first (own edit), then ar, zh-CN, da-DK, nl-NL, fa, fi-FI, ja-JP, no-NO, pt-BR, pt-PT, ru-RU, es-ES, es-419, sv-SE (second edit). All committed.
+- **Google Play, RTST:** the same 15 locales (fr-FR, ar, zh-CN, da-DK, nl-NL, fa, fi-FI, ja-JP, no-NO, pt-BR, pt-PT, ru-RU, es-ES, es-419, sv-SE) pushed and read back equal.
+- **App Store, Dino 1.81.1:** description, keywords, promotional text, subtitle, name pushed and read back equal for ar-SA, zh-Hans, da, nl-NL, fi, fr-FR, ja, no, pt-BR, pt-PT, ru, es-ES, es-MX, sv. The API accepted every code. Farsi skipped (not an App Store language). Not submitted.
+- **App Store, RTST 1.76.1:** the same 14 locales pushed and read back equal. Farsi skipped. Not submitted. Support/marketing/privacy URLs were copied from the existing localization (not new text).
+- **Microsoft Store, both apps:** WAITING. No Partner Center submission credential exists (`MS_STORE_*` is the Worker's collections app); the headless session did not try Chrome. Item 4 and the Partner Center part of item 5 stay open. Texts are in the repo.
+- Machine drafts, native read still open (`docs/plan/unverified.md`). Apple created the appInfo localization together with the version localization; the second pass patched it.
