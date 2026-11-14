@@ -5,6 +5,8 @@
 
 **Touches:** `docs/store-listings/**`, `STORE.md`, `site/dino/privacy.html`, `site/dino/index.html`, `.github/workflows/store-screenshots.yml` (new: macOS simulator screenshots), `tools/emulator/screenshot-frames.json`, `tools/desktop-vm/checks/rtst-panel-screenshot.ps1`, `docs/plan/slices/291-store-listings-and-screenshots.md`
 
+**Touches, widened for items 7-8 (coordinator, 2026-11-14):** `.claude/skills/store-listing/**`, `docs/store-listings/dino/play.md`.
+
 **Touches, widened at claim (2026-11-14):** also `.github/scripts/store-listings.mjs` and its test (item 3: RTST English through the release listing script, as Slice 193 did for German), `.github/workflows/store-submit.yml` (only if the RTST English line needs it), `tools/emulator/store-screenshots.ps1` (new), `.maestro/dino/store-shot-*.yaml` and `.maestro/rtst/store-shot-*.yaml` (new), `docs/store-listings/screenshots/**` (new: the PNGs). Widened after review pass 1 (coordinator, 2026-11-14; parallel-check showed no other live work): `.maestro/dino/needs-file/store-shot-*.yaml` and `.maestro/rtst/needs-file/store-shot-*.yaml` (the flows moved there so normal runs skip them), `tools/emulator/test-store-screenshots.ps1` (new), `tools/emulator/lint-flows.ps1` (one line: skip `store-shot-*` in the contact-sheet listing check).
 
 ## Claim notes (night 2026-11-14-1547 wave 4: iOS and tablet shots)
@@ -127,6 +129,22 @@ Premise check on origin/main:
 - Skipped #2 (`reviews/s291-check4.md`): "Offline emulator or pack server error keeps the banner visible" - low; it fails loudly and repeats check3 #4.
 - Skipped #3 (`reviews/s291-check4.md`): "fails if the banner shows for less than a poll" - low; after clearState a download runs for minutes, so it is not reachable on the emulator path.
 
+## From review (`reviews/s291b-high.md`)
+
+*Superseded:* the store-page code these lines fixed (`StoreCoversReady`, `[StoreShot]`) was removed when item 8 was reordered (no store shot, it shows prices); kept as the record.
+
+- Applied #1: the log marker is now `[StoreShot] covers ready n=`, written only once at least one cover is loaded (Test-LogMarker is a substring match, so a regex such as `n=[1-9]` would not work).
+- Applied #2: Debug-only `StoreCoversReady` dot (`StorePage.xaml` `CoversReadyMarker`, shown by `MarkCoversReady` after a cover batch has finished with at least one cover); the Dino store-shot flows wait on it (120 s) and then 3 s, replacing the one-cover wait plus 8 s. `StoreCoverShown` stays on the cover Image.
+- Skipped #3 (`reviews/s291b-high.md`): "AutomationId is put on an Image, which has no precedent in the repo; on Android an ImageView with no content description may be absent from the hierarchy Maestro reads" - the device run decides; the flows no longer wait on that id.
+- Applied #4: after the record shot the flows relaunch the app without clearState and wait for `StoryTile`, then enter the store tab; nothing depends on a recording existing.
+- Applied #5: the per-cover recount and the `[Redesign]` log are gone; the count is taken once, in `MarkCoversReady`, with the `[StoreShot]` tag.
+- Skipped #6, #7, #8, #9 (`reviews/s291b-high.md`): handled by the coordinator.
+
+## From review (`reviews/s291c-high-2.md`)
+
+- Applied #1 (the `[Record] open` expect-log marker removed from both Dino store-shot flows: the flow stops at the intro, so `RecordIntroStart` visible is the proof), #2 (shot 4 waits on `GalleryDone`, which only the grown-ups corner has), #3 (shot 3 waits for `ShelfAudioCancel-fa` to be gone after `set-language fa` and for `ReadingAudioStatus` to be gone on the reading page, 60 s each), #9 (the `en` reset in `onFlowComplete` waits for `StoryTile`).
+- Skipped #4, #5, #6, #7, #8 (`reviews/s291c-high-2.md`): handled by the coordinator.
+
 ## From review (`reviews/s291c-check2.md`)
 
 - Applied #1 (the iOS relaunch no longer requires PackStatusLabel visible; only the notVisible wait stays).
@@ -192,6 +210,18 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 - [ ] 5. (Android phone and tablet done 2026-11-14; iOS workflow built, not yet run; Microsoft Store and RTST control panel open) Screenshots, every store: iPhone 6.5-6.9" and iPad 13" (a macOS CI simulator job, `store-screenshots.yml`; Android and iOS are the same app, so Dino and RTST get the same frames); Play phone and tablet (emulator, `tools/emulator/screenshot-frames.json`); Microsoft Store desktop (VM). Retake the RTST control-panel shot from Slice 194 with the voice pack installed, signed in as a normal user and no watermark.
 - [ ] 6. Upload the screenshots with the listings (Play API, App Store Connect API, Partner Center), read each store back. Before the Play upload, check Play's current size and aspect-ratio rule: the phone shots are 1080x2400 (2.22:1) and `reviews/s291c-check.md` #1 says Play may cap the long side at twice the short side (not checked against Play's docs); the tablet shots are 1600x2560 (1.6:1).
 - From review (`reviews/s291c-check.md`): applied #5 (the rule above no longer names a user path); #1 recorded under item 6. Skipped #2 (`reviews/s291c-check.md`): "accepts any non-zero PNG size" the upload step checks the rule first (item 6), so a size check here would need another review round tonight for a step that does not run tonight; #3 (`reviews/s291c-check.md`): "one 1600x2560 set" low, the status-bar demo-mode follow-up from wave 3 covers the icons; #4 (`reviews/s291c-check.md`): "tablet PNGs are still untracked" the commit includes them.
+- [ ] 7. (User, 2026-11-14: "the listing has no image of important parts of the book!") Repo skill `.claude/skills/store-listing/` (what to say, what to show, per store) and the Dino text rewritten What / Why / Who / Features (`docs/store-listings/dino/play.md`, English first, translations after the user's yes).
+- [ ] 8. Dino phone shot set per the skill's table (reordered by the market research, user 2026-11-14: one difference per shot, strongest first), in `.maestro/dino/needs-file/store-shot-phone.yaml` (and the same screens in `store-shot-tablet.yaml`), names `store-dino-<form>-<n>-<screen>`:
+  1. `1-reading`: reading page with a character's line lit (today's reading shot; pick a page where a character, not the narrator, is speaking if the test book has one).
+  2. `2-record`: the record screen "Who will you record?" (`RecordIntroPage`, before `RecordIntroStart` is tapped): book sheet of Three Little Pigs in the grown-ups corner, "Record your voice"; path as `.maestro/dino/record-per-character.yaml`. `permissions: all: allow` at launch.
+  3. `3-language`: the same story page as shot 1 in another language, Farsi if the test books carry Farsi text, else German (a clearState relaunch with `skip-first-run lang: <code>` and the same `open-book`; check the test books' languages in `TestStore*.cs` / the test book data first). New flow steps: this is the shot that did not exist.
+  4. `4-grownups`: the grown-ups page, Books tab (`enter-grown-up tab: books`) with **no price visible** in the image; if that tab shows prices, use the Settings tab and say so in the report.
+  5. `5-shelf`: the kids' shelf of illustrated books (today's shelf shot).
+  Captions are not drawn into the PNGs in this item (the skill's caption table; captions go on with item 9). The live-store cover wait (`StoreCoverShown`, `StoreCoversReady`, the `[StoreShot]` log line in `StorePage.xaml(.cs)`) is **removed again**: the store page shows prices, so no shot uses it (review s291b-medium #1-#3, #5 fall away with it). `tools/emulator/store-screenshots.ps1` and its self-test take the new names. Then one emulator run (phone), the coordinator looks at every small copy, and the set replaces the live Play phone set after the user's yes.
+  *Built 2026-11-14:* both flows rewritten (shots 1 and 3 open page 6, where the Wolf speaks first, so a character line is lit; shot 3 uses `set-language lang=fa`; shot 4 waits on `GalleryDone` and asserts no `$`/`£`/`€` text). Emulator run 2026-11-14 (headless, phone): PASS in 93 s, five PNGs in `docs/store-listings/screenshots/dino/phone/` (`1-reading`, `2-record`, `3-language`, `4-grownups`, `5-shelf`), the three old ones deleted; the coordinator looked at the contact sheet: clean, no banners, no prices. Not pushed: waits on the user's yes to the text (item 7). Not yet verified: the tablet flow has not run.
+  *Open after the merge with PR #1148 (2026-11-14):* the Dino tablet PNGs committed there (`1-shelf`, `2-reading`, `3-books`) and `.maestro/dino/store-shot-ios-frames.yaml` still show the old set; retake the tablet set with the new `store-shot-tablet.yaml` and move the iOS frames flow to the five screens before any tablet or App Store upload. Also check the phone shots' 1080x2400 (2.22:1) against Play's "long side at most twice the short side" (stores.md) before the Play upload (item 6).
+- [ ] 9. Captions on the shots (one benefit line each, translated with the listing) and shots per listing language (`lang: fa`, `ar`, `de` ...), within what `stores.md` *Captions* allows; a caption tool (frame + text over the PNG) is new work, built after the user approves the English captions.
+- [ ] 10. Dino text in two versions (skill section 1, Dino): `docs/store-listings/dino/play.md` (live payment: four free, buy each book once) and `docs/store-listings/dino/play-subscription.md` (pushed only when Slice 384 ships; Slice 384 names the switch). Live version recorded here when pushed.
 
 ## Verification
 

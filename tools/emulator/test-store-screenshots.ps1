@@ -25,6 +25,14 @@ $flow = "- takeScreenshot: store-dino-phone-1-shelf`n- tapOn: x`n- takeScreensho
 Assert-Equal 'shot names of the phone form, in order' 'store-dino-phone-1-shelf,store-dino-phone-2-reading' ((Get-StoreShotNames $flow 'dino' 'phone') -join ',')
 Assert-Equal 'no shot for another app' 0 @(Get-StoreShotNames $flow 'rtst' 'phone').Count
 
+# Slice 291 item 8: the real Dino flows take the five shots of the skill's table, in order (reading, record, language, grown-ups, shelf; no store shot).
+$dinoShots = 'reading', 'record', 'language', 'grownups', 'shelf'
+foreach ($form in 'phone', 'tablet') {
+    $flowFile = Join-Path $PSScriptRoot "..\..\.maestro\dino\needs-file\store-shot-$form.yaml"
+    $expected = (1..5 | ForEach-Object { "store-dino-$form-$_-$($dinoShots[$_ - 1])" }) -join ','
+    Assert-Equal "the Dino $form flow's five shots" $expected ((Get-StoreShotNames (Get-Content -Raw $flowFile) 'dino' $form) -join ',')
+}
+
 $work = Join-Path ([IO.Path]::GetTempPath()) "store-shots-test-$PID"
 try {
     $null = New-Item -ItemType Directory -Force (Join-Path $work 'i1'), (Join-Path $work 'i2')
