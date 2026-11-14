@@ -5,87 +5,102 @@
     "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
+    "Carrot": {
+      "voice": "Puck",
+      "style": "a young, bright, bouncy little boy's voice for young children",
+      "direction": "excited and eager, can't wait to get closer"
+    },
     "Hazelnut": {
       "voice": "Leda",
       "style": "a young, bright, warm voice for young children",
       "direction": "warm and happy, a good friend"
+    },
+    "Referee": {
+      "voice": "Orus",
+      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children",
+      "direction": "calm, kind and friendly, never cross"
+    },
+    "Crowd": {
+      "voice": "Fenrir",
+      "style": "a big, loud, happy stadium crowd of football fans shouting together, warm and friendly for young children",
+      "direction": "long and joyful when they cheer a goal; a long, surprised, friendly 'oh' when they gasp, never cross or scared"
     }
   },
   "audioPacks": {
     "ar": {
-      "version": 2,
-      "hash": "914eda9acfa2bdd21cd864e284b17481f6a88f0e84047c4f03811b8ff57db1c2",
-      "bytes": 688624
+      "version": 3,
+      "hash": "2882a4c351e778ab1ff5fd074ea72d9e55caa0c6b4dc94a1e15980c7c64cd24e",
+      "bytes": 922359
     },
     "da": {
-      "version": 1,
-      "hash": "defbdb1dfa7485e210bd90181265e96ddf3434e8ef599c8673dfad32d3fe7b5e",
-      "bytes": 466594
+      "version": 2,
+      "hash": "73723cbba7d1d005377f65c8284e9ba5828600b6447ef600c2c347bae717509e",
+      "bytes": 706844
     },
     "de": {
-      "version": 1,
-      "hash": "b5a80995748f4f8c8c9d0bbfc7f81bd353c8a226f5b5724ea9be55c2c74100db",
-      "bytes": 551648
+      "version": 2,
+      "hash": "b55a3cb90d3cfa463a28f5a8932bab4936d66892a4dd3e706e93ef86e613c98a",
+      "bytes": 802130
     },
     "en": {
-      "version": 1,
-      "hash": "c579cc2b252a7c6e62a589887f2c9d303d7e50d3e0f12df371de173065e280c8",
-      "bytes": 526733
+      "version": 2,
+      "hash": "db3e0bcd722437c866a993294146d9b80f91215dedc5ded0c67389be0cfd8ccb",
+      "bytes": 778257
     },
     "es": {
-      "version": 1,
-      "hash": "346f91c4b8a1ee8e7c138add8f27d466437e84e3f773a5143ba56ceef88b10c1",
-      "bytes": 562483
+      "version": 2,
+      "hash": "8025d458100df7259f7d0972e1bc9ac441da7df7f6715b76e9d1665841feec7c",
+      "bytes": 856299
     },
     "fa": {
-      "version": 2,
-      "hash": "6b23f2c5b09dabbb30e19d4d93b8e66fdd526c5234c8c106f59149fe5d24b5f9",
-      "bytes": 559558
+      "version": 3,
+      "hash": "f7f0d16d0449eb54d4f0ca9a54b061e2cdefd1aae9cba30915634a13892e8e25",
+      "bytes": 816194
     },
     "fi": {
-      "version": 1,
-      "hash": "49116d72ad7e2f44677396bfeb6d15534fbcede9a9103dbf78ddda1eb982c693",
-      "bytes": 563382
+      "version": 2,
+      "hash": "83029ca9151aa6e00a9c0243b3f5296053c2a957f62d2a631e1513336da96a0b",
+      "bytes": 832315
     },
     "fr": {
-      "version": 1,
-      "hash": "aca93a4fe969ae08e9b8866dcde1df5aa15fe96f41f049dc10ae37894f0e33de",
-      "bytes": 501108
+      "version": 2,
+      "hash": "4d6810018c4d9232270f0cdb3e11fec21e8ad03e9c318efd24b16ec8112e44b5",
+      "bytes": 731263
     },
     "ja": {
-      "version": 1,
-      "hash": "86330aa252e9102345c04e875249f0a64c9bfdfc4637251216dd1b928f55955c",
-      "bytes": 598402
+      "version": 2,
+      "hash": "b3e98127fb0427820ce46f5f1e18aa69efacdcaef2b0e3fd1d93fb06f302ee4c",
+      "bytes": 869882
     },
     "nb": {
-      "version": 1,
-      "hash": "2ac55d64367901be2ea66f2dc0b5216d25eed7aa6959608f8dee3c7f05f963f3",
-      "bytes": 509500
+      "version": 2,
+      "hash": "1b62bff3ff8cbf6596752d578a31e799acf6ccf8cca930d060fb65a6d091384c",
+      "bytes": 776988
     },
     "nl": {
-      "version": 1,
-      "hash": "9ad7ab0b94b957f82552498d168614ba6fa20017f1f90abdababcdfed6f855b2",
-      "bytes": 488149
+      "version": 2,
+      "hash": "5801ec194ea47ce537e2f06d1895bda4bf5d42598bcacdd7c4b5670f54e2e3fd",
+      "bytes": 734304
     },
     "pt": {
-      "version": 1,
-      "hash": "f91391380b82b9cfbbeb6bfb5d8777f4a7c75aac9530bad7ec8cbd47ec698939",
-      "bytes": 546241
+      "version": 2,
+      "hash": "b8ba6edb0431fd4a810510822a7ee21b5e72b94aee9cc145e67bb62d81d1d7fe",
+      "bytes": 823385
     },
     "ru": {
-      "version": 1,
-      "hash": "4be3ada13aa270bb61da1d0f6932428e1866f6747740a98b55ab0d996e9eff9c",
-      "bytes": 645465
+      "version": 2,
+      "hash": "b995dc0bc131d62993ba1a0f8fc38f2b836fc22f0fa0024bcb264300ff77dcea",
+      "bytes": 919969
     },
     "sv": {
-      "version": 1,
-      "hash": "28715d62d1940918d0b85626db9056005d6d3c5122cca4b32076806d8dccd8f3",
-      "bytes": 546140
+      "version": 2,
+      "hash": "e96ddd1b369d8583be3861e51053de1c99568e629862d2ba6e1eba41ae4e0f22",
+      "bytes": 785944
     },
     "zh": {
-      "version": 1,
-      "hash": "48f7d387eb37c164674c7e92a725e9448b9b05e2df622880d2757b622529abbc",
-      "bytes": 572908
+      "version": 2,
+      "hash": "dbb6076ecd223d6bcbe000b55384c820464374e46e36312cbe6c284f0016b6d8",
+      "bytes": 812091
     }
   }
 }

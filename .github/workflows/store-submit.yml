@@ -58,6 +58,10 @@ on:
         description: 'Store product (app) id. Required, no fallback: the caller passes its own app id.'
         required: true
         type: string
+    outputs:
+      committed:
+        description: "'true' only when this run's own final step committed the submission (msstore submission publish exited 0)."
+        value: ${{ jobs.submit.outputs.committed }}
   workflow_dispatch:
     inputs:
       tag:
@@ -85,6 +89,8 @@ jobs:
     # shorter limits (the job limit is only the outer net), so a slow upload ends in the publish step, never in the middle of the commit steps; the last step
     # reports loudly when the job ends before the draft was committed.
     timeout-minutes: 90
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     # Slice 374: `msstore publish`, `submission get/update/publish` all act on the app's ONE pending draft, so two runs for the same
     # product (a manual dispatch during a release) must never interleave. Queued, never cancelled: a cancel after --noCommit would
     # leave an uncommitted draft.
@@ -257,6 +263,9 @@ jobs:
           #
           # Slice 374: --noCommit uploads the package into the new draft but does not send it for certification yet. The next step
           # puts the repo's 13-language listing text into that same draft and commits it, so the release is ONE submission.
+          #
+          # Slice 317 item 5 (design changed after check 2, two strikes): `msstore publish` is never re-run automatically (it creates a
+          # submission, so a second run could make a second one); a failure here fails the job. Only the commit below is retried once.
           msstore publish "out\$($env:PACKAGE).msixbundle" `
             -id "${{ inputs.product_id }}" -ut 300 -v --noCommit
           if ($LASTEXITCODE -ne 0) { throw "msstore publish failed ($LASTEXITCODE)" }
@@ -291,8 +300,17 @@ jobs:
           }
           if ($listingsOk) { Write-Host "Listing text merged into the draft." }
           # Always commit the draft: a release must never end with an uncommitted submission. This one stays loud.
+          # Slice 317 item 5: one retry after 60 s when the commit fails (the Ingestion API answered 5xx in run 42449477730 and 502 in run 43530984548).
+          # `submission publish` commits the app's existing pending draft and never creates a submission, so running it twice is safe: a second run on an
+          # already committed or missing draft fails cleanly (see the slice file for what the CLI docs say).
           msstore submission publish $id
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::msstore submission publish failed ($LASTEXITCODE); retrying once in 60 s."
+            Start-Sleep -Seconds 60
+            msstore submission publish $id
+          }
           if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed ($LASTEXITCODE)" }
+          "committed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append   # Slice 317: the caller's marker job tags only on this
 
       # Slice 377 item 2: the package is in the draft but the commit step did not finish (timed out, cancelled or failed): the release never reached
       # certification. Say so as an error annotation; the next `msstore publish` (a re-run, or the next release) discards that draft and starts a fresh one.
