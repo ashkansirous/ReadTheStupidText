@@ -62,18 +62,27 @@ internal static class HighResPack
     }
 
     /// <summary>The Git LFS object id of a file: the pointer's own <c>oid sha256:</c> when it is a pointer, else the sha256 of its bytes (which is what the oid is), so both forms of one file agree.</summary>
-    public static string Oid(string path)
+    public static string Oid(string path) =>
+        TryOid(path) ?? throw new InvalidOperationException($"{path} is a Git LFS pointer with no oid line.");
+
+    /// <summary>Like <see cref="Oid"/>, but null for a pointer with no <c>oid sha256:</c> line (truncated or hand-edited), so a caller can name the book instead of failing the whole run.</summary>
+    public static string? TryOid(string path)
     {
         if (IsLfsPointer(path))
         {
-            string line = File.ReadLines(path).FirstOrDefault(l => l.StartsWith(OidPrefix, StringComparison.Ordinal))
-                ?? throw new InvalidOperationException($"{path} is a Git LFS pointer with no oid line.");
-            return line[OidPrefix.Length..].Trim().ToLowerInvariant();
+            string? line = File.ReadLines(path).FirstOrDefault(l => l.StartsWith(OidPrefix, StringComparison.Ordinal));
+            return line?[OidPrefix.Length..].Trim().ToLowerInvariant();
         }
 
         using FileStream stream = File.OpenRead(path);
         return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream)).ToLowerInvariant();
     }
+
+    /// <summary>The pointers of a book's high-res set that carry no oid line, as problems naming the book and the file.</summary>
+    public static IEnumerable<string> BrokenPointerProblems(BookFolder book) =>
+        book.Info.Kind == BookKind.Store && Find(book) is { } files
+            ? files.All.Where(f => IsLfsPointer(f) && TryOid(f) is null).Select(f => $"{book.Stem}/{Directory}/{Path.GetFileName(f)} is a Git LFS pointer with no oid line (damaged; restore it from git)")
+            : [];
 
     /// <summary>The problem when a book's high-res set is complete in git but not pulled (a pointer where a picture must be packed); null otherwise. Publishing must fail on it, never ship standard only.</summary>
     public static string? UnpulledProblem(BookFolder book) =>
@@ -86,7 +95,8 @@ internal static class HighResPack
     {
         try
         {
-            return Find(book) is { HasPointers: false } files ? PictureProblems(book.Stem, files) : [];
+            List<string> broken = BrokenPointerProblems(book).ToList();
+            return broken.Count > 0 ? broken : Find(book) is { HasPointers: false } files ? PictureProblems(book.Stem, files) : [];
         }
         catch (IOException e)
         {

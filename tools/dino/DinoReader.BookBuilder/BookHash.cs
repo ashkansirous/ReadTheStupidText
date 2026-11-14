@@ -25,7 +25,7 @@ internal static class BookHash
 
         foreach (string file in HighResOf(book))
         {
-            Add(hash, Path.GetRelativePath(book.Dir, file).Replace('\\', '/'), Encoding.UTF8.GetBytes(HighResPack.Oid(file))); // by LFS oid, so a run with or without `git lfs pull` gets one hash
+            Add(hash, Path.GetRelativePath(book.Dir, file).Replace('\\', '/'), Encoding.UTF8.GetBytes(HighResPack.TryOid(file) ?? "no-oid")); // by LFS oid, so a run with or without `git lfs pull` gets one hash; a damaged pointer is named by the publish gate (HighResPack.BrokenPointerProblems), never a crash here
         }
 
         return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();

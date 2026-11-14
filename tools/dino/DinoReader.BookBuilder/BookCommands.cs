@@ -288,7 +288,7 @@ internal static class BookCommands
             bool both = File.Exists(Path.Combine(storeFolder, StoreBuilder.PackageFileName(book.Info.Version))) && File.Exists(Path.Combine(storeFolder, HighResPack.HdPackageFileName(book.Info.Version)));
             return both ? null : $"{book.Stem} has a complete high-res/ folder but no high-res pack was built beside the standard one";
         }
-        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException)
+        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException or InvalidDataException)
         {
             return $"{book.Stem}: {e.Message}";
         }

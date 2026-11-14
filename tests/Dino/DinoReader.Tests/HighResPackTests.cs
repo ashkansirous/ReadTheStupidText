@@ -254,6 +254,18 @@ public sealed class HighResPackTests : IDisposable
         Assert.Contains("2.jpg is 100x100, not 3:4", Assert.Single(HighResPack.GateProblems(book)));
     }
 
+    [Fact]
+    public void A_pointer_with_no_oid_line_is_named_by_the_gate_and_never_throws_in_the_hash()
+    {
+        BookFolder book = TinyBook(BookKind.Store);
+        WriteHighRes(book, "1.jpg", "2.jpg");
+        File.WriteAllText(Path.Combine(HighResPack.FolderOf(book), "2.jpg"), "version https://git-lfs.github.com/spec/v1\nsize 12\n");
+
+        Assert.Null(HighResPack.TryOid(Path.Combine(HighResPack.FolderOf(book), "2.jpg")));
+        Assert.NotEmpty(BookHash.Of(book));
+        Assert.Contains("tiny/high-res/2.jpg is a Git LFS pointer with no oid line", Assert.Single(HighResPack.GateProblems(book)));
+    }
+
     private static async Task WriteTinyPackageAsync(string path, string text, int version)
     {
         await StarterBuilder.InScratchAsync(async library =>

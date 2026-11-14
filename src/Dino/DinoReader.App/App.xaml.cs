@@ -35,6 +35,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
+		services.GetRequiredService<PictureSizeSource>().InitializeDevice(); // Slice 375 C: the display is read once here, on the main thread, never blocking later
 		services.GetRequiredService<PictureSizeSource>().StartWatching(); // Slice 375 review #5: starts the iOS connection watcher now, so the first download already knows Wi-Fi from limited
 		_ = services.GetRequiredService<ShelfAudioPacks>(); // Slice 313: its constructor subscribes to StagedBookUpdates.Swapped, so it must exist before the cold-start apply (GalleryPage) can swap a text
 		services.GetRequiredService<StagedBookUpdates>().DiscardPartialFiles(); // Slice 375 D: once, here, before anything can stage: a later call would delete a staging in flight

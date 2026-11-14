@@ -4,10 +4,11 @@ using DinoReader.Core;
 namespace DinoReader;
 
 /// <summary>
-/// Slice 375 D: swaps the high-res pictures in later, in the background, for the books <see cref="HighResUpgrades"/> says are waiting. It runs at app start and when the connection changes, acts only
-/// on an unmetered connection, fetches one book at a time with no loading screen, and only stages the package (<see cref="StagedBookUpdates"/>): the shelf's own apply (cold start, or the
-/// shown shelf) does the swap, so an open book is never swapped. Interrupts: a kill mid-download leaves a temp file that is discarded at the next start and the entry stays pending; offline or limited,
-/// nothing starts and the next connection change tries again; a book updated, deleted or no longer offered in high-res loses its entry (<see cref="HighResUpgradeTable.Reconcile"/>).
+/// Slice 375 D: swaps the high-res pictures in later, in the background. There is no list of waiting books: each pass DERIVES the books to upgrade from the shelf, the store catalogue, which size is
+/// installed and the failure ledger (<see cref="HighResUpgradePlan.Derive"/>). A pass starts at app start, after a book is installed or an update swapped in, and when the connection changes; it acts only
+/// on an unmetered connection and only on a device that takes high-res (a tablet or a PC), fetches one book at a time with no loading screen, and only stages the package (<see cref="StagedBookUpdates"/>):
+/// the shelf's own apply (cold start, or the shown shelf) does the swap, so an open book is never swapped. A book that cannot be fetched right now (an unsettled purchase, a store read that failed, no network)
+/// is simply not in the pass; only a downloaded package that fails to parse counts, at the swap (<see cref="HighResLedger.MaxFailures"/>).
 /// </summary>
 public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates staged, HighResUpgrades upgrades, PictureSizeSource pictures)
 {
@@ -16,7 +17,7 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 	private int _started;
 	private static int _again; // shared with OneRun: a call that found a pass running asks it for one more
 
-	/// <summary>Once per process: listens for the connection to change and runs once now (half-written staged files are discarded at app start, <see cref="StagedBookUpdates.DiscardPartialFiles"/>). Never throws.</summary>
+	/// <summary>Once per process (called from the shown shelf, on the main thread): reads the device if start-up could not, listens for the triggers and runs once now. Never throws.</summary>
 	public void Start()
 	{
 		if (Interlocked.Exchange(ref _started, 1) == 1)
@@ -24,19 +25,17 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 			return;
 		}
 
+		pictures.InitializeDevice(); // a no-op when start-up already read it; a display that was not ready then is read now, still on the main thread
 		pictures.ConnectionChanged += (_, _) => _ = RunAsync(CancellationToken.None); // the trigger and the reading come from the same source (iOS: the path monitor's own snapshot)
+		store.LibraryChanged += (_, _) => _ = RunAsync(CancellationToken.None); // a book was installed: it may be one that wants its high-res pack
+		staged.Swapped += (_, _) => _ = RunAsync(CancellationToken.None); // an update was swapped in: its new version may want its high-res pack
 		pictures.StartWatching();
 		_ = RunAsync(CancellationToken.None);
 	}
 
-	/// <summary>One pass over the waiting books. A call that arrives while a pass runs is not lost (review #4): the running call runs one more pass when it ends, so the last connection change is always seen. Never throws.</summary>
+	/// <summary>One pass. A call that arrives while a pass runs is not lost: the running call runs one more pass when it ends, so the last trigger is always seen. Never throws.</summary>
 	public async Task RunAsync(CancellationToken cancel)
 	{
-		if (upgrades.Snapshot().Count == 0)
-		{
-			return; // outcome rule: a pass runs only when the table has an entry
-		}
-
 		do
 		{
 			if (!await TryOwnAsync())
@@ -44,14 +43,14 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 				return;
 			}
 
-			Interlocked.Exchange(ref _again, 0); // the pass below reads the connection after this, so a flag erased here is covered by it
+			Interlocked.Exchange(ref _again, 0); // the pass below reads the state after this, so a flag erased here is covered by it
 			await RunOnePassAsync(cancel);
 		}
 		while (Volatile.Read(ref _again) == 1 && !cancel.IsCancellationRequested);
 	}
 
-	// Review #3 (check 3): a caller that finds a pass running sets the flag and tries once more. The owner checks the flag after it releases, so a flag set before the release is seen by the owner; one set after
-	// it is followed by this second try, which then succeeds. Review #7: no token on the wait, a cancelled one must not throw out of a "never throws" method.
+	// A caller that finds a pass running sets the flag and tries once more. The owner checks the flag after it releases, so a flag set before the release is seen by the owner; one set after
+	// it is followed by this second try, which then succeeds. No token on the wait: a cancelled one must not throw out of a "never throws" method.
 	private static async Task<bool> TryOwnAsync()
 	{
 		if (await OneRun.WaitAsync(0))
@@ -71,12 +70,12 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 		}
 		catch (OperationCanceledException)
 		{
-			// no-fallback: cancelled by the caller; the next start or connection change runs again
+			// no-fallback: cancelled by the caller or by the connection leaving unmetered; the next trigger runs again
 			HighResLog.Write("run cancelled");
 		}
 		catch (Exception ex)
 		{
-			HighResLog.Write($"run failed, the next start or connection change tries again: {ex.Message}");
+			HighResLog.Write($"run failed, the next trigger tries again: {ex.Message}");
 			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.UpdateCheckFailed);
 		}
 		finally
@@ -87,15 +86,19 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 
 	private async Task PassAsync(CancellationToken cancel)
 	{
-		RepairLostStagedFiles();
-		if (upgrades.Snapshot().Count == 0)
+		if (!pictures.DeviceKnown)
 		{
-			return;
+			await MainThread.InvokeOnMainThreadAsync(pictures.InitializeDevice); // review round 6 #5: a display not ready at start-up is read again at each pass
+		}
+
+		if (!pictures.DeviceWantsHighRes)
+		{
+			return; // a phone, or a display that could not be read: the standard size, no network
 		}
 
 		if (pictures.Network() != PictureNetwork.Unmetered)
 		{
-			HighResLog.Write($"{upgrades.Snapshot().Count} waiting, no unmetered connection, nothing started");
+			HighResLog.Write("no unmetered connection, nothing started");
 			return;
 		}
 
@@ -106,16 +109,34 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 			return;
 		}
 
-		await ReconcileAsync(listing.Items);
-		IReadOnlyList<StoreItem> fetchable = await store.FetchableAsync(listing.Items, cancel);
-		await DownloadWhileUnmeteredAsync(listing.Items, fetchable, cancel);
+		IReadOnlyList<StoreItem> due = await DeriveAsync(listing.Items, cancel);
+		HighResLog.Write($"{due.Count} book(s) due for their high-res pack");
+		await DownloadWhileUnmeteredAsync(due, cancel);
 	}
 
-	// Review #4: a download in flight is cancelled the moment the connection stops being unmetered (the run then ends as cancelled; the next unmetered change tries again), not only checked between books.
-	private async Task DownloadWhileUnmeteredAsync(IReadOnlyList<StoreItem> listed, IReadOnlyList<StoreItem> fetchable, CancellationToken cancel)
+	// The books to upgrade now, from what exists: the shelf, the catalogue, the installed-size record, staged files and the ledger. A book not fetchable right now is left out, never counted.
+	private async Task<IReadOnlyList<StoreItem>> DeriveAsync(IReadOnlyList<StoreItem> listed, CancellationToken cancel)
+	{
+		HashSet<string> onShelf = await store.InstalledIdsAsync();
+		var shelfVersions = onShelf.ToDictionary(id => id, StarterStories.RecordedVersion, StringComparer.OrdinalIgnoreCase);
+		var stagedHigh = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		foreach (string id in onShelf)
+		{
+			if (staged.StagedHighResVersion(id) is { } version)
+			{
+				stagedHigh[id] = version;
+			}
+		}
+
+		IReadOnlyList<StoreItem> fetchable = await store.FetchableAsync(listed, cancel);
+		var fetchableIds = fetchable.Select(i => i.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+		return HighResUpgradePlan.Derive(pictures.DeviceWantsHighRes, shelfVersions, listed, fetchableIds, upgrades.InstalledHigh(), stagedHigh, upgrades.Ledger);
+	}
+
+	// A download in flight is cancelled the moment the connection stops being unmetered (the pass then ends as cancelled; the next trigger tries again), not only checked between books.
+	private async Task DownloadWhileUnmeteredAsync(IReadOnlyList<StoreItem> due, CancellationToken cancel)
 	{
 		using var leftUnmetered = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-		var refused = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // outcome rule: a refused book is skipped for the rest of this run only
 		void OnChanged(object? sender, EventArgs e)
 		{
 			if (pictures.Network() == PictureNetwork.Unmetered)
@@ -136,19 +157,9 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 		pictures.ConnectionChanged += OnChanged;
 		try
 		{
-			while (upgrades.Snapshot().NextPending(refused) is { } next && pictures.Network() == PictureNetwork.Unmetered)
+			foreach (StoreItem item in due)
 			{
-				HighResOutcome? outcome = await UpgradeOneAsync(next.Key, next.Value, listed, fetchable, leftUnmetered.Token); // null: staged, the entry moved on to Staged and the swap is the shelf's
-				if (outcome is { } ended)
-				{
-					upgrades.Record(next.Key, next.Value.Version, ended);
-				}
-
-				if (outcome == HighResOutcome.Refused)
-				{
-					refused.Add(next.Key);
-				}
-				else if (outcome == HighResOutcome.Transient)
+				if (pictures.Network() != PictureNetwork.Unmetered || !await UpgradeOneAsync(item, leftUnmetered.Token))
 				{
 					return;
 				}
@@ -160,84 +171,40 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 		}
 	}
 
-	// A staged entry whose file is gone (deleted, never renamed in) is pending again, so it is fetched again.
-	private void RepairLostStagedFiles()
+	// One attempt. True: go on to the next book. False: stop the pass (no or lost network, a storage error); the next trigger derives the book again.
+	private async Task<bool> UpgradeOneAsync(StoreItem item, CancellationToken cancel)
 	{
-		foreach ((string id, HighResUpgrade entry) in upgrades.Snapshot().Entries.Where(e => e.Value.Phase == HighResPhase.Staged).ToList())
-		{
-			if (staged.StagedHighResVersion(id) != entry.Version)
-			{
-				HighResLog.Write($"{id}: staged v{entry.Version} file is gone, pending again");
-				upgrades.MarkLost(id, entry.Version); // review #3: no failure counted, the package was never found bad
-			}
-		}
-	}
-
-	private async Task ReconcileAsync(IReadOnlyList<StoreItem> items)
-	{
-		HashSet<string> onShelf = await store.InstalledIdsAsync();
-		HighResUpgradeTable table = upgrades.Snapshot();
-		upgrades.Reconcile(
-			id => onShelf.Contains(id) ? StarterStories.RecordedVersion(id) : null,
-			staged.StagedVersion,
-			id => OffersHighRes(items, id, table.Get(id)?.Version));
-	}
-
-	// Outcome rule: a book the catalogue does not list at all is unknown (null), never "no longer offered"; only a listed version without an hd package, or another listed version, is.
-	private static bool? OffersHighRes(IReadOnlyList<StoreItem> items, string id, int? version) =>
-		items.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase)) is { } item ? item.HasHighRes && item.Version == version : null;
-
-	// One attempt, one outcome (null: staged, the entry is Staged now). Transient stops the pass, Refused only skips the book.
-	private async Task<HighResOutcome?> UpgradeOneAsync(string id, HighResUpgrade entry, IReadOnlyList<StoreItem> listed, IReadOnlyList<StoreItem> fetchable, CancellationToken cancel)
-	{
-		StoreItem? offered = listed.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase));
-		if (offered is not null && (offered.Version != entry.Version || !offered.HasHighRes))
-		{
-			HighResLog.Write($"{id}: the catalogue no longer offers high-res for v{entry.Version}, upgrade dropped");
-			return HighResOutcome.Gone;
-		}
-
-		if (upgrades.InstalledIsHigh(id, entry.Version))
-		{
-			HighResLog.Write($"{id}: the installed v{entry.Version} already is high-res");
-			return HighResOutcome.Done;
-		}
-
-		StoreItem? item = fetchable.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase));
-		if (item is null)
-		{
-			HighResLog.Write($"{id}: not in the catalogue or purchase not settled yet, stays pending");
-			return HighResOutcome.Transient;
-		}
-
-		HighResLog.Write($"{id}: fetching the high-res pack of v{entry.Version}");
+		HighResLog.Write($"{item.Id}: fetching the high-res pack of v{item.Version}");
 		PackageFetch fetch = await store.FetchPackageFileAsync(item.HdDownloadUrl!, cancel);
-		return fetch.File is { } file ? StageFetched(id, entry.Version, file) : OutcomeOfUnfetched(id, fetch);
+		if (fetch.File is { } file)
+		{
+			return StageFetched(item.Id, item.Version, file);
+		}
+
+		if (fetch.Gone)
+		{
+			upgrades.Record(item.Id, item.Version, HighResUpgradePlan.OutcomeForMissingPackage()); // review round 7 #6: a 404 counts as one failure, given up after MaxFailures for this version
+			return true;
+		}
+
+		bool skipThisBook = fetch.Refused || fetch.NotFound; // a refused or invalid purchase is not this pass's business: nothing is counted, the next pass derives the book again
+		HighResLog.Write($"{item.Id}: high-res fetch gave no file ({(skipThisBook ? "skipped" : "stopped")})");
+		return skipThisBook;
 	}
 
-	private static HighResOutcome OutcomeOfUnfetched(string id, PackageFetch fetch)
-	{
-		HighResOutcome outcome = fetch.Gone ? HighResOutcome.Gone : fetch.Refused ? HighResOutcome.Refused : HighResOutcome.Transient;
-		HighResLog.Write($"{id}: high-res fetch gave no file ({outcome})");
-		return outcome;
-	}
-
-	private HighResOutcome? StageFetched(string id, int version, string file)
+	private bool StageFetched(string id, int version, string file)
 	{
 		try
 		{
-			upgrades.MarkStaged(id, version); // review #2: the table first, so an apply that sees the renamed file never finds a still-pending entry and drops it as stale
 			staged.Stage(id, version, file, highRes: true);
-			HighResLog.Write($"{id}: high-res v{version} staged, the shelf swaps it in");
-			staged.NotifyStaged();
-			return null;
+			HighResLog.Write($"{id}: high-res v{version} staged, swapped in at the next cold start or when the shelf next appears"); // review round 6 #6: no shelf signal and no overlay for a background upgrade
+			return true;
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			upgrades.MarkLost(id, version); // back to pending, no failure counted here: Record counts one only for a bad package
-			HighResLog.Write($"{id}: could not stage the high-res pack, stays pending: {ex.Message}");
+			HighResLog.Write($"{id}: could not stage the high-res pack, derived again next pass: {ex.Message}");
 			store.Fallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.UpdateCheckFailed);
-			return HighResOutcome.Transient; // Stage only copies and renames: an argument, IO or storage error never says the package is bad (only its validation at apply does)
+			return HighResUpgradePlan.PassContinuesAfterStageFault(ex); // review round 7 #5: a storage error stops the pass; a fault of this one book (a bad id) skips it only. Nothing says the package is bad (only its validation at apply does)
 		}
 		finally
 		{
@@ -253,7 +220,7 @@ public sealed class HighResUpgradeRunner(StoreClient store, StagedBookUpdates st
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
-			// no-fallback: housekeeping delete; nothing depends on it
+			// no-fallback: housekeeping delete; nothing depends on it, and it never replaces the outcome of the attempt it follows
 			Debug.WriteLine($"[HighRes] could not remove a temp file: {ex.Message}");
 		}
 	}

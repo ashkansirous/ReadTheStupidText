@@ -35,19 +35,11 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// <summary>Slice 375: which pack this device takes for a book now (a phone, or a build with no source: standard).</summary>
 	public PictureSize PictureSizeFor(StoreItem item) => pictureSize?.ChoiceFor(item) ?? PictureSize.Standard;
 
-	/// <summary>Slice 375 D: a copy of <paramref name="version"/> is now installed by <paramref name="size"/>: the install choice sets or removes the upgrade entry (the table's own Install) and the installed-size record follows.</summary>
-	public void RecordPictureSize(string id, int version, PictureSize size)
-	{
-		upgrades?.RecordInstalledSize(id, version, size == PictureSize.High);
-		upgrades?.Install(id, version, size == PictureSize.StandardThenHigh);
-	}
+	/// <summary>Slice 375 D: a copy of <paramref name="version"/> was installed by <paramref name="size"/> (called only after the import succeeded): the installed-size record follows. Nothing else is recorded: a standard copy that a high-res pack can replace is found by the next upgrade pass.</summary>
+	public void RecordPictureSize(string id, int version, PictureSize size) => upgrades?.RecordInstalledSize(id, version, size == PictureSize.High);
 
-	/// <summary>Slice 375 D (review #8): an update of <paramref name="version"/> was only staged. The install choice sets the upgrade entry now, but the installed-size record changes when the update is swapped in (<see cref="HighResUpgrades.SettleInstalledAtSwap"/>).</summary>
-	public void RecordStagedPictureSize(string id, int version, PictureSize size)
-	{
-		upgrades?.RecordStagedSize(id, version, size == PictureSize.High);
-		upgrades?.Install(id, version, size == PictureSize.StandardThenHigh);
-	}
+	/// <summary>Slice 375 D: an update of <paramref name="version"/> was only staged; the installed-size record changes when the update is swapped in (<see cref="HighResUpgrades.SettleInstalledAtSwap"/>).</summary>
+	public void RecordStagedPictureSize(string id, int version, PictureSize size) => upgrades?.RecordStagedSize(id, version, size == PictureSize.High);
 
 	// Slice 346: the books of the last listing by id, so a request for a book's files (a download, an update, an audio pack) can carry that book's purchase proof.
 	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, StoreItem> _listed = new(StringComparer.OrdinalIgnoreCase);
@@ -410,8 +402,8 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 				return DownloadOutcome.Failed;
 			}
 
+			// The size is recorded only for a copy that is on the shelf. A kill between the import and this line leaves a high-res copy recorded as standard, which the next upgrade pass swaps once more: harmless.
 			RecordPictureSize(item.Id, item.Version, size);
-
 			await InstallPacksAsync(item, wanted, summed, cancel); // audio is optional: it never fails or rolls back the book
 			return DownloadOutcome.Done;
 		}

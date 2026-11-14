@@ -1,53 +1,62 @@
 using System.Diagnostics;
+using System.Text.Json;
+using DinoReader.Core;
 
 namespace DinoReader;
 
 /// <summary>
-/// Slice 375 D: the one owner of the books waiting for their high-res pack. It owns one small JSON file in app data (book id to the version still waiting, see <see cref="HighResUpgradeTable"/>),
-/// reads it once, and every change goes through here, under one lock, written to a temp name and renamed so a kill never leaves half a file. It does no network and no staging itself:
-/// <see cref="HighResUpgradeRunner"/> downloads, <see cref="StagedBookUpdates"/> swaps.
+/// Slice 375 D: what the app remembers about high-res pictures, and nothing more. There is NO list of books waiting for an upgrade (that is derived at each pass, <see cref="HighResUpgradePlan.Derive"/>).
+/// Three small files in app data, each written to a temp name and renamed so a kill never leaves half a file, every change under one lock: which version of a book is installed at high-res
+/// (<c>high-res-installed.json</c>), which staged update is a high-res one until it is swapped in (<c>high-res-staged-size.json</c>), and the per-book failure ledger
+/// (<see cref="HighResLedger"/>, <c>high-res-failures.json</c>). It does no network and no staging: <see cref="HighResUpgradeRunner"/> downloads, <see cref="StagedBookUpdates"/> swaps.
 /// </summary>
 public sealed class HighResUpgrades
 {
-	private const string FileName = "high-res-upgrades.json";
-	private const string PartExtension = ".part";
+	private const string InstalledFileName = "high-res-installed.json";
+	private const string StagedSizeFileName = "high-res-staged-size.json";
+	private const string LedgerFileName = "high-res-failures.json";
 
 	private readonly object _lock = new();
-	private HighResUpgradeTable? _table;
-
-	private const string InstalledFileName = "high-res-installed.json";
-
-	private static string Path => System.IO.Path.Combine(FileSystem.AppDataDirectory, FileName);
-
-	private const string StagedSizeFileName = "high-res-staged-size.json";
-
-	private static string StagedSizePath => System.IO.Path.Combine(FileSystem.AppDataDirectory, StagedSizeFileName);
+	private HighResLedger? _ledger;
 
 	private static string InstalledPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, InstalledFileName);
 
-	/// <summary>The table as it is now.</summary>
-	public HighResUpgradeTable Snapshot()
+	private static string StagedSizePath => System.IO.Path.Combine(FileSystem.AppDataDirectory, StagedSizeFileName);
+
+	private static string LedgerPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, LedgerFileName);
+
+	/// <summary>The failure ledger as it is now.</summary>
+	public HighResLedger Ledger
 	{
-		lock (_lock)
+		get
 		{
-			return _table ??= Load();
+			lock (_lock)
+			{
+				return _ledger ?? LoadAndKeepLedger() ?? HighResLedger.Empty; // unreadable now: nothing is cached, the next call reads again
+			}
 		}
 	}
 
-	/// <summary>An install choice for <paramref name="version"/> (<see cref="HighResUpgradeTable.Install"/>): pending when <paramref name="upgradeLater"/>, else any older entry is removed.</summary>
-	public void Install(string id, int version, bool upgradeLater) => Change(table => table.Install(id, version, upgradeLater), $"{id} install v{version} upgradeLater={upgradeLater}");
+	private HighResLedger? LoadAndKeepLedger() => _ledger = LoadLedger();
 
-	/// <summary>A book delete (<see cref="HighResUpgradeTable.Remove"/>): the entry, the installed-size record and any remembered staged size go.</summary>
+	/// <summary>The books recorded as installed at high-res, id to version (a copy; the pass derives from it).</summary>
+	public IReadOnlyDictionary<string, int> InstalledHigh()
+	{
+		lock (_lock)
+		{
+			return LoadFile(InstalledPath) ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		}
+	}
+
+	/// <summary>A book delete: the installed-size record, any remembered staged size and the failure record go.</summary>
 	public void Remove(string id)
 	{
-		Change(table => table.Remove(id), $"{id} removed");
+		ChangeLedger(ledger => ledger.Remove(id), $"{id} removed");
 		ForgetInstalledHigh(id);
 		ForgetStagedSize(id);
 	}
 
-	public void MarkStaged(string id, int version) => Change(table => table.MarkStaged(id, version), $"{id} staged v{version}");
-
-	/// <summary>The outcome rule (Slice 375 D): the one way an attempt's end changes an entry (<see cref="HighResUpgradeTable.Apply"/>). Done also records that the installed copy is high-res.</summary>
+	/// <summary>The outcome rule (<see cref="HighResLedger.Apply"/>): the one way an attempt's end changes the ledger. Done also records that the installed copy is high-res.</summary>
 	public void Record(string id, int version, HighResOutcome outcome)
 	{
 		HighResLog.Write($"{id}: v{version} outcome {outcome}");
@@ -56,19 +65,13 @@ public sealed class HighResUpgrades
 			SetInstalledHigh(id, version);
 		}
 
-		Change(table => table.Apply(id, version, outcome), $"{id} {outcome} v{version}");
+		ChangeLedger(ledger => ledger.Apply(id, version, outcome), $"{id} {outcome} v{version}");
 	}
 
 	/// <summary>Whether the copy on the shelf at <paramref name="version"/> is the high-res one (a same-version hd package is then never swapped again).</summary>
-	public bool InstalledIsHigh(string id, int version)
-	{
-		lock (_lock)
-		{
-			return LoadInstalled().TryGetValue(id, out int have) && have == version;
-		}
-	}
+	public bool InstalledIsHigh(string id, int version) => InstalledHigh().TryGetValue(id, out int have) && have == version;
 
-	/// <summary>A staged update of <paramref name="version"/> was fetched at a size: remembered until the swap (review #8), so the installed-size record changes when the copy is really swapped in, never at staging.</summary>
+	/// <summary>A staged update of <paramref name="version"/> was fetched at a size: remembered until the swap, so the installed-size record changes when the copy is really swapped in, never at staging.</summary>
 	public void RecordStagedSize(string id, int version, bool high)
 	{
 		if (high)
@@ -88,13 +91,19 @@ public sealed class HighResUpgrades
 	{
 		lock (_lock)
 		{
-			bool high = LoadFile(StagedSizePath).TryGetValue(id, out int staged) && staged == version;
+			if (LoadFile(StagedSizePath) is not { } stagedSizes)
+			{
+				ForgetInstalledHigh(id); // review round 7 #9: unreadable, so the swapped-in copy is not known to be high-res: the old record is dropped (never kept wrong) and the pass derives the book again
+				return;
+			}
+
+			bool high = stagedSizes.TryGetValue(id, out int staged) && staged == version;
 			RecordInstalledSize(id, version, high);
 			ForgetStagedSize(id);
 		}
 	}
 
-	/// <summary>A copy of <paramref name="version"/> was installed at <paramref name="size"/>: remembers a high-res one, forgets the record for any other.</summary>
+	/// <summary>A copy of <paramref name="version"/> was installed (the import succeeded): remembers a high-res one, forgets the record for any other.</summary>
 	public void RecordInstalledSize(string id, int version, bool high)
 	{
 		if (high)
@@ -115,83 +124,71 @@ public sealed class HighResUpgrades
 	{
 		lock (_lock)
 		{
-			Dictionary<string, int> map = LoadFile(path);
+			if (LoadFile(path) is not { } map)
+			{
+				return; // unreadable: skip this write rather than overwrite the file with one change
+			}
+
 			change(map);
-			SaveFile(path, System.Text.Json.JsonSerializer.Serialize(map));
+			SaveFile(path, JsonSerializer.Serialize(map));
 		}
 	}
 
-	private Dictionary<string, int> LoadInstalled() => LoadFile(InstalledPath);
-
-	private static Dictionary<string, int> LoadFile(string path)
+	// Null when the file exists but could not be read (an IO error): the caller must not write then.
+	private static Dictionary<string, int>? LoadFile(string path)
 	{
-		try
+		Dictionary<string, int>? map = HighResStateFile.ReadMap(path);
+		if (map is null)
 		{
-			string? json = File.Exists(path) ? File.ReadAllText(path) : null;
-			var saved = json is null ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(json);
-			return new Dictionary<string, int>(saved ?? [], StringComparer.OrdinalIgnoreCase);
+			// no-fallback: an unreadable record is left alone, the change is skipped and made again by a later pass
+			Debug.WriteLine($"[HighRes] could not read {System.IO.Path.GetFileName(path)}, change skipped");
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
-		{
-			// no-fallback: an unreadable record means no copy is known to be high-res; at worst one same-version swap repeats
-			Debug.WriteLine($"[HighRes] could not read the installed-size record: {ex.Message}");
-			return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-		}
+
+		return map;
 	}
 
-	public void MarkLost(string id, int version) => Change(table => table.MarkLost(id, version), $"{id} staged file lost v{version}");
-
-	public void Reconcile(Func<string, int?> installedVersion, Func<string, int?> stagedUpdateVersion, Func<string, bool?> offersHighRes) =>
-		Change(table => table.Reconcile(installedVersion, stagedUpdateVersion, offersHighRes), "reconciled");
-
-	/// <summary>The entry the staged package of <paramref name="id"/> at <paramref name="version"/> belongs to is staged (a staged package with no staged entry is not applied).</summary>
-	public bool IsStaged(string id, int version) => Snapshot().Get(id) is { Phase: HighResPhase.Staged } entry && entry.Version == version;
-
-	private void Change(Func<HighResUpgradeTable, HighResUpgradeTable> transition, string what)
+	private void ChangeLedger(Func<HighResLedger, HighResLedger> transition, string what)
 	{
 		lock (_lock)
 		{
-			HighResUpgradeTable before = _table ??= Load();
-			HighResUpgradeTable after = transition(before);
+			HighResLedger? current = _ledger ?? LoadAndKeepLedger();
+			if (current is not { } before)
+			{
+				return; // unreadable ledger: skip this change rather than save a ledger made from nothing
+			}
+
+			HighResLedger after = transition(before);
 			if (ReferenceEquals(before, after))
 			{
 				return;
 			}
 
-			_table = after;
-			Save(after);
-			HighResLog.Write($"state {what}");
+			_ledger = after;
+			SaveFile(LedgerPath, after.ToJson());
+			HighResLog.Write($"ledger {what}");
 		}
 	}
 
-	private static HighResUpgradeTable Load()
+	// Null when the ledger file could not be read (an IO error), so nothing is cached or saved from an empty ledger.
+	private static HighResLedger? LoadLedger()
 	{
-		try
+		string? text = HighResStateFile.ReadText(LedgerPath);
+		if (text is null)
 		{
-			return File.Exists(Path) ? HighResUpgradeTable.FromJson(File.ReadAllText(Path)) : HighResUpgradeTable.Empty;
+			// no-fallback: an unreadable ledger is left alone; the next call reads it again
+			Debug.WriteLine("[HighRes] could not read the failure ledger, change skipped");
+			return null;
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			// no-fallback: an unreadable file means no upgrades waiting; the books keep their standard pictures
-			Debug.WriteLine($"[HighRes] could not read the upgrade list: {ex.Message}");
-			return HighResUpgradeTable.Empty;
-		}
-	}
 
-	private static void Save(HighResUpgradeTable table) => SaveFile(Path, table.ToJson());
+		return HighResLedger.FromJson(text);
+	}
 
 	private static void SaveFile(string path, string text)
 	{
-		try
+		if (!HighResStateFile.WriteAtomic(path, text))
 		{
-			string part = path + PartExtension;
-			File.WriteAllText(part, text);
-			File.Move(part, path, overwrite: true);
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			// no-fallback: the table stays right in memory for this run; a lost save only means the upgrade is not remembered after a restart
-			Debug.WriteLine($"[HighRes] could not save the upgrade list: {ex.Message}");
+			// no-fallback: the state stays right in memory for this run where it is kept; a lost save only means it is not remembered after a restart
+			Debug.WriteLine($"[HighRes] could not save {System.IO.Path.GetFileName(path)}");
 		}
 	}
 }

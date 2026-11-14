@@ -11,8 +11,6 @@ namespace DinoReader;
 /// </summary>
 public sealed class PictureSizeSource(IPackUpdateNetwork network)
 {
-	private PictureDeviceClass? _device;
-
 	private int _watching;
 
 	/// <summary>Slice 375 D: the connection changed. On Android and Windows this is MAUI's ConnectivityChanged; on iOS it is the path monitor's own snapshot handler, raised after the path it delivered is stored, so a handler that reads <see cref="Network"/> sees that same path.</summary>
@@ -29,8 +27,46 @@ public sealed class PictureSizeSource(IPackUpdateNetwork network)
 
 	private void RaiseConnectionChanged() => ConnectionChanged?.Invoke(this, EventArgs.Empty);
 
-	/// <summary>The class of this device, read once.</summary>
-	public PictureDeviceClass Device => _device ??= ReadDevice();
+	private const int DeviceUnread = -1;
+
+	private int _deviceCode = DeviceUnread; // the cached PictureDeviceClass, read once at start-up
+
+	/// <summary>
+	/// Reads the display once, on the main thread, during app start-up (<c>DinoApp</c> and the upgrade runner's start both call it; a later call does nothing once it is cached). A display that reports a density of 0 or
+	/// less is not cached, so the next start-up call reads it again; until a good read, <see cref="Device"/> is a phone, i.e. the standard size. Off the main thread it does nothing (iOS throws there); it never blocks.
+	/// </summary>
+	public void InitializeDevice()
+	{
+		if (Volatile.Read(ref _deviceCode) != DeviceUnread || !MainThread.IsMainThread)
+		{
+			return;
+		}
+
+		if (ReadDevice() is { } read)
+		{
+			Volatile.Write(ref _deviceCode, (int)read);
+		}
+		else
+		{
+			HighResLog.Write("display density not known yet, the standard size is used this run");
+		}
+	}
+
+	/// <summary>Whether the display has been read well yet (see <see cref="InitializeDevice"/>).</summary>
+	public bool DeviceKnown => Volatile.Read(ref _deviceCode) != DeviceUnread;
+
+	/// <summary>The class of this device as read at start-up; a phone (the standard size) until <see cref="InitializeDevice"/> has a good read.</summary>
+	public PictureDeviceClass Device
+	{
+		get
+		{
+			int code = Volatile.Read(ref _deviceCode);
+			return code == DeviceUnread ? PictureDeviceClass.Phone : (PictureDeviceClass)code;
+		}
+	}
+
+	/// <summary>Whether this device takes the high-res pack at all (a tablet or a PC), whatever the connection.</summary>
+	public bool DeviceWantsHighRes => PictureSizeChoice.Choose(Device, PictureNetwork.Unmetered, hasHighRes: true) == PictureSize.High;
 
 	/// <summary>The connection now.</summary>
 	public PictureNetwork Network()
@@ -57,13 +93,19 @@ public sealed class PictureSizeSource(IPackUpdateNetwork network)
 		return size;
 	}
 
-	private static PictureDeviceClass ReadDevice()
+	// Main thread only (the caller checks). Null when the display's density is not usable yet (0 or less): the caller then does not cache.
+	private static PictureDeviceClass? ReadDevice()
 	{
 		PictureDevicePlatform platform = DeviceInfo.Platform == DevicePlatform.WinUI ? PictureDevicePlatform.Windows
 			: DeviceInfo.Platform == DevicePlatform.iOS ? PictureDevicePlatform.Ios
 			: PictureDevicePlatform.Android;
 		DisplayInfo display = DeviceDisplay.Current.MainDisplayInfo;
-		double shortSideDp = display.Density > 0 ? Math.Min(display.Width, display.Height) / display.Density : 0;
+		if (display.Density <= 0)
+		{
+			return null;
+		}
+
+		double shortSideDp = Math.Min(display.Width, display.Height) / display.Density;
 		return PictureSizeChoice.DeviceClassOf(platform, shortSideDp, DeviceInfo.Idiom == DeviceIdiom.Tablet);
 	}
 
@@ -110,9 +152,15 @@ public sealed class PictureSizeSource(IPackUpdateNetwork network)
 #elif IOS
 	// Slice 375 D (iOS connection reading): an expensive link (Personal Hotspot, cellular) or Low Data Mode is limited, like Android's metered check. The trigger is the NWPathMonitor snapshot handler itself
 	// and the decision reads the path that snapshot delivered, so the event and the reading always agree. Before the first snapshot the connection counts as limited.
-	private IosPathWatcher? _pathWatcher;
+	private volatile IosPathWatcher? _pathWatcher;
 
-	private void StartPlatformWatch() => _pathWatcher = new IosPathWatcher(RaiseConnectionChanged);
+	// Review #2: the watcher is stored BEFORE its monitor starts, so the first snapshot (raised on the monitor's queue) finds Latest through the field. Android and Windows read the live connection at each call, so their ConnectivityChanged handler has no such order to keep.
+	private void StartPlatformWatch()
+	{
+		var watcher = new IosPathWatcher(RaiseConnectionChanged);
+		_pathWatcher = watcher;
+		watcher.Start();
+	}
 
 	// Unsatisfied status is None; an expensive or constrained path or one over a cellular interface is Limited; otherwise Unmetered. No snapshot yet counts as limited.
 	private PictureNetwork PlatformNetwork() => _pathWatcher?.Latest is not { } path ? PictureNetwork.Limited
@@ -125,12 +173,16 @@ public sealed class PictureSizeSource(IPackUpdateNetwork network)
 		private readonly Network.NWPathMonitor _monitor = new();
 		private volatile Network.NWPath? _latest;
 
-		public IosPathWatcher(Action changed)
+		private readonly Action _changed;
+
+		public IosPathWatcher(Action changed) => _changed = changed;
+
+		public void Start()
 		{
 			_monitor.SnapshotHandler = path =>
 			{
 				_latest = path; // stored first: the handler below reads it back through Network()
-				changed();
+				_changed();
 			};
 			_monitor.SetQueue(CoreFoundation.DispatchQueue.DefaultGlobalQueue);
 			_monitor.Start();

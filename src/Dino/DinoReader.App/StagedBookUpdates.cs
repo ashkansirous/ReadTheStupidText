@@ -24,7 +24,14 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 #endif
 	private Task? _applyTask;
 
-	private sealed record Entry(string Id, int Version, string Path, bool HighRes = false);
+	private sealed record Entry(string Id, int Version, string Path, bool HighRes = false, string Stamp = "");
+
+	// Review round 6 #7: the identity of the staged file when it was listed (size and write time); a file staged afresh over the same name has another one, and a finished apply leaves it alone.
+	private static string StampOf(string path)
+	{
+		var info = new FileInfo(path);
+		return $"{info.Length}|{info.LastWriteTimeUtc.Ticks}";
+	}
 
 	private static string Root => System.IO.Path.Combine(FileSystem.AppDataDirectory, FolderName);
 
@@ -59,6 +66,11 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		string part = target + PartExtension;
 		File.Copy(file, part, overwrite: true);
 		File.Move(part, target, overwrite: true);
+		if (highRes)
+		{
+			Undefer(id, version); // a package staged afresh, even of the same version, is tried again
+		}
+
 		foreach (string older in Directory.GetFiles(folder).Where(f => f != target && ParseName(f) is { } other && other.HighRes == highRes)) // only named packages of the same kind: a .part may be another staging in flight (DiscardPartialFiles clears leftovers at start)
 		{
 			File.Delete(older);
@@ -112,7 +124,38 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	}
 
 	/// <summary>Whether a package waits to be applied.</summary>
-	public bool HasPending => ListEntries().Count > 0;
+	public bool HasPending => ListEntries().Any(e => !IsDeferred(e));
+
+	// A high-res swap that ended Transient this process is not retried (nor does it hold the "Updating your books" overlay) until the next start or until a package is staged afresh; keyed by (book, version) so a newly staged version is always tried.
+	private readonly HashSet<string> _deferredHighRes = new(StringComparer.OrdinalIgnoreCase);
+
+	private static string DeferKey(Entry e) => DeferKey(e.Id, e.Version);
+
+	private static string DeferKey(string id, int version) => $"{id}|{version}";
+
+	private void Undefer(string id, int version)
+	{
+		lock (_deferredHighRes)
+		{
+			_deferredHighRes.Remove(DeferKey(id, version));
+		}
+	}
+
+	private bool IsDeferred(Entry e)
+	{
+		lock (_deferredHighRes)
+		{
+			return e.HighRes && _deferredHighRes.Contains(DeferKey(e));
+		}
+	}
+
+	private void Defer(Entry e)
+	{
+		lock (_deferredHighRes)
+		{
+			_deferredHighRes.Add(DeferKey(e));
+		}
+	}
 
 	/// <summary>
 	/// Slice 313: applies whatever is staged now, after any apply already running (never two at once, so the shelf is never read mid-swap). Called only by the gallery, when it is shown or
@@ -192,7 +235,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			await ApplyOneAsync(entry, decision);
 		}
 
-		foreach (Entry entry in entries.Where(e => e.HighRes)) // after the updates: a newer version staged for the same book has replaced the entry's version by now
+		foreach (Entry entry in entries.Where(e => e.HighRes && !IsDeferred(e))) // after the updates: a newer version staged for the same book has replaced the entry's version by now
 		{
 			await ApplyHighResAsync(entry);
 		}
@@ -208,26 +251,24 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			return;
 		}
 
-		bool stagedForVersion = upgrades.IsStaged(entry.Id, entry.Version);
 		bool onShelf = (await library.ListAsync()).Any(s => string.Equals(s.SourceId, entry.Id, StringComparison.OrdinalIgnoreCase));
-		HighResOutcome outcome = OutcomeBeforeSwap(entry, stagedForVersion, onShelf, upgrades) ?? await SwapHighResAsync(entry);
+		HighResOutcome? before = HighResUpgradePlan.OutcomeBeforeSwap(
+			StarterStories.RecordedVersion(entry.Id), entry.Version, StagedVersion(entry.Id), onShelf, upgrades.InstalledIsHigh(entry.Id, entry.Version));
+		HighResOutcome outcome = before ?? await SwapHighResAsync(entry);
 		HighResLog.Write($"{entry.Id}: staged high-res v{entry.Version} ended as {outcome}");
-		if (stagedForVersion || !onShelf)
+		if (before is null or HighResOutcome.Done)
 		{
-			upgrades.Record(entry.Id, entry.Version, outcome); // the outcome rule: the only thing that changes the entry. A book gone from the shelf loses its entry (Gone) even when it was only pending (review #6); otherwise a file with no staged entry of its own never touches the table
+			upgrades.Record(entry.Id, entry.Version, outcome); // the outcome rule: what a swap (or an already-high copy) found is recorded; a file that was merely stale (book gone, other version) records nothing, there is no journal to correct
 		}
 
 		if (outcome != HighResOutcome.Transient)
 		{
-			DeleteEntry(entry); // a transient end keeps the file and the entry for the next apply
+			DeleteEntry(entry);
 		}
-	}
-
-	// Slice 375 D outcome rule, before the swap: null when the package may be swapped in (HighResUpgradeTable.OutcomeBeforeSwap decides; a standard update still staged for this book keeps the entry waiting).
-	private HighResOutcome? OutcomeBeforeSwap(Entry entry, bool stagedForVersion, bool onShelf, HighResUpgrades table)
-	{
-		return HighResUpgradeTable.OutcomeBeforeSwap(
-			stagedForVersion, StarterStories.RecordedVersion(entry.Id), entry.Version, StagedVersion(entry.Id), onShelf, table.InstalledIsHigh(entry.Id, entry.Version));
+		else
+		{
+			Defer(entry); // a transient end keeps the file and waits for the next start (or a package staged afresh)
+		}
 	}
 
 	private async Task<HighResOutcome> SwapHighResAsync(Entry entry)
@@ -236,30 +277,45 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		{
 			bool swapped = await SwapAsync(entry);
 			HighResLog.Write(swapped ? $"{entry.Id}: swapped to the high-res pictures of v{entry.Version}" : $"{entry.Id}: edited, keeps its standard pictures");
+			if (swapped)
+			{
+				_swappedInRun = true; // review #4: the shelf and the audio packs are told, like after a standard swap
+			}
+
 			return swapped ? HighResOutcome.Done : HighResOutcome.Gone;
 		}
-		catch (Exception ex) when (ex is StoryPackageException or InvalidDataException)
+		catch (Exception ex) when (ex is not (IOException or UnauthorizedAccessException or OperationCanceledException))
 		{
+			// Review round 6 #2: any fault that is not storage or cancellation is the package's (a damaged zip entry can throw many types): counted, so three of them end the attempts for this version.
 			HighResLog.Write($"{entry.Id}: bad staged high-res package: {ex.Message}");
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			return HighResOutcome.BadPackage;
 		}
 		catch (Exception ex)
 		{
-			// Storage, cancellation or an unexpected fault is retryable, like a standard update's: the entry and the file stay and the swap is tried again at the next apply, nothing is counted.
+			// Storage or cancellation is retryable, like a standard update's: the entry and the file stay and the swap is tried again at the next apply, nothing is counted.
 			HighResLog.Write($"{entry.Id}: high-res swap failed, tried again at the next apply: {ex.Message}");
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			return HighResOutcome.Transient;
 		}
 	}
 
-	/// <summary>Slice 375 D: a deleted book forgets its high-res upgrade entry and removes its staged high-res file.</summary>
+	/// <summary>Slice 375 D: a deleted book forgets its high-res size records and failure ledger and removes its staged high-res file.</summary>
 	public void DiscardHighRes(string id)
 	{
 		upgrades?.Remove(id);
 		foreach (Entry entry in ListEntries().Where(e => e.HighRes && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
 		{
 			DeleteEntry(entry);
+		}
+	}
+
+	private void DropOlderHighRes(string id, int installedVersion)
+	{
+		foreach (Entry old in ListEntries().Where(e => e.HighRes && e.Version < installedVersion && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
+		{
+			Undefer(old.Id, old.Version);
+			DeleteEntry(old);
 		}
 	}
 
@@ -289,6 +345,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			{
 				ForgetForcedVersion(entry.Id);
 				upgrades?.SettleInstalledAtSwap(entry.Id, entry.Version); // review #8: the installed-size record changes here, at the swap
+				DropOlderHighRes(entry.Id, entry.Version); // review round 7 #3: a staged hd file of an older version (possibly deferred) can never be swapped in now
 				_swappedInRun = true;
 			}
 			else
@@ -370,7 +427,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			string id = System.IO.Path.GetFileName(folder);
 			entries.AddRange(Directory.GetFiles(folder, $"{FilePrefix}*{FileExtension}")
 				.Select(f => (File: f, Name: ParseName(f))).Where(x => x.Name is not null)
-				.Select(x => new Entry(id, x.Name!.Value.Version, x.File, x.Name.Value.HighRes)));
+				.Select(x => new Entry(id, x.Name!.Value.Version, x.File, x.Name.Value.HighRes, StampOf(x.File))));
 		}
 
 		return entries;
@@ -389,6 +446,12 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	{
 		try
 		{
+			if (entry.Stamp.Length > 0 && File.Exists(entry.Path) && StampOf(entry.Path) != entry.Stamp)
+			{
+				Debug.WriteLine($"{LogTag} {entry.Id}: staged v{entry.Version} was replaced meanwhile, the new file is kept");
+				return; // review round 6 #7: never delete a package that was staged afresh while this entry was being applied
+			}
+
 			File.Delete(entry.Path);
 			string folder = System.IO.Path.GetDirectoryName(entry.Path)!;
 			if (!Directory.EnumerateFileSystemEntries(folder).Any())

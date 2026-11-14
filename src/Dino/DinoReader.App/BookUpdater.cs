@@ -575,14 +575,9 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 			return StageOutcome.Staged;
 		}
 
-		PictureSize size = store.PictureSizeFor(item); // Slice 375: a tablet or PC on Wi-Fi takes the high-res package as the update; on a limited connection the standard one now and the high-res one later
-		PackageFetch fetch = await store.FetchPackageFileAsync(size == PictureSize.High ? item.HdDownloadUrl! : item.DownloadUrl, cancel);
-		if (size == PictureSize.High && fetch is { File: null, Gone: true }) // review #4: only a real 404; a purchase refusal is not a missing file and falls through to today's refusal handling
-		{
-			HighResLog.Write($"high-res pack of {item.Id} v{item.Version} is gone (404), standard instead");
-			size = PictureSize.Standard;
-			fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
-		}
+		// Slice 375 D (review round 6 #1, #3): an update is always the standard package. The high-res one is fetched only by HighResUpgradeRunner, which cancels on a metered link and
+		// counts bad packages in the failure ledger, so a bad hd package can neither loop here nor block the update.
+		PackageFetch fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
 
 		if (fetch.File is not { } file)
 		{
@@ -593,7 +588,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		try
 		{
 			staged.Stage(item.Id, item.Version, file);
-			store.RecordStagedPictureSize(item.Id, item.Version, size); // Slice 375 D: this update's own choice replaces any older upgrade entry (pending only for a StandardThenHigh one)
+			store.RecordStagedPictureSize(item.Id, item.Version, PictureSize.Standard); // Slice 375 D: a standard update forgets any remembered high-res staged size
 			Debug.WriteLine($"{LogTag} {item.Id}: v{item.Version} staged for the next start");
 			return StageOutcome.Staged;
 		}
