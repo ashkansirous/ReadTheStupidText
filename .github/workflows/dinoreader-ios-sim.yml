@@ -174,8 +174,9 @@ jobs:
           FETCH="$(grep -c 'HOOK fetch-audio-pack ok' <<<"$LOG" || true)"
           echo "premade clip lines: ${CLIPS:-0}; fetch-audio-pack ok lines: ${FETCH:-0}"
           { echo "### Audio-backed run"; echo "- fetch-audio-pack ok lines: ${FETCH:-0}"; echo "- premade clip lines: ${CLIPS:-0}"; } >> "$GITHUB_STEP_SUMMARY"
-          if [ "${CLIPS:-0}" = "0" ]; then
-            echo "::warning::No 'premade clip plays' line in the app log: the clip never played, or the line does not reach the iOS unified log."
+          if [ "${CLIPS:-0}" = "0" ] || [ "${FETCH:-0}" = "0" ]; then
+            echo "::error::Expected clip markers missing from the app log (premade clip lines: ${CLIPS:-0}; fetch-audio-pack ok lines: ${FETCH:-0}): the pack was not fetched or the clip never played."
+            exit 1
           fi
 
       - name: Fail when the flow failed or the app crashed
