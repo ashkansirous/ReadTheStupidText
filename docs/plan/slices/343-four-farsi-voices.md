@@ -11,6 +11,8 @@
 
 *Park note (night 2026-11-13-1149):* parked by wave 5 because the 3 extra-ezafe items have no text fix (the piper-fa VITS model adds the ezafe itself) and the second listen needs an interactive session (Artifact page; WAVs in `reviews/s342-ezafe/`). Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night retries it.
 
+*Park note (2026-11-14, night 2026-11-14-1547 housekeeping 2):* parked: the second listen is an Artifact listening page, which needs an interactive session (headless waves have no Artifact tool).
+
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
 **Touches:** `docs/plan/slices/343-four-farsi-voices.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
