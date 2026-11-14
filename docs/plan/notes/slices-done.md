@@ -373,6 +373,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | built | #1087 | | [369-release-workflow-per-product.md](../slices/369-release-workflow-per-product.md) |
 | 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
 | 370 | Tidy by product 5/6: give the shared code a neutral name (`Sirous.Reading.*`, decided 2026-11-13) | built | #1104 | | [370-rename-shared-code.md](../slices/370-rename-shared-code.md) |
+| 371 | Tidy by product 6/6: src, tests and tools folders grouped by product | built | #1109 | | [371-folders-by-product.md](../slices/371-folders-by-product.md) |
 | 342 | Listening page: Farsi voice pack | built (#1098); second listen waits for an interactive session | #1098 | | [342-farsi-voice-pack.md](../slices/342-farsi-voice-pack.md) |
 
 ## Batch ordering notes
