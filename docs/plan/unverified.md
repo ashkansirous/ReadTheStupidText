@@ -94,7 +94,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 358: Dino Android no Buy button ([slice](slices/358-dino-android-no-buy-button.md))
 
-- **Device:** the real cause on a Play-installed phone: the Release trace line `Dino Reader product details: code= asked= got= unfetched=` settles it.
 - **Device:** iOS and Windows strips are only compiled, not run.
 - **You:** the translations of `Store_NotForSaleNow` are machine drafts.
 
