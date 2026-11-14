@@ -29,6 +29,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 350 | Dino: high-resolution pictures for a printed Amazon book (Git LFS, `high-res/`), fixing faulty pages, one prompt per Gemini chat, stricter picture checks, Good Enough redrawn without text | in progress (Lion and Mouse done #1041; 14 books left, each needs the user's Chrome and Gemini account; B and C merged #1013) | #1013 | | [350-dino-high-res-pictures.md](docs/plan/slices/350-dino-high-res-pictures.md) |
 | 346 | Dino: four free books, the rest $0.99 each (store-account purchases, server receipt check, backups without book content) | parked: waits for the user (Submit for Review on the Dino App Store version with the 11 products; Google bank test deposit); Part E built (E1 #1046, E2-E5 #1120), device checks in unverified.md | #1016, #1033, #1036, #1038, #1039, #1046, #1120 | | [346-dino-paid-books.md](docs/plan/slices/346-dino-paid-books.md) |
+| 380 | Dino Android: product details through the Play listener only (the async wrapper is always empty, dotnet/android-libraries #1396), Slice 358 probe removed | planned | | | [380-dino-android-listener-only-details.md](docs/plan/slices/380-dino-android-listener-only-details.md) |
 
 ### Shared
 
