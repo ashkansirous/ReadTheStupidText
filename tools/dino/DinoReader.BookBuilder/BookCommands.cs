@@ -22,13 +22,19 @@ internal static class BookCommands
         // publish-store runs no test suite: this is its gate (Slice 239). An invalid book is skipped and named, the valid ones still build.
         IReadOnlyDictionary<string, IReadOnlyList<string>> invalid = livePath is null ? new Dictionary<string, IReadOnlyList<string>>() : StoreValidation.ProblemsByBook(chosen.Where(b => b.Info.Kind == BookKind.Store), includeAudio: true);
         ReportInvalid(invalid);
+        var failed = new Dictionary<string, IReadOnlyList<string>>();
 
         await StarterBuilder.InScratchAsync(async library =>
         {
             foreach (BookFolder book in chosen.Where(b => b.Info.Kind == BookKind.Store && !invalid.ContainsKey(b.Stem)))
             {
                 StoreStorySpec spec = StoreVersioning.Versioned(book, live);
-                await StoreBuilder.WriteStoryAsync(spec, library);
+                if (await TryWriteStoreBookAsync(book, spec, library) is { } problem)
+                {
+                    failed[book.Stem] = [problem]; // Slice 375 B (review #3): one book that cannot build (say its high-res pack disagrees with the standard one) is named and skipped, the others still go
+                    continue;
+                }
+
                 Console.WriteLine($"built {book.Stem} v{spec.Version}");
             }
 
@@ -41,7 +47,25 @@ internal static class BookCommands
                 Console.WriteLine($"built {book.Stem} v{book.Info.Version}{(rewritten ? " (rewrote the committed starter)" : string.Empty)}");
             }
         });
-        return invalid.Count == 0 ? 0 : SkippedBooksExitCode;
+        ReportInvalid(failed);
+        return invalid.Count == 0 && failed.Count == 0 ? 0 : SkippedBooksExitCode;
+    }
+
+    // The problem text when the store book could not be written (null when it was); its half-written packages are deleted so the upload never picks them up.
+    private static async Task<string?> TryWriteStoreBookAsync(BookFolder book, StoreStorySpec spec, FileStoryLibrary library)
+    {
+        try
+        {
+            await StoreBuilder.WriteStoryAsync(spec, library);
+            return null;
+        }
+        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException or InvalidDataException)
+        {
+            string folder = Path.Combine(StoreBuilder.StoreFolder(), spec.Id);
+            File.Delete(Path.Combine(folder, StoreBuilder.PackageFileName(spec.Version)));
+            File.Delete(Path.Combine(folder, HighResPack.HdPackageFileName(spec.Version)));
+            return $"{book.Stem} did not build: {e.Message}";
+        }
     }
 
     private static long? LiveBytesOf(BookFolder book, IReadOnlyDictionary<string, LiveEntry>? live) =>
@@ -66,6 +90,7 @@ internal static class BookCommands
         problems.AddRange(CheckBackCovers());
         problems.AddRange(CheckStoreBooksBuild());
         problems.AddRange(CheckStoreTitles());
+        problems.AddRange(await CheckHighResAsync());
         problems.AddRange(await CheckStartersAsync());
         problems.ForEach(p => Console.Error.WriteLine(p));
         Console.WriteLine(problems.Count == 0 ? $"All {Books.All.Count} books are current." : $"{problems.Count} problem(s).");
@@ -229,6 +254,53 @@ internal static class BookCommands
 
     private static IEnumerable<string> CheckStoreTitles() =>
         Books.StoreOnly.Select(b => TitlesProblem(b.Stem, b.Titles)).OfType<string>();
+
+    /// <summary>Slice 375 B: every store book with a complete <c>high-res/</c> set has JPEG, 3:4 pictures and builds a high-res pack that carries the same text, audio list and version as its standard pack.</summary>
+    private static async Task<IReadOnlyList<string>> CheckHighResAsync()
+    {
+        var problems = new List<string>();
+        foreach (BookFolder book in Books.StoreOnly.Where(b => b.Text is not null))
+        {
+            if (HighResPack.Find(book) is not { HasPointers: false } files)
+            {
+                continue; // none, or not pulled (a unit-test checkout): publish-store fails such a book itself (StoreValidation)
+            }
+
+            problems.AddRange(HighResPack.PictureProblems(book.Stem, files));
+            if (await PackPairProblemAsync(book) is { } problem)
+            {
+                problems.Add(problem);
+            }
+        }
+
+        return problems;
+    }
+
+    private static async Task<string?> PackPairProblemAsync(BookFolder book)
+    {
+        string? previous = StoreBuilder.OutputFolder;
+        string folder = Path.Combine(Path.GetTempPath(), "dino-check-hd-" + Guid.NewGuid().ToString("N"));
+        StoreBuilder.OutputFolder = folder;
+        try
+        {
+            await StarterBuilder.InScratchAsync(library => StoreBuilder.WriteStoryAsync(book.ToSpec(), library));
+            string storeFolder = Path.Combine(folder, book.Info.Id);
+            bool both = File.Exists(Path.Combine(storeFolder, StoreBuilder.PackageFileName(book.Info.Version))) && File.Exists(Path.Combine(storeFolder, HighResPack.HdPackageFileName(book.Info.Version)));
+            return both ? null : $"{book.Stem} has a complete high-res/ folder but no high-res pack was built beside the standard one";
+        }
+        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException)
+        {
+            return $"{book.Stem}: {e.Message}";
+        }
+        finally
+        {
+            StoreBuilder.OutputFolder = previous;
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
 
     private static IEnumerable<string> CheckStoreBooksBuild()
     {

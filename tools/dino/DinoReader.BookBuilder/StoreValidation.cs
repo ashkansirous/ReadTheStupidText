@@ -39,6 +39,12 @@ internal static class StoreValidation
             if (includeAudio)
             {
                 problems.AddRange(AudioProblems(book));
+                if (HighResPack.UnpulledProblem(book) is { } unpulled)
+                {
+                    problems.Add(unpulled); // Slice 375 B: a book whose high-res set was not pulled is skipped and named, never published standard only
+                }
+
+                problems.AddRange(HighResPack.GateProblems(book)); // Slice 375 B (review #3): a wrong-aspect or non-JPEG high-res picture skips that book, named, instead of shipping cropped
             }
             if (shared.TryGetValue(book.Info.Id, out string? stems))
             {

@@ -257,7 +257,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 
 	private async Task ShowListAsync(IReadOnlyList<StoreItem> items)
 	{
-		_items = FirstBooks.Order(BookAccess.FirstRunOffer(_store.Sales.EnabledForOffer, items)); // Slice 346: a fresh install is offered only books that are not sold; while the switch is unread, only those the listing says are free
+		_items = FirstBooks.Order(BookAccess.FirstRunOffer(_store.Sales.EnabledForOffer, items)).Select(item => item with { Bytes = item.BytesFor(_store.PictureSizeFor(item)) }).ToList(); // Slice 375: the size line counts the pack this device will fetch. Slice 346: a fresh install is offered only books that are not sold; while the switch is unread, only those the listing says are free
 		await ReadShelfAsync();
 		if (FirstBooks.IsSatisfied(_shelfCount))
 		{

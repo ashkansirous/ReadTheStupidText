@@ -42,7 +42,7 @@
  * Env: STORE_API_URL (default https://dinoreader.sirous.uk/api/stories), CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
  */
 
-import { appendFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -165,6 +165,9 @@ export function judgedIdsOf(args, read = (path) => readFileSync(path, 'utf8')) {
 
 export const packageName = (version) => `story-v${version}.dino`;
 
+/** Slice 375 B: the high-res package of the same version, built beside the standard one only for a book with a complete high-res/ folder. */
+export const hdPackageName = (version) => `story-v${version}.hd.dino`;
+
 /** Pure: a positive integer version from a meta value, else null. */
 export function parseVersion(value) {
     return Number.isInteger(value) && value > 0 ? value : null;
@@ -244,12 +247,13 @@ export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () =
     return done;
 }
 
-/** Pure: the uploads for one book, in the order they must run: cover, package, meta.json last. */
-export function uploadsFor({ id, version }, folder, hasCover) {
+/** Pure: the uploads for one book, in the order they must run: cover, package, high-res package (only when the book has one, Slice 375 B), meta.json last. */
+export function uploadsFor({ id, version }, folder, hasCover, hasHd = false) {
     const key = (name) => `${KEY_PREFIX}/${id}/${name}`;
     const uploads = [];
     if (hasCover) uploads.push({ name: COVER_FILE, key: key(COVER_FILE), path: join(folder, COVER_FILE), contentType: 'image/jpeg' });
     uploads.push({ name: packageName(version), key: key(packageName(version)), path: join(folder, packageName(version)), contentType: 'application/octet-stream', isPackage: true });
+    if (hasHd) uploads.push({ name: hdPackageName(version), key: key(hdPackageName(version)), path: join(folder, hdPackageName(version)), contentType: 'application/octet-stream', isPackage: true, isHdPackage: true });
     uploads.push({ name: META_FILE, key: key(META_FILE), path: join(folder, META_FILE), contentType: 'application/json' });
     return uploads;
 }
@@ -518,6 +522,23 @@ export function bytesFromMeta(metaText) {
     }
 }
 
+/** Pure: the `hdBytes` (positive integer) in a live meta.json text, or null (Slice 375 B: the size of the high-res package that is live). */
+export function hdBytesFromMeta(metaText) {
+    if (metaText === null || metaText === undefined) return null;
+    try {
+        const bytes = JSON.parse(metaText).hdBytes;
+        return Number.isInteger(bytes) && bytes > 0 ? bytes : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Pure: `{ hdBytes }` for the live state when the live meta lists a high-res package, else `{}`. */
+function hdBytesEntry(metaText) {
+    const hdBytes = hdBytesFromMeta(metaText);
+    return hdBytes === null ? {} : { hdBytes };
+}
+
 /** Pure: `{ bytes }` for the live state when the live meta carries one, else `{}` (BookBuilder then lists the size of what it built). */
 function bytesEntry(metaText) {
     const bytes = bytesFromMeta(metaText);
@@ -562,7 +583,7 @@ export function highestPackage(exists, from, window = PROBE_WINDOW) {
 export function liveStateOf(live, liveMeta, maxPackage = () => 0, extraIds = []) {
     const entries = live.map(({ id, version }) => {
         const metaText = liveMeta(id); // one read per story; an error from it propagates (never read as "no meta")
-        return [id, { version, contentHash: hashFromMeta(metaText), maxPackage: maxPackage(id, version + 1), ...bytesEntry(metaText), ...audioEntry(metaText) }];
+        return [id, { version, contentHash: hashFromMeta(metaText), maxPackage: maxPackage(id, version + 1), ...bytesEntry(metaText), ...hdBytesEntry(metaText), ...audioEntry(metaText) }];
     });
     const liveIds = new Set(live.map((story) => story.id));
     const extra = extraIds.filter((id) => !liveIds.has(id)).map((id) => [id, { version: 0, contentHash: null, maxPackage: maxPackage(id, 1) }]);
@@ -650,12 +671,12 @@ function listBuilt(root) {
  * in the bucket (it is then not sent again). A failing book is skipped and the others still go up; the run then throws once listing every failed book
  * (the error carries `done`). A book without its meta stays unlisted. Returns the ids and versions uploaded.
  */
-export function runUploads(plan, root, { put, packageExists, audioExists = packageExists, hasCover = (folder) => existsSync(join(folder, COVER_FILE)) }) {
+export function runUploads(plan, root, { put, packageExists, audioExists = packageExists, hasCover = (folder) => existsSync(join(folder, COVER_FILE)), packageSize = null }) {
     const done = [];
     const failures = [];
     for (const book of plan.filter((item) => item.outcome === Outcome.Upload)) {
         try {
-            done.push({ id: book.id, version: uploadBook(book, root, { put, packageExists, audioExists, hasCover }) });
+            done.push({ id: book.id, version: uploadBook(book, root, { put, packageExists, audioExists, hasCover, packageSize }) });
         } catch (error) {
             failures.push(`${book.id}: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -664,9 +685,10 @@ export function runUploads(plan, root, { put, packageExists, audioExists = packa
     return done;
 }
 
-/** Moves a built folder to another version: the package is renamed and meta.json gets the new version. */
+/** Moves a built folder to another version: the package (and the high-res one when built) is renamed and meta.json gets the new version. */
 function moveToVersion(folder, from, to) {
     renameSync(join(folder, packageName(from)), join(folder, packageName(to)));
+    if (existsSync(join(folder, hdPackageName(from)))) renameSync(join(folder, hdPackageName(from)), join(folder, hdPackageName(to)));
     const metaPath = join(folder, META_FILE);
     writeFileSync(metaPath, `${JSON.stringify({ ...JSON.parse(readFileSync(metaPath, 'utf8')), version: to }, null, 2)}\n`);
 }
@@ -689,19 +711,36 @@ function settleVersion(book, folder, packageExists) {
     }
 }
 
-function uploadBook(book, root, { put, packageExists, audioExists = packageExists, hasCover }) {
+function uploadBook(book, root, { put, packageExists, audioExists = packageExists, hasCover, packageSize = null }) {
     const folder = join(root, book.id);
     if (!existsSync(join(folder, packageName(book.version)))) throw new Error(`${book.id}: meta.json says v${book.version} but ${packageName(book.version)} is missing.`);
     putAudioPacks(book, folder, { put, packageExists: audioExists }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
     const { version, packageThere } = settleVersion(book, folder, packageExists);
-    for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder))) {
-        if (upload.isPackage && packageThere) {
+    const hasHd = existsSync(join(folder, hdPackageName(version)));
+    for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder), hasHd)) {
+        // Never overwrite a package key: the standard one is known to exist from settleVersion, the high-res one is asked of the bucket here.
+        if (upload.isPackage && (upload.isHdPackage ? packageExists({ key: upload.key }) : packageThere)) {
             console.log(`${upload.key} already exists, not overwriting`);
+            if (upload.isHdPackage) listBucketHdSize(folder, upload, packageSize);
             continue;
         }
         put(upload);
     }
     return version;
+}
+
+/**
+ * Review #7: A high-res package already in the bucket is kept, so meta.json must list ITS size, not that of this run's rebuild (a zip is not byte-reproducible). `packageSize(upload)` is the
+ * bucket object's size in bytes (null when unknown, then meta.json is left as built).
+ */
+function listBucketHdSize(folder, upload, packageSize) {
+    const bytes = packageSize ? packageSize(upload) : null;
+    if (!Number.isInteger(bytes) || bytes <= 0) return;
+    const metaPath = join(folder, META_FILE);
+    const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
+    if (meta.hdBytes === bytes) return;
+    writeFileSync(metaPath, `${JSON.stringify({ ...meta, hdBytes: bytes }, null, 2)}
+`);
 }
 
 /** Pure: the step-summary markdown. */
@@ -822,6 +861,18 @@ function packageInBucket(upload) {
     }
 }
 
+function packageSizeInBucket(upload) {
+    const folder = mkdtempSync(join(tmpdir(), 'store-size-'));
+    try {
+        const file = join(folder, 'probe');
+        const result = runWrangler(['r2', 'object', 'get', `${BUCKET_NAME}/${upload.key}`, '--remote', '--file', file], true);
+        if (result.error) throw result.error;
+        return publishedStateFrom({ status: result.status, output: `${result.stdout}${result.stderr}` }) ? statSync(file).size : null;
+    } finally {
+        rmSync(folder, { recursive: true, force: true });
+    }
+}
+
 function writeSummary(text) {
     console.log(text);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${text}\n`);
@@ -927,7 +978,7 @@ async function main() {
     let delisted = [];
     const errors = [];
     for (const [step, assign] of [
-        [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket, audioExists: audioExists }), (done) => { uploaded = done; }],
+        [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket, audioExists: audioExists, packageSize: packageSizeInBucket }), (done) => { uploaded = done; }],
         [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket, audioExists: audioExists }), (done) => { refreshed = done; }],
         [() => runDeletions(deletions, { remove: removeFromBucket }), (done) => { delisted = done; }],
     ]) {

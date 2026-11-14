@@ -35,7 +35,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
+		services.GetRequiredService<PictureSizeSource>().StartWatching(); // Slice 375 review #5: starts the iOS connection watcher now, so the first download already knows Wi-Fi from limited
 		_ = services.GetRequiredService<ShelfAudioPacks>(); // Slice 313: its constructor subscribes to StagedBookUpdates.Swapped, so it must exist before the cold-start apply (GalleryPage) can swap a text
+		services.GetRequiredService<StagedBookUpdates>().DiscardPartialFiles(); // Slice 375 D: once, here, before anything can stage: a later call would delete a staging in flight
 		if (services.GetService<IStoryLibrary>() is FileStoryLibrary shelf)
 		{
 			shelf.Fallbacks = new DinoFallbackSink(services.GetRequiredService<UsageCounter>()); // Slice 273 part D: an unreadable book or shelf order is counted

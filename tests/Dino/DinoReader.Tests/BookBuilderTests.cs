@@ -182,7 +182,7 @@ public sealed class BookBuilderTests : IDisposable
     }
 
     [Fact]
-    public void AHighResFolder_ChangesNeitherTheHashNorThePictureList()
+    public void AnIncompleteHighResFolder_ChangesNeitherTheHashNorThePictureList() // a complete one is covered in HighResPackTests (Slice 375 B)
     {
         BookFolder book = TinyBook("One.");
         Directory.CreateDirectory(book.PicturesPath);

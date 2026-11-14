@@ -575,7 +575,15 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 			return StageOutcome.Staged;
 		}
 
-		PackageFetch fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
+		PictureSize size = store.PictureSizeFor(item); // Slice 375: a tablet or PC on Wi-Fi takes the high-res package as the update; on a limited connection the standard one now and the high-res one later
+		PackageFetch fetch = await store.FetchPackageFileAsync(size == PictureSize.High ? item.HdDownloadUrl! : item.DownloadUrl, cancel);
+		if (size == PictureSize.High && fetch is { File: null, Gone: true }) // review #4: only a real 404; a purchase refusal is not a missing file and falls through to today's refusal handling
+		{
+			HighResLog.Write($"high-res pack of {item.Id} v{item.Version} is gone (404), standard instead");
+			size = PictureSize.Standard;
+			fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
+		}
+
 		if (fetch.File is not { } file)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: {(fetch.NotFound ? "package not in the store, skipped" : "download failed, run stopped")}");
@@ -585,6 +593,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		try
 		{
 			staged.Stage(item.Id, item.Version, file);
+			store.RecordStagedPictureSize(item.Id, item.Version, size); // Slice 375 D: this update's own choice replaces any older upgrade entry (pending only for a StandardThenHigh one)
 			Debug.WriteLine($"{LogTag} {item.Id}: v{item.Version} staged for the next start");
 			return StageOutcome.Staged;
 		}

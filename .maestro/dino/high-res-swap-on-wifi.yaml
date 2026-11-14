@@ -1,0 +1,23 @@
+# Slice 375 D: the second half of high-res-limited-then-wifi (run right after it, on the tablet emulator, which has Wi-Fi again): the book is pending from that flow, nothing clears the state here, and a
+# fresh start on Wi-Fi fetches the high-res pack in the background (no loading screen), stages it, and the shelf swaps it in. The flow ends on the shelf with the book still there.
+# Needs the book's high-res pack to be live in the store (uploaded by dino-store.yml after this slice merges).
+# expect-log: [HighRes] 1ca50c6936cc44788b992726784e8132: fetching the high-res pack
+# expect-log: [HighRes] 1ca50c6936cc44788b992726784e8132: high-res v
+# expect-log: [HighRes] 1ca50c6936cc44788b992726784e8132: swapped to the high-res pictures
+# expect-log: [HighRes] state 1ca50c6936cc44788b992726784e8132 applied v
+appId: uk.sirous.dinoreader.dbg
+name: A pending book gets its high-res pictures on Wi-Fi
+---
+- launchApp:
+    # launchApp-restart: a cold start is wanted here: the upgrade runner starts once per process, when the shelf first appears, and finds the pending book left by the previous flow.
+    arguments:
+      cmd: state
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 120000

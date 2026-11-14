@@ -30,8 +30,25 @@ public enum DownloadOutcome
 /// temp file first and imported into the library only when whole, so a dropped one leaves nothing on the shelf (the importer writes
 /// <c>story.json</c> last).
 /// </summary>
-public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, BookSales sales, IFallbackSink? fallbacks = null)
+public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, BookSales sales, IFallbackSink? fallbacks = null, PictureSizeSource? pictureSize = null, HighResUpgrades? upgrades = null)
 {
+	/// <summary>Slice 375: which pack this device takes for a book now (a phone, or a build with no source: standard).</summary>
+	public PictureSize PictureSizeFor(StoreItem item) => pictureSize?.ChoiceFor(item) ?? PictureSize.Standard;
+
+	/// <summary>Slice 375 D: a copy of <paramref name="version"/> is now installed by <paramref name="size"/>: the install choice sets or removes the upgrade entry (the table's own Install) and the installed-size record follows.</summary>
+	public void RecordPictureSize(string id, int version, PictureSize size)
+	{
+		upgrades?.RecordInstalledSize(id, version, size == PictureSize.High);
+		upgrades?.Install(id, version, size == PictureSize.StandardThenHigh);
+	}
+
+	/// <summary>Slice 375 D (review #8): an update of <paramref name="version"/> was only staged. The install choice sets the upgrade entry now, but the installed-size record changes when the update is swapped in (<see cref="HighResUpgrades.SettleInstalledAtSwap"/>).</summary>
+	public void RecordStagedPictureSize(string id, int version, PictureSize size)
+	{
+		upgrades?.RecordStagedSize(id, version, size == PictureSize.High);
+		upgrades?.Install(id, version, size == PictureSize.StandardThenHigh);
+	}
+
 	// Slice 346: the books of the last listing by id, so a request for a book's files (a download, an update, an audio pack) can carry that book's purchase proof.
 	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, StoreItem> _listed = new(StringComparer.OrdinalIgnoreCase);
 
@@ -387,11 +404,13 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, StoryLanguages.Current().All);
 			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
 			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
-			await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			PictureSize size = await FetchBookPackageAsync(item, PictureSizeFor(item), part, summed, cancel);
 			if (!await ImportPackageAsync(part, item.Id))
 			{
 				return DownloadOutcome.Failed;
 			}
+
+			RecordPictureSize(item.Id, item.Version, size);
 
 			await InstallPacksAsync(item, wanted, summed, cancel); // audio is optional: it never fails or rolls back the book
 			return DownloadOutcome.Done;
@@ -415,6 +434,31 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	}
 
 	/// <summary>
+	/// Slice 375: fetches the book's package as <paramref name="size"/> says (the high-res address for High, the standard one otherwise) and returns the size actually fetched: a high-res file the store
+	/// answers 404 for (listed but gone) falls back to the standard pack, which then carries no later upgrade.
+	/// </summary>
+	private async Task<PictureSize> FetchBookPackageAsync(StoreItem item, PictureSize size, string part, SummedProgress summed, CancellationToken cancel)
+	{
+		if (size == PictureSize.High)
+		{
+			try
+			{
+				await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+				return size;
+			}
+			catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
+			{
+				// no-fallback: the store lists a high-res pack it cannot serve; the standard pack is fetched instead and the book is not marked for an upgrade
+				HighResLog.Write($"high-res pack of {item.Id} v{item.Version} is gone (404), standard instead");
+				size = PictureSize.Standard;
+			}
+		}
+
+		await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+		return size;
+	}
+
+	/// <summary>
 	/// Downloads one package (an address from the list, Slice 181) into the cache for the background book update and returns the file; the caller deletes it.
 	/// File is null when the server cannot be reached or the package is not whole; NotFound is true for a 404 (the version is not in the store, so retrying will not help) and for the store's definitive "purchase not valid" for a sold book (same: skip the book, go on); any other refusal is not permanent.
 	/// Imports nothing and tells nobody.
@@ -433,7 +477,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			// no-fallback: the store answered that this version is gone; the caller treats it as not found, not as a failure
 			Debug.WriteLine($"Dino Reader found no such book version in the store: {downloadUrl}");
 			TryDelete(part);
-			return new PackageFetch(null, true);
+			return new PackageFetch(null, true, Gone: true); // Slice 375 review #4: a real 404, unlike the purchase refusal below
 		}
 		catch (StoreRefusedException ex) when (!cancel.IsCancellationRequested)
 		{
@@ -442,7 +486,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, definitive={ex.IsDefinitive}): {downloadUrl}");
 			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // a refusal (400/402/403) is the store answering; a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_unreachable
 			TryDelete(part);
-			return new PackageFetch(null, ex.IsDefinitive);
+			return new PackageFetch(null, ex.IsDefinitive, Refused: ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden);
 		}
 		catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden && !cancel.IsCancellationRequested)
 		{
@@ -450,7 +494,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}): {downloadUrl}");
 			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
 			TryDelete(part);
-			return new PackageFetch(null, false);
+			return new PackageFetch(null, false, Refused: true);
 		}
 		catch (Exception ex) when ((IsNetworkFailure(ex) || ex is StoreStorageException) && !cancel.IsCancellationRequested)
 		{
@@ -860,4 +904,4 @@ public sealed class StoreRefusedException(System.Net.HttpStatusCode status, stri
 public sealed class StoreStorageException(Exception inner) : Exception(inner.Message, inner);
 
 /// <summary>Result of a background package download (Slice 181): the cached file, or null with <see cref="NotFound"/> telling a 404 from a network failure.</summary>
-public sealed record PackageFetch(string? File, bool NotFound);
+public sealed record PackageFetch(string? File, bool NotFound, bool Gone = false, bool Refused = false);
