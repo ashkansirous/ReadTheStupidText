@@ -504,6 +504,21 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 376: Feedback loop 2026-11-13-1149 leftovers ([slice](slices/376-feedback-loop-2026-11-13-1149-leftovers.md))
+- iOS compile of the Farsi probe twin (`IosTtsEngine.cs` calling `FarsiEzafeProbe`).
+- Item 2: a run with a real stale onboarding flag (the run saw `pending=none`, so the cause stays likely).
+- Item 3: that `farsi-ezafe-reads` fails on a build before #1098.
+- Item 5: one emulator download row showing the pack version.
+- `premade-audio-past-roar` fixture clash (a real fa pack replaces `fixture-13.m4a` after `pm clear`): untouched, still open as item 2's second half.
+
+### Slice 354: Feedback loop 2026-11-12-1337 leftovers ([slice](slices/354-feedback-loop-2026-11-12-1337-leftovers.md))
+- `rerun-no-runner.yml` on a real release run with a no-runner cancel.
+- `asc-confirm-build.mjs` and its steps on a real release run (the `filter[version]` call was checked live, read-only, in review).
+- The TestFlight verdict on a real 500-then-success upload.
+- The VM test-package compile step on the next Dino Windows run.
+- `gemini-grab.js` on a non-English Gemini page.
+- Item 9: the Mono SIGSEGV at cold start; no crash-store match, needs a device run (10 cold starts).
+
 ### Slice 377: Feedback loop 2026-11-14-0726 leftovers ([slice](slices/377-feedback-loop-2026-11-14-0726-leftovers.md))
 - **Device:** item 2: a live read-back of one non-English Microsoft Store listing after certification (the store name in the text; the `pt-br` listing created beside any `pt-pt`; the `submission update` payload shape).
 - **Device:** item 16: first install on an unmetered link, turn the link metered mid-download: the standard pack arrives and the log line shows; a brief offline gap must not stop the high-res fetch.
