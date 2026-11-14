@@ -51,6 +51,27 @@ Listening page https://claude.ai/artifact/Cfes6Q7N1HvgG3HYnmHMjY, user pressed D
 - [ ] Fix: `fa-gyro-3` (Gyro, «دفتر خرید»): an extra ezafe, "daftare kharid" instead of "daftar kharid". Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong.
 - [x] Find one cause for the whole ezafe pattern across 342 and 343 (all four voices share the Farsi phonemizer), fix it once, and re-render every bad clip plus its neighbours on one page for a second listen. Result (probe in Slice 342's file): the missing ezafe is espeak's phonemes (a kasra fixes it, shipped); the three extra-ezafe items are not in espeak's phonemes (`sobh jek`, `daftar kharid` already), so no text mark stops them; they stay open, likely the VITS model's own habit, needs a different fix (for example another pack voice or model retrain). WAVs: `reviews/s342-ezafe/`, no Artifact page (headless).
 
+### Second listen (2026-11-14 21:33Z, same page, `v2-*` answers)
+
+The user pressed Done at 21:33:50Z. Answers word for word (Mana was not re-rendered: all three clips were right the first time):
+
+| Clip | Voice | Verdict | Note |
+| --- | --- | --- | --- |
+| ganji_adabi-1 | Ganji Adabi (default) | ok | (earlier wrong: "hal shoma"; the kasra fix works) |
+| ganji_adabi-2 | Ganji Adabi (default) | ok | |
+| ganji_adabi-3 | Ganji Adabi (default) | ok | |
+| ganji-1 | Ganji | ok | |
+| ganji-2 | Ganji | bad | says "har rooz sobhe" , should say "har rooz sob" |
+| ganji-3 | Ganji | ok | |
+| gyro-1 | Gyro | bad | misses the "ast" at the end |
+| gyro-2 | Gyro | bad | says "har rooze sob" , should say "har rooz sob" |
+| gyro-3 | Gyro | bad | says "daftare kharid" should say "daftar kharid" |
+
+Result: the missing-ezafe fix (Ganji Adabi, the default voice, and Slice 342's clip) is confirmed by ear. The three extra-ezafe items are still wrong, as expected (no text fix exists; see the cause line above). Gyro now also puts the extra ezafe on «روز» ("rooze") and drops the final «است» in clip 1: both new.
+
+- [ ] Fix: `gyro-1` (Gyro, «... خیلی خوب است.»): the final «است» ("ast") is not spoken (second listen, 2026-11-14). Find whether the sentence-final word is cut by the renderer (trailing audio trimmed, end-of-sentence handling) or by the model; fix through the review gate; re-render for a third listen.
+- [ ] Fix: the extra-ezafe items (`ganji-2`, `gyro-2` now on «روز» too, `gyro-3`): no text mark stops them (espeak's phonemes are already right). Try the cheapest model-side options first and render each on one page for a third listen: a short break between the two words (comma or zero-width non-joiner at render time), a different noise/length scale for these two voices, or the same sentence on the other pack voices. If none works, record it as the model's limit for Ganji and Gyro (the default voice, Ganji Adabi, and Mana are right).
+
 ## Verification
 
-The user's answers are recorded here. Each wrong item has a fix merged and its clip re-rendered on the same page for a second listen.
+The user's answers are recorded here. Each wrong item has a fix merged and its clip re-rendered on the same page for a second listen. Second listen done 2026-11-14 (above): the default voice is right; Ganji's and Gyro's open items need a third listen after their fixes.
