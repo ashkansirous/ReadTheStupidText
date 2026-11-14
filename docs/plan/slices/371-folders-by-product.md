@@ -1,7 +1,7 @@
 # Slice 371 — Folders grouped by product: src, tests and tools
 **Product:** Shared
 
-*Built 2026-11-14 (wave 2026-11-14), PR #1109, not merged; emulator flows passed, iOS builds, Windows VM run and the first-merge release run not yet verified.*
+*Built 2026-11-14 (wave 2026-11-14), merged as PR #1109 (303cd267); emulator flows passed, iOS builds, Windows VM run and the first-merge release run not yet verified.*
 
 **Parked (night 2026-11-13-1149, wave 7):** not started. Its own rule needs no other worktree with changes; worktree `gedlg` (`feat/ge-dialogue`, Good Enough redraw, live at 23:55Z) changes 474 files, one of them `tests/DinoReader.Tests/PictureBookSentenceDumpTests.cs`, and the primary checkout holds another session's untracked `src/DinoReader.Core/AppliedOnce.cs`, `tests/DinoReader.Tests/AppliedOnceTests.cs` and `src/DinoReader.BookSample/`. Run it once those are merged or cleared. Correction (feedback loop 2026-11-13-1149): the two `AppliedOnce` files are empty files from 2026-11-08 and `BookSample/` is 12 pictures from 2026-10-23 (Slice 157's known leftover), so they are stale and the move may leave them where they are; only `gedlg` is a real blocker. Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night checks again.
 
@@ -90,7 +90,7 @@ Folders marked "check" are placed by reading what they do; any that serve both s
 - Skipped #1 (`reviews/s371-medium.md`): "not re-measured after sources moved" - emulator builds use `--artifacts-path` (`tools/emulator/build-cache.ps1:173`), so source depth is not in the intermediate paths.
 - Skipped #2 (`reviews/s371-medium.md`): "No runtime effect" - the text is the same as on origin/main; it is a project-relative name.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-14)
 
 Nothing beyond the diff: the root layer diagram and *Where the rules live* list were already updated by this slice (Slice 371: docs/plan/slices/371-folders-by-product.md).
 

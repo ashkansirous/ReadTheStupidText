@@ -502,6 +502,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 371: Folders grouped by product ([slice](slices/371-folders-by-product.md))
+- **Device:** iOS builds of both apps from the new folders (no Mac; CI builds them on the PR or at the first release).
+- **Device:** Windows VM run (`tools/desktop-vm`) from the new paths.
+- **Release:** first merge's release run ids through the moved paths (Verification line 4).
+
 ### Slice 370: Give the shared code a neutral name ([slice](slices/370-rename-shared-code.md))
 
 - iOS simulator upgrade test (old build, setting, pack, install the renamed build over it): no Mac available.
@@ -512,6 +517,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
 
+- **Release:** Microsoft Store listings in 13 languages reach both apps' Store pages after the next release (read back with `msstore submission get <id>` after the first release run that calls `store-submit.yml`; check the keys, `pt-br`, no duplicate `fr`/`fr-fr`, and that the run's log shows no `::warning::` from the listing step). Built, not yet run live.
 - **You:** native read of the Arabic store listings (`ar`).
 - **You:** native read of the Chinese (Simplified) store listings (`zh`).
 - **You:** native read of the Danish store listings (`da`).
