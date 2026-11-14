@@ -7,6 +7,8 @@
 
 *Parked: second listen needs an Artifact listening page (interactive session); 3 extra-ezafe items.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
+*Park note (night 2026-11-14-0726):* parked again by housekeeping 1 for the same reason (the second listen needs an Artifact page; headless wave sessions have no Artifact tool). Moved back to `planned` by the 2026-11-14-0726 feedback loop per the user's 2026-11-01 rule; a night run can only re-park it, so it needs an interactive session.
+
 *Park note (night 2026-11-13-1149):* parked by wave 5 because the 3 extra-ezafe items have no text fix (the piper-fa VITS model adds the ezafe itself) and the second listen needs an interactive session (Artifact page; WAVs in `reviews/s342-ezafe/`). Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night retries it.
 
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.

@@ -1,1 +1,1 @@
-{"contentPaths": ["content/dino/**"], "workerPaths": ["worker/**", "site/**", "wrangler*.jsonc", "package.json", "package-lock.json"]}
+{"contentPaths": ["content/dino/**"], "workerPaths": ["worker/**", "!worker/**/*.md", "site/**", "wrangler*.jsonc", "package.json", "package-lock.json"]}

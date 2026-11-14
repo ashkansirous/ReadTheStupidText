@@ -96,6 +96,6 @@ Nothing beyond the diff: the root layer diagram and *Where the rules live* list 
 
 #### Not yet verified
 
-- iOS builds of both apps from the new folders (no Mac; CI builds them on the PR or at the first release).
 - Windows VM run (`tools/desktop-vm`) from the new paths.
-- First merge's release run ids through the moved paths (Verification line 4).
+
+Passed (read by the 2026-11-14-0726 feedback loop with `gh run view`): the batched release at ef2556e6 built both iOS apps from the new folders, release-dino.yml 43583369254 (`build-dinoios`) and release-rtst.yml 43583371778 (`build-ios`), both `success`.
