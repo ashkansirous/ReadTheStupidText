@@ -7,6 +7,8 @@
 
 *Earlier (history): drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.* Moved back to `planned` by the 2026-11-13-1149 feedback loop (park reason kept here); a night run is denied again unless the user adds an autoMode allow line for store listing pushes (see that note's *Waiting on the user*).
 
+*Park note (2026-11-14, night 2026-11-14-1547 housekeeping 2):* parked: items 4 and 5 wait for a release's Microsoft Store submission to be certified and read back with the 13 languages (no wave work left). Items 6 and 7 ticked here: both are recorded as done under *Draft state* (search words per language; 13 native-read lines in unverified.md).
+
 **Touches:** `docs/store-listings/**` (new: one file per language for Dino under `docs/store-listings/dino/<lang>.md`; RTST's existing `docs/store-listings/<lang>.md` files completed, new `da.md`, `fi.md`, `sv.md`, `nb.md`, `nl.md`), `docs/plan/slices/374-store-listings-13-languages.md`, `docs/plan/unverified.md`
 
 ## Why
@@ -32,8 +34,8 @@ A French or Japanese parent searching the store sees an English page for an app 
 - [x] 3. Dino App Store: the 13 languages on version 1.81.1 (description, keywords within 100 bytes per locale, promotional text, subtitle within 30). Read back. Do not submit the version.
 - [ ] 4. (BUILT into the release pipeline, not yet run live; stays open until a release run's `submission get` shows the 13 languages, see Microsoft Store build) Dino Microsoft Store: the 13 languages into the next Partner Center submission (listing only; never a submission that discards a pending draft), committed, read back from the submission.
 - [ ] 5. (Google Play and App Store done; Partner Center built into the release pipeline, not yet run live, so open until the read-back, see Microsoft Store build) RTST: complete `ar es fa fr ja pt ru zh` against the current `en.md`, add `da fi sv nb nl`, push to Play, App Store (version 1.76.1, not submitted) and Partner Center the same way, read back.
-- [ ] 6. Play's and Apple's store keywords and short texts are written for each language, not translated word for word (store search terms people actually type, e.g. "Gute-Nacht-Geschichten", not a literal "bedtime stories").
-- [ ] 7. Each language gets one line in `docs/plan/unverified.md`: native read of the Dino and RTST listings in that language.
+- [x] 6. Play's and Apple's store keywords and short texts are written for each language, not translated word for word (store search terms people actually type, e.g. "Gute-Nacht-Geschichten", not a literal "bedtime stories").
+- [x] 7. Each language gets one line in `docs/plan/unverified.md`: native read of the Dino and RTST listings in that language.
 
 The work goes through the global `store-listing` agent (apply mode; the user's approval above is the go).
 

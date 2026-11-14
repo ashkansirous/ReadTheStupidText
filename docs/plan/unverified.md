@@ -504,6 +504,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 317: Feedback loop 2026-11-08-0106 leftovers ([slice](slices/317-feedback-loop-2026-11-08-0106-leftovers.md))
+- Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).
+- The commit retry in `store-submit.yml` (a failed `msstore submission publish` is run once more after 60 s) has not run on a runner; what `submission publish` does when the draft is already committed or missing is undocumented and unverified.
+
 ### Slice 376: Feedback loop 2026-11-13-1149 leftovers ([slice](slices/376-feedback-loop-2026-11-13-1149-leftovers.md))
 - iOS compile of the Farsi probe twin (`IosTtsEngine.cs` calling `FarsiEzafeProbe`).
 - Item 2: a run with a real stale onboarding flag (the run saw `pending=none`, so the cause stays likely).
