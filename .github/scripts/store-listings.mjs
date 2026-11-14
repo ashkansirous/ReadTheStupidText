@@ -5,8 +5,12 @@
  * Pure parsing lives in exported functions (store-listings.test.mjs); the CLI only reads files and prints JSON.
  *
  * Sources: RTST `docs/store-listings/<lang>.md`, Dino `docs/store-listings/dino/<lang>.md`. Only the 13 languages
- * added by Slice 374 are built; en and de were pushed by hand earlier and use another file layout, so they are left
- * exactly as the Store has them (the output never names them).
+ * added by Slice 374 are built, plus `de` for RTST (Slice 193; an existing Partner Center RTST German listing is replaced by `de.md`,
+ * the user approved that text 2026-11-01). en (both apps) and Dino's de were pushed by hand earlier, so they are left exactly as
+ * the Store has them (the output never names them).
+ * Layouts: every file but RTST `de.md` uses one-line labels (`Short description (...): text`). RTST `de.md` is sectioned: headings are
+ * matched by prefix ("Short description", "Search terms", "Long description", "Microsoft Store only"), search terms are numbered
+ * lines (`1. term`); renaming a heading or using another list style fails the build with "missing ..." for that language.
  *
  * Usage: node store-listings.mjs --app rtst|dino [--root <repo root>] [--out <file>] [--submission <file>]
  * With --submission (the JSON `msstore submission get` printed) the output is that whole submission with the listings merged in, ready for
@@ -26,6 +30,11 @@ export const LANGUAGES = {
   ar: 'ar', zh: 'zh-cn', da: 'da', nl: 'nl', fa: 'fa', fi: 'fi', fr: 'fr',
   ja: 'ja', nb: 'nb', pt: 'pt-br', ru: 'ru', es: 'es', sv: 'sv',
 };
+
+/** Read The Stupid Text also carries German (Slice 193): its `de.md` uses headed sections instead of one-line labels, which parseRtst reads as a fallback. Dino's German was pushed by hand and stays out. */
+export function languagesFor(app) {
+  return app === APPS.rtst ? { ...LANGUAGES, de: 'de' } : LANGUAGES;
+}
 
 export const LIMITS = { title: 200, shortDescription: 1000, description: 10000, keywords: 7, keywordLength: 30, keywordWords: 21 };
 
@@ -53,16 +62,30 @@ export function splitTerms(line) {
   return line.split(';').map((t) => t.trim()).filter(Boolean);
 }
 
+/** The sectioned layout (`## Short description (...)` then the line): its first non-empty line. */
+function sectionFirstLine(text, headingStart) {
+  const body = sectionBody(text, headingStart);
+  return body?.split('\n').map((l) => l.trim()).find(Boolean);
+}
+
+/** The sectioned layout's search terms, one per line: `1. vorlesen`, `1) vorlesen` or `- vorlesen`; a trailing `(note)` is dropped. */
+function sectionTerms(text) {
+  const body = sectionBody(text, 'Search terms');
+  if (!body) return undefined;
+  const terms = body.split('\n').map((l) => /^(?:\d+[.)]|[-*])\s+(.+)$/.exec(l.trim())?.[1].replace(/\s*\([^)]*\)\s*$/, '').trim()).filter(Boolean);
+  return terms.length ? terms : undefined;
+}
+
 export function parseRtst(text) {
   const long = sectionBody(text, 'Long description');
   const note = sectionBody(text, 'Microsoft Store only');
-  const short = labelValue(text, 'Short description');
+  const short = labelValue(text, 'Short description') ?? sectionFirstLine(text, 'Short description');
   const terms = labelValue(text, 'Search terms');
   return {
     title: RTST_TITLE,
     shortDescription: short,
     description: short && long && note ? `${short}\n\n${long}\n\n${note}` : undefined,
-    keywords: terms ? splitTerms(terms) : undefined,
+    keywords: terms ? splitTerms(terms) : sectionTerms(text),
   };
 }
 
@@ -110,7 +133,7 @@ export function buildListings(app, read) {
   const parse = app === APPS.dino ? parseDino : parseRtst;
   const listings = {};
   const errors = [];
-  for (const [stem, code] of Object.entries(LANGUAGES)) {
+  for (const [stem, code] of Object.entries(languagesFor(app))) {
     const text = read(stem);
     if (text === undefined) { errors.push(`${stem}: file not found`); continue; }
     const listing = parse(text);
@@ -139,7 +162,7 @@ function setField(obj, name, value) {
 /**
  * Merges built listings into the submission JSON that `msstore submission get` printed, and returns the new submission.
  * Only Title, ShortDescription, Description and Keywords of each built language change; every other field (pricing, packages, images,
- * features, release notes) and every language not built (en, de) is kept exactly. Refuses a submission without Pricing.PriceId, as
+ * features, release notes) and every language not built (en; Dino's de; RTST builds de) is kept exactly. Refuses a submission without Pricing.PriceId, as
  * `msstore submission update` does, so a bad read can never reset the app's price. Property names follow the casing already present.
  */
 export function mergeListings(submission, built) {
