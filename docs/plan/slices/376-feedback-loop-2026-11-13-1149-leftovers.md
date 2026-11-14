@@ -1,9 +1,9 @@
 # Slice 376: Feedback loop 2026-11-13-1149 leftovers
 **Product:** Shared
 
-*Parked: feedback loop, waits for the user.* Found by the 2026-11-13-1149 feedback loop ([note](../notes/2026-11-13-1149-feedback-loop.md)). Nothing here is built until the user has read it.
+*In progress (wave 2026-11-14, night 2026-11-14-1547 wave 2), draft PR.* Wave scope: item 4 also covers Slice 354 item 3; item 13 also covers Slice 377 item 11; item 14 is built by Slice 377 item 15 (the wider rule, same hook). ClaudeSkills items go in their own ClaudeSkills PR (worktree `D:/ClaudeSkills-worktrees/cs376`). Was: *Parked: feedback loop, waits for the user.* Found by the 2026-11-13-1149 feedback loop ([note](../notes/2026-11-13-1149-feedback-loop.md)). Nothing here is built until the user has read it.
 
-**Touches:** `tools/emulator/**`, `tools/test-targets.ps1`, `src/DinoReader.App/Testing/**`, `.maestro/rtst/**`, `src/Sirous.Reading.Mobile.Shared/**` (pack download count), `worker/events.ts`, `.github/workflows/release-shared.yml` (store submit step), `docs/plan/slices/355-dino-web-catalogue.md`, `docs/plan/slices/360-dino-play-waits-for-wifi.md`; ClaudeSkills `skills/run-all-waves/clean-stale.mjs`, `skills/feedback-loop/check-review-skips.mjs`.
+**Touches:** `tools/emulator/lint-flows.ps1`, `tools/emulator/screenshot-frames.json`, `tools/emulator/**` (item 2 only), `tools/test-targets.ps1`, `tools/CLAUDE.md`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/rtst/**`, `.maestro/dino/**` (item 2 only), `src/Shared/Sirous.Reading.Mobile.Shared/**` (pack download count), `worker/events.ts`, `worker/**` (item 5 count column, its tests), `.github/workflows/release-shared.yml`, `.github/workflows/release-dino.yml`, `.github/workflows/store-submit.yml`, `.github/scripts/store-submit-*.mjs` (item 1), `docs/plan/slices/355-dino-web-catalogue.md`, `docs/plan/slices/360-dino-play-waits-for-wifi.md`; ClaudeSkills `skills/run-all-waves/clean-stale.mjs`, `skills/feedback-loop/**`, `skills/run-wave/SKILL.md`, `agents/device-test.md`, `agents/implement-slice.md`, `agents/fix-review-findings.md`, `skills/to-plan/**`.
 
 ## Items
 
