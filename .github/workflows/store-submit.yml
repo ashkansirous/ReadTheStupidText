@@ -58,6 +58,10 @@ on:
         description: 'Store product (app) id. Required, no fallback: the caller passes its own app id.'
         required: true
         type: string
+    outputs:
+      committed:
+        description: "'true' only when this run's own final step committed the submission (msstore submission publish exited 0)."
+        value: ${{ jobs.submit.outputs.committed }}
   workflow_dispatch:
     inputs:
       tag:
@@ -81,6 +85,8 @@ env:
 jobs:
   submit:
     runs-on: windows-latest
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
     # Slice 374: `msstore publish`, `submission get/update/publish` all act on the app's ONE pending draft, so two runs for the same
     # product (a manual dispatch during a release) must never interleave. Queued, never cancelled: a cancel after --noCommit would
     # leave an uncommitted draft.
@@ -285,6 +291,7 @@ jobs:
       # (it replaces the submission, which is why the merge starts from the draft); `submission publish` commits that one submission.
       # The product id check above already pairs the package with its own app, so the two apps cannot swap listings.
       - name: Put the repo's listing text into the submission and commit it
+        id: commit
         shell: pwsh
         run: |
           $id = "${{ inputs.product_id }}"
@@ -308,3 +315,4 @@ jobs:
           # Always commit the draft: a release must never end with an uncommitted submission. This one stays loud.
           msstore submission publish $id
           if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed ($LASTEXITCODE)" }
+          "committed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append   # Slice 317: the caller's marker job tags only on this

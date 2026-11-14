@@ -253,7 +253,8 @@ jobs:
   # the first successful submission creates it.
   store-submit-dino-mark:
     needs: [shared, store-submit-dino]
-    if: needs.store-submit-dino.result == 'success'
+    # Tags only when the submit's own commit step says it committed (store-submit.yml's `committed` output), not merely because the job ended green.
+    if: needs.store-submit-dino.result == 'success' && needs.store-submit-dino.outputs.committed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write   # create the marker tag

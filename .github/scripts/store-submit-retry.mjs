@@ -19,15 +19,21 @@ const SERVER_ERROR_STATUS = /\b(?:HTTP(?:\/\d(?:\.\d)?)?|status(?: code)?)\b[^\d
 /** The one stage that may be retried: the CLI looks up the app's existing submission before it creates anything, so a 5xx here has changed nothing in the Store. */
 export const RETRYABLE_STAGE = /Retrieving existing Submission/i;
 
-/** Stages that come after the lookup and may leave a draft behind: when one of them follows the lookup in the log, the failure is not the lookup's. */
-const LATER_STAGES = /\b(Uploading|Creating|Committing|Publishing)\b/i;
+/**
+ * The lines msstore prints once the lookup has succeeded (read from a real failed log, fixtures/msstore-502-while-polling-after-commit.log, release-dino run 43530984548): "Submission retrieved. Id = ...",
+ * "Submission properly configured.", "Submission Committed - Status=...", "Submission Status - ...". When one follows the last lookup line, a submission exists (and may be committed): the failure is not the lookup's.
+ */
+const LATER_STAGES = /^\s*(?:New\s+)?Submission (?:retrieved|properly configured|Committed|Status)\b/im;
+
+/** msstore colours its lines; the GitHub log viewer shows the escape byte as `^[`. Both forms are removed before the log is read. */
+const ANSI = /(?:\x1b|\^\[)\[[0-9;]*m/g;
 
 /**
  * Design changed after review check 1 (two strikes): the WHOLE captured log is searched (a fixed window of last lines lost the marker to `-v` output or a stack trace), but only the text from the
  * LAST "Retrieving existing Submission" on counts, so a 5xx an earlier request logged and then cured (an Azure Blob "Status: 503") is never read as this failure.
  */
 export function lastStageText(output) {
-    const text = String(output ?? '');
+    const text = String(output ?? '').replace(ANSI, '');
     const at = text.search(new RegExp(`${RETRYABLE_STAGE.source}(?![\\s\\S]*${RETRYABLE_STAGE.source})`, 'i'));
     return at < 0 ? '' : text.slice(at);
 }

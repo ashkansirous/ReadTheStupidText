@@ -22,7 +22,19 @@
 
 *From review:* check (`reviews/s317-check.md`), 9 findings, **design changed after review check 1 (two strikes)**; all nine applied, with these decisions (main thread):
 - Build cache (1-3): pruned only by age since last use (folder last-write time, which a reuse bumps) older than 14 days; the "creating worktree is gone" rule is dropped; no null path reaches `Remove-Item` (`@(foreach ...)`, nulls filtered); the size summary prints only when something was pruned. Item 1's third check ("measured only when something was pruned") answers finding 3.
-- No-voice skip (4-6): `-match 'No services found'` anywhere in adb's answer, probed once per run; a needs-voice flow is skipped before it runs (never run then excused); `Test-FlowSkipped` is the one helper for the summary and the exit code.
+- No-voice skip (4-6): `-match 'No services found'` anywhere in adb's answer, probed twice per run (4 s apart, round 2); a needs-voice flow is left out before it runs (never run then excused); `Test-FlowSkipped` is the one helper for the summary and the exit code.
 - Store-submit retry (7, 8): the whole captured log is searched, from the LAST `Retrieving existing Submission` on (a 5xx an earlier request logged is ignored, and a later Uploading/Creating/Committing/Publishing stage cancels the retry); the native call runs with `$ErrorActionPreference = 'Continue'` and `$PSNativeCommandUseErrorActionPreference = $false`, restored in a `finally`.
 - Dino marker (9): the build/submit split RTST has: submit flag `dinowinstore` (output `dinowin_store`, gates `store-submit-dino`), build flag `dinowin`; a pending submission turns the build on, and `store-submit-dino-mark`'s tag after a successful submit clears it, so a later release without a Dino Windows change builds no MSIX.
 - Item 6 built: the Gallery shelf pass reports a cancel/timeout like any failure (no gallery token reaches it); the weekly check skips a book already given up for that store version (`BookTextCurrency.SkipGivenUp`, tested); Slice 313's skip lines rewritten to the checker's format (`check-review-skips.mjs` exits 0).
+
+*From review:* medium pass 2 (`reviews/s317-medium2.md`), 7 findings; 1, 2, 4, 5, 7 applied, 3 and 6 recorded:
+- #1, #2: `store-submit-retry.mjs` is tested against a real failed log (release-dino run 43530984548, saved as `.github/scripts/fixtures/msstore-502-while-polling-after-commit.log`, upload URL signature redacted): a 502 while polling after the commit is NOT retried (a second publish would make a second submission). `LATER_STAGES` now matches only the lines msstore prints once the lookup succeeded (`Submission retrieved`, `properly configured`, `Committed`, `Status`), and colour codes (`^[[...m`) are stripped. The Tee-Object capture was checked in pwsh 7 (the step's shell): the file holds the raw text and the exit code survives; Windows PowerShell 5.1 would write UTF-16 and wrap stderr, which is not the step's shell.
+- #4: the TTS engine is probed twice, 4 s apart, and a skip needs both to say `No services found`; the run summary prints `no-voice skip: decided by two probes ...`.
+- #5: a cancel while the page has no handler (the page's teardown) is silent again (`// no-fallback:`); with the page alive a timeout still reports.
+- #7: `store-submit.yml` has a `committed` output set by its commit step only after `msstore submission publish` exits 0; `store-submit-dino-mark` runs only when it is `true`.
+- Skipped #3 (`reviews/s317-medium2.md`): "item 3 Kotlin error undiagnosed" - needs a device run (the full Maestro log now captured diagnoses it next run); listed in Not yet verified below.
+- Skipped #6 (`reviews/s317-medium2.md`): "Remove-AbandonedBuilds counts locked folders as removed" - low: a locked folder is tried again at the next prune, and the count only decides whether the size line prints.
+
+**Not yet verified:**
+- Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).
+- A real `msstore publish` 5xx at "Retrieving existing Submission" is retried once on a runner (only the retry decision is tested, on logs).

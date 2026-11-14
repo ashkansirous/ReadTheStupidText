@@ -617,7 +617,7 @@ try {
         $myNames = @($splitPlan.First)
         if (@($splitPlan.Second).Count -gt 0 -and -not $secondRun) { $myNames += @($splitPlan.Second) }   # emulator 2 did not come up: its flows run here
         $results = New-Object System.Collections.Generic.List[object]
-        $noTtsEngine = Test-NoTtsEngine (Get-EmulatorTtsServices)   # Slice 317 item 4: probed once; a `# needs: voice` flow is skipped before it runs when the emulator has no TTS engine
+        $noTtsEngine = Test-NoTtsEngineConfirmed { Get-EmulatorTtsServices }   # Slice 317 item 4: two probes a few seconds apart; a `# needs: voice` flow is skipped before it runs only when both say no engine
         $crashedIn = $null
         $stopLine = ''
         foreach ($file in @($files | Where-Object { $myNames -contains $_.BaseName })) {
@@ -644,6 +644,7 @@ try {
     $failed = @($results | Where-Object { $_.Problem }).Count
     $notRun = @($results | Where-Object { $_.NotRun -and -not (Test-FlowSkipped $_) }).Count   # a no-voice skip does not fail the run; any other not-run flow does (the same Test-FlowSkipped the summary uses)
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
+    if (@($results | Where-Object { Test-FlowSkipped $_ }).Count -gt 0) { Write-Host (Format-NoVoiceProbeLine) }
     foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
     foreach ($retrySummary in @(Format-RetrySummary $results.ToArray())) { Write-Host $retrySummary }
     foreach ($logLine in @(Format-RetryLogLines $results.ToArray())) { Write-Host $logLine }

@@ -343,9 +343,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		{
 			applied = await RebuildShelfAsync();
 		}
+		catch (OperationCanceledException) when (Handler is null)
+		{
+			// no-fallback: the page was torn down (its handler is gone) while the pass ran, so a cancel here is the teardown, not a failure; the shelf stays pending
+		}
 		catch (Exception ex)
 		{
-			// Slice 317 item 6 (313 check 3 #1): no token of the gallery's own reaches this pass (the wait is canCancel: false), so an OperationCanceledException here is an HttpClient timeout
+			// Slice 317 item 6 (313 check 3 #1): with the page alive, no token of the gallery's own reaches this pass (the wait is canCancel: false), so an OperationCanceledException here is an HttpClient timeout
 			// or a cancelled inner wait, a real failure: it is reported like any other, not dropped without a line.
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 			DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 325: the shelf keeps what it showed and is rebuilt on the next request; the same for every merged requester

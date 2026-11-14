@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { RETRY_WAIT_SECONDS, isTransientStoreError } from './store-submit-retry.mjs';
 
@@ -53,8 +54,22 @@ test('the marker far above the error (verbose output or a stack trace after it) 
     assert.equal(isTransientStoreError(log), true);
 });
 
-test('a 5xx after a later stage (an upload) is not the lookup\'s failure', () => {
-    assert.equal(isTransientStoreError([STAGE, 'Uploading package...', 'GatewayTimeout'].join('\n')), false);
+test('a 5xx after the lookup succeeded (a submission exists) is not the lookup\'s failure', () => {
+    assert.equal(isTransientStoreError([STAGE, "Submission retrieved. Id = '1'", 'GatewayTimeout'].join('\n')), false);
+    assert.equal(isTransientStoreError([STAGE, 'Submission Committed - Status=CommitStarted', 'HTTP 502'].join('\n')), false);
+});
+
+test('a real failed msstore log (release-dino run 43530984548: a 502 while polling after the commit) is never retried: a second publish would make a second submission', () => {
+    const real = readFileSync(new URL('./fixtures/msstore-502-while-polling-after-commit.log', import.meta.url), 'utf8');
+    assert.match(real, /Retrieving existing Submission/); // the log does contain the marker (it succeeded), the 502 comes much later
+    assert.match(real, /Submission Committed/);
+    assert.equal(isTransientStoreError(real), false);
+});
+
+test('the same real log with its lookup cut short by a 500 is retried, colour codes and wrapped lines included', () => {
+    const real = readFileSync(new URL('./fixtures/msstore-502-while-polling-after-commit.log', import.meta.url), 'utf8');
+    const upToLookup = real.slice(0, real.indexOf('Retrieving existing Submission') + 'Retrieving existing Submission'.length);
+    assert.equal(isTransientStoreError(upToLookup + '\n01:01:22 ^[[38;5;2;48;5;0minfo^[[0m: HttpClient Received HTTP response headers after 55000ms - 500\nUnhandled exception: MSStore.API.MSStoreException: {"code":"InternalServerError"}'), true);
 });
 
 test('the wait is one minute', () => {

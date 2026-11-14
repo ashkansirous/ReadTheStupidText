@@ -22,6 +22,17 @@ Assert-Equal 'one helper decides skipped: a pass is not a skip' $false (Test-Flo
 Assert-Equal 'extra adb line before the answer still counts' $true (Test-NoTtsEngine "WARNING: linker something`r`nNo services found`r`n")
 Assert-Equal 'unknown (adb timeout or empty output): no skip' $false (Test-NoTtsEngine '')
 Assert-Equal 'unknown (adb timeout returns null): no skip' $false (Test-NoTtsEngine $null)
+$script:answers = @('No services found', 'No services found')
+$script:probeCount = 0
+$twice = { $script:probeCount++; $script:answers[[Math]::Min($script:probeCount - 1, $script:answers.Count - 1)] }
+Assert-Equal 'two probes both say no engine: confirmed' $true (Test-NoTtsEngineConfirmed $twice 0)
+Assert-Equal 'both probes were made' 2 $script:probeCount
+$script:answers = @('No services found', 'priority=0 com.google.android.tts/.service.GoogleTTSService'); $script:probeCount = 0
+Assert-Equal 'a transient first answer, an engine on the second probe: not confirmed, flows run' $false (Test-NoTtsEngineConfirmed $twice 0)
+$script:answers = @('com.google.android.tts/.S'); $script:probeCount = 0
+Assert-Equal 'an engine on the first probe: no second probe, not confirmed' $false (Test-NoTtsEngineConfirmed $twice 0)
+Assert-Equal 'only one probe was made' 1 $script:probeCount
+Assert-Equal 'the summary line says two probes' $true ((Format-NoVoiceProbeLine) -match 'two probes')
 Assert-Equal 'adb error text: no skip' $false (Test-NoTtsEngine 'error: device offline')
 Assert-Equal 'adb error text with word/word: no skip' $false (Test-NoTtsEngine 'error: and/or closed')
 Assert-Equal 'no TTS engine: adb answered "No services found"' $true (Test-NoTtsEngine "No services found`r`n")

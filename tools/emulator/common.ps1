@@ -463,6 +463,19 @@ function Test-FlowSkipped($Result) {
     return [bool]($Result.NotRun -and "$($Result.NotRun)" -like 'SKIP *')
 }
 
+# Review round 2: one transient "No services found" (package service not yet up) must not skip every needs-voice flow with exit 0. $Probe returns adb's answer; both probes, $WaitSeconds apart, must say no engine.
+$script:NoTtsProbeWaitSeconds = 4
+function Test-NoTtsEngineConfirmed([scriptblock]$Probe, [int]$WaitSeconds = $script:NoTtsProbeWaitSeconds) {
+    if (-not (Test-NoTtsEngine (& $Probe))) { return $false }
+    if ($WaitSeconds -gt 0) { Start-Sleep -Seconds $WaitSeconds }
+    return (Test-NoTtsEngine (& $Probe))
+}
+
+# The run summary's line that says how the skip was decided.
+function Format-NoVoiceProbeLine {
+    return "no-voice skip: decided by two probes $($script:NoTtsProbeWaitSeconds) s apart that both answered 'No services found' (cmd package query-services -a android.intent.action.TTS_SERVICE)."
+}
+
 function Get-EmulatorTtsServices {
     return "$(Invoke-AdbBounded @('-s', $script:Serial, 'shell', 'cmd', 'package', 'query-services', '-a', 'android.intent.action.TTS_SERVICE'))"
 }
