@@ -1,17 +1,20 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 **Product:** Shared
 
-*In progress (2026-11-01): item 3 built.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
+*In progress (wave 2026-11-14), draft PR. Items 3 and 5 built earlier; this wave builds 1, 2, 4, 6, 7 (8 waits on a real crash after 1-2 ship).* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
 
 **Depends on:** none (Slice 227 built the reports).
-**Touches:** `.github/workflows/release.yml`, `.github/workflows/*ios*.yml`, `.github/CLAUDE.md`, `tools/crashes/**`,
-`src/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Sirous.Reading.Application/Crashes/**`,
-`src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**`, `src/Sirous.Reading.Mobile.Shared/Platforms/Android/**`,
-`src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/DinoLog.cs`, `src/DinoReader.App/App.xaml.cs`,
-`src/ReadTheStupidText.Mobile/App.xaml.cs`, `worker/crashes.ts`, `worker/crashes.test.mjs`, `worker/CLAUDE.md`,
-`tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/227-crash-reports.md`
+**Touches:** `.github/workflows/ios.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/workflows/android.yml`,
+`.github/workflows/dinoreader-android.yml`, `.github/workflows/release-shared.yml` (release-asset upload steps only),
+`.github/CLAUDE.md`, `tools/crashes/**`, `tools/CLAUDE.md`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Crashes/**`, `src/Shared/Sirous.Reading.Application/Crashes/**`,
+`src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/Crashes/**`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/**`,
+`src/Dino/DinoReader.App/DinoLog.cs`, `src/Dino/DinoReader.App/App.xaml.cs`,
+`src/Rtst/ReadTheStupidText.Mobile/App.xaml.cs`, `worker/crashes.ts`, `worker/crashes.test.mjs`, `worker/CLAUDE.md`,
+`tests/Shared/Shared.Tests/**`, `tests/Rtst/ReadTheStupidText.Tests/**`, `docs/plan/slices/227-crash-reports.md`
+(paths updated 2026-11-14 for the Slice 371 folder move; `release.yml` no longer exists)
 
 ## What the 2026-11-01 crashes showed was missing (checked that day)
 
