@@ -2,6 +2,8 @@
 # is written once, the first time the highlight moves past the first sentence of any chunk that is still playing,
 # so it appearing before READ_END proves the move whatever the chunker does (Slice 361). Android emulator, English only
 # (Maestro's inputText does not type Farsi reliably; the Farsi/RTL spans are unit-tested).
+# Slice 317: on an emulator with no voice no read starts, so run-flows.ps1 prints a "SKIP ... no voice" line instead of failing.
+# needs: voice
 # expect-log: READ_START
 # expect-log: SENTENCE_MOVED
 # expect-log: READ_END

@@ -11,6 +11,8 @@ Your caller gives you the worktree path, the slice file, the questions and the c
 language), and optionally the lines to read.
 
 - Renders from Gemini use `--batch` (the normal route's 100/day cap is used up); never try the normal route first.
+- Measure or reuse first (skill step 0): a check ffmpeg or a script can decide, or a question the slice file already answers, never goes on the page.
+- Write the page link into the slice file (under *Decisions (user, <date>)*, "page: <link>") as soon as it is published, before you start waiting for answers; you have no message tool, so the file is how your caller sees it.
 - Never change app code, packs or releases; write only the slice file's decisions and files under the ignored `tools/dino/voice-listen/out/` folder.
 - Report in at most 8 lines: the page link, each question's pick, notes, skipped candidates.
 - Before your final report, stop every loop and process you started and delete the venv and WAVs. End with `released: …`.

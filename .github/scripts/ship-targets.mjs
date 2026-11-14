@@ -77,14 +77,19 @@ const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
  * it); the store flag is measured from the newest one.
  */
 export const STORE_TAG_PREFIX = 'rtst-store-v';
+/** Slice 317 item 5: Dino Reader's twin, pushed by release-dino.yml's `store-submit-dino-mark` job after a successful Microsoft Store submission. Not a `dino-v` tag. */
+export const DINO_STORE_TAG_PREFIX = 'dino-store-v';
 
 /**
  * Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries.
- * `store` (RTST only): the marker-tag prefix, the flag measured from it and the flag a pending submission switches on.
+ * `store` (both products since Slice 317): the marker-tag prefix, the flag measured from it and the flag a pending submission switches on. `configuredEnv` (optional): the variable that must be set
+ * for the product's Store submit to exist at all; when it is empty nothing ever creates a marker, so the marker logic is off and the flag follows the release diff only (Slice 317 review fix 6).
  */
 export const PRODUCTS = {
     rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'], store: { prefix: STORE_TAG_PREFIX, flag: 'windowsstore', buildFlag: 'windows' } },
-    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'] },
+    // Slice 317 item 5 (design changed after review check 1, two strikes): the same build/submit split as RTST. `dinowinstore` (not a release-diff target: shipTargetsPerProduct adds it) is the submit flag, `dinowin` the
+    // build flag; `measure` names the shipTargets flag whose release-diff value `dinowinstore` starts from. A pending submission turns the build on, and the marker tag the successful submit pushes ends it.
+    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'], store: { prefix: DINO_STORE_TAG_PREFIX, flag: 'dinowinstore', buildFlag: 'dinowin', measure: 'dinowin', configuredEnv: 'DINOREADER_STORE_APP_ID' } },
 };
 
 /** Targets that publish content and never cut a release, so a major-bump token on their files must not rebuild the product (Slice 158). */
@@ -409,9 +414,9 @@ function writeOutputs(targets) {
  * submission was skipped, failed or cancelled is submitted by the next release. A pending RTST Store
  * submission also needs the MSIX built and released, so it turns `windows` on.
  */
-function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag }) {
+function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag, measure = flag }) {
     const sinceStore = shipTargets({ changedFiles: plan.storeChangedFiles, bump: plan.bump, forceAll });
-    merged[flag] = merged[flag] || sinceStore[flag];
+    merged[flag] = merged[flag] || sinceStore[measure];
     if (buildFlag) merged[buildFlag] = merged[buildFlag] || merged[flag];
 }
 
@@ -425,6 +430,7 @@ export function shipTargetsPerProduct({ plans, forceAll = false }) {
     for (const [name, product] of Object.entries(PRODUCTS).filter(([name]) => plans[name])) {
         const all = shipTargets({ ...plans[name], forceAll });
         product.targets.forEach((target) => { merged[target] = all[target]; });
+        if (product.store?.measure) merged[product.store.flag] = all[product.store.measure];   // a submit flag that is not a release-diff target starts from the build flag's diff value
         if (product.store && plans[name].storeChangedFiles) applySinceLastStore(merged, plans[name], forceAll, product.store);
     }
     return merged;
@@ -445,7 +451,8 @@ export function releaseWorkflows(changedFiles) {
 /** The files changed since the product's last store marker tag, or undefined (no marker, or the diff failed: the flag then follows the release diff). */
 function storeChangesFor(name, cwd) {
     if (!PRODUCTS[name].store) return undefined;
-    const { prefix } = PRODUCTS[name].store;
+    const { prefix, configuredEnv } = PRODUCTS[name].store;
+    if (configuredEnv && !process.env[configuredEnv]) { console.log(`ship-targets (${name}): ${configuredEnv} is not set (no Store submit), the store flag follows the release diff.`); return undefined; }
     const storeBase = previousReleaseTag(prefix, cwd);
     if (!storeBase) { console.log(`ship-targets (${name}): no ${prefix}* tag yet, the store flag follows the release diff.`); return undefined; }
     const files = changedFilesSince(storeBase, cwd);

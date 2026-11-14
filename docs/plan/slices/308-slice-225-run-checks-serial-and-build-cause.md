@@ -9,7 +9,7 @@
 
 ## Work
 
-- [x] 1. `Find-WirelessPhone` (`tools/phone/common.ps1`) accepts wireless serials only. Add `run-checks.ps1 -Serial emulator-NNNN` so the same checks run on an emulator, with one RTST dev package id on both (coordinate with Slice 221 item 2, the Dino id). The "wireless only" rule is for the user's real phone and stays: an emulator serial is allowed only when named. Verify: `paused-notification` runs on emulator-5554 and reports PASS or FAIL, never a device error.
+- [x] 1. `Find-WirelessPhone` (`tools/phone/common.ps1`) accepts wireless serials only. Add `run-checks.ps1 -Serial emulator-NNNN` so the same checks run on an emulator, with one RTST dev package id on both (coordinate with Slice 221 item 2, the Dino id). The "wireless only" rule here describes what `Find-WirelessPhone` accepts today (the global rule since 2026-11-13 is USB first, else wireless; a USB serial is not yet accepted by these scripts) and stays: an emulator serial is allowed only when named. Verify: `paused-notification` runs on emulator-5554 and reports PASS or FAIL, never a device error.
 - [x] 2. (investigated; cause not found, the runner now keeps `<log>.failed.log`) Read `build-dino-debug.log` and `build-rtst-debug.log` from a failing run (run the Debug builds through the runner until one stalls or fails, keep the logs), write the cause in the slice file, and fix it or record it as an environment limit.
 - [x] 3. Android only for the emulator path; the iOS equivalent is Slice 312's tooling, not this slice.
 

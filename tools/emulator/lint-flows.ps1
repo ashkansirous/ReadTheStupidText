@@ -33,7 +33,7 @@ $script:MaestroCommands = @(
     'setPermissions', 'startRecording', 'stopApp', 'stopRecording', 'swipe', 'takeScreenshot', 'tapOn', 'toggleAirplaneMode', 'toggleDarkMode',
     'travel', 'waitForAnimationToEnd'
 )
-$script:NeedsValues = @('cellular-only', 'report-stub', 'crash-stub', 'screen-cycle')   # Slice 320 item 5: report-stub/crash-stub start a host stub (need-stubs.ps1); screen-cycle (Slice 322): run-flows.ps1 sleeps and wakes the screen on a timer while the flow runs
+$script:NeedsValues = @('cellular-only', 'report-stub', 'crash-stub', 'screen-cycle', 'voice')   # Slice 317 item 4: voice = the flow reads aloud, so run-flows.ps1 skips it with a line on an emulator that has no voice; Slice 320 item 5: report-stub/crash-stub start a host stub (need-stubs.ps1); screen-cycle (Slice 322): run-flows.ps1 sleeps and wakes the screen on a timer while the flow runs
 $script:StubNeedsValues = @('report-stub', 'crash-stub')   # both listen on port 8787, so a flow may name only one
 $script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader.dbg')
 # YAML's double-quoted escapes: 0 a b t n v f r e space " / \ N _ L P x u U (and a tab).

@@ -161,7 +161,7 @@ export function mergeListings(submission, built) {
 export function findListingKey(keys, code) {
   const exact = keys.find((k) => k.toLowerCase() === code);
   if (exact) return exact;
-  if (code === 'pt-br') return keys.find((k) => k.toLowerCase() === 'pt') ?? keys.find((k) => k.toLowerCase() === 'pt-pt');
+  if (code === 'pt-br') return keys.find((k) => k.toLowerCase() === 'pt'); // never `pt-pt`: a Brazilian text must not overwrite a European Portuguese listing (Slice 377 item 2); with none, a new pt-br listing is made
   if (code.includes('-')) return code === 'zh-cn' ? keys.find((k) => k.toLowerCase() === 'zh-hans') : undefined;
   const sameLanguage = keys.filter((k) => k.toLowerCase().split('-')[0] === code);
   if (sameLanguage.length === 1) return sameLanguage[0];

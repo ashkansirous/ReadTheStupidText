@@ -8,6 +8,14 @@ description: Put a listening choice in front of the user and bring back their pi
 The user's ear decides; this skill only makes listening fast and brings the answer back. It never
 changes app code. The caller applies the pick (usually through `implement-slice`).
 
+## 0. Measure or reuse before asking the ear
+
+- A check a tool can measure (silence, clipping, length against the text, loudness, speed: ffmpeg, `run.py`'s length check)
+  is measured and decided by the tool; it never goes on a page (Slice 330 was closed by measuring with ffmpeg, #1064).
+- A question already answered (the slice file's *Decisions (user, <date>)*, an earlier page's answers) is reused, shown only
+  as "your earlier pick" when the candidates are the same, and never asked again.
+- Only a choice that is purely about how it sounds goes on the page. If nothing is left, publish no page and say so.
+
 ## 1. Render
 
 - Engines and packs as in `tools/dino/sound-words-test/README.md` (`engines.py` mirrors `SherpaEngineFactory.cs`:
@@ -35,6 +43,8 @@ changes app code. The caller applies the pick (usually through `implement-slice`
 
 ## 3. Wait and return
 
+- Give the caller the page link before the first wait, never only with the final report (a subagent has no message tool, so write
+  "page: <link>" into the slice file's decisions the moment the page is published); the link is never held back until the answers arrive.
 - Poll `answers` with `ArtifactData` every 5 minutes; stop at `done`, or after 2 hours idle (report "no answer yet",
   the page link, and keep nothing running).
 - Write the picks and the page link into the slice file the caller names (under *Decisions (user, <date>)*).

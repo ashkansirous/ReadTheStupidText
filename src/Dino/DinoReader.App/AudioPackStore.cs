@@ -64,6 +64,18 @@ public sealed class SummedProgress(IProgress<double> inner, long packBytesListed
 		}
 	}
 
+	/// <summary>Slice 377 item 16: the book part starts over (a high-res fetch was stopped and the standard pack is fetched instead, with its own total); the bar restarts from the new count, the one time it may go down.</summary>
+	public void ResetBook()
+	{
+		lock (_lock)
+		{
+			_bookDone = 0;
+			_bookTotal = 0;
+			_last = 0;
+			Report();
+		}
+	}
+
 	public void Pack(long done)
 	{
 		lock (_lock)

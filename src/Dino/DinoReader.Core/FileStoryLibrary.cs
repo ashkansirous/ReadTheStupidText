@@ -186,7 +186,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             if (File.Exists(path))
             {
-                throw new InvalidOperationException($"Story {story.Id} already exists.");
+                throw new ShelfRaceException($"Story {story.Id} already exists.");
             }
 
             await WriteAsync(story);
@@ -205,7 +205,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             if (File.Exists(path))
             {
-                throw new InvalidOperationException($"Story {story.Id} already exists.");
+                throw new ShelfRaceException($"Story {story.Id} already exists.");
             }
 
             await CopyFilesThenWriteAsync(story, files);
@@ -224,7 +224,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             if (!File.Exists(path))
             {
-                throw new InvalidOperationException($"Story {story.Id} does not exist.");
+                throw new ShelfRaceException($"Story {story.Id} does not exist.");
             }
 
             await WriteAsync(story);

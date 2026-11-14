@@ -217,7 +217,8 @@ function Format-FlowsSummary([string]$App, [object[]]$Results, [double]$Seconds)
     $failed = @($Results | Where-Object { $_.Problem }).Count
     $notRun = @($Results | Where-Object { $_.NotRun }).Count
     $passed = $Results.Length - $failed - $notRun
-    $why = if (@($Results | Where-Object { Test-RunnerStuck $_ }).Count -gt 0) { 'runner stuck' } else { 'app crashed' }
+    $skipped = @($Results | Where-Object { Test-FlowSkipped $_ }).Count   # only a no-voice skip is labelled so, next to the real counts
+    $why = if (@($Results | Where-Object { Test-RunnerStuck $_ }).Count -gt 0) { 'runner stuck' } elseif ($skipped -gt 0 -and $skipped -eq $notRun -and $failed -eq 0) { 'skipped, no voice' } elseif ($skipped -gt 0) { "app crashed; $skipped skipped, no voice" } else { 'app crashed' }
     return ('{0}: {1} passed, {2} failed, {3} not run ({4}) in {5:n1} s.' -f $App, $passed, $failed, $notRun, $why, $Seconds)
 }
 
@@ -441,6 +442,46 @@ function Test-LogMarkerCanMatch([string]$Marker) {
         if (Test-LogMarker $line $Marker) { return $true }
     }
     return $false
+}
+
+# Slice 317 item 4: a flow whose header says `# needs: voice` reads text aloud. On an emulator with no voice no read ever starts, so the engine's ENGINE_READY marker never appears and the
+# flow fails at a marker or a screen: that is a missing voice, not a bug in the feature the flow checks. Pure: $Needs are the flow's `# needs:` values, $Log the RTST-TEST log of the run.
+# Design changed after review check 1 (two strikes): the emulator's own answer decides, before the flow runs, so a UI failure in a needs-voice flow is never run and then excused.
+# $TtsServices is the output of `adb shell cmd package query-services -a android.intent.action.TTS_SERVICE`. "No engine" is true when "No services found" appears anywhere in it (an extra adb line,
+# a warning or a CRLF does not defeat it); empty output (a timeout returns $null), an error text or a component line is "unknown"/"engine present" and never skips a flow.
+$script:NoTtsServicesAnswer = 'No services found'
+function Test-NoTtsEngine([string]$TtsServices) {
+    return ("$TtsServices" -match [regex]::Escape($script:NoTtsServicesAnswer))
+}
+
+function Test-NoVoiceSkip([string[]]$Needs, [bool]$EmulatorHasNoTtsEngine) {
+    return (@($Needs) -contains 'voice') -and $EmulatorHasNoTtsEngine
+}
+
+# The one place that says whether a result is a skip; the end-of-run summary and run-flows' exit code both ask it, so they cannot drift.
+function Test-FlowSkipped($Result) {
+    return [bool]($Result.NotRun -and "$($Result.NotRun)" -like 'SKIP *')
+}
+
+# Review round 2: one transient "No services found" (package service not yet up) must not skip every needs-voice flow with exit 0. $Probe returns adb's answer; both probes, $WaitSeconds apart, must say no engine.
+$script:NoTtsProbeWaitSeconds = 10
+function Test-NoTtsEngineConfirmed([scriptblock]$Probe, [int]$WaitSeconds = $script:NoTtsProbeWaitSeconds) {
+    if (-not (Test-NoTtsEngine (& $Probe))) { return $false }
+    if ($WaitSeconds -gt 0) { Start-Sleep -Seconds $WaitSeconds }
+    return (Test-NoTtsEngine (& $Probe))
+}
+
+# The run summary's line that says how the skip was decided.
+function Format-NoVoiceProbeLine {
+    return "no-voice skip: decided by two probes $($script:NoTtsProbeWaitSeconds) s apart that both answered 'No services found' (cmd package query-services -a android.intent.action.TTS_SERVICE)."
+}
+
+function Get-EmulatorTtsServices {
+    return "$(Invoke-AdbBounded @('-s', $script:Serial, 'shell', 'cmd', 'package', 'query-services', '-a', 'android.intent.action.TTS_SERVICE'))"
+}
+
+function Format-NoVoiceSkipLine([string]$FlowName) {
+    return "SKIP ${FlowName}: no voice on this emulator (no TTS engine installed), so the flow could not read aloud; this is not a failure of the feature it checks."
 }
 
 # Slice 315 item 1: the Maestro CLI (Java) copies the dev app's APK (69-97 MB) to %TEMP%\tmp<digits>.apk about once per clearState and never deletes it (207 files, 16 GB in one day).
