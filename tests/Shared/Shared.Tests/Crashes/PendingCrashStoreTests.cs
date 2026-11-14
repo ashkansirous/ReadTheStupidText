@@ -85,9 +85,9 @@ public sealed class PendingCrashStoreTests : IDisposable
         Assert.Null(store.TakeUncleanExit());
 
         store.MarkRunning();
-        UncleanExit? since = store.TakeUncleanExit();
+        DateTimeOffset? since = store.TakeUncleanExit();
         Assert.NotNull(since);
-        Assert.True(DateTimeOffset.UtcNow - since.FrontSince < TimeSpan.FromMinutes(1));
+        Assert.True(DateTimeOffset.UtcNow - since.Value < TimeSpan.FromMinutes(1));
         Assert.Null(store.TakeUncleanExit());
 
         store.MarkRunning();

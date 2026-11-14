@@ -130,61 +130,189 @@ public class CrashFactsTests
         Assert.Equal((null, null, null), (about.Version, about.Facts, about.Session));
     }
 
-    [Fact]
-    public void The_run_marker_round_trips_a_launchs_facts_and_a_missing_field_stays_null()
+    private static readonly DateTimeOffset LaunchA = new(2026, 11, 14, 8, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset LaunchB = new(2026, 11, 14, 9, 0, 0, TimeSpan.Zero);
+
+    private static void WithFolder(Action<string> test)
     {
-        Assert.Equal(new LaunchFacts("1.0.0", "100", "AAAA"), RunMarker.Parse(RunMarker.Format(new LaunchFacts("1.0.0", "100", "AAAA"))));
-        Assert.Equal(new LaunchFacts("1.0.0", "100", null), RunMarker.Parse(RunMarker.Format(new LaunchFacts("1.0.0", "100", null))));
-        Assert.Equal(new LaunchFacts("1.0.0", null, null), RunMarker.Parse(RunMarker.Format(new LaunchFacts("1.0.0", null, null)) + "\r\n"));
+        string folder = Path.Combine(Path.GetTempPath(), $"facts-{Guid.NewGuid():N}");
+        try
+        {
+            test(folder);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Fact]
+    public void The_facts_file_keeps_the_previous_launch_as_prev_and_the_new_one_as_current()
+    {
+        WithFolder(folder =>
+        {
+            var file = new LaunchFactsFile(folder);
+            file.Begin(new LaunchFacts("1.0.0", "100", null), LaunchA); // launch A starts, its UUID arrives later
+            file.Write(new LaunchFacts("1.0.0", "100", "AAAA", LaunchA));
+
+            file.Begin(new LaunchFacts("1.1.0", "110", null), LaunchB); // launch B starts
+
+            Assert.Equal(new LaunchFacts("1.0.0", "100", "AAAA", LaunchA), file.ReadPrevious());
+            Assert.Equal(new LaunchFacts("1.1.0", "110", null, LaunchB), file.ReadCurrent());
+        });
+    }
+
+    [Fact]
+    public void A_background_only_launch_does_not_push_the_last_foreground_launchs_facts_out_of_prev()
+    {
+        WithFolder(folder =>
+        {
+            var file = new LaunchFactsFile(folder);
+            file.Begin(new LaunchFacts("1.0.0", "100", "AAAA"), LaunchA);
+            file.Begin(new LaunchFacts("1.0.1", "101", "BBBB"), LaunchA.AddHours(1)); // A becomes prev (no prev yet)
+            file.Write(new LaunchFacts("1.0.1", "101", "BBBB", LaunchA.AddHours(1), true)); // B reached the foreground, then crashed
+
+            file.Begin(new LaunchFacts("1.0.2", "102", "CCCC"), LaunchA.AddHours(2)); // C: background only, B is prev
+            file.Begin(new LaunchFacts("1.1.0", "110", "DDDD"), LaunchA.AddHours(3)); // D: C never reached the foreground, B stays prev
+
+            Assert.Equal("101", file.ReadPrevious()!.Build);
+            Assert.Equal("110", file.ReadCurrent()!.Build);
+        });
+    }
+
+    [Fact]
+    public void A_diagnostic_with_only_a_period_end_and_no_facts_gets_no_previous_launch_facts()
+    {
+        var previous = new LaunchFacts("1.0.0", "100", "AAAA", LaunchA);
+
+        Assert.Null(LaunchFactsChoice.ForNativeExit(null, null, previous, null));
+    }
+
+    [Fact]
+    public void A_uuid_write_changes_only_the_current_file()
+    {
+        WithFolder(folder =>
+        {
+            var file = new LaunchFactsFile(folder);
+            file.Begin(new LaunchFacts("1.0.0", "100", "AAAA"), LaunchA);
+            file.Begin(new LaunchFacts("1.1.0", "110", null), LaunchB);
+
+            file.Write(new LaunchFacts("1.1.0", "110", "BBBB", LaunchB));
+
+            Assert.Equal("AAAA", file.ReadPrevious()!.BinaryUuid);
+            Assert.Equal("BBBB", file.ReadCurrent()!.BinaryUuid);
+        });
+    }
+
+    [Fact]
+    public void A_missing_or_cleared_facts_file_has_no_facts_and_clear_removes_both()
+    {
+        WithFolder(folder =>
+        {
+            var file = new LaunchFactsFile(folder);
+            Assert.Null(file.ReadPrevious());
+            file.Begin(new LaunchFacts("1.0.0", "100", null), LaunchA);
+            file.Begin(new LaunchFacts("1.1.0", "110", null), LaunchB);
+
+            file.Clear();
+
+            Assert.Null(file.ReadPrevious());
+            Assert.Null(file.ReadCurrent());
+        });
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData("\t\t")]
-    [InlineData("just one field")]
-    [InlineData("1.0\t2\t3\t4")]
-    public void An_empty_or_damaged_run_marker_has_no_facts(string? text) => Assert.Null(RunMarker.Parse(text));
+    [InlineData("not json")]
+    [InlineData("{}")]
+    [InlineData("[1,2]")]
+    public void An_empty_or_damaged_facts_file_has_no_facts(string? text) => Assert.Null(LaunchFactsFile.Parse(text));
 
     [Fact]
-    public void An_unclean_exit_carries_the_build_its_own_marker_was_written_with()
+    public void The_run_marker_is_unchanged_by_the_facts_file()
     {
-        string folder = Path.Combine(Path.GetTempPath(), $"marker-{Guid.NewGuid():N}");
-        try
+        WithFolder(folder =>
         {
             var store = new PendingCrashStore(folder);
-            store.MarkRunning(new LaunchFacts("1.0.0", "100", "AAAA")); // launch A, which then crashes
+            new LaunchFactsFile(folder).Begin(new LaunchFacts("1.0.0", "100", "AAAA"), LaunchA);
 
-            UncleanExit? exit = store.TakeUncleanExit(); // read by launch B, which is a different build
-
-            Assert.Equal(new LaunchFacts("1.0.0", "100", "AAAA"), exit!.Launch);
-            var nowB = new CrashContext(CrashApp.Dino, "ios", "1.1.0", InstallChannel.Store, null, null, new CrashFacts("110", "BBBB"));
-            Assert.Equal(("1.0.0", new CrashFacts("100", "AAAA")), (LaunchFacts.About(nowB, exit.Launch).Version, LaunchFacts.About(nowB, exit.Launch).Facts));
-        }
-        finally
-        {
-            Directory.Delete(folder, true);
-        }
+            Assert.Null(store.TakeUncleanExit());
+            Assert.Empty(store.List());
+            store.MarkRunning();
+            Assert.NotNull(store.TakeUncleanExit());
+        });
     }
 
     [Fact]
-    public void An_unclean_exit_whose_marker_held_no_facts_has_none_rather_than_the_current_ones()
+    public void An_exit_during_the_previous_launch_takes_the_previous_launchs_facts_not_the_running_ones()
     {
-        string folder = Path.Combine(Path.GetTempPath(), $"marker-{Guid.NewGuid():N}");
-        try
-        {
-            var store = new PendingCrashStore(folder);
-            store.MarkRunning();
+        var previous = new LaunchFacts("1.0.0", "100", "AAAA", LaunchA);
+        var running = new LaunchFacts("1.1.0", "110", "BBBB", LaunchB);
 
-            UncleanExit? exit = store.TakeUncleanExit();
+        LaunchFacts? facts = LaunchFactsChoice.ForNativeExit(LaunchA.AddMinutes(30), null, previous, running);
 
-            Assert.NotNull(exit);
-            Assert.Null(exit.Launch);
-        }
-        finally
-        {
-            Directory.Delete(folder, true);
-        }
+        Assert.Equal(previous, facts);
+    }
+
+    [Fact]
+    public void An_exit_older_than_the_previous_launch_belongs_to_an_unknown_launch_and_gets_no_facts()
+    {
+        var previous = new LaunchFacts("1.0.0", "100", "AAAA", LaunchA);
+
+        Assert.Null(LaunchFactsChoice.ForNativeExit(LaunchA.AddHours(-3), null, previous, new LaunchFacts("1.1.0", "110", "BBBB", LaunchB)));
+        Assert.Null(LaunchFactsChoice.ForNativeExit(LaunchA.AddMinutes(1), null, null, null));
+    }
+
+    [Fact]
+    public void A_report_with_a_uuid_gap_and_the_running_build_takes_the_running_binarys_uuid()
+    {
+        var running = new LaunchFacts("1.1.0", "110", "BBBB", LaunchB);
+
+        LaunchFacts? fromSystem = LaunchFactsChoice.ForNativeExit(LaunchB, new LaunchFacts("1.1.0", "110", null), null, running);
+        LaunchFacts? fromFile = LaunchFactsChoice.ForUncleanExit(new LaunchFacts("1.1.0", "110", null, LaunchA), running);
+
+        Assert.Equal("BBBB", fromSystem!.BinaryUuid);
+        Assert.Equal("BBBB", fromFile!.BinaryUuid);
+    }
+
+    [Fact]
+    public void A_uuid_gap_on_another_build_stays_a_gap()
+    {
+        var running = new LaunchFacts("1.1.0", "110", "BBBB", LaunchB);
+
+        LaunchFacts? facts = LaunchFactsChoice.ForUncleanExit(new LaunchFacts("1.0.0", "100", null, LaunchA), running);
+
+        Assert.Null(facts!.BinaryUuid);
+        Assert.Equal("100", facts.Build);
+    }
+
+    [Fact]
+    public void A_diagnostic_that_names_its_own_build_wins_over_the_previous_launchs_file()
+    {
+        var reported = new LaunchFacts("0.9.0", "90", "ZZZZ");
+
+        LaunchFacts? facts = LaunchFactsChoice.ForNativeExit(LaunchB, reported, new LaunchFacts("1.0.0", "100", "AAAA", LaunchA), new LaunchFacts("1.1.0", "110", "BBBB", LaunchB));
+
+        Assert.Equal(reported, facts);
+    }
+
+    [Fact]
+    public void An_unclean_exit_with_no_previous_facts_has_none()
+    {
+        Assert.Null(LaunchFactsChoice.ForUncleanExit(null, new LaunchFacts("1.1.0", "110", "BBBB", LaunchB)));
+    }
+
+    [Fact]
+    public void A_call_stack_tree_deeper_than_the_default_json_depth_is_still_searched_and_one_too_deep_gives_null()
+    {
+        string Nest(int depth) => string.Concat(Enumerable.Repeat("{\"subFrames\":[", depth)) + "{\"binaryName\":\"App\",\"binaryUUID\":\"70b89f27-1634-3580-a695-57cdb41d7743\"}" + string.Concat(Enumerable.Repeat("]}", depth));
+
+        Assert.Equal("70B89F2716343580A69557CDB41D7743", MetricKitBinaries.UuidOf(Nest(50), "App")); // 101 levels
+        Assert.Null(MetricKitBinaries.UuidOf(Nest(200), "App")); // 401 levels: JsonException, caught
     }
 
     private const string MetricKitTree = """

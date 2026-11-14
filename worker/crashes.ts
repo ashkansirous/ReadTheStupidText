@@ -1,5 +1,5 @@
 // Crash and error reports from the phone apps (Slice 227). Dino Reader and Read The Stupid Text post one report per crash:
-//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version"?, "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"?, "session"?, "build"?, "binaryUuid"?, "memoryHeadroom"?, "memoryApp"?, "appState"? }
+//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version", "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"?, "session"?, "build"?, "binaryUuid"?, "memoryHeadroom"?, "memoryApp"?, "appState"? }
 // Each valid report is kept whole in R2 (`crashes/<app>/<yyyy-mm-dd>/<random id>.json` in the downloads bucket) and counted as one point in the
 // Analytics Engine dataset `app_crashes` (binding APP_CRASHES). Nothing identifies the sender: the object is named with a random id made here, the IP is
 // never stored (the rate limiter sees it as its key and keeps no record for us), and the only things taken from the connection are the country code
@@ -55,7 +55,6 @@ const CHANNELS = ["store", "testflight"] as const;
 const TESTFLIGHT = "testflight";
 const IOS = "ios";
 const OTHER_TYPE = "other";
-const UNKNOWN_VERSION = "unknown";
 const UNKNOWN_CLIENT = "unknown";
 // The exception type or the signal text: letters, digits and the punctuation of a .NET type name or a "key=value" native description.
 const TYPE_PATTERN = /^[A-Za-z0-9_.`+<>[\],=:$ -]{1,200}$/;
@@ -91,8 +90,7 @@ export type CrashFlagCheck = () => Promise<boolean>;
 export interface CrashReport {
   readonly app: string;
   readonly platform: string;
-  /** The app version; absent for a native or unclean-exit report whose launch the app could not identify (Slice 243: unknown, never the current build). */
-  readonly version?: string;
+  readonly version: string;
   readonly channel: string;
   readonly kind: string;
   readonly exceptionType: string;
@@ -174,7 +172,7 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
     raw["app"] === app &&
     oneOf(APPS, app) &&
     oneOf(PLATFORMS, platform) &&
-    (version === undefined || matches(VERSION_PATTERN, version)) &&
+    matches(VERSION_PATTERN, version) &&
     oneOf(CHANNELS, channel) &&
     oneOf(KINDS, kind) &&
     (channel !== TESTFLIGHT || platform === IOS); // TestFlight is an iOS channel: nothing authenticates the sender, so an Android "testflight" report is refused
@@ -182,7 +180,7 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
   const checked = {
     app,
     platform,
-    ...(version === undefined ? {} : { version }),
+    version,
     channel,
     kind,
     exceptionType: typeOrOther(raw["exceptionType"]),
@@ -199,16 +197,9 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
   return checked;
 }
 
-/**
- * True for a well-formed report that is deliberately not kept: an android/ios report from an Intel device (a robot or emulator), or one from an unstamped (dev) version.
- * The device rule never looks at the version, so a report whose launch is unknown (no version, Slice 243) still goes through it; only the version rule needs a version.
- */
+/** True for a well-formed report that is deliberately not kept: an unstamped (dev) version, or an android/ios report from an Intel device (a robot or emulator). */
 export function isDroppedReport(raw: unknown, report: CrashReport): boolean {
-  return isRobotCount(raw, report.device) || isUnstampedBuild(report);
-}
-
-function isUnstampedBuild(report: CrashReport): boolean {
-  return report.version !== undefined && isUnstampedVersion(report.version);
+  return isUnstampedVersion(report.version) || isRobotCount(raw, report.device);
 }
 
 /** The R2 key of a report received on `day` (yyyy-mm-dd) with the random id `id`. */
@@ -227,7 +218,7 @@ export function toCrashDataPoint(report: CrashReport, country: string): Analytic
   return {
     indexes: [report.kind],
     blobs: [
-      report.app, report.platform, report.version ?? UNKNOWN_VERSION, report.channel, report.kind, report.exceptionType,
+      report.app, report.platform, report.version, report.channel, report.kind, report.exceptionType,
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
     ],
     doubles: [1, coreBound(device.cores), ramBound(device.ram)],

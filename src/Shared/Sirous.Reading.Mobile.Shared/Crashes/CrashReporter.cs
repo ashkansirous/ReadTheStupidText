@@ -28,11 +28,14 @@ public static partial class CrashReporter
     private static PendingCrashStore? store;
     private static ReportedCrashLedger? ledger;
 
-    // Slice 243 findings 1-5: the build facts of THIS launch, held in memory (version and build number at start-up, the UUID a moment later, only with reporting on). A report about
-    // this launch reads them here; a report about an earlier launch takes the facts that launch left in its own run marker or in the system's own diagnostic, never these.
+    // Slice 243 item 6 (design changed after review check 2): the build facts of THIS launch are held in memory and in launch-facts.json (build and version at start, the UUID a moment
+    // later); the previous launch's are launch-facts.prev.json, read once at start. The run marker is not involved. FactsGate guards only these fields and that file; nothing here is
+    // held under StartGate.
+    private static readonly object FactsGate = new();
+    private static LaunchFactsFile? launchFacts;
     private static volatile LaunchFacts? thisLaunch;
-    private static volatile bool running;
-    private static bool uuidQueued;
+    private static volatile LaunchFacts? previousLaunch;
+    private static bool factsBegun;
     private static CrashContext? context;
     private static string? userSwitchKey;
     private static Exception? lastReported;
@@ -74,6 +77,7 @@ public static partial class CrashReporter
             string root = Path.Combine(FileSystem.AppDataDirectory, RootFolder);
             CrashLog.Use(new RollingLogFile(Path.Combine(root, LogFolder)), LogMayBeWritten);
             store = new PendingCrashStore(Path.Combine(root, PendingFolder));
+            launchFacts = new LaunchFactsFile(Path.Combine(root, PendingFolder));
             ledger = new ReportedCrashLedger(Path.Combine(root, LedgerName));
             context = ReadContext(app);
             thisLaunch = context is null ? null : new LaunchFacts(context.Version, context.Facts?.Build, null);
@@ -103,53 +107,90 @@ public static partial class CrashReporter
             DiscardAll(); // the switch is off: nothing from before is kept either
         }
 
-        ReadThisLaunchUuid();
+        BeginLaunchFacts(); // synchronous: the previous launch's facts must be in hand before RecordWhatTheLastRunLeft makes its reports
         RecordWhatTheLastRunLeft();
     }
 
-    // The executable's UUID is read once, only while reporting is on (at start-up, or when it is switched on during the launch, see RefreshAllowed), on a background thread. When it is
-    // known it joins this launch's facts and, if the app is in front, the run marker is rewritten with it, so a crash of this launch is later reported with the build that ran.
-    private static void ReadThisLaunchUuid()
+    // Only while reporting is on (at start-up, or when it is switched on during the launch, see RefreshAllowed): the previous launch's facts file is kept as launch-facts.prev.json, this
+    // launch's build number and version are written to launch-facts.json at once, and the previous launch's facts are read for the reports about it. Idempotent. Then the UUID is read on a
+    // background thread and rewrites only launch-facts.json.
+    private static void BeginLaunchFacts()
     {
-        LaunchFacts? known;
-        lock (StartGate)
+        try
         {
-            known = thisLaunch;
-            if (known is null || !reportingAllowed || uuidQueued)
+            LaunchFacts? known = thisLaunch;
+            LaunchFactsFile? file = launchFacts;
+            if (file is null || known is null)
             {
                 return;
             }
 
-            uuidQueued = true;
-        }
+            lock (FactsGate)
+            {
+                if (factsBegun || !reportingAllowed)
+                {
+                    return;
+                }
 
-        _ = Task.Run(() => AddUuidToThisLaunch(known));
+                factsBegun = true;
+                thisLaunch = file.Begin(known, DateTimeOffset.UtcNow);
+                previousLaunch = file.ReadPrevious();
+            }
+
+            if (AppTrace.InForeground == true)
+            {
+                MarkLaunchForeground(); // switched on while the app was already in front: SetRunning has come and gone
+            }
+
+            _ = Task.Run(AddUuidToThisLaunch);
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: crash reporting must never report into itself; this launch's reports then carry no previous-launch facts
+            Debug.WriteLine($"Crash reporting could not record the launch facts: {ex.Message}");
+        }
     }
 
-    private static void AddUuidToThisLaunch(LaunchFacts known)
+    // The launch reached the foreground: its facts file is now one a later start keeps as the previous copy (once per launch; a background-only launch is overwritten instead).
+    private static void MarkLaunchForeground()
+    {
+        lock (FactsGate)
+        {
+            if (!factsBegun || !reportingAllowed || thisLaunch is not { Foreground: false } current)
+            {
+                return;
+            }
+
+            thisLaunch = current with { Foreground = true };
+            launchFacts?.Write(thisLaunch);
+        }
+    }
+
+    private static void AddUuidToThisLaunch()
     {
         try
         {
-            LaunchFacts withUuid = known with { BinaryUuid = CrashPlatform.BinaryUuid() };
-            lock (StartGate)
+            string? uuid = CrashPlatform.BinaryUuid(); // read outside the lock; null off iOS, where there is nothing to add
+            if (uuid is null)
             {
-                thisLaunch = withUuid;
-                WriteRunMarker();
+                return;
+            }
+
+            lock (FactsGate)
+            {
+                if (!factsBegun || !reportingAllowed || thisLaunch is not { } current)
+                {
+                    return; // switched off meanwhile: nothing is written back
+                }
+
+                thisLaunch = current with { BinaryUuid = uuid };
+                launchFacts?.Write(thisLaunch);
             }
         }
         catch (Exception ex)
         {
             // no-fallback: crash reporting must never report into itself; this launch's reports then carry no UUID
             Debug.WriteLine($"Crash reporting could not read this launch's UUID: {ex.Message}");
-        }
-    }
-
-    // The run marker carries this launch's build facts (Slice 243 finding 5); written only while the app is in front and reporting is on. Called under StartGate.
-    private static void WriteRunMarker()
-    {
-        if (running && reportingAllowed)
-        {
-            store?.MarkRunning(thisLaunch);
         }
     }
 
@@ -205,17 +246,14 @@ public static partial class CrashReporter
         }
     }
 
-    private static void SetRunning(bool isRunning)
+    private static void SetRunning(bool running)
     {
         try
         {
-            running = isRunning;
-            if (isRunning && RefreshAllowed())
+            if (running && RefreshAllowed())
             {
-                lock (StartGate)
-                {
-                    WriteRunMarker();
-                }
+                store?.MarkRunning();
+                MarkLaunchForeground();
             }
             else
             {
@@ -233,7 +271,7 @@ public static partial class CrashReporter
     {
         try
         {
-            var facts = new CrashFacts(AppInfo.Current.BuildString); // the UUID is read later, only with reporting on (ReadThisLaunchUuid)
+            var facts = new CrashFacts(AppInfo.Current.BuildString); // the UUID is read later, only with reporting on (BeginLaunchFacts)
             return new CrashContext(app, UsageEnvironment.Platform, UsageEnvironment.InstalledVersion, CrashGate.Channel, DeviceProbe.Current, null, facts);
         }
         catch (Exception ex)
@@ -305,8 +343,8 @@ public static partial class CrashReporter
             return;
         }
 
-        UncleanExit? unclean = store.TakeUncleanExit(); // the previous launch's own marker, with the build that launch ran
-        IReadOnlyList<NativeCrash> history = WithMarkerBuild(ReadHistoryAndAdvance(), unclean?.Launch);
+        DateTimeOffset? frontSince = store.TakeUncleanExit();
+        IReadOnlyList<NativeCrash> history = ReadHistoryAndAdvance();
         if (!reportingAllowed)
         {
             CrashPlatform.StartNativeDelivery(OnNativeDelivered); // consumes MetricKit's payloads; OnNativeDelivered drops them while reporting is off
@@ -314,38 +352,26 @@ public static partial class CrashReporter
         }
 
         IReadOnlyList<CrashReport> pending = store.ReadAll().Select(item => item.Report).ToList();
-        bool needsTail = pending.Count > 0 || unclean is not null || history.Count > 0;
+        bool needsTail = pending.Count > 0 || frontSince is not null || history.Count > 0;
 
         // The file extents are taken here, before this run logs anything; the end is read on a background thread so the UI thread never waits on the disk.
         previousRunTail = needsTail ? CrashLog.Current?.TailInBackground() ?? Task.FromResult(string.Empty) : Task.FromResult(string.Empty);
         Task<string> tailTask = previousRunTail;
-        recorded = Task.Run(() => FinishRecordingAsync(tailTask, history, pending, unclean));
-    }
-
-    // Android: the marker belongs to the launch that just ended, whose exit is the newest system record; an older record is about an earlier launch and keeps no build facts (null).
-    // iOS has no history here: MetricKit's diagnostics carry their own build facts.
-    private static IReadOnlyList<NativeCrash> WithMarkerBuild(IReadOnlyList<NativeCrash> history, LaunchFacts? launch)
-    {
-        if (launch is null || history.Count == 0)
-        {
-            return history;
-        }
-
-        NativeCrash newest = history[^1];
-        return history.Take(history.Count - 1).Append(newest with { Launch = newest.Launch ?? launch }).ToList();
+        recorded = Task.Run(() => FinishRecordingAsync(tailTask, history, pending, frontSince));
     }
 
     // The part of the start-up check that needs the previous run's log tail.
-    private static async Task FinishRecordingAsync(Task<string> tailTask, IReadOnlyList<NativeCrash> history, IReadOnlyList<CrashReport> pending, UncleanExit? unclean)
+    private static async Task FinishRecordingAsync(Task<string> tailTask, IReadOnlyList<NativeCrash> history, IReadOnlyList<CrashReport> pending, DateTimeOffset? frontSince)
     {
         try
         {
             string tail = await tailTask.ConfigureAwait(false);
             SaveHistory(history, pending, tail);
-            bool explained = history.Count > 0 || (unclean is { } exit && CrashDedupe.ManagedReportSince(pending, exit.FrontSince));
-            if (unclean is not null && !explained && context is not null)
+            bool explained = history.Count > 0 || (frontSince is { } since && CrashDedupe.ManagedReportSince(pending, since));
+            if (frontSince is not null && !explained && context is not null)
             {
-                Save(CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), unclean.Launch), CrashKind.UncleanExit, UncleanType, "The run marker was left behind", string.Empty, tail, DateTimeOffset.UtcNow));
+                LaunchFacts? launch = LaunchFactsChoice.ForUncleanExit(previousLaunch, thisLaunch); // the previous launch's facts, never this launch's
+                Save(CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), launch),CrashKind.UncleanExit, UncleanType, "The run marker was left behind", string.Empty, tail, DateTimeOffset.UtcNow));
             }
 
             RememberReportedCrashes();
@@ -418,7 +444,7 @@ public static partial class CrashReporter
     }
 
     private static CrashReport? FromNative(NativeCrash crash, string tail) =>
-        context is null ? null : CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), crash.Launch), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
+        context is null ? null : CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), LaunchFactsChoice.ForNativeExit(crash.PeriodStart is null ? crash.Time : null, crash.Launch, previousLaunch, thisLaunch)), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
 
     /// <summary>Slice 250: Dino sets this to read its usage session id; Read The Stupid Text leaves it null and its reports carry none. Read at the moment a report about this launch is made.</summary>
     public static Func<string?>? SessionProvider { get; set; }
@@ -522,11 +548,7 @@ public static partial class CrashReporter
         }
         else if (!was && allowed)
         {
-            ReadThisLaunchUuid(); // switched on during the launch: the running binary is still the one whose UUID is read
-            lock (StartGate)
-            {
-                WriteRunMarker();
-            }
+            _ = Task.Run(BeginLaunchFacts); // switched on during the launch (or first seen at start); on a background thread so a log line or a hook never waits on the facts file
         }
 
         return allowed;
@@ -538,19 +560,29 @@ public static partial class CrashReporter
         try
         {
             store?.Clear();
+            store?.MarkNotRunning();
             CrashLog.Current?.DeleteFiles();
             ledger?.Clear();
-            lock (StartGate)
-            {
-                store?.MarkNotRunning(); // the run marker (with its build facts); under the gate so the UUID task cannot write it back after an opt-out
-                uuidQueued = false; // a later switch-on reads the UUID again
-            }
+            ForgetLaunchFacts();
         }
         catch (Exception ex)
         {
             // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not clear its files: {ex.Message}");
         }
+    }
+
+    // The flags are reset under FactsGate (no I/O there; this waits at most for an in-flight UUID write), the files are deleted after it: reportingAllowed is already false, so a UUID write that
+    // starts later writes nothing, and one that was in flight has finished before the files go.
+    private static void ForgetLaunchFacts()
+    {
+        lock (FactsGate)
+        {
+            factsBegun = false;
+            previousLaunch = null;
+        }
+
+        launchFacts?.Clear();
     }
 
     // One line per branch, for a device check to read: Debug builds only (a marker line for the scripted flows too).

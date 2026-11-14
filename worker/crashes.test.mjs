@@ -42,26 +42,15 @@ test("the build, executable UUID, memory buckets and app state are kept when val
   assert.equal(Object.hasOwn(parseCrash(report, "dino"), "binaryUuid"), false);
 });
 
-test("a report with no version (its launch unknown) is kept without one and counted as unknown, a malformed version is still refused (Slice 243)", async () => {
+test("a report with no version, or a malformed one, is refused and nothing is stored: only a stamped release counts (Slice 243 review finding 5)", async () => {
   const { version: _omitted, ...noVersion } = report;
-  const env = bindings();
-  assert.equal((await handleCrash(post(noVersion), env, on, "dino")).status, 204);
-  assert.equal(Object.hasOwn(JSON.parse([...env.objects.values()][0].value), "version"), false);
-  assert.equal(env.points[0].blobs[2], "unknown");
-  assert.equal(parseCrash({ ...report, version: "v1" }, "dino"), null);
-});
-
-test("a report with no version still goes through the Intel-device filter, and a real device's one is kept (Slice 243)", async () => {
-  const { version: _omitted, ...noVersion } = report;
-  for (const arch of ["x64", "x86"]) {
+  for (const body of [noVersion, { ...report, version: "v1" }]) {
     const env = bindings();
-    assert.equal((await handleCrash(post({ ...noVersion, device: { ...report.device, arch } }), env, on, "dino")).status, 204, arch);
-    assert.equal(env.objects.size, 0, arch);
-    assert.equal(env.points.length, 0, arch);
+    assert.equal((await handleCrash(post(body), env, on, "dino")).status, 400);
+    assert.equal(env.objects.size, 0);
+    assert.equal(env.points.length, 0);
   }
-  const env = bindings();
-  assert.equal((await handleCrash(post(noVersion), env, on, "dino")).status, 204);
-  assert.equal(env.objects.size, 1);
+  assert.equal(parseCrash(noVersion, "dino"), null);
 });
 
 test("the Slice 243 fields reach the stored object", async () => {

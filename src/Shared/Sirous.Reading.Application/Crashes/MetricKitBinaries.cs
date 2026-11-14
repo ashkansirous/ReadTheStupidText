@@ -13,6 +13,9 @@ public static class MetricKitBinaries
     private const int MaxDepth = 256;
     private const int UuidDigits = 32;
 
+    // The parser's own depth limit (default 64) is raised to the one Find honours, so a deep call-stack tree is read and not thrown away; deeper than that is a JsonException, caught below.
+    private static readonly JsonDocumentOptions ParseOptions = new() { MaxDepth = MaxDepth };
+
     /// <summary>The first <c>binaryUUID</c> of a frame whose <c>binaryName</c> is <paramref name="binaryName"/>, as 32 uppercase hex digits with no dashes; null when there is none or the JSON is not a call-stack tree.</summary>
     public static string? UuidOf(string? json, string? binaryName)
     {
@@ -23,7 +26,7 @@ public static class MetricKitBinaries
 
         try
         {
-            using JsonDocument document = JsonDocument.Parse(json);
+            using JsonDocument document = JsonDocument.Parse(json, ParseOptions);
             return Find(document.RootElement, binaryName, 0);
         }
         catch (JsonException)

@@ -48,12 +48,13 @@ internal static class IosRuntimeFacts
         }
     }
 
-    /// <summary>Bytes the app can take before the system ends it (<c>os_proc_available_memory</c>), the same meaning as Android's <c>AvailMem</c> minus <c>Threshold</c>; -1 when unreadable.</summary>
+    /// <summary>Bytes the app can take before the system ends it (<c>os_proc_available_memory</c>), the same meaning as Android's <c>AvailMem</c> minus <c>Threshold</c>; -1 when unreadable or reported as 0.</summary>
     public static long MemoryHeadroomBytes()
     {
         try
         {
-            return (long)os_proc_available_memory();
+            long bytes = (long)os_proc_available_memory();
+            return bytes > 0 ? bytes : -1; // 0 means "not meaningful" (simulator, old OS), not "no memory left": no bucket rather than "<128"
         }
         catch (Exception ex)
         {
