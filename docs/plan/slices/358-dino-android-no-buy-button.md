@@ -196,6 +196,20 @@ told apart, and the release build logs nothing about products. Only a Play-insta
   unfetched list says nothing and Play is not serving this app's catalog at all.
   Built: the real query and `BuyAsync`'s lookup are unchanged. Only when the final real answer is Ok with no product details, `AndroidPurchases.ProbeUnknownIdAsync` sends one more query holding only `ProbeProductId`, not awaited, and logs `product details (probe): code=... debug=... asked=1 got=... unfetched=... [id:status,...]`. Its answer never reaches prices, `_details` or the UI, and a throw is caught and logged, so it cannot change or delay what `QueryPricesAsync` returns. iOS needs no twin because `IosPurchases` already logs StoreKit's invalid product ids (`InvalidProducts`), which reports unknown ids.
 
+### 1.128.2 from Play (2026-11-14 17:11) and a bug of my own
+
+- License testing: a new email list "License - Ashkan only" (ashkan.sirous@gmail.com only) is ticked; Main and Second are not (user
+  OK 2026-11-14 "yes and yes"). Re-run right after: no change.
+- 1.128.2 logs the async line and `product details (listener callback): code=Ok`, then nothing: no `(listener)` line and no probe
+  line. Likely cause (code, plus the missing lines): the listener overload hands its BillingResult to the callback, so the details
+  object's `Result` is null; `TraceDetails` read `answer.Result.ResponseCode`, threw, and `BookPurchases.ReadAsync` swallowed it
+  (Debug-only log, `StoreFailed` fallback). So the listener's answer was never seen, and the probe never ran.
+- [ ] Fix: the listener path keeps the callback's own `BillingResult` next to the details (`DetailsAnswer`); the trace line and the
+  effective result used for the probe condition and `Failed` are the async answer's `Result`, or the listener callback's when the
+  listener answer replaced it. A null `Result` counts as not ok (no "missing means Ok" rule). `DetailsListener` always completes its
+  wait (try/finally). `BookPurchases.ReadAsync` writes the exception type and first stack frame to the Release log (`PurchaseTrace`).
+  Re-run on the S21 from Play and read the `(listener)` and `(probe)` lines.
+
 ## Not yet verified
 
 - The paid books show a price and Buy on a Play-installed phone (blocked by *Open* above).

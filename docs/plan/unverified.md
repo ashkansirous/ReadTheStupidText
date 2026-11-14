@@ -77,9 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
-### Slice 375: Dino: every picture in two sizes, part A ([slice](slices/375-dino-two-picture-sizes.md))
+### Slice 375: Dino: every picture in two sizes ([slice](slices/375-dino-two-picture-sizes.md))
 
 - **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
+- **Device:** parts B-D (merged #1113 on review and unit tests, no device run): a tablet on Wi-Fi gets a store book at standard size, then the high-res pack swaps in at the next cold start; a phone stays standard; on mobile data no hd download starts and one in flight is cancelled.
 
 ### Slice 362: Dino onboarding shows what Dino can do ([slice](slices/362-dino-onboarding-shows-what-dino-can-do.md))
 
@@ -183,6 +184,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** the switch-on store page against the real Worker.
 - **You:** the Microsoft Store ID flow against a live store.
 - **Device:** E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
+- **Device:** Part E on a device (merged #1120 on review and unit tests): on a Windows, Android and iOS paid row, the store row's wait and Cancel hold until the run ends, and a 403 `purchase-not-valid` after a real purchase is retried on the 3-30 s schedule (about 84 s) instead of showing "Try again" at once; a refused paid download reaches analytics as `download_refused` / `purchase_not_valid`.
 
 ### Slice 340: Listening page: Mid-book speed change on a phone ([slice](slices/340-mid-book-speed-change-on-a-phone.md))
 - **Device:** Fix 1 on a device: Settings > Reading speed slider runs 0.8x-1.2x with the left label "0.8x", on Android, iOS and the Windows head, and a book reads at 0.8x at the low end. Android phone emulator, 2026-11-09: `settings-reading-speed-row.yaml` passed and shows "0.8x · slow"; iOS (**You**, no Mac), Windows and the 0.8x reading are still open.
@@ -501,6 +503,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 243: Crash reports: everything missing to explain a crash ([slice](slices/243-crash-report-gaps.md))
+- **Device:** a Release iOS build in CI attaches the dSYM zip to its GitHub Release; `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2, merged #1122 on unit tests and review only).
+- **Device:** the rolling log of a test crash on the Android emulator and an iPhone shows the page, Back and lifecycle lines, and the report carries the new build, UUID, memory and foreground fields (items 5-7).
 
 ### Slice 371: Folders grouped by product ([slice](slices/371-folders-by-product.md))
 - **Device:** Windows VM run (`tools/desktop-vm`) from the new paths.
