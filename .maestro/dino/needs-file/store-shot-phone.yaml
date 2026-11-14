@@ -1,0 +1,57 @@
+# Slice 291 item 5: the Play store screenshots of Dino Reader (phone), taken by tools/emulator/store-screenshots.ps1 -App dino -Form phone (the shot names store-dino-phone-<n>-<screen> become the PNG names).
+# Shelf, a book open on page 2, and the Books tab, held upright, English, on the starter books (no live store, nothing downloaded or read aloud).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader.dbg
+name: Store screenshots, Dino Reader, phone
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter books and the Debug test store only and needs no pack or own book (the shots show a fresh shelf).
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- takeScreenshot: store-dino-phone-1-shelf
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-phone-2-reading
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+- assertVisible:
+    id: GalleryDone
+- takeScreenshot: store-dino-phone-3-books

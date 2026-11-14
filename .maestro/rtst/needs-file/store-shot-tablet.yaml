@@ -1,0 +1,82 @@
+# Slice 291 item 5: the Play store screenshots of Read The Stupid Text (tablet), taken by tools/emulator/store-screenshots.ps1 -App rtst -Form tablet (the shot names store-rtst-tablet-<n>-<screen> become the PNG names).
+# Home, a pasted text in the review page, the reading page and Settings. The first launch uses clearState so every run starts the same and lang: en applies; a fresh install always starts the supertonic-3 pack download, so the flow waits for its banner (required), then up to 5 minutes for it to go, and the shots show the pack installed.
+# expect-log: HOOK skip-first-run ok
+appId: uk.sirous.readthestupidtext
+name: Store screenshots, Read The Stupid Text, tablet
+---
+- launchApp:
+    # clearState: wipes the voice pack and own books; fine here, a fresh install makes every run the same, lang: en applies and the pack is downloaded again.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- assertVisible:
+    id: PlayButton
+# The first run downloads the voice pack (about 1 MB/s on the emulator); wait for its banner to show first (required: a fresh install always starts the download), then for it to go (up to 5 minutes). notVisible alone passes at once while the banner is still hidden.
+- extendedWaitUntil:
+    visible:
+      id: PackStatusLabel
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: PackStatusLabel
+    timeout: 300000
+- takeScreenshot: store-rtst-tablet-1-home
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Read any text aloud with natural voices. Select it, copy it or paste it here, and listen instead of staring at a screen."
+- hideKeyboard:
+    optional: true
+- takeScreenshot: store-rtst-tablet-2-review
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+# The review editor is gone before the sentence is looked for, so it cannot match on the review page mid-transition.
+- extendedWaitUntil:
+    notVisible:
+      id: ReviewEditor
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      # The pasted sentence itself, after the reading page is up.
+      text: "Read any text aloud with natural voices.*"
+    timeout: 15000
+- takeScreenshot: store-rtst-tablet-3-reading
+- stopApp
+- launchApp:
+    # launchApp-restart: back to a clean home so the Settings button is on screen whatever the reader was doing.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: PackStatusLabel
+    timeout: 300000
+- tapOn:
+    id: SettingsButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SpeedPresets
+    timeout: 10000
+- takeScreenshot: store-rtst-tablet-4-settings

@@ -6,7 +6,7 @@
  *
  * Sources: RTST `docs/store-listings/<lang>.md`, Dino `docs/store-listings/dino/<lang>.md`. Only the 13 languages
  * added by Slice 374 are built, plus `de` for RTST (Slice 193; an existing Partner Center RTST German listing is replaced by `de.md`,
- * the user approved that text 2026-11-01). en (both apps) and Dino's de were pushed by hand earlier, so they are left exactly as
+ * the user approved that text 2026-11-01) and `en` (Slice 291 item 3: the stale Partner Center RTST English is replaced by `en.md`). Dino's en and de were pushed by hand earlier, so they are left exactly as
  * the Store has them (the output never names them).
  * Layouts: every file but RTST `de.md` uses one-line labels (`Short description (...): text`). RTST `de.md` is sectioned: headings are
  * matched by prefix ("Short description", "Search terms", "Long description", "Microsoft Store only"), search terms are numbered
@@ -31,9 +31,9 @@ export const LANGUAGES = {
   ja: 'ja', nb: 'nb', pt: 'pt-br', ru: 'ru', es: 'es', sv: 'sv',
 };
 
-/** Read The Stupid Text also carries German (Slice 193): its `de.md` uses headed sections instead of one-line labels, which parseRtst reads as a fallback. Dino's German was pushed by hand and stays out. */
+/** Read The Stupid Text also carries German (Slice 193) and English (Slice 291 item 3): their `de.md` and `en.md` use headed sections instead of one-line labels, which parseRtst reads as a fallback. Dino's German and English were pushed by hand and stay out. */
 export function languagesFor(app) {
-  return app === APPS.rtst ? { ...LANGUAGES, de: 'de' } : LANGUAGES;
+  return app === APPS.rtst ? { ...LANGUAGES, de: 'de', en: 'en' } : LANGUAGES;
 }
 
 export const LIMITS = { title: 200, shortDescription: 1000, description: 10000, keywords: 7, keywordLength: 30, keywordWords: 21 };
@@ -162,7 +162,7 @@ function setField(obj, name, value) {
 /**
  * Merges built listings into the submission JSON that `msstore submission get` printed, and returns the new submission.
  * Only Title, ShortDescription, Description and Keywords of each built language change; every other field (pricing, packages, images,
- * features, release notes) and every language not built (en; Dino's de; RTST builds de) is kept exactly. Refuses a submission without Pricing.PriceId, as
+ * features, release notes) and every language not built (Dino's en and de; RTST builds de and en) is kept exactly. Refuses a submission without Pricing.PriceId, as
  * `msstore submission update` does, so a bad read can never reset the app's price. Property names follow the casing already present.
  */
 export function mergeListings(submission, built) {
@@ -176,12 +176,21 @@ export function mergeListings(submission, built) {
   for (const [code, entry] of Object.entries(built)) {
     const target = listingTarget(listings, code, cased, warnings);
     if (target) writeBaseListing(target, entry.baseListing, cased);
+    if (target && code === 'en') warnOtherEnglish(Object.keys(listings), warnings);
   }
   return { submission: merged, warnings };
 }
 
+/** One warning naming every English listing the en build did not write (en-gb and so on), so a stale one is never silent. */
+function warnOtherEnglish(keys, warnings) {
+  const primary = primaryEnglishKey(keys);
+  const others = keys.filter((k) => k !== primary && k.toLowerCase().split('-')[0] === 'en');
+  if (others.length > 0) warnings.push(`en: written to ${primary}; left as is: ${others.join(', ')}`);
+}
+
 /** Existing listing key for `code`: exact (any case), else the one regional key of the same bare language (`fr` -> `fr-fr`); undefined when none or ambiguous. */
 export function findListingKey(keys, code) {
+  if (code === 'en') return primaryEnglishKey(keys);
   const exact = keys.find((k) => k.toLowerCase() === code);
   if (exact) return exact;
   if (code === 'pt-br') return keys.find((k) => k.toLowerCase() === 'pt'); // never `pt-pt`: a Brazilian text must not overwrite a European Portuguese listing (Slice 377 item 2); with none, a new pt-br listing is made
@@ -191,16 +200,35 @@ export function findListingKey(keys, code) {
   return sameLanguage.find((k) => k.toLowerCase() === `${code}-${code}`);
 }
 
+/** The one English listing a build writes English text to: exactly en-us, else exactly en (any case); never another en-* such as en-gb (the only place that rule lives). */
+export function primaryEnglishKey(keys) {
+  const lower = (name) => keys.find((k) => k.toLowerCase() === name);
+  return lower('en-us') ?? lower('en');
+}
+
+/** The English listing a NEW language copies its images from: en-us, else en, else the first en-* listing. */
+function imageSourceEnglishKey(keys) {
+  return primaryEnglishKey(keys) ?? keys.find((k) => k.toLowerCase().split('-')[0] === 'en');
+}
+
+/** No en-us or en listing: nothing English is written; one warning names the English listings found. */
+function skipEnglish(keys, warnings) {
+  const found = keys.filter((k) => k.toLowerCase().split('-')[0] === 'en');
+  warnings.push(`en: no en-us or en listing; skipped (English listings found: ${found.length > 0 ? found.join(', ') : 'none'})`);
+  return undefined;
+}
+
 /** The listing object to write into: the existing one, or a new one carrying the English listing's images; undefined (with a warning) when it cannot be made. */
 function listingTarget(listings, code, cased, warnings) {
   const keys = Object.keys(listings);
   const existing = findListingKey(keys, code);
   if (existing) return getOrCreate(listings, existing);
+  if (code === 'en') return skipEnglish(keys, warnings);
   if (keys.some((k) => k.toLowerCase().split('-')[0] === code.split('-')[0] && !code.includes('-'))) {
     warnings.push(`${code}: several regional listings exist and none is ${code}-${code}; skipped`);
     return undefined;
   }
-  const en = keys.find((k) => k.toLowerCase() === 'en-us') ?? keys.find((k) => k.toLowerCase() === 'en') ?? keys.find((k) => k.toLowerCase().startsWith('en-'));
+  const en = imageSourceEnglishKey(keys);
   const enBase = en && listings[en][cased('BaseListing')];
   const imagesKey = enBase && Object.keys(enBase).find((k) => k.toLowerCase() === 'images');
   if (!imagesKey) {

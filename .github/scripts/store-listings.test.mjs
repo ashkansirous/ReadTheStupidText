@@ -170,6 +170,57 @@ test('German is built for RTST only, never for Dino (Slice 193)', () => {
   assert.equal(languagesFor(APPS.dino).de, undefined);
 });
 
+test('English is built for RTST only, never for Dino (Slice 291 item 3)', () => {
+  assert.equal(languagesFor(APPS.rtst).en, 'en');
+  assert.equal(languagesFor(APPS.dino).en, undefined);
+});
+
+test('the committed RTST English listing parses from its sectioned layout within the limits (Slice 291 item 3)', () => {
+  const l = parseRtst(readFileSync(join(listingsFolder(ROOT, APPS.rtst), 'en.md'), 'utf8'));
+  assert.deepEqual(validateListing(l), []);
+  assert.equal(l.keywords.length, 7);
+  assert.equal(l.shortDescription, 'Read any text aloud with natural voices that work offline, at 0.5x to 2x speed.');
+  assert.ok(l.description.startsWith(`${l.shortDescription}\n\n`));
+  assert.ok(l.description.includes('usage counts'), 'carries the corrected usage-counts bullet');
+  assert.ok(!l.description.includes('No account and no analytics'));
+  assert.ok(l.description.includes('built-in Windows voice') && !l.description.includes('Google Play'));
+});
+
+test('an RTST en build replaces en-us, and the only en-us among several English listings (Slice 291 item 3)', () => {
+  const sub = { Pricing: { PriceId: 'Free' }, Listings: { 'en-us': { BaseListing: { Title: 'old', Images: [1] } }, 'en-gb': { BaseListing: { Title: 'brit' } } } };
+  const built = { en: { baseListing: { title: 'T', shortDescription: 'S', description: 'D', keywords: ['k'] } } };
+  const { submission: out, warnings } = mergeListings(sub, built);
+  assert.equal(out.Listings['en-us'].BaseListing.Title, 'T');
+  assert.equal(out.Listings['en-gb'].BaseListing.Title, 'brit');
+  assert.deepEqual(warnings, ['en: written to en-us; left as is: en-gb']);
+  assert.equal(findListingKey(['en-gb', 'en'], 'en'), 'en');
+});
+
+test('an RTST en build with only en-gb writes nothing English and warns once naming it (Slice 291 item 3)', () => {
+  const sub = { Pricing: { PriceId: 'Free' }, Listings: { 'en-gb': { BaseListing: { Title: 'brit', Images: [1] } } } };
+  const built = { en: { baseListing: { title: 'T', shortDescription: 'S', description: 'D', keywords: ['k'] } } };
+  const { submission: out, warnings } = mergeListings(sub, built);
+  assert.deepEqual(out.Listings, sub.Listings);
+  assert.deepEqual(warnings, ['en: no en-us or en listing; skipped (English listings found: en-gb)']);
+  assert.equal(findListingKey(['en-au', 'en-gb'], 'en'), undefined);
+});
+
+test('a new ja listing still gets the images of en-gb when it is the only English listing (Slice 291 review)', () => {
+  const sub = { Pricing: { PriceId: 'Free' }, Listings: { 'en-gb': { BaseListing: { Title: 'brit', Images: [1] } } } };
+  const built = { ja: { baseListing: { title: 'T', shortDescription: 'S', description: 'D', keywords: ['k'] } } };
+  const { submission: out } = mergeListings(sub, built);
+  assert.deepEqual(out.Listings.ja.BaseListing.Images, [1]);
+  assert.equal(out.Listings.ja.BaseListing.Title, 'T');
+});
+
+test('an RTST en build with no English listing writes nothing and warns (Slice 291 item 3)', () => {
+  const sub = { Pricing: { PriceId: 'Free' }, Listings: { 'fr-fr': { BaseListing: { Title: 'x' } } } };
+  const built = { en: { baseListing: { title: 'T', shortDescription: 'S', description: 'D', keywords: ['k'] } } };
+  const { submission: out, warnings } = mergeListings(sub, built);
+  assert.deepEqual(Object.keys(out.Listings), ['fr-fr']);
+  assert.deepEqual(warnings, ['en: no en-us or en listing; skipped (English listings found: none)']);
+});
+
 test('the committed RTST German listing parses from its sectioned layout within the limits (Slice 193)', () => {
   const l = parseRtst(readFileSync(join(listingsFolder(ROOT, APPS.rtst), 'de.md'), 'utf8'));
   assert.deepEqual(validateListing(l), []);
