@@ -267,8 +267,8 @@ public sealed partial class AudioPackStore
 	private static int _forcedFailure;
 #endif
 
-	/// <summary>Slice 267: raised for every pack download as (book id, language, <see cref="AudioPackUsage"/> detail): started, done or failed with its kind. Carries ids and closed words only.</summary>
-	public event Action<string, string, string>? Outcome;
+	/// <summary>Slice 267: raised for every pack download as (book id, language, <see cref="AudioPackUsage"/> detail, pack version asked for, Slice 376): started, done or failed with its kind. Carries ids, numbers and closed words only.</summary>
+	public event Action<string, string, string, int>? Outcome;
 
 	/// <summary>Raised after the installed packs changed on disk (a pack installed, a book's or a language's packs removed, the sweep deleted a book). The shelf's installed-audio snapshot rescans on it.</summary>
 	public event Action? PacksChanged;
@@ -291,13 +291,13 @@ public sealed partial class AudioPackStore
 
 	private static string Key(string bookId, string language) => $"{bookId.ToLowerInvariant()}/{language}";
 
-	private void Report(string bookId, string language, string detail)
+	private void Report(string bookId, string language, string detail, int version)
 	{
 		bool failed = detail.StartsWith(AudioPackUsage.PackFailedPrefix, StringComparison.Ordinal);
 		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail is AudioPackUsage.PackStarted or AudioPackUsage.PackCancelled ? was : failed);
 		try
 		{
-			Outcome?.Invoke(bookId, language, detail);
+			Outcome?.Invoke(bookId, language, detail, version);
 		}
 		catch (Exception ex)
 		{
@@ -467,7 +467,7 @@ public sealed partial class AudioPackStore
 		catch (Exception ex)
 		{
 			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({FailureDetail(ex, pack.Url)})");
-			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex))); // failed before InstallCoreAsync, which reports its own failures
+			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex)), pack.Version); // failed before InstallCoreAsync, which reports its own failures
 			return PackInstall.Failed;
 		}
 	}
@@ -584,7 +584,7 @@ public sealed partial class AudioPackStore
 		try
 		{
 			Directory.CreateDirectory(_partFolder);
-			Report(bookId, language, AudioPackUsage.PackStarted);
+			Report(bookId, language, AudioPackUsage.PackStarted, pack.Version);
 #if DEBUG
 			PackFailureInjection forcedNow = ForcedFailure; // read once: the hook can switch it from another thread
 			forced = forcedNow != PackFailureInjection.None;
@@ -599,33 +599,33 @@ public sealed partial class AudioPackStore
 			if (pack.Bytes is { } listed && listed != length)
 			{
 				_log($"{label}: downloaded {length} bytes, the listing says {listed}, not kept (url={SafeUrl(pack.Url)})");
-				Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Size));
+				Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Size), pack.Version);
 				return PackInstall.Failed;
 			}
 
 			Unpack(part, tmp, language);
 			PublishFolder(bookId, language, pack.Version, tmp);
 			_log($"{label}: installed");
-			Report(bookId, language, AudioPackUsage.PackDone);
+			Report(bookId, language, AudioPackUsage.PackDone, pack.Version);
 			NotifyPacksChanged();
 			return PackInstall.Installed;
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
 			_log($"{label}: cancelled, nothing kept");
-			Report(bookId, language, AudioPackUsage.PackCancelled);
+			Report(bookId, language, AudioPackUsage.PackCancelled, pack.Version);
 			return PackInstall.Cancelled;
 		}
 		catch (AudioPackNotFoundException ex)
 		{
 			_log($"{label}: not in the store ({FailureDetail(ex, pack.Url)})");
-			Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Missing));
+			Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Missing), pack.Version);
 			return PackInstall.NotFound;
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
 			_log($"{label}: failed, the book is kept without it ({FailureDetail(ex, pack.Url)})");
-			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex)));
+			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex)), pack.Version);
 			return PackInstall.Failed;
 		}
 		finally

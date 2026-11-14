@@ -1,0 +1,51 @@
+# Throw-away (Slice 376 item 2): skip-first-run, then relaunch twice; onboarding must not return.
+# expect-log: HOOK skip-first-run past-first-run pending=none
+appId: uk.sirous.dinoreader.dbg
+name: Skip first run persists
+---
+- launchApp:
+    # clearState: wipes the app's data on purpose: needs the fresh install's first-run language page.
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    # launchApp-restart: skip-first-run changes what the app reads at startup, so it needs a fresh start from the language page.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 25000
+- assertNotVisible:
+    id: FirstRunLanguage
+- assertNotVisible:
+    id: OnboardingLanguages
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 25000
+- assertNotVisible:
+    id: FirstRunLanguage
+- assertNotVisible:
+    id: OnboardingLanguages

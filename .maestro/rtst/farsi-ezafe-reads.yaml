@@ -1,0 +1,62 @@
+# Slice 376 item 3 (Slice 342): the Farsi voice pack (piper-fa) downloads and a Farsi sentence with the pair "hal shoma" is synthesised with the ezafe override on (FarsiEzafe.ForModel, #1098).
+# Needs the network (the piper-fa pack, about 60 MB). The Debug marker FARSI_EZAFE (FarsiEzafeProbe, Mobile.Shared/Testing) is written only when the override changed the text sent to the engine,
+# so a build before #1098 never writes it and this flow fails on that expect-log line; on a build with the override it passes. The marker carries lengths, never the text.
+# The read text is the pair in a short sentence; Maestro cannot type Farsi, but a launchApp argument carries it (the Dino flows pass Farsi the same way).
+# expect-log: PACK_READY
+# expect-log: HOOK read start
+# expect-log: FARSI_EZAFE applied
+# expect-log: READ_END
+appId: uk.sirous.readthestupidtext
+name: Farsi voice pack downloads and reads with the ezafe override
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow downloads the Farsi pack from none and then reads with it.
+    clearState: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+# The "keep downloading when the phone is locked?" sheet may cover the screen; answer Not now by its Android button id (optional, as in cancelled-voice-pack-stays-cancelled.yaml).
+- extendedWaitUntil:
+    visible:
+      id: "android:id/button2"
+    timeout: 15000
+    optional: true
+- tapOn:
+    id: "android:id/button2"
+    optional: true
+# clearState removed the pack, so the download always starts; wait for it to show, then for the label to go away (the pack is ready and the status line is hidden).
+- extendedWaitUntil:
+    visible:
+      id: PackStatusLabel
+      text: "در حال دانلود صداهای طبیعی.*"
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: PackStatusLabel
+    timeout: 240000
+# stopApp: false: the hook goes to the running app as a new intent (a restart would kill it before the hooks are installed).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: read
+      text: "حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم. حال شما چطور است؟ من خوبم."
+# The play button is on the page before the read starts, so waiting for it alone proves nothing. The passage is eight sentences, each with the ezafe pair, so playback lasts well over
+# Maestro's poll interval and the Pause label (توقف) is on screen long enough to be seen. The first synthesis loads piper-fa (slow on an emulator), hence the long timeout.
+# The log markers (HOOK read start, FARSI_EZAFE applied, READ_END) are checked after the flow by the expect-log lines above, since Maestro cannot wait on a log. So: a REQUIRED wait for Pause
+# (the read started and is playing), then the final idle label, Play (پخش), is back (the read ended).
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+      text: "توقف"
+    timeout: 120000
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+      text: "پخش"
+    timeout: 120000

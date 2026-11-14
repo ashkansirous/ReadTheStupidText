@@ -64,6 +64,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
+		TestHookDispatcher.PastFirstRunSkip = () => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.ClearPendingOnboarding() ?? true; // Slice 376 item 2
 		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey, PaidKey, OwnedKey, PriceKey, BuyKey, OfflineKey];
 	}
 

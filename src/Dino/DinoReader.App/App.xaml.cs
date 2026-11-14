@@ -276,6 +276,55 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		RebuildRoot();
 		return true;
 	}
+
+	/// <summary>
+	/// Slice 376 item 2: <c>skip-first-run</c> on an install that already has a language. A persisted first-run or onboarding state left by an interrupted onboarding flow (the books pick, the story
+	/// languages step, a saved listen/voice step) would show onboarding again on the next launch, so it is cleared. The hook log says which state forced it (likely cause of the "onboarding again
+	/// after relaunch" reports of 2026-11-13; a device run proves it). The corner step is the gallery's own tour (RootPage leaves it alone), so it is never cleared here. True when nothing was pending or the
+	/// root was rebuilt; false when something was pending but there is no window yet (nothing is cleared, so the caller's retry sees the same state).
+	/// </summary>
+	public bool ClearPendingOnboarding()
+	{
+		var pending = new List<string>();
+		if (FirstBooksGate.Pending) { pending.Add("books"); }
+		if (FirstBooksGate.StoryLanguagesPending) { pending.Add("story-languages"); }
+		bool clearStep = OnboardingState.Step is { } step && step != OnboardingStep.Corner;
+		if (clearStep) { pending.Add($"step-{OnboardingState.Step}"); }
+		if (pending.Count > 0 && Windows.FirstOrDefault() is null)
+		{
+			return false;
+		}
+
+		if (pending.Count > 0)
+		{
+			ClearAndRebuild(clearStep);
+		}
+
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"HOOK skip-first-run past-first-run pending={(pending.Count == 0 ? "none" : string.Join(',', pending))}");
+		return true;
+	}
+
+	// The flags are cleared before the root is built (RootPage reads them); a rebuild that throws puts them back, so a later skip still sees what was pending.
+	private void ClearAndRebuild(bool clearStep)
+	{
+		var savedStep = OnboardingState.Step;
+		bool savedBooks = FirstBooksGate.Pending;
+		bool savedLanguages = FirstBooksGate.StoryLanguagesPending;
+		if (clearStep) { OnboardingState.Clear(); }
+		FirstBooksGate.Pending = false;
+		FirstBooksGate.StoryLanguagesPending = false;
+		try
+		{
+			RebuildRoot();
+		}
+		catch
+		{
+			if (clearStep && savedStep is { } step) { OnboardingState.Begin(step); }
+			FirstBooksGate.Pending = savedBooks;
+			FirstBooksGate.StoryLanguagesPending = savedLanguages;
+			throw;
+		}
+	}
 #endif
 
 	// A build below the config's minVersion opens on the "Please update" page and nothing else (Slice 132); a fresh install opens

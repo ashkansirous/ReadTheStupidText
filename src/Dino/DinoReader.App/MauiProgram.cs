@@ -131,10 +131,10 @@ public static class MauiProgram
 	{
 		var store = new AudioPackStore(Path.Combine(FileSystem.AppDataDirectory, AudioPackFolder), FileSystem.CacheDirectory, new StoreAudioPackFetcher(), AudioPackLog.Write);
 		var counter = services.GetRequiredService<UsageCounter>(); // resolved here, once, not inside the handler: a circular dependency shows at start-up, not at the first download
-		store.Outcome += (bookId, language, detail) =>
+		store.Outcome += (bookId, language, detail, version) =>
 		{
 			AudioPackLog.Write($"pack {bookId}/{language}: {detail}");
-			counter.RecordShelfBook(UsageEventName.AudioPackDownload, bookId, language, detail);
+			counter.RecordShelfBook(UsageEventName.AudioPackDownload, bookId, language, detail, version); // Slice 376 item 5: the pack version asked for is the count
 		};
 		return store;
 	}

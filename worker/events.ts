@@ -241,8 +241,10 @@ interface EventRule {
   readonly detail: (value: unknown) => boolean;
   /** When set, the only language the event may carry. */
   readonly language?: string;
-  /** Slice 273: true for the events whose `count` and `deviceCount` are kept (`fallback`, `read_voice`); every other event's numbers are dropped. */
+  /** Slice 273: true for the events whose `count` and `deviceCount` are kept (`fallback`, `read_voice`, and since Slice 376 `audio_pack_download`, whose `count` is the pack version); every other event's numbers are dropped. */
   readonly counts?: boolean;
+  /** Slice 376: false keeps `deviceCount` at -1 for a `counts` event that has no device count (`audio_pack_download`). */
+  readonly deviceCount?: boolean;
   /** Slice 288: true for the events whose `seconds` (whole seconds of audio played, 0 to a day) is kept (`read_paused`, `read_stopped`). */
   readonly seconds?: boolean;
 }
@@ -331,7 +333,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_listened: { sources: BOOK_SOURCES, detail: emptyDetail },
   // Slice 267: which voice a read used, and how one pre-made audio pack download went; closed lists only (docs/analytics/dino-voice-queries.md).
   read_voice: { sources: BOOK_SOURCES, detail: detailIn(READ_VOICES), counts: true },
-  audio_pack_download: { sources: [SHELF_SOURCE], detail: detailIn(AUDIO_PACK_OUTCOMES) },
+  // Slice 376 item 5: `count` is the pack version the download asked for (double3), so a `failed:missing` says which version the store did not have; no `deviceCount`.
+  audio_pack_download: { sources: [SHELF_SOURCE], detail: detailIn(AUDIO_PACK_OUTCOMES), counts: true, deviceCount: false },
   // Slice 313: a shelf book was behind the store; one count per book and outcome (result:from:to).
   book_update: { sources: [SHELF_SOURCE], detail: bookUpdateDetail },
   // Slice 273: a feature fell back (area:reason); about a book or about no book. Its `count` is how many times in that session.
@@ -488,7 +491,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   if (!valid) return null;
   const session = matches(SESSION_PATTERN, raw["session"]) ? raw["session"] : NO_SESSION;
   const seq = session !== NO_SESSION && isSeq(raw["seq"]) ? raw["seq"] : NO_SEQ;
-  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT, ...contextOf(raw) };
+  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts && rule.deviceCount !== false ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT, ...contextOf(raw) };
 }
 
 /** Slice 351: the who-and-when fields of a count, each on its closed list or whole-number range, else "none" / -1 (never drops the event). */

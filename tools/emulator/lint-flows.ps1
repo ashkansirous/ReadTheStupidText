@@ -16,10 +16,14 @@
      with a tokenizer that respects quotes and nested braces. `# clearState:` may sit on the line above the `clearState` key or above its `- launchApp:` item,
      and the word inside a quoted string is not a clearState. An explicit `stopApp: true` is a restart like a missing `stopApp: false`.
    - a flow file may not hold a doubled CR (CR CR LF) or mixed line endings (CRLF and LF lines): a fixer left doubled CRs in two flows on 2026-10-30.
+   - Slice 376 item 4 (Slice 354 item 3): every `- takeScreenshot: <name>` of a flow (not under an `rtst` folder: RTST has no mock frames) is listed in
+     screenshot-frames.json (the contact-sheet manifest, -Manifest), so a shot nobody lays out fails here and not first in CI's test-contact-sheet.ps1.
   Used by run-flows.ps1 (before any build). Its self-test, test-lint-flows.ps1, runs in CI (tools-selftests.yml, Slice 212) and by hand.
 #>
 param(
-    [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro')
+    [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro'),
+    # The contact-sheet manifest every takeScreenshot name must appear in (Slice 376 item 4); a missing file switches the rule off.
+    [string]$Manifest = (Join-Path $PSScriptRoot 'screenshot-frames.json')
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')   # Test-LogMarkerCanMatch: the matcher's own rule (Slice 315 item 9)
@@ -212,6 +216,22 @@ function Remove-ClosedBlocks($Blocks, [int]$Indent, [string]$Code) {
     }
 }
 
+# Slice 376 item 4: the shot names the manifest lists; $null when there is no manifest (the rule is then off).
+function Get-ManifestShots {
+    if (-not (Test-Path -LiteralPath $Manifest)) { return $null }
+    return @((Get-Content -LiteralPath $Manifest -Raw | ConvertFrom-Json) | ForEach-Object { $_.shot })
+}
+
+function Test-ScreenshotListed([string]$File, [int]$Index, [string]$Code) {
+    if ($null -eq $script:ManifestShots -or $File -match '[\\/]rtst[\\/]') { return }
+    if ($Code -notmatch '^\s*-\s+takeScreenshot\s*:(.*)$') { return }
+    # A name with a trailing comment or in quotes is read; the map form (path:) is not, so it is a problem rather than a silent skip.
+    $rest = ($Matches[1] -replace '\s+#.*$', '').Trim()
+    if ($rest -notmatch '^(?:"([^"]+)"|''([^'']+)''|([^\s"''{}\[\]]+))$') { Add-Problem $File ($Index + 1) "takeScreenshot is not in the plain form '- takeScreenshot: <name>' (a map or a nested path is not checked against the manifest): use the plain form"; return }
+    $name = @($Matches[1], $Matches[2], $Matches[3]) | Where-Object { $_ } | Select-Object -First 1
+    if ($script:ManifestShots -cnotcontains $name) { Add-Problem $File ($Index + 1) "takeScreenshot '$name' is not in $(Split-Path $Manifest -Leaf): add an entry (shot, flow, label, mock, frame) or the CI contact-sheet self-test fails" }
+}
+
 function Test-CommandLine([string]$File, [string[]]$Lines, [int]$Index, [string]$Code) {
     if ($Code.TrimStart() -match '^-\s+([^\s:#]+)\s*(:|$)') {
         $name = $Matches[1]
@@ -314,7 +334,7 @@ function Test-FlowBody([string]$File, [string[]]$Lines, [int]$Separator, [switch
             if ($path) { Test-SubFlow $File $i $path $Dir }
         }
         if ($LaunchOnly) { continue }
-        if ($code.TrimStart().StartsWith('-') -and (Test-IsCommandItem $indent $blocks)) { Test-CommandLine $File $Lines $i $code }
+        if ($code.TrimStart().StartsWith('-') -and (Test-IsCommandItem $indent $blocks)) { Test-CommandLine $File $Lines $i $code; Test-ScreenshotListed $File $i $code }
         $bare = Remove-QuotedText $code  # a "clearState" inside a string is not the command
         if ($bare -match '\bclearState\b' -and $bare -notmatch '\bclearState\s*:\s*false\b') { Test-ClearState $File $Lines $i }  # also the inline form {clearState: true}
     }
@@ -335,6 +355,7 @@ function Test-FlowFile([System.IO.FileInfo]$File) {
 }
 
 if (-not (Test-Path $Path)) { Write-Host "lint-flows: $Path does not exist."; exit 2 }
+$script:ManifestShots = Get-ManifestShots
 $files = @(Get-ChildItem $Path -Include '*.yaml', '*.yml' -Recurse -File)
 if ((Get-Item $Path).PSIsContainer -eq $false) { $files = @(Get-Item $Path) }
 foreach ($file in $files) { Test-FlowFile $file }

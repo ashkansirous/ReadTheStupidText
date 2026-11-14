@@ -40,9 +40,19 @@ Assert-Lines 'the Android sherpa packaging props run the RTST and shared tests (
 Assert-Lines 'a Shared.Tests file runs the shared tests with no build' @('tests/Shared/Shared.Tests/A.cs') @($sharedTests)
 Assert-Lines 'a Dino test file runs the Dino tests with no build' @('tests/Dino/DinoReader.Tests/A.cs') @($dinoTests)
 Assert-Lines 'an RTST test file runs the RTST tests with no build' @('tests/Rtst/ReadTheStupidText.Tests/A.cs') @($rtstTests)
-Assert-Lines 'test tooling alone names no build or test line' @('tools/lease-common.ps1', '.maestro/rtst/speed.yaml') @()
+Assert-Lines 'test tooling alone names no build or test line' @('tools/lease-common.ps1') @()
+$lintFlows = 'pwsh -NoProfile -Command ./tools/emulator/lint-flows.ps1'
+$lintSelfTest = 'pwsh -NoProfile -Command ./tools/emulator/test-lint-flows.ps1'
+$contactSheet = 'pwsh -NoProfile -Command ./tools/emulator/test-contact-sheet.ps1'
+$selfTests = @($lintFlows, $lintSelfTest, $contactSheet)
+Assert-Lines 'Slice 376 item 4: a flow edit names the flow lint and the self-tests, no build' @('.maestro/dino/back-cover.yaml') $selfTests
+Assert-Lines 'Slice 376 item 4: an RTST flow edit names them too' @('.maestro/rtst/speed.yaml') $selfTests
+Assert-Lines 'Slice 376 item 4: a manifest edit names them' @('tools/emulator/screenshot-frames.json') $selfTests
+Assert-Lines 'Slice 376 item 8: a lint fixture names them' @('tools/emulator/fixtures/lint/shot-listed.yaml') $selfTests
+Assert-Lines 'Slice 376 item 8: the lint self-test names them' @('tools/emulator/test-lint-flows.ps1') $selfTests
+Assert-Lines 'Slice 376 item 8: common.ps1 (dot-sourced by the lint) names them' @('tools/emulator/common.ps1') $selfTests
 Assert-Lines 'a shared build input names every build and both test projects' @('Directory.Build.props') @($rtstAndroid, $dinoAndroid, $rtstWindows, $dinoWindows, $rtstTests, $sharedTests, $dinoTests)
-Assert-Lines 'an unreadable change names everything' @('*') @($rtstAndroid, $dinoAndroid, $rtstWindows, $dinoWindows, $rtstTests, $sharedTests, $dinoTests)
+Assert-Lines 'an unreadable change names everything' @('*') @($rtstAndroid, $dinoAndroid, $rtstWindows, $dinoWindows, $rtstTests, $sharedTests, $dinoTests, $lintFlows, $lintSelfTest, $contactSheet)
 
 $infra = Get-CheckLines @('src/Shared/Sirous.Reading.Infrastructure/A.cs')
 if ($infra -notcontains $dinoTests) { $failed++; Write-Host "FAIL: Infrastructure (used by Dino's Windows head) is missing [$dinoTests]; got: $($infra -join ' | ')" }
