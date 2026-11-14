@@ -33,6 +33,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 381 | Dino: the first-run tour's highlights and tooltips sit lower than the real buttons under a tall status bar (Pixel 10 Pro), Android and iOS, with a position check | planned | | | [381-dino-tour-shifted-under-tall-status-bar.md](docs/plan/slices/381-dino-tour-shifted-under-tall-status-bar.md) |
 | 382 | Dino reorder: the held book keeps wiggling, a drag needs no hold in edit mode, covers sharp on first open | planned | | | [382-dino-reorder-held-book-wiggles-plain-drag.md](docs/plan/slices/382-dino-reorder-held-book-wiggles-plain-drag.md) |
 | 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | planned | | | [383-dino-reading-keeps-going-when-locked.md](docs/plan/slices/383-dino-reading-keeps-going-when-locked.md) |
+| 384 | Dino: a monthly (£1.99) and yearly (£14.99) subscription with a 7-day trial for every paid book, alongside single-book sales; lapsed subscription books greyed for parents, hidden from the child | planned | | | [384-dino-subscription.md](docs/plan/slices/384-dino-subscription.md) |
 
 ### Shared
 
