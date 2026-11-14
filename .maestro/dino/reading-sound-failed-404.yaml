@@ -14,6 +14,14 @@
 # expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Ok
 appId: uk.sirous.dinoreader.dbg
 name: A 404 shows the failed card and the hourly retry fetches the pack
+# Runs after the flow pass or fail, so a failure never leaves the app in another language for the next flow (usage-context asserts uiLang=en).
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no pack installed.

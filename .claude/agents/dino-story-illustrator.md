@@ -86,7 +86,12 @@ the contact sheet live only in the working folder. Touch nothing else.
      `SENT WITHOUT TEXT: ...` means a message went out without the prompt: that chat is spoiled, start a new chat
      (never patch it), and never count its picture as a model's result (2026-11-12: two models were judged on
      pictures drawn from the line-up alone). `UNCONFIRMED: ...` means read the chat before anything else (the prompt may be there,
-     rendered differently; `__waitForPicture()` still works) and never send the prompt again into that chat;
+     rendered differently; `__waitForPicture()` still works) and never send the prompt again into that chat. `UNCONFIRMED: no new message
+     within 30 s` (Slice 354) means no new message appeared at all: take one screenshot of the chat; if the prompt is not there, the send did
+     not happen: reload the tab once, re-inject `gemini-grab.js`, open a new chat and start that picture's set-up again; if it is there, carry
+     on with `__waitForPicture()`. Never call it SENT and never retry in the same chat. Inject `gemini-grab.js` as the file itself, whole;
+     never a trimmed or retyped copy (one redraw ran a trimmed copy and lost these checks): `typeof window.__sendChecked` and
+     `typeof window.__setupPicture` must both be `function`;
    - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
      `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool` (never paste its body into a call more than once per

@@ -5,6 +5,14 @@
 # expect-log: HOOK enter-grown-up ok
 appId: uk.sirous.dinoreader.dbg
 name: Store tag badges, tagged books first
+# Runs after the flow pass or fail, so a failure never leaves the app in another language for the next flow (usage-context asserts uiLang=en).
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow reads the live store list and a starter shelf, with no own book or voice pack.

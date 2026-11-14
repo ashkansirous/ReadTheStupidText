@@ -21,6 +21,17 @@ name: Counts carry the screen language, install age, launch count and seconds si
     visible:
       id: StoryTile
     timeout: 60000
+# Slice 354 item 5: `skip-first-run lang=en` ignores the language once one is stored, so a flow that ran before this one (349's Arabic/Farsi corner flow) leaves the UI in that language and `uiLang=en` never prints; set-language always applies.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
 # launchApp-restart: a second launch of the app is the point of this flow (the launch count must rise), so the app is stopped and started again
 - launchApp:
     stopApp: true

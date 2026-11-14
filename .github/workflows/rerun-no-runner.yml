@@ -1,0 +1,55 @@
+name: rerun-no-runner
+
+# Slice 354 items 4 and 7: a release build job that ends `cancelled` having run no step never got a runner (a macOS runner
+# that did not come). When such a release run finishes as a failure on its first attempt, rerun its no-runner jobs once:
+# `gh run rerun --job` reruns the same run on the same commit with the same matrix, so no target list is rebuilt or
+# carried over. The rerun is attempt 2, which this workflow never reruns again. A run cancelled by a person or by a newer
+# push ends with conclusion `cancelled` and is left alone. One rerun call per run: `--failed` when every non-success job is
+# a no-runner job, else `--job <databaseId>` for the first no-runner job only (a `--failed` would also repeat a job that
+# failed for a real reason), the others named in a warning.
+on:
+  workflow_run:
+    workflows: [release-rtst, release-dino]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  rerun:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1 }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write   # gh run rerun
+    steps:
+      - name: Rerun the failed jobs once when a job was cancelled with no step run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          # The jobs API id is the job's databaseId, which `gh run rerun --job` takes (not the number in the browser URL).
+          jobs_url="repos/${GH_REPO}/actions/runs/${RUN_ID}/attempts/1/jobs"
+          no_runner=$(gh api --paginate "$jobs_url" \
+            --jq '.jobs[] | select(.conclusion == "cancelled" and (.steps | length) == 0) | .id')
+          if [ -z "$no_runner" ]; then
+            echo "No job was cancelled without running a step: not rerunning." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Non-success jobs that are not no-runner jobs (failed, or cancelled after running a step).
+          others=$(gh api --paginate "$jobs_url" \
+            --jq '.jobs[] | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != null and ((.conclusion == "cancelled" and (.steps | length) == 0) | not)) | .id')
+          echo "Jobs cancelled with no step run (no runner took them): ${no_runner//$'\n'/ }" >> "$GITHUB_STEP_SUMMARY"
+          # One rerun call per run, so a second call never clashes with the attempt the first one started.
+          if [ -z "$others" ]; then
+            # Every non-success job is a no-runner job: `--failed` reruns exactly those and their dependents.
+            gh run rerun "$RUN_ID" --failed
+            echo "Reran the no-runner jobs of run ${RUN_ID} once (--failed)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            first_job=${no_runner%%$'\n'*}
+            echo "::warning::Run ${RUN_ID} also has other non-success jobs (${others//$'\n'/ }); rerunning only the first no-runner job ${first_job}. Other no-runner jobs: ${no_runner//$'\n'/ }"
+            gh run rerun "$RUN_ID" --job "$first_job"
+            echo "Reran only no-runner job ${first_job} of run ${RUN_ID} once." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -85,10 +85,14 @@ if (!window.__grabReady) {
 //   'SENT'                     the sent message shows the whole prompt;
 //   'REFUSED: <why>'           nothing was sent; fix what it names and call again;
 //   'SENT WITHOUT TEXT: <why>' a message went out without the prompt: the chat is spoiled, start a new chat;
-//   'UNCONFIRMED: <why>'       Send was clicked but no new message showed within 30 s: read the chat before
+//   'UNCONFIRMED: <why>'       Send was clicked but no new message showed within 30 s, or no labelled Send button was found
+//                              (nothing clicked): read the chat before
 //                              doing anything else, and never send the prompt again into the same chat.
 (() => {
   const squash = s => (s || '').replace(/[\s​-‍﻿]+/g, ' ').trim();
+  // Slice 354: only the labelled Send button counts. Never click a button picked by the `send-button` class: while Gemini draws that
+  // element turns into Stop (possibly with a translated label), and a click would abort the generation. No labelled button
+  // means no click: __sendChecked answers UNCONFIRMED and the caller reads the chat.
   const sendButton = root => root?.querySelector('button[aria-label="Send message"]');
   const plain = s => squash(s).replace(/["'*_`“”‘’]/g, '');
   const lastQuery = () => {
@@ -192,7 +196,7 @@ if (!window.__grabReady) {
     if (!(await fillPrompt(prompt))) return 'MISSING: prompt box did not take the whole prompt';
     const attached = attachedPictures(await composerAreaReady());
     if (attached === null) return `MISSING: ${UNKNOWN_AREA} (could not count attached pictures; screenshot and go click by click)`;
-    if (pictures > 0 ? attached < pictures : attached !== 0) return `REFUSED: ${attached} picture(s) attached, expected ${pictures}`;
+    if (attached !== pictures) return `REFUSED: ${attached} picture(s) attached, expected exactly ${pictures}`; // Slice 354: an extra thumbnail is a wrong picture, never a pass
     if (!modesStillOn()) return 'MISSING: Create image or 3:4 was reset after the prompt was filled (set them again, then call again)';
     const line = `create-image, 3:4, ${attached} attachment, prompt ${squash(prompt).length} chars`;
     if (dryRun) return `dry-run ok: ${line}, not sent`;
@@ -214,14 +218,15 @@ if (!window.__grabReady) {
       const at = firstDifference(typed, want);
       return `REFUSED: prompt box differs at char ${at} of ${want.length} (box has ${typed.length}): "${typed.slice(at, at + 30)}" vs "${want.slice(at, at + 30)}"`;
     }
+    if (!area) return 'UNCONFIRMED: no Send button found by its "Send message" label; nothing was clicked (read the chat and the prompt box before doing anything else)';
     const attached = attachedPictures(area);
     if (attached === null) return `MISSING: ${UNKNOWN_AREA} (could not count attached pictures; screenshot and go click by click)`;
-    if (pictures === 0 ? attached !== 0 : attached < pictures) return `REFUSED: ${attached} picture(s) attached, expected ${pictures}`;
+    if (attached !== pictures) return `REFUSED: ${attached} picture(s) attached, expected exactly ${pictures}`; // Slice 354: an extra thumbnail is a wrong picture, never a pass
     const send = sendButton(area);
     if (!send || send.disabled || send.getAttribute('aria-disabled') === 'true') return 'REFUSED: no enabled Send button';
     const before = lastQuery();
     send.click();
-    const isNew = now => now.count > before.count || (now.text && now.text !== before.text);
+    const isNew = now => now.count > before.count; // Slice 354: a changed last text with the same message count is not a sent message
     const head = plain(want).slice(0, 60);
     let now = lastQuery();
     for (let i = 0; i < 60 && !(isNew(now) && plain(now.text).includes(head)); i++) {

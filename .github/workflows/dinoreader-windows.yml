@@ -286,3 +286,12 @@ jobs:
             echo "::error::Expected exactly 1 app .msix, found ${#msix[@]}: ${msix[*]:-none}"; exit 1
           fi
           gh release upload "$TAG" "${msix[0]}" --repo "${{ github.repository }}" --clobber
+
+      # Slice 354 item 4: the Windows VM test package (Release + the test-books property,`Build-TestPackage.ps1 -App dino`) compiles
+      # src/Dino/DinoReader.App/Testing/** that no other CI build includes (Slice 346 merged a CS0234 there). Compile only, never a
+      # release path. It runs after the MSIX upload, into its own output folder, so it can neither add a second app .msix to the
+      # "exactly one" search above nor put the test-books build in the release. Every run of this workflow (x64 only).
+      - name: Compile the VM test package variant (${{ matrix.platform }})
+        if: success() && matrix.platform == 'x64'
+        shell: bash
+        run: bash .github/scripts/compile-dino-test-package.sh "$PROJECT" "${{ matrix.platform }}" "$RUNNER_TEMP/dino-test-package"
