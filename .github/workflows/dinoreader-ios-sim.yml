@@ -1,0 +1,137 @@
+name: dinoreader-ios-sim
+
+# Slice 244 item 1: reproduce Dino Reader's 2026-11 iOS crashes on a CI simulator. Manual only
+# (workflow_dispatch): build the Debug iossimulator-arm64 app (same macOS image, Xcode and workload as
+# dinoreader-ios.yml), boot one iPhone simulator, install the app and Maestro, run
+# .maestro/dino/ios-read-back-reread-background.yaml, then print the app's crash reports (.ips) and
+# filtered log into the job log and step summary. The job fails when the flow fails or the app left a
+# crash report. Its boot/install/collect steps are .github/scripts/ios-sim-*.sh, reused by Slice 291.
+# Zero Actions artifacts (Batch 8): evidence goes to the job log and summary only.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    timeout-minutes: 90
+    runs-on: macos-26
+    env:
+      PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
+      BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64
+      FLOW: .maestro/dino/ios-read-back-reread-background.yaml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      # Same toolchain pin as dinoreader-ios.yml (workload set 10.0.401 needs Xcode 26.6).
+      - name: Select Xcode 26.6
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install the .NET MAUI iOS workload (pinned)
+        run: |
+          set -euo pipefail
+          dotnet --version
+          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload --version
+
+      # Maestro needs Java 17 or newer.
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build the Debug simulator app
+        run: >
+          dotnet build "$PROJECT"
+          -f net10.0-ios
+          -p:IncludeAndroid=false
+          -c Debug
+          -p:RuntimeIdentifier=iossimulator-arm64
+
+      - name: Boot an iPhone simulator
+        timeout-minutes: 10
+        run: bash .github/scripts/ios-sim-boot.sh
+
+      - name: Install Maestro
+        run: bash .github/scripts/ios-sim-install-maestro.sh
+
+      - name: Install the app
+        run: |
+          set -euo pipefail
+          APP="$(find "$BUILD_DIR" -maxdepth 1 -name 'DinoReader*.app' -print -quit)"
+          if [ -z "$APP" ]; then APP="$(find "$BUILD_DIR" -maxdepth 1 -name '*.app' -print -quit)"; fi
+          test -d "$APP"
+          PLIST="$APP/Info.plist"
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")"
+          PROCESS_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$PLIST")"
+          echo "BUNDLE_ID=$BUNDLE_ID" >> "$GITHUB_ENV"
+          echo "PROCESS_NAME=$PROCESS_NAME" >> "$GITHUB_ENV"
+          echo "bundle id $BUNDLE_ID, process $PROCESS_NAME"
+          xcrun simctl install "$SIM_UDID" "$APP"
+
+      # The flow's appId is the Android dev package; the iOS app's bundle id has no .dbg suffix.
+      - name: Run the flow
+        id: flow
+        run: |
+          set -uo pipefail
+          FLOW_RUN="$RUNNER_TEMP/flow.yaml"
+          # Drop the expect-log markers: nothing on iOS reads them (Console output may not reach the unified log), so the job judges by the flow result and the crash reports.
+          sed -e "s/^appId: .*/appId: $BUNDLE_ID/" -e "/^# expect-log:/d" "$FLOW" > "$FLOW_RUN"
+          grep -q "^appId: $BUNDLE_ID\$" "$FLOW_RUN" || { echo "::error::the appId line of $FLOW was not swapped for $BUNDLE_ID"; exit 1; }
+          touch "$RUNNER_TEMP/flow-start"
+          rc=0
+          maestro --device "$SIM_UDID" test "$FLOW_RUN" || rc=$?
+          echo "flow exit code $rc"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" != "0" ]; then
+            # The AutomationId to accessibilityIdentifier mapping is unconfirmed: show what Maestro sees.
+            # Tell a dead app from a hook that never arrived (or a wrong id): is the process still running?
+            # Capture first: grep -q closing the pipe early would fail it with 141 under pipefail.
+            RUNNING="$(xcrun simctl spawn "$SIM_UDID" launchctl list || true)"
+            if grep -q "UIKitApplication:$BUNDLE_ID" <<<"$RUNNING"; then
+              echo "::warning::The app is still running: a test hook (dino-test:// URL) was not delivered, or an id is wrong; see the hierarchy below."
+            else
+              echo "::warning::The app is not running: it crashed or was killed; see the crash reports and log below."
+            fi
+            echo "::group::maestro hierarchy"
+            maestro --device "$SIM_UDID" hierarchy || true
+            echo "::endgroup::"
+          fi
+
+      - name: Crash reports and app log
+        id: collect
+        if: always()
+        run: |
+          set -uo pipefail
+          if [ -z "${SIM_UDID:-}" ] || [ -z "${PROCESS_NAME:-}" ]; then
+            echo "::warning::No simulator or app was set up (an earlier step failed): nothing to collect."
+            echo "rc=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rc=0
+          bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/flow-start" || rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      - name: Fail when the flow failed or the app crashed
+        if: always()
+        env:
+          FLOW_RC: ${{ steps.flow.outputs.rc }}
+          COLLECT_RC: ${{ steps.collect.outputs.rc }}
+        run: |
+          echo "flow exit code: ${FLOW_RC:-not run}; crash-report check: ${COLLECT_RC:-not run}"
+          if [ "${FLOW_RC:-1}" != "0" ] || [ "${COLLECT_RC:-1}" != "0" ]; then
+            echo "::error::The flow failed or the app left a crash report (see the steps above and the summary)."
+            exit 1
+          fi

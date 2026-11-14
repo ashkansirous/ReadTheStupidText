@@ -762,7 +762,8 @@ test('a mixed push (a book plus Dino code) still starts release-dino.yml; shared
 // Slice 369 (review): the release workflows' push paths are written by hand, so they are checked against GROUPS here.
 // (release-dino.yml's list is already compared with GROUPS by the "release-dino.yml push paths equal ..." test above.)
 // dino-store.yml is not in any GROUPS entry (it ships books, not an app) but only the store workflow reads it.
-const RTST_EXTRA_NEGATIONS = ['!content/dino/**', '!.github/workflows/dino-store.yml'];
+// The iOS simulator flow (Slice 244) is a dispatch-only test: no GROUPS entry reads its scripts or flows either.
+const RTST_EXTRA_NEGATIONS = ['!content/dino/**', '!.github/workflows/dino-store.yml', '!.github/scripts/ios-sim-*.sh', '!.maestro/dino/ios-*.yaml'];
 const RTST_RELEASE_GROUPS = ['core', 'unittests', 'sharedtests', 'sherpapins', 'infrastructure', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'];
 const sampleFileOf = (pattern) => globOf(pattern).replace('**', 'sample.cs').replace('*', 'a');
 const includeSamples = (groups) => groups.flatMap((name) => GROUPS[name].include.map(sampleFileOf));

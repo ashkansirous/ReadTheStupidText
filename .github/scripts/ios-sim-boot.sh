@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Slice 244: create and boot one iPhone simulator on a macOS runner (also used by Slice 291's screenshot run).
+# macOS bash 3.2: no associative arrays, no mapfile, no ${var,,}.
+#
+# Usage: ios-sim-boot.sh
+#   SIM_DEVICE_NAME  name of the simulator to create (default rtst-sim)
+#   SIM_DEVICE_TYPE  a CoreSimulator device-type id; unset = the smallest iPhone this image's runtime accepts
+# Prints `udid=<UDID>` as its last line, and appends SIM_UDID=<UDID> to $GITHUB_ENV when that is set.
+set -euo pipefail
+
+NAME="${SIM_DEVICE_NAME:-rtst-sim}"
+ERR_FILE="$(mktemp)"
+
+# The newest available iOS runtime's identifier (the line ends `... - com.apple.CoreSimulator.SimRuntime.iOS-26-5`).
+newest_ios_runtime() {
+  xcrun simctl list runtimes available | grep -E '^iOS ' | tail -n 1 | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/'
+}
+
+# Plain iPhones (no Pro, Plus, Max, Air) in `simctl list devicetypes` order, which is oldest first: the oldest
+# have the smallest screen and the oldest identity. A simulator shares the Mac host's RAM, so this is NOT a memory limit.
+candidate_device_types() {
+  xcrun simctl list devicetypes | grep -E '^iPhone ' | grep -vE 'Pro|Plus|Max|Air' | sed -E 's/.*\((com\.apple\.CoreSimulator\.SimDeviceType\.[^)]+)\)$/\1/'
+}
+
+# Creates the simulator from the first device type the runtime accepts; prints the UDID.
+create_simulator() {
+  local runtime="$1" type udid
+  if [ -n "${SIM_DEVICE_TYPE:-}" ]; then
+    xcrun simctl create "$NAME" "$SIM_DEVICE_TYPE" "$runtime"
+    return
+  fi
+  while IFS= read -r type; do
+    if udid=$(xcrun simctl create "$NAME" "$type" "$runtime" 2>"$ERR_FILE"); then
+      echo "device type: $type" >&2
+      echo "$udid"
+      return
+    fi
+    echo "simctl create refused $type: $(cat "$ERR_FILE")" >&2
+  done < <(candidate_device_types)
+  echo "no iPhone device type accepted by $runtime" >&2
+  return 1
+}
+
+RUNTIME="$(newest_ios_runtime)"
+echo "runtime: $RUNTIME" >&2
+echo "device types the image has:" >&2
+xcrun simctl list devicetypes | grep -E '^iPhone ' >&2 || true
+
+UDID="$(create_simulator "$RUNTIME")"
+xcrun simctl boot "$UDID"
+# The workflow step's own timeout-minutes bounds a hung boot.
+xcrun simctl bootstatus "$UDID" -b >&2
+
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+fi
+echo "udid=$UDID"

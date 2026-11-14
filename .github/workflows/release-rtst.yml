@@ -63,6 +63,8 @@ on:
       - '!.github/workflows/dinoreader-*.yml'
       - '!.github/workflows/dino-store.yml'
       - '!.github/scripts/check-ios-bundle.sh'
+      - '!.github/scripts/ios-sim-*.sh'
+      - '!.maestro/dino/ios-*.yaml'
       - '!.github/scripts/publish-store-books.mjs'
       - '!.github/scripts/r2-wrangler.mjs'
   workflow_dispatch:
