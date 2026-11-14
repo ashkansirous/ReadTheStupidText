@@ -5,7 +5,7 @@
  *
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
  *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
- *   - tests/ReadTheStupidText.Tests, tests/Shared.Tests           -> nothing (tests.yml runs them on PRs; `--local --tests` / testSuites() says which suite a change needs, Slice 368)
+ *   - tests/Rtst/ReadTheStupidText.Tests, tests/Shared/Shared.Tests           -> nothing (tests.yml runs them on PRs; `--local --tests` / testSuites() says which suite a change needs, Slice 368)
  *   - App / Windows.Tray / Infrastructure / store-submit.yml / windows.yml -> windows + windowsstore (the Store submission)
  *   - Windows.Tray (Slice 128, tray-only code) maps to no dino* target: only App references it
  *   - Mobile/Platforms/Android/**                                 -> android
@@ -18,7 +18,7 @@
  *   - DinoReader.App/**, DinoReader.Core/**                       -> also dinoios (Slice 67, ships only with its own iOS secrets) and dinowin (unsigned MSIX, needs no secrets)
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
- *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
+ *   - DinoReader.Core / tests/Dino/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
  *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (dino-store.yml only; never ships an app)
  *   - Slice 239, 265: a change under content/dino/<book>/** (a new, changed or deleted folder; its text, pictures, translations and its Git LFS audio clips) maps to dinostore ONLY: no Dino suite,
  *     no app, no PR check workflow. There is no starter exception (Slice 261 moves the starters out of the app); a book's rebuilt .dino in the app is under DinoReader.App/** and ships the apps
@@ -57,8 +57,8 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const MOBILE = 'src/ReadTheStupidText.Mobile/';
-const SHARED = 'src/Sirous.Reading.Mobile.Shared/';
+const MOBILE = 'src/Rtst/ReadTheStupidText.Mobile/';
+const SHARED = 'src/Shared/Sirous.Reading.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
 /** The branch a local run compares against (Slice 180). */
 const DEFAULT_LOCAL_BASE = 'origin/main';
@@ -97,12 +97,12 @@ export const CONTENT_MARKDOWN = ['content/dino/*/story.md'];
 
 /** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
-    'src/Sirous.Reading.Domain/',
-    'src/Sirous.Reading.Application/',
-    'src/Sirous.Reading.Documents/',
+    'src/Shared/Sirous.Reading.Domain/',
+    'src/Shared/Sirous.Reading.Application/',
+    'src/Shared/Sirous.Reading.Documents/',
     'global.json',
     'Directory.Build.props',
-    'src/SherpaOnnxVersion.props',
+    'src/Shared/SherpaOnnxVersion.props',
     'GitVersion.yml',
     '.gitattributes',
     // Slice 369: the shared half of both release workflows; each product's own release-<product>.yml is in its own group below.
@@ -121,17 +121,17 @@ export const GROUPS = {
     // The unit tests build and ship nothing, so no target maps here. The groups only exist so tests.yml's
     // pull_request.paths (which runs them on PRs) stays derived from GROUPS, and so testSuites() can pick the suites.
     // unittests: RTST's own (tray, control panel, phone app); sharedtests: the shared engine's (Slice 368).
-    unittests: { include: ['tests/ReadTheStupidText.Tests/'] },
-    sharedtests: { include: ['tests/Shared.Tests/'] },
+    unittests: { include: ['tests/Rtst/ReadTheStupidText.Tests/'] },
+    sharedtests: { include: ['tests/Shared/Shared.Tests/'] },
     // The pin checker SherpaVersionPinTests runs, and the pin sites outside every other group (Slice 368): they select the shared suite only.
-    sherpapins: { include: ['.github/scripts/check-sherpa-pins.mjs', '.github/workflows/packs.yml', 'tools/sound-words-test/requirements.txt'] },
+    sherpapins: { include: ['.github/scripts/check-sherpa-pins.mjs', '.github/workflows/packs.yml', 'tools/dino/sound-words-test/requirements.txt'] },
     // Infrastructure is in `windows` too (RTST's suite builds on it); on its own it is shared code (Dino Reader on Windows reads with it).
-    infrastructure: { include: ['src/Sirous.Reading.Infrastructure/'] },
+    infrastructure: { include: ['src/Shared/Sirous.Reading.Infrastructure/'] },
     windows: {
         include: [
-            'src/ReadTheStupidText.App/',
-            'src/ReadTheStupidText.Windows.Tray/',
-            'src/Sirous.Reading.Infrastructure/',
+            'src/Rtst/ReadTheStupidText.App/',
+            'src/Rtst/ReadTheStupidText.Windows.Tray/',
+            'src/Shared/Sirous.Reading.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/windows.yml',
         ],
@@ -140,9 +140,9 @@ export const GROUPS = {
         include: [
             `${MOBILE}Platforms/Android/`,
             `${SHARED}Platforms/Android/`,
-            'src/AndroidSherpaPackaging.props',
-            'src/AndroidRelease.props',
-            'src/AndroidProguard.cfg',
+            'src/Shared/AndroidSherpaPackaging.props',
+            'src/Shared/AndroidRelease.props',
+            'src/Shared/AndroidProguard.cfg',
             '.github/scripts/stage-android-package.sh',
             '.github/scripts/check-android-natives.sh',
             '.github/workflows/android.yml',
@@ -151,12 +151,12 @@ export const GROUPS = {
     dinoapp: {
         include: [
             DINO_VERSION_CONFIG,
-            'src/DinoReader.App/',
-            'src/DinoReader.Core/',
+            'src/Dino/DinoReader.App/',
+            'src/Dino/DinoReader.Core/',
             `${SHARED}Platforms/Android/`,
-            'src/AndroidSherpaPackaging.props',
-            'src/AndroidRelease.props',
-            'src/AndroidProguard.cfg',
+            'src/Shared/AndroidSherpaPackaging.props',
+            'src/Shared/AndroidRelease.props',
+            'src/Shared/AndroidProguard.cfg',
             '.github/scripts/stage-android-package.sh',
             '.github/scripts/check-android-natives.sh',
             '.github/workflows/dinoreader-android.yml',
@@ -168,8 +168,8 @@ export const GROUPS = {
     dinoios: {
         include: [
             DINO_VERSION_CONFIG,
-            'src/DinoReader.App/',
-            'src/DinoReader.Core/',
+            'src/Dino/DinoReader.App/',
+            'src/Dino/DinoReader.Core/',
             `${SHARED}Platforms/iOS/`,
             `${SHARED}IosSherpaPackaging.props`,
             '.github/scripts/ios-signing.sh',
@@ -184,10 +184,10 @@ export const GROUPS = {
     dinowin: {
         include: [
             DINO_VERSION_CONFIG,
-            'src/DinoReader.App/',
-            'src/DinoReader.Core/',
+            'src/Dino/DinoReader.App/',
+            'src/Dino/DinoReader.Core/',
             `${SHARED}Platforms/Windows/`,
-            'src/Sirous.Reading.Infrastructure/',
+            'src/Shared/Sirous.Reading.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/dinoreader-windows.yml',
         ],
@@ -208,11 +208,11 @@ export const GROUPS = {
     // and the upload scripts. dino-store.yml's push paths must cover this list (a node test checks it); never cuts an app release by itself.
     dinostore: {
         include: [
-            'src/DinoReader.Core/',
-            'src/Sirous.Reading.Application/', // LineReflow, used by the book builder (Slice 302)
+            'src/Dino/DinoReader.Core/',
+            'src/Shared/Sirous.Reading.Application/', // LineReflow, used by the book builder (Slice 302)
             'content/dino/',
-            'tools/DinoReader.BookBuilder/',
-            'tools/upload-store-story.ps1',
+            'tools/dino/DinoReader.BookBuilder/',
+            'tools/dino/upload-store-story.ps1',
             '.github/scripts/publish-store-books.mjs',
             '.github/scripts/r2-wrangler.mjs',
         ],
@@ -220,7 +220,7 @@ export const GROUPS = {
         exclude: ['content/dino/*/high-res/**/*'],
     },
     dinoreader: {
-        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', 'tools/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
+        include: [DINO_VERSION_CONFIG, 'src/Dino/DinoReader.Core/', 'tests/Dino/DinoReader.Tests/', 'tools/dino/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
     },
     // Slice 369: each product's own release workflow. Editing one rebuilds that product's targets only (the shared half,
     // release-shared.yml, is in `core` and rebuilds both). release-<product>.yml's push paths and the PR paths of the
@@ -280,14 +280,14 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
 
 /** Test files one project compiles from the other (see the two csproj files): editing one can break the other project. */
 const LINKED_TEST_FILES = [
-    'tests/ReadTheStupidText.Tests/TestFakes.cs',
-    'tests/ReadTheStupidText.Tests/TranslationFakes.cs',
-    'tests/Shared.Tests/MainThreadStub.cs',
+    'tests/Rtst/ReadTheStupidText.Tests/TestFakes.cs',
+    'tests/Rtst/ReadTheStupidText.Tests/TranslationFakes.cs',
+    'tests/Shared/Shared.Tests/MainThreadStub.cs',
 ];
 
 /**
- * Slice 368: which of RTST's two .NET suites a change set needs. `shared` (tests/Shared.Tests) covers Domain, Application,
- * Documents, Infrastructure and Mobile.Shared's pure logic, so any of those selects it; `rtst` (tests/ReadTheStupidText.Tests)
+ * Slice 368: which of RTST's two .NET suites a change set needs. `shared` (tests/Shared/Shared.Tests) covers Domain, Application,
+ * Documents, Infrastructure and Mobile.Shared's pure logic, so any of those selects it; `rtst` (tests/Rtst/ReadTheStupidText.Tests)
  * covers the tray, control panel and the RTST phone app on top of the same engine, so it runs for those and for core changes.
  * The two repo-wide guards (FallbackGuardTests, SherpaVersionPinTests) live in Shared.Tests and scan all of src/, so any code
  * change selects `shared`. Only a change to RTST's own tests (not the files the two projects link) selects `rtst` alone, and a change

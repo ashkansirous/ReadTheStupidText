@@ -59,7 +59,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **Store submission is Windows-only.** `store-submit` is gated on the `windowsstore` output
 > (App/Infrastructure/`store-submit.yml`/`windows.yml` changes), not `windows`: a core-only change
-> rebuilds the MSIX for the release but is not submitted. `tests/ReadTheStupidText.Tests` is not a
+> rebuilds the MSIX for the release but is not submitted. `tests/Rtst/ReadTheStupidText.Tests` is not a
 > core path (tests.yml still runs it on PRs). Force a submission with `release-rtst.yml` `force_all`.
 > `force_all` turns on **every** target of **that product only** (Slice 369):
 > `release-rtst.yml` forces the Microsoft Store, Play and TestFlight for RTST, `release-dino.yml` the same for Dino Reader
@@ -91,7 +91,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **Tests per product (Slice 128, gating replaced by Slice 368 above):** `dinoreader.yml` (Dino's suite) runs for
 > `dinoreader|dinoapp|dinoios|dinowin`. A Dino-only change skips RTST's own tests (`rtst`), an RTST-only change skips Dino's;
-> the shared suite runs for both. `src/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
+> the shared suite runs for both. `src/Rtst/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
 > only (no `dinowin`). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 
 > **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401
@@ -99,9 +99,9 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
 > **Android toolchain pin (Slice 72):** `android.yml` and `dinoreader-android.yml` pin dotnet 10.0.402 + workload set
-> 10.0.402 (Android SDK 36.1.118, the first with R8 obfuscation). `src/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
+> 10.0.402 (Android SDK 36.1.118, the first with R8 obfuscation). `src/Shared/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
 > setting plus an Error target) fails any Release Android build on an older SDK, so these two files and the props'
-> `36.1.118` check move together; no other workflow builds Android Release. `src/AndroidProguard.cfg` holds the R8 keep rules
+> `36.1.118` check move together; no other workflow builds Android Release. `src/Shared/AndroidProguard.cfg` holds the R8 keep rules
 > (MAUI Essentials reaches `ActivityResultContracts` through JNI, and R8 stripped `PickVisualMedia$ImageOnly.INSTANCE`).
 > `AndroidRelease.props` and `AndroidProguard.cfg` are in the android and
 > dinoapp path groups, so editing either ships both Android apps.
@@ -113,7 +113,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **Stuck and old release runs are cancelled (user, 2026-11-02).** Every build job a release calls (`android.yml`, `ios.yml`, `windows.yml`, `dinoreader-android.yml`, `dinoreader-ios.yml`, `dinoreader-windows.yml`) has `timeout-minutes: 90` (the Dino iOS signed build normally takes about 50; a hung iOS build can sit silent for hours and hold every newer release in the queue). Whoever watches a release cancels, without asking, any `release-rtst.yml` or `release-dino.yml` run that has been on one job for more than 90 minutes, and any unfinished run of either that is not on the newest `main` commit: only the latest version matters. A run that ignores `gh run cancel` gets `gh api -X POST repos/<owner>/<repo>/actions/runs/<id>/force-cancel`. A new build job gets the same timeout. The 90-minute watch matters most for the jobs without a timeout (the Windows `version` jobs, `release-draft`, `release-publish`, the submit jobs; GitHub's default is 360 min). Never cancel a run, newest or older, once its `release-publish` job has succeeded: its `store-submit` or `testflight-submit` would be cut off and the published release never submitted. When an iOS job times out or fails, re-run only the failed jobs (`gh run rerun <id> --failed`), not the whole run. A release run that is `pending` with no jobs waits on the `in_progress` run of the same concurrency group: find that run (`gh run list --workflow release-rtst.yml --status in_progress`, or `release-dino.yml`) and check its current step's age instead of calling it "pending". The signed iOS Release build steps print a per-target/per-task performance summary into the job summary and the .ipa upload retries 5 times with back-off. (Slice 252: docs/plan/slices/252-release-ios-build-timeout-and-speed.md)
 
-> **Tool self-tests (Slice 212):** `tools-selftests.yml` runs the device-tooling self-tests (`tools/emulator`, `tools/phone`, `tools/test-test-targets.ps1`, flow lint) on `windows-latest`, `pull_request` only, for `tools/**`, `.maestro/**` and itself, behind a `scope` job that decides which checks a change needs. A second job `audio-alignment` (ubuntu, `BookBuilder check-audio`, only the LFS `manifest.json` files fetched; Slice 272) also runs for `src/DinoReader.Core/**`, `src/Sirous.Reading.Application/**`, `src/DinoReader.App/StoryVoicing.cs` and `content/dino/**`: every Dino audio manifest must hash the pieces the app reads now. `dino-store.yml` runs the same check before it builds or uploads packs, so one misaligned manifest on `main` stops every store upload until it is re-aligned (intended, Slice 272). It is in no `ship-targets.mjs` group (and must stay out: editing `tests.yml` ships every app); no `upload-artifact`.
+> **Tool self-tests (Slice 212):** `tools-selftests.yml` runs the device-tooling self-tests (`tools/emulator`, `tools/phone`, `tools/test-test-targets.ps1`, flow lint) on `windows-latest`, `pull_request` only, for `tools/**`, `.maestro/**` and itself, behind a `scope` job that decides which checks a change needs. A second job `audio-alignment` (ubuntu, `BookBuilder check-audio`, only the LFS `manifest.json` files fetched; Slice 272) also runs for `src/Dino/DinoReader.Core/**`, `src/Shared/Sirous.Reading.Application/**`, `src/Dino/DinoReader.App/StoryVoicing.cs` and `content/dino/**`: every Dino audio manifest must hash the pieces the app reads now. `dino-store.yml` runs the same check before it builds or uploads packs, so one misaligned manifest on `main` stops every store upload until it is re-aligned (intended, Slice 272). It is in no `ship-targets.mjs` group (and must stay out: editing `tests.yml` ships every app); no `upload-artifact`.
 
 ## Windows packaging and Store
 
@@ -145,8 +145,8 @@ never the RTST ones; without all five a Dino-only change cuts no release). Its r
 (`IncludeSpeechEngines`/`IncludeMlKit=false`), so `dinoreader-android.yml` runs `check-android-natives.sh <pkg> --none` on them
 (asserts none of `libsherpa-onnx-c-api.so`, `libonnxruntime.so`, `libmlkit_*`, `libtranslate_jni.so` is present); RTST's `android.yml` runs it without the flag (requires the first two).
 
-**Store upload workflow (Slice 239):** the upload is `.github/workflows/dino-store.yml` (push to `main` for everything in ship-targets' `dinostore` group plus `ShippedTitles.cs` (a node test checks the paths cover the group; the group includes `src/Sirous.Reading.Application/**` because `LineReflow` shapes the audio pieces, so an RTST-only Application change also starts a store run, Slice 302), a daily `schedule` at 03:30 UTC that retries a failed or cancelled upload, and `workflow_dispatch`; every run passes `--delist`; group `dino-store`, no cancel), kept apart from the release groups so a story merge never waits behind an iOS build. `release-rtst.yml`'s push `paths` are `**` minus `content/dino/**` (Slice 265) and the Dino-only files, and `release-dino.yml`'s are derived from `GROUPS` and never list `content/dino`, so a push of only book content (text, pictures, audio clips) starts no release run and a mixed push runs `dino-store.yml` and the release workflow(s) its code files match (a node test checks the release workflows' and dino-store.yml's path lists). No test suite gates it; `build --live` validation does the checking.
-Store books publish from the `publish-store` job (Slice 158, Decision 163; Decision 162's separate `dino-store.yml` came back): every run of `dino-store.yml` starts it (store-path push, daily schedule or manual; not tag-relative, so a failed or skipped publish can never be lost behind a later `dino-v` tag; the live comparison makes a no-op run upload nothing; 30-minute timeout). It builds `artifacts/store` from `content/dino/` (`dotnet run --project tools/DinoReader.BookBuilder -- build`; Slice 157), then `publish-store-books.mjs` compares with the LIVE `/api/stories` (never the
+**Store upload workflow (Slice 239):** the upload is `.github/workflows/dino-store.yml` (push to `main` for everything in ship-targets' `dinostore` group plus `ShippedTitles.cs` (a node test checks the paths cover the group; the group includes `src/Shared/Sirous.Reading.Application/**` because `LineReflow` shapes the audio pieces, so an RTST-only Application change also starts a store run, Slice 302), a daily `schedule` at 03:30 UTC that retries a failed or cancelled upload, and `workflow_dispatch`; every run passes `--delist`; group `dino-store`, no cancel), kept apart from the release groups so a story merge never waits behind an iOS build. `release-rtst.yml`'s push `paths` are `**` minus `content/dino/**` (Slice 265) and the Dino-only files, and `release-dino.yml`'s are derived from `GROUPS` and never list `content/dino`, so a push of only book content (text, pictures, audio clips) starts no release run and a mixed push runs `dino-store.yml` and the release workflow(s) its code files match (a node test checks the release workflows' and dino-store.yml's path lists). No test suite gates it; `build --live` validation does the checking.
+Store books publish from the `publish-store` job (Slice 158, Decision 163; Decision 162's separate `dino-store.yml` came back): every run of `dino-store.yml` starts it (store-path push, daily schedule or manual; not tag-relative, so a failed or skipped publish can never be lost behind a later `dino-v` tag; the live comparison makes a no-op run upload nothing; 30-minute timeout). It builds `artifacts/store` from `content/dino/` (`dotnet run --project tools/dino/DinoReader.BookBuilder -- build`; Slice 157), then `publish-store-books.mjs` compares with the LIVE `/api/stories` (never the
 diff) and uploads each book whose built version is higher, cover and package first, `meta.json` last, never overwriting an existing
 `story-v<n>.dino`, never uploading a lower version; `--verify` then fails the job if any built book is still behind. It reuses
 `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` (a missing token on `main` fails the job), has its own `concurrency` group and `dinostore` alone never
@@ -159,7 +159,7 @@ A book already live at the same version still gets only its `meta.json` re-uploa
 (Slice 158: docs/plan/slices/158-dino-publish-store-books.md)
 
 Dino Reader on iOS (Slice 67) is the `dinoios` target: `dinoreader-ios.yml` (a twin of `ios.yml`
-for `src/DinoReader.App`, asset `DinoReader-<v>.ipa`) and `testflight-submit-dino` in `release-dino.yml`.
+for `src/Dino/DinoReader.App`, asset `DinoReader-<v>.ipa`) and `testflight-submit-dino` in `release-dino.yml`.
 It reuses the team-wide `ASC_API_*` and `IOS_DIST_CERT_P12_*` secrets and has its own
 `DINOREADER_IOS_PROVISIONING_PROFILE_BASE64` (profile "Dino Reader App Store"); `release-draft`
 reports all six as its `ios_signed` output (Dino product), and without them it only compiles unsigned and ships nothing.
@@ -167,11 +167,11 @@ reports all six as its `ios_signed` output (Dino product), and without them it o
 carry-forward patterns are per app (`^ReadTheStupidText-...ipa$`, `^DinoReader-...ipa$`). (Decisions 72-82, `docs/plan/slices/58-67`)
 
 Dino Reader on Windows (Slice 67) is the `dinowin` target: `dinoreader-windows.yml` (a twin of `windows.yml`
-for `src/DinoReader.App`; unsigned x64 + ARM64 MSIX from `dotnet publish -f net10.0-windows10.0.19041.0
+for `src/Dino/DinoReader.App`; unsigned x64 + ARM64 MSIX from `dotnet publish -f net10.0-windows10.0.19041.0
 -p:IncludeAndroid=false -p:Platform=<arch>`, assets `DinoReader.App_<v>.0_<arch>.msix`) and `store-submit-dino` in
 `release-dino.yml`, which calls the shared `store-submit.yml` (inputs `package`, `product_id`) with the same
 `AZURE_AD_*`/`SELLER_ID` secrets and runs only when the repository variable `DINOREADER_STORE_APP_ID` is set.
-It needs no secrets to build, so any change to `src/DinoReader.App/**`, `DinoReader.Core`, `Mobile.Shared` (root and
+It needs no secrets to build, so any change to `src/Dino/DinoReader.App/**`, `DinoReader.Core`, `Mobile.Shared` (root and
 `Platforms/Windows/`) or `Infrastructure` cuts a release. Never pass a global
 `-p:RuntimeIdentifier` to the Dino build: the csproj derives it from `-p:Platform` (a global one makes the package list
 Mobile.Shared's `.pdb` twice, APPX1101). The RTST Store submit matches only `ReadTheStupidText.App_*.msix`.

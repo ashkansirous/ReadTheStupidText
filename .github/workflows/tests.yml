@@ -1,7 +1,7 @@
 name: tests
 
 # The pure-logic unit tests (net10.0-windows: they reference Infrastructure), in two projects (Slice 368):
-# tests/Shared.Tests (the engine both apps ship) and tests/ReadTheStupidText.Tests (RTST's own). Slice 128: they run for
+# tests/Shared/Shared.Tests (the engine both apps ship) and tests/Rtst/ReadTheStupidText.Tests (RTST's own). Slice 128: they run for
 # RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml. release-shared.yml calls this workflow twice:
 # `shared-test` (suite: shared) whenever any product output builds, and `rtst-test` (suite: rtst) when an RTST output builds,
 # so the shared suite runs once per product run (twice for a push that starts both products) and every build gate needs `success` from each test job it depends on.
@@ -15,14 +15,14 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/Sirous.Reading.Domain/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/Sirous.Reading.Documents/**'
-      - 'tests/ReadTheStupidText.Tests/**'
-      - 'tests/Shared.Tests/**'
+      - 'src/Shared/Sirous.Reading.Domain/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Shared/Sirous.Reading.Documents/**'
+      - 'tests/Rtst/ReadTheStupidText.Tests/**'
+      - 'tests/Shared/Shared.Tests/**'
       - 'global.json'
       - 'Directory.Build.props'
-      - 'src/SherpaOnnxVersion.props'
+      - 'src/Shared/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '.gitattributes'
       - '.github/workflows/release-shared.yml'
@@ -33,23 +33,23 @@ on:
       - '.github/scripts/ship-targets.mjs'
       - '.github/scripts/check-sherpa-pins.mjs'
       - '.github/workflows/packs.yml'
-      - 'tools/sound-words-test/requirements.txt'
-      - 'src/ReadTheStupidText.App/**'
-      - 'src/ReadTheStupidText.Windows.Tray/**'
-      - 'src/Sirous.Reading.Infrastructure/**'
+      - 'tools/dino/sound-words-test/requirements.txt'
+      - 'src/Rtst/ReadTheStupidText.App/**'
+      - 'src/Rtst/ReadTheStupidText.Windows.Tray/**'
+      - 'src/Shared/Sirous.Reading.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'
-      - 'src/ReadTheStupidText.Mobile/**'
-      - '!src/ReadTheStupidText.Mobile/Platforms/**'
-      - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
-      - 'src/ReadTheStupidText.Mobile/Platforms/iOS/**'
-      - 'src/Sirous.Reading.Mobile.Shared/**'
-      - '!src/Sirous.Reading.Mobile.Shared/Platforms/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
-      - 'src/AndroidSherpaPackaging.props'
-      - 'src/AndroidRelease.props'
-      - 'src/AndroidProguard.cfg'
+      - 'src/Rtst/ReadTheStupidText.Mobile/**'
+      - '!src/Rtst/ReadTheStupidText.Mobile/Platforms/**'
+      - 'src/Rtst/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - 'src/Rtst/ReadTheStupidText.Mobile/Platforms/iOS/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/**'
+      - '!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/iOS/**'
+      - 'src/Shared/AndroidSherpaPackaging.props'
+      - 'src/Shared/AndroidRelease.props'
+      - 'src/Shared/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
@@ -59,10 +59,10 @@ on:
       # Slice 368: the Dino groups (dinoapp, dinoios, dinowin) also select the shared suite (its repo-wide guards scan all of src/),
       # so a Dino-only pull request must start this workflow too.
       - 'GitVersion.dino.yml'
-      - 'src/DinoReader.App/**'
-      - 'src/DinoReader.Core/**'
-      - 'src/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
-      - 'src/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
+      - 'src/Dino/DinoReader.App/**'
+      - 'src/Dino/DinoReader.Core/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Windows/**'
+      - 'src/Shared/Sirous.Reading.Mobile.Shared/IosSherpaPackaging.props'
       - '.github/scripts/check-ios-bundle.sh'
       - '.github/workflows/dinoreader-android.yml'
       - '.github/workflows/dinoreader-ios.yml'
@@ -123,7 +123,7 @@ jobs:
           global-json-file: global.json # Slice 353: one SDK pin for every job
 
       - name: Run shared unit tests
-        run: dotnet test tests/Shared.Tests/Shared.Tests.csproj --configuration Release
+        run: dotnet test tests/Shared/Shared.Tests/Shared.Tests.csproj --configuration Release
 
   # RTST's own tests (tray, control panel, the RTST phone app). Gates RTST's builds only.
   rtst:
@@ -149,4 +149,4 @@ jobs:
           ./tools/phone/test-timing.ps1
 
       - name: Run RTST unit tests
-        run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release
+        run: dotnet test tests/Rtst/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release

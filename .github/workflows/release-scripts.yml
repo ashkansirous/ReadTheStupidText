@@ -22,8 +22,8 @@ on:
       - '.github/actionlint.yaml'
       - 'src/**/*.props'
       - 'src/**/*.csproj'
-      - 'src/Sirous.Reading.Application/Reading/PackConstants.cs'
-      - 'tools/sound-words-test/requirements.txt'
+      - 'src/Shared/Sirous.Reading.Application/Reading/PackConstants.cs'
+      - 'tools/dino/sound-words-test/requirements.txt'
       - '!**/*.md'
   workflow_dispatch:
 
@@ -51,7 +51,7 @@ jobs:
       - name: Test the release scripts
         run: node --test .github/scripts/*.test.mjs
 
-      # Slice 245: sherpa-onnx and onnxruntime are one version, written in src/SherpaOnnxVersion.props.
+      # Slice 245: sherpa-onnx and onnxruntime are one version, written in src/Shared/SherpaOnnxVersion.props.
       - name: Check every sherpa-onnx / onnxruntime pin
         run: node .github/scripts/check-sherpa-pins.mjs
 

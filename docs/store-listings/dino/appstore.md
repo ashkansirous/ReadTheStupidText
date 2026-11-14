@@ -49,7 +49,7 @@ MADE FOR KIDS
 - Your recordings stay on your device. Back them up and restore them from the grown-ups area.
 - Optional anonymous usage counts with no names or identifiers, switched off in Settings (behind the grown-ups gate).
 
-(Basis: `site/dino/index.html` and `site/dino/privacy.html` as of 2026-11-13, and the app rules in `src/DinoReader.App/CLAUDE.md`. "Made for kids" is a heading only, not the App Store Kids Category.)
+(Basis: `site/dino/index.html` and `site/dino/privacy.html` as of 2026-11-13, and the app rules in `src/Dino/DinoReader.App/CLAUDE.md`. "Made for kids" is a heading only, not the App Store Kids Category.)
 
 ## 3. Version and app fields
 

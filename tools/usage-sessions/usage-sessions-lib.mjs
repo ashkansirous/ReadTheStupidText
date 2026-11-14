@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 export const DATASET = "dino_usage";
 export const SECRETS_ENV = "D:\\secrets\\readthestupidtext\\secrets.env";
 export const TOKEN_NAME = "CF_ANALYTICS_READ_TOKEN";
-// The account that owns the Worker (the same id tools/dino-usage-report.ps1 defaults to; it is an id, not a secret).
+// The account that owns the Worker (the same id tools/dino/dino-usage-report.ps1 defaults to; it is an id, not a secret).
 export const DEFAULT_ACCOUNT_ID = "985d711340bd2cf7bf5d71f04a7e84c9";
 
 const SESSION_PATTERN = /^[0-9a-f]{32}$/;

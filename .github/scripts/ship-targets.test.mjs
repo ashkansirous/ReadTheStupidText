@@ -11,8 +11,8 @@ import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changed
 // Slice 265: every book is store-only content (Slice 299: dino-starters.json is gone); the book stems are read from the real content folders, so a renamed book cannot leave these tests empty.
 const CONTENT_DIR = fileURLToPath(new URL('../../content/dino/', import.meta.url));
 const BOOK_STEMS = readdirSync(CONTENT_DIR).filter((stem) => existsSync(join(CONTENT_DIR, stem, 'book.json')));
-const M = 'src/ReadTheStupidText.Mobile';
-const S = 'src/Sirous.Reading.Mobile.Shared';
+const M = 'src/Rtst/ReadTheStupidText.Mobile';
+const S = 'src/Shared/Sirous.Reading.Mobile.Shared';
 const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
 // Core changes rebuild every app platform, Dino Reader's app included (its tests are separate).
 const ALL3 = { windows: true, android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true };
@@ -34,16 +34,16 @@ const CASES = [
     ['shared Mobile code', [`${M}/ReaderPage.xaml.cs`], { android: true, ios: true }],
     ['Mobile csproj', [`${M}/ReadTheStupidText.Mobile.csproj`], { android: true, ios: true }],
     ['Mobile resource', [`${M}/Resources/Images/a.png`], { android: true, ios: true }],
-    ['Domain core', ['src/Sirous.Reading.Domain/PlaybackRate.cs'], ALL3],
-    ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/Sirous.Reading.Application/X.cs'], { ...ALL3, dinostore: true }],
-    ['Documents core', ['src/Sirous.Reading.Documents/X.cs'], ALL3],
-    ['unit tests build and ship nothing', ['tests/ReadTheStupidText.Tests/X.cs'], {}],
-    ['shared unit tests build and ship nothing', ['tests/Shared.Tests/X.cs'], {}],
+    ['Domain core', ['src/Shared/Sirous.Reading.Domain/PlaybackRate.cs'], ALL3],
+    ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/Shared/Sirous.Reading.Application/X.cs'], { ...ALL3, dinostore: true }],
+    ['Documents core', ['src/Shared/Sirous.Reading.Documents/X.cs'], ALL3],
+    ['unit tests build and ship nothing', ['tests/Rtst/ReadTheStupidText.Tests/X.cs'], {}],
+    ['shared unit tests build and ship nothing', ['tests/Shared/Shared.Tests/X.cs'], {}],
     // Slice 316 item 8: no build or test job goes through the solution file (each builds its own csproj), so editing it, e.g. a Dino-only line, ships nothing.
     ['solution file builds and ships nothing', ['ReadTheStupidText.slnx'], {}],
     ['global.json', ['global.json'], ALL3],
     ['Directory.Build.props', ['Directory.Build.props'], ALL3],
-    ['sherpa-onnx version props (Slice 245)', ['src/SherpaOnnxVersion.props'], ALL3],
+    ['sherpa-onnx version props (Slice 245)', ['src/Shared/SherpaOnnxVersion.props'], ALL3],
     ['GitVersion.yml', ['GitVersion.yml'], ALL3],
     ['GitVersion.dino.yml', ['GitVersion.dino.yml'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['.gitattributes', ['.gitattributes'], ALL3],
@@ -51,13 +51,13 @@ const CASES = [
     ['RTST release workflow rebuilds RTST only (Slice 369)', ['.github/workflows/release-rtst.yml'], { windows: true, android: true, ios: true }],
     ['Dino release workflow rebuilds Dino Reader only (Slice 369)', ['.github/workflows/release-dino.yml'], { dinoapp: true, dinoios: true, dinowin: true }],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
-    ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true, windowsstore: true }],
-    ['Windows tray library only (no Dino target)', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { windows: true, windowsstore: true }],
-    ['Infrastructure only', ['src/Sirous.Reading.Infrastructure/X.cs'], { windows: true, windowsstore: true, dinowin: true }],
+    ['Windows app only', ['src/Rtst/ReadTheStupidText.App/App.xaml.cs'], { windows: true, windowsstore: true }],
+    ['Windows tray library only (no Dino target)', ['src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs'], { windows: true, windowsstore: true }],
+    ['Infrastructure only', ['src/Shared/Sirous.Reading.Infrastructure/X.cs'], { windows: true, windowsstore: true, dinowin: true }],
     ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, windowsstore: true, dinowin: true }],
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
-    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
+    ['DinoReader only', ['src/Dino/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
     // Slice 239: a store book (any folder that is not a starter) runs only publish-store: no suite, no app, no PR check.
     ['store book text', ['content/dino/x-marks-the-treasure/story.md'], { dinostore: true }],
     ['store book data', ['content/dino/x-marks-the-treasure/book.json'], { dinostore: true }],
@@ -71,21 +71,21 @@ const CASES = [
     ['an audio clip only', ['content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'], { dinostore: true }],
     ['an audio manifest only', ['content/dino/x-marks-the-treasure/audio/ja/manifest.json'], { dinostore: true }],
     ['audio clips of several books and languages', ['content/dino/good-enough/audio/fa/a.m4a', 'content/dino/tortoise-and-hare/audio/de/b.m4a', 'content/dino/tortoise-and-hare/audio-cast.json'], { dinostore: true }],
-    ['a former starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
+    ['a former starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/Dino/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['a high-res print picture ships nothing (Slice 350)', ['content/dino/lion-and-mouse/high-res/pictures/5.png', 'content/dino/lion-and-mouse/high-res/cover.png'], {}],
     ['a high-res picture next to a page picture still ships the store book', ['content/dino/lion-and-mouse/high-res/pictures/5.png', 'content/dino/lion-and-mouse/pictures/5.jpg'], { dinostore: true }],
     ['a book folder that merely contains the words high-res elsewhere still ships', ['content/dino/lion-and-mouse/pictures/high-res.jpg'], { dinostore: true }],
     ['book art record is documentation', ['content/dino/x-marks-the-treasure/art.md'], {}],
-    ['book builder', ['tools/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
-    ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
+    ['book builder', ['tools/dino/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
+    ['store upload script', ['tools/dino/upload-store-story.ps1'], { dinostore: true }],
     ['store publish script', ['.github/scripts/publish-store-books.mjs'], { dinostore: true }],
     ['R2 wrangler helper', ['.github/scripts/r2-wrangler.mjs'], { dinostore: true }],
-    ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
+    ['DinoReader tests only', ['tests/Dino/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
-    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
+    ['Windows + DinoReader', ['src/Rtst/ReadTheStupidText.App/a.cs', 'src/Dino/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
     // Slice 58: the shared MAUI library and the Dino Reader app.
-    ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true, dinoios: true, dinowin: true }],
-    ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true, dinoios: true, dinowin: true }],
+    ['Dino Reader app only', ['src/Dino/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true, dinoios: true, dinowin: true }],
+    ['Dino Reader app csproj', ['src/Dino/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true, dinoios: true, dinowin: true }],
     ['Dino Reader iOS workflow', ['.github/workflows/dinoreader-ios.yml'], { dinoios: true }],
     ['iOS sherpa packaging props', [`${S}/IosSherpaPackaging.props`], { android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['Dino Reader Android workflow', ['.github/workflows/dinoreader-android.yml'], { dinoapp: true }],
@@ -95,9 +95,9 @@ const CASES = [
     ['Mobile.Shared iOS platform', [`${S}/Platforms/iOS/AvSpeechReader.cs`], { ios: true, dinoios: true }],
     ['Mobile.Shared Windows platform', [`${S}/Platforms/Windows/WindowsPlatformServices.cs`], { dinowin: true }],
     ['Mobile.Shared unknown platform folder', [`${S}/Platforms/Tizen/x.cs`], {}],
-    ['Android sherpa packaging props', ['src/AndroidSherpaPackaging.props'], { android: true, dinoapp: true }],
-    ['Android release props', ['src/AndroidRelease.props'], { android: true, dinoapp: true }],
-    ['Android proguard keep rules', ['src/AndroidProguard.cfg'], { android: true, dinoapp: true }],
+    ['Android sherpa packaging props', ['src/Shared/AndroidSherpaPackaging.props'], { android: true, dinoapp: true }],
+    ['Android release props', ['src/Shared/AndroidRelease.props'], { android: true, dinoapp: true }],
+    ['Android proguard keep rules', ['src/Shared/AndroidProguard.cfg'], { android: true, dinoapp: true }],
     ['RTST Mobile Android platform does not rebuild Dino Reader', [`${M}/Platforms/Android/MainActivity.cs`], { android: true }],
     ['RTST Mobile root does not rebuild Dino Reader', [`${M}/MauiProgram.cs`], { android: true, ios: true }],
     ['RTST Mobile iOS platform does not rebuild Dino Reader', [`${M}/Platforms/iOS/AppDelegate.cs`], { ios: true }],
@@ -111,42 +111,42 @@ for (const [name, files, expected] of CASES) {
 }
 
 test('a core-only change rebuilds the MSIX but does not submit to the Store', () => {
-    const t = targetsOf(['src/Sirous.Reading.Application/X.cs']);
+    const t = targetsOf(['src/Shared/Sirous.Reading.Application/X.cs']);
     assert.deepEqual([t.windows, t.windowsstore], [true, false]);
 });
 
 test('a Windows App change builds and submits to the Store', () => {
-    const t = targetsOf(['src/ReadTheStupidText.App/X.cs', 'src/Sirous.Reading.Application/X.cs']);
+    const t = targetsOf(['src/Rtst/ReadTheStupidText.App/X.cs', 'src/Shared/Sirous.Reading.Application/X.cs']);
     assert.deepEqual([t.windows, t.windowsstore], [true, true]);
 });
 
 test('a tests-only change builds and ships nothing', () => {
-    assert.deepEqual(targetsOf(['tests/ReadTheStupidText.Tests/X.cs']), NONE);
+    assert.deepEqual(targetsOf(['tests/Rtst/ReadTheStupidText.Tests/X.cs']), NONE);
 });
 
-// Slice 368: tests.yml runs the shared suite (tests/Shared.Tests) and RTST's own (tests/ReadTheStupidText.Tests); testSuites picks which.
+// Slice 368: tests.yml runs the shared suite (tests/Shared/Shared.Tests) and RTST's own (tests/Rtst/ReadTheStupidText.Tests); testSuites picks which.
 const SUITE_CASES = [
-    ['a shared engine file (Application) selects both suites', ['src/Sirous.Reading.Application/Reading/X.cs'], { shared: true, rtst: true }],
-    ['Domain selects both', ['src/Sirous.Reading.Domain/X.cs'], { shared: true, rtst: true }],
-    ['Documents selects both', ['src/Sirous.Reading.Documents/X.cs'], { shared: true, rtst: true }],
-    ['Infrastructure selects both', ['src/Sirous.Reading.Infrastructure/Reading/X.cs'], { shared: true, rtst: true }],
+    ['a shared engine file (Application) selects both suites', ['src/Shared/Sirous.Reading.Application/Reading/X.cs'], { shared: true, rtst: true }],
+    ['Domain selects both', ['src/Shared/Sirous.Reading.Domain/X.cs'], { shared: true, rtst: true }],
+    ['Documents selects both', ['src/Shared/Sirous.Reading.Documents/X.cs'], { shared: true, rtst: true }],
+    ['Infrastructure selects both', ['src/Shared/Sirous.Reading.Infrastructure/Reading/X.cs'], { shared: true, rtst: true }],
     ['Mobile.Shared root code selects both', [`${S}/PackDownloadHost.cs`], { shared: true, rtst: true }],
     // The repo-wide guards (FallbackGuardTests, SherpaVersionPinTests) live in Shared.Tests and scan all of src/.
-    ['a tray change selects both suites (the guards scan it)', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { shared: true, rtst: true }],
-    ['an App change selects both suites', ['src/ReadTheStupidText.App/X.xaml.cs'], { shared: true, rtst: true }],
+    ['a tray change selects both suites (the guards scan it)', ['src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs'], { shared: true, rtst: true }],
+    ['an App change selects both suites', ['src/Rtst/ReadTheStupidText.App/X.xaml.cs'], { shared: true, rtst: true }],
     ['the RTST phone app selects both suites', [`${M}/ReaderPage.xaml.cs`], { shared: true, rtst: true }],
-    ['the Android packaging props select both suites (SherpaVersionPinTests reads them)', ['src/AndroidSherpaPackaging.props'], { shared: true, rtst: true }],
+    ['the Android packaging props select both suites (SherpaVersionPinTests reads them)', ['src/Shared/AndroidSherpaPackaging.props'], { shared: true, rtst: true }],
     ['the pin checker selects the shared suite only (SherpaVersionPinTests runs it)', ['.github/scripts/check-sherpa-pins.mjs'], { shared: true, rtst: false }],
     ['packs.yml (holds a sherpa-onnx pin) selects the shared suite only', ['.github/workflows/packs.yml'], { shared: true, rtst: false }],
-    ['the sound-words requirements (a sherpa-onnx pin) select the shared suite only', ['tools/sound-words-test/requirements.txt'], { shared: true, rtst: false }],
-    ['Dino app code selects the shared suite only (the guards scan it)', ['src/DinoReader.App/X.cs'], { shared: true, rtst: false }],
-    ['TestFakes.cs (linked into both test projects) selects both', ['tests/ReadTheStupidText.Tests/TestFakes.cs'], { shared: true, rtst: true }],
-    ['TranslationFakes.cs (linked) selects both', ['tests/ReadTheStupidText.Tests/TranslationFakes.cs'], { shared: true, rtst: true }],
-    ['MainThreadStub.cs (linked) selects both', ['tests/Shared.Tests/MainThreadStub.cs'], { shared: true, rtst: true }],
-    ['a change to RTST tests only selects only the RTST suite', ['tests/ReadTheStupidText.Tests/X.cs'], { shared: false, rtst: true }],
-    ['a change to the shared tests only selects only the shared suite', ['tests/Shared.Tests/X.cs'], { shared: true, rtst: false }],
-    ['Dino Reader tests alone select neither .NET suite here (dinoreader.yml owns them)', ['tests/DinoReader.Tests/ParserTests.cs'], { shared: false, rtst: false }],
-    ['Markdown selects nothing', ['src/Sirous.Reading.Application/CLAUDE.md'], { shared: false, rtst: false }],
+    ['the sound-words requirements (a sherpa-onnx pin) select the shared suite only', ['tools/dino/sound-words-test/requirements.txt'], { shared: true, rtst: false }],
+    ['Dino app code selects the shared suite only (the guards scan it)', ['src/Dino/DinoReader.App/X.cs'], { shared: true, rtst: false }],
+    ['TestFakes.cs (linked into both test projects) selects both', ['tests/Rtst/ReadTheStupidText.Tests/TestFakes.cs'], { shared: true, rtst: true }],
+    ['TranslationFakes.cs (linked) selects both', ['tests/Rtst/ReadTheStupidText.Tests/TranslationFakes.cs'], { shared: true, rtst: true }],
+    ['MainThreadStub.cs (linked) selects both', ['tests/Shared/Shared.Tests/MainThreadStub.cs'], { shared: true, rtst: true }],
+    ['a change to RTST tests only selects only the RTST suite', ['tests/Rtst/ReadTheStupidText.Tests/X.cs'], { shared: false, rtst: true }],
+    ['a change to the shared tests only selects only the shared suite', ['tests/Shared/Shared.Tests/X.cs'], { shared: true, rtst: false }],
+    ['Dino Reader tests alone select neither .NET suite here (dinoreader.yml owns them)', ['tests/Dino/DinoReader.Tests/ParserTests.cs'], { shared: false, rtst: false }],
+    ['Markdown selects nothing', ['src/Shared/Sirous.Reading.Application/CLAUDE.md'], { shared: false, rtst: false }],
     ['an unknown range selects both', null, { shared: true, rtst: true }],
 ];
 
@@ -157,7 +157,7 @@ for (const [name, files, expected] of SUITE_CASES) {
 }
 
 test('--tests prints shared and rtst for a file list on standard input', () => {
-    const out = execFileSync('node', [fileURLToPath(new URL('./ship-targets.mjs', import.meta.url)), '--local', '--tests', '--stdin'], { input: 'tests/ReadTheStupidText.Tests/X.cs\n', encoding: 'utf8' });
+    const out = execFileSync('node', [fileURLToPath(new URL('./ship-targets.mjs', import.meta.url)), '--local', '--tests', '--stdin'], { input: 'tests/Rtst/ReadTheStupidText.Tests/X.cs\n', encoding: 'utf8' });
     assert.equal(out.trim(), 'shared=false\nrtst=true');
 });
 
@@ -184,7 +184,7 @@ test('an iOS-only change reports ios and nothing else (release-shared.yml declin
 });
 
 test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform', () => {
-    const t = targetsOf(['src/DinoReader.Core/a.cs']);
+    const t = targetsOf(['src/Dino/DinoReader.Core/a.cs']);
     assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, true]);
 });
 
@@ -194,7 +194,7 @@ test('Slice 239: a store-only change starts no suite, no app and no RTST target'
 });
 
 test('Slice 302: an Application-only change selects the store job (LineReflow)', () => {
-    assert.equal(targetsOf(['src/Sirous.Reading.Application/LineReflow.cs']).dinostore, true);
+    assert.equal(targetsOf(['src/Shared/Sirous.Reading.Application/LineReflow.cs']).dinostore, true);
 });
 
 test('a store-book change publishes books but ships no app (Slice 158)', () => {
@@ -203,17 +203,17 @@ test('a store-book change publishes books but ships no app (Slice 158)', () => {
 });
 
 test('a store-book change cannot make a major bump rebuild the product (dinostore is content-only)', () => {
-    const commits = [{ message: ['x', '+', 'semver: major'].join(''), files: ['tools/upload-store-story.ps1'] }];
+    const commits = [{ message: ['x', '+', 'semver: major'].join(''), files: ['tools/dino/upload-store-story.ps1'] }];
     assert.equal(productBump({ baseTag: 'dino-v1.0.0', version: '2.0.0', prefix: 'dino-v', commits, targets: PRODUCTS.dino.targets.filter((t) => t !== 'dinostore') }), 'other');
 });
 
 test('a Dino Reader app change builds nothing else (Windows, RTST Android, iOS)', () => {
-    const t = targetsOf(['src/DinoReader.App/App.xaml']);
+    const t = targetsOf(['src/Dino/DinoReader.App/App.xaml']);
     assert.deepEqual([t.windows, t.android, t.ios], [false, false, false]);
 });
 
 test('a Dino Reader app change builds Dino Reader on every platform (Slice 67)', () => {
-    const t = targetsOf(['src/DinoReader.App/App.xaml']);
+    const t = targetsOf(['src/Dino/DinoReader.App/App.xaml']);
     assert.deepEqual([t.dinoapp, t.dinoios, t.dinowin], [true, true, true]);
 });
 
@@ -257,18 +257,18 @@ const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: fa
 const plan = (rtstFiles, dinoFiles) => ({ rtst: { changedFiles: rtstFiles, bump: 'other' }, dino: { changedFiles: dinoFiles, bump: 'other' } });
 
 test('per product: each product reads only the changes since its own tag', () => {
-    const dinoOnly = ['src/DinoReader.App/App.xaml'];
-    const rtstOnly = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    const dinoOnly = ['src/Dino/DinoReader.App/App.xaml'];
+    const rtstOnly = ['src/Rtst/ReadTheStupidText.App/App.xaml.cs'];
     // RTST was tagged after the Dino change, Dino after the RTST one: each sees only its own.
     assert.deepEqual(shipTargetsPerProduct({ plans: plan([], dinoOnly) }), { ...NO_RTST, ...NO_DINO, dinoapp: true, dinoios: true, dinowin: true });
     assert.deepEqual(shipTargetsPerProduct({ plans: plan(rtstOnly, []) }), { ...NO_RTST, ...NO_DINO, windows: true, windowsstore: true });
 });
 
 test('per product: a core change cuts both, a Dino-only change leaves RTST untouched', () => {
-    const core = ['src/Sirous.Reading.Application/X.cs'];
+    const core = ['src/Shared/Sirous.Reading.Application/X.cs'];
     const both = shipTargetsPerProduct({ plans: plan(core, core) });
     assert.deepEqual([both.windows, both.android, both.ios, both.dinoapp, both.dinoios, both.dinowin], [true, true, true, true, true, true]);
-    const dino = shipTargetsPerProduct({ plans: plan([], ['src/DinoReader.Core/Parser.cs']) });
+    const dino = shipTargetsPerProduct({ plans: plan([], ['src/Dino/DinoReader.Core/Parser.cs']) });
     assert.deepEqual([dino.windows, dino.android, dino.ios, dino.windowsstore], [false, false, false, false]);
 });
 
@@ -356,7 +356,7 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
     });
 }
 
-const MOBILE_ROOTS = ['src/ReadTheStupidText.Mobile', 'src/Sirous.Reading.Mobile.Shared'];
+const MOBILE_ROOTS = ['src/Rtst/ReadTheStupidText.Mobile', 'src/Shared/Sirous.Reading.Mobile.Shared'];
 
 test('a negated path follows its root glob and precedes the Platforms re-includes', () => {
     const roots = { 'android.yml': MOBILE_ROOTS, 'ios.yml': MOBILE_ROOTS, 'tests.yml': MOBILE_ROOTS, 'dinoreader-android.yml': [MOBILE_ROOTS[1]], 'dinoreader-ios.yml': [MOBILE_ROOTS[1]], 'dinoreader-windows.yml': [MOBILE_ROOTS[1]] };
@@ -381,22 +381,22 @@ test('every pull_request.paths list ends with the Markdown negation', () => {
 
 test('a Markdown-only change set builds nothing', () => {
     const files = [
-        'src/ReadTheStupidText.App/a.md',
-        'src/Sirous.Reading.Infrastructure/a.md',
-        'src/DinoReader.App/a.md',
-        'src/DinoReader.Core/a.md',
-        'tests/DinoReader.Tests/a.md',
+        'src/Rtst/ReadTheStupidText.App/a.md',
+        'src/Shared/Sirous.Reading.Infrastructure/a.md',
+        'src/Dino/DinoReader.App/a.md',
+        'src/Dino/DinoReader.Core/a.md',
+        'tests/Dino/DinoReader.Tests/a.md',
         `${M}/CLAUDE.md`,
         `${M}/Platforms/Android/a.md`,
         `${M}/Platforms/iOS/a.md`,
         `${S}/CLAUDE.md`,
-        'src/Sirous.Reading.Application/a.md',
+        'src/Shared/Sirous.Reading.Application/a.md',
     ];
     assert.deepEqual(targetsOf(files), NONE);
 });
 
 test('the Markdown ignore is case-sensitive, like GitHub paths globs', () => {
-    assert.deepEqual(targetsOf(['src/Sirous.Reading.Domain/README.MD']), { ...NONE, ...ALL3 });
+    assert.deepEqual(targetsOf(['src/Shared/Sirous.Reading.Domain/README.MD']), { ...NONE, ...ALL3 });
 });
 
 test('Markdown mixed with code still builds the code targets', () => {
@@ -406,8 +406,8 @@ test('Markdown mixed with code still builds the code targets', () => {
 // ---- Slice 130: a major-bump token only bumps the product whose paths its commit touches ----
 
 const MAJOR_MESSAGE = ['feat: x', '', '+' + 'semver: major'].join('\n');
-const dinoCommit = { message: MAJOR_MESSAGE, files: ['src/DinoReader.App/App.xaml'] };
-const coreCommit = { message: MAJOR_MESSAGE, files: ['src/Sirous.Reading.Domain/X.cs'] };
+const dinoCommit = { message: MAJOR_MESSAGE, files: ['src/Dino/DinoReader.App/App.xaml'] };
+const coreCommit = { message: MAJOR_MESSAGE, files: ['src/Shared/Sirous.Reading.Domain/X.cs'] };
 const bumpOf = (name, version, commits) => productBump({
     baseTag: `${PRODUCTS[name].prefix}1.0.0`, version, prefix: PRODUCTS[name].prefix, commits, targets: PRODUCTS[name].targets,
 });
@@ -505,14 +505,14 @@ test('localChangedFiles returns an empty list for a clean tree', () => {
 });
 
 test('local mode: a Dino-only UI change touches the Dino targets and not the RTST ones; unknown changes build everything', () => {
-    const dino = targetsOf(['src/DinoReader.App/Views/ReaderPage.xaml']);
+    const dino = targetsOf(['src/Dino/DinoReader.App/Views/ReaderPage.xaml']);
     assert.deepEqual([dino.dinoapp, dino.dinowin, dino.android, dino.windows], [true, true, false, false]);
     assert.ok(Object.values(targetsOf(null)).every(Boolean));
 });
 
 test('Slice 218: a Windows change in a release the Store never got is submitted by the next core-only release', () => {
-    const infra = 'src/Sirous.Reading.Infrastructure/Reading/SherpaEngineFactory.cs';
-    const core = 'src/Sirous.Reading.Application/X.cs';
+    const infra = 'src/Shared/Sirous.Reading.Infrastructure/Reading/SherpaEngineFactory.cs';
+    const core = 'src/Shared/Sirous.Reading.Application/X.cs';
     // Last Store submission was before the Infrastructure change; the last release (the base of `changedFiles`) is a core-only one after it.
     const plans = plan([core], []);
     plans.rtst.storeChangedFiles = [infra, core];
@@ -523,13 +523,13 @@ test('Slice 218: a Windows change in a release the Store never got is submitted 
 });
 
 test('Slice 218: nothing Windows-specific since the last Store submission submits nothing; a Store-only backlog still builds the MSIX', () => {
-    const core = 'src/Sirous.Reading.Application/X.cs';
+    const core = 'src/Shared/Sirous.Reading.Application/X.cs';
     const plans = plan([core], []);
     plans.rtst.storeChangedFiles = [core];
     assert.equal(shipTargetsPerProduct({ plans }).windowsstore, false);
     // The release diff is empty (e.g. docs only) but a Windows change is still unsubmitted: the release must build and carry the MSIX.
     const backlog = plan([], []);
-    backlog.rtst.storeChangedFiles = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    backlog.rtst.storeChangedFiles = ['src/Rtst/ReadTheStupidText.App/App.xaml.cs'];
     const flags = shipTargetsPerProduct({ plans: backlog });
     assert.deepEqual([flags.windows, flags.windowsstore, flags.android], [true, true, false]);
 });
@@ -539,8 +539,8 @@ test('Slice 218: the Store marker tag is not an rtst-v release tag', () => {
     assert.equal(newestAppTag(['rtst-store-v1.80.0', 'rtst-v1.76.1'], PRODUCTS.rtst.store.prefix), 'rtst-store-v1.80.0');
 });
 
-const INFRA = 'src/Sirous.Reading.Infrastructure/Reading/SherpaEngineFactory.cs';
-const CORE = 'src/Sirous.Reading.Application/X.cs';
+const INFRA = 'src/Shared/Sirous.Reading.Infrastructure/Reading/SherpaEngineFactory.cs';
+const CORE = 'src/Shared/Sirous.Reading.Application/X.cs';
 
 /** A throwaway repo; `commit(file, tag...)` adds a change under that path and tags it. */
 function withRepo(body) {
@@ -615,8 +615,8 @@ test('Slice 218 (git): an unreadable store diff is null, which leaves the plan o
 });
 
 test('Slice 222: a Dino-only run with a pending Store change builds and submits the MSIX (the rtst version is always computed by GitVersion)', () => {
-    const dinoOnly = plan([], ['src/DinoReader.Core/Parser.cs']);
-    dinoOnly.rtst.storeChangedFiles = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    const dinoOnly = plan([], ['src/Dino/DinoReader.Core/Parser.cs']);
+    dinoOnly.rtst.storeChangedFiles = ['src/Rtst/ReadTheStupidText.App/App.xaml.cs'];
     const flags = shipTargetsPerProduct({ plans: dinoOnly });
     assert.deepEqual([flags.windows, flags.windowsstore, flags.dinoapp], [true, true, true]);
 });
@@ -677,10 +677,10 @@ for (const workflow of ['release-rtst.yml', 'release-dino.yml']) {
 }
 
 test('a mixed push (a book plus Dino code) still starts release-dino.yml; shared code starts both release workflows', () => {
-    const mixed = ['content/dino/x-marks-the-treasure/story.md', 'src/DinoReader.Core/Parser.cs'];
+    const mixed = ['content/dino/x-marks-the-treasure/story.md', 'src/Dino/DinoReader.Core/Parser.cs'];
     assert.equal(mixed.some((file) => pushRuns(pushPathsOf('release-dino.yml'), file)), true);
     for (const workflow of ['release-rtst.yml', 'release-dino.yml']) {
-        for (const file of ['src/Sirous.Reading.Domain/X.cs', '.github/workflows/release-shared.yml', 'GitVersion.yml']) assert.equal(pushRuns(pushPathsOf(workflow), file), true, `${workflow}: ${file}`);
+        for (const file of ['src/Shared/Sirous.Reading.Domain/X.cs', '.github/workflows/release-shared.yml', 'GitVersion.yml']) assert.equal(pushRuns(pushPathsOf(workflow), file), true, `${workflow}: ${file}`);
     }
 });
 
@@ -731,7 +731,7 @@ test('dino-store.yml push paths cover every path of the dinostore group (one sou
     const paths = pushPathsOf('dino-store.yml');
     const probe = (entry) => (entry.endsWith('/') ? `${entry}sub/file.x` : entry);
     for (const entry of GROUPS.dinostore.include) assert.equal(pushRuns(paths, probe(entry)), true, `dinostore path not covered by dino-store.yml: ${entry}`);
-    for (const extra of ['src/DinoReader.App/ShippedTitles.cs', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
+    for (const extra of ['src/Dino/DinoReader.App/ShippedTitles.cs', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/high-res/cover.png'), false);
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), true);
 });
@@ -744,18 +744,18 @@ test('tools-selftests.yml still runs on a high-res-only pull request (a PR must 
 // ---- Slice 369: one release workflow per product ----
 const BOTH = { rtst: true, dino: true };
 const RELEASE_CASES = [
-    ['a Dino-only change starts only the Dino workflow', ['src/DinoReader.App/MainPage.xaml.cs'], { rtst: false, dino: true }],
-    ['a Dino Core change starts only the Dino workflow', ['src/DinoReader.Core/Parser.cs'], { rtst: false, dino: true }],
-    ['a Dino test change starts only the Dino workflow (its suite)', ['tests/DinoReader.Tests/ParserTests.cs'], { rtst: false, dino: true }],
-    ['a tray-only change starts only the RTST workflow', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { rtst: true, dino: false }],
+    ['a Dino-only change starts only the Dino workflow', ['src/Dino/DinoReader.App/MainPage.xaml.cs'], { rtst: false, dino: true }],
+    ['a Dino Core change starts only the Dino workflow', ['src/Dino/DinoReader.Core/Parser.cs'], { rtst: false, dino: true }],
+    ['a Dino test change starts only the Dino workflow (its suite)', ['tests/Dino/DinoReader.Tests/ParserTests.cs'], { rtst: false, dino: true }],
+    ['a tray-only change starts only the RTST workflow', ['src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs'], { rtst: true, dino: false }],
     ['the RTST phone app starts only the RTST workflow', [`${M}/ReaderPage.xaml.cs`], { rtst: true, dino: false }],
-    ['a shared engine change starts both', ['src/Sirous.Reading.Application/Reading/X.cs'], BOTH],
-    ['Infrastructure starts both (Dino reads with its Windows engines)', ['src/Sirous.Reading.Infrastructure/X.cs'], BOTH],
+    ['a shared engine change starts both', ['src/Shared/Sirous.Reading.Application/Reading/X.cs'], BOTH],
+    ['Infrastructure starts both (Dino reads with its Windows engines)', ['src/Shared/Sirous.Reading.Infrastructure/X.cs'], BOTH],
     ['the shared release workflow starts both', ['.github/workflows/release-shared.yml'], BOTH],
     ['each product release workflow starts only its own product', ['.github/workflows/release-rtst.yml'], { rtst: true, dino: false }],
     ['docs only start neither', ['CLAUDE.md', 'plan.md', 'docs/plan/slices/1-x.md'], { rtst: false, dino: false }],
     ['a store book starts neither (dino-store.yml owns it)', ['content/dino/x-marks-the-treasure/story.md'], { rtst: false, dino: false }],
-    ['a change in both products starts both', ['src/DinoReader.App/MainPage.xaml.cs', 'src/ReadTheStupidText.Windows.Tray/Input/X.cs'], BOTH],
+    ['a change in both products starts both', ['src/Dino/DinoReader.App/MainPage.xaml.cs', 'src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs'], BOTH],
     ['an unknown range starts both', null, BOTH],
 ];
 
@@ -800,16 +800,16 @@ test('release-dino.yml push paths equal the paths derived from GROUPS (core + ev
     IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
     assert.equal(new Set(actual).size, actual.length, 'duplicate path entries');
     assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
-    const excluded = actual.indexOf('!src/Sirous.Reading.Mobile.Shared/Platforms/**');
-    assert.ok(excluded > actual.indexOf('src/Sirous.Reading.Mobile.Shared/**') && actual.indexOf('src/Sirous.Reading.Mobile.Shared/**') >= 0, '! must follow the Mobile.Shared glob');
-    assert.ok(actual.filter((p) => p.startsWith('src/Sirous.Reading.Mobile.Shared/Platforms/')).every((p) => actual.indexOf(p) > excluded), 'Platforms re-includes must follow the !');
+    const excluded = actual.indexOf('!src/Shared/Sirous.Reading.Mobile.Shared/Platforms/**');
+    assert.ok(excluded > actual.indexOf('src/Shared/Sirous.Reading.Mobile.Shared/**') && actual.indexOf('src/Shared/Sirous.Reading.Mobile.Shared/**') >= 0, '! must follow the Mobile.Shared glob');
+    assert.ok(actual.filter((p) => p.startsWith('src/Shared/Sirous.Reading.Mobile.Shared/Platforms/')).every((p) => actual.indexOf(p) > excluded), 'Platforms re-includes must follow the !');
 });
 
 test('a Dino-only PR starts only release-dino.yml and an RTST-only one only release-rtst.yml (the first-merge check of Slice 369)', () => {
-    assert.equal(startsFor('release-dino.yml', ['src/DinoReader.App/MainPage.xaml.cs']), true);
-    assert.equal(startsFor('release-rtst.yml', ['src/DinoReader.App/MainPage.xaml.cs']), false);
-    assert.equal(startsFor('release-rtst.yml', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs']), true);
-    assert.equal(startsFor('release-dino.yml', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs']), false);
+    assert.equal(startsFor('release-dino.yml', ['src/Dino/DinoReader.App/MainPage.xaml.cs']), true);
+    assert.equal(startsFor('release-rtst.yml', ['src/Dino/DinoReader.App/MainPage.xaml.cs']), false);
+    assert.equal(startsFor('release-rtst.yml', ['src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs']), true);
+    assert.equal(startsFor('release-dino.yml', ['src/Rtst/ReadTheStupidText.Windows.Tray/Input/X.cs']), false);
 });
 
 test('per product plan: PRODUCT=dino plans only Dino (the RTST tag is never read), PRODUCT=rtst only RTST, no PRODUCT both', () => {
@@ -823,7 +823,7 @@ test('per product plan: PRODUCT=dino plans only Dino (the RTST tag is never read
 });
 
 test('per product plan: a Dino plan sets only the Dino targets, force_all and a major bump stay inside the product', () => {
-    const dinoOnly = shipTargetsPerProduct({ plans: { dino: { changedFiles: ['src/DinoReader.App/X.cs'], bump: 'other' } } });
+    const dinoOnly = shipTargetsPerProduct({ plans: { dino: { changedFiles: ['src/Dino/DinoReader.App/X.cs'], bump: 'other' } } });
     assert.deepEqual(Object.keys(dinoOnly).sort(), [...PRODUCTS.dino.targets].sort());
     assert.deepEqual([dinoOnly.dinoapp, dinoOnly.dinoios, dinoOnly.dinowin], [true, true, true]);
     const forced = shipTargetsPerProduct({ plans: { rtst: { changedFiles: [], bump: 'other' } }, forceAll: true });

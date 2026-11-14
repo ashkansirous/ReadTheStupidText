@@ -10,12 +10,12 @@
   pipeline, for run-flows.ps1 and Invoke-DesktopTest.ps1 -App auto. A caller may add an app; it never drops one silently.
   Slice 207: -Checks prints the fast checks the same diff needs instead: one `dotnet build` line per app the code change names
   (Mobile.Shared always names both Android apps) and one `dotnet test` line per test project it reaches (Domain, Application and
-  Mobile.Shared reach both; DinoReader.Core reaches tests/DinoReader.Tests; Windows-only projects reach tests/ReadTheStupidText.Tests).
+  Mobile.Shared reach both; DinoReader.Core reaches tests/Dino/DinoReader.Tests; Windows-only projects reach tests/Rtst/ReadTheStupidText.Tests).
   A change that cannot be read names everything. A tooling-only change prints no build or test line.
 .EXAMPLE
   .\test-targets.ps1                       # all four, with reasons
   .\test-targets.ps1 -Platform android -Raw
-  .\test-targets.ps1 -Files src/DinoReader.App/Views/ReaderPage.xaml
+  .\test-targets.ps1 -Files src/Dino/DinoReader.App/Views/ReaderPage.xaml
 #>
 param(
     [ValidateSet('android', 'windows', 'all')][string]$Platform = 'all',
@@ -33,7 +33,7 @@ $unknown = '*'
 
 $allRuns = @('rtst-android', 'rtst-windows', 'dino-android', 'dino-windows')
 # Tooling that touches no device check (story builders and uploads): it never needs a device run.
-$noDevicePrefixes = @('tools/DinoReader.BookBuilder/', 'tools/upload-store-story.ps1')
+$noDevicePrefixes = @('tools/dino/DinoReader.BookBuilder/', 'tools/dino/upload-store-story.ps1')
 
 function Get-ChangedFiles {
     if ($Files) { return @($Files) }
@@ -99,27 +99,28 @@ function Select-Platform([string[]]$Runs) {
 }
 
 # ---- Slice 207: -Checks, the fast checks (builds and unit tests) a change needs.
+$testGroups = @{ 'ReadTheStupidText.Tests' = 'Rtst'; 'Shared.Tests' = 'Shared'; 'DinoReader.Tests' = 'Dino' }  # Slice 371: the tests/<group>/ folder of each project
 $bothTests = @('ReadTheStupidText.Tests', 'Shared.Tests', 'DinoReader.Tests')  # every .NET test project (Slice 368: Shared.Tests holds the engine both apps ship)
 # First match wins. A path reaches the test projects named here; builds come from the CI rules (Get-ShipRuns) plus Mobile.Shared below.
 $testRules = @(
-    @{ Pattern = '^src/Sirous\.Reading\.(Mobile\.Shared|Application|Domain|Infrastructure|Documents)/'; Tests = $bothTests }  # Dino references Infrastructure and Documents too
+    @{ Pattern = '^src/Shared/Sirous\.Reading\.(Mobile\.Shared|Application|Domain|Infrastructure|Documents)/'; Tests = $bothTests }  # Dino references Infrastructure and Documents too
     # FallbackGuardTests and SherpaVersionPinTests (Shared.Tests) scan all of src/, so every code folder also reaches Shared.Tests (the CI selector does the same).
-    @{ Pattern = '^src/ReadTheStupidText\.(App|Windows\.Tray|Mobile)/|^src/AndroidSherpaPackaging\.props$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
-    @{ Pattern = '^src/DinoReader\.(Core|App)/'; Tests = @('DinoReader.Tests', 'Shared.Tests') }
-    @{ Pattern = '^(tools/DinoReader\.BookBuilder|content/dino)/'; Tests = @('DinoReader.Tests') }
+    @{ Pattern = '^src/Rtst/ReadTheStupidText\.(App|Windows\.Tray|Mobile)/|^src/Shared/AndroidSherpaPackaging\.props$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
+    @{ Pattern = '^src/Dino/DinoReader\.(Core|App)/'; Tests = @('DinoReader.Tests', 'Shared.Tests') }
+    @{ Pattern = '^(tools/dino/DinoReader\.BookBuilder|content/dino)/'; Tests = @('DinoReader.Tests') }
     # Test files one project compiles from the other (see the two csproj files): both projects run.
-    @{ Pattern = '^tests/(ReadTheStupidText\.Tests/(TestFakes|TranslationFakes)\.cs|Shared\.Tests/MainThreadStub\.cs)$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
-    @{ Pattern = '^tests/ReadTheStupidText\.Tests/'; Tests = @('ReadTheStupidText.Tests') }
-    @{ Pattern = '^tests/Shared\.Tests/'; Tests = @('Shared.Tests') }
-    @{ Pattern = '^tests/DinoReader\.Tests/'; Tests = @('DinoReader.Tests') }
+    @{ Pattern = '^tests/(Rtst/ReadTheStupidText\.Tests/(TestFakes|TranslationFakes)\.cs|Shared/Shared\.Tests/MainThreadStub\.cs)$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
+    @{ Pattern = '^tests/Rtst/ReadTheStupidText\.Tests/'; Tests = @('ReadTheStupidText.Tests') }
+    @{ Pattern = '^tests/Shared/Shared\.Tests/'; Tests = @('Shared.Tests') }
+    @{ Pattern = '^tests/Dino/DinoReader\.Tests/'; Tests = @('DinoReader.Tests') }
     # Shared build inputs reach every project, so both test projects run (the same fail-safe as an unknown file).
     @{ Pattern = '^(Directory\.(Build|Packages)\.(props|targets)|global\.json|nuget\.config|[^/]+\.slnx)$'; Tests = $bothTests }
 )
 $buildCommands = [ordered]@{
-    'rtst-android' = 'dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android'
-    'dino-android' = 'dotnet build src/DinoReader.App/DinoReader.App.csproj -f net10.0-android'
-    'rtst-windows' = 'dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64'
-    'dino-windows' = 'dotnet build src/DinoReader.App/DinoReader.App.csproj -f net10.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
+    'rtst-android' = 'dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android'
+    'dino-android' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-android'
+    'rtst-windows' = 'dotnet build src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64'
+    'dino-windows' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
 }
 
 function Get-FastCheckTests([string[]]$Changed) {
@@ -133,7 +134,7 @@ function Get-FastCheckBuilds([string[]]$Changed) {
     $code = @($Changed | Where-Object { $_ -notmatch '^(tools|\.maestro)/' })
     if ($code.Count -eq 0) { return @() }
     $runs = @(Get-ShipRuns $code)
-    if ($code | Where-Object { $_ -match '^src/Sirous\.Reading\.Mobile\.Shared/' }) { $runs += 'rtst-android', 'dino-android' }
+    if ($code | Where-Object { $_ -match '^src/Shared/Sirous\.Reading\.Mobile\.Shared/' }) { $runs += 'rtst-android', 'dino-android' }
     return @($buildCommands.Keys | Where-Object { $runs -contains $_ })
 }
 
@@ -141,7 +142,7 @@ function Write-FastChecks([string[]]$Changed) {
     $builds = @(Get-FastCheckBuilds $Changed)
     $tests = @(Get-FastCheckTests $Changed)
     foreach ($app in $builds) { Write-Output $buildCommands[$app] }
-    foreach ($project in $tests) { Write-Output "dotnet test tests/$project/$project.csproj" }
+    foreach ($project in $tests) { Write-Output "dotnet test tests/$($testGroups[$project])/$project/$project.csproj" }
     if ($builds.Count + $tests.Count -eq 0) { Write-Host 'No build or unit-test project is touched by this change (test tooling and docs only).' }
     elseif ($builds | Where-Object { $_ -like '*-android' }) { Write-Host 'note: where only the maui-android workload is installed, add -p:IncludeWindows=false to the Android builds.' }
 }

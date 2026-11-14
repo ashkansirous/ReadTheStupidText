@@ -13,9 +13,9 @@ on:
       - '.github/workflows/tools-selftests.yml'
       - 'PSScriptAnalyzerSettings.psd1'
       # Slice 272: the Dino audio alignment check below. The `scope` job keeps the Windows self-tests off these paths.
-      - 'src/DinoReader.Core/**'
-      - 'src/Sirous.Reading.Application/**'
-      - 'src/DinoReader.App/StoryVoicing.cs'
+      - 'src/Dino/DinoReader.Core/**'
+      - 'src/Shared/Sirous.Reading.Application/**'
+      - 'src/Dino/DinoReader.App/StoryVoicing.cs'
       - 'content/dino/**'
 
 permissions:
@@ -46,7 +46,7 @@ jobs:
         run: |
           changed="$(git diff --name-only "$BASE" "$GITHUB_SHA")"
           if echo "$changed" | grep -qE '^(tools/|\.maestro/|\.github/workflows/tools-selftests\.yml$|PSScriptAnalyzerSettings\.psd1$)'; then echo "tooling=true" >> "$GITHUB_OUTPUT"; else echo "tooling=false" >> "$GITHUB_OUTPUT"; fi
-          if echo "$changed" | grep -qE '^(src/DinoReader\.Core/|src/Sirous\.Reading\.Application/|src/DinoReader\.App/StoryVoicing\.cs$|tools/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -qE '^(src/Dino/DinoReader\.Core/|src/Shared/Sirous\.Reading\.Application/|src/Dino/DinoReader\.App/StoryVoicing\.cs$|tools/dino/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
 
   # Slice 272: every Dino pre-made audio manifest must hash the sentences the app reads now, position by position (Slice 255 changed the count and eight Farsi packs silently stopped fitting).
   # Only the manifest.json files are fetched from Git LFS (about 240 small files), never a clip.
@@ -68,7 +68,7 @@ jobs:
         run: git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""
 
       - name: Check that every audio manifest lines up with the sentences the app reads
-        run: dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio
+        run: dotnet run --project tools/dino/DinoReader.BookBuilder --configuration Release -- check-audio
 
   # Slice 215: one job, two shells (pwsh = PowerShell 7, powershell = Windows PowerShell 5.1), instead of two copies of the same steps.
   selftests:

@@ -10,7 +10,7 @@
 # expect-log: HOOK set-language ok fa
 # expect-log: HOOK install-audio-pack ok
 # expect-log: HOOK read start
-# The tag «پیم گفت.» is piece 13 of the joined order (tools/DinoReader.BookBuilder dump-sentences three-little-pigs --lang fa), in the same sentence 11 as its quote's first half (piece 14), so the sentence number alone cannot tell them apart:
+# The tag «پیم گفت.» is piece 13 of the joined order (tools/dino/DinoReader.BookBuilder dump-sentences three-little-pigs --lang fa), in the same sentence 11 as its quote's first half (piece 14), so the sentence number alone cannot tell them apart:
 # the read logs the clip it plays, and the fixture names clip n after piece n, so "clip fixture-13.m4a" appears only when the TAG found its own clip at its place in the joined order. A tag miss fails this line.
 # expect-log: [AudioPack] premade clip plays (sentence 11) clip fixture-13.m4a
 # expect-log: [AudioPack] premade clip plays (sentence 11) clip fixture-14.m4a
