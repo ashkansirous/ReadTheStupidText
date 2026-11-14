@@ -158,8 +158,26 @@ told apart, and the release build logs nothing about products. Only a Play-insta
 - Run 1 (`reviews/w54-358-emu/`): `store-payment-required`, `store-server-errors` and `paid-books` PASS; `store-not-for-sale` FAIL because the Debug offline fake did not reach the Connectivity rule. Fixed: the fake's offline flag drives `HasInternet` in `DINO_TEST_BOOKS` builds.
 - Run 2 (`reviews/w54-358-emu/run2/`): `store-not-for-sale` PASS, markers `[StoreSale] row state=ConnectToBuy`, then `[Purchases] prices missing count=1 of=1` and `[StoreSale] row state=NotForSaleNow`. No layout-check ok line was printed (not counted as a pass).
 
+### Play-installed run (2026-11-14, user bug report "the books cannot be bought on android yet")
+
+- S21, Dino Reader 1.127.0 installed from Play (installer `com.android.vending`), online, Store tab: logcat
+  `[Purchases] product details: code=Ok asked=11 got=0 unfetched=0`, three times. Every paid row shows the red strip.
+- dino_usage: 1.127.0 Android sent one `store:prices_missing` at 08:08 (the user's own phone), no `billing_error` on any version.
+- Play Console (Chrome): the 11 one-time products are listed, one active option each; the payments profile shows a bank account and no
+  warning, so the earlier "bank check pending" guess is not supported.
+- Billing 8+ docs say every product Play cannot return comes back in `unfetchedProductList` with a status code, so Ok with 0 details
+  and 0 unfetched is not a documented answer (https://developer.android.com/google/play/billing/release-notes). The cause is still
+  open: the binding's `QueryProductDetailsAsync` wrapper (Xamarin.Android.Google.BillingClient 9.1.0.2) not filling its lists, or Play
+  returning an empty catalog for this app.
+
+## Open (cause of the empty answer)
+
+- [ ] Log `answer.Result.DebugMessage` and each `UnfetchedProduct`'s id and status code in the trace line.
+- [ ] Query once through the listener overload (`client.QueryProductDetails(query, listener)`) and log both lists, to rule the async wrapper in or out.
+- [ ] Release it, re-run on the S21 from Play, and fix whichever side is empty.
+
 ## Not yet verified
 
-- The real cause on a Play-installed phone: the Release trace line `Dino Reader product details: code= asked= got= unfetched=` settles it.
+- The paid books show a price and Buy on a Play-installed phone (blocked by *Open* above).
 - iOS and Windows strips are only compiled, not run.
 - The translations of `Store_NotForSaleNow` are machine drafts.
