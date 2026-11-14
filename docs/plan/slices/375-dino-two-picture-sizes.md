@@ -1,7 +1,7 @@
 ### Slice 375 — Dino: every picture in two sizes; agents look only at the small one; a high-res pack for tablets and Windows
 **Product:** Dino
 
-*Part A merged as PR #1101 (f5692138). Parts B, C, D: in progress (wave 2026-11-14), draft PR.*
+*Part A merged as PR #1101 (f5692138). Parts B, C, D merged as PR #1113 (3ccecadd, 2026-11-14 11:49Z); Not yet verified below.*
 
 **Touches (parts B-D, paths after Slice 371; part A's are history):** `tools/dino/prepare-story-pictures.ps1`, `tools/dino/picture-review-copy.ps1`, `content/dino/lion-and-mouse/high-res/**`, `tools/dino/DinoReader.BookBuilder/**`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `worker/stories.ts`, `worker/download-keys.mjs`, `worker/download-keys.d.mts`, `worker/downloads.ts`, `worker/*.test.mjs` (stories, downloads, catalogue), `worker/CLAUDE.md`, `src/Dino/DinoReader.Core/PictureSize*.cs` (new), `src/Dino/DinoReader.Core/LandscapeLayout.cs` (read only, for `TabletShortSide`), `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/BookUpdater.cs`, `src/Dino/DinoReader.App/StagedBookUpdates.cs`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/HighResUpgrades*.cs` (new), `src/Dino/DinoReader.App/PictureSize*.cs` (new, platform device class), `src/Dino/DinoReader.App/Platforms/**` (device class only), `src/Dino/DinoReader.App/MauiProgram.cs` (DI), the `StoreItem` type's file, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/**`, `src/Dino/DinoReader.App/CLAUDE.md`
 
