@@ -1,6 +1,6 @@
 # Store listing: Farsi (`fa`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Persian, right to left. Locales: Play `fa` (Play's list names fa, fa-AE, fa-AF, fa-IR); Microsoft Store `fa` (to be confirmed at push). **App Store: not supported.** Apple's App Store localization list (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) has 50 languages and Persian is not one; so there is no Farsi App Store text, it is not mapped to another language. Layout as in `fr.md` (Microsoft description = Description with "Google Play" replaced by "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Persian, right to left. Locales: Play `fa` (Play's list names fa, fa-AE, fa-AF, fa-IR); Microsoft Store `fa` (to be confirmed at push). **App Store: not supported.** Apple's App Store localization list (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) has 50 languages and Persian is not one; so there is no Farsi App Store text, it is not mapped to another language. Layout as in `fr.md` (Microsoft description = Description with "Google Play" replaced by "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
 Play short description (<= 80): داستان‌هایی که بلند خوانده می‌شوند، با صدایی جدا برای هر شخصیت.

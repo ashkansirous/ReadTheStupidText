@@ -1,6 +1,6 @@
 # Store listing: French (`fr`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13), from the English `play.md` and `appstore.md` of the same day. Not read by a native speaker (line in `docs/plan/unverified.md`). Not pushed yet.** Locales: Play `fr-FR`; App Store `fr-FR`; Microsoft Store `fr`. Uses "vous" for the grown-ups.
+**Machine draft by Claude (Slice 374, 2026-11-13), from the English `play.md` and `appstore.md` of the same day. Not read by a native speaker (line in `docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `fr-FR`; App Store `fr-FR`; Microsoft Store `fr`. Uses "vous" for the grown-ups.
 
 How the files in this folder work: the Description below is the Google Play full description. The App Store description is the same text with every "Google Play" replaced by "App Store"; the Microsoft Store description is the same text with every "Google Play" replaced by "Microsoft Store". Title, subtitle, keywords and promotional text are the single lines below.
 

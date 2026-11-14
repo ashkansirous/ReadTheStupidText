@@ -1,6 +1,6 @@
 # Store listing: Portuguese (`pt`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Written in Brazilian Portuguese. Locales: Play `pt-BR` and `pt-PT` (same text); App Store `pt-BR` and `pt-PT` (same text); Microsoft Store `pt`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Written in Brazilian Portuguese. Locales: Play `pt-BR` and `pt-PT` (same text); App Store `pt-BR` and `pt-PT` (same text); Microsoft Store `pt`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
 Play short description (<= 80): Histórias lidas em voz alta, com uma voz diferente para cada personagem.

@@ -1,6 +1,6 @@
 # Store listing: Russian (`ru`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Locales: Play `ru-RU`; App Store `ru`; Microsoft Store `ru`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"). "Вы" for the grown-ups.
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `ru-RU`; App Store `ru`; Microsoft Store `ru`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"). "Вы" for the grown-ups.
 
 Title (<= 30): Dino Book Reader
 Play short description (<= 80): Сказки вслух, у каждого героя свой голос.
