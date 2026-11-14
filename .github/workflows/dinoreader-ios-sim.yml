@@ -52,6 +52,8 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # A test-only Debug build must clear the live remote config minVersion gate: the csproj default 1.0 is below it,
+      # so the app opened the "Dino needs an update" page (run 43639865693). Same property form as dinoreader-ios.yml.
       - name: Build the Debug simulator app
         run: >
           dotnet build "$PROJECT"
@@ -59,10 +61,15 @@ jobs:
           -p:IncludeAndroid=false
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64
+          -p:ApplicationDisplayVersion=99.0.0
+          -p:ApplicationVersion=99
 
       - name: Boot an iPhone simulator
         timeout-minutes: 10
         run: bash .github/scripts/ios-sim-boot.sh
+
+      - name: Show the booted device type and runtime
+        run: xcrun simctl list devices booted
 
       - name: Install Maestro
         run: bash .github/scripts/ios-sim-install-maestro.sh

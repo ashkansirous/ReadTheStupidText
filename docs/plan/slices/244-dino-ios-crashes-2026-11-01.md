@@ -133,6 +133,8 @@ Premise check on origin/main corrected the slice:
 - Android emulator run of the new flow: PASS 2026-11-14 (emulator-5554, 120.9 s, markers met, no FATAL/ANR). Logs: `D:/ReadTheStupidText-worktrees/reviews/wave62-device/` (outside the repo).
 - iOS simulator runs: after merge, because a dispatch-only workflow cannot run before it is on main. Their results and item 6 go in a follow-up PR. Items 1 and 6 stay open.
 
+- Item 1, run 1 (2026-11-14 21:07Z, run 43639865693): no crash, no .ips, no Jetsam; the flow stopped on the "Dino needs an update" page (Debug build ApplicationDisplayVersion 1.0 is below the live iOS minVersion, App.xaml.cs:330), so the ids' visibility could not be judged because the update page was the only screen. Fix: the sim workflow builds with `-p:ApplicationDisplayVersion=99.0.0 -p:ApplicationVersion=99` and prints the booted device (`simctl list devices booted`). Run 2 pending.
+
 ## Checks run
 
 - DinoReader.Tests 1941, ReadTheStupidText.Tests 2002 (2 skipped); Android builds of both apps; iOS compiles of both.
