@@ -517,6 +517,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
 
+- **Release:** Microsoft Store listings in 13 languages reach both apps' Store pages after the next release (read back with `msstore submission get <id>` after the first release run that calls `store-submit.yml`; check the keys, `pt-br`, no duplicate `fr`/`fr-fr`, and that the run's log shows no `::warning::` from the listing step). Built, not yet run live.
 - **You:** native read of the Arabic store listings (`ar`).
 - **You:** native read of the Chinese (Simplified) store listings (`zh`).
 - **You:** native read of the Danish store listings (`da`).
