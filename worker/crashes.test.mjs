@@ -31,6 +31,37 @@ test("a valid session id is kept on the report and a malformed one is dropped, n
   assert.equal(Object.hasOwn(parseCrash(report, "dino"), "session"), false);
 });
 
+test("the build, executable UUID, memory buckets and app state are kept when valid and dropped one by one when not (Slice 243)", () => {
+  const facts = { build: "20261114.101", binaryUuid: "0123456789ABCDEF0123456789ABCDEF", memoryHeadroom: "256-512", memoryApp: "<128", appState: "background" };
+  const parsed = parseCrash({ ...report, ...facts }, "dino");
+  for (const [name, value] of Object.entries(facts)) assert.equal(parsed?.[name], value, name);
+  const bad = { build: "1 2", binaryUuid: "0123456789abcdef0123456789abcdef", memoryHeadroom: "lots", memoryApp: 5, appState: "asleep" };
+  const dropped = parseCrash({ ...report, ...bad }, "dino");
+  assert.ok(dropped);
+  for (const name of Object.keys(bad)) assert.equal(Object.hasOwn(dropped, name), false, name);
+  assert.equal(Object.hasOwn(parseCrash(report, "dino"), "binaryUuid"), false);
+});
+
+test("a report with no version, or a malformed one, is refused and nothing is stored: only a stamped release counts (Slice 243 review finding 5)", async () => {
+  const { version: _omitted, ...noVersion } = report;
+  for (const body of [noVersion, { ...report, version: "v1" }]) {
+    const env = bindings();
+    assert.equal((await handleCrash(post(body), env, on, "dino")).status, 400);
+    assert.equal(env.objects.size, 0);
+    assert.equal(env.points.length, 0);
+  }
+  assert.equal(parseCrash(noVersion, "dino"), null);
+});
+
+test("the Slice 243 fields reach the stored object", async () => {
+  const env = bindings();
+  const res = await handleCrash(post({ ...report, build: "42", binaryUuid: "0123456789ABCDEF0123456789ABCDEF" }), env, on, "dino");
+  assert.equal(res.status, 204);
+  const stored = JSON.parse([...env.objects.values()][0].value);
+  assert.equal(stored.build, "42");
+  assert.equal(stored.binaryUuid, "0123456789ABCDEF0123456789ABCDEF");
+});
+
 const post = (body, headers = {}) =>
   new Request("https://dinoreader.sirous.uk/api/crash", { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) });
 

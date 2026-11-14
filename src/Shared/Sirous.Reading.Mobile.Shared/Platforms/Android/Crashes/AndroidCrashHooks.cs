@@ -55,7 +55,7 @@ internal static class AndroidCrashHooks
         }
 
         var time = DateTimeOffset.FromUnixTimeMilliseconds(info.Timestamp);
-        return new NativeCrash(kind, info.Reason.ToString(), info.Description ?? string.Empty, ReadTrace(info, kind), time);
+        return new NativeCrash(kind, info.Reason.ToString(), info.Description ?? string.Empty, ReadTrace(info, kind), time, null, null, time);
     }
 
     private static string? KindOf(ApplicationExitInfoReason reason) => reason switch

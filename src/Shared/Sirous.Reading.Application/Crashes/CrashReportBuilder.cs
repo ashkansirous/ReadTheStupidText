@@ -6,11 +6,12 @@ namespace Sirous.Reading.Application.Crashes;
 /// <summary>What every report of one run says about the build (Slice 227).</summary>
 /// <param name="App">A <see cref="CrashApp"/> value.</param>
 /// <param name="Platform">"android" or "ios".</param>
-/// <param name="Version">The app version.</param>
+/// <param name="Version">The app version; null in a context made about an earlier launch that is not in the launch history.</param>
 /// <param name="Channel">The install channel; a <see cref="InstallChannel.Dev"/> install builds no report.</param>
 /// <param name="Device">The coarse device buckets, or null.</param>
 /// <param name="Session">Slice 250: the usage session id of the launch that makes the report, or null (Read The Stupid Text; a report about an earlier launch).</param>
-public sealed record CrashContext(string App, string Platform, string Version, InstallChannel Channel, DeviceContext? Device, string? Session = null);
+/// <param name="Facts">Slice 243 item 6: the build number, executable UUID and (for a report about the running launch) the memory and state buckets, or null.</param>
+public sealed record CrashContext(string App, string Platform, string? Version, InstallChannel Channel, DeviceContext? Device, string? Session = null, CrashFacts? Facts = null);
 
 /// <summary>Builds <see cref="CrashReport"/>s from an exception or from a native description (Slice 227). Pure.</summary>
 public static class CrashReportBuilder
@@ -36,7 +37,7 @@ public static class CrashReportBuilder
         }
 
         return CrashReportJson.Capped(new CrashReport(
-            context.App, context.Platform, context.Version, channel, kind, type, message, stack, logTail, CrashReportJson.MinuteOf(now), context.Device, context.Session));
+            context.App, context.Platform, context.Version, channel, kind, type, message, stack, logTail, CrashReportJson.MinuteOf(now), context.Device, context.Session, context.Facts));
     }
 
     /// <summary>The stack trace of <paramref name="error"/>, then each inner exception's type and stack, so a wrapped failure keeps its origin.</summary>

@@ -55,7 +55,7 @@ public static partial class CrashReporter
             }
 
             string tail = await ReadTailAsync().ConfigureAwait(false);
-            CrashReport? report = context is null ? null : UserReportBuilder.Build(ContextNow(context), code, tail, CreatedAtFor(code)) is { } built ? built with { Session = InThisLaunch(context).Session } : null;
+            CrashReport? report = context is null ? null : UserReportBuilder.Build(InThisLaunch(ContextNow(context)), code, tail, CreatedAtFor(code));
             if (report is null)
             {
                 Note("user report not made (this install's channel sends nothing)");

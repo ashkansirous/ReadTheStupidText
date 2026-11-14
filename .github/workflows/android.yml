@@ -176,3 +176,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "rtst-v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
+
+      # Slice 243 item 7: the prebuilt sherpa-onnx / onnxruntime arm64 .so files, as shipped, so a native crash address in them can be matched to the exact build
+      # (the file name carries the ELF build id or a file hash). There is no Android keep-symbols property: these are the package's own files, and the step prints
+      # whether they still carry a symbol table. Kept outside dist/ because the upload above takes dist/*. Release assets, never Actions artifacts.
+      - name: Keep the native libraries as release assets
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node tools/crashes/collect-symbols.mjs android-natives --name ReadTheStupidText --version "$VERSION" --out native-symbols | tee -a "$GITHUB_STEP_SUMMARY"
+          gh release upload "rtst-v${VERSION}" native-symbols/* --repo "${{ github.repository }}" --clobber
