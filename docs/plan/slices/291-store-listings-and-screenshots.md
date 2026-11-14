@@ -12,7 +12,7 @@
 *Built 2026-11-14 (wave 4), PR #1148, not merged. The iOS shots are not yet taken (the workflow can be dispatched only after merge); Play phone and tablet sets are done.*
 
 - Scope: item 5's iPhone 6.9"/6.5" and iPad 13" shots of both apps from a new `store-screenshots.yml` (macOS simulator, dispatch-only, reusing `.github/scripts/ios-sim-*.sh` from Slice 244; plan-not-needed: 244), and the Play tablet shots on the `RTST_Tablet` AVD (`tools/emulator/new-avd.ps1 -Tablet`). The Microsoft Store desktop shot and the RTST control-panel retake stay open (Hyper-V VM needs over 8 GB free memory; 3.9 GB at the claim). Item 6 (uploads) waits for complete per-store sets, as decided in wave 3.
-- **Touches, widened at claim (wave 4):** also `.github/scripts/ios-sim-*.sh` (only to add a parameter, the 244 flow keeps working), `.maestro/dino/store-shot-ios-*.yaml` and `.maestro/rtst/store-shot-ios-*.yaml` (new), `.maestro/*/needs-file/store-shot-tablet.yaml`, `.github/scripts/ship-targets.test.mjs` (exclusions for new test-only files), `.github/workflows/release-rtst.yml` and `release-dino.yml` (path exclusions only), `tools/emulator/new-avd.ps1`, `tools/emulator/common.ps1`. (Corrected 2026-11-14: this note first said the shots stay outside the repo. The phone shots are committed under `docs/store-listings/screenshots/`, so the tablet shots are too. The iOS shots come from the CI job as a draft release, handed over the way `.github/CLAUDE.md` allows for Actions storage.)
+- **Touches, widened at claim (wave 4):** also `.github/scripts/ios-sim-*.sh` (only to add a parameter, the 244 flow keeps working), `.maestro/dino/store-shot-ios-*.yaml` and `.maestro/rtst/store-shot-ios-*.yaml` (new), `.maestro/*/needs-file/store-shot-tablet.yaml`, `.github/scripts/ship-targets.test.mjs` (exclusions for new test-only files), `.github/workflows/release-rtst.yml` and `release-dino.yml` (path exclusions only), `tools/emulator/new-avd.ps1`, `tools/emulator/common.ps1`, `tools/emulator/test-contact-sheet.ps1` (one line: skip `store-shot-*` flows when listing taken shots; CI selftests failure on PR 1148). (Corrected 2026-11-14: this note first said the shots stay outside the repo. The phone shots are committed under `docs/store-listings/screenshots/`, so the tablet shots are too. The iOS shots come from the CI job as a draft release, handed over the way `.github/CLAUDE.md` allows for Actions storage.)
 - Tablet shots (review `reviews/s291c-high.md` #7, scope note, answered): the Play tablet flows, `Get-StoreShotInstance` and `new-avd.ps1 -Tablet` already exist on main, so wave 4 adds no tablet code; the tablet shots are a device run after the reviews (`install-debug.ps1 -App <app> -Instance tablet`, then `store-screenshots.ps1 -App <app> -Form tablet`).
 - Applied (`reviews/s291c-high.md`): #1 (`|| true` on the pattern grep in `ios-sim-boot.sh`), #2 (no `run_flow` after a failed `prepare_flow`), #3 (Dino Books-tab wait), #4 (draft tag now includes `GITHUB_RUN_ATTEMPT`). (`reviews/s291c-medium.md`): #1 (collect shots from `$PWD` too), #3 (RTST waits for `PackStatusLabel` before `notVisible`). Read: high 7/7, medium 5/5.
 - Skipped #5 (`reviews/s291c-high.md`): "the RTST supertonic-3 pack is downloaded three times per run" - low, and the dispatch-only job's cost is accepted; no change to the clearState flow.
@@ -119,6 +119,26 @@ Premise check on origin/main:
 - Skipped #1 (`reviews/s291-check4.md`): "the notVisible PackStatusLabel wait passes on the first poll" - low; the pack was installed by shot 3, so a banner in shot 4 is unlikely, and the coordinator looks at every shot.
 - Skipped #2 (`reviews/s291-check4.md`): "Offline emulator or pack server error keeps the banner visible" - low; it fails loudly and repeats check3 #4.
 - Skipped #3 (`reviews/s291-check4.md`): "fails if the banner shows for less than a poll" - low; after clearState a download runs for minutes, so it is not reachable on the emulator path.
+
+## From review (`reviews/s291c-check2.md`)
+
+- Applied #1 (the iOS relaunch no longer requires PackStatusLabel visible; only the notVisible wait stays).
+- Skipped #2 (`reviews/s291c-check2.md`): "with no set -e and pipeline status unchecked" low; a failed boot fails loudly at install.
+- Skipped #3 (`reviews/s291c-check2.md`): "collect_shots also searches $PWD for <name>.png, names reused across the three devices" low; CI runners are fresh and the size check catches a wrong picture.
+- Skipped #4 (`reviews/s291c-check2.md`): "publishes the draft release even when the shots step failed" low; the release is a draft the coordinator looks at.
+- Skipped #5 (`reviews/s291c-check2.md`): "After openLink dino-test://enter-grown-up?tab=books the wait is on StoryTile" low; already deferred to the first CI run.
+- Skipped #6 (`reviews/s291c-check2.md`): "If boot fails partway, udid is empty and shoot_device returns without simctl delete" low; matters only on reused runners.
+
+## From review (`reviews/s291c-check3.md`)
+
+- Skipped #1 (`reviews/s291c-check3.md`): "One 300 s wait covers the pack download, repeated per fresh simulator" this cost was accepted: each device is a fresh install, and the wait proves the pack is in before the shots.
+- Skipped #2 (`reviews/s291c-check3.md`): "After relaunch, notVisible wait on PackStatusLabel passes at once" the pack is already installed after the relaunch, so no banner is expected. The Settings shot waits on its own element (line ~85).
+- Skipped #3 (`reviews/s291c-check3.md`): "failed prepare_flow does not skip run_flow" this is not true of the code: `ios-sim-store-shots.sh:126-128` is an `if ! prepare_flow ... elif run_flow` chain (applied in high #2). The cleanup runs after each device (`:134-135`).
+- Skipped #4 (`reviews/s291c-check3.md`): "if: always() hand-over publishes a draft release with partial set" repeats medium #5 and check2 #4. The release is a draft, and the coordinator looks at every shot before item 6.
+- Skipped #5 (`reviews/s291c-check3.md`): "collect_shots also searches $PWD" repeats check2 #3: CI runners are fresh, and the size check catches a wrong picture.
+- Skipped #6 (`reviews/s291c-check3.md`): "Wait after tapping Books tab is on StoryTile" repeats medium #2 and check2 #5. The first CI run and a look at the shot decide it.
+- Skipped #7 (`reviews/s291c-check3.md`): "with no exit-status" repeats check2 #2 (low).
+- Skipped #8 (`reviews/s291c-check3.md`): "leaks the simulator" low. It matters only on reused runners.
 
 ## Changed while building
 

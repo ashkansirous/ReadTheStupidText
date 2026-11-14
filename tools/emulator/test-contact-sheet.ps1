@@ -46,7 +46,8 @@ foreach ($entry in $manifest) {
     $flowText = if (Test-Path $flowFile) { Get-Content $flowFile -Raw } else { '' }
     Assert-Equal "flow $($entry.flow) takes $($entry.shot)" $true ($flowText -match ('(?m)^\s*- takeScreenshot:\s*' + [regex]::Escape($entry.shot) + '\s*$'))
 }
-$taken = foreach ($file in Get-ChildItem (Join-Path $repoRoot '.maestro\dino') -Filter '*.yaml' -File) {
+# A store-shot-* flow (Slice 291: iOS store screenshots, taken by CI and never committed) has no mock frame, so it is not in the manifest.
+$taken = foreach ($file in Get-ChildItem (Join-Path $repoRoot '.maestro\dino') -Filter '*.yaml' -File | Where-Object { $_.BaseName -notlike 'store-shot-*' }) {
     foreach ($m in [regex]::Matches((Get-Content $file.FullName -Raw), '(?m)^\s*- takeScreenshot:\s*(\S+)\s*$')) { $m.Groups[1].Value }
 }
 foreach ($name in @($taken)) { Assert-Equal "manifest lists $name" $true (@($manifest | Where-Object { $_.shot -eq $name }).Count -eq 1) }

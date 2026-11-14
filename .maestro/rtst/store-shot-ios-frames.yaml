@@ -69,11 +69,7 @@ name: Store screenshots, Read The Stupid Text, iOS
     visible:
       id: SettingsButton
     timeout: 20000
-# Same design as the Android shot flow: the banner must show first (a fresh install always downloads the pack), then go; notVisible alone passes at once while the banner is still hidden.
-- extendedWaitUntil:
-    visible:
-      id: PackStatusLabel
-    timeout: 30000
+# Relaunch without clearState: the pack is already installed, so the banner stays hidden; only wait for it to be gone (the first launch, a fresh install, is the one that requires it visible).
 - extendedWaitUntil:
     notVisible:
       id: PackStatusLabel
