@@ -1,9 +1,9 @@
 ### Slice 317 — Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows)
 **Product:** Shared
 
-*Parked: feedback loop, waits for the user (2026-11-08).* Found by the night 2026-11-08-0106 feedback loop ([note](../notes/2026-11-08-0106-feedback-loop.md)); repo code, so it is planned here and not built outside an implementation phase.
+*In progress (wave 2026-11-14), draft PR (user 2026-11-14: "run all waves, finish them all"). Item 6 is built after Slice 346 part E merges (both edit `StoreClient.cs`).* Found by the night 2026-11-08-0106 feedback loop ([note](../notes/2026-11-08-0106-feedback-loop.md)).
 
-**Touches:** `tools/emulator/build-cache.ps1`, `tools/emulator/**`, `tools/phone/**`, `.maestro/**`, `src/DinoReader.App/Testing/**`, `.github/workflows/release.yml`, `.github/workflows/store-submit.yml`
+**Touches:** `tools/emulator/**`, `tools/phone/**`, `tools/CLAUDE.md`, `.maestro/**`, `src/Dino/DinoReader.App/Testing/**`, `src/Rtst/ReadTheStupidText.Mobile/Testing/**`, `.github/workflows/release-dino.yml`, `.github/workflows/store-submit.yml`, `.github/scripts/**` (store submit retry only), `.github/CLAUDE.md`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/BookUpdater.cs`, `tests/Dino/DinoReader.Tests/**` (item 6), `docs/plan/slices/313-*.md`, `docs/plan/slices/315-*.md`; ClaudeSkills `skills/run-all-waves/**` (items 2 and 7). (Paths updated 2026-11-14 for Slices 369 and 371.)
 
 ## Items
 
