@@ -69,6 +69,6 @@ public static class UserReportBuilder
 
         return CrashReportJson.Capped(new CrashReport(
             context.App, context.Platform, context.Version, channel, CrashKind.UserReport,
-            ReportCode.UserReportType, ReportCode.MessageFor(code), string.Empty, logTail, CrashReportJson.MinuteOf(now), context.Device));
+            ReportCode.UserReportType, ReportCode.MessageFor(code), string.Empty, logTail, CrashReportJson.MinuteOf(now), context.Device, context.Session, context.Facts));
     }
 }

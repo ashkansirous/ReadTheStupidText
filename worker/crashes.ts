@@ -1,5 +1,5 @@
 // Crash and error reports from the phone apps (Slice 227). Dino Reader and Read The Stupid Text post one report per crash:
-//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version", "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"?, "session"? }
+//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version"?, "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"?, "session"?, "build"?, "binaryUuid"?, "memoryHeadroom"?, "memoryApp"?, "appState"? }
 // Each valid report is kept whole in R2 (`crashes/<app>/<yyyy-mm-dd>/<random id>.json` in the downloads bucket) and counted as one point in the
 // Analytics Engine dataset `app_crashes` (binding APP_CRASHES). Nothing identifies the sender: the object is named with a random id made here, the IP is
 // never stored (the rate limiter sees it as its key and keeps no record for us), and the only things taken from the connection are the country code
@@ -55,9 +55,16 @@ const CHANNELS = ["store", "testflight"] as const;
 const TESTFLIGHT = "testflight";
 const IOS = "ios";
 const OTHER_TYPE = "other";
+const UNKNOWN_VERSION = "unknown";
 const UNKNOWN_CLIENT = "unknown";
 // The exception type or the signal text: letters, digits and the punctuation of a .NET type name or a "key=value" native description.
 const TYPE_PATTERN = /^[A-Za-z0-9_.`+<>[\],=:$ -]{1,200}$/;
+// Slice 243 item 6: the build number (CFBundleVersion "20261114.101" or an Android versionCode), the executable's Mach-O UUID (32 upper-case hex digits), the memory
+// buckets (MB; the app's CrashMemory.Buckets must match) and the foreground state. A malformed one is dropped from the report, never the report.
+const BUILD_PATTERN = /^[0-9A-Za-z.]{1,24}$/;
+const BINARY_UUID_PATTERN = /^[0-9A-F]{32}$/;
+const MEMORY_BUCKETS = ["<128", "128-256", "256-512", "512-1024", "1024-2048", "2048+"] as const;
+const APP_STATES = ["foreground", "background"] as const;
 const MINUTE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/;
 const REPLACEMENT_CHARACTER = "�";
 const ErrorCode = {
@@ -84,7 +91,8 @@ export type CrashFlagCheck = () => Promise<boolean>;
 export interface CrashReport {
   readonly app: string;
   readonly platform: string;
-  readonly version: string;
+  /** The app version; absent for a native or unclean-exit report whose launch the app could not identify (Slice 243: unknown, never the current build). */
+  readonly version?: string;
   readonly channel: string;
   readonly kind: string;
   readonly exceptionType: string;
@@ -95,6 +103,28 @@ export interface CrashReport {
   readonly device: DeviceContext;
   /** Slice 250: the usage session id of the launch the report was made in (32 hex digits), so its usage rows can be found; absent when the build sent none or a malformed one. */
   readonly session?: string;
+  /** Slice 243 item 6: the build number of the app that made the report. */
+  readonly build?: string;
+  /** Slice 243 item 6: the Mach-O UUID of the iOS executable (matches the dSYM in the release); absent on Android. */
+  readonly binaryUuid?: string;
+  /** Slice 243 item 6: a MEMORY_BUCKETS value, how much more memory the app could take before the system ended it (iOS os_proc_available_memory; Android AvailMem minus Threshold; only for a report about the running launch). */
+  readonly memoryHeadroom?: string;
+  /** Slice 243 item 6: a MEMORY_BUCKETS value, the app's own memory. */
+  readonly memoryApp?: string;
+  /** Slice 243 item 6: "foreground" or "background". */
+  readonly appState?: string;
+}
+
+/** The optional Slice 243 fields of `raw` that pass their check; the others are left out. */
+function parseFacts(raw: Record<string, unknown>): Partial<CrashReport> {
+  const { build, binaryUuid, memoryHeadroom, memoryApp, appState } = raw;
+  return {
+    ...(matches(BUILD_PATTERN, build) ? { build } : {}),
+    ...(matches(BINARY_UUID_PATTERN, binaryUuid) ? { binaryUuid } : {}),
+    ...(oneOf(MEMORY_BUCKETS, memoryHeadroom) ? { memoryHeadroom } : {}),
+    ...(oneOf(MEMORY_BUCKETS, memoryApp) ? { memoryApp } : {}),
+    ...(oneOf(APP_STATES, appState) ? { appState } : {}),
+  };
 }
 
 /** The code of a user report (`user_report` kind) from its message, or null for any other kind or a message that is not `user report <code>`. */
@@ -144,7 +174,7 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
     raw["app"] === app &&
     oneOf(APPS, app) &&
     oneOf(PLATFORMS, platform) &&
-    matches(VERSION_PATTERN, version) &&
+    (version === undefined || matches(VERSION_PATTERN, version)) &&
     oneOf(CHANNELS, channel) &&
     oneOf(KINDS, kind) &&
     (channel !== TESTFLIGHT || platform === IOS); // TestFlight is an iOS channel: nothing authenticates the sender, so an Android "testflight" report is refused
@@ -152,7 +182,7 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
   const checked = {
     app,
     platform,
-    version,
+    ...(version === undefined ? {} : { version }),
     channel,
     kind,
     exceptionType: typeOrOther(raw["exceptionType"]),
@@ -162,15 +192,23 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
     minute: minuteOrNow(raw["minute"], now),
     device: parseDevice(raw["device"]),
     ...(matches(SESSION_PATTERN, raw["session"]) ? { session: raw["session"] } : {}),
+    ...parseFacts(raw),
   };
   // A user report without a valid code cannot be found again, so it is refused rather than kept under a made-up name.
   if (kind === USER_REPORT_KIND && userReportCode(checked) === null) return null;
   return checked;
 }
 
-/** True for a well-formed report that is deliberately not kept: an unstamped (dev) version, or an android/ios report from an Intel device (a robot or emulator). */
+/**
+ * True for a well-formed report that is deliberately not kept: an android/ios report from an Intel device (a robot or emulator), or one from an unstamped (dev) version.
+ * The device rule never looks at the version, so a report whose launch is unknown (no version, Slice 243) still goes through it; only the version rule needs a version.
+ */
 export function isDroppedReport(raw: unknown, report: CrashReport): boolean {
-  return isUnstampedVersion(report.version) || isRobotCount(raw, report.device);
+  return isRobotCount(raw, report.device) || isUnstampedBuild(report);
+}
+
+function isUnstampedBuild(report: CrashReport): boolean {
+  return report.version !== undefined && isUnstampedVersion(report.version);
 }
 
 /** The R2 key of a report received on `day` (yyyy-mm-dd) with the random id `id`. */
@@ -189,7 +227,7 @@ export function toCrashDataPoint(report: CrashReport, country: string): Analytic
   return {
     indexes: [report.kind],
     blobs: [
-      report.app, report.platform, report.version, report.channel, report.kind, report.exceptionType,
+      report.app, report.platform, report.version ?? UNKNOWN_VERSION, report.channel, report.kind, report.exceptionType,
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
     ],
     doubles: [1, coreBound(device.cores), ramBound(device.ram)],

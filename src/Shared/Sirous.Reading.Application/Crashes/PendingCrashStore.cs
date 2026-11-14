@@ -2,6 +2,9 @@ using System.Text;
 
 namespace Sirous.Reading.Application.Crashes;
 
+/// <summary>The previous run's left-behind run marker: when the app last came to the front and the build that launch ran (null when the marker held none).</summary>
+public sealed record UncleanExit(DateTimeOffset FrontSince, LaunchFacts? Launch);
+
 /// <summary>
 /// The crash reports waiting on the phone to be sent, one JSON file each in one folder, and the run marker (Slice 227). Plain files so the crash handler
 /// can write one synchronously with no network and no preferences; at most <see cref="MaxPending"/> are kept, the oldest dropped first. Every method
@@ -125,13 +128,16 @@ public sealed class PendingCrashStore(string folder)
         }
     }
 
-    /// <summary>Notes that the app is in front. If the app dies before <see cref="MarkNotRunning"/>, the next launch sees the marker.</summary>
-    public void MarkRunning()
+    /// <summary>
+    /// Notes that the app is in front, with the build <paramref name="launch"/> this launch runs (null when not known). If the app dies before <see cref="MarkNotRunning"/>, the next launch
+    /// sees the marker and reports the crash with that build, not the one then installed.
+    /// </summary>
+    public void MarkRunning(LaunchFacts? launch = null)
     {
         try
         {
             Directory.CreateDirectory(folder);
-            File.WriteAllText(RunMarkerPath, string.Empty);
+            File.WriteAllText(RunMarkerPath, RunMarker.Format(launch), new UTF8Encoding(false));
         }
         catch (Exception)
         {
@@ -142,18 +148,36 @@ public sealed class PendingCrashStore(string folder)
     /// <summary>Notes that the app went to the background.</summary>
     public void MarkNotRunning() => Delete(RunMarkerPath);
 
-    /// <summary>When the app last came to the front, once, if the last run left its marker behind (it did not reach the background); null otherwise. The marker is removed.</summary>
-    public DateTimeOffset? TakeUncleanExit()
+    /// <summary>
+    /// When the app last came to the front and the build that launch ran (null when its marker held none), once, if the last run left its marker behind (it did not reach the background);
+    /// null otherwise. The marker is removed.
+    /// </summary>
+    public UncleanExit? TakeUncleanExit()
     {
         try
         {
-            DateTimeOffset? left = File.Exists(RunMarkerPath) ? new DateTimeOffset(File.GetLastWriteTimeUtc(RunMarkerPath), TimeSpan.Zero) : null;
+            UncleanExit? left = File.Exists(RunMarkerPath)
+                ? new UncleanExit(new DateTimeOffset(File.GetLastWriteTimeUtc(RunMarkerPath), TimeSpan.Zero), ReadMarkerFacts())
+                : null;
             Delete(RunMarkerPath);
             return left;
         }
         catch (Exception)
         {
             // no-fallback: an unreadable run marker reads as a clean exit (null).
+            return null;
+        }
+    }
+
+    private LaunchFacts? ReadMarkerFacts()
+    {
+        try
+        {
+            return RunMarker.Parse(File.ReadAllText(RunMarkerPath, Encoding.UTF8));
+        }
+        catch (Exception)
+        {
+            // no-fallback: an unreadable marker still shows the unclean exit, with no build facts (null), never another launch's.
             return null;
         }
     }

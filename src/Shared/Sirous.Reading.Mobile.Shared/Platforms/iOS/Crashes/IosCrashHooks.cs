@@ -1,5 +1,6 @@
 using Foundation;
 using MetricKit;
+using Sirous.Reading.Application.Crashes;
 
 namespace Sirous.Reading.Mobile.Shared.Crashes;
 
@@ -64,7 +65,8 @@ internal sealed class IosMetricSubscriber(Action<NativeCrash> deliver) : NSObjec
         {
             string type = $"{CrashType} exception={IosCrashHooks.Describe(crash.ExceptionType)} signal={IosCrashHooks.Describe(crash.Signal)}";
             string message = $"code={IosCrashHooks.Describe(crash.ExceptionCode)} {crash.TerminationReason}";
-            deliver(new NativeCrash("native", type, message, IosCrashHooks.Cap(crash.CallStackTree?.JsonRepresentation?.ToString()), TimeOf(payload), StartOf(payload)));
+            string? tree = crash.CallStackTree?.JsonRepresentation?.ToString();
+            deliver(new NativeCrash("native", type, message, IosCrashHooks.Cap(tree), TimeOf(payload), StartOf(payload), LaunchOf(crash, tree)));
         }
     }
 
@@ -73,9 +75,17 @@ internal sealed class IosMetricSubscriber(Action<NativeCrash> deliver) : NSObjec
         foreach (MXHangDiagnostic hang in payload.HangDiagnostics ?? [])
         {
             string message = $"duration {hang.HangDuration}";
-            deliver(new NativeCrash("hang", HangType, message, IosCrashHooks.Cap(hang.CallStackTree?.JsonRepresentation?.ToString()), TimeOf(payload)));
+            string? tree = hang.CallStackTree?.JsonRepresentation?.ToString();
+            deliver(new NativeCrash("hang", HangType, message, IosCrashHooks.Cap(tree), TimeOf(payload), null, LaunchOf(hang, tree)));
         }
     }
+
+    // Slice 243 finding 3: the build the diagnostic is about comes from the diagnostic itself (MXDiagnostic.applicationVersion, MXMetaData.applicationBuildVersion, and the UUID of this
+    // app's binary in the call-stack tree), never from the build installed now; a field the payload lacks is null.
+    private static LaunchFacts LaunchOf(MXDiagnostic diagnostic, string? callStackTree) =>
+        new(NullIfEmpty(diagnostic.ApplicationVersion), NullIfEmpty(diagnostic.MetaData?.ApplicationBuildVersion), MetricKitBinaries.UuidOf(callStackTree, IosRuntimeFacts.ExecutableName()));
+
+    private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
 
     private static DateTimeOffset TimeOf(MXDiagnosticPayload payload) =>
         payload.TimeStampEnd is { } end ? new DateTimeOffset((DateTime)end, TimeSpan.Zero) : DateTimeOffset.UtcNow;

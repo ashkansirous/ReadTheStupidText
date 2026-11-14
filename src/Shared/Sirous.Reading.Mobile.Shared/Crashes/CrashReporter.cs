@@ -27,6 +27,12 @@ public static partial class CrashReporter
     private static readonly object StartGate = new();
     private static PendingCrashStore? store;
     private static ReportedCrashLedger? ledger;
+
+    // Slice 243 findings 1-5: the build facts of THIS launch, held in memory (version and build number at start-up, the UUID a moment later, only with reporting on). A report about
+    // this launch reads them here; a report about an earlier launch takes the facts that launch left in its own run marker or in the system's own diagnostic, never these.
+    private static volatile LaunchFacts? thisLaunch;
+    private static volatile bool running;
+    private static bool uuidQueued;
     private static CrashContext? context;
     private static string? userSwitchKey;
     private static Exception? lastReported;
@@ -70,6 +76,7 @@ public static partial class CrashReporter
             store = new PendingCrashStore(Path.Combine(root, PendingFolder));
             ledger = new ReportedCrashLedger(Path.Combine(root, LedgerName));
             context = ReadContext(app);
+            thisLaunch = context is null ? null : new LaunchFacts(context.Version, context.Facts?.Build, null);
             StartReporting();
         }
         catch (Exception ex)
@@ -96,7 +103,54 @@ public static partial class CrashReporter
             DiscardAll(); // the switch is off: nothing from before is kept either
         }
 
+        ReadThisLaunchUuid();
         RecordWhatTheLastRunLeft();
+    }
+
+    // The executable's UUID is read once, only while reporting is on (at start-up, or when it is switched on during the launch, see RefreshAllowed), on a background thread. When it is
+    // known it joins this launch's facts and, if the app is in front, the run marker is rewritten with it, so a crash of this launch is later reported with the build that ran.
+    private static void ReadThisLaunchUuid()
+    {
+        LaunchFacts? known;
+        lock (StartGate)
+        {
+            known = thisLaunch;
+            if (known is null || !reportingAllowed || uuidQueued)
+            {
+                return;
+            }
+
+            uuidQueued = true;
+        }
+
+        _ = Task.Run(() => AddUuidToThisLaunch(known));
+    }
+
+    private static void AddUuidToThisLaunch(LaunchFacts known)
+    {
+        try
+        {
+            LaunchFacts withUuid = known with { BinaryUuid = CrashPlatform.BinaryUuid() };
+            lock (StartGate)
+            {
+                thisLaunch = withUuid;
+                WriteRunMarker();
+            }
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: crash reporting must never report into itself; this launch's reports then carry no UUID
+            Debug.WriteLine($"Crash reporting could not read this launch's UUID: {ex.Message}");
+        }
+    }
+
+    // The run marker carries this launch's build facts (Slice 243 finding 5); written only while the app is in front and reporting is on. Called under StartGate.
+    private static void WriteRunMarker()
+    {
+        if (running && reportingAllowed)
+        {
+            store?.MarkRunning(thisLaunch);
+        }
     }
 
     /// <summary>Posts the pending reports a little after start-up, once the remote config says so (Slice 227). Never throws.</summary>
@@ -151,13 +205,17 @@ public static partial class CrashReporter
         }
     }
 
-    private static void SetRunning(bool running)
+    private static void SetRunning(bool isRunning)
     {
         try
         {
-            if (running && RefreshAllowed())
+            running = isRunning;
+            if (isRunning && RefreshAllowed())
             {
-                store?.MarkRunning();
+                lock (StartGate)
+                {
+                    WriteRunMarker();
+                }
             }
             else
             {
@@ -175,7 +233,8 @@ public static partial class CrashReporter
     {
         try
         {
-            return new CrashContext(app, UsageEnvironment.Platform, UsageEnvironment.InstalledVersion, CrashGate.Channel, DeviceProbe.Current);
+            var facts = new CrashFacts(AppInfo.Current.BuildString); // the UUID is read later, only with reporting on (ReadThisLaunchUuid)
+            return new CrashContext(app, UsageEnvironment.Platform, UsageEnvironment.InstalledVersion, CrashGate.Channel, DeviceProbe.Current, null, facts);
         }
         catch (Exception ex)
         {
@@ -246,8 +305,8 @@ public static partial class CrashReporter
             return;
         }
 
-        DateTimeOffset? frontSince = store.TakeUncleanExit();
-        IReadOnlyList<NativeCrash> history = ReadHistoryAndAdvance();
+        UncleanExit? unclean = store.TakeUncleanExit(); // the previous launch's own marker, with the build that launch ran
+        IReadOnlyList<NativeCrash> history = WithMarkerBuild(ReadHistoryAndAdvance(), unclean?.Launch);
         if (!reportingAllowed)
         {
             CrashPlatform.StartNativeDelivery(OnNativeDelivered); // consumes MetricKit's payloads; OnNativeDelivered drops them while reporting is off
@@ -255,25 +314,38 @@ public static partial class CrashReporter
         }
 
         IReadOnlyList<CrashReport> pending = store.ReadAll().Select(item => item.Report).ToList();
-        bool needsTail = pending.Count > 0 || frontSince is not null || history.Count > 0;
+        bool needsTail = pending.Count > 0 || unclean is not null || history.Count > 0;
 
         // The file extents are taken here, before this run logs anything; the end is read on a background thread so the UI thread never waits on the disk.
         previousRunTail = needsTail ? CrashLog.Current?.TailInBackground() ?? Task.FromResult(string.Empty) : Task.FromResult(string.Empty);
         Task<string> tailTask = previousRunTail;
-        recorded = Task.Run(() => FinishRecordingAsync(tailTask, history, pending, frontSince));
+        recorded = Task.Run(() => FinishRecordingAsync(tailTask, history, pending, unclean));
+    }
+
+    // Android: the marker belongs to the launch that just ended, whose exit is the newest system record; an older record is about an earlier launch and keeps no build facts (null).
+    // iOS has no history here: MetricKit's diagnostics carry their own build facts.
+    private static IReadOnlyList<NativeCrash> WithMarkerBuild(IReadOnlyList<NativeCrash> history, LaunchFacts? launch)
+    {
+        if (launch is null || history.Count == 0)
+        {
+            return history;
+        }
+
+        NativeCrash newest = history[^1];
+        return history.Take(history.Count - 1).Append(newest with { Launch = newest.Launch ?? launch }).ToList();
     }
 
     // The part of the start-up check that needs the previous run's log tail.
-    private static async Task FinishRecordingAsync(Task<string> tailTask, IReadOnlyList<NativeCrash> history, IReadOnlyList<CrashReport> pending, DateTimeOffset? frontSince)
+    private static async Task FinishRecordingAsync(Task<string> tailTask, IReadOnlyList<NativeCrash> history, IReadOnlyList<CrashReport> pending, UncleanExit? unclean)
     {
         try
         {
             string tail = await tailTask.ConfigureAwait(false);
             SaveHistory(history, pending, tail);
-            bool explained = history.Count > 0 || (frontSince is { } since && CrashDedupe.ManagedReportSince(pending, since));
-            if (frontSince is not null && !explained && context is not null)
+            bool explained = history.Count > 0 || (unclean is { } exit && CrashDedupe.ManagedReportSince(pending, exit.FrontSince));
+            if (unclean is not null && !explained && context is not null)
             {
-                Save(CrashReportBuilder.FromDescription(ContextNow(context), CrashKind.UncleanExit, UncleanType, "The run marker was left behind", string.Empty, tail, DateTimeOffset.UtcNow));
+                Save(CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), unclean.Launch), CrashKind.UncleanExit, UncleanType, "The run marker was left behind", string.Empty, tail, DateTimeOffset.UtcNow));
             }
 
             RememberReportedCrashes();
@@ -346,17 +418,19 @@ public static partial class CrashReporter
     }
 
     private static CrashReport? FromNative(NativeCrash crash, string tail) =>
-        context is null ? null : CrashReportBuilder.FromDescription(ContextNow(context), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
+        context is null ? null : CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), crash.Launch), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
 
     /// <summary>Slice 250: Dino sets this to read its usage session id; Read The Stupid Text leaves it null and its reports carry none. Read at the moment a report about this launch is made.</summary>
     public static Func<string?>? SessionProvider { get; set; }
 
     // A report about the launch that is running (a managed crash, a user report) carries its session id; one about an earlier launch (native, unclean exit) must not, it would name the wrong session.
+    // Slice 243 finding 1: reads only what is already in memory (this launch's facts); no wait, no file, so it is safe inside the last-chance hook.
     private static CrashContext InThisLaunch(CrashContext facts)
     {
         try
         {
-            return facts with { Session = SessionProvider?.Invoke() };
+            CrashFacts? build = thisLaunch is { } launch ? new CrashFacts(launch.Build, launch.BinaryUuid) : facts.Facts;
+            return facts with { Session = SessionProvider?.Invoke(), Facts = RuntimeFacts(build) };
         }
         catch (Exception)
         {
@@ -364,6 +438,10 @@ public static partial class CrashReporter
             return facts;
         }
     }
+
+    // Slice 243 item 6: memory and foreground state at the moment of a report about this launch (an earlier launch's state would mislead). Cheap reads, no lock, no preference.
+    private static CrashFacts RuntimeFacts(CrashFacts? build) =>
+        CrashFacts.Snapshot(build, CrashPlatform.MemoryHeadroomBytes(), Environment.WorkingSet, AppTrace.InForeground);
 
     // The build facts a report is made with. A Debug build is a dev install, which sends nothing; with the scripted check's stub set it reports as a store
     // install so the whole path (handler, file, sender, Worker checks) runs. Release builds use the facts as read.
@@ -442,6 +520,14 @@ public static partial class CrashReporter
         {
             DiscardAll();
         }
+        else if (!was && allowed)
+        {
+            ReadThisLaunchUuid(); // switched on during the launch: the running binary is still the one whose UUID is read
+            lock (StartGate)
+            {
+                WriteRunMarker();
+            }
+        }
 
         return allowed;
     }
@@ -452,9 +538,13 @@ public static partial class CrashReporter
         try
         {
             store?.Clear();
-            store?.MarkNotRunning();
             CrashLog.Current?.DeleteFiles();
             ledger?.Clear();
+            lock (StartGate)
+            {
+                store?.MarkNotRunning(); // the run marker (with its build facts); under the gate so the UUID task cannot write it back after an opt-out
+                uuidQueued = false; // a later switch-on reads the UUID again
+            }
         }
         catch (Exception ex)
         {

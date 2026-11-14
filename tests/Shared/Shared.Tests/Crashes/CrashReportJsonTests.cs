@@ -23,6 +23,17 @@ public class CrashReportJsonTests
     }
 
     [Fact]
+    public void A_report_with_no_known_version_round_trips_without_one()
+    {
+        var report = new CrashReport("dino", "ios", null, "testflight", "native", "SIGSEGV", "boom", "", "", "2026-10-31T14:05Z", Phone);
+
+        string json = CrashReportJson.ToJson(report);
+
+        Assert.DoesNotContain("\"version\"", json);
+        Assert.Equal(report, CrashReportJson.Parse(json));
+    }
+
+    [Fact]
     public void Text_fields_are_cut_to_their_byte_caps_and_the_log_keeps_its_newest_end()
     {
         var report = new CrashReport("dino", "android", "1.83.0", "store", "managed",

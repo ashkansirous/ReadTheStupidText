@@ -68,3 +68,16 @@ priority", "add slices for adding anything missing from the crash report".
   (`crash-test`, Slice 227) of that build to a C# method.
 - `pull-crashes.mjs` lists and downloads the 2026-11-01 reports with no token in `D:\secrets`.
 - Android emulator and iPhone: the rolling log of a test crash shows the page, Back and lifecycle lines.
+
+## From review
+
+- Skipped #9 (`reviews/s243-medium.md`): "Facts flattened into five parallel nullable wire fields kept in step in Wire, Serialize, FactsOf and the Worker's parseFacts. Scenario: a sixth fact added in one place is silently dropped; nest CrashFacts on the wire." - a wire-shape refactor with no failure shown today.
+- Skipped #9 (`reviews/s243-high.md`): "`inspectElf` indexes `sections[nameTable]` unchecked. ELF with more than 0xFF00 sections (e_shnum 0, e_shstrndx = SHN_XINDEX) silently gets a hash name; a corrupt header with `nameTable >= count` throws a TypeError surfacing as `::error::Cannot read properties of undefined`." - speculative: the input is only the two known package .so files; no failure path shown.
+- Third round (`reviews/s243-check.md` #1-#3, #5): which build a report belongs to is no longer guessed from a launch history (`LaunchHistory`, `launches.txt` and its time rule are gone). A managed crash and a user report read the running launch's version, build and UUID from memory (no wait, no file read in the crash hook); an unclean exit, and an Android native crash, take them from the crashed launch's own run marker (`running.marker`: version, build, UUID, written when the app comes to the front with reporting on, rewritten when the UUID is known); an iOS MetricKit diagnostic takes version (`MXDiagnostic.applicationVersion`), build (`MXMetaData.applicationBuildVersion`) and the app binary's UUID from its own call-stack tree. A missing field is null, never another launch's value. `DiscardAll` deletes the marker.
+- Third round #6 (`reviews/s243-check.md`): the Worker's Intel-device filter never looks at the version, so a report with no version still goes through it; a no-version report from a real device is kept and counted as `unknown`.
+- Third round #7 (`reviews/s243-check.md`): `collect-symbols.mjs` refuses an empty, missing or flag-like value instead of shifting the following flags.
+- Skipped #8 (`reviews/s243-check.md`): "AppTrace.cs:77, low: foreground flag only set by Activated/Resumed/Stopped; null on background cold start, Deactivated ignored." - a background cold start reports no foreground state; unknown is correct.
+
+## Waiting on the user
+
+- Parity difference for the user to decide (`reviews/s243-check.md` #4): Android has no per-process memory headroom API; `memoryHeadroom` on Android is system free RAM minus the low-memory threshold, on iOS os_proc_available_memory.

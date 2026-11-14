@@ -14,6 +14,11 @@ public static class AppTrace
     private static ISystemLog? log;
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<NavigationPage, object> Watched = new();
 
+    private static volatile int foreground; // 0 unknown, 1 foreground, 2 background
+
+    /// <summary>Slice 243 item 6: true while a window is in front, false once it stopped, null before the first activation. Read by the crash report (no lock, no preference).</summary>
+    internal static bool? InForeground => foreground == 0 ? null : foreground == 1;
+
     /// <summary>Writes one trace line.</summary>
     public static void Line(string message)
     {
@@ -60,8 +65,17 @@ public static class AppTrace
     {
         try
         {
-            window.Activated += (_, _) => Line(TraceLines.AppForeground);
-            window.Stopped += (_, _) => Line(TraceLines.AppBackground);
+            window.Activated += (_, _) =>
+            {
+                foreground = 1;
+                Line(TraceLines.AppForeground);
+            };
+            window.Resumed += (_, _) => foreground = 1; // coming back after Stopped may not raise Activated; the state still follows the window
+            window.Stopped += (_, _) =>
+            {
+                foreground = 2;
+                Line(TraceLines.AppBackground);
+            };
             WatchPops(window.Page);
             window.PropertyChanged += (_, e) =>
             {
