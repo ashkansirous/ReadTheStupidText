@@ -1,7 +1,7 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
-*In progress: workflow built 2026-11-14 (wave 62), PR merged for the workflow, simulator runs next.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*In progress: workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack), an audio-backed run and the iPhone 8 run are open.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
@@ -73,7 +73,7 @@ Premise check on origin/main corrected the slice:
 
 ## Work
 
-- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14, its runs and the iPhone 8 open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
+- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); an audio-backed simulator run and the iPhone 8 run are open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
   the user's iPhone 8 when it is free: read, press Back mid-sentence, read again, change page while reading, background
   the app while reading. Same flows on the Android emulator (parity). Record what crashes.
 - [x] 2. **Layout crash:** find every iOS place that builds an attributes dictionary or attributed string (our code and
@@ -87,7 +87,7 @@ Premise check on origin/main corrected the slice:
 - [x] 5. **`0xdead10cc`** (investigated, not fixed, cause unproven): find files held open across suspension (rolling log writer, crash run marker, settings,
   any SQLite); close or flush them on background (`UIApplication.DidEnterBackground`) or wrap the write in a background
   task. Same review on Android for its equivalents.
-- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed.
+- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until an audio-backed run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243.)
 
 ## Verification
 
@@ -116,6 +116,7 @@ Premise check on origin/main corrected the slice:
 - **Whole book queued on an iPhone 8 (the two 1.88.0 `unclean_exit`s):** *likely* contributor (memory/main-thread pressure with ~110 sentences queued in 10 ms, from our R2 reports); **generation in flight bounded; generated audio still held** (the window bounds parallel synthesis, not finished clips queued ahead of playback, so this is not a whole-book fix): at most 3 (under 3 GB) or 8 generations run at once. No log shows the kill reason (jetsam vs the layout abort), so the link to the abort is not proven.
 - **`0xdead10cc`:** *unexplained*: see item 5.
 - **Back does not stop the story:** *not reproduced by reading the code* (item 4). Android emulator 2026-11-02: no failure to stop (below); the iOS device flow is still owed.
+- **Simulator run 2 (2026-11-14), summary for item 6:** the NSDictionary nil layout crash is guarded, cause unproven, and not reproduced on the simulator (no audio ran, and a simulator is not memory-limited). The whole-book queue is bounded since PR #722; its link to the kill is unproven. `0xdead10cc` is unexplained and not reproduced (the run had no suspension kill). Item 6 stays open until an audio-backed run or a symbolicated crash settles them (Slice 243 item 8; plan-not-needed: 243).
 
 ## Changed while building
 
@@ -133,7 +134,8 @@ Premise check on origin/main corrected the slice:
 - Android emulator run of the new flow: PASS 2026-11-14 (emulator-5554, 120.9 s, markers met, no FATAL/ANR). Logs: `D:/ReadTheStupidText-worktrees/reviews/wave62-device/` (outside the repo).
 - iOS simulator runs: after merge, because a dispatch-only workflow cannot run before it is on main. Their results and item 6 go in a follow-up PR. Items 1 and 6 stay open.
 
-- Item 1, run 1 (2026-11-14 21:07Z, run 43639865693): no crash, no .ips, no Jetsam; the flow stopped on the "Dino needs an update" page (Debug build ApplicationDisplayVersion 1.0 is below the live iOS minVersion, App.xaml.cs:330), so the ids' visibility could not be judged because the update page was the only screen. Fix: the sim workflow builds with `-p:ApplicationDisplayVersion=99.0.0 -p:ApplicationVersion=99` and prints the booted device (`simctl list devices booted`). Run 2 pending.
+- Item 1, run 1 (2026-11-14 21:07Z, run 43639865693): no crash, no .ips, no Jetsam; the flow stopped on the "Dino needs an update" page (the hierarchy showed "Dino needs an update" and "Open the App Store"), so the ids' visibility could not be judged because the update page was the only screen. The cause is likely, not proven: the Debug build's ApplicationDisplayVersion 1.0 is below the live iOS minVersion (the update-page check is at `App.xaml.cs:334`), but no log printed the live minVersion or the installed version. Fix: the sim workflow builds with `-p:ApplicationDisplayVersion=99.0.0 -p:ApplicationVersion=99` and prints the booted device (`simctl list devices booted`). Run 2 confirmed the version stamp cleared the update page.
+- Item 1, run 2 (2026-11-14 21:29-21:35Z, run 43642530390, branch `fix/244-sim-version`, iOS 26.5 simulator "rtst-sim"; the device type was not printed): flow exit 0, "Repeat 3 times... COMPLETED" (read, Back mid-sentence, re-read, change page, background and return); the `dino-test://` hooks were delivered 4 times via `openLink`; the "Open in" prompt never appeared (the conditional step was skipped); 0 .ips, 0 Jetsam. But the app log shows `fallback premade_audio:no_pack ... count=78`: the offline test store gave the book no audio pack, so playback was not exercised. So run 2 proves the harness and the Back / re-read / background navigation on iOS without a crash; it does not reproduce or clear the audio-path crashes. Item 1 stays open: a simulator run where the book has its audio pack (a test hook that installs a book with its pack offline, e.g. `import-test-book` per `src/Dino/DinoReader.App/Testing/CLAUDE.md`, or the online test store), then 3 rounds; and the iPhone 8 run (the user's device).
 
 ## Checks run
 
@@ -165,6 +167,12 @@ Files are outside the repo (`D:/ReadTheStupidText-worktrees/reviews/`); all read
 - Skipped #2 (`reviews/s244-check3.md`): "only the boot step has timeout-minutes" - low; the 90-minute job limit stays for the other steps.
 - Skipped #3 (`reviews/s244-check3.md`): "exits silently when no iOS runtime exists" - low.
 - Review files read: `s244-high-2.md` 10/10, `s244-medium-2.md` 10/10, `s244-check.md` 6/6, `s244-check2.md` 4/4, `s244-check3.md` 3/3.
+- Review of PR #1138 (sim version stamp): `reviews/s244b-high.md` (5 low) and `reviews/s244b-medium.md` (3 low); the code-change findings (all low) are listed below, and its slice-text points (high #2 line number, #3 likely, #4 pending wording) applied in this write-up.
+- Skipped #1 (`reviews/s244b-high.md`): "Hardcoded 99.0.0 / 99 only clears the gate while the live iOS minVersion stays below 99." - low; fails only if minVersion passes 99.
+- Skipped #5 (`reviews/s244b-high.md`): "`xcrun simctl list devices booted` lists every booted simulator, not just `$SIM_UDID`" - low; the device list repeats the boot log.
+- Skipped #1 (`reviews/s244b-medium.md`): "hardcoded 99.0.0/99 only clears the gate while live minVersion stays below 99" - low; same as high #1.
+- Skipped #2 (`reviews/s244b-medium.md`): "new device-listing step is diagnostic only; does not prove the 99.0.0 version took effect" - low; run 2 showed the update page gone.
+- Review files read: `s244b-high.md` 5/5, `s244b-medium.md` 3/3.
 - Deviation: the medium fixer reworded four older 2026-11-02 lines from the word for skipping to "Left as is" so that the review-skip check passes. They were not new decisions.
 
 ## For CLAUDE.md (lifted 2026-11-02)
@@ -178,7 +186,7 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 
 - The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt, the `.ips` file naming, the Jetsam `largestProcess` field.
-- iOS simulator flow results (the workflow is built; no run yet).
+- An audio-backed iOS simulator run: the book installed with its audio pack (a test hook such as `import-test-book`, or the online test store), then 3 rounds of read, Back, re-read, background. Run 2 had `premade_audio:no_pack`, so playback was not exercised.
 - No new NSDictionary or `0xdead10cc` crash for a week after release (`tools/crashes`).
 - The window size on a real phone.
 - The 3-window on a sub-3 GB device.
