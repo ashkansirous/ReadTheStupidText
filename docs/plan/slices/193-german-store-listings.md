@@ -1,7 +1,7 @@
 ### Slice 193 — German store listings for both apps
 **Product:** Shared
 
-*Built 2026-11-14 (PR #1128, not merged): Play RTST de-DE pushed and read back, App Store de-DE (both apps) applied 2026-11-01, Partner Center German built into the RTST Microsoft Store pipeline (reaches the Store with the next RTST release). Left: the native German read and the post-release Partner Center read-back.* *Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
+*Built 2026-11-14, merged as PR #1128 (46641cc8): Play RTST de-DE pushed and read back, App Store de-DE (both apps) applied 2026-11-01, Partner Center German built into the RTST Microsoft Store pipeline (reaches the Store with the next RTST release). Left: the native German read and the post-release Partner Center read-back.* *Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
 
 **Touches:** `docs/store-listings/de.md` (new, Read The Stupid Text), `docs/store-listings/dino/de.md` (new, Dino), `STORE.md` (where listings are kept), `docs/plan/slices/193-german-store-listings.md`, `.github/scripts/store-listings.mjs` and `.github/scripts/store-listings.test.mjs` (RTST German in the Microsoft Store build).
 

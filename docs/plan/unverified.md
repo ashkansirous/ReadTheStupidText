@@ -504,6 +504,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 377: Feedback loop 2026-11-14-0726 leftovers ([slice](slices/377-feedback-loop-2026-11-14-0726-leftovers.md))
+- **Device:** item 2: a live read-back of one non-English Microsoft Store listing after certification (the store name in the text; the `pt-br` listing created beside any `pt-pt`; the `submission update` payload shape).
+- **Device:** item 16: first install on an unmetered link, turn the link metered mid-download: the standard pack arrives and the log line shows; a brief offline gap must not stop the high-res fetch.
+- **Device:** item 16: the iOS head compile (no Mac here).
+
+### Slice 193: German store listings ([slice](slices/193-german-store-listings.md))
+- **You:** native German read of both files (machine-written).
+- **Device:** after the next RTST release's certification, the Partner Center submission shows the German listing with the `docs/store-listings/de.md` text (it replaces the existing `de` listing).
+
 ### Slice 243: Crash reports: everything missing to explain a crash ([slice](slices/243-crash-report-gaps.md))
 - **Device:** a Release iOS build in CI attaches the dSYM zip to its GitHub Release; `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2, merged #1122 on unit tests and review only).
 - **Device:** the rolling log of a test crash on the Android emulator and an iPhone shows the page, Back and lifecycle lines, and the report carries the new build, UUID, memory and foreground fields (items 5-7).
