@@ -201,7 +201,8 @@ function Get-FlowName([string]$Flow) {
 function Find-FlowFiles([string]$FlowDir, [string]$Flow) {
     $name = Get-FlowName $Flow
     $own = @(Get-ChildItem $FlowDir -Filter '*.yaml' -File -ErrorAction SilentlyContinue)
-    if (-not $name) { return @($own | Sort-Object Name) }
+    # Slice 291: a store-shot-* flow (the iOS ones sit beside the other flows; the Android ones in needs-file/) runs by name only, never in a whole-folder run.
+    if (-not $name) { return @($own | Where-Object { $_.BaseName -notlike 'store-shot-*' } | Sort-Object Name) }
     $hit = @($own | Where-Object { $_.BaseName -eq $name })
     if ($hit.Count -eq 0) { $hit = @(Get-ChildItem (Join-Path $FlowDir 'needs-file') -Filter '*.yaml' -File -ErrorAction SilentlyContinue | Where-Object { $_.BaseName -eq $name }) }
     return $hit

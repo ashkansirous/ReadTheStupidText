@@ -65,6 +65,8 @@ on:
       - '!.github/scripts/check-ios-bundle.sh'
       - '!.github/scripts/ios-sim-*.sh'
       - '!.maestro/dino/ios-*.yaml'
+      - '!.github/workflows/store-screenshots.yml'
+      - '!.maestro/*/store-shot-ios-*.yaml'
       - '!.github/scripts/publish-store-books.mjs'
       - '!.github/scripts/r2-wrangler.mjs'
   workflow_dispatch:

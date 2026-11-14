@@ -1,0 +1,61 @@
+# Slice 291 item 5 (iOS part): the App Store screenshots of Dino Reader, taken by .github/scripts/ios-sim-store-shots.sh (store-screenshots.yml) on an iPhone 6.9", an iPhone 6.5" and an iPad 13" simulator.
+# The same frames as the Play shots (.maestro/dino/needs-file/store-shot-phone.yaml): shelf, a book open on page 2, and the Books tab, held upright, English, on the starter books (no live store, nothing downloaded or read aloud).
+# The script swaps the appId line for the app's bundle id and renames store-dino-ios-<n>-<screen> to store-dino-<device>-<n>-<screen>. Run by name only: store-screenshots.ps1 and a normal run-flows.ps1 run skip store-shot-* flows.
+# Mid-flow hooks go to the running app as openLink on the dino-test:// URL (iOS reads launch arguments only once, see ios-read-back-reread-background.yaml).
+appId: uk.sirous.dinoreader.dbg
+name: Store screenshots, Dino Reader, iOS
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: a fresh simulator install, the flow uses the starter books only and needs no pack or own book (the shots show a fresh shelf).
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- takeScreenshot: store-dino-ios-1-shelf
+- openLink: "dino-test://open-book?id=three-little-pigs&page=2"
+# iOS asks "Open in <app>?" for a custom-scheme link: Open is tapped only while that prompt's own text is on screen (never an app control labelled Open).
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-ios-2-reading
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
+- openLink: "dino-test://enter-grown-up?tab=books"
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+- assertVisible:
+    id: GalleryDone
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-ios-3-books
