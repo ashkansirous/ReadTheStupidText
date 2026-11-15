@@ -6,28 +6,8 @@ namespace DinoReader.Core;
 public sealed record StoreKitTransaction(string ProductId, DateTimeOffset? PurchasedAt, DateTimeOffset? ExpiresAt, bool Trial, string Jws, bool Revoked = false);
 
 /// <summary>The wrapper's answer to "what does this Apple ID own": <paramref name="Current"/> are the entitlements, <paramref name="Latest"/> the newest transaction of each subscription plan (expired ones too).</summary>
-public sealed record StoreKitEntitlements(IReadOnlyList<StoreKitTransaction> Current, IReadOnlyList<StoreKitTransaction> Latest, bool Incomplete = false)
+public sealed record StoreKitEntitlements(IReadOnlyList<StoreKitTransaction> Current, IReadOnlyList<StoreKitTransaction> Latest, bool Incomplete = false) // Incomplete: some entry did not verify and was left out; it only triggers one fallback event, the verified ones are the whole truth
 {
-    /// <summary>
-    /// For a read the wrapper marked <see cref="Incomplete"/> (an entitlement it could not verify): this read's transactions plus those of the earlier read for products this read does not show, so a book already known
-    /// is never dropped because one other entitlement did not verify. A complete read, or no earlier read, is returned as it is.
-    /// </summary>
-    public StoreKitEntitlements KeepingKnown(StoreKitEntitlements? earlier)
-    {
-        if (!Incomplete || earlier is null)
-        {
-            return this;
-        }
-
-        HashSet<string> seenCurrent = [.. Current.Select(t => t.ProductId)];
-        HashSet<string> seenLatest = [.. Latest.Select(t => t.ProductId)];
-        return this with
-        {
-            Current = [.. Current, .. earlier.Current.Where(t => !seenCurrent.Contains(t.ProductId))],
-            Latest = [.. Latest, .. earlier.Latest.Where(t => !seenLatest.Contains(t.ProductId))],
-        };
-    }
-
     public IReadOnlySet<string> Owned => Current.Select(t => t.ProductId).ToHashSet();
 
     /// <summary>The proof per owned product: the JWS of its newest transaction.</summary>

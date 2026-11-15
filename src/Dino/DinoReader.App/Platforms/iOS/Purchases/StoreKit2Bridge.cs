@@ -125,10 +125,10 @@ internal sealed unsafe class StoreKit2Bridge
             bridge.StartUpdates();
             return bridge;
         }
-        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
+        catch (Exception ex)
         {
-            // no-fallback: see the comment above; the trace line is the report
-            PurchaseTrace.Line($"storekit2 library missing: {ex.GetType().Name}");
+            // no-fallback: see the comment above; any failure here (a missing symbol or library, a native fault) means no bridge, never a crash at launch; the trace line is the report
+            PurchaseTrace.Line($"storekit2 unavailable: {ex.GetType().Name}");
             return null;
         }
     }

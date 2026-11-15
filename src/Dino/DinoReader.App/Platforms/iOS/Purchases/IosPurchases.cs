@@ -12,8 +12,6 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
 {
     private static readonly TimeSpan LateAnswerTimeout = TimeSpan.FromMinutes(15);
     private readonly CancellationTokenSource _closing = new();
-    private readonly object _knownLock = new();
-    private StoreKitEntitlements? _lastRead; // the last read that reached Apple's list: what an incomplete read keeps (never dropping a known book)
 
     private const string RedeemAddress = "https://apps.apple.com/redeem";
     private const string ManageAddress = "https://apps.apple.com/account/subscriptions";
@@ -52,7 +50,7 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
         }
 
         (Dictionary<string, string> prices, bool pricesFailed) = restricted ? (new Dictionary<string, string>(), false) : await QueryPricesAsync(bridge, productIds, cancel); // a failed or timed-out request is a failed query; whether the store was reached is BookPurchases' call (the device's internet)
-        StoreKitEntitlements? owned = KeepKnown(await ReadEntitlementsAsync(bridge, cancel));
+        StoreKitEntitlements? owned = await ReadEntitlementsAsync(bridge, cancel); // an unverified entry is left out (Apple's rule): the verified ones are the whole truth of this read
         return Snapshot(prices, owned) with { PricesFailed = pricesFailed, Restricted = restricted };
     }
 
@@ -114,38 +112,26 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
         return await Launcher.Default.OpenAsync(new Uri(RedeemAddress)); // the sheet could not be shown (no framework, iOS before 16, no scene)
     }
 
-    // An incomplete read (one entitlement did not verify) keeps the books of the last read for the products it cannot see; the result becomes the last read either way.
-    private StoreKitEntitlements? KeepKnown(StoreKitEntitlements? read)
-    {
-        if (read is null)
-        {
-            return null;
-        }
-
-        lock (_knownLock)
-        {
-            StoreKitEntitlements merged = read.KeepingKnown(_lastRead);
-            _lastRead = merged;
-            return merged;
-        }
-    }
-
+    // A purchase is never lost: whatever the late answer is (or when none comes in time), Apple's list is read again.
     private async Task DeliverLateAnswerAsync(Task<string> request)
     {
         try
         {
             string answer = await request.WaitAsync(LateAnswerTimeout, _closing.Token);
-            if (StoreKit2Answers.Buy(answer)?.Outcome == StoreKit2Answers.Bought)
-            {
-                PurchaseTrace.Line("buy completed after the page closed");
-                PurchaseUpdates.Raise();
-            }
+            PurchaseTrace.Line($"buy answered after the page closed outcome={StoreKit2Answers.Buy(answer)?.Outcome ?? "unreadable"}");
+            PurchaseUpdates.Raise();
         }
-        catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
+        catch (TimeoutException)
         {
-            // no-fallback: giving up a wait for a purchase that never answered is not a store fault; the next refresh reads Apple's list
-            StoreKit2Bridge.Abandon(request); // no answer came in time (or the app is closing): the waiting entry goes, so nothing is left waiting
-            PurchaseTrace.Line("late buy answer given up");
+            // no-fallback: giving up a wait for a purchase that never answered is not a store fault; the re-read below shows what Apple holds
+            StoreKit2Bridge.Abandon(request); // the waiting entry goes, so nothing is left waiting
+            PurchaseTrace.Line("late buy answer given up, reading Apple's list");
+            PurchaseUpdates.Raise();
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: the app is closing; the next launch reads Apple's list
+            StoreKit2Bridge.Abandon(request);
         }
         catch (Exception ex)
         {

@@ -7,6 +7,8 @@
 
 **Park note.** Item 1's check (`library-docs`: context7 and the dotnet/macios wiki `BINDINGS` and `docs/native-library-interop.md`) found no StoreKit 2 binding in .NET for iOS: StoreKit 2 is Swift-only. Two routes: (a) our own Swift wrapper built into an XCFramework (needs a macOS/Xcode build step in CI), or (b) Plugin.InAppBilling 10.x (StoreKit 2 by default through its own Swift shim; its README says only Android and Windows are actively maintained). StoreKit 2 also hands out JWS signed transactions instead of the app receipt that item 2 says is "sent to the server", so the Worker's purchase check changes too. StoreKit 1 still works at runtime on iOS 18 (deprecation warning only, per dotnet/macios `src/storekit.cs`). It waits for the user's choice between a new third-party dependency and our own Swift code, for a real-money path no wave can test on an iPhone.
 
+**Decision (two strikes on unverified entitlements, 2026-11-15):** unverified transactions are ignored, as Apple's docs say. An unverified StoreKit 2 transaction grants nothing and is left out; the verified entitlements are the whole truth of a read, no last-read merge and no keep-the-last-snapshot rule. A read with an unverified entry reports one store fallback event and still returns a Reachable listing of the verified ones. A book whose transaction cannot be verified shows Buy, and the store answers already-owned / Restore.
+
 **Touches:** `src/Dino/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs` (and any new file beside it), `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt` only if a catch changes, `docs/plan/slices/390-dino-ios-purchases-storekit-2.md`
 
 ## Why
@@ -68,5 +70,14 @@ Third pass (`reviews/s390-check.md`):
 - #7 (late-answer task never ends): applied; it times out after 15 minutes or on dispose and drops its waiting entry.
 - Skipped #5 (`reviews/s390-check.md`): "every JWS verification failure (forgery included) is now CANNOT_VERIFY, so forged proofs are never negatively cached; repeated full chain verification costs CPU only" - CPU only, no wrong answer.
 - Skipped #8 (`reviews/s390-check.md`): "arm64 device and simulator slices only; an x64 simulator build fails to link (workflows pin arm64; same limit as before)" - arm64-only as before.
+
+Fourth pass (`reviews/s390-check2.md`):
+
+- #1 (`KeepKnown` merges the last read without checking the Apple ID): fixed by removal; `KeepKnown`, `_lastRead` and `KeepingKnown` are gone (the Decision above).
+- #2 (`_lastRead` memory-only, cold start returns a snapshot missing the unverified book): fixed by the same removal; the verified entries are the whole read.
+- #3 (late answer gives up after 15 minutes, no re-read): applied; a late answer, and the timeout, both raise `PurchaseUpdates` so the store is read again (`IosPurchases.DeliverLateAnswerAsync`).
+- #4 (`TryCreate` catches only two exception types): applied; it catches every exception, so `Load()` on the launch path never throws.
+- #5 (`TakeMissed` only marks stale): applied; a missed update marks stale and starts the re-read (`BookPurchases.ListenForStoreUpdates`); the launch listener's updates reach it through `PurchaseUpdates.Raise`.
+- Skipped #6 (`reviews/s390-check2.md`): "verified Sandbox JWS without switch returns CANNOT_VERIFY, never cached; repeated full chain verification (CPU only, no entitlement granted)" - CPU only, no wrong answer.
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.

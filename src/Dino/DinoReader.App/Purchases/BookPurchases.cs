@@ -133,6 +133,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             if (PurchaseUpdates.TakeMissed())
             {
                 MarkStale(); // an update came before anyone listened: the read that follows must not be skipped as fresh
+                OnStoreChanged(); // and the store is read again now, so a missed purchase shows without waiting for another listing
             }
         }
     }
@@ -363,14 +364,14 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
-    // Slice 390: a read in which the store could not verify one entitlement (the others are kept, plus the books known before) is one store fallback per change, not one per read.
+    // Slice 390: a read in which the store could not verify one entitlement (it is left out, the verified ones are the whole read) is one store fallback per change, not one per read.
     private void ReportIncompleteOnce(PurchaseSnapshot read)
     {
         bool before = _reportedIncomplete;
         _reportedIncomplete = read.Incomplete;
         if (read.Incomplete && !before)
         {
-            PurchaseTrace.Line("store read incomplete: an entitlement could not be verified, the books known before are kept");
+            PurchaseTrace.Line("store read incomplete: an entitlement could not be verified and was left out");
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
         }
     }
