@@ -86,9 +86,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Windows Hyper-V VM subscription flow.
 - **You:** real store sandbox (Play licence tester, Apple sandbox) after the store setup.
 - **Device:** Worker route `GET /api/stories/subscription` live, after the batched release deploy.
-- **Device:** `store-products.mjs` request shapes (UNVERIFIED, never run with `--apply`).
+- **Device:** `store-products.mjs` request shapes: the Apple and Play runs went through live on 2026-11-15; the Microsoft shapes are still unverified.
 - **Device:** offline 3-day lock on a real device.
 - **You:** restore on iOS.
+- **Device:** the app's subscription card shows each plan's name, length and price before buying (Apple requires it in the app; not checked on a screen).
+- **Device:** the plans showing in the iOS app (sandbox/TestFlight) now that the products exist.
 
 ### Slice 383: Dino: a book keeps reading when the phone is locked ([slice](slices/383-dino-reading-keeps-going-when-locked.md))
 - **Device:** A long locked read (1 minute or more, three-little-pigs with its real Farsi pack on the S21 dev install; `KEYCODE_WAKEUP` before `open-book`): a silent beat's delay is not stalled by Doze.
@@ -696,7 +698,10 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 - **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
 - **You:** A native read of the 14 machine-translated RTST listings (ar, da, de, es, fi, fr, ja, nb, nl, pt, ru, sv, zh, fa), already live on Play and the App Store (fa on Play only).
-- **Device:** The iOS store shots, first run on main (43650776897): a look at each Dino iPhone 6.9"/6.5" shot; the Dino iPad 13" flow (`Tap on id: ReadingBack... FAILED`) and the RTST flows on all three devices (`PackStatusLabel is not visible... FAILED`) failed.
+- **Device:** The RTST iOS store shots: the RTST flows on all three devices failed in the 2026-11-14 run (`PackStatusLabel is not visible... FAILED`) and have not been retaken. (Dino's iPhone and iPad sets are done, run 43748250465, 2026-11-15.)
+- **Device:** Whether App Store localizations without screenshots show the en-US set (Apple's docs do not say); read it on the App Store page once Dino is live.
+- **Device:** The resume path of `store-screenshots.yml` (no job failed in run 43761667169), its `resume_run` input, and the RTST single-flow unit.
+- **You:** A native read of the 15 machine-translated App Store subscription texts (Dino; also Slice 384).
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
 - **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).

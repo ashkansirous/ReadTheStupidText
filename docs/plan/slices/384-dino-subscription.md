@@ -49,13 +49,18 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   change plan happen there, never in the app). Apple and Google both require an auto-renewing subscription's
   price, length, trial and renewal terms to be shown before buying, with links to the terms and privacy pages.
 
-## Waiting on the user (store setup; do these when the code is merged)
+## Store setup (was "Waiting on the user"; nothing waits on the user now, 2026-11-15)
 
 - Create the subscription and its two plans in Google Play Console, App Store Connect and Microsoft Partner Center,
   with the prices and trial above. `.github/scripts/store-products.mjs` should do as much as the store APIs allow;
   only what no API can set goes to the user, one step at a time with direct links. Plan: `store-products.mjs --apply`
-  for Play and App Store Connect, Partner Center by hand.
-- Approve the listing text drafted in `docs/store-listings/dino/` before the `store-listing` agent pushes it.
+  for Play and App Store Connect, Partner Center by hand. **Done 2026-11-15:** Play and App Store Connect (see below).
+  **Open, Claude's work:** Microsoft Partner Center subscriptions are not created.
+- Approve the listing text: void. The user ruled on 2026-11-15 that store text is written, checked and pushed without a
+  review round (Slice 291, *User answers (2026-11-15, RTST App Store and review rounds)*).
+- Submitting the two App Store subscriptions with an app version: **done 2026-11-15 by Claude** through the API, on the
+  user's request "dino reader seems to be ready for ios release. do it for me": they are WAITING_FOR_REVIEW in review
+  submission d259ffc8-0e09-43dd-ad88-67770f155ea1 with Dino 1.131.1 (Slice 291, *Dino App Store submission 2026-11-15*).
 
 ## Store listing switch (Slice 291 item 10, 2026-11-14)
 
@@ -63,6 +68,8 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   is written in advance in `docs/store-listings/dino/play-subscription.md` and is pushed **only when this slice is
   live on Play** (same for the App Store and Microsoft versions, written from it then, with the EULA and privacy
   links Apple requires). The switch is the last work item here; record its date in Slice 291 item 10.
+  **App Store switch done 2026-11-15** (the subscription text on all 16 localizations, sent with the review
+  submission; recorded in Slice 291 item 10). Play and Microsoft: not recorded as switched.
 
 ## Design note (coordinator, wave 2026-11-15)
 
@@ -213,7 +220,11 @@ Cause, read live: App Store Connect had no subscription group for app 6825053435
 
 From review (`reviews/s384a-check.md`), follow-ups, not changed: #1 if GBR is ever missing from the held availability, the base price and trial are not posted and no note says so (availability is posted for every territory, so GBR is held); #2 a territory Apple refuses permanently fails on every rerun and is listed each time. Low: an existing price's amount is not compared; an entry with no territory only adds a note; notes are lost when no session is passed.
 
-**Live 2026-11-15:** `store-products.mjs --apply --store apple` (after #1198) created group "Dino Book Reader subscription" with `uk.sirous.dinoreader.sub.monthly` (1.99 GBP) and `.sub.yearly` (14.99 GBP), prices and 7-day free trials in all 175 territories, 0 failed. Claude then uploaded one App Store review screenshot to each through the API (the Dino phone shelf shot padded to 1242x2688, as for the books in Slice 346); both read back `READY_TO_SUBMIT`. The script's "by hand: review screenshot (no API)" line is wrong: `subscriptionAppStoreReviewScreenshots` and the IAP equivalent exist; fold the upload into the script. Still the user's: submitting the subscriptions for review with an app version (https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions). Play and Microsoft subscriptions are not created yet.
+**Live 2026-11-15:** `store-products.mjs --apply --store apple` (after #1198) created group "Dino Book Reader subscription" with `uk.sirous.dinoreader.sub.monthly` (1.99 GBP) and `.sub.yearly` (14.99 GBP), prices and 7-day free trials in all 175 territories, 0 failed. Claude then uploaded one App Store review screenshot to each through the API (the Dino phone shelf shot padded to 1242x2688, as for the books in Slice 346); both read back `READY_TO_SUBMIT`. The script's "by hand: review screenshot (no API)" line is wrong: `subscriptionAppStoreReviewScreenshots` and the IAP equivalent exist; fold the upload into the script. Submitting the subscriptions for review with an app version was first left to the user; **done 2026-11-15 by Claude through the API** (both WAITING_FOR_REVIEW in review submission d259ffc8-0e09-43dd-ad88-67770f155ea1 with Dino 1.131.1; both subscriptions' en-US description changed to "Opens every book while you subscribe."; see Slice 291, *Dino App Store submission 2026-11-15*). Page: https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions . Play was created later the same day (below); Microsoft subscriptions are not created yet.
+
+Follow-ups from the submission (Claude's work, not the user's):
+- `store-products.mjs` sends a subscription description longer than Apple's limit, and Apple stored it cut off ("Opens every book in Dino Book Reader while"). The script should fail on over-long text and use "Opens every book while you subscribe." Its "review screenshot by hand" line stays wrong (noted above).
+- Not yet verified: whether the app's subscription card shows each plan's name, length and price before buying (Apple requires it in the app).
 
 Not yet verified (moved below the Apple section):
 - Offline 3-day lock on a real device.
@@ -248,5 +259,6 @@ From review (`reviews/s384p-check.md`): #1 (fresh create read Play's 404 body as
 - Google Play: subscription `uk.sirous.dinoreader.sub` now has 17 listings (en-GB plus the 16 other languages of the Play store listing), pushed with `subscriptions.patch` (`updateMask=listings`, regionsVersion 2026/01) and read back identical; both base plans still ACTIVE, nothing else touched. Text: `docs/store-listings/dino/subscription-listings.md` (machine drafts from the app's `Sub_*` strings; native read not done).
 - App Store Connect: not added. Apple answers 409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE` ("The field (NAME) can not be modified" for the group localization, "(LOCALE_CODE)" for the subscription one) because both subscriptions are Waiting for Review. Only en-US exists. Add the 15 locales from the same file once the subscriptions are editable.
 
+- App Store localizations: the App Store text of the two subscriptions' en-US description was changed on 2026-11-15 (above); the other localizations below still wait for Apple.
 - **Next (Claude, after Apple approves the subscriptions):** add the 14 other App Store localizations from `docs/store-listings/dino/subscription-listings.md` to group 22582310 and both subscriptions (Apple refused new localizations while they were Waiting for Review, 409 UNMODIFIABLE, 2026-11-15).
 - Not yet verified: a native read of the machine-written subscription texts (Play live in 16 languages; App Store pending).
