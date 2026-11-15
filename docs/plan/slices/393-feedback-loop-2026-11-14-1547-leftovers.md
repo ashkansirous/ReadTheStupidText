@@ -41,6 +41,7 @@ Product and harness:
 - [ ] 22. `agents/update-docs.md` and the ship-branch brief give the full path `~/.claude/skills/run-wave/count-unverified.mjs` (wave 3 entry 1569: an agent reported it missing and left PR #1139's test-plan line unticked).
 - [ ] 23. One item hardens the shared iOS simulator harness (`.github/scripts/ios-sim-*.sh`: a driver-ready retry, a longer first wait) instead of three slices recording the symptoms (244: StoryTile 60 s timeout and XCUITestServerError Unreachable; 387: `IOSDriverTimeoutException`; 291: the Dino iPad flow). dC wave 4 1201, 1217, wave 5 1324.
 - [ ] 24. Compare the Google Play en-US download note's "crash reports" sentence (`docs/store-listings/`) with the code; Slice 291's code check says there is no separate crash reporter on Windows. Re-push the Play text only if it is wrong. dC wave 3 328.
+- [ ] 25. ClaudeSkills `skills/feedback-loop/illustrator-brief-guard.mjs`, wired 2026-11-15 (ClaudeSkills #224), findings left open by `D:/ClaudeSkills-worktrees/reviews/wireig-high.md`: #1 the global guard names `dino-story-illustrator`, which exists only in this repo, so a Gemini brief in another repo is denied with a hint to an agent it does not have (scope it to repos that have the agent); #2 the bare `\bgemini\b` match denies briefs that only mention Gemini; #4 `fork` and `claude` agents pass unchecked. Item 20 happened again on 2026-11-15: the paste was opened in the primary `D:\ClaudeSkills`, not a worktree.
 
 Item 9 names the unit: 50,000 bytes.
 
