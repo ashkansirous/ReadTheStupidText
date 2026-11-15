@@ -1,7 +1,7 @@
 # Slice 392 — Dino: the `grown-ups-button` flow fails on main (GalleryDone still visible on Settings)
 **Product:** Dino
 
-*Planned 2026-11-15, not built.*
+*In progress (wave 2026-11-15), draft PR.*
 
 **Touches:** `.maestro/dino/grown-ups-button.yaml`, `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/GrownUpHeader.cs`, this slice file.
 
