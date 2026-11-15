@@ -34,7 +34,7 @@
 #### Not yet verified
 
 - The signed Release build with the static XCFramework: first proven by release-dino after the merge.
-- Sandbox buy: done by the user on their iPhone (user, 2026-11-15: "I tried the sandbox buy!"). Never ask for it again; it does not hold the App Store submission. Not stated by the user, so still unverified and not a to-do for them: a subscription plan, and Restore (also on a second install).
+- Sandbox buy: done by the user on their iPhone (user, 2026-11-15: "I tried the sandbox buy!"; later the same day: "I just bought a book with ios. it worked."). Never ask for it again; it does not hold the App Store submission. Not stated by the user, so still unverified and not a to-do for them: a subscription plan, and Restore (also on a second install).
   - What the app's own logs can show (analytics-query, 2026-11-15): the app sends no buy, restore or subscription event at all (`worker/events.ts` has none), so a purchase leaves no row and the logs can neither confirm nor deny it. Seen in `dino_usage_beta` (TestFlight), iOS, version 1.131.0: one session 15:00-15:52 UTC on 2026-11-15 in the store area, two `store_download` rows at 15:52:55, then one `store:store_unreachable` fallback at 15:52:59; no `download_refused` or `purchase_not_valid`. Finding for a later slice: add buy, restore and subscription outcome events so "did the user already buy" is answered from the logs.
 - The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
 
