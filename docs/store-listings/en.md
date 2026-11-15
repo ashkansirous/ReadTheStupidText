@@ -12,25 +12,30 @@
 
 ## Short description (Google Play <= 80 chars; Microsoft Store: use as the first line of the description)
 
-Read any text aloud with natural voices that work offline, at 0.5x to 2x speed.
+Natural voices read any text aloud, offline, in 15 languages, at 0.5x to 2x.
 
 ## Long description (Microsoft Store <= 10,000 chars; Google Play <= 4,000)
 
 Read The Stupid Text reads any text out loud, so you can listen instead of staring at a screen.
 
+The voices sound natural and run on your device, so your text never leaves it.
+
+It is for anyone who would rather listen than read: a long article, a PDF, study notes, a page of a book, or a text in a language you read slowly.
+
 On Windows it lives in the tray. Select text in almost any app, or copy it, and it is read aloud right away. Press Ctrl+Win+R to read whatever you have copied. (Terminals do not report selections, so copy the text there.)
 
 On Android, paste or type text, open a .txt, .pdf or .docx file, or scan a page with the camera, then tap play.
 
-- Natural-sounding voices that run on your device
-- Reading speed from 0.5x to 2x
+- Natural-sounding voices in 15 languages (English, Persian, French, Spanish, Portuguese, Chinese, Arabic, Russian, Japanese, Danish, Finnish, Swedish, Norwegian, Dutch and German) that run on your device
+- Choose a voice and a reading speed from 0.5x to 2x
+- Optional translation before reading, done on your device (machine translation, quality varies; not available for every language)
 - Works offline once your voice pack is downloaded (a one-time download on first launch); your text, files and scans never leave your device
 - No account and no ads
 - Optional anonymous usage counts, with no text, names or identifiers; switch them off any time in Settings
 
 ## Google Play only: download note (append to the full description)
 
-The first time you launch the app on Android, it downloads a voice pack of about 145 MB, so it needs an internet connection once (Wi-Fi recommended). Until the download finishes, the app reads with your phone's built-in voice. Scanning also downloads a small text-recognition pack for your language. Only these packs are downloaded: your text, files and scans stay on your device, and once the voice is installed, reading does not use the network. The only other network use is the optional anonymous usage counts and crash reports, which you can switch off in Settings.
+The first time you launch the app on Android, it downloads a voice pack of about 145 MB, so it needs an internet connection once (Wi-Fi recommended). Until the download finishes, the app reads with your phone's built-in voice. Scanning also downloads a small text-recognition pack for your language. The first time you translate to or from a language, a translation model of about 30 MB is also downloaded once from Google's servers; none of your text is sent. Only these packs are downloaded: your text, files and scans stay on your device, and once the voice is installed, reading does not use the network. The only other network use is the optional anonymous usage counts and crash reports, which you can switch off in Settings.
 
 ## Microsoft Store only: download note (append to the full description)
 

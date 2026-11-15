@@ -179,7 +179,7 @@ test('the committed RTST English listing parses from its sectioned layout within
   const l = parseRtst(readFileSync(join(listingsFolder(ROOT, APPS.rtst), 'en.md'), 'utf8'));
   assert.deepEqual(validateListing(l), []);
   assert.equal(l.keywords.length, 7);
-  assert.equal(l.shortDescription, 'Read any text aloud with natural voices that work offline, at 0.5x to 2x speed.');
+  assert.equal(l.shortDescription, 'Natural voices read any text aloud, offline, in 15 languages, at 0.5x to 2x.');
   assert.ok(l.description.startsWith(`${l.shortDescription}\n\n`));
   assert.ok(l.description.includes('usage counts'), 'carries the corrected usage-counts bullet');
   assert.ok(!l.description.includes('No account and no analytics'));
