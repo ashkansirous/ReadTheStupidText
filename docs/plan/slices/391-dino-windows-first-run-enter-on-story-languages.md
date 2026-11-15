@@ -1,7 +1,7 @@
 # Slice 391 — Dino Windows: Enter on the first-run story-languages step opens no book picker
 **Product:** Dino
 
-*Built 2026-11-15, not merged. Cause shown by the wave 7 VM trace; the final build passed `dino-onboarding-keys` on the VM; `dino-reorder` not reached (see Not yet verified).*
+*Built 2026-11-15, merged as PR #1170 (892d5995). Cause shown by the wave 7 VM trace; the final build passed `dino-onboarding-keys` on the VM; `dino-reorder` not reached (see Not yet verified).*
 
 **Touches:** `src/Dino/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`, `src/Dino/DinoReader.App/StoryLanguagesPage.cs`, `src/Dino/DinoReader.Core/DinoKeyMap.cs`, `tools/desktop-vm/checks/dino-onboarding-keys.ps1`, `docs/plan/slices/391-dino-windows-first-run-enter-on-story-languages.md`, `tools/desktop-vm/checks/dino-reorder.ps1` (only if it must change)
 
@@ -47,7 +47,7 @@ Not "Enter has no target": the story-languages page is a target (`OnboardingStep
 - Skipped #5 (`reviews/pr-1170-medium.md`): "Root cause unconfirmed" - the VM trace on main shows the focus loss.
 - Skipped #6 (`reviews/pr-1170-medium.md`): "Pass the toggled code to Rebuild explicitly" - low, no failure path shown.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 - `StoryLanguagePicker.Rebuild` (`StoryLanguagesPage.cs`) replaces the rows and must restore keyboard focus to the row that had it; without it a tick drops focus on Windows and the next Space or Enter has no target. Don't re-add a key swallow in `DinoKeyboard.cs` for this. (Slice 391: docs/plan/slices/391-dino-windows-first-run-enter-on-story-languages.md)
 
