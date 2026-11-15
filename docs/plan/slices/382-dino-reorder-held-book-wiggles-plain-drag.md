@@ -1,9 +1,9 @@
 ### Slice 382 — Dino reorder: the held book wiggles, a drag needs no hold in edit mode, covers are sharp on first open
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/ShelfReorderView.cs`, `src/Dino/DinoReader.App/ShelfReorderTiles.cs`, `src/Dino/DinoReader.App/StoryCover.xaml`, `src/Dino/DinoReader.App/StoryCover.xaml.cs`, `src/Dino/DinoReader.Core/ShelfDragSession.cs`, `src/Dino/DinoReader.Core/ReorderPan.cs` (new, only if the drag start rule is pulled out as pure code), `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml`, `tools/desktop-vm/checks/dino-reorder.ps1`, `src/Dino/DinoReader.App/CLAUDE.md`
+**Touches:** `src/Dino/DinoReader.App/ShelfReorderView.cs`, `src/Dino/DinoReader.App/ShelfReorderTiles.cs`, `src/Dino/DinoReader.App/StoryCover.xaml`, `src/Dino/DinoReader.App/StoryCover.xaml.cs`, `src/Dino/DinoReader.Core/ShelfDragSession.cs`, `src/Dino/DinoReader.Core/ReorderPan.cs` (new, only if the drag start rule is pulled out as pure code), `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml`, `tools/desktop-vm/checks/dino-reorder.ps1`, `src/Dino/DinoReader.App/CLAUDE.md`, `src/Dino/DinoReader.App/StoryTile.cs` (sets `CoverImagePath`/`HasImage`), `docs/plan/slices/382-dino-reorder-held-book-wiggles-plain-drag.md`
 
 **Why.** The user reported this on 2026-11-14, Dino 1.129.0 (Pixel 10 Pro), with a screenshot of the Reorder screen showing blurred covers:
 - "the one that I kept my finger on, does not wiggle"
