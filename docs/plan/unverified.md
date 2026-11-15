@@ -77,6 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 387: Dino: the shelf title cut by the Grown-ups button ([slice](slices/387-dino-shelf-title-cut-by-grownups-button.md))
+- **Device:** Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
+- **Device:** The iPhone shots (run 43657945195, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException`, twice); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
+
 ### Slice 380: Dino Android: product details through the listener only ([slice](slices/380-dino-android-listener-only-details.md))
 - **Device:** S21 with a Play internal-track build shows a price for every product and one `product details:` line per refresh (needs the next batched release).
 

@@ -32,7 +32,7 @@ The first iOS store-screenshot run on main (Slice 291, run 43650776897) shows th
 - Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
 - The iPhone shots (run 43657945195 on the branch, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException: iOS driver not ready in time`, twice; a runner start-up failure, it passed in wave 4's run 43650776897); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
 
-## For CLAUDE.md
+## For CLAUDE.md (lifted 2026-11-15)
 
 - Shelf header (`src/Dino/DinoReader.App/ShelfHeader.cs`): size the title room from the Grown-ups pill's laid-out width (`ShelfTitleRules.PillWidth`), never from one early `Measure`, which returns about 0 before the pill has a native view; `Fit` must re-run on the pill's `HandlerChanged`/`SizeChanged`. (Slice 387: docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md)
 
