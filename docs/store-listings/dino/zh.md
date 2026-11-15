@@ -1,14 +1,47 @@
 # Store listing: Chinese Simplified (`zh`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Simplified Chinese. Locales: Play `zh-CN`; App Store `zh-Hans`; Microsoft Store `zh-cn` (Partner Center code to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Simplified Chinese. Locales: Play `zh-CN`; App Store `zh-Hans`; Microsoft Store `zh-cn` (Partner Center code to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): 绘本故事朗读，每个角色都有自己的声音。
+Play short description (<= 80): 每个角色都有自己的声音，奶奶也能录下她的声音来当大灰狼
 Play search phrases used in the text: 睡前故事, 儿童绘本, 童话故事, 朗读
 App Store subtitle (<= 30): 每个角色都有专属声音
 App Store keywords (<= 100 bytes): 睡前故事,绘本,童话,儿童,故事书,亲子阅读,朗读,幼儿,录音,早教
 App Store promotional text (<= 170): 为 3 至 9 岁孩子朗读的故事，每个角色都有自己的声音，还能录上您自己的声音。无广告。四个故事免费，其余每个 0.99 美元。支持 15 种语言。
 Microsoft search terms (7): 睡前故事; 儿童绘本; 故事朗读; 童话; 亲子阅读; 儿童读物; 角色配音
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+Dino Book Reader 里每个角色都有自己的声音。旁白讲故事，大灰狼和小猪各有各的声音，爸爸妈妈或爷爷奶奶还能为任何角色录上自己的声音：奶奶可以来当大灰狼。
+
+每个故事都有 15 种语言，适合在学校语言之外保留家庭语言的家庭：波斯语、阿拉伯语、瑞典语、挪威语、丹麦语、芬兰语等。大人选好两三种故事语言，孩子读的时候可以随时切换，听同一个故事，同时学会两种语言里的词。
+
+没有广告，不需要账号。下载好的故事可离线阅读，您的录音只保存在您的设备上。
+
+四个插图故事免费：狮子和老鼠、姜饼人、三只小猪、X 标出宝藏。其他故事买一次就永远属于您，每个 0.99 美元（Google Play 会以您的货币显示价格）。大人在家长锁后面购买，之后可随时恢复以前的购买。
+
+适合 3 至 9 岁的孩子
+孩子听故事、看图画、跟着读：适合睡前故事，也适合正在学习两种语言词汇的双语儿童。大人负责设置、挑选书籍，并在家长锁后面录音。
+
+经典童话，温柔重述
+精心挑选的绘本，每本都为年幼的孩子重新讲述，每一页都有插图。
+
+更多精彩
+- 每句话在朗读时会亮起。
+- 只看图、只看文字，或图文并茂。
+- 朗读速度 0.8 倍到 1.2 倍，动物音效可开可关。
+- 适合睡前的夜间主题。
+- 任何角色、任何一页、任何故事语言都能录音；录音可备份和恢复。
+
+语言
+英语、阿拉伯语、中文、丹麦语、荷兰语、波斯语、芬兰语、法语、德语、日语、挪威语、葡萄牙语、俄语、西班牙语和瑞典语：应用、故事和配音都支持。
+
+安全与隐私
+- 没有广告，无需创建账号。我们不保存任何关于您或您购买的信息；商店的凭证验证后即丢弃。
+- 购买、设置、录音和备份都在家长锁后面。
+- 可选的匿名使用统计，不含姓名或标识符，可在设置中关闭。
 
 ## Description
 

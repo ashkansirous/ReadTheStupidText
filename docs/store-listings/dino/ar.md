@@ -1,14 +1,47 @@
 # Store listing: Arabic (`ar`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Modern Standard Arabic, right to left. Locales: Play `ar`; App Store `ar-SA`; Microsoft Store `ar`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Modern Standard Arabic, right to left. Locales: Play `ar`; App Store `ar-SA`; Microsoft Store `ar`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): قصص مقروءة بصوت عالٍ، بصوت مختلف لكل شخصية.
+Play short description (<= 80): لكل شخصية صوتها، وتستطيع الجدة تسجيل صوتها لتكون الذئب
 Play search phrases used in the text: قصص قبل النوم, قصص أطفال, كتب مصورة, قراءة بصوت عالٍ
 App Store subtitle (<= 30): صوت لكل شخصية
 App Store keywords (<= 100 bytes): قصص,أطفال,قبل النوم,كتب مصورة,حكايات,قراءة,تسجيل,صغار
 App Store promotional text (<= 170): قصص مقروءة للأطفال من 3 إلى 9 سنوات، بصوت لكل شخصية ومكان لصوتك أنت. بلا إعلانات. أربع قصص مجانية والباقي 0.99 دولار لكل قصة. 15 لغة.
 Microsoft search terms (7): قصص أطفال; قراءة بصوت عالٍ; قصص قبل النوم; كتب مصورة; حكايات; كتب للأطفال; أصوات الشخصيات
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+في Dino Book Reader لكل شخصية صوتها الخاص. الراوي يحكي القصة، والذئب والخنازير الصغيرة يبدو كل منهم مختلفًا، ويستطيع الأب أو الأم أو الجد أو الجدة تسجيل صوته لأي شخصية: الجدة تستطيع أن تكون الذئب.
+
+كل قصة متوفرة بـ 15 لغة، للعائلات التي تحافظ على لغة البيت إلى جانب لغة المدرسة: الفارسية والعربية والسويدية والنرويجية والدنماركية والفنلندية وغيرها. يختار شخص بالغ لغتين أو ثلاث للقصص، ويستطيع الطفل التبديل بينها أثناء القراءة، فيسمع القصة نفسها ويتعلم الكلمات باللغتين.
+
+بلا إعلانات. بلا حساب. القصة التي نزّلتها تعمل دون اتصال، وتسجيلاتك تبقى على جهازك.
+
+أربع قصص مصورة مجانية: الأسد والفأر، رجل خبز الزنجبيل، الخنازير الثلاثة الصغيرة، والعلامة X تدل على الكنز. أي قصة أخرى تشتريها مرة واحدة وتبقى لك، بسعر 0.99 دولار للقصة (يعرض Google Play السعر بعملتك). يشتري شخص بالغ خلف بوابة الكبار، ويمكنه استعادة المشتريات السابقة في أي وقت.
+
+للأطفال من 3 إلى 9 سنوات
+يستمع الأطفال وينظرون إلى الصور ويتابعون: مناسب لقصص ما قبل النوم، وللأطفال ثنائيي اللغة الذين يتعلمون الكلمات بلغتين. يجهّز شخص بالغ التطبيق ويختار الكتب ويسجّل الأصوات خلف بوابة الكبار.
+
+حكايات كلاسيكية بسرد لطيف
+كتب مصورة مختارة بعناية، كل منها أُعيد سرده للأطفال الصغار، مع صورة في كل صفحة.
+
+والمزيد
+- تضيء كل جملة أثناء قراءتها.
+- صورة فقط، أو نص فقط، أو صورة ونص.
+- سرعة القراءة من 0.8x إلى 1.2x، وأصوات حيوانات يمكن تشغيلها أو إيقافها.
+- مظهر ليلي لوقت النوم.
+- سجّل أي شخصية، في أي صفحة، بأي لغة للقصة؛ ويمكن نسخ التسجيلات احتياطيًا واستعادتها.
+
+اللغات
+الإنجليزية والعربية والصينية والدنماركية والهولندية والفارسية والفنلندية والفرنسية والألمانية واليابانية والنرويجية والبرتغالية والروسية والإسبانية والسويدية: التطبيق والقصص والأصوات.
+
+آمن وخاص
+- بلا إعلانات وبلا حساب لإنشائه. لا نحتفظ بشيء عنك أو عن عملية شرائك؛ يُتحقق من إثبات المتجر ثم يُنسى.
+- الشراء والإعدادات والتسجيل والنسخ الاحتياطي كلها خلف بوابة الكبار.
+- إحصاءات استخدام مجهولة اختيارية بلا أسماء أو معرّفات، ويمكن إيقافها من الإعدادات.
 
 ## Description
 
