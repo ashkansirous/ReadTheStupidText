@@ -19,16 +19,25 @@ OUT="${4:?out folder}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/null}"
 FAILED=0
+PROBLEMS=0
 # Maestro waits this long (milliseconds, MAESTRO_DRIVER_STARTUP_TIMEOUT) for its iOS driver to answer; the 6.9" simulator missed the default twice (run 43733772461).
 DRIVER_STARTUP_TIMEOUT_MS=180000
 # One try plus one retry per device.
 FLOW_ATTEMPTS=2
+# A flow attempt that runs longer than this is killed and counts as failed (run 43738623335: maestro hung 82 minutes after "XCTPerformOnMainRunLoop work timed out after 60.0s" and the 90-minute step limit ended the run).
+# Unmeasured for a clean five-shot flow; the first two shots took about 4 minutes on the 6.5" simulator.
+FLOW_TIME_LIMIT_SECONDS=900
+# The script stops starting attempts after this (the workflow step limit is 100 minutes), so the hand-over step always has the shots that came out.
+SCRIPT_BUDGET_SECONDS=5700
+WATCHDOG_POLL_SECONDS=5
+HIERARCHY_TIME_LIMIT_SECONDS=60
 
 # One line per device: label | ';'-separated device-type name patterns, in order | sizes App Store Connect accepts for that slot (WxH, portrait).
+# The 6.9" runs last: it failed in three runs in three ways (driver start timeout twice, a hung relaunch once) and the other two sets must not wait behind it.
 device_specs() {
-  echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
   echo 'iphone-6.5|iPhone 11 Pro Max;iPhone Xs Max;iPhone 14 Plus;iPhone 13 Pro Max;iPhone 12 Pro Max|1242x2688 1284x2778'
   echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2064x2752 2048x2732'
+  echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
 }
 
 # The shot names the flow takes, one per line.
@@ -45,6 +54,7 @@ problem() {
   echo "::error::$1"
   echo "- FAILED: $1" >> "$SUMMARY"
   FAILED=1
+  PROBLEMS=$((PROBLEMS + 1))
 }
 
 # Installs the app on the simulator and prints its bundle id.
@@ -100,16 +110,74 @@ collect_shots() {
   done < <(flow_shots)
 }
 
-# Runs the flow on a booted simulator; prints Maestro's hierarchy when it fails.
+# Kills a process and all its descendants (pgrep and pkill ship with macOS; GNU timeout does not).
+kill_tree() {
+  local pid="$1" child
+  for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+    kill_tree "$child"
+  done
+  kill -9 "$pid" 2>/dev/null || true
+}
+
+# Kills what is left of Maestro's iOS driver for one simulator: the xcodebuild/XCTest runner names the simulator's id on its command line.
+kill_driver() {
+  local udid="$1"
+  pkill -9 -f "xcodebuild.*$udid" 2>/dev/null || true
+  pkill -9 -f "maestro.*$udid" 2>/dev/null || true
+}
+
+# Runs a command with a time limit (pure bash watchdog). Returns the command's status, or 124 after killing it and its children when the limit passed.
+run_limited() {
+  local limit="$1" udid="$2" pid started rc=0
+  shift 2
+  "$@" &
+  pid=$!
+  started=$SECONDS
+  while kill -0 "$pid" 2>/dev/null; do
+    if [ $((SECONDS - started)) -ge "$limit" ]; then
+      echo "::warning::killed after $limit s: $*"
+      kill_tree "$pid"
+      kill_driver "$udid"
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep "$WATCHDOG_POLL_SECONDS"
+  done
+  wait "$pid" || rc=$?
+  return "$rc"
+}
+
+# Maestro run with the driver start timeout set; a function so run_limited can start it in the background.
+maestro_test() {
+  local udid="$1" flow_run="$2" test_out="$3"
+  MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run"
+}
+
+# Runs the flow on a booted simulator under the time limit; prints Maestro's hierarchy when it fails (not after a kill: the driver is gone).
+# Returns 0 on success, 124 when it was killed at the limit, else Maestro's status.
 run_flow() {
   local udid="$1" flow_run="$2" test_out="$3" rc=0
-  MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run" || rc=$?
-  if [ "$rc" != "0" ]; then
+  run_limited "$FLOW_TIME_LIMIT_SECONDS" "$udid" maestro_test "$udid" "$flow_run" "$test_out" || rc=$?
+  if [ "$rc" = "124" ]; then
+    echo "::warning::the flow ran longer than $FLOW_TIME_LIMIT_SECONDS s on $udid and was killed"
+  elif [ "$rc" != "0" ]; then
     echo "::group::maestro hierarchy"
-    maestro --device "$udid" hierarchy || true
+    run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" maestro --device "$udid" hierarchy || true
     echo "::endgroup::"
   fi
   return "$rc"
+}
+
+# Before a retry: the app is stopped on that simulator and no driver of the attempt before is left; after a kill the simulator is also shut down and booted again (a hung main run loop does not recover by itself).
+reset_simulator() {
+  local udid="$1" bundle_id="$2" after_kill="$3"
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  kill_driver "$udid"
+  if [ "$after_kill" = "yes" ]; then
+    xcrun simctl shutdown "$udid" 2>/dev/null || true
+    xcrun simctl boot "$udid" 2>/dev/null || true
+    xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || true
+  fi
 }
 
 # Empties the attempt's output folder and removes the flow's shots from the working directory (Maestro may write them there), so a retry never mixes in a shot of the attempt before.
@@ -125,15 +193,23 @@ reset_attempt() {
 # Runs the flow, and once more on a fresh output folder when the first attempt failed (run 43733772461: "iOS driver not ready in time" on the iPhone 6.9", twice, before any step ran).
 # Only the last attempt's shots are collected. Returns the last attempt's status.
 run_flow_with_retry() {
-  local udid="$1" flow_run="$2" test_out="$3" attempt=1
+  local udid="$1" flow_run="$2" test_out="$3" bundle_id="$4" attempt=1 rc killed=no
   while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
+    if [ $((SECONDS + FLOW_TIME_LIMIT_SECONDS)) -gt "$SCRIPT_BUDGET_SECONDS" ]; then
+      note "- no time left for attempt $attempt (script budget $SCRIPT_BUDGET_SECONDS s)"
+      return 1
+    fi
     reset_attempt "$test_out"
-    if run_flow "$udid" "$flow_run" "$test_out"; then
+    rc=0
+    run_flow "$udid" "$flow_run" "$test_out" || rc=$?
+    if [ "$rc" = "0" ]; then
       return 0
     fi
+    [ "$rc" = "124" ] && killed=yes || killed=no
     if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
-      echo "::warning::attempt $attempt of the store-shot flow failed on $udid; retrying once on a fresh output folder (its shots are discarded)"
-      note "- RETRY: attempt $attempt failed, the flow runs once more (shots of the failed attempt discarded)"
+      echo "::warning::attempt $attempt of the store-shot flow failed on $udid (status $rc); retrying once on a fresh output folder (its shots are discarded)"
+      note "- RETRY: attempt $attempt failed (status $rc, killed at the time limit: $killed), the flow runs once more (shots of the failed attempt discarded)"
+      reset_simulator "$udid" "$bundle_id" "$killed"
     fi
     attempt=$((attempt + 1))
   done
@@ -157,21 +233,35 @@ shoot_device() {
     test_out="$RUNNER_TEMP/maestro-out-$label"
     if ! prepare_flow "$bundle_id" "$flow_run"; then
       problem "$label: the appId line was not swapped for $bundle_id"
-    elif run_flow_with_retry "$udid" "$flow_run" "$test_out"; then
+    elif run_flow_with_retry "$udid" "$flow_run" "$test_out" "$bundle_id"; then
       collect_shots "$label" "$accepted" "$test_out"
     else
-      problem "$label: the flow failed"
+      problem "$label: the flow failed (killed at the $FLOW_TIME_LIMIT_SECONDS s limit, or Maestro failed; the log above says which)"
     fi
   fi
+  kill_driver "$udid"
   xcrun simctl shutdown "$udid" || true
   xcrun simctl delete "$udid" || true
+}
+
+# One summary line per device: all shots, or failed (the FAILED lines above it say why).
+device_verdict() {
+  local label="$1" problems_before="$2" shots
+  shots="$(flow_shots | grep -c .)"
+  if [ "$PROBLEMS" -eq "$problems_before" ]; then
+    note "**RESULT $label: OK, all $shots shots at an App Store size.**"
+  else
+    note "**RESULT $label: FAILED, not a full set of $shots shots (see the FAILED lines above).**"
+  fi
 }
 
 RUNNER_TEMP="${RUNNER_TEMP:-$(mktemp -d)}"
 mkdir -p "$OUT"
 # The specs come in on fd 3: maestro and xcrun read stdin and would swallow the remaining lines.
 while IFS='|' read -r label patterns accepted <&3; do
+  problems_before="$PROBLEMS"
   shoot_device "$label" "$patterns" "$accepted" < /dev/null
+  device_verdict "$label" "$problems_before"
 done 3< <(device_specs)
 
 note "Shots for $APP are in $OUT: $(find "$OUT" -name '*.png' | wc -l | tr -d ' ') PNG(s)."

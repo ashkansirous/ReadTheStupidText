@@ -105,7 +105,7 @@ jobs:
 
       - name: Take the shots on three simulators
         id: shots
-        timeout-minutes: 90
+        timeout-minutes: 100   # the script starts no attempt after 95 minutes (SCRIPT_BUDGET_SECONDS); each attempt is killed after 15
         run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR"
 
       # Runs even when a device failed: the shots that did come out are kept. The draft is skipped when there are none.
