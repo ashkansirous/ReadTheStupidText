@@ -45,9 +45,18 @@ const Resource = {
     AppStoreVersions: 'appStoreVersions',
     ReviewSubmissions: 'reviewSubmissions',
     ReviewSubmissionItems: 'reviewSubmissionItems',
+    InAppPurchaseVersions: 'inAppPurchaseVersions',
+    SubscriptionVersions: 'subscriptionVersions',
+    SubscriptionGroupVersions: 'subscriptionGroupVersions',
     BetaAppReviewSubmissions: 'betaAppReviewSubmissions',
     BuildBetaDetails: 'buildBetaDetails',
     BuildBetaNotifications: 'buildBetaNotifications',
+};
+/** Relationship names on a review submission item; Apple refuses `subscription`, `subscriptionGroup`, `inAppPurchaseV2`. */
+const Relationship = {
+    InAppPurchaseVersion: 'inAppPurchaseVersion',
+    SubscriptionVersion: 'subscriptionVersion',
+    SubscriptionGroupVersion: 'subscriptionGroupVersion',
 };
 const PRE_RELEASE_TYPE = 'preReleaseVersions';
 /** A build's `externalBuildState` in App Store Connect (what its external testers can see). */
@@ -76,6 +85,12 @@ export const ProcessingState = { Valid: 'VALID' };
 /** An App Store review in one of these states holds the app's single review slot. */
 export const STORE_BUSY_STATES = ['WAITING_FOR_REVIEW', 'IN_REVIEW', 'UNRESOLVED_ISSUES', 'CANCELING', 'COMPLETING'];
 const STORE_DRAFT_STATE = 'READY_FOR_REVIEW';
+/** An in-app purchase or subscription in this state goes to review with the app version. */
+export const READY_TO_SUBMIT = 'READY_TO_SUBMIT';
+/** A subscription (group) version in this state can still be added to a review submission. */
+const PREPARE_FOR_SUBMISSION = 'PREPARE_FOR_SUBMISSION';
+const IAP_PAGE_SIZE = 50;
+const MAX_PAGES = 20;
 /** App Store version states in which the version (and its build) can still be changed. */
 export const EDITABLE_VERSION_STATES = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'];
 /** App Store version states that mean its build was submitted, approved or is live. */
@@ -508,9 +523,149 @@ async function ensureDraftSubmission(asc, app, submissions) {
     return { id: json.data.id, existing: false };
 }
 
-async function draftHoldsVersion(asc, submissionId, versionId) {
-    const json = await getOrThrow(asc, `/v1/reviewSubmissions/${submissionId}/items?include=appStoreVersion&limit=${PAGE_SIZE}`);
-    return (json.data ?? []).some((item) => item.relationships?.appStoreVersion?.data?.id === versionId);
+/** Every row of a list endpoint, following Apple's `links.next` (a full URL) page by page. A list that is still not finished after MAX_PAGES throws: a cut list would leave out what is submitted. */
+async function listAllPages(asc, firstPath) {
+    const rows = [];
+    let path = firstPath;
+    for (let page = 0; path; page++) {
+        if (page >= MAX_PAGES) throw new Error(`${firstPath.split('?')[0]} has more than ${MAX_PAGES} pages; refusing to work from a cut list.`);
+        const json = await getOrThrow(asc, path);
+        rows.push(...(json.data ?? []));
+        path = json.links?.next ? json.links.next.replace(API_BASE, '') : null;
+    }
+    return rows;
+}
+
+function listDraftItems(asc, submissionId) {
+    // Run live on 2026-11-15 against app 6825053435: this include returned each item with the matching relationship carrying data (1 version, 11 inAppPurchaseVersion, 1 subscriptionGroupVersion, 2 subscriptionVersion).
+    const include = 'appStoreVersion,inAppPurchaseVersion,subscriptionVersion,subscriptionGroupVersion';
+    return listAllPages(asc, `/v1/reviewSubmissions/${submissionId}/items?include=${include}&limit=${PAGE_SIZE}`);
+}
+
+function itemsHoldVersion(items, versionId) {
+    return items.some((item) => item.relationships?.appStoreVersion?.data?.id === versionId);
+}
+
+/** The ids a draft's items already hold under one relationship (`inAppPurchaseVersion`, `subscriptionVersion`, ...). */
+function heldVersionIds(items, relationship) {
+    return new Set(items.map((item) => item.relationships?.[relationship]?.data?.id).filter(Boolean));
+}
+
+// The in-app purchase endpoints below are confirmed by Apple's responses on 2026-11-15 (Dino Reader, 11
+// products), not by the API docs, which context7 does not carry: GET /v1/apps/{id}/inAppPurchasesV2,
+// GET /v2/inAppPurchases/{id}/versions and a reviewSubmissionItems relationship named `inAppPurchaseVersion`
+// (`inAppPurchaseV2` and `inAppPurchase` are refused; the product id in place of the version id is refused).
+
+// States of a product or subscription that need nothing from this run (it is added now, or already waiting, in review or approved).
+const SETTLED_PRODUCT_STATES = [READY_TO_SUBMIT, 'WAITING_FOR_REVIEW', 'IN_REVIEW', 'APPROVED'];
+
+/** Records, for the result message, each product or subscription in any other state (for example MISSING_METADATA): it is not submitted, and the app still is. */
+function noteLeftBehind(rows, leftBehind) {
+    for (const row of rows) {
+        const state = row.attributes?.state;
+        if (!SETTLED_PRODUCT_STATES.includes(state)) leftBehind.push(`${row.attributes?.productId ?? row.id} ${state}`);
+    }
+}
+
+export async function listReadyInAppPurchases(asc, appId, leftBehind = []) {
+    const rows = await listAllPages(asc, `/v1/apps/${appId}/inAppPurchasesV2?limit=${IAP_PAGE_SIZE}`);
+    noteLeftBehind(rows, leftBehind);
+    return rows.filter((product) => product.attributes?.state === READY_TO_SUBMIT).map((product) => ({ id: product.id, productId: product.attributes?.productId }));
+}
+
+function versionNumber(version) {
+    const number = Number(version.attributes?.version);
+    return Number.isFinite(number) ? number : -Infinity;
+}
+
+/** The newest version (highest number, a missing or non-numeric one counts lowest) that is still PREPARE_FOR_SUBMISSION, else null. One rule for products, groups and subscriptions. */
+function newestSubmittableVersion(versions) {
+    const open = versions.filter((version) => version.attributes?.state === PREPARE_FOR_SUBMISSION);
+    return [...open].sort((a, b) => versionNumber(b) - versionNumber(a))[0] ?? null;
+}
+
+async function findInAppPurchaseVersionId(asc, product) {
+    const versions = await listAllPages(asc, `/v2/inAppPurchases/${product.id}/versions`);
+    const version = newestSubmittableVersion(versions);
+    if (!version) throw new Error(`In-app purchase ${product.productId ?? product.id} is READY_TO_SUBMIT but has no ${PREPARE_FOR_SUBMISSION} version; nothing was submitted.`);
+    return version.id;
+}
+
+async function addInAppPurchaseToSubmission(asc, submissionId, versionId) {
+    const item = {
+        data: {
+            type: Resource.ReviewSubmissionItems,
+            relationships: {
+                reviewSubmission: { data: { type: Resource.ReviewSubmissions, id: submissionId } },
+                inAppPurchaseVersion: { data: { type: Resource.InAppPurchaseVersions, id: versionId } },
+            },
+        },
+    };
+    await writeOrThrow(asc, Method.Post, '/v1/reviewSubmissionItems', item);
+}
+
+/** Adds every READY_TO_SUBMIT in-app purchase the draft lacks; a refused add throws, so nothing is submitted. Returns how many go with the version. */
+export async function addInAppPurchases(asc, appId, submissionId, items, leftBehind = []) {
+    const held = heldVersionIds(items, Relationship.InAppPurchaseVersion);
+    let count = 0;
+    for (const product of await listReadyInAppPurchases(asc, appId, leftBehind)) {
+        const versionId = await findInAppPurchaseVersionId(asc, product);
+        if (!held.has(versionId)) await addInAppPurchaseToSubmission(asc, submissionId, versionId);
+        count++;
+    }
+    return count;
+}
+
+// Subscription routes, proven live on 2026-11-15 (Dino Reader, 2 READY_TO_SUBMIT subscriptions): groups and
+// their subscriptions are listed under the app, versions under `/v1/subscriptionGroups/{id}/versions` and
+// `/v1/subscriptions/{id}/versions`; the review item takes the VERSION ids (a product or group id is refused
+// with STATE_ERROR.ENTITY_STATE_INVALID). Order: group version, then its subscriptions.
+
+async function addVersionItem(asc, submissionId, relationship, type, versionId) {
+    const relationships = {
+        reviewSubmission: { data: { type: Resource.ReviewSubmissions, id: submissionId } },
+        [relationship]: { data: { type, id: versionId } },
+    };
+    await writeOrThrow(asc, Method.Post, '/v1/reviewSubmissionItems', { data: { type: Resource.ReviewSubmissionItems, relationships } });
+}
+
+/** The group's PREPARE_FOR_SUBMISSION version joins the draft (an approved group has none and adds nothing). */
+async function addGroupVersion(asc, group, submissionId, held) {
+    const newest = newestSubmittableVersion(await listAllPages(asc, `/v1/subscriptionGroups/${group.id}/versions`));
+    if (!newest) return;
+    if (held.has(newest.id)) return;
+    await addVersionItem(asc, submissionId, Relationship.SubscriptionGroupVersion, Resource.SubscriptionGroupVersions, newest.id);
+}
+
+async function addSubscriptionVersion(asc, subscription, submissionId, held) {
+    const newest = newestSubmittableVersion(await listAllPages(asc, `/v1/subscriptions/${subscription.id}/versions`));
+    if (!newest) throw new Error(`Subscription ${subscription.attributes?.productId ?? subscription.id} is READY_TO_SUBMIT but has no ${PREPARE_FOR_SUBMISSION} version; nothing was submitted.`);
+    if (held.has(newest.id)) return;
+    await addVersionItem(asc, submissionId, Relationship.SubscriptionVersion, Resource.SubscriptionVersions, newest.id);
+}
+
+async function addGroupSubscriptions(asc, group, submissionId, items, leftBehind) {
+    const all = await listAllPages(asc, `/v1/subscriptionGroups/${group.id}/subscriptions?limit=${IAP_PAGE_SIZE}`);
+    noteLeftBehind(all, leftBehind);
+    const ready = all.filter((subscription) => subscription.attributes?.state === READY_TO_SUBMIT);
+    if (!ready.length) return 0;
+    await addGroupVersion(asc, group, submissionId, heldVersionIds(items, Relationship.SubscriptionGroupVersion));
+    const held = heldVersionIds(items, Relationship.SubscriptionVersion);
+    for (const subscription of ready) await addSubscriptionVersion(asc, subscription, submissionId, held);
+    return ready.length;
+}
+
+/** Adds, for every group with a READY_TO_SUBMIT subscription, its group version and those subscriptions; a refused add throws. Returns how many subscriptions go with the version. */
+export async function addSubscriptions(asc, appId, submissionId, items, leftBehind = []) {
+    const groups = await listAllPages(asc, `/v1/apps/${appId}/subscriptionGroups?limit=${IAP_PAGE_SIZE}`);
+    let count = 0;
+    for (const group of groups) count += await addGroupSubscriptions(asc, group, submissionId, items, leftBehind);
+    return count;
+}
+
+function submittedMessage(build, purchases, subscriptions, leftBehind) {
+    const base = `${describeBuild(build)} submitted for App Store review with ${purchases} in-app purchases and ${subscriptions} subscriptions`;
+    return leftBehind.length ? `${base}; not submitted: ${leftBehind.join(', ')}` : base;
 }
 
 async function addVersionToSubmission(asc, submissionId, versionId) {
@@ -530,12 +685,14 @@ export async function submitToAppStore(asc, app, decision, submissions) {
     const versionId = await prepareVersion(asc, app, decision);
     await writeOrThrow(asc, Method.Patch, `/v1/appStoreVersions/${versionId}/relationships/build`, buildRef(decision.build.id));
     const { id: submissionId, existing } = await ensureDraftSubmission(asc, app, submissions);
-    if (!existing || !(await draftHoldsVersion(asc, submissionId, versionId))) {
-        await addVersionToSubmission(asc, submissionId, versionId);
-    }
+    const items = existing ? await listDraftItems(asc, submissionId) : [];
+    if (!itemsHoldVersion(items, versionId)) await addVersionToSubmission(asc, submissionId, versionId);
+    const leftBehind = [];
+    const purchases = await addInAppPurchases(asc, app.id, submissionId, items, leftBehind);
+    const subscriptions = await addSubscriptions(asc, app.id, submissionId, items, leftBehind);
     const submit = { data: { type: Resource.ReviewSubmissions, id: submissionId, attributes: { submitted: true } } };
     await writeOrThrow(asc, Method.Patch, `/v1/reviewSubmissions/${submissionId}`, submit);
-    return { outcome: Outcome.Submitted, message: `${describeBuild(decision.build)} submitted for App Store review` };
+    return { outcome: Outcome.Submitted, message: submittedMessage(decision.build, purchases, subscriptions, leftBehind) };
 }
 
 export async function runAppStore(asc, app) {
