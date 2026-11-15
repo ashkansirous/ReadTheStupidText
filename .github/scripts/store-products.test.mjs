@@ -15,7 +15,7 @@ import {
 
 import {
     applePlanForAvailability, appleRetryDelayMs, retryingAsc, SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionAvailabilityBody, applePricePlan, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
-    playSubscriptionBody, playSubscriptionStage, playTrialOfferBody, subscriptionItemsFor, subscriptionPlanLines,
+    retryingPlay, playPlanRegionalConfigs, playHeldRegions, playHasGbPrice, playRegionsVersion, playTaxExclusiveInput, playSubscriptionBody, playSubscriptionStage, playTrialOfferBody, subscriptionItemsFor, subscriptionPlanLines,
 } from './store-products.mjs';
 
 const SCRIPT = fileURLToPath(new URL('./store-products.mjs', import.meta.url));
@@ -383,10 +383,161 @@ test('Slice 384: a Play subscription is created whole, a half-made one is finish
     assert.equal(log.filter((line) => line.includes(':activate')).length, 4); // two base plans and two trial offers
     assert.equal(log.filter((line) => line.includes('/offers') && line.startsWith('POST') && !line.includes(':activate')).length, 2);
     log.length = 0;
-    const draft = { basePlans: [{ basePlanId: 'monthly', state: 'DRAFT' }, { basePlanId: 'yearly', state: 'ACTIVE' }] };
+    const draft = { basePlans: [{ basePlanId: 'monthly', state: 'DRAFT', regionalConfigs: [{ regionCode: 'GB', price: { currencyCode: 'GBP', units: '1', nanos: 990000000 } }] }, { basePlanId: 'yearly', state: 'ACTIVE', regionalConfigs: [{ regionCode: 'GB', price: { currencyCode: 'GBP', units: '14', nanos: 990000000 } }] }] };
     assert.equal(await createPlaySubscription('t', item, request(draft, 'ACTIVE')), Outcome.Completed);
-    assert.equal(log.filter((line) => line.startsWith('POST')).length, 1);
+    assert.deepEqual(log.filter((line) => line.startsWith('POST')), ['POST pricing:convertRegionPrices', 'POST subscriptions/uk.sirous.dinoreader.sub/basePlans/monthly:activate']); // one conversion call for the regions version, then only the activate
     assert.ok(log.some((line) => line.includes('basePlans/monthly:activate')));
+});
+
+const quiet = { sleep: async () => {}, log: () => {} };
+
+test('Slice 384: Play subscription shapes: GB keeps the plan price, no grace override, the trial offer has one phase config per region and the same regions as the plan', () => {
+    const converted = { convertedRegionPrices: { GB: { price: { currencyCode: 'GBP', units: '2', nanos: 390000000 } }, US: { price: { currencyCode: 'USD', units: '2', nanos: 490000000 } } }, convertedOtherRegionsPrice: { usdPrice: { currencyCode: 'USD', units: '2', nanos: 0 }, eurPrice: { currencyCode: 'EUR', units: '2', nanos: 0 } } };
+    const plan = SUBSCRIPTION_PLANS[0];
+    const regional = playPlanRegionalConfigs(plan, converted);
+    assert.deepEqual(regional.map((entry) => entry.regionCode), ['GB', 'US']);
+    assert.deepEqual(regional[0].price, plan.gbp); // not Play's tax-inclusive 2.39
+    const body = playSubscriptionBody({ monthly: converted, yearly: converted });
+    assert.deepEqual(body.basePlans[0].autoRenewingBasePlanType, { billingPeriodDuration: 'P1M', resubscribeState: 'RESUBSCRIBE_STATE_ACTIVE' });
+    assert.deepEqual(body.basePlans[0].otherRegionsConfig.usdPrice, converted.convertedOtherRegionsPrice.usdPrice);
+    const offer = playTrialOfferBody(plan, regional.map((entry) => entry.regionCode));
+    assert.deepEqual(offer.regionalConfigs.map((c) => c.regionCode), offer.phases[0].regionalConfigs.map((c) => c.regionCode));
+    assert.equal(offer.phases[0].recurrenceCount, 1);
+    assert.deepEqual(offer.phases[0].otherRegionsConfig, { free: {} });
+    assert.deepEqual(offer.otherRegionsConfig, { otherRegionsNewSubscriberAvailability: true });
+    assert.ok(playHasGbPrice(converted) && !playHasGbPrice({ convertedRegionPrices: { US: {} } }));
+    assert.deepEqual(playHeldRegions({ basePlans: [{ basePlanId: 'monthly', regionalConfigs: [{ regionCode: 'DE' }] }] }, 'monthly'), ['DE']);
+    assert.throws(() => playHeldRegions({ basePlans: [] }, 'monthly'), /lists no regions for the monthly base plan/);
+    assert.equal(playRegionsVersion({ regionVersion: { version: '2025/03' } }), process.env.PLAY_REGIONS_VERSION ?? '2025/03');
+});
+
+test('Slice 384: Play requests: a GET is retried after 429 or 5xx, a write only after 429, never after a 5xx', async () => {
+    const sequence = (method, statuses) => {
+        const calls = [];
+        const raw = async () => {
+            const status = statuses[calls.length] ?? 200;
+            calls.push(status);
+            return { status, ok: status < 300, json: {}, retryAfter: null };
+        };
+        return { calls, run: () => retryingPlay(raw, async () => {})('t', method, 'x') };
+    };
+    const get = sequence('GET', [503, 429, 200]);
+    assert.equal((await get.run()).status, 200);
+    assert.equal(get.calls.length, 3);
+    const throttled = sequence('POST', [429, 200]);
+    assert.equal((await throttled.run()).status, 200);
+    assert.equal(throttled.calls.length, 2);
+    const broken = sequence('POST', [503, 200]);
+    assert.equal((await broken.run()).status, 503);
+    assert.equal(broken.calls.length, 1);
+});
+
+test('Slice 384: Play rerun cases: a missing trial offer is created without a second subscription, a refused offer read stops, a subscription short of plans stops, one failed plan does not stop the other', async () => {
+    const [item] = subscriptionItemsFor(Store.Google);
+    const held = { basePlans: [{ basePlanId: 'monthly', state: 'ACTIVE', regionalConfigs: [{ regionCode: 'GB', price: { currencyCode: 'GBP', units: '1', nanos: 990000000 } }, { regionCode: 'DE' }] }, { basePlanId: 'yearly', state: 'ACTIVE', regionalConfigs: [{ regionCode: 'GB', price: { currencyCode: 'GBP', units: '14', nanos: 990000000 } }] }] };
+    const posts = [];
+    const make = (offers, failPath) => async (_t, method, path, body) => {
+        if (method === 'GET' && path.includes('/offers/')) { const plan = path.split('/')[3]; const offer = offers[plan]; return offer === 'forbidden' ? { status: 403, ok: false, json: {} } : offer ? okJson({ state: offer }) : { status: 404, ok: false, json: {} }; }
+        if (method === 'GET') return okJson(held);
+        posts.push({ path, body });
+        if (failPath && path.includes(failPath)) return { status: 400, ok: false, json: { error: 'bad' } };
+        return path.startsWith('pricing') ? okJson({ regionVersion: { version: '2025/03' }, convertedRegionPrices: {} }) : okJson({});
+    };
+    assert.equal(await createPlaySubscription('t', item, make({ monthly: 'ACTIVE', yearly: undefined }), quiet), Outcome.Completed);
+    const created = posts.filter((post) => post.path.includes('/offers?offerId=trial'));
+    assert.equal(created.length, 1);
+    assert.ok(created[0].path.includes('basePlans/yearly/offers') && created[0].path.includes(`regionsVersion.version=${encodeURIComponent(process.env.PLAY_REGIONS_VERSION ?? '2025/03')}`), 'the offer uses the version Play names (finding 2)');
+    assert.equal(posts.filter((post) => post.path.startsWith('pricing')).length, 1, 'one conversion call on the held path, for the regions version only');
+    assert.deepEqual(created[0].body.regionalConfigs.map((c) => c.regionCode), ['GB']);
+    assert.ok(!posts.some((post) => post.path.startsWith('subscriptions?')), 'never a second subscription');
+    await assert.rejects(() => createPlaySubscription('t', item, make({ monthly: 'forbidden', yearly: 'ACTIVE' }), quiet), /look up the monthly trial offer: HTTP 403/);
+    const short = async (_t, method) => (method === 'GET' ? okJson({ basePlans: [held.basePlans[0]] }) : okJson({}));
+    await assert.rejects(() => createPlaySubscription('t', item, short, quiet), /without all its base plans/);
+    posts.length = 0;
+    await assert.rejects(() => createPlaySubscription('t', item, make({ monthly: undefined, yearly: undefined }, 'basePlans/monthly/offers?'), quiet), /1 of 2 plans failed.*monthly.*create the monthly trial offer/);
+    assert.ok(posts.some((post) => post.path.includes('basePlans/yearly/offers/trial:activate')), 'the yearly plan is still finished');
+});
+
+test('Slice 384: a held base plan is activated only at the plan GB price, its trial gets otherRegionsConfig only when the plan has one, and unknown regions stop the plan', async () => {
+    const [item] = subscriptionItemsFor(Store.Google);
+    const gb = (units, nanos) => ({ regionCode: 'GB', price: { currencyCode: 'GBP', units, nanos } });
+    const yearlyLive = { basePlanId: 'yearly', state: 'ACTIVE', regionalConfigs: [gb('14', 990000000)] };
+    const run = async (monthly) => {
+        const posts = [];
+        const request = async (_t, method, path, body) => {
+            if (method === 'GET' && path.includes('/offers/')) return path.includes('/yearly/') ? okJson({ state: 'ACTIVE' }) : { status: 404, ok: false, json: {} };
+            if (method === 'GET') return okJson({ basePlans: [monthly, yearlyLive] });
+            posts.push({ path, body });
+            return okJson({});
+        };
+        const outcome = await createPlaySubscription('t', item, request, quiet).catch((error) => error);
+        return { outcome, posts };
+    };
+    const wrong = await run({ basePlanId: 'monthly', state: 'DRAFT', regionalConfigs: [gb('2', 390000000)] });
+    assert.match(wrong.outcome.message, /1 of 2 plans failed.*monthly.*GB price is not 1\.99.*not activated/);
+    assert.ok(!wrong.posts.some((post) => post.path.includes('activate') || post.path.includes('/offers')));
+    const wrongActive = await run({ basePlanId: 'monthly', state: 'ACTIVE', regionalConfigs: [gb('2', 390000000)] }); // finding 3: an ACTIVE plan is checked too
+    assert.match(wrongActive.outcome.message, /monthly.*GB price is not 1\.99/);
+    assert.ok(!wrongActive.posts.some((post) => post.path.includes('/offers')));
+    const noPrice = await run({ basePlanId: 'monthly', state: 'DRAFT', regionalConfigs: [{ regionCode: 'DE' }] });
+    assert.match(noPrice.outcome.message, /GB price is not 1\.99/);
+    const withOther = await run({ basePlanId: 'monthly', state: 'ACTIVE', regionalConfigs: [gb('1', 990000000)], otherRegionsConfig: { usdPrice: {}, eurPrice: {} } });
+    assert.equal(withOther.outcome, Outcome.Completed);
+    assert.deepEqual(withOther.posts.find((post) => post.path.includes('/offers?')).body.otherRegionsConfig, { otherRegionsNewSubscriberAvailability: true });
+    const without = await run({ basePlanId: 'monthly', state: 'ACTIVE', regionalConfigs: [gb('1', 990000000)] });
+    const body = without.posts.find((post) => post.path.includes('/offers?')).body;
+    assert.equal(body.otherRegionsConfig, undefined);
+    assert.equal(body.phases[0].otherRegionsConfig, undefined);
+    const noRegions = await run({ basePlanId: 'monthly', state: 'ACTIVE' });
+    assert.match(noRegions.outcome.message, /monthly.*GB price is not 1\.99/); // no GB price stops the plan before any region is read
+    assert.ok(!noRegions.posts.some((post) => post.path.includes('/offers?')));
+    assert.equal(playTrialOfferBody(SUBSCRIPTION_PLANS[0], ['GB'], false).otherRegionsConfig, undefined);
+});
+
+test('Slice 384: Play prices: other regions are converted from the tax-exclusive GB price, so GB comes back as the plan price (finding 1)', async () => {
+    const [item] = subscriptionItemsFor(Store.Google);
+    const vat = 1.2;
+    const money = (code, amount) => ({ currencyCode: code, units: String(Math.floor(amount)), nanos: Math.round((amount % 1) * 1e9) });
+    const inputs = [];
+    const request = async (_t, method, path, body) => {
+        if (method === 'GET') return { status: 404, ok: false, json: null };
+        if (path.startsWith('pricing')) {
+            const net = Number(body.price.units) + body.price.nanos / 1e9;
+            inputs.push(net);
+            return okJson({ convertedRegionPrices: { GB: { price: money('GBP', net * vat) }, US: { price: money('USD', net * vat * 1.25) } } });
+        }
+        return okJson({});
+    };
+    const lines = [];
+    await createPlaySubscription('t', item, request, { sleep: async () => {}, log: (line) => lines.push(line) });
+    assert.equal(inputs.length, 4); // per plan: the as-is conversion, then the tax-exclusive one
+    assert.ok(Math.abs(inputs[0] - 1.99) < 1e-9 && Math.abs(inputs[1] - 1.99 / vat) < 1e-5, `second input ${inputs[1]}`);
+    assert.ok(lines.some((line) => /monthly prices.*GB 1\.99 GBP, US 2\.49 USD/.test(line)), lines.join('\n'));
+    assert.deepEqual(playTaxExclusiveInput(SUBSCRIPTION_PLANS[0], { convertedRegionPrices: {} }), null);
+});
+
+test('Slice 384: a held trial offer that is INACTIVE or UNKNOWN is left alone and reported, a DRAFT one is activated (finding 4)', async () => {
+    const [item] = subscriptionItemsFor(Store.Google);
+    const gb = (units) => ({ regionCode: 'GB', price: { currencyCode: 'GBP', units, nanos: 990000000 } });
+    const held = { basePlans: [{ basePlanId: 'monthly', state: 'ACTIVE', regionalConfigs: [gb('1')] }, { basePlanId: 'yearly', state: 'ACTIVE', regionalConfigs: [gb('14')] }] };
+    const run = async (state) => {
+        const posts = [];
+        const lines = [];
+        const request = async (_t, method, path) => {
+            if (method === 'GET' && path.includes('/offers/')) return path.includes('/yearly/') ? okJson({ state: 'ACTIVE' }) : okJson({ state });
+            if (method === 'GET') return okJson(held);
+            posts.push(path);
+            return okJson({});
+        };
+        await createPlaySubscription('t', item, request, { sleep: async () => {}, log: (line) => lines.push(line) });
+        return { posts, lines };
+    };
+    for (const state of ['INACTIVE', 'STATE_UNSPECIFIED', 'UNKNOWN']) {
+        const result = await run(state);
+        assert.ok(!result.posts.some((path) => path.includes('offers')), `${state} is not touched`);
+        assert.ok(result.lines.some((line) => line.includes(`trial offer is ${state}; left alone`)));
+    }
+    assert.ok((await run('DRAFT')).posts.some((path) => path.includes('monthly/offers/trial:activate')));
 });
 
 test('Slice 384: the Apple subscription bodies carry the product id, the plan period, the price point and a one-week free trial', () => {
