@@ -77,6 +77,11 @@ the contact sheet live only in the working folder. Touch nothing else.
    the prompt, `__sendChecked` to send), never by coordinates, since a stray click on a suggestion chip sends a prompt you didn't
    write. Other lines (`REFUSED`, `SENT WITHOUT TEXT`, `UNCONFIRMED`) are `__sendChecked`'s, with its rules below. If a chat draws an earlier scene
    again instead of the new one, start a new chat for it. If the bad picture would steer a patch, start a new chat instead of patching.
+   **Model first, every mode (recover and download-only included):** before opening or searching any chat, set the
+   text-model picker to the model the brief names, or for a Slice 350 high-res book the model in that slice's part A4
+   (3.1 Pro), and read it back. Never Flash-Lite for Slice 350. A brief that names no model for a Slice 350 book: use A4's.
+   An old chat shows the model it was drawn with; set the picker again in every chat before any send. (2026-11-14,
+   Freddy recover run: the picker was never checked and the user saw Flash-Lite.)
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
    - 5 s after opening or reloading a tab, check the tab URL and `window.__geminiHealth()` once (the left menu loads only

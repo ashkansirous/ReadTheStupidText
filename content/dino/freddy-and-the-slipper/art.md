@@ -230,3 +230,15 @@ Drawn 2026-11-01 with 3.5 Flash-Lite, 3:4, one character chat (Freddy sheet, Mum
 | 12 | 4 | 1792x2400 | Attempts 1 and 2: red-orange ember glow under the grate (breaks rule 1; the retry in the same chat drew the same scene). Attempt 3: clean grill but a postcard inset with white margins and a different garden (review). Redo accepted: full-width in the garden of pages 10-11, grumpy, both paws on his tummy, no tears. |
 | 13 | 2 | 1792x2400 | Attempt 1: two Freddies at the table. A small kettle shows on the counter in the accepted one (cold, no steam). |
 | 14 | 4 | 1792x2400 | Attempt 1: dark starry night in the window for "the next evening". Attempt 2: orange jar on the left worktop with a letter-like scribble (review). Redo 1: plain jars but Freddy cheered with the bowl on the table. Redo 2 accepted: dusk window, jars with blank labels, Freddy holds the empty bowl up, Mummy holds the pot and spoon. |
+
+## High-res redraw (Slice 350, 2026-11-14 to 15, Gemini 3.1 Pro, all 1792x2400, saved untouched)
+
+Cover and pages 1, 2, 4, 14 from the g1-g4 redraw chats; pages 8-12 recovered from the earlier chats (c06-1, c04-1, c11-1, c11-3, c06-3), not redrawn. `high-res/` holds the JPEG 85 print pack made by `prepare-story-pictures.ps1 -HighRes`; the untouched downloads are kept outside the repo. The full review passed on 2026-11-15 (non-blocking: pages 2-3 have a different kitchen layout from 6, 7, 13, 14; page 6 shows a second lidded pot and about five potatoes; page 5's tail shows above the sheet).
+
+| Page | Tries | Chat | Notes |
+| --- | --- | --- | --- |
+| 3 | 4 | 978385f603762c62 | Page 2's kitchen, Freddy frowning, paw on tummy, feet well above the line. |
+| 5 | 2 | 49386e9ed9bccdb2 | Page 4's room, Freddy under the sheet. |
+| 6 | 3 | 6b34782efd098d01 | Plank floor to the bottom, empty pot with its lid off, potatoes in the open fridge. Tries 1-2 hid the pot's inside. |
+| 7 | 2 | 6965297be8919f81 | Freddy at the window, paw at the glass towards page 8's grill, other paw on his tummy. Try 1 pointed at the pot. |
+| 13 | 1 | a948cdf65c37a698 | Page 14's kitchen, no kettle, Freddy alone frowning over the potatoes. |
