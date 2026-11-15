@@ -96,7 +96,7 @@ function Invoke-Touch {
   Assert-Owner
   $touch = Invoke-Script 'gemini-lock.ps1' @('Touch', $Owner)
   if ($touch.Code -ne 0) { Stop-Step "FAILED: $Owner does not hold the lock: $($touch.Text -replace '\s+', ' ')" }
-  Stop-Step "TOUCHED $Owner"
+  Stop-Step "TOUCHED $Owner" 0
 }
 
 function Invoke-Release {
