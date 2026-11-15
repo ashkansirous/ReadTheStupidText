@@ -1,0 +1,164 @@
+# Slice 381: every first-run tour copy stands over its real control. As soon as each stop's copy is laid out the app logs where the copy and its target are on the screen (dp): aligned=yes when their centres are within 4 dp
+# (TourGeometry.IsAligned), aligned=no when not. When the tour ends it logs one line, 'placement misaligned=<n>', counting every stop drawn off its target or unreadable, redraws included. The flow expects aligned=yes for each of
+# the five stops and misaligned=0, so a copy drawn a status-bar height too low fails it (aligned=no is logged and the count is not 0), even when a later redraw put it right. Same for the old placement code with this logging in.
+# Run it at the default emulator size and at the Pixel 10 Pro's (1280x2856, 495 dpi, tall cutout).
+# The first run is walked as onboarding-phone.yaml walks it (no hook jumps to the tour), without the screenshots: language, story languages, books, listen, voice and record, then the tour. Scripted only.
+# layout-check
+# expect-log: HOOK test-store ok ok
+# expect-log: [Onboarding] tour stop=Books aligned=yes
+# expect-log: [Onboarding] tour stop=Store aligned=yes
+# expect-log: [Onboarding] tour stop=Settings aligned=yes
+# expect-log: [Onboarding] tour stop=ShelfPointer aligned=yes
+# expect-log: [Onboarding] tour stop=ChildShelf aligned=yes
+# expect-log: [Onboarding] tour placement misaligned=0
+appId: uk.sirous.dinoreader.dbg
+name: Tour copies over their real controls
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+# The Slice 183 "keep downloading when locked?" sheet shows on a fresh install on some devices; dismissed when it is there.
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: OnboardingVoice
+    commands:
+      - tapOn:
+          id: OnboardingContinue
+          optional: true
+          waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: OnboardingVoice
+    timeout: 15000
+- tapOn:
+    id: OnboardingRecord
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 30000
+- repeat:
+    times: 4
+    while:
+      notVisible:
+        id: OnboardingHearYourself
+    commands:
+      - tapOn:
+          id: RecordButton
+          optional: true
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: RecordStopButton
+          timeout: 8000
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: RecordNeverShown
+          timeout: 1500
+          optional: true
+      - tapOn:
+          id: RecordStopButton
+          optional: true
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: RecordChip
+          timeout: 15000
+          optional: true
+      - tapOn:
+          id: RecordNext
+          optional: true
+          waitToSettleTimeoutMs: 600
+- extendedWaitUntil:
+    visible:
+      id: OnboardingHearYourself
+    timeout: 60000
+- tapOn:
+    id: OnboardingContinue
+    waitToSettleTimeoutMs: 500
+# The tour: each stop is drawn and logs its placement as soon as its copy has been laid out (no fixed delay); the waits below leave time for that before the next Next.
+- extendedWaitUntil:
+    visible:
+      id: TourWelcome
+    timeout: 30000
+- tapOn:
+    id: TourShowAround
+    waitToSettleTimeoutMs: 600
+- extendedWaitUntil:
+    visible:
+      id: TourTip
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "1 of 3"
+    timeout: 5000
+- tapOn:
+    id: TourNext
+    waitToSettleTimeoutMs: 1200
+- extendedWaitUntil:
+    visible: "2 of 3"
+    timeout: 5000
+- tapOn:
+    id: TourNext
+    waitToSettleTimeoutMs: 1200
+- extendedWaitUntil:
+    visible: "3 of 3"
+    timeout: 5000
+- tapOn:
+    id: TourNext
+    waitToSettleTimeoutMs: 1200
+- extendedWaitUntil:
+    visible:
+      id: TourShelfTip
+    timeout: 10000
+- tapOn:
+    id: TourShowMe
+    waitToSettleTimeoutMs: 1200
+- extendedWaitUntil:
+    visible:
+      id: TourChildShelf
+    timeout: 15000
+- tapOn:
+    id: TourStartReading
+    waitToSettleTimeoutMs: 800
+- assertNotVisible:
+    id: TourChildShelf
