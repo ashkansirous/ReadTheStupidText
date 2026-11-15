@@ -37,6 +37,24 @@ public static class PackDownloadLog
 
     private static Action<string>? _sink;
 
+    private static readonly AsyncLocal<Action<string>?> ScopedSink = new();
+
+    /// <summary>
+    /// Test seam: lines written from the calling async flow (and what it starts) also reach <paramref name="sink"/>;
+    /// a parallel test's lines never do. Dispose to end the capture.
+    /// </summary>
+    public static IDisposable CaptureScope(Action<string> sink)
+    {
+        Action<string>? previous = ScopedSink.Value;
+        ScopedSink.Value = sink;
+        return new ScopeRestore(previous);
+    }
+
+    private sealed class ScopeRestore(Action<string>? previous) : IDisposable
+    {
+        public void Dispose() => ScopedSink.Value = previous;
+    }
+
     public static void Start(string packId, long offset) => Write($"{StartEvent} pack={packId} offset={offset}");
 
     public static void Range(string packId, long offset) => Write($"{RangeEvent} pack={packId} offset={offset}");
@@ -71,12 +89,15 @@ public static class PackDownloadLog
     public static void LanguageFailure(string language, PackDownloadResult result, PackFailureAction action) =>
         Write($"{LanguageFailedEvent} language={language} result={result} action={action}");
 
-    private static void Write(string line)
+    private static void Write(string line) => WriteText($"{Prefix} {line}");
+
+    /// <summary>Writes an already-prefixed line to the debug output, the scoped capture and the global sink (the mobile service log).</summary>
+    internal static void WriteText(string text)
     {
-        string text = $"{Prefix} {line}";
         Debug.WriteLine(text);
         try
         {
+            ScopedSink.Value?.Invoke(text);
             Volatile.Read(ref _sink)?.Invoke(text);
         }
         catch (Exception)

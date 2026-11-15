@@ -297,16 +297,7 @@ public static class PackDownloadHost
     internal static void LogService(string action, string packId, string? reason = null)
     {
         string line = $"{PackDownloadLog.Prefix} {ServiceEvent} {action} pack={packId}" + (reason is null ? "" : $" {PausedReasonKey}{reason}");
-        System.Diagnostics.Debug.WriteLine(line);
-        try
-        {
-            PackDownloadLog.Sink?.Invoke(line);
-        }
-        catch (Exception)
-        {
-            // no-fallback: a diagnostic log sink failing is logging-only
-            // A diagnostic sink must never break a download.
-        }
+        PackDownloadLog.WriteText(line);
     }
 }
 
