@@ -81,7 +81,7 @@ Decisions 1-99 are in [notes/decisions-001-099.md](notes/decisions-001-099.md) (
     supersedes Decision 106's public-domain follow-up. (Slice 119)
 126. **One house style for every Dino book (Batch 25)**: soft watercolour and coloured pencil, warm gentle colours,
     simple rounded shapes, no text; style line and cast per book in `content/dino/<stem>/art.md`. (Slice 119)
-127. **Dino pictures are 3:4 portrait, 896x1200 (Gemini's native output; never upscaled), text-free, characters and action in the top 70% (the words panel takes at most 30%, Slice 122; was top 40% before it) (Batch 25)**; the title on a
+127. **Dino pictures are 3:4 portrait, 896x1200 (Gemini's native output; never upscaled), text-free, characters and action in the top 70% (the words panel takes at most 30%, Slice 122; was top 40% before it) (Batch 25)**; since 2026-11-15 (the user) prompts ask for the bottom 32% free and the picture check passes at 27% free (a red line at 73%), 5 points of wiggle room; the title on a
     cover comes from our code, never from Gemini. The store list gets a 288x384 `cover-thumb.jpg`; the full cover stays inside the package. (Slice 119)
 128. **The bundled starters are also store stories with the same package id (Batch 25)**, so a deleted starter can be
     downloaded again. (Slice 119)

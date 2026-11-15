@@ -46,12 +46,12 @@ Read `content/dino/<stem>/characters/` (the line-up and sheets), then the cover 
 picture's **small copy** (`<name>.small.jpg`, 896x1200; the app copy in `content/dino/<stem>/pictures/` is the same size), one at a time, from the working folder. Open a full-size crop only for one named fault, never a whole original. Never judge from the contact sheet.
 
 - **Each picture against its page**: shows that page's one action, nothing from another page; the exact
-  cast with the right count; the step 5 checklist in SKILL.md (no text, every character whole above the 70% line with the bottom 30% still scene, indoors or outdoors, rule 1, no menace).
+  cast with the right count; the step 5 checklist in SKILL.md (no text, every character whole above the 73% line with the bottom of the picture still scene, indoors or outdoors, rule 1, no menace).
   A picture **fails if any** of these fails (Slice 350):
-  - every character is whole above the 70% line: heads, bodies, legs, feet, paws, tails and anything they hold. Run
+  - every character is whole above the 73% line (at least the bottom 27% free; prompts ask for 32%, the user, 2026-11-15; `line70.ps1` keeps its old name but draws the line at 73%): heads, bodies, legs, feet, paws, tails and anything they hold. Run
     `pwsh <repo or worktree root>/.claude/skills/create-dino-story/line70.ps1 <picture>` (for a picture under a `\content\dino\` folder it writes its small copy and the overlay to
     `%TEMP%\line70\<hash of the picture's full path>\`, so you change nothing in the repo) and read the `.line70.png` whose path it prints; any part of a
-    character inside the tinted bottom 30% fails (the app's words cover that strip);
+    character inside the tinted bottom 27% fails (the app's words cover that strip);
   - every character has the right number of arms, hands, legs, paws and wings;
   - the scene fills the whole frame, with no plain white or empty strip at the top or bottom;
   - there are no words, letters or signs in the picture;

@@ -186,9 +186,10 @@ accepted picture's actual size in the art record. The size line never changed th
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"every character stays whole
-in the top 70% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above
-the 70% line. The bottom 30% is calm scene (grass, flowers, floor or water) with no character or any part
-of one in it, never a plain empty strip"**. "Faces and action" alone is not enough: 3.1 Pro kept the faces
+in the top 68% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above
+the 68% line. The bottom 32% is calm scene (grass, flowers, floor or water) with no character or any part
+of one in it, never a plain empty strip"**. The prompt asks for 32% free and the check (step 5) passes at
+27% free, the 73% line: 5 points of wiggle room (the user, 2026-11-15). "Faces and action" alone is not enough: 3.1 Pro kept the faces
 up and still walked the Mouse's body, feet and berry into the bottom strip (Slice 350, 2026-11-13). When
 the phone is upright the words panel covers up to 30% of the picture from the bottom (Slice 122; before
 it, 58%, which is why the Slice 119 pigs pictures used the top 40%).
@@ -218,8 +219,8 @@ trousers or none).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
 - [ ] No text, letters, words or signs anywhere (signatures included).
-- [ ] **Every character is whole above the 70% line** (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (for a scratch candidate it uses the `<name>.small.jpg` beside it and writes the overlay beside it, or into `-OutDir <folder>`; for a picture whose path has a `\content\dino\` segment, in any checkout, it writes the small copy and overlay to `%TEMP%\line70\<12-hex hash of the full path>\`, never into the repo; `-OutDir` overrides both) and read the `<picture>.line70.png` whose path it prints (red line at 70%, bottom 30% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
-- [ ] The bottom 30% is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
+- [ ] **Every character is whole above the 73% line** (at least the bottom 27% free of characters; prompts ask for 32%, the user, 2026-11-15) (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (for a scratch candidate it uses the `<name>.small.jpg` beside it and writes the overlay beside it, or into `-OutDir <folder>`; for a picture whose path has a `\content\dino\` segment, in any checkout, it writes the small copy and overlay to `%TEMP%\line70\<12-hex hash of the full path>\`, never into the repo; `-OutDir` overrides both) and read the `<picture>.line70.png` whose path it prints (red line at 73%, bottom 27% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
+- [ ] The bottom of the picture is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
 - [ ] Every character has the right number of arms, hands, legs, paws and wings (Slice 350: a lion with three hands, an extra limb).
 - [ ] Objects and tools have their real shape, not melted or twisted.
