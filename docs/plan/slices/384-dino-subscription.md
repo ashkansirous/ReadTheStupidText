@@ -1,9 +1,9 @@
 # Slice 384 — Dino: a monthly and yearly subscription for every book, alongside buying single books
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs` (new), `src/Dino/DinoReader.Core/AppConfig.cs`, `src/Dino/DinoReader.Core/StoreCatalog.cs`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/StorePage.xaml*`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/BookUpdater.cs`, `src/Dino/DinoReader.App/ShelfAudioPacks*.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `src/Dino/DinoReader.App/CLAUDE.md`, `worker/entitlements/**`, `worker/products.ts`, `worker/stories.ts`, `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/entitlements.test.mjs`, `worker/stories.test.mjs`, `worker/CLAUDE.md`, `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/subscription.yaml` (new), `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/384-dino-subscription.md`
+**Touches:** `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs` (new), `src/Dino/DinoReader.Core/AppConfig.cs`, `src/Dino/DinoReader.Core/StoreCatalog.cs`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/StorePage.xaml*`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/BookUpdater.cs`, `src/Dino/DinoReader.App/ShelfAudioPacks*.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `src/Dino/DinoReader.App/CLAUDE.md`, `worker/entitlements/**`, `worker/products.ts`, `worker/stories.ts`, `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/entitlements.test.mjs`, `worker/stories.test.mjs`, `worker/CLAUDE.md`, `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/subscription.yaml` (new), `docs/store-listings/dino/**`, `site/dino/privacy.html`, `src/Dino/DinoReader.App/GrownUpGate.cs`, `src/Dino/DinoReader.App/GrownUpMode.cs`, `src/Dino/DinoReader.App/GrownUpHeader.cs`, `src/Dino/DinoReader.App/BackupPage.xaml.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `docs/plan/slices/384-dino-subscription.md`
 
 ## Why
 
@@ -61,6 +61,23 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   is written in advance in `docs/store-listings/dino/play-subscription.md` and is pushed **only when this slice is
   live on Play** (same for the App Store and Microsoft versions, written from it then, with the EULA and privacy
   links Apple requires). The switch is the last work item here; record its date in Slice 291 item 10.
+
+## Design note (coordinator, wave 2026-11-15)
+
+- **iOS stays on StoreKit 1** for this slice, the same path single books use today (`IosPurchases.cs`, transaction id as
+  the proof, the Worker reads it from the App Store Server API, which returns `expiresDate` for subscription
+  transactions). StoreKit 1 sells auto-renewing subscriptions; moving every iOS purchase to StoreKit 2 stays in
+  plan-not-needed: 390 and does not block this one. Reason: one purchase path per platform, and the parked StoreKit 2 route choice is the user's.
+- **One owner of subscription state:** `SubscriptionAccess` (pure, Core) holds the last store answer (state, end date,
+  checked-at) and is persisted through one app-side store (the same settings store purchases use) after every store
+  read. Interrupts: app killed: the persisted record is read at start; offline: the record decides, locked 3 days after
+  the end date (Decision 6); store read fails while online: treated as offline (keep the record), never as expired;
+  cancelled purchase sheet: no change; Restore: replaces the record with the store's answer.
+- **One owner of "unlocked by":** `BookAccess` keeps the per-book record (free, bought, subscription, from-before) written
+  once when a book is downloaded, and upgraded to bought when a purchase lands; never downgraded.
+- **Work G and H do not go live from this slice's build:** `store-products.mjs` gains the subscription in dry-run by
+  default; running `--apply` against the stores and pushing listings are the user's steps under *Waiting on the user*.
+  Listing text H is drafted in the repo only.
 
 ## Work
 
