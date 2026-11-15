@@ -16,7 +16,9 @@ internal sealed class ShelfHeader : Grid
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Label _title = new() { AutomationId = "GalleryTitle", FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
-	private readonly Label _probe = new() { FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1 }; // measures the title's words; never added to a layout
+	// Measures the title's words. It sits in the title's own cell so it has a native view (a label outside a layout has no Handler and measures about 0), but nobody sees or touches it:
+	// transparent, hidden from the accessibility tree, empty between measures, one pixel high (so no row grows) and left-aligned (a star column never widens for it).
+	private readonly Label _probe = new() { FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1, Opacity = 0, InputTransparent = true, HeightRequest = 1, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Center };
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -34,6 +36,7 @@ internal sealed class ShelfHeader : Grid
 		GrownUps = UiUsage.Press(new PillButton("GalleryGrownUps", coral: false), UiControls.OpenCorner, () => GrownUpsRequested?.Invoke()); // Slice 352: counted before the gate opens
 		_iconFrame.Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill };
 		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
+		AutomationProperties.SetIsInAccessibleTree(_probe, false);
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
 		_title.GestureRecognizers.Add(tap);
@@ -121,6 +124,7 @@ internal sealed class ShelfHeader : Grid
 		_row.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)];
 		_row.Add(_iconFrame, 0, 0);
 		_row.Add(_title, 1, 0);
+		_row.Add(_probe, 1, 0);
 		_row.Add(_flag, 2, 0);
 		_row.Add(GrownUps, 3, 0);
 	}
@@ -137,6 +141,7 @@ internal sealed class ShelfHeader : Grid
 		_nameRow.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)];
 		_nameRow.Add(_iconFrame, 0, 0);
 		_nameRow.Add(_title, 1, 0);
+		_nameRow.Add(_probe, 1, 0);
 		_nameRow.Add(_flag, 2, 0);
 		_row.Add(_nameRow, 0, 0);
 		_row.Add(GrownUps, 0, 1);
@@ -240,7 +245,13 @@ internal sealed class ShelfHeader : Grid
 	{
 		_probe.FontSize = _title.FontSize;
 		_probe.FontFamily = _title.FontFamily;
+		_probe.FontAutoScalingEnabled = _title.FontAutoScalingEnabled;
+		_probe.CharacterSpacing = _title.CharacterSpacing;
+		_probe.LineHeight = _title.LineHeight;
 		_probe.Text = text;
-		return _probe.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
+		OwnScript.InOwnScript(_probe); // the Persian family a Farsi title gets, before it is measured
+		double width = _probe.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
+		_probe.Text = string.Empty;
+		return width;
 	}
 }
