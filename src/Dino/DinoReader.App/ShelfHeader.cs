@@ -37,6 +37,9 @@ internal sealed class ShelfHeader : Grid
 		tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
 		_title.GestureRecognizers.Add(tap);
 		Children.Add(_row);
+#if DEBUG
+		_title.SizeChanged += (_, _) => LogTitleSize();
+#endif
 		SizeChanged += (_, _) => FitWhenWidthChanged();
 		GrownUps.HandlerChanged += (_, _) => FitWhenPillChanged(); // Slice 387: the pill can only be measured once it has a native view
 		GrownUps.SizeChanged += (_, _) => FitWhenPillChanged(); // and its words grow with the font scale
@@ -176,11 +179,30 @@ internal sealed class ShelfHeader : Grid
 		_lastPill = PillRoom();
 		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, _lastPill, _sizes.HeaderGap);
 		TitleState = ShelfTitleRules.Fit(available, full, shortWidth);
+#if DEBUG
+		LogFit(full, shortWidth, available, flag); // Slice 387 item 3: the numbers behind the iOS "My s..." cut
+#endif
 		_title.IsVisible = TitleState != ShelfTitle.Hidden;
 		_title.Text = TitleState == ShelfTitle.Short ? AppResources.Gallery_ShelfTitleShort : AppResources.Gallery_Title;
 		OwnScript.InOwnScriptAligned(_title);
 		Fitted?.Invoke(TitleState);
 	}
+
+#if DEBUG
+	private void LogFit(double full, double shortWidth, double available, double flag)
+	{
+		string line = $"[Shelf] fit Width={Width:0.#} rail={_isRail} full={full:0.#} shortWidth={shortWidth:0.#} available={available:0.#} pillRoom={_lastPill:0.#} pillWidth={GrownUps.Width:0.#} flag={flag:0.#} icon={_sizes.Icon:0.#} gap={_sizes.HeaderGap:0.#} state={TitleState} titleFont={_title.FontSize:0.#}";
+		System.Diagnostics.Debug.WriteLine(line);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+	}
+
+	private void LogTitleSize()
+	{
+		string line = $"[Shelf] title laid-out Width={_title.Width:0.#} Height={_title.Height:0.#} text='{_title.Text}' visible={_title.IsVisible} headerWidth={Width:0.#} pillWidth={GrownUps.Width:0.#}";
+		System.Diagnostics.Debug.WriteLine(line);
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+	}
+#endif
 
 	private double RailRoom(double flag)
 	{
