@@ -1,7 +1,7 @@
 # Slice 394 — Dino: the store's "9–12" chip crashes on Android, every book sits in two age bands, empty filters still show
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report. Not built yet.*
+*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day. Not built yet.*
 
 **Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`PlacePurchaseArea`, `BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `content/dino/*/book.json` (`ageMin`/`ageMax`), the store's `meta.json` per book (rebuild and re-upload), `tests/Dino/DinoReader.Tests` (StoreFilter tests), a Maestro store flow under `.maestro/dino/`, this slice file.
 
@@ -19,7 +19,7 @@ The user (2026-11-15), on Android:
 - **Likely crash cause (to prove, item 1).** "9–12" is the only chip that empties the list. When `_rows` goes to 0, `ApplyFilter` calls `PlacePurchaseArea` (`src/Dino/DinoReader.App/StorePage.xaml.cs:850`), which takes the "Bought books before?" `PurchaseArea` out of `StoryList.Footer` and adds it back to `StoreRoot` in the same pass (Slice 364 review). On Android, a view that was a CollectionView footer can still be attached to the RecyclerView's native parent at that moment, the classic `Java.Lang.IllegalStateException: The specified child already has a parent`. It runs whether `PurchaseArea` is visible or not, and the move back (picking "All ages" again) has the same risk. No crash report has been read yet: the crash store needs wrangler's login (Slice 243).
 - **The chips are fixed.** `BuildChips` (`StorePage.xaml.cs:699`) adds one chip per `StoreAgeBand` value, whatever the list holds. The author row already hides when no author is in the band (`ShowAuthor`), and the author picker only lists authors in the band, so it never empties the list.
 
-## Decisions (recommended; the user approves or changes them)
+## Decisions (approved by the user, 2026-11-15)
 
 1. **Each book belongs to one band.** Ranges are narrowed so no book crosses 5/6: "5 & under" books get `3-5`, "6–8" books get `6-8`. The overlap rule in `StoreFilter.InBand` stays (a book with a range like `4-7` from a future upload still shows under both), so the fix is in the data, not a rule change.
 2. **The grouping** (pages and words from `content/dino/*/story.md`; all are 11-17 pages):
