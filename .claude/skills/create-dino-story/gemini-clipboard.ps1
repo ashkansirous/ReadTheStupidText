@@ -1,9 +1,11 @@
 # Moves a picture between a file and the Windows clipboard for the Gemini loop (create-dino-story steps 3 and 6). Run with -STA:
 #   pwsh -STA gemini-clipboard.ps1 Put <file>    puts the picture (e.g. the line-up) on the clipboard, to paste into Gemini with ctrl+v
 #   pwsh -STA gemini-clipboard.ps1 Save <file>   saves the clipboard picture (from gemini-grab.js) as JPEG quality 95, then clears it
+#   pwsh -STA gemini-clipboard.ps1 PutFiles a.jpg,b.jpg   puts several picture FILES on the clipboard as a file list, so ONE ctrl+v can attach
+#                                            all of them (as when copied in Explorer). Not yet confirmed in Gemini: if fewer thumbnails appear, Put them one at a time.
 param(
-  [Parameter(Mandatory = $true)][ValidateSet('Put', 'Save')][string]$Action,
-  [Parameter(Mandatory = $true)][string]$Path
+  [Parameter(Mandatory = $true)][ValidateSet('Put', 'Save', 'PutFiles')][string]$Action,
+  [Parameter(Mandatory = $true)][string[]]$Path
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
@@ -33,4 +35,19 @@ function Save-ClipboardPicture([string]$file) {
   [System.Windows.Forms.Clipboard]::Clear()
 }
 
-if ($Action -eq 'Put') { Set-ClipboardPicture $Path } else { Save-ClipboardPicture $Path }
+function Set-ClipboardFiles([string[]]$files) {
+  $list = [System.Collections.Specialized.StringCollection]::new()
+  $files = @($files | ForEach-Object { $_ -split ',' })   # pwsh -File passes "a.jpg,b.jpg" as one string
+  foreach ($file in $files) {
+    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Picture not found: $file" }
+    [void]$list.Add((Resolve-Path -LiteralPath $file).Path)
+  }
+  [System.Windows.Forms.Clipboard]::SetFileDropList($list)
+  Write-Host "On the clipboard as $($list.Count) file(s): $($files -join ', ')"
+}
+
+switch ($Action) {
+  'Put' { Set-ClipboardPicture $Path[0] }
+  'PutFiles' { Set-ClipboardFiles $Path }
+  'Save' { Save-ClipboardPicture $Path[0] }
+}

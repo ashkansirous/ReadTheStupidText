@@ -160,14 +160,14 @@ the store, not by markup).
 **Short description** (Google Play field, <= 80 chars; on the Microsoft Store
 use it as the first line of the description):
 
-> Read any text aloud with natural voices that work offline, at 0.5x to 2x speed.
+> Natural voices read any text aloud, offline, in 15 languages, at 0.5x to 2x.
 
 **Long description** (Microsoft Store <= 10,000 chars, Google Play <= 4,000):
 see `docs/store-listings/en.md`. It only claims what ships today: selected or
 copied text and the `Ctrl+Win+R` hotkey (Windows); pasted text, `.txt`/`.pdf`/
 `.docx` files and camera-scanned pages (Android); on-device natural voices,
-0.5x-2x speed, nothing leaves the device. It does **not** mention translation,
-languages or voice packs (Batch 9 features not yet shipped).
+0.5x-2x speed, nothing leaves the device. It also names the 15 voice languages, the optional on-device translation
+(not available for every language) and the one-time voice-pack download.
 
 **Limits to re-check when pasting** (they change): Microsoft Store description
 10,000 chars, up to 7 search terms of <= 30 chars each; Google Play title 30,

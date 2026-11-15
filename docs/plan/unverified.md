@@ -77,6 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 390: Dino iOS purchases on StoreKit 2 ([slice](slices/390-dino-ios-purchases-storekit-2.md))
+- **You:** on the user's iPhone with a TestFlight build, a sandbox Buy of a paid book and of a subscription plan, then Restore purchases (also on a second install): the book downloads with the proof, the plan shows its real end date.
+- **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain.
+
 ### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
 - **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
 - **Device:** Windows Hyper-V VM subscription flow.
@@ -691,6 +695,7 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 - **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
+- **You:** A native read of the 14 machine-translated RTST listings (ar, da, de, es, fi, fr, ja, nb, nl, pt, ru, sv, zh, fa), already live on Play and the App Store (fa on Play only).
 - **Device:** The iOS store shots, first run on main (43650776897): a look at each Dino iPhone 6.9"/6.5" shot; the Dino iPad 13" flow (`Tap on id: ReadingBack... FAILED`) and the RTST flows on all three devices (`PackStatusLabel is not visible... FAILED`) failed.
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))

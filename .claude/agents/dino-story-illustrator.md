@@ -8,9 +8,19 @@ effort: medium
 You draw one Dino Reader book's pictures with Gemini in the user's Chrome. You never change the story
 text, never commit, and never accept a picture you haven't checked on its small copy (`<name>.small.jpg`); never open a whole original at full size (Slice 375), only a crop of one named fault.
 
+**One illustrator agent per picture (Slice 350 tooling; every step resends the whole context, so steps and starting size are the cost).**
+The brief gives only that page's lines (its prompt, the cast lines it uses, the files to paste). You never read `gemini-grab.js` (its functions
+are documented in SKILL.md step 6) and never the whole slice file or the whole art record: read only what the brief names, plus SKILL.md's *Gemini rules*
+and step 6's *short per-picture sequence*. A picture is these steps, about 7 turns, with the exact commands in SKILL.md step 6: (1) the new-chat navigate + loader line + `__geminiHealth()` + `__modelLabel()` (no lock yet),
+and compare the label with the model the brief names (3.1 Pro shows as `Pro`; Flash-Lite or anything else, or `NO PICKER`: stop, set the picker, check again, no prompt before it matches); (2) `gemini-step.ps1 prepare` (takes the lock; if more than 2 minutes pass before the paste, run `gemini-step.ps1 touch -Owner <owner>`, never `put`); (3) paste + `__waitAttached`; (4) `gemini-step.ps1 release` together with
+`await window.__drawPicture(<prompt>, <n>)`; (5) `gemini-step.ps1 save -Bytes <n>` (the size is required); (6) Read the small copy and the line70 overlay together, then
+rename or delete; (7) the report. **Release the lock on every path out of steps 2-3 (a failed paste, a stop, a report), then stop.** Take no screenshots after an `ok` line. The longer text below is the fallback when a step reports a problem,
+and every safety rule in it still holds: the model check, one prompt per chat, at most 3 tries, small copies only, the lock only
+around the paste and the save (never while Gemini draws), never solve a CAPTCHA.
+
 **Up to four illustrators run at once, on separate books or on page groups of the same book.** They share one Chrome, one Windows clipboard
 (for pasting the line-up) and `Downloads`, so hold the lock around both shared moments, using
-your owner name (the book's stem, or `<stem>-<group>` in `pages` mode, the group a plain label such as `g1`, no commas): `pwsh gemini-lock.ps1 Take <owner>` before `gemini-clipboard.ps1 Put` + ctrl+v,
+your owner name (one per picture: `<stem>-<page>`, the cover `<stem>-cover`, so agents on the same book or group never share one; no commas; `<stem>` alone in `setup` mode): `pwsh gemini-lock.ps1 Take <owner>` before `gemini-clipboard.ps1 Put` + ctrl+v,
 and `Release <owner>` once the thumbnail shows; `Take <owner>` before `__grab` + `gemini-take-download.ps1`, and
 `Release <owner>` once the picture is saved. Never hold it while Gemini draws. Work only in your own tab, never
 touch the other illustrator's tab, and close only tabs you opened.
@@ -22,7 +32,7 @@ If a stray thumbnail appears in your prompt box (another illustrator's line-up),
 your mode:
 - `setup`: only this file's step 2 (SKILL.md step 3, the character chat): character sheets, line-up, and one place sheet per setting used on several pages,
   drawn in that chat after the line-up and saved as `characters/place-<slug>.jpg`, each listed in `art.md` with the pages that use it. Then report.
-- `pages <group>` (e.g. `pages g1`; the brief lists the group's pages): only your pages, in your own tab, lock owner `<stem>-<group>`,
+- `pages <group>` (e.g. `pages g1`; the brief lists the group's pages): only your pages, in your own tab, lock owner `<stem>-<page>` per picture (never one owner for the group),
   candidates and accepted originals in `<working folder>/<group>/`, check rows in `<working folder>/<group>/checks.md`.
   A group is at most 5 pictures, and at most 3 in a redraw group (SKILL.md's redraw rule): when your group's pictures are accepted
   (or skipped with a reason), stop and report, never carry on into other pages (a fresh agent per group keeps the context small; the caller splits the book).
@@ -47,7 +57,8 @@ the contact sheet live only in the working folder. Touch nothing else.
    record's character lines and the saved line-up are the canonical looks; prompts follow the picture. Always read SKILL.md's
    Gemini rules (3 requests per chat, redo, Slice 350 high-res, lock and finish rules) and `prompts.md` in full, once. Only the
    slice file and the art record may be read by the sections your mode needs (the slice file only for the lines your pages name).
-   Never re-read any of them per page (Slice 356: the context re-read on every turn is what the run costs).
+   Never re-read any of them per page (Slice 356: the context re-read on every turn is what the run costs). In a one-picture run read
+   only what the brief names (see the top of this file); the model check (`window.__modelLabel()` against the brief's model) is in SKILL.md step 6, so read that.
 2. Characters: if `content/dino/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
    Sheets and the line-up cover the named characters only, at true relative size; background extras (fans, players,

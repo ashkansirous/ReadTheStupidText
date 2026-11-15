@@ -274,6 +274,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 391 | Dino Windows: Enter on the first-run story-languages step does not open the book picker (`dino-onboarding-keys` fails), which blocks `dino-reorder` on the VM | built | #1170 | | [391-dino-windows-first-run-enter-on-story-languages.md](../slices/391-dino-windows-first-run-enter-on-story-languages.md) |
 | 384 | Dino: a monthly (£1.99) and yearly (£14.99) subscription with a 7-day trial for every paid book, alongside single-book sales; lapsed subscription books greyed for parents, hidden from the child | built, not yet verified | #1174 | | [384-dino-subscription.md](../slices/384-dino-subscription.md) |
 | 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | built, not yet verified | #1169 | | [383-dino-reading-keeps-going-when-locked.md](../slices/383-dino-reading-keeps-going-when-locked.md) |
+| 390 | Dino iOS purchases: StoreKit 1 (obsoleted from iOS 18) to StoreKit 2, then remove the file-scoped CA1422 suppression from Slice 378 | built, not yet verified | #1189 | | [390-dino-ios-purchases-storekit-2.md](../slices/390-dino-ios-purchases-storekit-2.md) |
 
 ## Shared
 

@@ -21,6 +21,8 @@ export interface Proof {
 export interface CheckResult {
   readonly verdict: VerdictName;
   readonly owned: readonly string[];
+  /** The store environment a verified signed purchase named (Apple: "Production" or "Sandbox"); absent for a proof that carries none. */
+  readonly environment?: string;
 }
 
 /** The fetch the checkers use; tests pass a recorded one. */
