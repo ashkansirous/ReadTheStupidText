@@ -16,12 +16,14 @@ internal sealed class ShelfHeader : Grid
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private const string TitleAutomationId = "GalleryTitle";
+	private const string FullTitleAutomationId = "GalleryTitleFull";
 	private const string ShortTitleAutomationId = "GalleryTitleShort";
 	// Slice 387 item 3 (two failed iOS runs: a live label whose Text was swapped kept a stale short width; a probe label in the cell laid out 0 x 0): two title labels in the title's cell, one with the full words and
 	// one with the short words, each with a Text that only changes with the language. Both stay IsVisible (each has a native view to measure); Fit shows one by Opacity 1 and puts it in the accessibility tree.
-	// The full one carries the id the flows look for (GalleryTitle); the short one has its own (GalleryTitleShort), and starts out of the tree so only the full one is findable before the first Fit.
-	private readonly Label _titleFull = NewTitle(TitleAutomationId, inTree: true);
+	// Both labels sit in one container that always carries the id the flows, VM checks and debug hooks look for (GalleryTitle), whatever Fit chose (Full, Short or Hidden); the labels have their own ids (an AutomationId is set once).
+	private readonly Label _titleFull = NewTitle(FullTitleAutomationId, inTree: true);
 	private readonly Label _titleShort = NewTitle(ShortTitleAutomationId, inTree: false);
+	private readonly Grid _titleHost = new() { AutomationId = TitleAutomationId, VerticalOptions = LayoutOptions.Center };
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -30,6 +32,8 @@ internal sealed class ShelfHeader : Grid
 	private bool _flagShown;
 	private double _lastWidth;
 	private double _lastPill;
+	private bool _remeasure; // a Text or FontSize changed: the next Fit waits for a dispatched pass
+	private bool _raisePending; // Fitted is owed for a change not yet raised
 
 	public ShelfHeader(StoryLanguageButton flag)
 	{
@@ -44,7 +48,8 @@ internal sealed class ShelfHeader : Grid
 			var tap = new TapGestureRecognizer();
 			tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
 			title.GestureRecognizers.Add(tap);
-			title.HandlerChanged += (_, _) => Fit(); // Slice 387: a no-op without both handlers, so a rebuilt label is measured only once it has a native view
+			title.HandlerChanged += (_, _) => FitWhenHandled(title); // Slice 387: a no-op without both handlers, so a rebuilt label is measured only once it has a native view
+			_titleHost.Children.Add(title);
 #if DEBUG
 			title.SizeChanged += (_, _) => LogTitleSize(title);
 #endif
@@ -95,8 +100,8 @@ internal sealed class ShelfHeader : Grid
 		_iconFrame.WidthRequest = sizes.Icon;
 		_iconFrame.HeightRequest = sizes.Icon;
 		_iconFrame.StrokeShape = new RoundRectangle { CornerRadius = sizes.IconRadius };
-		_titleFull.FontSize = sizes.Title;
-		_titleShort.FontSize = sizes.Title;
+		SetTitleFont(sizes.Title);
+		_raisePending = true; // the chrome changed: the log line carries it even when the title state is the same
 		_flag.SetRound(sizes.FlagButton, sizes.Flag);
 		_flag.IsVisible = flagShown;
 		GrownUps.Apply(sizes.PillHeight, sizes.PillLabel, sizes.PillPadLeft, sizes.PillPadRight, sizes.PillGap, sizes.PillIcon, fullWidth: _isRail);
@@ -139,8 +144,7 @@ internal sealed class ShelfHeader : Grid
 		_row.Padding = new Thickness(_sizes.Header.Left, _sizes.Header.Top, _sizes.Header.Right, _sizes.Header.Bottom);
 		_row.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)];
 		_row.Add(_iconFrame, 0, 0);
-		_row.Add(_titleFull, 1, 0);
-		_row.Add(_titleShort, 1, 0);
+		_row.Add(_titleHost, 1, 0);
 		_row.Add(_flag, 2, 0);
 		_row.Add(GrownUps, 3, 0);
 	}
@@ -156,8 +160,7 @@ internal sealed class ShelfHeader : Grid
 		_nameRow.ColumnSpacing = RailNameSpacing;
 		_nameRow.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)];
 		_nameRow.Add(_iconFrame, 0, 0);
-		_nameRow.Add(_titleFull, 1, 0);
-		_nameRow.Add(_titleShort, 1, 0);
+		_nameRow.Add(_titleHost, 1, 0);
 		_nameRow.Add(_flag, 2, 0);
 		_row.Add(_nameRow, 0, 0);
 		_row.Add(GrownUps, 0, 1);
@@ -190,10 +193,13 @@ internal sealed class ShelfHeader : Grid
 	/// <summary>Chooses the title that fits the row: "My stories", "Stories", or none. A no-op until the header has a width.</summary>
 	public void Fit()
 	{
-		if (SetTitleTexts())
+		_remeasure |= SetTitleTexts();
+		if (_remeasure)
 		{
+			_remeasure = false;
+			_raisePending = true;
 			InvalidateTitles();
-			Dispatcher.Dispatch(Fit); // a new Text is measured only after the next layout pass: iOS returns the old text's width in the same pass (run 43675329629)
+			Dispatcher.Dispatch(Fit); // a new Text or FontSize is measured only after the next layout pass: iOS returns the old width in the same pass (run 43675329629)
 			return;
 		}
 
@@ -208,13 +214,42 @@ internal sealed class ShelfHeader : Grid
 		double flag = _flagShown ? _sizes.FlagButton : 0;
 		_lastPill = PillRoom();
 		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, _lastPill, _sizes.HeaderGap);
+		ShelfTitle previous = TitleState;
 		TitleState = ShelfTitleRules.Fit(available, full, shortWidth);
 #if DEBUG
 		LogFit(full, shortWidth, available, flag); // Slice 387 item 3: the numbers behind the iOS "My s..." cut
 #endif
 		ShowTitle(_titleFull, TitleState == ShelfTitle.Full);
 		ShowTitle(_titleShort, TitleState == ShelfTitle.Short);
-		Fitted?.Invoke(TitleState);
+		RaiseFitted(previous);
+	}
+
+	// Fitted is raised after a fit that ran past its deferral, once per change (a Text, a FontSize or a chrome change) or when the kept title differs from the last fit; never for a repeat of the same fit.
+	private void RaiseFitted(ShelfTitle previous)
+	{
+		if (_raisePending || previous != TitleState)
+		{
+			_raisePending = false;
+			Fitted?.Invoke(TitleState);
+		}
+	}
+
+	private void FitWhenHandled(Label title)
+	{
+		if (title.Handler is not null)
+		{
+			Fit(); // a detach (Handler null) cannot be measured
+		}
+	}
+
+	private void SetTitleFont(double size)
+	{
+		if (Math.Abs(_titleFull.FontSize - size) > 0.01)
+		{
+			_titleFull.FontSize = size;
+			_titleShort.FontSize = size;
+			_remeasure = true;
+		}
 	}
 
 	// The shown label is opaque, touchable and in the accessibility tree; the other is transparent, transparent to touch and out of the tree.
