@@ -140,8 +140,29 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
         }
     }
 
-    // Slice 384: Apple's own subscriptions page, where a subscription is cancelled or its plan changed.
-    public async Task<bool> ManageSubscriptionAsync() => await Launcher.Default.OpenAsync(new Uri(ManageAddress));
+    // Slice 384: Apple's own Manage Subscriptions sheet, where a subscription is cancelled or its plan changed. The web page is the fallback only, because it never lists a sandbox (TestFlight) subscription.
+    public async Task<bool> ManageSubscriptionAsync()
+    {
+        StoreKit2Bridge? bridge = StoreKit2Bridge.Load();
+        string? answer = bridge is null ? null : await bridge.ManageSubscriptionsAsync(); // no timeout: the sheet waits for the person, and the web address must never open on top of it
+        if (answer is not null && StoreKit2Answers.IsOk(answer))
+        {
+            PurchaseTrace.Line("manage sheet shown, re-reading the subscription");
+            PurchaseUpdates.Raise(); // a cancel or plan change made in the sheet shows without a restart
+            return true;
+        }
+
+        string? error = answer is null ? null : StoreKit2Answers.Error(answer);
+        bool sheetUnavailable = answer is null || error == StoreKit2Answers.Unsupported || error == StoreKit2Answers.NoScene;
+        if (!sheetUnavailable)
+        {
+            PurchaseTrace.Line($"manage sheet failed error={error}"); // a StoreKit error is the sheet failing: the page says it did not work, the web page stays closed
+            return false;
+        }
+
+        PurchaseTrace.Line($"manage sheet unavailable error={error ?? "no bridge"}, opening the web page");
+        return await Launcher.Default.OpenAsync(new Uri(ManageAddress));
+    }
 
     private BuyOutcome OutcomeOf(string productId, string outcome)
     {

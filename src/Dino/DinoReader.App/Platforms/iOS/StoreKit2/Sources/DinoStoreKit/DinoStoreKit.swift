@@ -161,6 +161,29 @@ public func dinoSkRedeem(_ requestId: Int32, _ callback: DinoCallback) {
     }
 }
 
+/// Apple's own "Manage Subscriptions" sheet (iOS 15 and newer), which also lists sandbox (TestFlight) subscriptions that the web page never shows (Slice 384). Answers when the sheet closes: `{"ok":true}`, or
+/// `{"ok":false,"error":"no-scene"}` (no window scene), `"unsupported"` (an iOS app running on a Mac) or the StoreKit `domain:code` of a failure; the caller opens the web address only for the first two.
+@_cdecl("dino_sk_manage_subscriptions")
+public func dinoSkManageSubscriptions(_ requestId: Int32, _ callback: DinoCallback) {
+    Task { @MainActor in
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            deliver(callback, requestId, ["ok": false, "error": "unsupported"])
+            return
+        }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
+            deliver(callback, requestId, ["ok": false, "error": "no-scene"])
+            return
+        }
+        do {
+            try await AppStore.showManageSubscriptions(in: scene)
+            deliver(callback, requestId, ["ok": true])
+        } catch {
+            fail(callback, requestId, error)
+        }
+    }
+}
+
 private var updatesTask: Task<Void, Never>?
 
 /// Starts the one `Transaction.updates` listener (renewals, Ask to Buy approvals, purchases made elsewhere): each verified one is finished and reported as `{"event":"updated","productId":...}` with request id 0.

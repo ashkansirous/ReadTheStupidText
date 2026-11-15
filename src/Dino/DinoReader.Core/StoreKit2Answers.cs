@@ -56,6 +56,7 @@ public static class StoreKit2Answers
     public const string Pending = "pending";
     public const string Failed = "failed";
     public const string Unsupported = "unsupported";
+    public const string NoScene = "no-scene";
 
     /// <summary>The prices (product to the App Store's own text) of a products answer, with the ids Apple did not know; null when the request failed.</summary>
     public static (Dictionary<string, string> Prices, IReadOnlyList<string> Invalid)? Prices(string json)

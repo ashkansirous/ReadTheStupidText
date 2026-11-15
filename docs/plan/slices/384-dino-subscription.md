@@ -219,3 +219,12 @@ Not yet verified (moved below the Apple section):
 - Offline 3-day lock on a real device.
 - Restore on iOS.
 - The plans showing in the iOS app (sandbox/TestFlight) now that the products exist.
+
+## iOS Manage subscription (2026-11-15)
+
+Bug (user, TestFlight): "the subscription worked, but after, I tried to cancel it. it opened another external place where it showed that I have no subscriptions." Cause: iOS `ManageSubscriptionAsync` opened https://apps.apple.com/account/subscriptions, and a TestFlight app runs in the sandbox, which that page never lists.
+
+Fix: Apple's in-app sheet `AppStore.showManageSubscriptions(in:)` (iOS 15+; the iOS 17 subscription-group overload is not used) through the new Swift export `dino_sk_manage_subscriptions` (Slice 390's wrapper; it answers `ok`, or `no-scene`, `unsupported` (iOS app on a Mac) or the StoreKit error). `IosPurchases.ManageSubscriptionAsync` returns true when the sheet was shown and then raises `PurchaseUpdates` so the status is read again (a cancel shows). The web page opens only when the bridge is missing or the answer is `no-scene` or `unsupported`; any other failure returns false and the page says it did not work. Debug trace lines: `manage sheet shown`, `manage sheet failed`, `manage sheet unavailable`. Android keeps the Play subscriptions link (it works for Play's own test purchases); Windows is unchanged.
+
+Not yet verified:
+- Manage subscription on a TestFlight iPhone shows Apple's sheet with the sandbox subscription, and a cancel there shows in the app after the sheet closes (the Swift side is proven by `dinoreader-ios` on the branch, the behaviour only on a device).
