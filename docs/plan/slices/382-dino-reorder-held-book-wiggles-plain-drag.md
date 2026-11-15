@@ -1,7 +1,7 @@
 ### Slice 382 — Dino reorder: the held book wiggles, a drag needs no hold in edit mode, covers are sharp on first open
 **Product:** Dino
 
-*Built 2026-11-15, PR #1162, not merged. Emulator run passed; Windows VM, S21 and iOS not yet verified (see Not yet verified).*
+*Built 2026-11-15, merged as PR #1162 (a683600a). Emulator run passed; Windows VM, S21 and iOS not yet verified (see Not yet verified).*
 
 **Touches:** `src/Dino/DinoReader.App/ShelfReorderView.cs`, `src/Dino/DinoReader.App/ShelfReorderTiles.cs`, `src/Dino/DinoReader.App/StoryCover.xaml`, `src/Dino/DinoReader.App/StoryCover.xaml.cs`, `src/Dino/DinoReader.Core/ShelfDragSession.cs`, `src/Dino/DinoReader.Core/ReorderPan.cs` (new, only if the drag start rule is pulled out as pure code), `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml`, `tools/desktop-vm/checks/dino-reorder.ps1`, `src/Dino/DinoReader.App/CLAUDE.md`, `src/Dino/DinoReader.App/StoryTile.cs` (sets `CoverImagePath`/`HasImage`), `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs` (the typed `Cover_Waiting` property, widened 2026-11-15 by review fix #11; no open PR touches it), `docs/plan/slices/382-dino-reorder-held-book-wiggles-plain-drag.md`
 
@@ -74,8 +74,8 @@
 - Emulator (build 22e6b62ec3cb): PASS `shelf-reorder`, see the Verification line above.
 - Windows VM: `dino-reorder` did not reach this slice's code. Its prerequisite `dino-onboarding-keys` failed twice ("Enter on the story-languages step did not open the book picker (waited 30 s)"; trace "Dino keyboard: Enter not used (FirstRunPage, no target)"). Slice 382 changes no first-run code. Logs: `reviews/wave6-device/vm-reorder.log`, `vm-reorder2.log`.
 
-#### For CLAUDE.md
-(none from the brief)
+#### For CLAUDE.md (lifted 2026-11-15)
+(none from the brief; the rule was added in the slice's own PR)
 
 #### Not yet verified
 - Windows VM `dino-reorder` (mouse drag, keyboard path, the new hint): blocked by the `dino-onboarding-keys` first-run Enter failure, not yet checked on main.

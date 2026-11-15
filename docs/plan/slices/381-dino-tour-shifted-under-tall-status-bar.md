@@ -1,7 +1,7 @@
 ### Slice 381 — Dino: the first-run tour's highlights and tooltips sit lower than the real buttons on a tall status bar
 **Product:** Dino
 
-*Built 2026-11-15, PR #1164, not merged. Emulator flow passed at two sizes; S21, iOS and the Farsi run not yet verified.*
+*Built 2026-11-15, merged as PR #1164 (906fabde). Emulator flow passed at two sizes; S21, iOS and the Farsi run not yet verified.*
 
 **Touches:** `src/Dino/DinoReader.App/CornerTour.cs`, `src/Dino/DinoReader.Core/TourGeometry.cs` (new, only if the offset rule is pulled out as pure code), `tests/Dino/DinoReader.Tests/TourGeometryTests.cs` (new, same condition), `.maestro/dino/onboarding-tour-position.yaml` (new), `src/Dino/DinoReader.App/Testing/DinoTestCommands.cs` (a log line with the copy's and the target's bounds), `src/Dino/DinoReader.App/CLAUDE.md`, `docs/plan/slices/381-dino-tour-shifted-under-tall-status-bar.md`
 
@@ -50,7 +50,7 @@
 
 **Debug log and flow, moved here from CLAUDE.md (review #7).** Debug logs `[Onboarding] tour stop=<stop> aligned=yes|no copy=x,y,w,h target=x,y,w,h` per stop once the copy is laid out, and `tour placement misaligned=<n>` when the tour ends. `onboarding-tour-position.yaml` expects `aligned=yes` at every stop and `misaligned=0` at the end. A view not yet in a window reads as unreadable, and `Draw` retries; on the last try the layout sum is used and the fallback is reported once per stop. Windows reads no screen position, so it keeps the layout sum and logs no placement.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 - The tour places each copy and tooltip from the target's screen position less the tour layer's screen position (`TourGeometry.InLayer`, `CornerTour.cs`), never from a sum of layout `X/Y`: a padding inset (status bar) is not part of a child's `Y`. Windows has no screen read and keeps the layout sum. (Slice 381: docs/plan/slices/381-dino-tour-shifted-under-tall-status-bar.md)
 
 (Already written into `src/Dino/DinoReader.App/CLAUDE.md`, First run bullet, on this branch; the index pass lifts it only if missing.)
