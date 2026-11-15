@@ -75,7 +75,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > TestFlight on merge (the Store only if a Windows path also changed, see above). Expect that, or batch such
 > edits. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
-> **The SDK is pinned in `global.json`** (`10.0.401`, `rollForward: latestPatch`, so only the 10.0.4xx band): runner images
+> **The SDK is pinned in `global.json`** (`10.0.401` is the floor, `rollForward: latestPatch`, so any installed 10.0.4xx at or above it: a machine on 10.0.402 builds, and the Android/Windows workflows pinning 10.0.404 roll forward to it): runner images
 > now also carry a .NET 11 SDK, which the `dotnet` muxer would pick over `setup-dotnet`'s install and break the
 > workload install (manifest conflict). Every workflow's `setup-dotnet` installs a 10.0.4xx SDK (explicit version, or
 > `global-json-file: global.json`); a workload install logs `dotnet --version` before it (the Windows Dino job installs into its own
@@ -94,12 +94,12 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > the shared suite runs for both. `src/Rtst/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
 > only (no `dinowin`). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 
-> **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401
-> (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27.
-> Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
+> **iOS toolchain pin:** the iOS workflows install dotnet 10.0.401 exactly (not 10.0.404: an iOS SDK/workload-set pairing off 10.0.401 was never run on macos-26; Slice 379) with workload set 10.0.401
+> (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27 (every workload set after 10.0.401 carries
+> iOS SDK 27.x; checked 2026-11-15, Slice 379). Bump the SDK, workload set and Xcode together, once Xcode 27 is on the runners. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
-> **Android toolchain pin (Slice 72):** `android.yml` and `dinoreader-android.yml` pin dotnet 10.0.402 + workload set
-> 10.0.402 (Android SDK 36.1.118, the first with R8 obfuscation). `src/Shared/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
+> **Android toolchain pin (Slice 72):** `android.yml` and `dinoreader-android.yml` pin dotnet 10.0.404 + workload set
+> 10.0.404 (Android SDK 36.1.118, the first with R8 obfuscation). `src/Shared/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
 > setting plus an Error target) fails any Release Android build on an older SDK, so these two files and the props'
 > `36.1.118` check move together; no other workflow builds Android Release. `src/Shared/AndroidProguard.cfg` holds the R8 keep rules
 > (MAUI Essentials reaches `ActivityResultContracts` through JNI, and R8 stripped `PickVisualMedia$ImageOnly.INSTANCE`).
@@ -107,7 +107,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > dinoapp path groups, so editing either ships both Android apps.
 > After editing `AndroidProguard.cfg`, delete `obj/Release` and `bin/Release` before rebuilding: stale generated manifest keep rules otherwise survive.
 
-> **Dino Windows toolchain pin (Slice 240):** `dinoreader-windows.yml` pins `SDK_VERSION` and `WORKLOAD_SET` (job `env`, both 10.0.402) and caches the whole job-local dotnet root (SDK + file-based maui-windows workload, installed by `setup-dotnet` into `DOTNET_INSTALL_DIR`; no MSI marker, so no `userlocal` or `DOTNET_CLI_HOME`) plus NuGet packages per matrix arch. The two pins must match each other and both are in the cache key; never use `10.0.x` there. The key includes `ImageOS` but not `ImageVersion` (jobs of one run can get different image versions). A restore is validated (version, `maui-windows`, a Microsoft.Maui folder in `packs\`); a bad exact hit is reinstalled, its entry deleted (`gh cache delete`, job needs `actions: write`) and saved again under the same key. A called workflow can only downgrade its caller's token permissions, so every `permissions:` scope a reusable workflow's job asks for must also be granted on the caller job in `release-dino.yml` (`build-dinowin`; and the `shared` job of each release file must grant what `release-shared.yml`'s jobs ask for), or the whole release run ends `startup_failure` with 0 jobs. `release-scripts.yml` enforces it: `.github/scripts/check-called-workflow-permissions.mjs` fails a PR when a called workflow (top level or any job) asks for more than its caller job grants (Slice 242). (Slice 240: docs/plan/slices/240-dino-windows-ci-setup-cache.md)
+> **Dino Windows toolchain pin (Slice 240):** `dinoreader-windows.yml` pins `SDK_VERSION` and `WORKLOAD_SET` (job `env`, both 10.0.404) and caches the whole job-local dotnet root (SDK + file-based maui-windows workload, installed by `setup-dotnet` into `DOTNET_INSTALL_DIR`; no MSI marker, so no `userlocal` or `DOTNET_CLI_HOME`) plus NuGet packages per matrix arch. The two pins must match each other and both are in the cache key; never use `10.0.x` there. The key includes `ImageOS` but not `ImageVersion` (jobs of one run can get different image versions). A restore is validated (version, `maui-windows`, a Microsoft.Maui folder in `packs\`); a bad exact hit is reinstalled, its entry deleted (`gh cache delete`, job needs `actions: write`) and saved again under the same key. A called workflow can only downgrade its caller's token permissions, so every `permissions:` scope a reusable workflow's job asks for must also be granted on the caller job in `release-dino.yml` (`build-dinowin`; and the `shared` job of each release file must grant what `release-shared.yml`'s jobs ask for), or the whole release run ends `startup_failure` with 0 jobs. `release-scripts.yml` enforces it: `.github/scripts/check-called-workflow-permissions.mjs` fails a PR when a called workflow (top level or any job) asks for more than its caller job grants (Slice 242). (Slice 240: docs/plan/slices/240-dino-windows-ci-setup-cache.md)
 
 > **iOS signing (Slice 48, lifted 2026-10-21):** `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 

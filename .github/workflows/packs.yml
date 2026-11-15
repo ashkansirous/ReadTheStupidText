@@ -191,12 +191,12 @@ jobs:
           git lfs install --local
           git lfs pull --include "src/Rtst/ReadTheStupidText.App/VoiceModel/**" --exclude "content/dino/**/audio/**"
 
-      # The quantiser pins below (onnxruntime 1.23.2, matching the apps) have no wheels for the
-      # runner image's newer default Python, so pin one they support.
-      - name: Use Python 3.12 for the quantiser
+      # The quantiser pins below (onnxruntime 1.23.2, matching the apps) have wheels only up to
+      # Python 3.13 (PyPI, read 2026-11-15; 3.14 and 3.15 have none), so pin the newest they support.
+      - name: Use Python 3.13 for the quantiser
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Refuse a tag that is not packs-<number>
         run: |

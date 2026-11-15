@@ -78,7 +78,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       # A test-only Debug build must clear the live remote config minVersion gate: the csproj default 1.0 is below it,
       # so the app opened the "Dino needs an update" page (run 43639865693). Same property form as dinoreader-ios.yml.

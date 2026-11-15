@@ -1,7 +1,9 @@
 # Slice 387 — Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button
 **Product:** Dino
 
-*Items 1-2 merged in PR #1157 (Android verified). Item 3 in progress (wave 2026-11-15), draft PR.*
+*Items 1-2 merged in PR #1157 (Android verified). Item 3 built in PR #1168 (2026-11-15): the starter session took it over after the wave-7 park; the fit file route found the cause, and the two-label design passed iOS simulator run 43681051514 and the Android emulator checks.*
+
+**Park note (wave 7, night 2026-11-14-1547, resolved by PR #1168):** draft PR #1168 (branch `fix/387-ios-title`, worktree `s387b`) holds Debug-only diagnostics, unreviewed and not merged. The `[Shelf] fit` / `[Shelf] title laid-out` lines (ShelfHeader.cs, `Debug.WriteLine` + `TestHookLog.Write`) never reached the iOS unified log in two Debug simulator runs: dinoreader-ios-sim 43671940787 (smallest iPhone, 390 pt; the collect step keeps the last 3000 lines) and 43673538364 (iPhone Pro Max; a new "Shelf fit lines" step grepping the whole log found none, and the whole log held only 11 RTST-TEST lines, so TestHookLog/Console output mostly does not reach the unified log on iOS). store-screenshots 43669367967 prints no app log at all. The flow itself also failed in 43673538364 (exit code not read yet). Next: a channel that reaches the runner, e.g. the Debug build writes the fit lines to a file in the app's data container and the workflow copies it out with `xcrun simctl get_app_container <udid> <bundle> data`, or os_log/NSLog instead of Console. Logs: `reviews/wave7-device/387-ios-*.log`.
 
 **Touches:** `src/Dino/DinoReader.App/ShelfHeader.cs` (the shelf header is built in code), `src/Dino/DinoReader.Core/ShelfTitleRules.cs`, `tests/Dino/DinoReader.Tests/ShelfTitleRulesTests.cs`, `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`, `.github/workflows/dinoreader-ios-sim.yml` (only to read or print the Debug fit line), `.maestro/dino/**` (only a flow that prints or captures the fit line)
 

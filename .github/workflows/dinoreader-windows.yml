@@ -105,8 +105,8 @@ jobs:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       MANIFEST: src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest
       VERSION: ${{ inputs.version || needs.version.outputs.version }}
-      SDK_VERSION: '10.0.402'
-      WORKLOAD_SET: '10.0.402'
+      SDK_VERSION: '10.0.404'
+      WORKLOAD_SET: '10.0.404'
     steps:
       - name: Checkout
         uses: actions/checkout@v7

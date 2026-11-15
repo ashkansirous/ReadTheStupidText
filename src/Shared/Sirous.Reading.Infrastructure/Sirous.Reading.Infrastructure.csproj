@@ -28,13 +28,13 @@
        Microsoft.ML.Tokenizers (MIT) reads the pack's SentencePiece model. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
-    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="3.0.0" />
   </ItemGroup>
 
   <!-- Diagnostic logging: Serilog rolling-file sink for the per-day system log.
        The structured input log is hand-written (see ActivityInputLog). -->
   <ItemGroup>
-    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 

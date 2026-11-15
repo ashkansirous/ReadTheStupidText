@@ -38,6 +38,10 @@ public sealed class ReadingSession
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recordedPlay;
+#if DEBUG
+	private readonly HashSet<int> _pagesReached = []; // Slice 383: the pages the read has shown a sentence of; cleared when a read starts; only the Debug finish line reads it
+	private volatile bool _windowStopped; // Slice 383: set by the page while its window is stopped (lock, screen off, Home); only a log line reads it, the beat ignores it
+#endif
 
 	// Slice 288: every change to a field IsAudible reads goes through a setter that runs UpdateAudible, so no transition can skip it.
 	private RecordedPlay _recorded
@@ -230,6 +234,17 @@ public sealed class ReadingSession
 		_pageStarts = StoryRecordings.PageStarts(story.Pages);
 		_pageSentences = SentencesOfPages(story.Pages.Count);
 		_unplayable.Clear();
+#if DEBUG
+		_pagesReached.Clear();
+#endif
+	}
+
+	/// <summary>Slice 383: the page tells the session its window is stopped or back; it changes nothing but a Debug log line (nothing at all in Release), so a device check can tell a piece shown while the screen slept.</summary>
+	public void SetWindowStopped(bool stopped)
+	{
+#if DEBUG
+		_windowStopped = stopped;
+#endif
 	}
 
 	// A clip plays in the language it was recorded in (Slice 286): the reading language picks which clips are in play, and the screen shows that language's text, so no clip is left out for its page's text.
@@ -353,6 +368,9 @@ public sealed class ReadingSession
 		Finished = false;
 		CurrentSentence = sentence;
 		CurrentPosition = position;
+#if DEBUG
+		_pagesReached.Add(PageOf(sentence));
+#endif
 		SentenceChanged?.Invoke(this, sentence);
 	}
 
@@ -388,10 +406,10 @@ public sealed class ReadingSession
 	}
 
 	/// <summary>
-	/// A piece shown for a beat has no sound, so while the page cannot be seen (screen lock, another app, the grown-up gate, the page leaving) its timer stops; it never runs on unseen. The page states the combined
-	/// fact after every event (Slice 322); the same value twice does nothing. Only the cover flips: a person's pause is untouched. A clip plays on, as audio does.
+	/// A piece shown for a beat has no sound, so while the page is covered (the grown-up gate, a sheet, the page leaving) its timer stops. Slice 383: a locked or dark screen, Home or another app do not cover it:
+	/// the beat runs on and the read goes to the next page, so a parent can read with the screen dark. The page states the combined fact after every event (Slice 322); the same value twice does nothing. Only the cover flips: a person's pause is untouched. A clip plays on, as audio does.
 	/// </summary>
-	public void SetBeatHidden(bool hidden, BeatCoverCause cause)
+	public void SetBeatHidden(bool hidden)
 	{
 		if (_silent.SetHidden(hidden))
 		{
@@ -399,12 +417,12 @@ public sealed class ReadingSession
 			{
 				StopBeat();
 				_beatPausedByCover = true;
-				AudioPackLog.Write(cause == BeatCoverCause.Window ? "silent piece paused, the window is not in front" : "silent piece paused, the page is not shown");
+				AudioPackLog.Write("silent piece paused, the page is not shown");
 			}
 			else
 			{
 				StartBeatTimer();
-				AudioPackLog.Write(_beatPausedByCover ? "silent piece resumed, the page is shown and its window is in front" : "silent piece started, the page is shown and its window is in front");
+				AudioPackLog.Write(_beatPausedByCover ? "silent piece resumed, the page is shown" : "silent piece started, the page is shown");
 				_beatPausedByCover = false;
 			}
 		}
@@ -511,6 +529,9 @@ public sealed class ReadingSession
 		{
 			RaiseStopped(ReadStopReason.Restarted); // a start that cuts a running read closes it first
 			_countedOpen = true;
+#if DEBUG
+			_pagesReached.Clear(); // Slice 383: a read asked for from outside starts its own record, so "read all" never passes on an earlier read's pages
+#endif
 			Playback?.Invoke(ReadingEventKind.Started, null);
 		}
 
@@ -1012,6 +1033,13 @@ public sealed class ReadingSession
 		VoicedSegment piece = step.Run[0];
 		ReportPieceFallback(read, index, read.SilentReason);
 		AudioPackLog.Write($"silent piece shown (sentence {StorySentences.IndexAt(_sentences, piece.SourceStart)}) {read.SilentReason}");
+#if DEBUG
+		if (_windowStopped)
+		{
+			AudioPackLog.Write("silent piece shown while the window is stopped (the screen is locked or off)"); // Slice 383: only a beat that ran on while asleep writes this; the old pause-on-lock never could
+		}
+#endif
+
 		NoteFirstSound("silent piece", read.ReadId);
 		bool timerRuns = _silent.Begin(); // before ClearPending, so the state is Playing (never Loading) the moment the pending marker goes
 		RunOnMain(() => MarkPiece(read, piece));
@@ -1141,6 +1169,11 @@ public sealed class ReadingSession
 
 		Finished = true;
 		AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.Finished);
+#if DEBUG
+		int pagesWithText = _pageSentences.Count(p => p.First >= 0);
+		string all = _pagesReached.Count == pagesWithText ? "all " : "";
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] book finished: read {all}{_pagesReached.Count} of {pagesWithText} pages"); // Slice 383: read-while-locked expects "read all"; a count short of the total is a failed read
+#endif
 		RaiseStopped(ReadStopReason.Finished);
 		RaiseStateChanged(); // the page counts a finished book from this
 	}

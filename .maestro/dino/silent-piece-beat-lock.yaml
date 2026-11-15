@@ -1,19 +1,18 @@
-# Slice 322: the silent beat follows the screen lock like the read's audio does. Locking the screen raises Window.Stopped (Android onStop, iOS DidEnterBackground), not Page.OnDisappearing, so
-# ReadingPage recombines "page shown" and "window in front" and tells the session (SetBeatHidden): the beat's timer stops and no further "silent piece shown" line is written while the screen is locked; on unlock the whole beat starts again
-# and the read goes on. The flow cannot assert an absent line, so it proves the path by the two lines the pause and the resume write, in that order, plus a piece shown after the unlock.
+# Slice 383 (replaces Slice 322's rule for a lock): a locked or dark screen does NOT pause the silent beat; a book that is playing keeps reading with the screen off. Locking raises Window.Stopped (Android onStop, iOS
+# DidEnterBackground), not Page.OnDisappearing; ReadingPage logs "window stopped" and the beat's timer is not touched, so the pieces keep being shown while asleep; the session then writes "silent piece shown while the window is stopped" for a piece shown between a stop and the next resume.
+# Only the page itself being covered (the grown-up gate, a sheet) pauses a beat.
 # Same setup as silent-piece-beat (store offline, so no piece has a clip). Needs the emulator's screen lock set to None or Swipe.
-# Maestro's `pressKey: lock` never turned the emulator's screen off (330 dumpsys power samples all Awake, no onStop), so the sleep and wake come from the harness: `# needs: screen-cycle` makes run-flows.ps1
-# send KEYCODE_SLEEP for 4 s every 12 s while the flow runs, then KEYCODE_WAKEUP and wm dismiss-keyguard (tools/emulator/dialog-guard.ps1, Get-ScreenCycleCommands). The flow only waits and checks the read goes on.
+# `# needs: screen-cycle` makes run-flows.ps1 send KEYCODE_SLEEP for 4 s every 12 s while the flow runs, then KEYCODE_WAKEUP and wm dismiss-keyguard (tools/emulator/dialog-guard.ps1, Get-ScreenCycleCommands).
 # needs: screen-cycle
-# To see it fail against the old behaviour: before Slice 322 a lock wrote no "silent piece paused, the window is not in front" line and the beat kept going.
+# To see it fail against the old behaviour: before Slice 383 a lock stopped the beat's timer, so the next piece could only be shown after the unlock and the line "silent piece shown while the window is stopped" could never be written (on origin/main it does not exist, and its condition cannot happen).
 # expect-log: HOOK test-store ok offline
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK read start
 # expect-log: [AudioPack] silent piece shown (sentence 0)
-# expect-log: [AudioPack] silent piece paused, the window is not in front
-# expect-log: [AudioPack] silent piece resumed, the page is shown and its window is in front
+# expect-log: [AudioPack] window stopped (lock, screen off, Home or another app)
+# expect-log: [AudioPack] silent piece shown while the window is stopped
 appId: uk.sirous.dinoreader.dbg
-name: The silent beat pauses when the screen locks and goes on when it is back
+name: The silent beat goes on while the screen is locked
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, side languages, installed audio packs, a stored shelf order); fine here: skip-first-run puts the four test books back and no audio pack may be installed beforehand, so that every piece has no clip.
@@ -48,8 +47,7 @@ name: The silent beat pauses when the screen locks and goes on when it is back
 - extendedWaitUntil:
     visible: Pause
     timeout: 30000
-# A real wait of 45 s (nothing with this id ever shows; optional lets the flow go on): the harness sleeps and wakes the screen about three times in it. Several cycles, because one sleep can land between two
-# 1.2 s beats (then no beat is running and no paused line is written, by design); at least one catches a running beat, and the expect-log lines above need only one pause line and one resume line.
+# A real wait of 45 s (nothing with this id ever shows; optional lets the flow go on): the harness sleeps and wakes the screen about three times in it; the read keeps going through every sleep.
 - extendedWaitUntil:
     visible:
       id: SilentBeatNeverShown
@@ -62,7 +60,7 @@ name: The silent beat pauses when the screen locks and goes on when it is back
     visible:
       id: ReadingSurface
     timeout: 20000
-# The read goes on after the last unlock.
+# The read went on through the locks (a pause here would mean the old behaviour stopped it).
 - assertVisible:
     id: ReadingSurface
 - extendedWaitUntil:

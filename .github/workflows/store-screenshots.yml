@@ -86,7 +86,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       # Debug, because the test hooks (skip-first-run, open-book, ...) exist in Debug builds only. A test-only build must clear the live
       # remote config minVersion gate, so the version is stamped high (same property form as dinoreader-ios-sim.yml).

@@ -1,6 +1,8 @@
 version: 2
 updates:
-  # GitHub Actions only (Slice 378); NuGet and npm updates are Slice 379's.
+  # GitHub Actions (Slice 378); NuGet and npm added by Slice 379: weekly, minor and patch grouped,
+  # majors open one PR each. sherpa-onnx and onnxruntime are held by SherpaOnnxVersion.props and
+  # check-sherpa-pins.mjs (sherpa-onnx stays on 1.x), so Dependabot never touches them.
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -9,3 +11,32 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: nuget
+    # No csproj sits at the root (only the slnx and Directory.Build.props), so list the project folders (globs need `directories`).
+    directories:
+      - "/"
+      - "/src/**"
+      - "/tests/**"
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "org.k2fsa.sherpa.onnx*"
+      - dependency-name: "Microsoft.ML.OnnxRuntime*"
+    groups:
+      # Fragment and Fragment.Ktx must move in one PR (the D8 duplicate-class pin); first group wins, so this one takes every update type.
+      androidx-fragment:
+        patterns:
+          - "Xamarin.AndroidX.Fragment*"
+      nuget-minor-patch:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch

@@ -77,7 +77,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.15" />
 	</ItemGroup>
 
 	<!-- The engine, the scanner and ML Kit text recognition live in Sirous.Reading.Mobile.Shared (Slice 58, 63).
@@ -109,9 +109,9 @@
 		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
 
 		<!-- The scanner and the text recognizer both pull Fragment.Ktx 1.8.8.1 while the MAUI
-		     graph resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails
+		     graph resolves Fragment 1.9.1 (which already contains the ktx classes): D8 fails
 		     with duplicate classes. Pin the matching Ktx build. -->
-		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.1" />
 	</ItemGroup>
 
 	<!-- iOS neural voice and OCR native packaging (Slice 49, 55, 67): the managed sherpa-onnx binding,

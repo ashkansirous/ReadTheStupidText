@@ -77,6 +77,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 383: Dino: a book keeps reading when the phone is locked ([slice](slices/383-dino-reading-keeps-going-when-locked.md))
+- **Device:** A long locked read (1 minute or more, three-little-pigs with its real Farsi pack on the S21 dev install; `KEYCODE_WAKEUP` before `open-book`): a silent beat's delay is not stalled by Doze.
+- **You:** iOS TestFlight: a book plays to the end with the iPhone locked, the silent beat's delay runs, and `OnDisappearing` does not pause it on lock.
+- **Device:** Another app in front with the screen on: the read goes on (no device run covers it).
+
+### Slice 391: Dino Windows: Enter on the first-run story-languages step opens no book picker ([slice](slices/391-dino-windows-first-run-enter-on-story-languages.md))
+- **Device:** `dino-reorder` on the VM (item 3; Slice 382's open Windows check) was not reached: `dino-onboarding-keys` passed on the final build `50c83d7c6389`, but the prerequisite `dino-launch` then failed ("the shelf did not show", app left on onboarding step 5 of 6), so `dino-reorder` stopped with "SETUP FAILURE: need two books on the shelf, found 0". Likely a harness gap in `tools/desktop-vm` (finish or skip onboarding before `dino-launch`), not app code.
+
 ### Slice 381: Dino: first-run tour placement under a tall status bar ([slice](slices/381-dino-tour-shifted-under-tall-status-bar.md))
 - **Device:** The tall-cutout overlay was enabled for the Pixel-size run but not read back, so the 149 px status bar of the repro may not have been active.
 - **Device:** The flow was not shown failing on the old build (without the fix).
@@ -215,7 +223,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 322: Dino's silent beats pause when the screen locks ([slice](slices/322-dino-beat-pauses-on-screen-lock.md))
 - **You:** iOS (no Mac): the same `Window.Stopped`/`Resumed` handlers, not run.
-- **Device:** Windows head: `WindowForeground` returns unknown and `Deactivated` is unhandled; not run on the VM.
 - **Device:** Edge cases reverted after the second strike: a window re-subscribe while an event fact is newer than the platform read, and a null `Platform.CurrentActivity`.
 - **Device:** Harness flake risk (`reviews/s322-check-final3.md` #1-#3): the screen cycle could sleep the display during the flow's final launch/assert or setup waits.
 

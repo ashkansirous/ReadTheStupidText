@@ -106,7 +106,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.15" />
 	</ItemGroup>
 
 	<!-- Slice 261: DINO_TEST_BOOKS compiles the test books and the test store in (Debug, or a Release package built with -p:DinoTestBooks=true for the Windows VM checks); DINO_TEST_STORE_ON also makes
