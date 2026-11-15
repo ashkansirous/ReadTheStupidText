@@ -1,7 +1,7 @@
 # Slice 386 — Dino: the `default-view-per-book` flow fails on main
 **Product:** Dino
 
-*Built 2026-11-15, PR #1163, not merged. Passed on the Android emulator 2026-11-15.*
+*Built 2026-11-15, merged as PR #1163 (9614912e). Passed on the Android emulator 2026-11-15.*
 
 **Touches:** `.maestro/dino/default-view-per-book.yaml`, `docs/plan/slices/386-dino-default-view-per-book-flow-fails.md`.
 
@@ -35,6 +35,6 @@ Medium pass: 4 low findings (flow and doc only), each below.
 
 - No test-store book has carried `textInPictures` since Slice 350, so the device path of the Picture-only default (story.json `TextInPictures` -> `Story.Mode` -> `PictureTextPages.IsPictureOnly` -> `ModeSwitch`) is covered only by the `Story.Mode` unit tests (`TextInPicturesTests.cs`), not by any flow.
 
-## For CLAUDE.md
+## For CLAUDE.md (lifted 2026-11-15)
 
 - `src/Dino/DinoReader.Core/CLAUDE.md:26` and Slice 196's statements (Verification, Checks, Not yet verified) say Good Enough sets `textInPictures` and opens in Picture only; since Slice 350 no shipped book carries the flag. Correct them in the index pass; Slice 196's "flow not shown failing on old main" unverified line is moot. plan-not-needed: 196, 350

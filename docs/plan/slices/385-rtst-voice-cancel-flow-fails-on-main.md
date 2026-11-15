@@ -1,7 +1,7 @@
 # Slice 385 — RTST: the `voice-cancel-holds-scan-pack` flow fails on main's build
 **Product:** RTST
 
-*Built 2026-11-15, PR #1165, not merged. Flow-side fix only (the app is unchanged). Verified on the emulator 2026-11-15.*
+*Built 2026-11-15, merged as PR #1165 (15f2c480). Flow-side fix only (the app is unchanged). Verified on the emulator 2026-11-15.*
 
 **Touches:** `.maestro/rtst/voice-cancel-holds-scan-pack.yaml`, the RTST Mobile code the first work item names as wrong (`src/Rtst/ReadTheStupidText.Mobile/**`, only if the app is the faulty side), `docs/plan/slices/385-rtst-voice-cancel-flow-fails-on-main.md`
 
