@@ -1,0 +1,71 @@
+# Slice 291 item 5 (iOS part): App Store shot 2 of 5 of Dino Reader, "record": the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml). English, on the four test books.
+# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, so it also works when shot 1 was never taken), sets its own language and leaves nothing the next one needs.
+# Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
+appId: uk.sirous.dinoreader.dbg
+name: Store screenshot 2 of 5, record, Dino Reader, iOS
+---
+- launchApp:
+    # No clearState: the relaunch keeps the data. A relaunch builds a new window, and CreateWindow leaves grown-up mode (App.xaml.cs:68), so this starts on the kids' shelf whatever the flow before did.
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# English, set explicitly (voice=0 starts no voice pack). Wait for a string only the English shelf shows, not StoryTile.
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 3000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|For grown-ups).*"
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- openLink: "dino-test://enter-grown-up"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 3000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    text: ".*Three Little Pigs.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: "Record your voice"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroStart
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 5000
+# No system microphone dialog over the shot (permissions: all: allow is not shown to cover the microphone on a simulator).
+- assertNotVisible:
+    text: ".*(Would Like to Access the Microphone|Don.t Allow).*"
+- takeScreenshot: store-dino-ios-2-record
