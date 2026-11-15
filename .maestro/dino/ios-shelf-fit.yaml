@@ -1,0 +1,14 @@
+# Slice 387 item 3 (diagnostics): open the shelf on the iOS simulator and wait for the title, so the Debug-only shelf-fit.log in the app's data folder holds the header's measurements;
+# dinoreader-ios-sim.yml prints it in its "Shelf fit lines" step. It asserts nothing about the cut itself: the numbers are the result. No ids (the id mapping on iOS is unconfirmed): the title's own words.
+appId: uk.sirous.dinoreader.dbg
+name: Shelf header fit lines (iOS diagnostics)
+---
+- launchApp:
+    # No clearState: nothing here needs a clean install.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible: "My s.*"
+    timeout: 90000
+- waitForAnimationToEnd

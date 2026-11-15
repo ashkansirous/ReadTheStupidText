@@ -159,16 +159,25 @@ jobs:
           bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/flow-start" || rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
 
-      # Slice 387 item 3: the Debug shelf fit lines, from the whole log (the collect step keeps only the last 3000 lines, which can drop the launch layout).
+      # Slice 387 item 3: the Debug shelf fit lines. The unified log does not carry them on iOS, so the Debug build writes them to shelf-fit.log in the app's data folder; copy it out of the container.
       - name: Shelf fit lines
         if: always()
         run: |
           set -uo pipefail
-          if [ -z "${SIM_UDID:-}" ] || [ -z "${PROCESS_NAME:-}" ]; then
+          if [ -z "${SIM_UDID:-}" ] || [ -z "${BUNDLE_ID:-}" ]; then
             echo "No simulator or app was set up: nothing to show."
             exit 0
           fi
-          xcrun simctl spawn "$SIM_UDID" log show --last 60m --style compact --predicate "process == \"$PROCESS_NAME\"" 2>&1 | grep -F '[Shelf]' | head -n 200 || echo "no [Shelf] lines in the app log"
+          DATA="$(xcrun simctl get_app_container "$SIM_UDID" "$BUNDLE_ID" data 2>&1)" || { echo "no data container: $DATA"; exit 0; }
+          echo "data container: $DATA"
+          FIT="$(find "$DATA" -name shelf-fit.log -print -quit 2>/dev/null)"
+          if [ -z "$FIT" ]; then
+            echo "no shelf-fit.log in the app's data folder; files:"
+            find "$DATA" -maxdepth 4 -type f | head -n 60
+            exit 0
+          fi
+          echo "== $FIT"
+          head -n 200 "$FIT"
 
       # Audio-backed flow only (a flow with a '# expect-clips' header line): did a real pack clip play? The proof is the flow itself: it waits until the reading page's sound pill
       # (ReadingAudioStatus, shown only while the current piece has no clip) is gone, so a read on the device voice fails the flow. This step only adds the log counts: the app's test-hook

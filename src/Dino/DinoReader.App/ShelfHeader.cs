@@ -192,15 +192,28 @@ internal sealed class ShelfHeader : Grid
 	private void LogFit(double full, double shortWidth, double available, double flag)
 	{
 		string line = $"[Shelf] fit Width={Width:0.#} rail={_isRail} full={full:0.#} shortWidth={shortWidth:0.#} available={available:0.#} pillRoom={_lastPill:0.#} pillWidth={GrownUps.Width:0.#} flag={flag:0.#} icon={_sizes.Icon:0.#} gap={_sizes.HeaderGap:0.#} state={TitleState} titleFont={_title.FontSize:0.#}";
+		WriteFitFile(line);
+	}
+
+	// Slice 387 item 3: the iOS unified log does not carry Console or Debug output, so the lines go to a file the iOS simulator workflow copies out of the app's data folder.
+	private static void WriteFitFile(string line)
+	{
 		System.Diagnostics.Debug.WriteLine(line);
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+		try
+		{
+			File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "shelf-fit.log"), line + "\n");
+		}
+		catch (Exception)
+		{
+			// no-fallback: Debug-only diagnostics file; a failed write must not change the shelf
+		}
 	}
 
 	private void LogTitleSize()
 	{
 		string line = $"[Shelf] title laid-out Width={_title.Width:0.#} Height={_title.Height:0.#} text='{_title.Text}' visible={_title.IsVisible} headerWidth={Width:0.#} pillWidth={GrownUps.Width:0.#}";
-		System.Diagnostics.Debug.WriteLine(line);
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+		WriteFitFile(line);
 	}
 #endif
 
