@@ -1,9 +1,9 @@
 # Slice 385 — RTST: the `voice-cancel-holds-scan-pack` flow fails on main's build
 **Product:** RTST
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `.maestro/rtst/voice-cancel-holds-scan-pack.yaml`, the RTST Mobile code the first work item names as wrong (`src/Rtst/ReadTheStupidText.Mobile/**`, only if the app is the faulty side), `docs/plan/slices/385-rtst-voice-cancel-flow-fails-on-main.md`
+**Touches:** `.maestro/rtst/voice-cancel-holds-scan-pack.yaml`, `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` (only if it shares the same wait race), the RTST Mobile code the first work item names as wrong (`src/Rtst/ReadTheStupidText.Mobile/**`, only if the app is the faulty side), `docs/plan/slices/385-rtst-voice-cancel-flow-fails-on-main.md`
 
 ## Why
 
