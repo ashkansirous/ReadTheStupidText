@@ -80,4 +80,6 @@ Fourth pass (`reviews/s390-check2.md`):
 - #5 (`TakeMissed` only marks stale): applied; a missed update marks stale and starts the re-read (`BookPurchases.ListenForStoreUpdates`); the launch listener's updates reach it through `PurchaseUpdates.Raise`.
 - Skipped #6 (`reviews/s390-check2.md`): "verified Sandbox JWS without switch returns CANNOT_VERIFY, never cached; repeated full chain verification (CPU only, no entitlement granted)" - CPU only, no wrong answer.
 
+Fifth pass (`reviews/s390-check3.md`): no blocker. Follow-ups, low, not changed: #1 `_closing.Token` read after Dispose can leak one waiting entry; #2 a missed update at the first listing queues a second read; #3 `TryCreate` traces instead of sending a fallback event when the bridge cannot start. Unconfirmed until the iPhone sandbox run: a purchase completed after the 15-minute timeout unlocks through the launch listener's `Raise`.
+
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.
