@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 391: Dino Windows: Enter on the first-run story-languages step opens no book picker ([slice](slices/391-dino-windows-first-run-enter-on-story-languages.md))
+- **Device:** `dino-reorder` on the VM (item 3; Slice 382's open Windows check) was not reached: `dino-onboarding-keys` passed on the final build `50c83d7c6389`, but the prerequisite `dino-launch` then failed ("the shelf did not show", app left on onboarding step 5 of 6), so `dino-reorder` stopped with "SETUP FAILURE: need two books on the shelf, found 0". Likely a harness gap in `tools/desktop-vm` (finish or skip onboarding before `dino-launch`), not app code.
+
 ### Slice 381: Dino: first-run tour placement under a tall status bar ([slice](slices/381-dino-tour-shifted-under-tall-status-bar.md))
 - **Device:** The tall-cutout overlay was enabled for the Pixel-size run but not read back, so the 149 px status bar of the repro may not have been active.
 - **Device:** The flow was not shown failing on the old build (without the fix).
