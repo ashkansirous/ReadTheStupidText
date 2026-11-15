@@ -185,7 +185,16 @@ internal sealed class ShelfHeader : Grid
 		_title.IsVisible = TitleState != ShelfTitle.Hidden;
 		_title.Text = TitleState == ShelfTitle.Short ? AppResources.Gallery_ShelfTitleShort : AppResources.Gallery_Title;
 		OwnScript.InOwnScriptAligned(_title);
+		RemeasureTitle();
 		Fitted?.Invoke(TitleState);
+	}
+
+	// Slice 387 item 3 (iOS run 43675329629: the title laid out 76.7 wide, the width of the short text measured last, in a 202 wide room): MeasureTitle leaves the label's cached size at the last
+	// probe, and the Text change that follows is swallowed while the header is laid out. Ask for a fresh measure now and once more after the layout pass.
+	private void RemeasureTitle()
+	{
+		_title.InvalidateMeasure();
+		Dispatcher.Dispatch(_title.InvalidateMeasure);
 	}
 
 #if DEBUG
