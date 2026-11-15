@@ -212,5 +212,10 @@ None from this slice's brief.
 Cause, read live: App Store Connect had no subscription group for app 6825053435, so iOS returned no plan prices and the Store page kept the subscription card hidden (StorePage.xaml.cs `ApplySubscriptionCard`). The script's Apple subscription calls were rewritten per the docs: separate availability call, per-territory prices from the GBR point's equalisations and per-territory 7-day trials, no automatic retry of a POST, a rerun reads what Apple holds first.
 
 From review (`reviews/s384a-check.md`), follow-ups, not changed: #1 if GBR is ever missing from the held availability, the base price and trial are not posted and no note says so (availability is posted for every territory, so GBR is held); #2 a territory Apple refuses permanently fails on every rerun and is listed each time. Low: an existing price's amount is not compared; an entry with no territory only adds a note; notes are lost when no session is passed.
+
+**Live 2026-11-15:** `store-products.mjs --apply --store apple` (after #1198) created group "Dino Book Reader subscription" with `uk.sirous.dinoreader.sub.monthly` (1.99 GBP) and `.sub.yearly` (14.99 GBP), prices and 7-day free trials in all 175 territories, 0 failed. Claude then uploaded one App Store review screenshot to each through the API (the Dino phone shelf shot padded to 1242x2688, as for the books in Slice 346); both read back `READY_TO_SUBMIT`. The script's "by hand: review screenshot (no API)" line is wrong: `subscriptionAppStoreReviewScreenshots` and the IAP equivalent exist; fold the upload into the script. Still the user's: submitting the subscriptions for review with an app version (https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions). Play and Microsoft subscriptions are not created yet.
+
+Not yet verified (moved below the Apple section):
 - Offline 3-day lock on a real device.
 - Restore on iOS.
+- The plans showing in the iOS app (sandbox/TestFlight) now that the products exist.
