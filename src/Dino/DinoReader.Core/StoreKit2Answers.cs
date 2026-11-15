@@ -56,6 +56,7 @@ public static class StoreKit2Answers
     public const string Pending = "pending";
     public const string Failed = "failed";
     public const string Unsupported = "unsupported";
+    public const string NoScene = "no-scene";
 
     /// <summary>The prices (product to the App Store's own text) of a products answer, with the ids Apple did not know; null when the request failed.</summary>
     public static (Dictionary<string, string> Prices, IReadOnlyList<string> Invalid)? Prices(string json)
@@ -103,14 +104,14 @@ public static class StoreKit2Answers
         return new StoreKitBuyAnswer(outcome, transaction);
     }
 
-    /// <summary>True when the answer is <c>ok</c> (restore and redeem answer nothing else); false for a failure or an unreadable answer.</summary>
+    /// <summary>True when the answer is <c>ok</c> (restore, redeem and the Manage Subscriptions sheet answer nothing else); false for a failure or an unreadable answer.</summary>
     public static bool IsOk(string json)
     {
         using JsonDocument? doc = Open(json);
         return doc is not null;
     }
 
-    /// <summary>The <c>error</c> of a failed answer (<c>domain:code</c> or <see cref="Unsupported"/>), or null when it was ok or unreadable.</summary>
+    /// <summary>The <c>error</c> of a failed answer (<c>domain:code</c>, <see cref="Unsupported"/> or <see cref="NoScene"/>), or null when it was ok or unreadable.</summary>
     public static string? Error(string json)
     {
         try

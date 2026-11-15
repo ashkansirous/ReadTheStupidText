@@ -11,6 +11,8 @@ namespace DinoReader;
 public sealed class IosPurchases : IBookPurchases, IDisposable
 {
     private static readonly TimeSpan LateAnswerTimeout = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan ManageTimeout = TimeSpan.FromMinutes(10);
+    private int _manageOpen;
     private readonly CancellationTokenSource _closing = new();
 
     private const string RedeemAddress = "https://apps.apple.com/redeem";
@@ -140,8 +142,58 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
         }
     }
 
-    // Slice 384: Apple's own subscriptions page, where a subscription is cancelled or its plan changed.
-    public async Task<bool> ManageSubscriptionAsync() => await Launcher.Default.OpenAsync(new Uri(ManageAddress));
+    // Slice 384: Apple's own Manage Subscriptions sheet, where a subscription is cancelled or its plan changed. The web page is the fallback only, because it never lists a sandbox (TestFlight) subscription.
+    // Returns true when the sheet was shown (or a second tap came while one is open, which does nothing), false when it failed (the page says so).
+    public async Task<bool> ManageSubscriptionAsync()
+    {
+        if (Interlocked.Exchange(ref _manageOpen, 1) == 1)
+        {
+            return true; // a sheet is already open: a second tap must not call the native export again
+        }
+
+        try
+        {
+            return await ShowManageSheetAsync();
+        }
+        finally
+        {
+            Volatile.Write(ref _manageOpen, 0);
+        }
+    }
+
+    private async Task<bool> ShowManageSheetAsync()
+    {
+        StoreKit2Bridge? bridge = StoreKit2Bridge.Load();
+        string? answer = null;
+        if (bridge is not null)
+        {
+            answer = await AskAsync(bridge.ManageSubscriptionsAsync(), ManageTimeout, CancellationToken.None); // long, because the sheet waits for the person; the web address must never open on top of it
+            if (answer is null)
+            {
+                PurchaseTrace.Line("manage sheet gave no answer in time, giving up the wait"); // no-fallback: a sheet left open this long is the person's, not a store fault; the waiting entry went (Abandon) so the external-activity guard ends
+                PurchaseUpdates.Raise();
+                return true;
+            }
+        }
+
+        if (answer is not null && StoreKit2Answers.IsOk(answer))
+        {
+            PurchaseTrace.Line("manage sheet shown, re-reading the subscription");
+            PurchaseUpdates.Raise(); // the status is read again (Apple's list keeps a cancelled plan until its end date, so the card only changes when the plan really changes)
+            return true;
+        }
+
+        string? error = answer is null ? null : StoreKit2Answers.Error(answer);
+        bool sheetUnavailable = answer is null || error == StoreKit2Answers.Unsupported || error == StoreKit2Answers.NoScene;
+        if (!sheetUnavailable)
+        {
+            PurchaseTrace.Line($"manage sheet failed error={error}"); // a StoreKit error is the sheet failing: the page says it did not work, the web page stays closed
+            return false;
+        }
+
+        PurchaseTrace.Line($"manage sheet unavailable error={error ?? "no bridge"}, opening the web page");
+        return await Launcher.Default.OpenAsync(new Uri(ManageAddress));
+    }
 
     private BuyOutcome OutcomeOf(string productId, string outcome)
     {

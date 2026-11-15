@@ -415,6 +415,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Palauta ostot</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lunasta koodi</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Osto ei onnistunut. Yritä uudelleen.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Tilausasetuksia ei voitu avata. Yritä uudelleen.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Jotkin kirjat maksavat vähän. Ne ostetaan kauppatililläsi, eikä meille lähetetä mitään sinusta tai lapsestasi.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Odotetaan kauppaa…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tarkistetaan ostoksiasi…</value></data>

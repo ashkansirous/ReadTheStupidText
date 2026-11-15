@@ -417,6 +417,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Käufe wiederherstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Code einlösen</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Der Kauf hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Die Abo-Einstellungen ließen sich nicht öffnen. Bitte versuche es noch einmal.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Manche Bücher kosten ein bisschen. Sie werden über dein Store-Konto gekauft, und nichts über dich oder dein Kind wird an uns gesendet.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Warte auf den Store …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Käufe werden geprüft …</value></data>

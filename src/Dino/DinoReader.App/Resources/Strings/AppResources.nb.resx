@@ -415,6 +415,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Gjenopprett kjøp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Løs inn en kode</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Kjøpet gikk ikke gjennom. Prøv igjen.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Abonnementsinnstillingene kunne ikke åpnes. Prøv igjen.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Noen bøker koster litt. De kjøpes med butikkontoen din, og ingenting om deg eller barnet ditt sendes til oss.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Sjekker kjøpene dine …</value></data>

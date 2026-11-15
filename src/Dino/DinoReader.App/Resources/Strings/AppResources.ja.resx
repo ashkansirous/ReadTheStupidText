@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>購入を復元</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>コードを使う</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>購入できませんでした。もう一度お試しください。</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>サブスクリプションの設定を開けませんでした。もう一度お試しください。</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>有料の本もあります。購入はストアのアカウントで行われ、あなたやお子さまの情報は私たちには送られません。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>ストアの応答を待っています…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>購入内容を確認しています…</value></data>

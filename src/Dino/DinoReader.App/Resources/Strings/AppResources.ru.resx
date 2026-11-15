@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Восстановить покупки</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Ввести код</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Покупка не удалась. Попробуйте ещё раз.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Не удалось открыть настройки подписки. Попробуйте ещё раз.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Некоторые книги стоят немного. Их покупают через аккаунт магазина, и ничего о вас или вашем ребёнке нам не отправляется.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Ждём ответа магазина…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Проверяем ваши покупки…</value></data>

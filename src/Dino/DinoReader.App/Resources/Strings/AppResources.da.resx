@@ -415,6 +415,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Gendan køb</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Indløs en kode</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Købet gik ikke igennem. Prøv igen.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Abonnementsindstillingerne kunne ikke åbnes. Prøv igen.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Nogle bøger koster lidt. De købes via din butikskonto, og der sendes intet om dig eller dit barn til os.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tjekker dine køb …</value></data>

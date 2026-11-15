@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>بازیابی خریدها</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>وارد کردن کد</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>خرید انجام نشد. دوباره تلاش کنید.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>تنظیمات اشتراک باز نشد. دوباره تلاش کنید.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>بعضی کتاب‌ها کمی هزینه دارند. آن‌ها با حساب فروشگاه شما خریده می‌شوند و هیچ چیزی درباره شما یا فرزندتان برای ما فرستاده نمی‌شود.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>در انتظار فروشگاه…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>در حال بررسی خریدهای شما…</value></data>

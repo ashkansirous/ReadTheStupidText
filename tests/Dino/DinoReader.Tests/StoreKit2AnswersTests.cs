@@ -62,6 +62,15 @@ public class StoreKit2AnswersTests
     }
 
     [Fact]
+    public void ManageSubscriptionsAnswers_AreOkOrTheNoSceneAndUnsupportedWords()
+    {
+        Assert.True(StoreKit2Answers.IsOk("""{"ok":true}"""));
+        Assert.Equal(StoreKit2Answers.NoScene, StoreKit2Answers.Error("""{"ok":false,"error":"no-scene"}"""));
+        Assert.Equal(StoreKit2Answers.Unsupported, StoreKit2Answers.Error("""{"ok":false,"error":"unsupported"}"""));
+        Assert.Equal("no-scene", StoreKit2Answers.NoScene); // the Swift wrapper writes this word; a drift would send a missing scene to the failed branch instead of the web page
+    }
+
+    [Fact]
     public void OwnedProducts_AndTheirProofs_AreTheNewestTransactionsJws()
     {
         StoreKitEntitlements owned = Read($"{Tx(Book, NowMs - 2 * Day, jws: "old")},{Tx(Book, NowMs - Day, jws: "new")},{Tx("uk.sirous.dinoreader.book.other", NowMs, jws: "x")}");

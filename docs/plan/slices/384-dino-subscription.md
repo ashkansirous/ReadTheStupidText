@@ -219,3 +219,14 @@ Not yet verified (moved below the Apple section):
 - Offline 3-day lock on a real device.
 - Restore on iOS.
 - The plans showing in the iOS app (sandbox/TestFlight) now that the products exist.
+
+## iOS Manage subscription (2026-11-15)
+
+Bug (user, TestFlight): "the subscription worked, but after, I tried to cancel it. it opened another external place where it showed that I have no subscriptions." Cause: iOS `ManageSubscriptionAsync` opened https://apps.apple.com/account/subscriptions, and a TestFlight app runs in the sandbox, which that page never lists.
+
+Fix: Apple's in-app sheet `AppStore.showManageSubscriptions(in:)` (iOS 15+; the iOS 17 subscription-group overload is not used) through the new Swift export `dino_sk_manage_subscriptions` (Slice 390's wrapper; it answers `ok`, or `no-scene`, `unsupported` (iOS app on a Mac) or the StoreKit error). `IosPurchases.ManageSubscriptionAsync` returns true when the sheet was shown and then raises `PurchaseUpdates` so the status is read again (a plan change shows; a cancel does not change the card until the plan ends, because Apple keeps listing it as owned and the app has no "will not renew" state on any platform, Android included; review of 2026-11-15, finding 3, left as it is). The Swift export picks only a foreground-active (else foreground-inactive) scene; with none it answers `no-scene`. The web page opens only when the bridge is missing or the answer is `no-scene` or `unsupported`; any other failure returns false, `BookPurchases` reports a `Store`/`StoreFailed` fallback and the page shows `Store_ManageFailed`. A second tap while the sheet is open does nothing, and the wait ends after 10 minutes (the waiting entry is abandoned) so the grown-up guard always ends. Debug trace lines: `manage sheet shown`, `manage sheet failed`, `manage sheet unavailable`, `manage sheet gave no answer in time`. Android keeps the Play subscriptions link (it works for Play's own test purchases); Windows is unchanged.
+
+From review (`reviews/s384m-medium.md`), follow-ups, not changed: #1 after the 10-minute timeout the sheet may still be open and its later close is not re-read (the next store read picks it up); #2 a repeat tap while the sheet is open does nothing visible; #3 on Android and Windows a false from the link opener now reports `StoreFailed` though no store failed (telemetry reason only); #4 a StoreKit error shows the failure message with no web fallback; #5 a `foregroundInactive` scene can be chosen during a transition; #6 the tap is ignored silently while another external activity runs.
+
+Not yet verified:
+- Manage subscription on a TestFlight iPhone shows Apple's sheet with the sandbox subscription, and the status is read again when it closes (a cancel made there shows only once the plan ends; the app has no "will not renew" card line) (the Swift side is proven by `dinoreader-ios` on the branch, the behaviour only on a device).

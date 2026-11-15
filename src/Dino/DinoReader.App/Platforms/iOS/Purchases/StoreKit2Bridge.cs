@@ -37,6 +37,9 @@ internal sealed unsafe class StoreKit2Bridge
     [DllImport("__Internal", EntryPoint = "dino_sk_redeem")]
     private static extern void NativeRedeem(int requestId, delegate* unmanaged<int, byte*, void> callback);
 
+    [DllImport("__Internal", EntryPoint = "dino_sk_manage_subscriptions")]
+    private static extern void NativeManageSubscriptions(int requestId, delegate* unmanaged<int, byte*, void> callback);
+
     [DllImport("__Internal", EntryPoint = "dino_sk_start_updates")]
     private static extern void NativeStartUpdates(delegate* unmanaged<int, byte*, void> callback);
 
@@ -111,6 +114,14 @@ internal sealed unsafe class StoreKit2Bridge
     {
         (int id, Task<string> task) = Register();
         NativeRedeem(id, &OnAnswer);
+        return task;
+    }
+
+    /// <summary>Apple's Manage Subscriptions sheet; the answer comes when the person closes it.</summary>
+    public Task<string> ManageSubscriptionsAsync()
+    {
+        (int id, Task<string> task) = Register();
+        NativeManageSubscriptions(id, &OnAnswer);
         return task;
     }
 

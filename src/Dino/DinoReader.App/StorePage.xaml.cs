@@ -494,8 +494,20 @@ public partial class StorePage : ContentView, ICornerTabView
 	private async void OnSubscriptionPrivacyTapped(object? sender, TappedEventArgs e) => // no-tap-count: a link to the privacy page, see above
 		await _external.RunAsync(() => Launcher.Default.OpenAsync(new Uri(SubscriptionLinks.Privacy)));
 
-	private async void OnSubscriptionManageTapped(object? sender, TappedEventArgs e) => // no-tap-count: opens the store's own subscription page, see above
-		await _external.RunAsync(_client.Sales.Purchases.ManageSubscriptionAsync);
+	// Slice 384: false means the store's sheet or page failed (BookPurchases has reported it): the grown-up is told. A tap while the store's sheet is already open does nothing.
+	private async void OnSubscriptionManageTapped(object? sender, TappedEventArgs e) // no-tap-count: opens the store's own subscription page, see above
+	{
+		if (_external.IsActive)
+		{
+			return;
+		}
+
+		bool opened = await _external.RunAsync(_client.Sales.Purchases.ManageSubscriptionAsync);
+		if (!opened)
+		{
+			await AlertAsync(AppResources.Store_ManageFailed);
+		}
+	}
 
 	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
 	public async void Appearing()

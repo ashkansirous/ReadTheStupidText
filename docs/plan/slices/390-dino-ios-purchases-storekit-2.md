@@ -38,6 +38,10 @@
   - What the app's own logs can show (analytics-query, 2026-11-15): the app sends no buy, restore or subscription event at all (`worker/events.ts` has none), so a purchase leaves no row and the logs can neither confirm nor deny it. Seen in `dino_usage_beta` (TestFlight), iOS, version 1.131.0: one session 15:00-15:52 UTC on 2026-11-15 in the store area, two `store_download` rows at 15:52:55, then one `store:store_unreachable` fallback at 15:52:59; no `download_refused` or `purchase_not_valid`. Finding for a later slice: add buy, restore and subscription outcome events so "did the user already buy" is answered from the logs.
 - The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
 
+#### Manage subscriptions export (2026-11-15, Slice 384)
+
+`DinoStoreKit.swift` also exports `dino_sk_manage_subscriptions(requestId, callback)`: on the main actor it picks the foreground `UIWindowScene` and awaits `AppStore.showManageSubscriptions(in:)`; the answer is `{"ok":true}` when the sheet closes, or `{"ok":false,"error":"no-scene"|"unsupported"|"<domain:code>"}` (`unsupported` is `ProcessInfo.isiOSAppOnMac`). `StoreKit2Bridge.ManageSubscriptionsAsync` declares it with `DllImport("__Internal")`. Proven only by the `dinoreader-ios` job on the branch.
+
 ## From review
 
 Files: `reviews/s390-high.md` (pass 1) and `reviews/s390-medium.md` (pass 2).

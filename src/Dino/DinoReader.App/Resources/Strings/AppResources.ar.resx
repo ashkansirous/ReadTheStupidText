@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>استعادة المشتريات</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>استبدال رمز</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>لم تتم عملية الشراء. حاول مرة أخرى.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>تعذر فتح إعدادات الاشتراك. حاول مرة أخرى.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>بعض الكتب لها ثمن بسيط. تُشترى عبر حساب المتجر الخاص بك، ولا يُرسل إلينا أي شيء عنك أو عن طفلك.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>في انتظار المتجر…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>جارٍ فحص مشترياتك…</value></data>
