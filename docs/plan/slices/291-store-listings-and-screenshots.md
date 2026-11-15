@@ -254,3 +254,5 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
   nothing is planned or built for it (StoreKit on iOS and Play Billing on Android, the Paid Apps agreement in App
   Store Connect, a gate in front of purchases). Every "no in-app purchases" line in `docs/store-listings/dino/*`,
   `site/dino/privacy.html` and the Play/Microsoft listings would have to change when purchases ship.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user (item 3 Partner Center login, item 4 the five declaration values, items 6 and 8-10 their yes to text and shots before live uploads) (items 1 done, 3 built (Partner Center read-back after the next RTST release), 5 Play phone and tablet shots done (#1137, #1148); left: Dino iPad 13" and RTST iOS shots (flows failed on main), Microsoft Store desktop, item 4 declarations (user), item 6 uploads)`.

@@ -77,3 +77,5 @@ Third listen page (2026-11-14, same page, `v3-*` answers, 16 clips): https://cla
 ## Verification
 
 The user's answers are recorded here. Each wrong item has a fix merged and its clip re-rendered on the same page for a second listen. Second listen done 2026-11-14 (above): the default voice is right; Ganji's and Gyro's open items need a third listen after their fixes.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: the second listen is an Artifact listening page, which needs an interactive session (headless waves have no Artifact tool) (3 extra-ezafe items; park reason in the slice file; the second listen of 342, built in #1098, is the same page: [342](docs/plan/slices/342-farsi-voice-pack.md))`.

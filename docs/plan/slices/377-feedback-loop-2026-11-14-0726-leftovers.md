@@ -81,3 +81,5 @@ Not built here: items 1 and 7 (Slice 354), 11 (Slice 376), 3 (the Slice 193 stor
 - Skipped #5 (`reviews/s377cs-medium.md`): "silent-starter re-arm rule is prose only" - the driver half is item 6, left open.
 - Skipped #3 (`reviews/s377cs-check3.md`): "Starter takes over parked in-scope work with no claim step" - the starter-side text was removed (item 6 stays open).
 - Skipped #4 (`reviews/s377cs-check3.md`): "PY_OPEN_TARGET only matches modes starting" - low-medium guard gap, best-effort nudge.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: item 6 (driver notices a silent starter) did not pass review after four rounds in wave 2 (needs a redesign); item 17 waits for the LFS rejection to recur or one clean high-res push (PR #1131 merged 2026-11-14; device and read-back checks in unverified.md)`.
