@@ -2,6 +2,8 @@
 # The marker proves the hold branch ran; run-flows has no negative log check, so "no download" and the restart case are covered by unit tests.
 # The UI is Farsi (lang: fa). The pack status label has AutomationId PackStatusLabel (Slice 215): the flow matches that id plus the fa strings PackStatus_Downloading / PackStatus_Stopped for the state, so the id pins the element and the text pins the state.
 # Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads` (the service is not exported and Maestro has no shade command); it runs the same PackDownloadHost cancel path. On a build without the hold the marker never appears and the flow fails.
+# Slice 385: the flow no longer races the download. On main's build (s378 baseline) the 61 MB piper-fa pack finished in 11.8 s (PACKDL done 23:12:30.068) while the optional button2 wait (15 s, no sheet showed) ran until 23:12:29.997, so the Downloading wait started after the download was done and failed. As in cancelled-voice-pack-stays-cancelled.yaml (Slice 320), the first launch arms the Debug hook stall-pack-network aimed at piper-fa (same recipe and comment as cancelled-voice-pack-stays-cancelled.yaml), armed before skip-first-run starts the download. The stalled read does not end on Cancel; only the 60 s stall guard ends it, so Cancel must land within that time.
+# expect-log: HOOK stall-pack-network ok
 # expect-log: OCRPACK held-voice-cancelled fa
 appId: uk.sirous.readthestupidtext
 name: Voice cancel holds the scan pack
@@ -9,6 +11,11 @@ name: Voice cancel holds the scan pack
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow starts the voice download itself and needs the packs missing.
     clearState: true
+    arguments:
+      cmd: stall-pack-network
+      id: piper-fa
+- launchApp:
+    stopApp: false
     arguments:
       cmd: skip-first-run
       lang: fa
