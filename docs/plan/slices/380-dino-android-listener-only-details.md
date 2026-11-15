@@ -1,9 +1,9 @@
 # Slice 380 — Dino Android: product details through the listener only, Slice 358 probe removed
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt`, `docs/plan/slices/380-dino-android-listener-only-details.md`
+**Touches:** `src/Dino/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt`, `src/Dino/DinoReader.App/Purchases/BookPurchases.cs` (only if the new Failed=true path needs it), `docs/plan/slices/380-dino-android-listener-only-details.md`
 
 ## Why
 
