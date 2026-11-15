@@ -1,9 +1,9 @@
 # Slice 391 — Dino Windows: Enter on the first-run story-languages step opens no book picker
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`, `src/Dino/DinoReader.App/StoryLanguagesPage.cs`, `src/Dino/DinoReader.Core/DinoKeyMap.cs`, `tools/desktop-vm/checks/dino-onboarding-keys.ps1`, `docs/plan/slices/391-dino-windows-first-run-enter-on-story-languages.md`
+**Touches:** `src/Dino/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`, `src/Dino/DinoReader.App/StoryLanguagesPage.cs`, `src/Dino/DinoReader.Core/DinoKeyMap.cs`, `tools/desktop-vm/checks/dino-onboarding-keys.ps1`, `docs/plan/slices/391-dino-windows-first-run-enter-on-story-languages.md`, `tools/desktop-vm/checks/dino-reorder.ps1` (only if it must change)
 
 ## Why
 
