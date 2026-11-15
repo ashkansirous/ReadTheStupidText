@@ -29,6 +29,8 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 350 | Dino: high-resolution pictures for a printed Amazon book (Git LFS, `high-res/`), fixing faulty pages, one prompt per Gemini chat, stricter picture checks, Good Enough redrawn without text | in progress (Lion and Mouse done #1041; 14 books left, each needs the user's Chrome and Gemini account; B and C merged #1013) | #1013 | | [350-dino-high-res-pictures.md](docs/plan/slices/350-dino-high-res-pictures.md) |
 | 346 | Dino: four free books, the rest $0.99 each (store-account purchases, server receipt check, backups without book content) | planned (back from parked 2026-11-15; park note in the slice file) | #1016, #1033, #1036, #1038, #1039, #1046, #1120 | | [346-dino-paid-books.md](docs/plan/slices/346-dino-paid-books.md) |
+| 394 | Dino: the store's "9–12" chip crashes on Android; every book in one age band (3-5 or 6-8); a chip or author row with nothing in it is not shown | planned (scope approved 2026-11-15) | | | [394-dino-store-age-filter-crash-and-bands.md](docs/plan/slices/394-dino-store-age-filter-crash-and-bands.md) |
+| 395 | Dino: recording a character shows and replaces only that character's quoted words; the narration around them keeps the book's own audio | planned (scope approved 2026-11-15) | | | [395-dino-record-only-the-characters-words.md](docs/plan/slices/395-dino-record-only-the-characters-words.md) |
 
 ### Shared
 

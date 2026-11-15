@@ -1,7 +1,7 @@
 # Slice 395 — Dino: recording a character shows and replaces only that character's words, not the narration around them
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report. Not built yet; the decisions below wait for the user's yes.*
+*Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day. Not built yet.*
 
 **Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file.
 
@@ -21,7 +21,7 @@ The same holds for every character in every book.
 - **A clip is keyed by sentences.** `StoryClipKey(Page, First, Last, Language)` (`StoryClipKey.cs:8`) names a run of a page's sentences, and the reading screen plays a clip *instead of* those sentences (`ReadingSession.ClipAt`, `ReadingSession.cs:303`). So no clip can cover part of a sentence today.
 - **The book's own audio is already per part.** The premade audio (`content/dino/<book>/audio/<lang>/`) is one file per segment (quote or narration, with its voice), from `StorySegmenter` plus `SpeakerAttributor`. So the narration parts are recorded apart already; a parent's take only needs to stand in for the quote parts it covers.
 
-## Decisions (recommended; the user approves or changes them)
+## Decisions (approved by the user, 2026-11-15)
 
 1. **Per character, a card is a run of one speaker's quote parts on a page, never narration.** The unit is the segment (`StorySegmenter` + `SpeakerAttributor` + `StoryCast`, the split the reading screen and the premade audio already use), not the sentence. Quote parts of the same speaker that follow each other with no narration between them make one card ("Dinner, my dear! I've made you some stew. Come and sit over here!"); any narration between them ends the card ("said Mummy" makes two cards). The quote marks are not shown on the card.
 2. **Playback: the take replaces only the parts it covers.** While reading, a recorded part plays the parent's take and every other part (the narration, the characters not ticked) plays the book's own audio as before, in order. The Storyteller can still be ticked: then the narration parts are cards of their own, in the same way.
