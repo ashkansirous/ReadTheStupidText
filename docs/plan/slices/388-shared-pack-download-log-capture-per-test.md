@@ -1,9 +1,9 @@
 # Slice 388 — Shared tests: `PackDownloadLogTests` capture leaks another test's line
 **Product:** Shared
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `tests/Shared/Shared.Tests/PackDownloadLogTests.cs`, and the log capture it uses (confirm in item 1), `docs/plan/slices/388-shared-pack-download-log-capture-per-test.md`
+**Touches:** `tests/Shared/Shared.Tests/PackDownloadLogTests.cs`, `src/Shared/Sirous.Reading.Application/Reading/PackDownloadLog.cs` (the capture sink, only if a per-test sink is needed; `tests/Shared/Shared.Tests/PausedNoticePolicyTests.cs` also sets it), `docs/plan/slices/388-shared-pack-download-log-capture-per-test.md`
 
 ## Why
 
