@@ -1,7 +1,7 @@
 # Slice 392 — Dino: the `grown-ups-button` flow fails on main (GalleryDone still visible on Settings)
 **Product:** Dino
 
-*Built 2026-11-15 (wave 2026-11-15), PR #1180, not merged. Verified on the Android emulator.*
+*Built 2026-11-15 (wave 2026-11-15), merged as PR #1180 (d313444f). Verified on the Android emulator.*
 
 **Touches:** `.maestro/dino/grown-ups-button.yaml`, `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/GrownUpHeader.cs`, this slice file.
 
