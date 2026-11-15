@@ -1,7 +1,7 @@
 # Slice 387 — Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button
 **Product:** Dino
 
-*Built (wave 2026-11-15), PR #1157.*
+*In progress: items 1-2 built and merged in PR #1157 (Android verified); item 3 (the iOS truncation) planned.*
 
 **Touches:** `src/Dino/DinoReader.App/ShelfHeader.cs` (the shelf header is built in code), `src/Dino/DinoReader.Core/ShelfTitleRules.cs`, `tests/Dino/DinoReader.Tests/ShelfTitleRulesTests.cs`, `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`
 
@@ -11,8 +11,9 @@ The first iOS store-screenshot run on main (Slice 291, run 43650776897) shows th
 
 ## Work
 
-- [x] 1. Find the header layout that lets the button cover the title, and fix it so the title shows whole or shortens with an ellipsis before the button, on iOS and Android alike (same app).
+- [x] 1. Find the header layout that lets the button cover the title, and fix it so the title shows whole or shortens with an ellipsis before the button, on iOS and Android alike (same app). (Done for Android; on iOS the title still shortens with room to spare, item 3.)
 - [x] 2. Check a long title (the German and Farsi strings) and a large text size, so the fix does not move the cut. (English and German on the Android emulator at font 1.0 and 1.3; Farsi and the iPhone shot are under Not yet verified.)
+- [ ] 3. iOS: the title still shortens with room to spare. The branch's simulator run (store-screenshots.yml run 43657945195, 2026-11-15) shows the iPhone 6.5" shelf as logo, "My s…", clear space, then the Grown-ups pill: the pill was not what cut it on iOS (it was on the pill-rule guess), the title label's own frame is narrower than its Star column. Design for the next wave: first turn on diagnostics, never another guessed fix: a Debug-only `[Shelf] fit` line from `ShelfHeader.Fit` with `Width`, `full`, `shortWidth`, `available`, the pill room, and the title's laid-out `Width` after layout (`_title.SizeChanged`), read from the simulator's app log in the same store-shots run (or `dinoreader-ios-sim.yml`); then fix what those numbers name (likely candidates: the measure taken while `Text`/`FontSize` change inside `MeasureTitle`, or the iOS bold-font measure). Evidence: `D:/ReadTheStupidText-worktrees/reviews/s387-device/ios/` (6.5" frames, `top-small.png`).
 
 ## Verification
 
@@ -29,7 +30,7 @@ The first iOS store-screenshot run on main (Slice 291, run 43650776897) shows th
 ## Not yet verified
 
 - Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
-- The iPhone 6.9" simulator shot: `store-screenshots.yml` run on the branch is pending; the result line is added when it reports.
+- The iPhone shots (run 43657945195 on the branch, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException: iOS driver not ready in time`, twice; a runner start-up failure, it passed in wave 4's run 43650776897); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
 
 ## For CLAUDE.md
 
