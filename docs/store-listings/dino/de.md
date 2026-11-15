@@ -1,6 +1,6 @@
 # Store listing: German (`de`), Dino Book Reader
 
-**Machine-written by Claude (Slice 193, 2026-10-30; Kauf-Zeilen Slice 346 Teil D, 2026-11-13). Pushed 2026-11-13 by the user's order (they don't read German, so no native read holds it): Google Play de-DE and App Store de-DE (version 1.81.1) rewritten from the current app and pushed again 2026-11-13, read back equal (Play edit committed; App Store version not submitted); Microsoft `de` purchase lines in submission 1152921505702395457 (listing only).** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing.
+**Machine-written by Claude (Slice 193, 2026-10-30; Kauf-Zeilen Slice 346 Teil D, 2026-11-13). Pushed 2026-11-13 by the user's order (they don't read German, so no native read holds it): Google Play de-DE and App Store de-DE (version 1.81.1) rewritten from the current app and pushed again 2026-11-13, read back equal (Play edit committed; App Store version not submitted); Microsoft `de` purchase lines in submission 1152921505702395457 (listing only).** Basis: the live Google Play English text (en-GB), updated to 15 languages and ages 3-9, in the wording of the German Microsoft Store listing that is already live (first submission 2026-10-29). Uses "Sie" for the grown-ups, like that live listing. **Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10).**
 
 ## Microsoft Store (live in German; Slice 346 changes only the purchase lines, see below)
 
@@ -12,39 +12,40 @@ Dino Book Reader
 
 ## Google Play short description (<= 80)
 
-Geschichten zum Vorlesen, mit einer eigenen Stimme für jede Figur.
+Jede Figur hat ihre eigene Stimme - und Oma nimmt den Wolf selbst auf
 
 ## Google Play full description (<= 4,000)
 
-Rewritten 2026-11-13 from the current app, with the English `play.md` and the German App Store text below (machine draft, no native read).
+Rewritten 2026-11-15 from the English `play.md` (live-payment version), machine draft, no native read.
 
-Dino Book Reader liest Kindern von 3 bis 9 Jahren Bilderbuch-Geschichten vor, mit einer eigenen Stimme für jede Figur. Der Erzähler erzählt die Geschichte, und der Wolf, die Schweinchen und der Lebkuchenmann sprechen jeweils mit ihrer eigenen Stimme.
+In Dino Book Reader hat jede Figur ihre eigene Stimme. Der Erzähler erzählt die Geschichte, der Wolf und die kleinen Schweinchen klingen jeweils wie sie selbst, und Eltern oder Großeltern können ihre eigene Stimme für jede Figur aufnehmen: Oma kann der Wolf sein.
 
-GESCHICHTEN AUSSUCHEN
-Ein Erwachsener wählt Bücher aus dem Geschichtenregal: bekannte Märchen, sanft neu erzählt, mit einem Bild auf jeder Seite. Vier Geschichten sind kostenlos. Jedes Buch bringt seine eigenen vorproduzierten Stimmen mit, in der Sprache, die Sie wählen.
+Jede Geschichte gibt es in 15 Sprachen, für Familien, die neben der Schulsprache eine Heimatsprache pflegen: Farsi, Arabisch, Schwedisch, Norwegisch, Dänisch, Finnisch und mehr. Ein Erwachsener wählt zwei oder drei Geschichtensprachen, und das Kind kann beim Lesen zwischen ihnen wechseln, hört dieselbe Geschichte und lernt die Wörter in beiden Sprachen.
 
-DIE FAMILIE IN DER GESCHICHTE
-Eltern oder Großeltern können für jede Figur auf jeder Seite ihre eigene Stimme aufnehmen, in jeder Geschichtensprache. Ihr Kind hört Sie vorlesen, und die Aufnahme bleibt auf Ihrem Gerät.
+Keine Werbung. Kein Konto. Eine geladene Geschichte funktioniert offline, und Ihre Aufnahmen bleiben auf Ihrem Gerät.
 
-GEMEINSAM LESEN
-- Jeder Satz leuchtet beim Vorlesen auf, damit Kinder mitlesen können.
+Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte kaufen Sie einmal und behalten sie, je 0,99 $ (Google Play zeigt den Preis in Ihrer Währung). Ein Erwachsener kauft hinter der Erwachsenensperre und kann frühere Käufe jederzeit wiederherstellen.
+
+FÜR KINDER VON 3 BIS 9 JAHREN
+Kinder hören zu, schauen die Bilder an und lesen mit: gut für Gutenachtgeschichten und für zweisprachige Kinder, die Wörter in zwei Sprachen lernen. Ein Erwachsener richtet alles ein, wählt die Bücher und nimmt Stimmen hinter der Erwachsenensperre auf.
+
+KLASSISCHE MÄRCHEN, SANFT NEU ERZÄHLT
+Handverlesene Bilderbücher, jedes für kleine Kinder neu erzählt, mit einem Bild auf jeder Seite.
+
+NOCH MEHR
+- Jeder Satz leuchtet beim Vorlesen auf.
 - Nur Bild, nur Text oder Bild und Text.
 - Lesetempo von 0,8x bis 1,2x und Tiergeräusche, die sich ein- und ausschalten lassen.
 - Ein Nachtmodus für Gutenachtgeschichten.
+- Jede Figur auf jeder Seite in jeder Geschichtensprache aufnehmen; Aufnahmen sichern und wiederherstellen.
 
-GESCHICHTEN UND PREISE
-Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte im Geschichtenregal kostet je 0,99 € bzw. der entsprechende Preis in Ihrer Landeswährung (Google Play zeigt den Preis an). Ein Erwachsener kauft eine Geschichte einmal, hinter der Erwachsenensperre, über Google Play und kann frühere Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
+SPRACHEN
+Englisch, Arabisch, Chinesisch, Dänisch, Niederländisch, Farsi, Finnisch, Französisch, Deutsch, Japanisch, Norwegisch, Portugiesisch, Russisch, Spanisch und Schwedisch: die App, die Geschichten und die Stimmen.
 
-FÜNFZEHN SPRACHEN
-Die App, die Geschichten und die Stimmen gibt es auf Arabisch, Chinesisch, Dänisch, Deutsch, Englisch, Farsi, Finnisch, Französisch, Japanisch, Niederländisch, Norwegisch, Portugiesisch, Russisch, Schwedisch und Spanisch.
-
-FÜR KINDER GEMACHT
-- Keine Werbung.
-- Geschichten werden über Google Play gekauft, von einem Erwachsenen hinter der Erwachsenensperre. Es gibt kein Konto anzulegen, und wir speichern nichts über den Käufer.
-- Einstellungen, Kaufen und Löschen von Geschichten, Aufnehmen und Sicherungen liegen hinter einer Erwachsenensperre.
-- Sobald eine Geschichte und ihre Sprache geladen sind, funktioniert das Vorlesen offline.
-- Ihre Aufnahmen bleiben auf Ihrem Gerät. Sie lassen sich im Erwachsenenbereich sichern und wiederherstellen.
-- Optionale anonyme Nutzungszählungen ohne Namen oder Kennungen, in den Einstellungen abschaltbar (hinter der Erwachsenensperre).
+SICHER UND PRIVAT
+- Keine Werbung und kein Konto. Wir speichern nichts über Sie oder Ihren Kauf; der Nachweis des Stores wird geprüft und vergessen.
+- Kaufen, Einstellungen, Aufnehmen und Sicherungen liegen hinter einer Erwachsenensperre.
+- Optionale anonyme Nutzungszählungen ohne Namen oder Kennungen, in den Einstellungen abschaltbar.
 
 ## App Store (iOS)
 

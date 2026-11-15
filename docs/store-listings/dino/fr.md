@@ -1,16 +1,49 @@
 # Store listing: French (`fr`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13), from the English `play.md` and `appstore.md` of the same day. Not read by a native speaker (line in `docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `fr-FR`; App Store `fr-FR`; Microsoft Store `fr`. Uses "vous" for the grown-ups.
+**Machine draft by Claude (Slice 374, 2026-11-13), from the English `play.md` and `appstore.md` of the same day. Not read by a native speaker (line in `docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `fr-FR`; App Store `fr-FR`; Microsoft Store `fr`. Uses "vous" for the grown-ups.
 
 How the files in this folder work: the Description below is the Google Play full description. The App Store description is the same text with every "Google Play" replaced by "App Store"; the Microsoft Store description is the same text with every "Google Play" replaced by "Microsoft Store". Title, subtitle, keywords and promotional text are the single lines below.
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): Des histoires lues à voix haute, avec une voix pour chaque personnage.
+Play short description (<= 80): Chaque personnage a sa voix - et mamie peut enregistrer la sienne en loup
 Play search phrases used in the text: histoires du soir, contes pour enfants, livres illustrés, lecture à voix haute
 App Store subtitle (<= 30): Une voix par personnage
 App Store keywords (<= 100 bytes): histoires,contes,enfants,livres illustrés,coucher,lecture,conte,bébé,enregistrer,album
 App Store promotional text (<= 170): Des histoires lues aux enfants de 3 à 9 ans, une voix pour chaque personnage et de la place pour la vôtre. Sans pub. Quatre gratuites, les autres 0,99 $. 15 langues.
 Microsoft search terms (7): histoires pour enfants; lecture à voix haute; histoires du soir; livres illustrés; contes; livres pour enfants; voix des personnages
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+Dans Dino Book Reader, chaque personnage a sa propre voix. Le narrateur raconte l'histoire, le loup et les petits cochons ont chacun leur voix, et un parent ou un grand-parent peut enregistrer sa propre voix pour n'importe quel personnage : mamie peut être le loup.
+
+Chaque histoire existe en 15 langues, pour les familles qui gardent une langue maternelle à côté de la langue de l'école : persan, arabe, suédois, norvégien, danois, finnois et d'autres. Un adulte choisit deux ou trois langues d'histoire, et l'enfant peut passer de l'une à l'autre pendant la lecture, entendre la même histoire et apprendre les mots dans les deux langues.
+
+Sans pub. Sans compte. Une histoire téléchargée se lit hors connexion, et vos enregistrements restent sur votre appareil.
+
+Quatre histoires illustrées sont gratuites : Le Lion et la Souris, Le Bonhomme de pain d'épices, Les Trois Petits Cochons et X marque le trésor. Toute autre histoire s'achète une fois et se garde, 0,99 $ chacune (Google Play affiche le prix dans votre devise). Un adulte achète derrière la barrière parentale et peut restaurer ses achats à tout moment.
+
+POUR LES ENFANTS DE 3 À 9 ANS
+Les enfants écoutent, regardent les images et suivent : idéal pour l'histoire du soir, et pour les enfants bilingues qui apprennent des mots dans deux langues. Un adulte configure l'application, choisit les livres et enregistre les voix derrière la barrière parentale.
+
+CONTES CLASSIQUES, RACONTÉS AVEC DOUCEUR
+Des albums choisis un à un, chacun raconté pour les jeunes enfants, avec une image sur chaque page.
+
+ET AUSSI
+- Chaque phrase s'illumine pendant la lecture.
+- Image seule, texte seul, ou image et texte.
+- Vitesse de lecture de 0,8x à 1,2x, et bruitages d'animaux à activer ou non.
+- Un thème nuit pour le coucher.
+- Enregistrez n'importe quel personnage, sur n'importe quelle page, dans n'importe quelle langue d'histoire ; sauvegardez et restaurez vos enregistrements.
+
+LANGUES
+Anglais, arabe, chinois, danois, néerlandais, persan, finnois, français, allemand, japonais, norvégien, portugais, russe, espagnol et suédois : l'application, les histoires et les voix.
+
+SÛR ET PRIVÉ
+- Sans pub et sans compte à créer. Nous ne gardons rien sur vous ni sur votre achat ; la preuve du store est vérifiée puis oubliée.
+- Achats, réglages, enregistrement et sauvegardes sont derrière une barrière parentale.
+- Compteurs d'usage anonymes facultatifs, sans nom ni identifiant, désactivables dans les réglages.
 
 ## Description
 
