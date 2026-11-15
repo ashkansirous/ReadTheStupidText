@@ -129,7 +129,7 @@ function Add-Result {
     }
 }
 
-function Get-Hint { try { return Find-UiaByName -Root (Get-DinoWindow) -Name 'then drag it to a new place' } catch { return $null } }
+function Get-Hint { try { return Find-UiaByName -Root (Get-DinoWindow) -Name 'Drag a book to a new place' } catch { return $null } }
 function Wait-ReorderOpen { Wait-Until { Get-Hint } 10 'reorder layer did not open' | Out-Null }
 function Wait-ReorderClosed { Wait-Until { -not (Get-Hint) } 10 'reorder layer did not close' | Out-Null }
 function Get-LayerTiles {

@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Cuentos</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Reordenar</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Mantén pulsado un libro y arrástralo a otro lugar. La estantería de tu hijo muestra el mismo orden.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Arrastra un libro a otro lugar. La estantería de tu hijo muestra el mismo orden.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Esperando la imagen de la portada</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>No se pudo guardar el nuevo orden</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Algo sigue usando el archivo. Toca Listo para intentarlo de nuevo, o Cancelar para mantener el orden anterior.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Leer ahora</value></data>

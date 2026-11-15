@@ -6,7 +6,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The shelf's reorder mode (Slice 264, mock Batch 47 frames 173 to 176): a state of the gallery, drawn as a layer over it with its own ink bar (Cancel left, "Reorder", Done), a hint, and the books in a grid
-/// that wiggle. A tap lifts a book; dragging one (a long press first on Android and iOS, as the system drag starts there; a plain mouse drag on Windows) shows the spot it would land in, lit, while the
+/// that wiggle. A tap lifts a book; dragging one (a plain touch drag on Android and iOS, no hold, Slice 382; a plain mouse drag on Windows) shows the spot it would land in, lit, while the
 /// others slide to make room. It works on an in-memory order and owns nothing stored: Done hands the order to the page, which is the only thing that saves; Cancel and closing save nothing.
 /// Positions are computed by <see cref="ShelfOrderGrid"/> and the move by <see cref="ShelfOrder.MoveBefore"/>; the layout never mirrors.
 /// </summary>
@@ -18,7 +18,9 @@ internal sealed class ShelfReorderView : Grid
 	private const double EdgeStep = 36;
 	private const double BottomRoom = 24;
 	private const double MinWidthChange = 1;
+	private const double PictureReloadWidthChange = 16; // a tile this much wider or narrower than the one its picture was decoded for gets the picture loaded again
 	private double _lastLayoutWidth;
+	private double _decodedTileWidth;
 	private bool _edgeScrolling;
 	private const uint DropSettleMs = 150;
 	private const int HideSourceDelayMs = 100;
@@ -39,6 +41,17 @@ internal sealed class ShelfReorderView : Grid
 	private bool _closing;
 	private int _kbIndex = -1; // the spot the keyboard focus is on; -1 until a key is pressed
 	private bool _keyboardHolding; // Space lifted the focused cover and the arrows carry it
+	private (IReadOnlyList<StoryTile> Tiles, string? LiftedId)? _pending; // Slice 382: the covers wait here until the scroll has a width, so each picture loads at its real size
+	private const int PanTickMs = 50;
+	private bool _pointerDrag; // the drag is a touch pan (Android, iOS): the lifted cover itself follows the finger; the system drag (Windows) draws its own picture
+	private double _panCoverX;
+	private double _panCoverY;
+	private double _panTouchX;
+	private double _panTouchY;
+	private double _panScrollY;
+	private double _panDx;
+	private double _panDy;
+	private IDispatcherTimer? _panTimer;
 
 	public ShelfReorderView()
 	{
@@ -70,7 +83,9 @@ internal sealed class ShelfReorderView : Grid
 	public event Action? CancelRequested;
 
 	/// <summary>The book ids in the order shown now.</summary>
-	public IReadOnlyList<string> Order => [.. _entries.OrderBy(e => e.Slot).Select(e => e.Id)];
+	public IReadOnlyList<string> Order => _pending is { } pending
+		? [.. pending.Tiles.Select(t => t.Story.Id)] // the covers are not built yet (no width): nothing was moved, the order is the one the mode opened with, never an empty list
+		: [.. _entries.OrderBy(e => e.Slot).Select(e => e.Id)];
 
 	private Grid Header()
 	{
@@ -129,15 +144,30 @@ internal sealed class ShelfReorderView : Grid
 		_lit.IsVisible = false;
 		_surface.Children.Add(_lit);
 		TraceSize("lit", _lit);
-		AddEntries(tiles, liftedId);
+		BuildOrWait(tiles, liftedId);
 		IsVisible = true;
 		Dispatcher.Dispatch(Relayout);
 		ReorderTrace.Step("view open end");
 	}
 
+	// Slice 382, the blurred covers on the first open: the scroll is hidden until the first Open, so its width is 0 and the tiles were built 1 dp wide; the cover pictures decode to the size of
+	// the view they are first set on (the platform image loader downsamples to it) and were never decoded again when the grid was laid out at the real width. Build the tiles only once the scroll has a width.
+	private void BuildOrWait(IReadOnlyList<StoryTile> tiles, string? liftedId)
+	{
+		if (_scroll.Width > 0)
+		{
+			AddEntries(tiles, liftedId);
+			return;
+		}
+
+		_pending = (tiles, liftedId);
+		DebugLog("covers wait for the scroll width");
+	}
+
 	private void AddEntries(IReadOnlyList<StoryTile> tiles, string? liftedId)
 	{
 		bool outline = Sirous.Reading.Mobile.Shared.Waiting.ReduceMotion.IsOn;
+		_decodedTileWidth = _grid.TileWidth;
 		for (int i = 0; i < tiles.Count; i++)
 		{
 			Grid view = ShelfReorderTiles.Build(tiles[i], _grid, _titleHeight, TitleSpacing, outline);
@@ -158,13 +188,18 @@ internal sealed class ShelfReorderView : Grid
 		tap.Tapped += (_, _) =>
 		{
 			UiUsage.Tap(UiControls.Reorder); // Slice 352: a tile lifted to move
+			DebugLog($"tap lift {entry.Id}"); // the shelf-reorder flow taps a cover and expects this: the touch pan must not eat the tap
 			Lift(entry);
 		};
+		entry.View.GestureRecognizers.Add(tap);
+#if ANDROID || IOS
+		ReorderTouchPan.Attach(entry.View, new ReorderPanCallbacks((x, y) => PanBegin(entry, x, y), PanMove, cancelled => PanEnd(entry, cancelled))); // Slice 382: a touch that moves drags at once, no hold
+#else
 		var drag = new DragGestureRecognizer { CanDrag = true };
 		drag.DragStarting += (_, e) => StartDrag(entry, e);
 		drag.DropCompleted += (_, _) => ApplyDragOutcome(_drag.Completed(Order, Environment.TickCount64));
-		entry.View.GestureRecognizers.Add(tap);
 		entry.View.GestureRecognizers.Add(drag);
+#endif
 #if WINDOWS
 		entry.View.HandlerChanged += (_, _) => DinoCursor.Set(entry.View, DinoCursorShape.OpenHand); // an open hand over every cover (Windows)
 #endif
@@ -303,13 +338,33 @@ internal sealed class ShelfReorderView : Grid
 		}
 
 		_entries.Clear();
+		_pending = null;
+		StopPanTimer();
+		_pointerDrag = false;
+		if (_lit is not null) // the first Open clears before it makes the lit spot (device run 2026-11-15: a null _lit threw and the reorder mode never opened)
+		{
+			_lit.IsVisible = false; // review #6: a drag torn down mid-flight leaves no lit spot behind
+		}
 		_surface.Children.Clear();
-		_dragged = null; // the drag session stays: a rebuild mid-drag must still let a cancel restore the pre-drag order (reset in Close, or by the next Begin)
+		_dragged = null; // one rule (review #4/#5): a drag in flight when its entries go away ends as cancelled, never a drop: nothing is applied, the order is the one the next Open brings, and a late Ended(cancelled) finds no drag; the ShelfDragSession is reset only in Close and Begin (Core CLAUDE.md), so a late Drop after a rebuild is still judged by it
 	}
 
 	// Only a change of the scroll's width re-lays out (a height-only change, or a scrollbar flicker under 1 dp, must not feed back into the surface size: Windows threw a layout cycle).
 	private void OnScrollSizeChanged(object? sender, EventArgs e)
 	{
+		if (_pending is not null && !IsVisible)
+		{
+			_pending = null; // review #7: the layer was hidden before the scroll got a width; nothing waits for it
+		}
+
+		if (_pending is { } pending && _scroll.Width > 0)
+		{
+			_pending = null;
+			_grid = FitGrid(_scroll.Width, _titleHeight);
+			AddEntries(pending.Tiles, pending.LiftedId);
+			DebugLog($"covers built at width {_scroll.Width:0}");
+		}
+
 		if (Math.Abs(_scroll.Width - _lastLayoutWidth) >= MinWidthChange)
 		{
 			Relayout();
@@ -352,6 +407,25 @@ internal sealed class ShelfReorderView : Grid
 			PlaceLit(_dragged?.Slot ?? _kbIndex, animate: false); // the lit spot and the keyboard ring are the same element and follow the new columns
 		}
 
+		ReloadPicturesIfResized();
+	}
+
+	// Slice 382: a picture decodes to the size of the cover it is set on, so a rotation or a window resize that changes the tile width needs the pictures loaded again at the new size, after this layout pass.
+	private void ReloadPicturesIfResized()
+	{
+		if (Math.Abs(_grid.TileWidth - _decodedTileWidth) < PictureReloadWidthChange)
+		{
+			return;
+		}
+
+		_decodedTileWidth = _grid.TileWidth;
+		Dispatcher.Dispatch(() =>
+		{
+			foreach (ReorderEntry entry in _entries)
+			{
+				ShelfReorderTiles.ReloadCover(entry);
+			}
+		});
 	}
 
 	// A view sits in its layout bounds at its home spot and moves to its slot with its translation; a lifted book rides 10 dp up.
@@ -408,15 +482,7 @@ internal sealed class ShelfReorderView : Grid
 		entry.Lifted = lifted;
 		entry.View.ZIndex = lifted ? 1 : 0;
 		ShelfReorderTiles.ApplyLift(entry);
-		Place(entry, animate: true);
-		if (lifted)
-		{
-			ShelfReorderTiles.StopWiggle(entry);
-		}
-		else
-		{
-			ShelfReorderTiles.StartWiggle(entry, entry.Slot, Dispatcher);
-		}
+		Place(entry, animate: true); // a lifted book keeps wiggling (Slice 382)
 	}
 
 	private void StartDrag(ReorderEntry entry, DragStartingEventArgs e)
@@ -437,6 +503,93 @@ internal sealed class ShelfReorderView : Grid
 			}
 		});
 		DebugLog($"drag start {entry.Id} from {entry.Slot + 1}");
+	}
+
+	// Slice 382, Android and iOS: the touch drag. The lifted cover itself follows the finger (scale 1.10, shadow, still wiggling); the lit spot and the sliding follow the finger's slot as with the system drag.
+	private bool PanBegin(ReorderEntry entry, double touchX, double touchY)
+	{
+		if (_dragged is not null || _closing)
+		{
+			return false;
+		}
+
+		_dragged = entry;
+		_pointerDrag = true;
+		_drag.Begin(Order);
+		_kbIndex = -1;
+		_keyboardHolding = false;
+		foreach (ReorderEntry other in _entries)
+		{
+			SetLifted(other, other == entry);
+		}
+
+		(_panCoverX, _panCoverY) = _grid.Origin(entry.Slot);
+		(_panTouchX, _panTouchY) = (touchX, touchY);
+		_panScrollY = _scroll.ScrollY;
+		(_panDx, _panDy) = (0, 0);
+		_lit.IsVisible = true;
+		PlaceLit(entry.Slot, animate: false);
+		StartPanTimer();
+		DebugLog($"drag start {entry.Id} from {entry.Slot + 1} touch");
+		DebugLog($"drag wiggle {entry.Id} running={ShelfReorderTiles.IsWiggling(entry)} reduceMotion={Sirous.Reading.Mobile.Shared.Waiting.ReduceMotion.IsOn} scale={entry.View.Scale:0.00}");
+		PanUpdate(edgeScroll: false);
+		return true;
+	}
+
+	private void PanMove(double dx, double dy)
+	{
+		(_panDx, _panDy) = (dx, dy);
+		PanUpdate(edgeScroll: false); // only the timer scrolls at the edge, so the speed does not follow the touch event rate
+	}
+
+	private void PanUpdate(bool edgeScroll)
+	{
+		if (_dragged is not { } entry || !_pointerDrag)
+		{
+			return;
+		}
+
+		(double fx, double fy) = ReorderPan.FingerOnSurface(_panCoverX, _panCoverY, _panTouchX, _panTouchY, _panDx, _panDy, _scroll.ScrollY - _panScrollY);
+		(double homeX, double homeY) = _grid.Origin(entry.HomeIndex);
+		entry.View.AbortAnimation("TranslateTo");
+		entry.View.TranslationX = fx - _panTouchX - homeX;
+		entry.View.TranslationY = fy - _panTouchY - homeY;
+		MoveTarget(_grid.SlotAt(fx, fy, _entries.Count));
+		if (edgeScroll)
+		{
+			ScrollNearEdge(fy - _scroll.ScrollY);
+		}
+	}
+
+	// Ended by the finger lifting (a drop) or by the system taking the touch (a cancel: the old order comes back). Nothing when no touch drag is running (a tap, or a pan that never began).
+	private void PanEnd(ReorderEntry entry, bool cancelled)
+	{
+		if (_dragged != entry || !_pointerDrag) // an end from a torn-down entry's pan (review #5) never touches another cover's drag
+		{
+			return;
+		}
+
+		StopPanTimer();
+		long now = Environment.TickCount64;
+		ApplyDragOutcome(cancelled ? _drag.Completed(Order, now) : _drag.Drop(now));
+		DebugLog($"drag end {(cancelled ? "cancelled" : "drop")}");
+	}
+
+	// A finger held still near an edge sends no moves, so a timer keeps the edge scroll going.
+	private void StartPanTimer()
+	{
+		StopPanTimer();
+		IDispatcherTimer timer = Dispatcher.CreateTimer();
+		timer.Interval = TimeSpan.FromMilliseconds(PanTickMs);
+		timer.Tick += (_, _) => PanUpdate(edgeScroll: true);
+		_panTimer = timer;
+		timer.Start();
+	}
+
+	private void StopPanTimer()
+	{
+		_panTimer?.Stop();
+		_panTimer = null;
 	}
 
 	private void OnDragOver(object? sender, DragEventArgs e)
@@ -519,6 +672,11 @@ internal sealed class ShelfReorderView : Grid
 			}
 
 			entry.Slot = slot;
+			if (entry == _dragged && _pointerDrag)
+			{
+				continue; // the finger carries it
+			}
+
 			Place(entry, animate: entry != _dragged);
 		}
 	}
@@ -544,14 +702,25 @@ internal sealed class ShelfReorderView : Grid
 			return;
 		}
 
+		bool pointer = _pointerDrag;
+		_pointerDrag = false;
 		_dragged = null;
 		_lit.IsVisible = false;
 		entry.View.Opacity = 1;
+		if (pointer)
+		{
+			SetLifted(entry, false); // scale and shadow back; the wiggle never stopped
+		}
+
 		entry.View.AbortAnimation("TranslateTo");
 		(double x, double y) = _grid.Origin(entry.Slot);
 		(double homeX, double homeY) = _grid.Origin(entry.HomeIndex);
 		_ = entry.View.TranslateToAsync(x - homeX, y - homeY, DropSettleMs, Easing.CubicOut);
-		ShelfReorderTiles.StartWiggle(entry, entry.Slot, Dispatcher);
+		if (!pointer && !ShelfReorderTiles.IsWiggling(entry))
+		{
+			ShelfReorderTiles.StartWiggle(entry, entry.Slot, Dispatcher); // the wiggle never stops during a drag (Slice 382): restarting a running one would jerk the dropped cover
+		}
+
 		DebugLog($"dropped at {entry.Slot + 1}");
 	}
 

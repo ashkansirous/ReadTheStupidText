@@ -1,8 +1,15 @@
 # Slice 264: a grown-up reorders the shelf. The "Reorder" row of a book's sheet opens the reorder mode (Done and Cancel at the top); Cancel leaves the order as it was; Done keeps it, and it survives a restart.
 # The drag itself is not scripted: the system drag starts on a long press, which a Maestro swipe cannot make. The shelf-reorder-move hook drops the 4th book before the 2nd through the same order code a drop uses.
 # The four starter books are in a fixed order (three-little-pigs is 2nd, tortoise-and-hare 4th), so the 2nd title tells the order: before the move it is the pigs, after Done and after a restart the tortoise.
-# The 1 second press on a cover (TileOverlay's PointerGestureRecognizer) and the real drag are Not yet verified on a device: the device stage reads the [Reorder] lines of a hand run.
+# Slice 382: the plain-swipe drag is scripted below (a touch drag, no hold, on Android and iOS); the Windows mouse drag is the VM check's. The covers on the first open after the clearState install log "[Cover] shown <id> in N ms" (sharp straight away, N small).
+# The 1 second press on a cover (TileOverlay's PointerGestureRecognizer) is Not yet verified on a device.
 # expect-log: HOOK skip-first-run ok
+# expect-log: [Cover] shown
+# expect-log: [Reorder] drag start
+# expect-log: [Reorder] drag wiggle
+# expect-log: running=True
+# expect-log: [Reorder] drag end drop
+# expect-log: [Reorder] tap lift
 # expect-log: HOOK shelf-order-reset ok
 # expect-log: HOOK enter-grown-up ok
 # expect-log: [Reorder] opened with 4 books,
@@ -62,6 +69,46 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
     id: ReorderCancel
 - assertVisible:
     id: ReorderHint
+# Slice 382: a plain swipe on a cover drags it at once in edit mode, no hold; the held book keeps wiggling (the "drag wiggle ... running=True" line). Maestro's swipe is a real touch drag, so this is the scripted check of the
+# touch drag itself: before the slice a swipe only scrolled or did nothing, because the system drag needed a long press. The swipe is slow (1.2 s) so the cover is under the finger for the whole move.
+- swipe:
+    from:
+      id: ReorderCover
+      index: 3
+    direction: UP
+    duration: 1200
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+# Where the drag drops depends on the screen, so Cancel and reopen the reorder mode: the shelf is back in its original order for the steps below.
+- tapOn:
+    id: ReorderCancel
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 10000
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReorder
+    timeout: 10000
+- tapOn:
+    id: BookSheetReorder
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+# Review finding 1: the touch pan must not eat a plain tap, which lifts a cover (the "tap lift" line).
+- tapOn:
+    id: ReorderCover
+    index: 2
+    waitToSettleTimeoutMs: 300
 - launchApp:
     stopApp: false
     arguments:

@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>故事</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>重新排序</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>长按一本书，然后将它拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>将一本书拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>正在等待封面图片</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>无法保存新的顺序</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>文件仍被占用。点按“完成”重试，或点按“取消”保留原来的顺序。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>立即阅读</value></data>

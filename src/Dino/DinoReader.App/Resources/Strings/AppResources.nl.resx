@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Verhalen</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Opnieuw ordenen</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Houd een boek ingedrukt en sleep het naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Sleep een boek naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Wachten op de omslagafbeelding</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>De nieuwe volgorde kon niet worden opgeslagen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Iets gebruikt het bestand nog. Tik op Klaar om het opnieuw te proberen, of op Annuleren om de oude volgorde te houden.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Nu lezen</value></data>

@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Historier</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Endre rekkefølge</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Trykk og hold på en bok, og dra den til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Dra en bok til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Venter på omslagsbildet</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre den nye rekkefølgen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Noe bruker fortsatt filen. Trykk Ferdig for å prøve igjen, eller Avbryt for å beholde den gamle rekkefølgen.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Les nå</value></data>

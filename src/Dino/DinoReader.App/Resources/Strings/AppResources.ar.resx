@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>قصص</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>إعادة الترتيب</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>اضغط مطولًا على كتاب ثم اسحبه إلى مكان جديد. يعرض رف طفلك الترتيب نفسه.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>اسحب كتابًا إلى مكان جديد. يعرض رف طفلك الترتيب نفسه.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>بانتظار صورة الغلاف</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ الترتيب الجديد</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>هناك ما زال يستخدم الملف. اضغط «تم» للمحاولة مجددًا، أو «إلغاء» للإبقاء على الترتيب القديم.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>اقرأ الآن</value></data>

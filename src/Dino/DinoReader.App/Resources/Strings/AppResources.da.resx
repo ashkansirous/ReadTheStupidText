@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Historier</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Omarranger</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Tryk og hold på en bog, og træk den så til et nyt sted. Dit barns hylde viser samme rækkefølge.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Træk en bog til et nyt sted. Dit barns hylde viser samme rækkefølge.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Venter på forsidebilledet</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke gemme den nye rækkefølge</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Noget bruger stadig filen. Tryk på Færdig for at prøve igen, eller Annuller for at beholde den gamle rækkefølge.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Læs nu</value></data>
