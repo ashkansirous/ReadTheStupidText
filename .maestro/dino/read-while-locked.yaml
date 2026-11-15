@@ -1,0 +1,55 @@
+# Slice 383: a book that is playing reads to its end while the screen is locked or off (a parent reads with the screen dark). Offline store, so every piece is a silent beat (no pack): the beats must keep running while
+# the harness sleeps the screen. The flow waits for the control to go back from Pause to Play (the read finished) and expects the end-of-book line, which is only written when the last page was read; the window-stopped
+# line proves the screen really slept meanwhile. No "silent piece paused, the page is not shown" may come from the lock (the lock never touches the page).
+# `# needs: screen-cycle`: run-flows.ps1 sends KEYCODE_SLEEP for 4 s every 12 s while the flow runs, then KEYCODE_WAKEUP and wm dismiss-keyguard. Needs the emulator's screen lock set to None or Swipe.
+# To see it fail against the old behaviour: before Slice 383 a sleep stopped the beat's timer, so no piece could be shown while the window was stopped: the line "silent piece shown while the window is stopped" never exists on origin/main.
+# The finish line names the pages read and the pages with text ("read N of N pages"), starting "read all" only when the two are equal; the flow expects that, so a read that ended early fails.
+# needs: screen-cycle
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK read start
+# expect-log: [AudioPack] silent piece shown (sentence 0)
+# expect-log: [AudioPack] window stopped (lock, screen off, Home or another app)
+# expect-log: [AudioPack] silent piece shown while the window is stopped
+# expect-log: [Reading] book finished: read all
+appId: uk.sirous.dinoreader.dbg
+name: A book reads to its end while the screen is locked
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, a stored shelf order); fine here: skip-first-run puts the four test books back and no audio pack may be installed beforehand, so that every piece is a silent beat.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 30000
+# The read finishes while the screen sleeps and wakes about every 12 s: the control goes back to Play when the last page was read.
+- extendedWaitUntil:
+    visible: Play
+    timeout: 240000
+- assertVisible:
+    id: ReadingSurface
