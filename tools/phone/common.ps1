@@ -565,7 +565,7 @@ function Restore-PacksAside([string]$Phone, [string]$Package, [string]$Archive, 
 }
 
 # Slice 213: each phone build (one per variant) has its own --artifacts-path, so the Debug and the AOT build of one checkout can run at the same time
-# and neither touches src\*\obj or src\*\bin. dotnet puts the project's output under <dir>\bin\<Project>\debug_net10.0-android_<rid>\.
+# and neither touches src\*\obj or src\*\bin. dotnet puts the project's output under <dir>\bin\<Project>\debug_net11.0-android_<rid>\.
 $script:ArtifactsFolderName = '.artifacts'
 # The folder name is short on purpose: aapt2 fails past the Windows path limit (APT2264) and the ML Kit asset paths are already ~230 characters long.
 function Get-PhoneArtifactsPath([string]$RepoRoot, [string]$App, [string]$Platform) {
@@ -691,7 +691,7 @@ function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinute
 # a caller that goes through Start-Process quotes the ones with spaces (ConvertTo-ProcessArguments).
 function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot) {
     # Slice 225 item 23: --disable-build-servers (= -nodeReuse:false, UseSharedCompilation=false, UseRazorBuildServer=false) so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
-    $arguments = @($Project, '-f', 'net10.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '--disable-build-servers', '-nodeReuse:false', '-p:UseSharedCompilation=false',
+    $arguments = @($Project, '-f', 'net11.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '--disable-build-servers', '-nodeReuse:false', '-p:UseSharedCompilation=false',
         "-p:RuntimeIdentifier=$Rid", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$Package")
     if ($Aot) { $arguments += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
     return $arguments

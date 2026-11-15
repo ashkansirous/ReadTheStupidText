@@ -2,15 +2,15 @@
 
 	<PropertyGroup>
 		<!-- Android always; iOS only where it can be built (Decision 70, Slice 48). The iOS
-		     target needs a Mac (CI: macos-26), so it is added on macOS, or anywhere with
+		     target needs a Mac (CI: the xcode-27 image), so it is added on macOS, or anywhere with
 		     -p:IncludeIos=true. Windows and Linux builds of this project (the Android CI
-		     job, a Windows developer's `dotnet build -f net10.0-android`) therefore never
+		     job, a Windows developer's `dotnet build -f net11.0-android`) therefore never
 		     restore or evaluate the iOS target. The iOS CI job passes -p:IncludeAndroid=false so
 		     a macOS restore does not need the Android workload (a plain -p:TargetFrameworks=...
 		     would also flow into the referenced class libraries). -->
-		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
-		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net11.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net11.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net11.0-ios'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
 
 		<!-- Slice 305: Mobile.Shared's per-app switches (Dino Reader sets both false): this app links the speech engines and ML Kit. -->
 		<IncludeSpeechEngines>true</IncludeSpeechEngines>
@@ -77,7 +77,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.15" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
 	</ItemGroup>
 
 	<!-- The engine, the scanner and ML Kit text recognition live in Sirous.Reading.Mobile.Shared (Slice 58, 63).

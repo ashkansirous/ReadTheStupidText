@@ -1,6 +1,6 @@
 # CLAUDE.md — DinoReader.Core
 
-- **DinoReader.Core** (`net10.0`, `src/Dino/DinoReader.Core`) — the pure dialogue library
+- **DinoReader.Core** (`net11.0`, `src/Dino/DinoReader.Core`) — the pure dialogue library
   for Dino Reader: `StorySegmenter`, `SpeakerAttributor`, `GenderGuesser`,
   `VoiceCaster` (Decision 75). No package references; it references Application (`LineReflow`, the reading types such as `IVoicedAudioTransform`, and the `Usage` fallback kinds: `FileStoryLibrary` reports through `IFallbackSink`) and Domain (Slice 273: docs/plan/slices/273-fallback-events-everywhere.md); voices come in as plain `VoiceOption(id, gender)`. Every language
   table lives in `LanguageRules` (`LanguageRules.English` today): a new language adds
@@ -13,7 +13,7 @@
 - Picture + text books (Slice 98): `PictureTextBook` sorts pictures in natural file-name order (`1, 2, 10`), splits plain text on lines holding only `---` (CRLF or LF, surrounding spaces ignored; no such line means one page) and fills a page list's empty picture slots in that order. It has no mismatch result: a page without a picture reads as text. A picture + text page is just `ImageFile` + `Text` with no `Lines`: no new field and no `schemaVersion` bump. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
 - Every `AppLanguage` needs its own `LanguageRules` in `RuleSets` (a missing one silently falls back to English and finds no speakers), and every shipped book needs a translation table for every `UiLanguage.Supported` code; the coverage test reads that list, so adding a language fails the build until the tables exist. Engine codes that differ (ML Kit `no` for `nb`) are mapped in one named table in the adapter. (Slices 103, 105: docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md)
 
-Tests: `dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj` (xUnit v3, plain `net10.0`, any OS).
+Tests: `dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj` (xUnit v3, plain `net11.0`, any OS).
 - A story has one cast per language (`Story.Cast` is the story language's, `Story.LanguageCasts` the others', keyed by `BundledTranslations.Key`); always use `CastIn`/`WithCastIn`, never read `Cast` for another language. `story.json` `LanguageCasts` is optional (`schemaVersion` stays 1); a damaged language entry is dropped, not the story. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)
 
 - `VoiceFlavour`, `VoiceFlavours` and `PitchShifter` live here (Slice 129, Decision 136); `FlavourTransform.For(flavour)` is the `IVoicedAudioTransform` the shared speech engine receives on a `VoicedSegment` (null for Normal). A flavour's cache tag is its name, so Normal keeps the cache id it always had. Keep this file out of Domain/Application/Infrastructure.

@@ -5,7 +5,7 @@
 
 **Part B correction (coordinator, 2026-11-15):** part A's note that Xcode 27 is not on the runners is wrong. GitHub has an `xcode-27` image (runs-on `xcode-27`, macOS 27, Xcode 27.0/27.1/27.2; marked public preview), see runner-images issue 14404 and `images/macos/xcode-27-arm64-Readme.md`. Part B moves the iOS jobs to it, with the .NET 11 iOS workload, and corrects the `.github/CLAUDE.md` note.
 
-**Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/AndroidRelease.props` (message text only), `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md` (workload-set text only), `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `CLAUDE.md` (root, item 9 only), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
+**Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/AndroidRelease.props` (message text only), `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md` (workload-set text only), `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `CLAUDE.md` (root, item 9 only), `README.md`, `STORE.md`, `src/Rtst/ReadTheStupidText.App/AGENTS.md` (.NET 11 version text only), `tools/CLAUDE.md` (API 37 note only), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
 
 ## Why
 
@@ -78,9 +78,20 @@ Part A inventory (built 2026-11-15; no extra source files needed a change, the T
 
 Part B — .NET 11:
 
-- [ ] 7. Check with `library-docs`: MAUI 11 release state, iOS/Android workload requirements (Xcode version vs. GitHub's macOS images), Windows App SDK on net11, sherpa-onnx 1.x and every other package's net11 support. Record the result here.
-- [ ] 8. Move `global.json`, every TFM, `MauiVersion`, workload sets and workflow pins to .NET 11; fix breaking changes; Android and iOS heads of both apps plus the Windows tray and Dino Windows build.
-- [ ] 9. Update the version facts in the root `CLAUDE.md` (Stack, ".NET 10") and `.github/CLAUDE.md` pins.
+- [x] 7. Check with `library-docs`: MAUI 11 release state, iOS/Android workload requirements (Xcode version vs. GitHub's macOS images), Windows App SDK on net11, sherpa-onnx 1.x and every other package's net11 support. Record the result here.
+- [~] 8. Move `global.json`, every TFM, `MauiVersion`, workload sets and workflow pins to .NET 11; fix breaking changes; Android and iOS heads of both apps plus the Windows tray and Dino Windows build. (Done and built except the two Android builds: blocker below.)
+- [x] 9. Update the version facts in the root `CLAUDE.md` (Stack, ".NET 10") and `.github/CLAUDE.md` pins.
+
+Part B results (built 2026-11-15, SDK 11.0.100 installed into the worktree's ignored `tmp/dotnet`):
+
+- **Item 7 findings.** SDK 11.0.100; `dotnet workload install ... --version 11.0.100` resolves workload set 11.0.100 (iOS manifest 27.2.11039, Android 37.2.29, MAUI 11.0.0); `Microsoft.Maui.Controls` 11.0.10 is the latest 11.x; Extensions 11.0.0; Android min API 24 (the apps' `SupportedOSPlatformVersion` 28 is above it); Windows App SDK 2.6.5 (part A) builds on `net11.0-windows` for the tray and Dino; sherpa-onnx 1.13.8 / OnnxRuntime 1.28.0 / Microsoft.ML.Tokenizers 3.0.0 / Serilog 4.4.0 / xunit.v3 4.0.3 restore and run on net11 (all tests pass). Runners: GitHub's `xcode-27` image (Xcode 27.2 at `/Applications/Xcode_27.2.app`, default 27.1, only .NET 10 SDKs, public preview; https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md). The compatibility page is https://learn.microsoft.com/en-us/dotnet/core/compatibility/11 (the `/11.0` URL 404s) and the MAUI notes are https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-11. The docs do not say whether iOS 15.5 stays a valid minimum on MAUI 11 (page lists 18.2 as supported): the iOS compile-only builds on Windows pass with 15.5.
+- **Moved:** `global.json` 11.0.100; every `net10.0*` TFM to `net11.0*` (11 csproj plus tests and tools); `MauiVersion` 11.0.10; Extensions packages 11.0.0; all workflows (`setup-dotnet` 11.0.100, workload set 11.0.100 for Android, iOS and Dino Windows `SDK_VERSION`/`WORKLOAD_SET`, iOS jobs `runs-on: xcode-27` with Xcode 27.2, step names "Set up .NET 11"); an `InstallAndroidDependencies` step in both Android workflows (API 37 `android.jar`, XA5207 otherwise).
+- **Opt-outs:** Windows CollectionView2 off for Dino (`UseWindowsCollectionView2Handler=false` in `DinoReader.App.csproj`, windows block): Dino's gallery and store lists were built on the old handler. No switch exists for CoreCLR on Android/iOS (Mono is gone on .NET 11), handler-based Shell on Android, or handler NavigationPage/TabbedPage on iOS (Dino uses NavigationPage): these come in as the new default and need checks on a device (listed below).
+- **CollectionView2 opt-out checked (review fix 9):** the Dino Windows x64 Debug build's `bin/x64/Debug/net11.0-windows10.0.19041.0/win-x64/DinoReader.App.runtimeconfig.json` carries `"Microsoft.Maui.RuntimeFeature.IsWindowsCollectionView2HandlerEnabled": false`, so the property reaches the runtime.
+- **Mono is not an option on .NET 11 (checked in review, 2026-11-15):** `UseMonoRuntime` still exists, but the .NET 11 SDK stops `UseMonoRuntime=true` on `net11.0-android`/`-ios` with NETSDK1242 (`_CheckForUnsupportedMonoMobileRuntime` in `Microsoft.NET.Sdk.TargetFrameworkInference.targets`; the MAUI repo's UI-testing guide says the same, context7 `/dotnet/maui`). So both apps move to CoreCLR with this slice; the only way back to Mono is a .NET 10 build. Review finding 1 (pin Mono) was not applied for that reason.
+- **Extra files edited outside the Touches line (each hardcodes the TFM or label):** `.github/actionlint.yaml` (`xcode-27` label), `.github/scripts/compile-dino-test-package.sh`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/emulator/install-debug.ps1`, `tools/phone/common.ps1`, `tools/test-targets.ps1`, `tools/test-test-targets.ps1`, `src/Dino/DinoReader.App/CLAUDE.md`, `src/Dino/DinoReader.Core/CLAUDE.md`, `src/Shared/Sirous.Reading.Mobile.Shared/CLAUDE.md`, `tools/desktop-vm/README.md` (TFM text only). No C# source needed a change. README.md, STORE.md and `src/Rtst/ReadTheStupidText.App/AGENTS.md` now say .NET 11 (review fix).
+- **Checks:** builds pass (0 errors) for DinoReader.Core, RTST App x64 Debug and Release, Dino Windows x64 Debug and Release, RTST Mobile and Dino iOS compile-only (`-p:IncludeIos=true`, `net11.0-ios`); tests Shared 1722, RTST 628, Dino 4511 pass; `npm run typecheck`, actionlint 1.7.12, `.github/scripts` tests (429), `test-test-targets.ps1` pass. New warning: CsWinRT1032 (collection expressions on WinRT-facing code, from the new SDK), not in the warnings-as-errors list.
+- **Blocker (Android builds not run):** `net11.0-android` compiles against API 37, and the machine's Android SDK only has `platforms/android-36`; the fix is `dotnet build <proj> -t:InstallAndroidDependencies -f net11.0-android -p:AndroidSdkDirectory=<sdk> -p:AcceptAndroidSDKLicenses=true`, which installs into the user's Android SDK and accepts its licences, and the permission check denied it for this agent (a copy into tmp also needs `AcceptAndroidSDKLicenses`). RTST Mobile and Dino Android Debug and Release (R8) builds are therefore NOT RUN; the CI workflows now run that step themselves. Source: https://aka.ms/xa5207.
 
 ## Verification
 
@@ -90,7 +101,10 @@ Part B — .NET 11:
 
 ## Not yet verified
 
-- iOS jobs on CI after merge (SDK 10.0.401 / Xcode 26.6 pins).
+- iOS jobs on CI on `xcode-27` (SDK 11.0.100, workload set 11.0.100, Xcode 27.2): `ios.yml` and `dinoreader-ios.yml` on the branch.
+- Android Debug and Release (R8) builds of both apps on .NET 11 (API 37 platform step in CI), then both apps on an emulator under CoreCLR and handler-based Shell.
+- Dino's per-page iOS status-bar icon colour (`StatusBarPageViewController`, Slice 325 A4) on the handler-based NavigationPage: check on an iOS simulator or device that the icons still follow each page.
+- iOS NavigationPage/TabbedPage handlers (Dino), Windows CollectionView2 (opted out for Dino, so unchanged).
 - Node 26 in the release scripts (first release run).
 - Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
 - ARM64 MSIX.

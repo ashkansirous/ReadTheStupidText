@@ -23,12 +23,12 @@
 	</ItemGroup>
 
 	<!-- Fail loudly instead of silently shipping an unobfuscated build: an older .NET for Android SDK
-	     ignores AndroidR8ObfuscationMode. Workload set 10.0.402 was the first that carries 36.1.118; CI pins 10.0.404.
-	     Install one with `dotnet workload install maui-android` pinned to that workload set on a 10.0.4xx SDK. -->
+	     ignores AndroidR8ObfuscationMode. Workload set 10.0.402 was the first that carries 36.1.118; CI pins 11.0.100 (Android SDK 37.x).
+	     Install one with `dotnet workload install maui-android` pinned to that workload set on the matching SDK. -->
 	<Target Name="RequireAndroidSdkForR8" BeforeTargets="PrepareForBuild"
 	        Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<Error Condition="'$(AndroidNETSdkVersion)' == '' Or $([MSBuild]::VersionLessThan('$(AndroidNETSdkVersion)', '36.1.118'))"
-		       Text="Release Android builds need .NET for Android SDK 36.1.118 or newer for R8 obfuscation (AndroidR8ObfuscationMode), found '$(AndroidNETSdkVersion)'. Install workload set 10.0.404 (10.0.402 or newer): dotnet workload install maui-android --version 10.0.404 (SDK 10.0.4xx)." />
+		       Text="Release Android builds need .NET for Android SDK 36.1.118 or newer for R8 obfuscation (AndroidR8ObfuscationMode), found '$(AndroidNETSdkVersion)'. Install workload set 11.0.100: dotnet workload install maui-android --version 11.0.100 (SDK 11.0.1xx)." />
 	</Target>
 
 </Project>

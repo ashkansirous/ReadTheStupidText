@@ -1,5 +1,6 @@
 # actionlint config (release-scripts.yml runs it on every workflow change).
-# macos-26 is a GitHub-hosted runner label newer than actionlint 1.7.7's list.
+# macos-26 and xcode-27 are GitHub-hosted runner labels newer than actionlint 1.7.7's list.
 self-hosted-runner:
   labels:
     - macos-26
+    - xcode-27

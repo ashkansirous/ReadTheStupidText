@@ -62,7 +62,7 @@ concurrency:
 jobs:
   build:
     timeout-minutes: 90   # a stuck release build ends after 90 min (user, 2026-11-02)
-    runs-on: macos-26
+    runs-on: xcode-27   # macOS 27 image with Xcode 27.x (public preview; the .NET 11 iOS SDK 27.x needs it)
     permissions:
       contents: write   # gh release upload (release runs only)
     env:
@@ -70,7 +70,7 @@ jobs:
       # already published, the output would be discarded and the secrets needlessly
       # exposed.
       SIGN_RELEASE: ${{ inputs.sign == true }}
-      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net10.0-ios/ios-arm64/publish
+      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net11.0-ios/ios-arm64/publish
       PROJECT: src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
       VERSION: ${{ inputs.version }}
     steps:
@@ -78,37 +78,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # iOS pins the SDK feature band its workload set needs (see the workload step).
-      - name: Set up .NET 10
+      # The xcode-27 image has no .NET 11 SDK (it lists 10.0.x), so setup-dotnet installs it.
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.401'
+          dotnet-version: '11.0.100'
 
       # On macOS the csproj multi-targets android + ios, and restore evaluates every
       # target, so it would demand the Android workload. Both dotnet calls below pass
-      # -p:IncludeAndroid=false, which the csproj honours by dropping net10.0-android, so
-      # only maui-ios is needed. (A plain -p:TargetFrameworks=net10.0-ios would also flow
+      # -p:IncludeAndroid=false, which the csproj honours by dropping net11.0-android, so
+      # only maui-ios is needed. (A plain -p:TargetFrameworks=net11.0-ios would also flow
       # into the referenced class libraries and break their restore.)
-      # Each .NET iOS SDK requires one Xcode version. The latest manifests (iOS SDK
-      # 27.x) need Xcode 27, which macos-26 doesn't have, so the workload is pinned
-      # to workload set 10.0.401 (Microsoft.iOS.Sdk 26.5.10318, needs Xcode 26.6 —
-      # the image's default, selected explicitly). A workload set only works with an
-      # SDK of its feature band (10.0.4xx; dotnet-version 10.0.401 above, exactly as before Slice 379).
-      # Every workload set after 10.0.401 carries iOS SDK 27.x (Xcode 27), and macos-26 has
-      # Xcode 26.6 at most (runner-images macos-26-arm64-Readme, read 2026-11-15), so the
-      # workload set and Xcode stay put. Moving to a newer iOS SDK means bumping both together,
-      # and the Xcode when the image has it. (Slice 379)
-      - name: Select Xcode 26.6
+      # Each .NET iOS SDK requires one Xcode version. Workload set 11.0.100 carries iOS SDK 27.2
+      # (manifest 27.2.11039), which needs Xcode 27.2: the `xcode-27` image has it at
+      # /Applications/Xcode_27.2.app (its default is 27.1, so it is selected explicitly;
+      # runner-images xcode-27-arm64-Readme, read 2026-11-15). A workload set only works with an
+      # SDK of its feature band (11.0.1xx). Bump the SDK, workload set and Xcode together. (Slice 379)
+      - name: Select Xcode 27.2
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
           xcodebuild -version
 
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |
           set -euo pipefail
           dotnet --version
-          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload install maui-ios --version 11.0.100
           dotnet workload --version
 
       # Simulator build: needs no certificate or profile. Skipped when the signed
@@ -120,7 +116,7 @@ jobs:
         if: ${{ env.SIGN_RELEASE != 'true' }}
         run: >
           dotnet build "$PROJECT"
-          -f net10.0-ios
+          -f net11.0-ios
           -p:IncludeAndroid=false
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64
@@ -153,7 +149,7 @@ jobs:
           START=$SECONDS
           rc=0
           dotnet publish "$PROJECT" \
-            -f net10.0-ios \
+            -f net11.0-ios \
             -p:IncludeAndroid=false \
             -c Release \
             -p:RuntimeIdentifier=ios-arm64 \

@@ -25,10 +25,10 @@ permissions:
 jobs:
   simulator:
     timeout-minutes: 90
-    runs-on: macos-26
+    runs-on: xcode-27
     env:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
-      BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64
+      BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64
       FLOW: ${{ inputs.flow || '.maestro/dino/ios-read-back-reread-background.yaml' }}
     steps:
       - name: Checkout
@@ -48,23 +48,23 @@ jobs:
           test -f "$FLOW" || { echo "::error::no such flow file: $FLOW"; exit 1; }
           echo "flow: $FLOW"
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.401'
+          dotnet-version: '11.0.100'
 
-      # Same toolchain pin as dinoreader-ios.yml (workload set 10.0.401 needs Xcode 26.6).
-      - name: Select Xcode 26.6
+      # Same toolchain pin as dinoreader-ios.yml (workload set 11.0.100 needs Xcode 27.2).
+      - name: Select Xcode 27.2
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
           xcodebuild -version
 
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |
           set -euo pipefail
           dotnet --version
-          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload install maui-ios --version 11.0.100
           dotnet workload --version
 
       # Maestro needs Java 17 or newer.
@@ -79,7 +79,7 @@ jobs:
       - name: Build the Debug simulator app
         run: >
           dotnet build "$PROJECT"
-          -f net10.0-ios
+          -f net11.0-ios
           -p:IncludeAndroid=false
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64

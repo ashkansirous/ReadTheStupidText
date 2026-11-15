@@ -12,15 +12,15 @@ This is a **WinUI 3** desktop application built on the **Windows App SDK**. It u
 |---|---|
 | UI Framework | WinUI 3 (`Microsoft.UI.Xaml`) -- always used |
 | App SDK | Read `Microsoft.WindowsAppSDK` version from `.csproj` `<PackageReference>` |
-| Runtime / TFM | Read `<TargetFramework>` from `.csproj` (e.g., `net10.0-windows10.0.26100.0`) |
+| Runtime / TFM | Read `<TargetFramework>` from `.csproj` (e.g., `net11.0-windows10.0.26100.0`) |
 | Target OS | Derived from `<TargetFramework>` and `<TargetPlatformMinVersion>` in `.csproj` |
 | Platforms | Read `<Platforms>` from `.csproj` (e.g., `x86;x64;ARM64`) |
 | Packaging | MSIX (`<EnableMsixTooling>true</EnableMsixTooling>`) |
 | Namespace | Read `<RootNamespace>` from `.csproj` |
 | Nullable | Read `<Nullable>` from `.csproj` |
 
-> **Default TFM:** Templates ship with `net10.0` by default. Pass
-> `--dotnet-version <tfm>` (for example `net10.0`) when running `dotnet new ...`
+> **Default TFM:** Templates ship with `net11.0` by default. Pass
+> `--dotnet-version <tfm>` (for example `net11.0`) when running `dotnet new ...`
 > or edit `<TargetFramework>` inside the generated `.csproj` before the first
 > build if you need a newer framework. Keep `<RuntimeIdentifiers>` synchronized
 > with the framework you pick.
@@ -104,7 +104,7 @@ This template references the [`Microsoft.Windows.SDK.BuildTools.WinApp`](https:/
   - `dotnet new winui-usercontrol -n ProfileCard --project .\MyApp\MyApp.csproj`
 - Discover available scaffolds with `dotnet new winui --list` (shows supported
   parameters such as `--dotnet-version`).
-- Need a newer TFM? Supply `--dotnet-version net10.0` during scaffold or edit
+- Need a newer TFM? Supply `--dotnet-version net11.0` during scaffold or edit
   `<TargetFramework>` afterward before the first build.
 
 ### Prerequisites
@@ -175,7 +175,7 @@ The CLI prints the registered package's AUMID and the launched process's PID -- 
 #### Manual `winapp run` (when not using `dotnet run`)
 
 ```powershell
-# Read <TargetFramework> from .csproj first; example uses net10.0-windows10.0.26100.0
+# Read <TargetFramework> from .csproj first; example uses net11.0-windows10.0.26100.0
 winapp run .\bin\$Platform\Debug\<TargetFramework>
 
 # Pass args after -- to avoid escaping
@@ -231,7 +231,7 @@ $Rid = $Platform.ToLower()   # arm64, x64, x86
 Add-AppxPackage -Register ".\<ProjectName>\bin\$Platform\Debug\<TargetFramework>\win-$Rid\AppxManifest.xml"
 ```
 
-> **Note:** Replace `<TargetFramework>` with the actual value from `.csproj` (e.g., `net10.0-windows10.0.26100.0`).
+> **Note:** Replace `<TargetFramework>` with the actual value from `.csproj` (e.g., `net11.0-windows10.0.26100.0`).
 
 If the launch fails because an old instance is still running, terminate it with `taskkill /IM <ProjectName>.exe /F` before re-running.
 

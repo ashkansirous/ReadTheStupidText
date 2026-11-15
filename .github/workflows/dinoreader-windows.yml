@@ -105,8 +105,8 @@ jobs:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       MANIFEST: src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest
       VERSION: ${{ inputs.version || needs.version.outputs.version }}
-      SDK_VERSION: '10.0.404'
-      WORKLOAD_SET: '10.0.404'
+      SDK_VERSION: '11.0.100'
+      WORKLOAD_SET: '11.0.100'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -167,7 +167,7 @@ jobs:
         shell: bash
         run: rm -rf "${DOTNET_ROOT}"
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         if: steps.dotnet-valid.outputs.valid != 'true'
         uses: actions/setup-dotnet@v6
         with:
@@ -253,7 +253,7 @@ jobs:
       - name: Build and package MSIX (${{ matrix.platform }})
         run: >
           dotnet publish ${{ env.PROJECT }}
-          -f net10.0-windows10.0.19041.0
+          -f net11.0-windows10.0.19041.0
           -c Release
           -p:IncludeAndroid=false
           -p:Platform=${{ matrix.platform }}

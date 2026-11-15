@@ -5,7 +5,7 @@
        Commands: build, check, stamp, dump-pieces, dump-voices, voice-listen. Plain .NET, runs on any OS. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>DinoReader.BookBuilder</RootNamespace>
