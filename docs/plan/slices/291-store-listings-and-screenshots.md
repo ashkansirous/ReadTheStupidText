@@ -3,7 +3,7 @@
 
 *Built in part 2026-11-14 (items 1, 2 done; 3 built, read-back pending; 5 Android phone shots done; 4 and 6 open), merged as PR #1137 (e3e79c1a).* *Wave 2026-11-08: PR #941 merged (08e1d63a): item 2 and the repo listing text of items 1 and 3 only (no store push, no screenshots); the rest stays open.* **Wave scope (2026-11-08):** this wave's PR touches only `docs/store-listings/**`, `site/dino/privacy.html`, `site/dino/index.html` (same age range) and this file. **Park note (2026-11-07, night run wave 5):** parked: the Play "Manage store presence" grant (user: later) and the App Store legal values (user: not tonight), per the User answers 2026-11-07. Blocks pushing the listings. Store text and images, no app code. Moves the listing bullets out of plan.md's *Outstanding work* (the Play "out of date" bullet, the App Store go-live bullet, the stale RTST Microsoft Store English listing from Slice 193's live read, the Slice 194 screenshot retake).
 
-**Touches:** `docs/store-listings/**`, `STORE.md`, `site/dino/privacy.html`, `site/dino/index.html`, `.github/workflows/store-screenshots.yml` (new: macOS simulator screenshots), `tools/emulator/screenshot-frames.json`, `tools/desktop-vm/checks/rtst-panel-screenshot.ps1`, `docs/plan/slices/291-store-listings-and-screenshots.md`
+**Touches:** `docs/store-listings/**`, `STORE.md`, `site/dino/privacy.html`, `site/dino/index.html`, `.github/workflows/store-screenshots.yml` (new: macOS simulator screenshots), `tools/emulator/screenshot-frames.json`, `tools/emulator/store-captions.ps1`, `tools/emulator/test-store-captions.ps1`, `tools/desktop-vm/checks/rtst-panel-screenshot.ps1`, `docs/plan/slices/291-store-listings-and-screenshots.md`
 
 **Touches, widened for items 7-8 (coordinator, 2026-11-14):** `.claude/skills/store-listing/**`, `docs/store-listings/dino/play.md`.
 
@@ -165,6 +165,23 @@ Premise check on origin/main:
 - Skipped #7 (`reviews/s291c-check3.md`): "with no exit-status" repeats check2 #2 (low).
 - Skipped #8 (`reviews/s291c-check3.md`): "leaks the simulator" low. It matters only on reused runners.
 
+## From review (`reviews/s291cap-high.md`)
+
+- Skipped #4 (`reviews/s291cap-high.md`): "Output keeps 1080x2400 (2.22:1); the slice itself says Play's 'long side at most twice the short side' is unchecked" - already an open check before the Play upload (item 6); not a caption-tool change.
+- Skipped #5 (`reviews/s291cap-high.md`): "Forbidden-word and price rules are English-only" - other languages are a later part of item 9; their rules are added with their lines.
+- Skipped #7, rest (`reviews/s291cap-high.md`): "Self-test never covers ... long or localized text, RTL, the band staying under 20%, or the committed PNGs" - only the long-caption wrap case was added; the rest waits for the other languages.
+- Skipped #8 (`reviews/s291cap-high.md`): "New-CaptionSheet duplicates tools/emulator/contact-sheet.ps1" - low, not worth a refactor now.
+- Skipped #9 (`reviews/s291cap-high.md`): "nothing checks they match captions.json plus the raw shots" - low; the tool regenerates them in one command.
+
+## From review (`reviews/s291cap-medium.md`)
+
+- Applied #1 (doc and comments now say: one start size, wrap before shrink, a long line can end smaller), #2 (a missing font fails the run), #3 (`-Lang` validated; old set moved to a backup, new set moved in, backup removed, restored on failure), #9 (a `store-*.png` with another name fails the run).
+- Skipped #4 (`reviews/s291cap-medium.md`): "Forbidden-word and price checks are English-only" - repeats high #5; other languages get their rules with their lines.
+- Skipped #5 (`reviews/s291cap-medium.md`): "self-test measures with a default StringFormat and width 1016, while production draws into 952 wide" - low; the real render check and the looked-at PNGs cover it.
+- Skipped #6 (`reviews/s291cap-medium.md`): "Raw shot is scaled to 85% height with green side bars; confirm the user approved this layout" - the band-over-shot layout is the one the skill's table and the coordinator looked at; framing is a user look at the contact sheet.
+- Skipped #7 (`reviews/s291cap-medium.md`): "Render check counts bright pixels in a box of a synthetic 300x600 image; never reads the committed PNGs" - repeats high #7.
+- Skipped #8 (`reviews/s291cap-medium.md`): "New-CaptionSheet duplicates tools/emulator/contact-sheet.ps1" - repeats high #8.
+
 ## Changed while building
 
 - Item 1 done 2026-11-14 (wave 62): RTST Play, 17 live locales read. Only en-US carried the stale "no analytics" line; two committed Play edits (the usage-counts bullet from `en.md` lines 28-29, and the Google Play download note from `en.md`), read back equal, 1349 characters. The other 16 locales were already current. Dino Play was done 2026-11-13.
@@ -221,6 +238,7 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
   *Built 2026-11-14:* both flows rewritten (shots 1 and 3 open page 6, where the Wolf speaks first, so a character line is lit; shot 3 uses `set-language lang=fa`; shot 4 waits on `GalleryDone` and asserts no `$`/`£`/`€` text). Emulator run 2026-11-14 (headless, phone): PASS in 93 s, five PNGs in `docs/store-listings/screenshots/dino/phone/` (`1-reading`, `2-record`, `3-language`, `4-grownups`, `5-shelf`), the three old ones deleted; the coordinator looked at the contact sheet: clean, no banners, no prices. Not pushed: waits on the user's yes to the text (item 7). Not yet verified: the tablet flow has not run.
   *Open after the merge with PR #1148 (2026-11-14):* the Dino tablet PNGs committed there (`1-shelf`, `2-reading`, `3-books`) and `.maestro/dino/store-shot-ios-frames.yaml` still show the old set; retake the tablet set with the new `store-shot-tablet.yaml` and move the iOS frames flow to the five screens before any tablet or App Store upload. Also check the phone shots' 1080x2400 (2.22:1) against Play's "long side at most twice the short side" (stores.md) before the Play upload (item 6).
 - [ ] 9. Captions on the shots (one benefit line each, translated with the listing) and shots per listing language (`lang: fa`, `ar`, `de` ...), within what `stores.md` *Captions* allows; a caption tool (frame + text over the PNG) is new work, built after the user approves the English captions.
+  *Built 2026-11-15 (first part: tool and English Dino phone set; nothing ticked):* `tools/emulator/store-captions.ps1` (System.Drawing; run `pwsh -NoProfile -File tools/emulator/store-captions.ps1 -App dino -Form phone -Lang en [-ContactSheet <png>]`) reads `docs/store-listings/screenshots/captions.json` (one line per shot per language) and writes same-size captioned copies to `docs/store-listings/screenshots/dino/phone-captioned/<lang>/`: a 15% band (under Play's 20%) on top with the caption in white Segoe UI Semibold on dark green, one font size for every caption (a line too long for one line wraps to a second line at that same size; only when two lines do not fit does the font shrink), all shots checked first and written to a temp folder that replaces the output folder only when every shot succeeded, the raw shot scaled under it; raw PNGs untouched; self-test `tools/emulator/test-store-captions.ps1`. Lines with a price, ranking or call to action are rejected. Left for later: captioned tablet and iOS sets, other languages (lines, fonts and RTL for fa/ar checked on the shot), per-language shots, and the upload (item 6).
 - [x] 10. Dino text in two versions (skill section 1, Dino): `docs/store-listings/dino/play.md` (live payment: four free, buy each book once) and `docs/store-listings/dino/play-subscription.md` (pushed only when Slice 384 ships; Slice 384 names the switch). Live version recorded here when pushed.
 
 ## Verification
