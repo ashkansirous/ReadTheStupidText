@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>おはなし</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>並べ替え</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を長押ししてから、新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>表紙の絵を待っています</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>新しい順番を保存できませんでした</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。「完了」でもう一度試すか、「キャンセル」で元の順番のままにします。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>今すぐ読む</value></data>

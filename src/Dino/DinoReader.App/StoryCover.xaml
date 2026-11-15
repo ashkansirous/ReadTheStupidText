@@ -18,7 +18,10 @@
             <Shadow x:Name="CoverShadow" Brush="#2b2540" Opacity="{DynamicResource TileShadowOpacity}" Offset="0,4" Radius="0" />
         </Border.Shadow>
         <Grid>
-            <Image Source="{Binding CoverImagePath}" Aspect="AspectFill" IsVisible="{Binding HasImage}" />
+            <Image x:Name="CoverPicture" Source="{Binding CoverImagePath}" Aspect="AspectFill" IsVisible="{Binding HasImage}" />
+            <!-- Slice 382: a picture that takes over 500 ms shows a spinner on the flat cover colour, never a blurred or faded picture. -->
+            <ActivityIndicator x:Name="CoverWait" IsRunning="False" IsVisible="False" Color="White" WidthRequest="28" HeightRequest="28"
+                               HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True" />
             <Label Text="{Binding Title}" IsVisible="{Binding ShowRtlCoverTitle}" FontFamily="{Binding RtlCoverFont}" FontSize="18" FontAttributes="Bold"
                    TextColor="#2b2540" LineHeight="1.35" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="12" FlowDirection="RightToLeft" />
             <Label Text="{Binding Title}" IsVisible="{Binding ShowLatinCoverTitle}" FontFamily="AndikaBold" FontSize="18"

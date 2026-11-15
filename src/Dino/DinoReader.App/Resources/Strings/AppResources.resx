@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Stories</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Reorder</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Press and hold a book, then drag it to a new place. Your child’s shelf shows the same order.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Drag a book to a new place. Your child’s shelf shows the same order.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Waiting for the cover picture</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Couldn't save the new order</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Something is still using the file. Tap Done to try again, or Cancel to keep the old order.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Read now</value></data>

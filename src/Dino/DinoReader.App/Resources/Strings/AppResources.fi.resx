@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Tarinat</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Järjestä uudelleen</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Paina kirjaa pitkään ja vedä se uuteen paikkaan. Lapsesi hylly näyttää saman järjestyksen.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Vedä kirja uuteen paikkaan. Lapsesi hylly näyttää saman järjestyksen.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Odotetaan kansikuvaa</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Uutta järjestystä ei voitu tallentaa</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Jokin käyttää vielä tiedostoa. Yritä uudelleen valitsemalla Valmis tai säilytä vanha järjestys valitsemalla Peruuta.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Lue nyt</value></data>

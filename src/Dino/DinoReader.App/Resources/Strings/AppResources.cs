@@ -336,6 +336,7 @@ public static class AppResources
 	public static string Gallery_BackToShelf => Get();
 	public static string Gallery_Reorder => Get();
 	public static string Gallery_ReorderHint => Get();
+	public static string Cover_Waiting => Get();
 	public static string Reorder_SaveFailedTitle => Get();
 	public static string Reorder_SaveFailedBody => Get();
 	public static string Book_ReadNow => Get();
