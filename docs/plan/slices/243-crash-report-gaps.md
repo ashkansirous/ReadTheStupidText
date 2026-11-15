@@ -92,3 +92,5 @@ priority", "add slices for adding anything missing from the crash report".
 
 - A Release iOS build in CI attaches the dSYM zip to its GitHub Release, and `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2).
 - On the Android emulator and an iPhone, the rolling log of a test crash shows the page, Back and lifecycle lines, and the report carries the build, UUID, memory and foreground fields (items 5-7).
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the next real iOS crash (item 8; items 1-7 built, #711, #781, #1122; device checks in unverified.md)`.

@@ -227,3 +227,5 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 - The 3-window on a sub-3 GB device.
 - The iOS twin of the Maestro flow.
 - iOS: the Open in prompt for dino-test:// links on the simulator is tapped (prompt text, timing, locale) - first dinoreader-ios-sim run.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's iPhone 8 run (item 1) and a proven cause (item 6) (item 1: iOS simulator workflow merged #1136, update-gate fix #1138; the audio-backed simulator run passed on the branch (#1147; two later runs on main failed for harness reasons, no app crash); left: the iPhone 8 run, and item 6 once a cause is proven)`.

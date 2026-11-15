@@ -101,3 +101,5 @@ Part B — .NET 11:
 #### For CLAUDE.md (lifted 2026-11-15)
 
 Already edited on the branch: the SDK floor and iOS pin note in `.github/CLAUDE.md` (Slice 379: docs/plan/slices/379-everything-to-latest-stable.md).
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: part B (.NET 11) needs the Android API 37 platform installed (denied at night) and a CoreCLR device run, since .NET 11 forces CoreCLR on Android and iOS (draft #1176, worktree s379b) (part A built #1175)`.

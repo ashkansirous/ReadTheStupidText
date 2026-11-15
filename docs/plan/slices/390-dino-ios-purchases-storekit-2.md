@@ -21,3 +21,5 @@
 
 - `net10.0-ios` Dino builds with the gate on and no suppression.
 - A sandbox purchase and a restore on a TestFlight build (a check for the user's iPhone, listed in Not yet verified when built).
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.

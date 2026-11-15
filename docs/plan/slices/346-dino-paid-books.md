@@ -406,3 +406,5 @@ E1 built 2026-11-13 (branch fix/s346-mslog): gate logs one line per fresh store 
 - A plain store download with the switch off has no dedicated flow.
 - `store-products.mjs --apply` against each real store (Apple read routes marked UNVERIFIED).
 - Apple App Store Server API production answered 401 with the new key (sandbox accepted it); recheck once an in-app product is approved.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user (Submit for Review on the Dino App Store version with the 11 products; Google bank test deposit); Part E built (E1 #1046, E2-E5 #1120), device checks in unverified.md`.
