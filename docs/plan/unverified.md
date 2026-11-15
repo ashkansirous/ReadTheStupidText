@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 380: Dino Android: product details through the listener only ([slice](slices/380-dino-android-listener-only-details.md))
+- **Device:** S21 with a Play internal-track build shows a price for every product and one `product details:` line per refresh (needs the next batched release).
+
 ### Slice 375: Dino: every picture in two sizes ([slice](slices/375-dino-two-picture-sizes.md))
 
 - **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
@@ -504,6 +507,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 389: Tooling: the emulator preflight picks an installed JDK ([slice](slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md))
+- **Device:** `run-flows.ps1` end to end with a removed `JAVA_HOME` (cached build, then `-NoBuild`): the `Confirm-EmulatorPreflight` wiring prints the chosen JDK, and with no JDK at all it exits 7. The pick and the Maestro preflight themselves passed on emulator-5554.
+
+### Slice 388: Shared tests: `PackDownloadLogTests` capture leaks another test's line ([slice](slices/388-shared-pack-download-log-capture-per-test.md))
+- **Logs:** the shared tests job stays green over the next releases (no foreign PACKDL line); the CI flake was not reproduced locally.
 
 ### Slice 378: Build warnings gate ([slice](slices/378-build-warnings-gate.md))
 - **Device:** The scan-crop fix on an API 28-30 emulator image: no Android 9-11 system image is installed, and no flow scans a real page, so a scan flow is needed as well.

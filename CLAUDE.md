@@ -142,6 +142,8 @@ The `tests.yml` workflow (called by `release-shared.yml`, once per product run) 
 touches app code (docs-only changes skip it) and **gates** the build and release jobs,
 so a failing test blocks the release.
 
+- Tests capture `PackDownloadLog` through `PackDownloadLog.CaptureScope`, never by setting the static `PackDownloadLog.Sink`: the sink is process-wide and parallel tests' lines leak into it. A test that must exercise the global `Sink` goes in the non-parallel collection (`tests/Shared/Shared.Tests/PackDownloadLogGlobalSinkTests.cs`). (Slice 388: docs/plan/slices/388-shared-pack-download-log-capture-per-test.md)
+
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
 - **License is MIT** (Decision 16 in `docs/plan/notes/decisions-001-099.md`). Anyone may use/extend/sell it

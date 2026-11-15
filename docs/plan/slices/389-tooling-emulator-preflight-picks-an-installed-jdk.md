@@ -1,7 +1,7 @@
 # Slice 389 — Tooling: the emulator preflight picks an installed JDK
 **Product:** Shared
 
-*Built (wave 2026-11-15), PR #1158.*
+*Built (wave 2026-11-15), merged as PR #1158 (0ccb2da).*
 
 **Touches:** `tools/emulator/common.ps1`, `tools/emulator/run-flows.ps1` (`Test-MaestroPreflight` launches Maestro), `tools/emulator/preflight.yaml` only if it needs a change, `tools/emulator/test-jdk-pick.ps1`, `.github/workflows/tools-selftests.yml`, `tools/CLAUDE.md` (drop or reword the JAVA_HOME rule from Slice 291), `docs/plan/slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md`
 
@@ -37,7 +37,7 @@ Device runs failed preflight because the machine `JAVA_HOME` points at a removed
 - A run with `JAVA_HOME` pointing at a removed folder passes preflight and prints the JDK chosen.
   - Result (2026-11-15, emulator-5554, this machine's real `JAVA_HOME` = the removed `C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot\`): PASS for the pick and the Maestro preflight. `Set-ProcessJavaHome` printed `JDK: JAVA_HOME is unusable (...); using C:\Users\ashka\.jdks\openjdk-26.0.1 for this run only.`, then Maestro ran `tools/emulator/preflight.yaml` to `exit=0`; Machine and User `JAVA_HOME` unchanged (both empty). Run through a throw-away script that dot-sources `common.ps1` (`reviews/s389-device/preflight-only.ps1`, log `preflight-only.log`), because `run-flows.ps1 -NoBuild` stopped first at a build-cache miss (exit 6, `Build-BeforeLease` runs before `Confirm-EmulatorPreflight`). The `run-flows.ps1` wiring and its exit 7 stay in Not yet verified.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 - Maestro needs a live JDK: `run-flows.ps1`'s preflight (`Set-ProcessJavaHome` in `tools/emulator/common.ps1`) keeps a valid `JAVA_HOME` of major >= 17, else sets it for that process only (never the machine) to the newest JDK of major 17..21 (Maestro's docs recommend Java 17 or 21; context7 `/mobile-dev-inc/maestro-docs`), then a newer one, found under `~/.jdks`, `Program Files` and `Program Files (x86)` `Eclipse Adoptium`, `Microsoft`, `Java`, `Amazon Corretto`, `Zulu`, or Android Studio's jbr (version from the JDK's `release` file, else the folder name; below 17 ignored); else a `java` on PATH reporting major >= 17 (a dead `JAVA_HOME` is cleared for the process). It prints `JDK: ... using <path>`; with none it exits 7 with one `JDK not found` line. Self-test: `tools/emulator/test-jdk-pick.ps1`. Other Maestro launchers (`store-screenshots.ps1`, `tools/phone`) do not call it yet. (Slice 389: docs/plan/slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md)
 

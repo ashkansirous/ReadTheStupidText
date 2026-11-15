@@ -1,7 +1,7 @@
 # Slice 388 — Shared tests: `PackDownloadLogTests` capture leaks another test's line
 **Product:** Shared
 
-*Built (wave 2026-11-15), PR #1156.*
+*Built (wave 2026-11-15), merged as PR #1156 (417dc0d).*
 
 **Touches:** `tests/Shared/Shared.Tests/PackDownloadLogTests.cs`, `src/Shared/Sirous.Reading.Application/Reading/PackDownloadLog.cs` (the capture sink, only if a per-test sink is needed; `tests/Shared/Shared.Tests/PausedNoticePolicyTests.cs` also sets it), `src/Shared/Sirous.Reading.Mobile.Shared/PackDownloadHost.cs` (LogService writes through PackDownloadLog.WriteText; review high #1), `tests/Shared/Shared.Tests/PackDownloadLogGlobalSinkTests.cs` (new, review medium #1), `docs/plan/slices/388-shared-pack-download-log-capture-per-test.md`
 
@@ -31,7 +31,7 @@
 - Skipped #3 (`reviews/s388-medium.md`): "ScopeRestore.Dispose writes the AsyncLocal in the disposing context" - low, test-only scope behaviour, no production failure path (production never sets a scope).
 - Skipped #4 (`reviews/s388-medium.md`): "removed pack=p1 filter and global-Sink capture weaken assertions" - low, test-only scope behaviour, no production failure path (production never sets a scope).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 - Tests capture `PackDownloadLog` through `PackDownloadLog.CaptureScope`, never by setting the static `PackDownloadLog.Sink`: the sink is process-wide and parallel tests' lines leak into it. A test that must exercise the global `Sink` goes in the non-parallel collection (`tests/Shared/Shared.Tests/PackDownloadLogGlobalSinkTests.cs`). (Slice 388: docs/plan/slices/388-shared-pack-download-log-capture-per-test.md)
 
