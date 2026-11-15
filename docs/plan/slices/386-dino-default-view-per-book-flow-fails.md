@@ -1,9 +1,9 @@
 # Slice 386 — Dino: the `default-view-per-book` flow fails on main
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `.maestro/dino/default-view-per-book.yaml`, the Dino code the first work item names as wrong (`src/Dino/DinoReader.App/**`, only if the app is the faulty side), `docs/plan/slices/386-dino-default-view-per-book-flow-fails.md`
+**Touches:** `.maestro/dino/default-view-per-book.yaml`, `src/Dino/DinoReader.App/Resources/Raw/testbooks/**` (the test-store book asset; premise check 2026-11-15: `good-enough.dino` likely lacks `textInPictures`, so `Story.cs:172` opens it in Picture + text), `tools/dino/DinoReader.BookBuilder/**` (only if the test book is made by it), `src/Dino/DinoReader.App/Testing/TestStore.cs`, `docs/plan/slices/386-dino-default-view-per-book-flow-fails.md`. Any other app file needs a parallel-check first (wave 6 builds 381 and 382 beside it).
 
 ## Why
 
