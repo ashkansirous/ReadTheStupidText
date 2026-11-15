@@ -34,7 +34,7 @@
 #### Not yet verified
 
 - The signed Release build with the static XCFramework: first proven by release-dino after the merge.
-- Sandbox buy and restore on the user's iPhone with a TestFlight build (a paid book and a subscription plan; Restore on a second install).
+- Sandbox buy: done by the user on their iPhone (user, 2026-11-15: "I tried the sandbox buy!"). Never ask for it again; it does not hold the App Store submission. Not stated by the user, so still unverified and not a to-do for them: a subscription plan, and Restore (also on a second install).
 - The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
 
 ## From review
