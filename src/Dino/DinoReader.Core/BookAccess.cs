@@ -24,6 +24,58 @@ public enum BookState
 
     /// <summary>Sold, not owned, but already on the shelf from before the sale began: it stays readable, gets no updates.</summary>
     KeptFromBefore,
+
+    /// <summary>Slice 384: sold, not owned, on the shelf only because a subscription that has ended opened it: it is locked (greyed for parents, hidden from the child) and can be bought or subscribed to again.</summary>
+    LockedByLapse,
+}
+
+/// <summary>What opened a book on this device, written once when it is downloaded and never downgraded (Slice 384, Decided by Claude).</summary>
+public enum BookUnlock
+{
+    /// <summary>A free book (or the paid-books switch was off): never affected by a subscription.</summary>
+    Free,
+
+    /// <summary>Bought: kept for good, whatever the subscription does.</summary>
+    Bought,
+
+    /// <summary>Downloaded only because the subscription was running: locked when it ends, until it is renewed or the book is bought.</summary>
+    Subscription,
+
+    /// <summary>Already on the device before the sale began (Slice 346): never locked.</summary>
+    FromBefore,
+}
+
+/// <summary>Whether a book on the shelf may be opened (Slice 384).</summary>
+public enum ShelfAccess
+{
+    Readable,
+
+    /// <summary>The subscription that opened it has ended: greyed out on the parents' screen, gone from the child's shelf, files kept.</summary>
+    LockedByLapse,
+}
+
+/// <summary>The subscription products the stores carry (Slice 384); every one unlocks every paid book. Mirrors <c>worker/products.ts</c>.</summary>
+public static class SubscriptionProducts
+{
+    /// <summary>Google Play's one subscription, with the two base plans below; also the proof's product for Android.</summary>
+    public const string Subscription = "uk.sirous.dinoreader.sub";
+
+    /// <summary>App Store Connect and Microsoft Store: the monthly and the yearly product.</summary>
+    public const string Monthly = Subscription + ".monthly";
+
+    public const string Yearly = Subscription + ".yearly";
+
+    /// <summary>The Play base plan ids of <see cref="Subscription"/>.</summary>
+    public const string MonthlyBasePlan = "monthly";
+
+    public const string YearlyBasePlan = "yearly";
+
+    /// <summary>The 7-day free trial's offer id on the Play base plans.</summary>
+    public const string TrialOffer = "trial";
+
+    public static IReadOnlyList<string> All { get; } = [Subscription, Monthly, Yearly];
+
+    public static bool Is(string productId) => productId is Subscription or Monthly or Yearly;
 }
 
 /// <summary>Where a book of an old (schema 1) backup is taken from by a restore (Slice 346).</summary>
@@ -94,11 +146,42 @@ public static class BookAccess
     public static string? OwnedProduct(StoreItem item, IReadOnlySet<string> owned) =>
         item.Products.FirstOrDefault(owned.Contains);
 
+    /// <summary>Slice 384: the book's own (or a bundle's) product the account bought, not the subscription; null when the book is only open through the subscription.</summary>
+    public static string? BoughtProduct(StoreItem item, IReadOnlySet<string> owned) =>
+        item.Products.FirstOrDefault(p => !SubscriptionProducts.Is(p) && owned.Contains(p));
+
+    /// <summary>What opens a book at the moment it is downloaded (Slice 384): free when it is not sold, bought when a product of its own is owned, else the subscription; "from before" for a sold book that is neither (it was already on the device).</summary>
+    public static BookUnlock UnlockAtDownload(bool paidBooksOn, StoreItem item, IReadOnlySet<string> owned)
+    {
+        if (!IsSold(paidBooksOn, item))
+        {
+            return BookUnlock.Free;
+        }
+
+        if (BoughtProduct(item, owned) is not null)
+        {
+            return BookUnlock.Bought;
+        }
+
+        return OwnedProduct(item, owned) is not null ? BookUnlock.Subscription : BookUnlock.FromBefore;
+    }
+
+    /// <summary>The record to keep for a book after a store read: a subscription book the account has now bought becomes bought; nothing is ever downgraded.</summary>
+    public static BookUnlock? UpgradeUnlock(BookUnlock? recorded, bool boughtNow) =>
+        recorded == BookUnlock.Subscription && boughtNow ? BookUnlock.Bought : recorded;
+
+    /// <summary>
+    /// Whether a book on the shelf may be opened (Slice 384, Decisions 4 and 5). Only a book whose record says the subscription alone opened it can be locked, and only while the paid-books switch is on and
+    /// the subscription does not run. No record (a book from before this work, a restored one) is never locked.
+    /// </summary>
+    public static ShelfAccess ShelfAccessOf(bool paidBooksOn, BookUnlock? recorded, bool subscriptionGrants) =>
+        paidBooksOn && recorded == BookUnlock.Subscription && !subscriptionGrants ? ShelfAccess.LockedByLapse : ShelfAccess.Readable;
+
     /// <summary>Whether a request for the book's files must carry a purchase proof.</summary>
     public static bool NeedsProof(bool paidBooksOn, StoreItem item) => IsSold(paidBooksOn, item);
 
     /// <summary>The state of a listed book. A book on the shelf is never taken away: sold, not owned and on the shelf is <see cref="BookState.KeptFromBefore"/>.</summary>
-    public static BookState StateOf(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending)
+    public static BookState StateOf(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending, bool lapsed = false)
     {
         if (!IsSold(paidBooksOn, item))
         {
@@ -112,16 +195,16 @@ public static class BookAccess
 
         if (onShelf)
         {
-            return BookState.KeptFromBefore;
+            return lapsed ? BookState.LockedByLapse : BookState.KeptFromBefore; // Slice 384: a lapsed subscription book offers Buy, a book from before never does
         }
 
-        return item.Products.Any(pending.Contains) ? BookState.Pending : BookState.Buyable;
+        return item.Products.Any(p => !SubscriptionProducts.Is(p) && pending.Contains(p)) ? BookState.Pending : BookState.Buyable; // a pending subscription never makes a book "waiting": the parent can still buy it
     }
 
     /// <summary>What the store card shows for the book; <paramref name="price"/> is the store's formatted price for the book's product, or null when not known; <paramref name="answer"/> is how the latest store read went (Slice 358): only a store that was not reached makes a missing price "connect to buy", every other way of having no price is "not for sale now".</summary>
-    public static StoreCardPlan Plan(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending, string? price, StoreAnswer answer = StoreAnswer.NotReached)
+    public static StoreCardPlan Plan(bool paidBooksOn, StoreItem item, bool onShelf, IReadOnlySet<string> owned, IReadOnlySet<string> pending, string? price, StoreAnswer answer = StoreAnswer.NotReached, bool lapsed = false)
     {
-        BookState state = StateOf(paidBooksOn, item, onShelf, owned, pending);
+        BookState state = StateOf(paidBooksOn, item, onShelf, owned, pending, lapsed);
         StoreAction action = state switch
         {
             BookState.Free or BookState.Owned => onShelf ? StoreAction.OnShelf : StoreAction.Get,
@@ -153,7 +236,7 @@ public static class BookAccess
 
     /// <summary>The price the card shows for a book: the first non-blank price among its products (its own or a bundle's), or null.</summary>
     public static string? PriceOf(StoreItem item, IReadOnlyDictionary<string, string> prices) =>
-        item.Products.Select(product => prices.GetValueOrDefault(product)).FirstOrDefault(HasPrice);
+        item.Products.Where(product => !SubscriptionProducts.Is(product)).Select(product => prices.GetValueOrDefault(product)).FirstOrDefault(HasPrice); // never a subscription's price (Slice 384)
 
     /// <summary>Whether a book already on the shelf may be updated from the store: not sold, or owned. A kept old copy gets no updates (and no request that would be refused).</summary>
     public static bool MayUpdate(bool paidBooksOn, StoreItem item, IReadOnlySet<string> owned) =>

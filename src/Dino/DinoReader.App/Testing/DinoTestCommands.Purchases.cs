@@ -15,6 +15,9 @@ namespace DinoReader.Testing;
 internal static partial class DinoTestCommands
 {
 	private const string FakePurchasesName = "fake-purchases";
+	private const string FakeSubscriptionName = "fake-subscription";
+	private const string StateKey = "state";
+	private const string DaysKey = "days";
 	private const string PaidKey = "paid";
 	private const string OwnedKey = "owned";
 	private const string PriceKey = "price";
@@ -58,6 +61,51 @@ internal static partial class DinoTestCommands
 			// no-fallback: Debug-only test hook; the fault is written to the hook log
 			Log($"{FakePurchasesName} fault {TestHookLog.FaultSummary(ex)}");
 		}
+	}
+
+	/// <summary>
+	/// Slice 384 (Debug only): <c>fake-subscription state=none|trial|active|grace|expired [days=&lt;n&gt;]</c> changes the pretend store's subscription (the fake store must be on: <c>fake-purchases mode=on</c>) and reads the store at once,
+	/// so a flow can lapse and renew it with no money. <c>days</c> is how far from now the paid period ends (default 30, may be negative). Outcome: <c>HOOK fake-subscription ok &lt;state&gt;</c> or <c>failed ...</c>;
+	/// the purchase code logs <c>[Purchases] subscription state=... grants=...</c> after the read.
+	/// </summary>
+	private static async Task FakeSubscriptionAsync(TestHookCommand command)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			if (services.GetRequiredService<SwitchablePurchases>().Override is not FakePurchases fake)
+			{
+				Log($"{FakeSubscriptionName} failed the fake store is off");
+				return;
+			}
+
+			string state = command.Get(StateKey, "none");
+			int days = int.TryParse(command.Get(DaysKey, "30"), out int parsed) ? parsed : 30;
+			fake.Subscription = FakeSubscriptionOf(state, days);
+			var sales = services.GetRequiredService<BookSales>();
+			sales.Purchases.MarkStale();
+			StoreListing listing = await services.GetRequiredService<StoreClient>().ListAsync(CancellationToken.None); // reads the fake store (the purchase read)
+			await sales.Purchases.RefreshAsync(listing.Items, CancellationToken.None, interactive: true); // ListAsync waits only a budget for the read; this one is awaited
+			Log($"{FakeSubscriptionName} ok {state}");
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: Debug-only test hook; the fault is written to the hook log
+			Log($"{FakeSubscriptionName} fault {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	private static SubscriptionStatus? FakeSubscriptionOf(string state, int days)
+	{
+		DateTimeOffset ends = DateTimeOffset.UtcNow.AddDays(days);
+		return state switch
+		{
+			"trial" => new SubscriptionStatus(SubscriptionState.Trial, ends, SubscriptionProducts.Monthly),
+			"active" => new SubscriptionStatus(SubscriptionState.Active, ends, SubscriptionProducts.Monthly),
+			"grace" => new SubscriptionStatus(SubscriptionState.InGrace, ends, SubscriptionProducts.Monthly),
+			"expired" => new SubscriptionStatus(SubscriptionState.Expired, ends, SubscriptionProducts.Monthly),
+			_ => null,
+		};
 	}
 
 	private static BuyOutcome BuyOutcomeOf(string text) => text switch

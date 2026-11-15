@@ -27,6 +27,11 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 	/// <summary>Opens the reading screen on <paramref name="story"/>.</summary>
 	public async Task ReadAsync(INavigation navigation, Story story, string origin = ReadOrigins.Shelf)
 	{
+		if (services.GetRequiredService<BookSales>().IsLapsed(story))
+		{
+			return; // Slice 384: the one place every read starts (shelf, resume, link, keyboard): a book the ended subscription locked is never opened
+		}
+
 		var reading = services.GetRequiredService<ReadingPage>();
 		reading.ReadOrigin = origin; // Slice 352: the read says where it started
 		reading.Load(story);
@@ -115,6 +120,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 			await library.DeleteAsync(story.Id);
 			RecordChoices.Forget(story.Id); // the remembered record choice goes with the book (Slice 279)
 			StarterStories.ForgetStoreInstall(story.SourceId);
+			services.GetRequiredService<BookSales>().ForgetBook(story); // Slice 384: what opened the book goes with it, so a later download is recorded afresh
 			if (story.SourceId is { } sourceId)
 			{
 				services.GetRequiredService<StagedBookUpdates>().DiscardHighRes(sourceId); // Slice 375 D: its upgrade entry and staged high-res file go with it

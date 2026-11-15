@@ -42,8 +42,34 @@ export interface EntitlementEnv {
   readonly MS_STORE_CLIENT_SECRET?: string;
 }
 
+/** Slice 384: what the store says about a subscription right now. `expiresAt` is an ISO time (the end of the paid, trial or grace period), null when the store gave none. */
+export const SubscriptionState = { Active: "active", Grace: "grace", Expired: "expired", Revoked: "revoked" } as const;
+export type SubscriptionStateName = (typeof SubscriptionState)[keyof typeof SubscriptionState];
+
+export interface SubscriptionStatus {
+  readonly state: SubscriptionStateName;
+  readonly expiresAt: string | null;
+}
+
+/** `checked` carries the status; `cannot-verify` carries none. */
+export interface SubscriptionCheck {
+  readonly verdict: VerdictName;
+  readonly status: SubscriptionStatus | null;
+}
+
+export const CANNOT_VERIFY_SUBSCRIPTION: SubscriptionCheck = { verdict: Verdict.CannotVerify, status: null };
+
+export function checkedSubscription(status: SubscriptionStatus): SubscriptionCheck {
+  return { verdict: Verdict.Checked, status };
+}
+
+/** A store that knows no subscription for the token (or a token that is not one). */
+export const NO_SUBSCRIPTION: SubscriptionStatus = { state: SubscriptionState.Expired, expiresAt: null };
+
 export interface StoreChecker {
   check(proof: Proof, env: EntitlementEnv, fetcher: Fetcher): Promise<CheckResult>;
+  /** Slice 384: the subscription's state and end date; absent on a store the app reads locally (Windows). */
+  subscription?(proof: Proof, env: EntitlementEnv, fetcher: Fetcher): Promise<SubscriptionCheck>;
 }
 
 export const CANNOT_VERIFY: CheckResult = { verdict: Verdict.CannotVerify, owned: [] };

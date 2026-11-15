@@ -9,15 +9,31 @@ namespace DinoReader;
 /// listeners when it changed. Nothing here is saved: on launch and whenever the store page opens the app asks the store again, so a book bought or redeemed outside the app shows as owned
 /// without pressing Restore. A store that cannot be reached leaves the last snapshot in place.
 /// </summary>
-public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks)
+public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null)
 {
+    // Slice 384: the Worker that asks Apple or Google for the subscription's real end date (iOS and Android; Windows keeps its own end date). The host registers none, so the app uses the real client.
+    private readonly ISubscriptionEnd _end = subscriptionEnd ?? new SubscriptionEndClient();
+    private readonly SemaphoreSlim _endGate = new(1, 1);
+
+    // Slice 384: the device's kept subscription record and per-book unlock records; the one shared store when the host registers none (the app has one process-wide instance).
+    private readonly SubscriptionStore subscription = subscriptionStore ?? SubscriptionStore.Shared;
+
     private readonly SemaphoreSlim _gate = new(1, 1);
     private PurchaseSnapshot _snapshot = PurchaseSnapshot.Empty;
 
     /// <summary>Raised after a read that changed the snapshot, on whatever thread ran it; a subscriber that touches UI marshals itself.</summary>
     public event EventHandler? Changed;
 
-    public PurchaseSnapshot Snapshot => _snapshot;
+    /// <summary>The last read as the books must see it: the subscription's products are owned only while the kept record still grants access (<see cref="SubscriptionAccess.OwnedWhile"/>).</summary>
+    public PurchaseSnapshot Snapshot
+    {
+        get
+        {
+            PurchaseSnapshot held = _snapshot;
+            bool grants = subscription.Grants;
+            return grants ? held : held with { Owned = SubscriptionAccess.OwnedWhile(held.Owned, grants), Proofs = SubscriptionAccess.ProofsWhile(held.Proofs, grants) };
+        }
+    }
 
     private volatile bool _hasInternet;
     private volatile bool _lastPricesFailed;
@@ -27,6 +43,27 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     public StoreAnswer Answer => BookAccess.AnswerOf(_hasInternet, _lastPricesFailed, _snapshot.Restricted);
 
     public string StoreName => platform.StoreName;
+
+    /// <summary>Slice 384: what the device keeps about the subscription and about what opened each book.</summary>
+    public SubscriptionStore Subscription => subscription;
+
+    /// <summary>True while the subscription opens paid books: the store's last answer, followed with no internet until the offline rule (<see cref="SubscriptionAccess"/>) ends it.</summary>
+    public bool SubscriptionActive => subscription.Grants;
+
+    /// <summary>The Manage subscription link: the store's own page. Never throws; false when it could not be opened.</summary>
+    public async Task<bool> ManageSubscriptionAsync()
+    {
+        try
+        {
+            return await platform.ManageSubscriptionAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Debug.WriteLine($"Dino Reader could not open the subscription page: {ex.Message}");
+            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+            return false;
+        }
+    }
 
     private static readonly TimeSpan FreshFor = TimeSpan.FromSeconds(60);
     private long _readAt;
@@ -80,7 +117,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
     /// <summary>The Worker header for a book's files, or null when the book is not sold or no proof is held.</summary>
     public string? ProofHeader(bool paidBooksOn, StoreItem item) =>
-        BookAccess.ProofHeader(paidBooksOn, item, _snapshot.Proofs, platform.StoreName);
+        BookAccess.ProofHeader(paidBooksOn, item, Snapshot.Proofs, platform.StoreName);
 
     private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
     {
@@ -89,10 +126,18 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         await _gate.WaitAsync(cancel);
         try
         {
-            PurchaseSnapshot read = restore ? await platform.RestoreAsync(products, cancel) : await platform.RefreshAsync(products, interactive, cancel);
+            PurchaseSnapshot read = NormaliseSubscription(restore ? await platform.RestoreAsync(products, cancel) : await platform.RefreshAsync(products, interactive, cancel));
             bool hasInternet = HasInternet(); // read once per read: the only thing that says "store not reached"
             ReportReadProblems(listed, read, hasInternet);
-            Keep(read, hasInternet);
+            bool subscriptionChanged = KeepSubscription(read, hasInternet);
+            bool snapshotChanged = Keep(read, hasInternet);
+            RecordBought(listed); // before Changed: the shelf the event rebuilds must see the book as bought, not as opened by the subscription
+            if (subscriptionChanged || snapshotChanged)
+            {
+                Changed?.Invoke(this, EventArgs.Empty); // the shelf locks or opens its subscription books
+            }
+
+            StartEndCheck(read, hasInternet);
             return _snapshot;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -110,6 +155,118 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         {
             _gate.Release();
         }
+    }
+
+    // Slice 384: the store's answer about the subscription is the one thing that says whether its products are owned: an answer that is not paid access takes them out of Owned and Proofs (so an old proof is never sent and the
+    // state is never "owned"), whatever a platform left in; a read that gave no answer about it (Subscription null) changes nothing.
+    private static PurchaseSnapshot NormaliseSubscription(PurchaseSnapshot read)
+    {
+        if (read.Subscription is not { } status || SubscriptionAccess.IsEntitled(status.State))
+        {
+            return read;
+        }
+
+        return read with
+        {
+            Owned = new HashSet<string>(read.Owned.Where(p => !SubscriptionProducts.Is(p))),
+            Proofs = read.Proofs.Where(p => !SubscriptionProducts.Is(p.Key)).ToDictionary(p => p.Key, p => p.Value),
+        };
+    }
+
+    // Replaces the kept record with the store's answer when this read reached the store (the platform answered AND the device has internet: Play Billing answers from its on-device cache offline) and answered about
+    // the subscription; true when what the books depend on changed. Any other read keeps the record, its CheckedAt and its end date as they were, so the offline rule (Decision 6) can end the access.
+    private bool KeepSubscription(PurchaseSnapshot read, bool hasInternet)
+    {
+        if (!read.Reachable || !hasInternet || read.Subscription is null)
+        {
+#if DEBUG
+            Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] subscription kept (store not asked) state={subscription.Record?.State} grants={subscription.Grants}"); // the offline rule's branch: the kept record decides
+#endif
+            return false;
+        }
+
+        bool grantedBefore = subscription.Grants;
+        (SubscriptionRecord? before, SubscriptionRecord? after) = subscription.Merge(new SubscriptionAnswer.DeviceRead(read.Subscription));
+        bool changed = grantedBefore != subscription.Grants || before?.State != after?.State;
+        PurchaseTrace.Line($"subscription {after?.State} ends={(after?.EndsAt is { } end ? end.ToString("yyyy-MM-dd") : "none")} grants={subscription.Grants} changed={changed}");
+#if DEBUG
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] subscription state={after?.State} grants={subscription.Grants}");
+#endif
+        return changed;
+    }
+
+    // Slice 384 (review finding 2): after a read of the device's own store on iOS and Android, the Worker is asked for the subscription's real end date and state (Apple's all-statuses or Play's subscriptionsv2 answer) and
+    // its answer replaces the device's estimate. It runs in the background and never holds the read, the shelf or any page. Not asked: Windows (its own end date), the Debug fake store, a read that did not reach the store,
+    // no internet, or a store that says there is no subscription (no proof to send).
+    private void StartEndCheck(PurchaseSnapshot read, bool hasInternet)
+    {
+        string? header = EndCheckHeader(read, hasInternet);
+        if (header is not null)
+        {
+            long readNumber = subscription.Record?.ReadNumber ?? 0; // the device read this check belongs to: a later read makes its answer late
+            _ = Task.Run(() => ApplyEndAsync(_end, header, readNumber));
+        }
+    }
+
+    private string? EndCheckHeader(PurchaseSnapshot read, bool hasInternet)
+    {
+        bool realStore = platform.StoreName != PurchaseProofs.WindowsStore && platform is not SwitchablePurchases { Override: not null };
+        if (!realStore || !read.Reachable || !hasInternet || read.Subscription is not { } status || !SubscriptionAccess.IsEntitled(status.State))
+        {
+            return null;
+        }
+
+        string? product = SubscriptionAccess.NewestProofProduct(read.Proofs.Keys, read.PurchasedAt); // the newest purchase's proof, never the older plan's
+        return product is null ? null : $"{platform.StoreName}:{PurchaseProofs.ProductPart(platform.StoreName, product)}:{read.Proofs[product]}";
+    }
+
+    private async Task ApplyEndAsync(ISubscriptionEnd source, string header, long readNumber)
+    {
+        await _endGate.WaitAsync();
+        try
+        {
+            WorkerSubscription? answer = await source.AskAsync(header, CancellationToken.None);
+            if (answer is null)
+            {
+                PurchaseTrace.Line("subscription end: no Worker answer, the kept record stands");
+                if (HasInternet())
+                {
+                    fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the Worker could not be asked though the device is online: the kept record decides
+                }
+
+                return;
+            }
+
+            if (KeepWorkerAnswer(answer, readNumber))
+            {
+                Changed?.Invoke(this, EventArgs.Empty); // the shelf locks or opens its subscription books
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            PurchaseTrace.Line($"subscription end failed: {ex.GetType().Name}");
+            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+        }
+        finally
+        {
+            _endGate.Release();
+        }
+    }
+
+    // Writes the Worker's answer into the record (an unknown state, or an answer to an older device read, changes nothing); true when what the books depend on changed.
+    private bool KeepWorkerAnswer(WorkerSubscription answer, long readNumber)
+    {
+        bool grantedBefore = subscription.Grants;
+        (SubscriptionRecord? before, SubscriptionRecord? after) = subscription.Merge(new SubscriptionAnswer.Worker(readNumber, answer.State, answer.ExpiresAt));
+        PurchaseTrace.Line($"subscription from the Worker {after?.State} ends={(after?.EndsAt is { } end ? end.ToString("yyyy-MM-dd") : "none")} grants={subscription.Grants}");
+        return grantedBefore != subscription.Grants || before?.State != after?.State || before?.EndsAt != after?.EndsAt;
+    }
+
+    // A listed book the account now owns by purchase (its own product, not the subscription) is bought for good: its record never goes back to "the subscription opened it".
+    private void RecordBought(IReadOnlyCollection<StoreItem> items)
+    {
+        IReadOnlySet<string> owned = _snapshot.Owned; // the raw read: only books bought with their own product are upgraded, the subscription's products never count here
+        subscription.UpgradeBought(items.Where(i => i.Sale == BookSale.Paid && BookAccess.BoughtProduct(i, owned) is not null).Select(i => i.Id));
     }
 
     // One line: the first stack frame (code location, no user data), else the exception message flattened.
@@ -195,29 +352,22 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
     // A read the platform could not make keeps what was known; any other read replaces what is owned and pending even with no internet (a purchase made elsewhere still shows), and its prices
     // overlay the last known ones (a price query that failed or timed out while the purchases query worked must not blank every card).
-    private void Keep(PurchaseSnapshot read, bool hasInternet)
+    // True when the snapshot changed (the caller raises Changed once, after the unlock records are brought up to date).
+    private bool Keep(PurchaseSnapshot read, bool hasInternet)
     {
         bool flipped = NoteRead(hasInternet, read.PricesFailed || !read.Reachable);
         if (!read.Reachable)
         {
-            if (flipped)
-            {
-                Changed?.Invoke(this, EventArgs.Empty);
-            }
-
-            return;
+            return flipped;
         }
 
         PurchaseSnapshot before = _snapshot;
         Interlocked.Exchange(ref _readAt, Stopwatch.GetTimestamp());
         _snapshot = read with { Prices = BookAccess.KeepPrices(before.Prices, read.Prices) };
 #if DEBUG
-        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count}");
+        Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count(p => !SubscriptionProducts.Is(p.Key))}"); // the books' prices only: the paid-books flow counts them (Slice 346), the plans are the subscription flow's (Slice 384)
 #endif
-        if (flipped || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key)))
-        {
-            Changed?.Invoke(this, EventArgs.Empty);
-        }
+        return flipped || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key));
     }
 }
 
@@ -298,8 +448,33 @@ public sealed class BookSales(AppConfigClient config, BookPurchases purchases)
     {
         PurchaseSnapshot snapshot = purchases.Snapshot;
         string? price = BookAccess.PriceOf(item, snapshot.Prices);
-        return BookAccess.Plan(SwitchKnownOn, item, onShelf, snapshot.Owned, snapshot.Pending, price, purchases.Answer);
+        return BookAccess.Plan(SwitchKnownOn, item, onShelf, snapshot.Owned, snapshot.Pending, price, purchases.Answer, lapsed: IsLapsed(item.Id));
     }
+
+    /// <summary>Slice 384: true while the subscription opens paid books.</summary>
+    public bool SubscriptionActive => purchases.SubscriptionActive;
+
+    /// <summary>Slice 384: whether the book on the shelf may be opened; only a book the subscription alone opened can be locked, and only once the subscription has ended (greyed for parents, hidden from the child).</summary>
+    public ShelfAccess ShelfAccessOf(string bookId) =>
+        BookAccess.ShelfAccessOf(SwitchKnownOn, purchases.Subscription.UnlockOf(bookId), purchases.SubscriptionActive);
+
+    public bool IsLapsed(string bookId) => ShelfAccessOf(bookId) == ShelfAccess.LockedByLapse;
+
+    /// <summary>Whether a story on the shelf is locked: the unlock records are kept under the store item's id, which a store book carries as its <see cref="Story.SourceId"/> (its own <see cref="Story.Id"/> is new at every import); a story with no source is never locked.</summary>
+    public bool IsLapsed(Story story) => story.SourceId is { } sourceId && IsLapsed(sourceId);
+
+    /// <summary>Forgets what opened a removed book, so a later download of it is recorded afresh.</summary>
+    public void ForgetBook(Story story)
+    {
+        if (story.SourceId is { } sourceId)
+        {
+            purchases.Subscription.ForgetUnlock(sourceId);
+        }
+    }
+
+    /// <summary>Slice 384: written once when a book finishes downloading: what opened it (free, bought, the subscription, or already on the device).</summary>
+    public void RecordDownload(StoreItem item) =>
+        purchases.Subscription.RecordUnlock(item.Id, BookAccess.UnlockAtDownload(SwitchKnownOn, item, purchases.Snapshot.Owned));
 
     public bool MayUpdate(StoreItem item) => BookAccess.MayUpdate(SwitchKnownOn, item, purchases.Snapshot.Owned);
 }

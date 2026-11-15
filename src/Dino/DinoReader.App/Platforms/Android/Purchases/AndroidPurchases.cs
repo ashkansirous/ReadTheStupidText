@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Android.BillingClient.Api;
+using DinoReader.Core;
 
 namespace DinoReader;
 
@@ -11,10 +12,12 @@ namespace DinoReader;
 public sealed class AndroidPurchases : IBookPurchases
 {
     private const string RedeemAddress = "https://play.google.com/redeem";
+    private const string ManageAddress = "https://play.google.com/store/account/subscriptions?sku=" + DinoReader.Core.SubscriptionProducts.Subscription + "&package=uk.sirous.dinoreader";
     private static readonly TimeSpan SetupTimeout = TimeSpan.FromSeconds(15);
 
     private readonly PurchasesUpdates _updates = new();
     private readonly Dictionary<string, ProductDetails> _details = [];
+    private readonly Dictionary<string, string> _offerTokens = []; // the app's plan product (monthly or yearly) to the Play offer token to buy: the trial offer when Play lists it, else the base plan
     private BillingClient? _client;
 
     public string StoreName => DinoReader.Core.PurchaseProofs.AndroidStore;
@@ -27,9 +30,19 @@ public sealed class AndroidPurchases : IBookPurchases
             return PurchaseSnapshot.Empty;
         }
 
-        (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(client, productIds); // any non-OK code is a failed query; whether the store was reached is BookPurchases' call (the device's internet), never a code table
-        (HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, bool ok) = await QueryOwnedAsync(client);
-        return new PurchaseSnapshot(prices, owned, pending, proofs, ok, pricesFailed);
+        string[] bookProducts = [.. productIds.Where(id => !SubscriptionProducts.Is(id))];
+        (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(client, bookProducts); // any non-OK code is a failed query; whether the store was reached is BookPurchases' call (the device's internet), never a code table
+        if (productIds.Any(SubscriptionProducts.Is))
+        {
+            (Dictionary<string, string> planPrices, _) = await QueryPricesAsync(client, [SubscriptionProducts.Subscription], BillingClient.ProductType.Subs); // a failed subscription query only means no subscription card, never a red strip for the books
+            foreach ((string plan, string price) in planPrices)
+            {
+                prices[plan] = price;
+            }
+        }
+
+        (HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, bool ok, SubscriptionStatus? subscription, Dictionary<string, DateTimeOffset> purchasedAt) = await QueryOwnedAsync(client);
+        return new PurchaseSnapshot(prices, owned, pending, proofs, ok, pricesFailed, Subscription: subscription, PurchasedAt: purchasedAt);
     }
 
     // Play has no separate restore: what the account owns is read again.
@@ -43,18 +56,26 @@ public sealed class AndroidPurchases : IBookPurchases
             return BuyOutcome.Failed;
         }
 
-        if (!_details.ContainsKey(productId))
+        bool isPlan = SubscriptionProducts.Is(productId);
+        string detailsId = isPlan ? SubscriptionProducts.Subscription : productId; // both plans are base plans of Play's one subscription
+        if (!_details.ContainsKey(detailsId) || (isPlan && !_offerTokens.ContainsKey(productId)))
         {
-            await QueryPricesAsync(client, [productId]);
+            await QueryPricesAsync(client, [detailsId], isPlan ? BillingClient.ProductType.Subs : BillingClient.ProductType.Inapp);
         }
 
-        if (!_details.TryGetValue(productId, out ProductDetails? details))
+        if (!_details.TryGetValue(detailsId, out ProductDetails? details) || (isPlan && !_offerTokens.ContainsKey(productId)))
         {
             return BuyOutcome.Failed;
         }
 
         Task<BuyOutcome> result = _updates.NextAsync();
-        BillingFlowParams.ProductDetailsParams item = BillingFlowParams.ProductDetailsParams.NewBuilder().SetProductDetails(details).Build();
+        BillingFlowParams.ProductDetailsParams.Builder builder = BillingFlowParams.ProductDetailsParams.NewBuilder().SetProductDetails(details);
+        if (isPlan)
+        {
+            builder.SetOfferToken(_offerTokens[productId]); // the trial offer when Play showed it (new subscribers only), else the base plan
+        }
+
+        BillingFlowParams.ProductDetailsParams item = builder.Build();
         BillingFlowParams flow = BillingFlowParams.NewBuilder().SetProductDetailsParamsList([item]).Build();
         BillingResult launched = client.LaunchBillingFlow(activity, flow);
         if (launched.ResponseCode != BillingResponseCode.Ok)
@@ -67,6 +88,8 @@ public sealed class AndroidPurchases : IBookPurchases
     }
 
     public async Task<bool> RedeemCodeAsync() => await Launcher.Default.OpenAsync(new Uri(RedeemAddress));
+
+    public async Task<bool> ManageSubscriptionAsync() => await Launcher.Default.OpenAsync(new Uri(ManageAddress));
 
     private async Task<BillingClient?> ConnectAsync()
     {
@@ -110,7 +133,7 @@ public sealed class AndroidPurchases : IBookPurchases
         old?.EndConnection();
     }
 
-    private async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(BillingClient client, IReadOnlyCollection<string> productIds)
+    private async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(BillingClient client, IReadOnlyCollection<string> productIds, string productType = BillingClient.ProductType.Inapp)
     {
         var prices = new Dictionary<string, string>();
         if (productIds.Count == 0)
@@ -118,7 +141,7 @@ public sealed class AndroidPurchases : IBookPurchases
             return (prices, false);
         }
 
-        var products = productIds.Select(id => QueryProductDetailsParams.Product.NewBuilder().SetProductId(id).SetProductType(BillingClient.ProductType.Inapp).Build()).ToList();
+        var products = productIds.Select(id => QueryProductDetailsParams.Product.NewBuilder().SetProductId(id).SetProductType(productType).Build()).ToList();
         QueryProductDetailsParams query = QueryProductDetailsParams.NewBuilder().SetProductList(products).Build();
         // Never client.QueryProductDetailsAsync: the binding's async wrapper returns Ok with an empty ProductDetailsList while the listener overload returns the products
         // (dotnet/android-libraries #1396, open; seen on the S21 in Slice 358). Check that issue before a binding upgrade (Slice 379) puts the wrapper back.
@@ -132,7 +155,11 @@ public sealed class AndroidPurchases : IBookPurchases
         foreach (ProductDetails details in answer.Details.ProductDetailsList ?? [])
         {
             _details[details.ProductId] = details;
-            if (details.GetOneTimePurchaseOfferDetails()?.FormattedPrice is { } price)
+            if (productType == BillingClient.ProductType.Subs)
+            {
+                ReadPlans(details, prices);
+            }
+            else if (details.GetOneTimePurchaseOfferDetails()?.FormattedPrice is { } price)
             {
                 prices[details.ProductId] = price;
             }
@@ -140,6 +167,43 @@ public sealed class AndroidPurchases : IBookPurchases
 
         return (prices, !IsOk(answer.Result)); // any non-OK code is a failed query (BookPurchases reports billing_error when the device has internet; the code is in the trace line above); OK with no price is prices_missing
     }
+
+    // Slice 384: Play's one subscription has two base plans (monthly, yearly), each with an optional 7-day trial offer that Play lists only for an account that may still use it. The price is the recurring one (the last pricing phase of the
+    // offer); the offer token to buy is the trial offer's when listed, else the base plan's. Product ids are the app's plan products, never Play's base plan ids.
+    private void ReadPlans(ProductDetails details, Dictionary<string, string> prices)
+    {
+        _offerTokens.Clear(); // a trial offer Play no longer lists (the account used it) must not be bought from an old token
+        foreach (ProductDetails.SubscriptionOfferDetails offer in details.GetSubscriptionOfferDetails() ?? [])
+        {
+            string? plan = PlanProductOf(offer.BasePlanId);
+            if (plan is null)
+            {
+                continue;
+            }
+
+            bool isTrial = offer.OfferId == SubscriptionProducts.TrialOffer;
+            if (offer.OfferId is null || isTrial)
+            {
+                string? price = offer.PricingPhases.PricingPhaseList.LastOrDefault()?.FormattedPrice;
+                if (price is not null && (offer.OfferId is null || !prices.ContainsKey(plan)))
+                {
+                    prices[plan] = price;
+                }
+
+                if (isTrial || !_offerTokens.ContainsKey(plan))
+                {
+                    _offerTokens[plan] = offer.OfferToken;
+                }
+            }
+        }
+    }
+
+    private static string? PlanProductOf(string? basePlanId) => basePlanId switch
+    {
+        SubscriptionProducts.MonthlyBasePlan => SubscriptionProducts.Monthly,
+        SubscriptionProducts.YearlyBasePlan => SubscriptionProducts.Yearly,
+        _ => null,
+    };
 
     // Slice 358: Play's answer, so a run can tell "not ok", "ok but empty" and "no price in the details" apart (BookPurchases reports prices_missing for the products left without a price). Codes, counts and product ids only. The Release log, not Debug only. One line per refresh (Slice 380).
     private static void TraceDetails(int asked, DetailsAnswer answer)
@@ -198,27 +262,52 @@ public sealed class AndroidPurchases : IBookPurchases
         return answer;
     }
 
-    private static async Task<(HashSet<string> Owned, HashSet<string> Pending, Dictionary<string, string> Proofs, bool Ok)> QueryOwnedAsync(BillingClient client)
+    private static async Task<(HashSet<string> Owned, HashSet<string> Pending, Dictionary<string, string> Proofs, bool Ok, SubscriptionStatus? Subscription, Dictionary<string, DateTimeOffset> PurchasedAt)> QueryOwnedAsync(BillingClient client)
     {
         var owned = new HashSet<string>();
         var pending = new HashSet<string>();
         var proofs = new Dictionary<string, string>();
+        var times = new Dictionary<string, DateTimeOffset>();
         QueryPurchasesParams query = QueryPurchasesParams.NewBuilder().SetProductType(BillingClient.ProductType.Inapp).Build();
         IList<Purchase>? purchases = await OwnedPurchasesAsync(client, query);
+        Collect(client, purchases, owned, pending, proofs, times);
+        SubscriptionStatus? subscription = await QueryOwnedSubscriptionsAsync(client, owned, pending, proofs, times);
+        return (owned, pending, proofs, purchases is not null, subscription, times);
+    }
+
+    // Slice 384: Play lists a subscription purchase while it is active, in its trial, in grace or cancelled but not yet ended, and no longer once it has ended. The on-device purchase carries no end date, so the answer has none; BookPurchases then asks the Worker
+    // (Play subscriptionsv2) for the real end date after each read and keeps that (until its first answer the record counts from this read). A query that fails is no answer (null), never "no subscription".
+    private static async Task<SubscriptionStatus?> QueryOwnedSubscriptionsAsync(BillingClient client, HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, Dictionary<string, DateTimeOffset> times)
+    {
+        QueryPurchasesParams query = QueryPurchasesParams.NewBuilder().SetProductType(BillingClient.ProductType.Subs).Build();
+        IList<Purchase>? purchases = await OwnedPurchasesAsync(client, query);
+        if (purchases is null)
+        {
+            PurchaseTrace.Line("subscription purchases: the query did not answer");
+            return null;
+        }
+
+        Collect(client, purchases, owned, pending, proofs, times);
+        bool running = purchases.Any(p => p.PurchaseState == PurchaseState.Purchased && p.Products.Any(SubscriptionProducts.Is));
+        return running ? new SubscriptionStatus(SubscriptionState.Active, null, SubscriptionProducts.Subscription) : SubscriptionStatus.None;
+    }
+
+    private static void Collect(BillingClient client, IList<Purchase>? purchases, HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, Dictionary<string, DateTimeOffset> times)
+    {
         foreach (Purchase purchase in purchases ?? [])
         {
             AcknowledgeIfNeeded(client, purchase); // seen here (start-up, store page, Restore), so a purchase approved later or bought on another phone is acknowledged too
             foreach (string product in purchase.Products)
             {
                 (purchase.PurchaseState == PurchaseState.Purchased ? owned : pending).Add(product);
-                if (purchase.PurchaseState == PurchaseState.Purchased)
+                DateTimeOffset at = DateTimeOffset.FromUnixTimeMilliseconds(purchase.PurchaseTime);
+                if (purchase.PurchaseState == PurchaseState.Purchased && (!times.TryGetValue(product, out DateTimeOffset held) || at >= held))
                 {
-                    proofs[product] = purchase.PurchaseToken;
+                    proofs[product] = purchase.PurchaseToken; // the newest purchase of a product gives its proof
+                    times[product] = at;
                 }
             }
         }
-
-        return (owned, pending, proofs, purchases is not null);
     }
 
     // Play refunds a purchase that is not acknowledged within three days; only a Purchased one can be (a pending one is acknowledged once it is approved and seen here).

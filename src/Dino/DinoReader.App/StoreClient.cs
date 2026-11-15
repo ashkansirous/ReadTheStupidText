@@ -404,6 +404,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			}
 
 			imported = true;
+			sales.RecordDownload(item); // Slice 384: what opened the book (free, bought, the subscription), so only a subscription-only book can lock when it ends
 
 			// The size is recorded only for a copy that is on the shelf. A kill between the import and this line leaves a high-res copy recorded as standard, which the next upgrade pass swaps once more: harmless.
 			RecordPictureSize(item.Id, item.Version, size);

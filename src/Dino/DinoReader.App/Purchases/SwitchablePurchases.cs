@@ -20,6 +20,8 @@ public sealed class SwitchablePurchases(IBookPurchases real) : IBookPurchases
     public Task<PurchaseSnapshot> RestoreAsync(IReadOnlyCollection<string> productIds, CancellationToken cancel) => Current.RestoreAsync(productIds, cancel);
 
     public Task<bool> RedeemCodeAsync() => Current.RedeemCodeAsync();
+
+    public Task<bool> ManageSubscriptionAsync() => Current.ManageSubscriptionAsync();
 }
 
 /// <summary>Makes the platform's store (implemented once per head under <c>Platforms/&lt;OS&gt;/Purchases</c>).</summary>

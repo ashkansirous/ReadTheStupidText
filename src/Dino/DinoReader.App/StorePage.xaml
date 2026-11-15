@@ -217,6 +217,42 @@
             </HorizontalStackLayout>
         </Grid>
 
+        <!-- Slice 384: the subscription card, the head of the book list (the page moves it into the CollectionView header). Both plans show the store's own recurring price and the trial; the terms (price, length, trial, auto-renewal)
+             sit under the buttons with the terms and privacy links Apple and Google require, and Manage opens the store's own subscription page. Shown only while books are sold and the store priced a plan, or the subscription runs. -->
+        <Border x:Name="SubscriptionCard" AutomationId="StoreSubscriptionCard" IsVisible="False" BackgroundColor="White" StrokeThickness="0" Padding="16" Margin="0,0,0,14">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="18" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="10">
+                <Label x:Name="SubscriptionTitle" Text="{x:Static res:AppResources.Sub_Title}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
+                <Label x:Name="SubscriptionLine" AutomationId="StoreSubscriptionLine" Text="{x:Static res:AppResources.Sub_Line}" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                <VerticalStackLayout x:Name="SubscriptionPlans" Spacing="8">
+                    <Button x:Name="SubscribeMonthlyButton" AutomationId="StoreSubscribeMonthly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
+                            BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnSubscribeMonthlyClicked" />
+                    <Button x:Name="SubscribeYearlyButton" AutomationId="StoreSubscribeYearly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
+                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnSubscribeYearlyClicked" />
+                    <Label x:Name="SubscriptionTerms" AutomationId="StoreSubscriptionTerms" Text="{x:Static res:AppResources.Sub_Terms}" FontSize="12" LineHeight="1.4" TextColor="{StaticResource Muted}" />
+                </VerticalStackLayout>
+                <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+                    <Label x:Name="SubscriptionTermsLink" AutomationId="StoreSubscriptionTermsLink" Text="{x:Static res:AppResources.Sub_TermsLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSubscriptionTermsTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="SubscriptionPrivacyLink" AutomationId="StoreSubscriptionPrivacyLink" Text="{x:Static res:AppResources.Sub_PrivacyLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSubscriptionPrivacyTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="SubscriptionManageLink" AutomationId="StoreSubscriptionManage" Text="{x:Static res:AppResources.Sub_Manage}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,0,4">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSubscriptionManageTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </Border>
+
         <!-- Slice 364 (mock S3): the "Bought books before?" card, shown only while books are sold (the remote switch). It is the foot of the list while the list has books (the page moves it into the CollectionView footer)
              and sits at the bottom of the page when the list is empty, filtered to nothing or offline, so Restore and Redeem are always reachable. Both buttons open the store's own screens; the grown-up corner is already behind the gate.
              The result line of a restore sits under the card: green when books came to the shelf, sand when there was nothing to bring. -->

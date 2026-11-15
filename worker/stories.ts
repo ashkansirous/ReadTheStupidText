@@ -40,6 +40,8 @@ import type { ServedFile } from "./downloads";
 import { GateAnswer } from "./entitlements/gate.ts";
 import type { PaidGate } from "./entitlements/gate.ts";
 import { PROOF_HEADER } from "./entitlements/proof.ts";
+import { SubscriptionAnswerKind } from "./entitlements/subscription.ts";
+import type { SubscriptionAnswer, SubscriptionSource } from "./entitlements/subscription.ts";
 import { isProductId, productsUnlocking } from "./products.ts";
 
 export const STORIES_API_PATH = "/api/stories";
@@ -97,6 +99,8 @@ const ErrorCode = {
   StoryUnavailable: "story-unavailable",
 } as const;
 
+const HTTP_OK = 200;
+const HTTP_NOT_FOUND = 404;
 const HTTP_BAD_REQUEST = 400;
 const HTTP_PAYMENT_REQUIRED = 402;
 const HTTP_FORBIDDEN = 403;
@@ -710,8 +714,27 @@ async function ticketResponse(request: Request, ticket: WindowsTicketSource | un
   return "ticket" in answer ? jsonResponse({ ticket: answer.ticket }, 200, NO_CACHE) : statusOnly(404);
 }
 
-async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource): Promise<Response> {
+export const SUBSCRIPTION_PATH = "/api/stories/subscription";
+
+/** Slice 384: the subscription's state and end date for the app (`{ state, expiresAt }`), never cached; error codes as the paid gate's (404 off, 402 no proof, 403 bad proof, 429, 503). */
+async function subscriptionResponse(request: Request, source: SubscriptionSource | undefined): Promise<Response> {
+  if (request.method === "HEAD") return statusOnly(source === undefined ? HTTP_NOT_FOUND : HTTP_OK); // review finding 8: a HEAD never asks a store or spends a rate-limit slot
+  let answer: SubscriptionAnswer = { kind: SubscriptionAnswerKind.Off };
+  try {
+    answer = source === undefined ? answer : await source(request.headers.get(PROOF_HEADER), request.headers.get("CF-Connecting-IP") ?? UNKNOWN_CLIENT);
+  } catch (error) {
+    // no-fallback: a store check broke unexpectedly (a bad proof, a signing failure); the app keeps what it holds. The error's name is logged (never the proof) so it is not mistaken for a store outage.
+    console.warn(`subscription check threw ${error instanceof Error ? error.name : typeof error}`);
+    return statusOnly(HTTP_UNAVAILABLE);
+  }
+  if (answer.kind === SubscriptionAnswerKind.Status && answer.status !== undefined) return jsonResponse({ state: answer.status.state, expiresAt: answer.status.expiresAt }, 200, NO_CACHE);
+  const codes: Record<string, number> = { [SubscriptionAnswerKind.NoProof]: HTTP_PAYMENT_REQUIRED, [SubscriptionAnswerKind.BadProof]: HTTP_FORBIDDEN, [SubscriptionAnswerKind.CannotVerify]: HTTP_UNAVAILABLE, [SubscriptionAnswerKind.RateLimited]: HTTP_TOO_MANY_REQUESTS };
+  return statusOnly(codes[answer.kind] ?? 404);
+}
+
+async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource, subscription?: SubscriptionSource): Promise<Response> {
   const { pathname } = new URL(request.url);
+  if (pathname === SUBSCRIPTION_PATH) return subscriptionResponse(request, subscription);
   if (pathname === STORIES_API_PATH) {
     const entries = await currentEntries(bucket);
     return entries === null ? statusOnly(503) : listResponse(entries, pathPrefix, request.method === "HEAD");
@@ -761,12 +784,13 @@ export async function handleStories(
   serve: ObjectServer,
   paid?: PaidGate,
   ticket?: WindowsTicketSource,
+  subscription?: SubscriptionSource,
 ): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
   if (!env.DOWNLOADS) return statusOnly(503);
-  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket);
+  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket, subscription);
   if (request.method !== "HEAD" || response.status < 400) return response;
   return new Response(null, { status: response.status, headers: response.headers });
 }

@@ -420,6 +420,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Manche Bücher kosten ein bisschen. Sie werden über dein Store-Konto gekauft, und nichts über dich oder dein Kind wird an uns gesendet.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Warte auf den Store …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Käufe werden geprüft …</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Alle Bücher mit einem Abo</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Öffne alle Bücher, solange du abonniert bist. Gekaufte Bücher bleiben für immer deine.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Gratis testen, danach {0} pro Monat</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Gratis testen, danach {0} pro Jahr</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 Tage gratis für neue Abonnenten. Danach verlängert es sich automatisch jeden Monat oder jedes Jahr zum angezeigten Preis, bis du in deinem Store-Konto kündigst. Jederzeit kündbar.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Nutzungsbedingungen</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Datenschutzerklärung</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Abo verwalten</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Du hast ein Abo. Alle Bücher sind offen.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Erneut abonnieren</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Dieses Buch kaufen</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Gesperrt: Das Abo ist abgelaufen</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bücher, die aus dem Store zurückkommen</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Kostenlose Bücher kommen von selbst zurück. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Kostenlose Bücher, die noch im Store sind, kommen von selbst zurück. Ein Buch, das der Store nicht mehr anbietet, kommt nicht zurück, seine Aufnahmen bleiben aber in der Backup-Datei. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>

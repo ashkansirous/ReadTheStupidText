@@ -26,6 +26,9 @@
  *   Microsoft: API creates the durable add-on shell only (Store submission API, create add-on). No API for the price: an add-on on Pricing Version 2 makes the API answer an unknown tier,
  *              so its price (0.99 USD), listing and submission are set in Partner Center by hand, and the Partner Center payout and tax profile must exist.
  *
+ * Slice 384 adds the Dino subscription (a monthly 1.99 GBP and a yearly 14.99 GBP plan, 7-day free trial) to the same run, after the books: Play one subscription with two base plans and trial offers, Apple one group with
+ * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its request shapes are UNVERIFIED (no --apply has run); the dry run lists them and what is left by hand.
+ *
  * Run live on 2026-11-13 against all three stores (Play: 11 created and activated; Apple: 11 created; Partner Center: 11 add-on shells created). Request shapes the
  * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
  */
@@ -536,7 +539,8 @@ async function microsoftExistingIds(token) {
 export async function createMicrosoftProduct(token, book, existing, storeAppId, { request = microsoftRequest, list = microsoftExistingIds } = {}) {
     const wanted = normalProductId(book.productId);
     if (existing.has(wanted)) return Outcome.Exists;
-    const response = await request(token, 'POST', `${MS_API}/inappproducts`, microsoftAddOnBody(book, storeAppId));
+    const body = book.kind === 'subscription' ? microsoftSubscriptionBody(book, storeAppId) : microsoftAddOnBody(book, storeAppId);
+    const response = await request(token, 'POST', `${MS_API}/inappproducts`, body);
     if (response.status === HTTP_CONFLICT) {
         const fresh = await list(token);
         if (fresh.has(wanted)) return Outcome.Exists;
@@ -544,6 +548,225 @@ export async function createMicrosoftProduct(token, book, existing, storeAppId, 
     }
     must(response, 'create add-on');
     return Outcome.Created;
+}
+
+// ---- Subscription (Slice 384) ----
+// One subscription per store with a monthly (1.99 GBP) and a yearly (14.99 GBP) plan and a 7-day free trial for new subscribers; the stores fill in other countries (Play: convertRegionPrices; Apple: equalised price points).
+// Play: one subscription with two base plans and a trial offer on each. Apple: one subscription group with two products. Microsoft: two subscription add-on shells (price, period and trial are set in Partner Center by hand).
+// Every request shape below follows the stores' docs read 2026-11-15 and is marked UNVERIFIED until a real --apply has run once; this script's dry run (the default) is all that has run.
+
+export const SUBSCRIPTION_PRODUCT_ID = `${PACKAGE_NAME}.sub`;
+export const TRIAL_DAYS = 7;
+export const TRIAL_OFFER_ID = 'trial';
+export const SUBSCRIPTION_CURRENCY = 'GBP';
+const APPLE_SUBSCRIPTION_TERRITORY = 'GBR';
+const APPLE_GROUP_NAME = 'Dino Book Reader subscription';
+const SUBSCRIPTION_TITLE = 'Dino Book Reader: every book';
+const SUBSCRIPTION_DESCRIPTION = 'Opens every book in Dino Book Reader while you subscribe.';
+export const SUBSCRIPTION_PLANS = [
+    { id: 'monthly', productId: `${SUBSCRIPTION_PRODUCT_ID}.monthly`, playPeriod: 'P1M', applePeriod: 'ONE_MONTH', appleLevel: 2, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '1', nanos: 990000000 }, gbpLabel: '1.99' },
+    { id: 'yearly', productId: `${SUBSCRIPTION_PRODUCT_ID}.yearly`, playPeriod: 'P1Y', applePeriod: 'ONE_YEAR', appleLevel: 1, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '14', nanos: 990000000 }, gbpLabel: '14.99' },
+];
+
+/** Pure: what a store gets created for the subscription. Play has one subscription holding both plans; Apple and Microsoft one product per plan. */
+export function subscriptionItemsFor(store) {
+    if (store === Store.Google) return [{ kind: 'subscription', title: SUBSCRIPTION_TITLE, productId: SUBSCRIPTION_PRODUCT_ID, plans: SUBSCRIPTION_PLANS, problem: null }];
+    return SUBSCRIPTION_PLANS.map((plan) => ({ kind: 'subscription', title: `${SUBSCRIPTION_TITLE} (${plan.id})`, productId: plan.productId, plan, problem: null }));
+}
+
+/** Pure: the dry-run lines for the subscription of one store. */
+export function subscriptionPlanLines(store) {
+    const lines = [`${STORE_TITLES[store]}: subscription, ${SUBSCRIPTION_PLANS.map((plan) => `${plan.id} ${plan.gbpLabel} ${SUBSCRIPTION_CURRENCY}`).join(' and ')}, ${TRIAL_DAYS}-day free trial`];
+    for (const item of subscriptionItemsFor(store)) lines.push(`  would create ${item.productId} ("${item.title}")`);
+    return [...lines, ...SUBSCRIPTION_MANUAL_STEPS[store].map((step) => `  by hand: ${step}`)];
+}
+
+export const SUBSCRIPTION_MANUAL_STEPS = {
+    [Store.Apple]: [
+        'add the review screenshot to each subscription and the subscription group\'s localisation if App Store Connect asks, then submit them for review with an app version (https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions)',
+    ],
+    [Store.Google]: [
+        'nothing left once the merchant account is done (Play Console > Monetise with Play > Subscriptions)',
+    ],
+    [Store.Microsoft]: [
+        'for each subscription add-on set the period (1 month, 1 year), the price (1.99 GBP, 14.99 GBP), the 7-day free trial, its listing and submit it in Partner Center (the submission API cannot set a subscription\'s price or trial)',
+    ],
+};
+
+/** Pure: Play's subscription (POST .../subscriptions?productId=...&regionsVersion.version=...): one en-GB listing and a base plan per plan, priced per region from the converted GBP price. UNVERIFIED shape. */
+export function playSubscriptionBody(convertedByPlan) {
+    return {
+        packageName: PACKAGE_NAME,
+        productId: SUBSCRIPTION_PRODUCT_ID,
+        listings: [{ languageCode: PLAY_LISTING_LANGUAGE, title: SUBSCRIPTION_TITLE, description: SUBSCRIPTION_DESCRIPTION, benefits: ['Every book opens', 'New books included'] }],
+        basePlans: SUBSCRIPTION_PLANS.map((plan) => playBasePlanBody(plan, convertedByPlan[plan.id])),
+    };
+}
+
+function playBasePlanBody(plan, converted) {
+    const regions = Object.entries(converted?.convertedRegionPrices ?? {}).map(([regionCode, entry]) => ({ regionCode, newSubscriberAvailability: true, price: entry.price }));
+    const other = converted?.convertedOtherRegionsPrice;
+    const body = {
+        basePlanId: plan.id,
+        autoRenewingBasePlanType: { billingPeriodDuration: plan.playPeriod, resubscribeState: 'RESUBSCRIBE_STATE_ACTIVE', gracePeriodDuration: 'P7D' },
+        regionalConfigs: regions,
+    };
+    if (other?.usdPrice && other?.eurPrice) body.otherRegionsConfig = { usdPrice: other.usdPrice, eurPrice: other.eurPrice, newSubscriberAvailability: true };
+    return body;
+}
+
+/** Pure: the 7-day free trial offer of one base plan (POST .../basePlans/<plan>/offers?offerId=trial&regionsVersion.version=...): free for new subscribers of this subscription, in every region the plan is sold in. UNVERIFIED shape. */
+export function playTrialOfferBody(plan, regionCodes) {
+    return {
+        packageName: PACKAGE_NAME,
+        productId: SUBSCRIPTION_PRODUCT_ID,
+        basePlanId: plan.id,
+        offerId: TRIAL_OFFER_ID,
+        phases: [{ recurrenceCount: 1, duration: `P${TRIAL_DAYS}D`, regionalConfigs: regionCodes.map((regionCode) => ({ regionCode, free: {} })), otherRegionsConfig: { free: {} } }],
+        regionalConfigs: regionCodes.map((regionCode) => ({ regionCode, newSubscriberAvailability: true })),
+        otherRegionsConfig: { otherRegionsNewSubscriberAvailability: true },
+        targeting: { acquisitionRule: { scope: { thisSubscription: {} } } },
+    };
+}
+
+/** Pure: where a Play subscription stands: no subscription (`missing`), a base plan or trial not live (`inactive`), or all live (`active`). */
+export function playSubscriptionStage(subscription, trials) {
+    const plans = subscription?.basePlans ?? [];
+    if (SUBSCRIPTION_PLANS.some((plan) => !plans.some((base) => base?.basePlanId === plan.id))) return PlayStage.Missing;
+    const live = SUBSCRIPTION_PLANS.every((plan) => plans.find((base) => base.basePlanId === plan.id).state === PLAY_STATE_ACTIVE && trials?.[plan.id] === PLAY_STATE_ACTIVE);
+    return live ? PlayStage.Active : PlayStage.Inactive;
+}
+
+/** Creates the Play subscription with both base plans and trial offers, or finishes a half-created one (each base plan and offer is activated). */
+export async function createPlaySubscription(token, item, request = playRequest) {
+    const base = `subscriptions/${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}`;
+    const existing = await request(token, 'GET', base);
+    if (!existing.ok && existing.status !== HTTP_NOT_FOUND) throw new Error(`look up subscription: HTTP ${existing.status}`);
+    if (existing.nonJson === true) throw nonJsonError('look up subscription', existing);
+    const trials = {};
+    for (const plan of item.plans) {
+        const offer = existing.ok ? await request(token, 'GET', `${base}/basePlans/${plan.id}/offers/${TRIAL_OFFER_ID}`) : { ok: false };
+        trials[plan.id] = offer.ok ? offer.json?.state : undefined;
+    }
+    const stage = existing.ok ? playSubscriptionStage(existing.json, trials) : PlayStage.Missing;
+    if (stage === PlayStage.Active) return Outcome.Exists;
+    const version = process.env.PLAY_REGIONS_VERSION ?? PLAY_DEFAULT_REGIONS_VERSION;
+    const regionsQuery = `regionsVersion.version=${encodeURIComponent(version)}`;
+    const converted = {};
+    if (stage === PlayStage.Missing) {
+        for (const plan of item.plans) converted[plan.id] = must(await request(token, 'POST', 'pricing:convertRegionPrices', { price: plan.gbp }), `convert the ${plan.id} price`);
+        must(await request(token, 'POST', `subscriptions?productId=${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}&${regionsQuery}`, playSubscriptionBody(converted)), 'create the subscription');
+    }
+    for (const plan of item.plans) await finishPlayPlan(token, plan, existing, converted, regionsQuery, request);
+    return existing.ok ? Outcome.Completed : Outcome.Created;
+}
+
+async function finishPlayPlan(token, plan, existing, converted, regionsQuery, request) {
+    const base = `subscriptions/${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}/basePlans/${plan.id}`;
+    const planState = (existing.json?.basePlans ?? []).find((entry) => entry.basePlanId === plan.id)?.state;
+    if (planState !== PLAY_STATE_ACTIVE) must(await request(token, 'POST', `${base}:activate`, {}), `activate the ${plan.id} base plan`);
+    const offer = await request(token, 'GET', `${base}/offers/${TRIAL_OFFER_ID}`);
+    if (offer.ok && offer.json?.state === PLAY_STATE_ACTIVE) return;
+    if (!offer.ok) {
+        const regions = Object.keys(converted[plan.id]?.convertedRegionPrices ?? {});
+        must(await request(token, 'POST', `${base}/offers?offerId=${TRIAL_OFFER_ID}&${regionsQuery}`, playTrialOfferBody(plan, regions.length > 0 ? regions : [PLAY_REGION_GB])), `create the ${plan.id} trial offer`);
+    }
+    must(await request(token, 'POST', `${base}/offers/${TRIAL_OFFER_ID}:activate`, {}), `activate the ${plan.id} trial offer`);
+}
+
+const PLAY_REGION_GB = 'GB';
+
+/** Pure: App Store Connect's subscription group (POST /v1/subscriptionGroups). */
+export function appleSubscriptionGroupBody(appId) {
+    return { data: { type: 'subscriptionGroups', attributes: { referenceName: APPLE_GROUP_NAME }, relationships: { app: { data: { type: 'apps', id: appId } } } } };
+}
+
+/** Pure: the group's en-US display name (POST /v1/subscriptionGroupLocalizations). UNVERIFIED shape. */
+export function appleGroupLocalizationBody(groupId) {
+    return { data: { type: 'subscriptionGroupLocalizations', attributes: { name: 'Dino Book Reader', locale: APPLE_LOCALE }, relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: groupId } } } } };
+}
+
+/** Pure: one auto-renewing subscription of the group (POST /v1/subscriptions); the yearly plan is level 1 (the best), the monthly level 2. */
+export function appleSubscriptionBody(item, groupId) {
+    return {
+        data: {
+            type: 'subscriptions',
+            attributes: { name: `Every book (${item.plan.id})`, productId: item.productId, subscriptionPeriod: item.plan.applePeriod, familySharable: false, groupLevel: item.plan.appleLevel, availableInAllTerritories: true, reviewNote: 'Opens every book while subscribed. Purchases sit behind the grown-ups gate.' },
+            relationships: { group: { data: { type: 'subscriptionGroups', id: groupId } } },
+        },
+    };
+}
+
+/** Pure: the en-US name and description of an Apple subscription (POST /v1/subscriptionLocalizations). UNVERIFIED shape. */
+export function appleSubscriptionLocalizationBody(item, subscriptionId) {
+    return { data: { type: 'subscriptionLocalizations', attributes: { name: SUBSCRIPTION_TITLE, description: cut(SUBSCRIPTION_DESCRIPTION, APPLE_DESCRIPTION_MAX), locale: APPLE_LOCALE }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
+}
+
+/** Pure: the price of the base territory (POST /v1/subscriptionPrices): the price point's id, applied now (startDate null); other territories follow Apple's equalisation when set by hand or by a later run. */
+export function appleSubscriptionPriceBody(subscriptionId, pricePointId) {
+    return {
+        data: {
+            type: 'subscriptionPrices',
+            attributes: { startDate: null, preserveCurrentPrice: false },
+            relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } }, subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: pricePointId } } },
+        },
+    };
+}
+
+/** Pure: the 7-day free trial (POST /v1/subscriptionIntroductoryOffers). UNVERIFIED: duration ONE_WEEK, one period, in the base territory. */
+export function appleTrialBody(subscriptionId) {
+    return {
+        data: {
+            type: 'subscriptionIntroductoryOffers',
+            attributes: { duration: 'ONE_WEEK', offerMode: 'FREE_TRIAL', numberOfPeriods: 1 },
+            relationships: {
+                subscription: { data: { type: 'subscriptions', id: subscriptionId } },
+                territory: { data: { type: 'territories', id: APPLE_SUBSCRIPTION_TERRITORY } },
+            },
+        },
+    };
+}
+
+/** Creates one Apple subscription (and the group once per run), or completes a half-created one: group, product, listing, price and trial are each checked and only the missing ones are done. */
+export async function createAppleSubscription(asc, item, appId, session = {}) {
+    session.groupId ??= await ensureAppleGroup(asc, appId);
+    const found = must(await asc.get(`/v1/subscriptionGroups/${session.groupId}/subscriptions`), 'look up subscription');
+    const existingId = (found.data ?? []).find((entry) => entry?.attributes?.productId === item.productId)?.id;
+    const id = existingId ?? must(await asc.post('/v1/subscriptions', appleSubscriptionBody(item, session.groupId)), 'create subscription').data.id;
+    const fresh = existingId === undefined;
+    let did = fresh;
+    const missing = async (path, what) => fresh || !(await appleStepDone(asc, path, what));
+    if (await missing(`/v1/subscriptions/${id}/subscriptionLocalizations`, 'the en-US listing')) {
+        must(await asc.post('/v1/subscriptionLocalizations', appleSubscriptionLocalizationBody(item, id)), 'add the en-US listing');
+        did = true;
+    }
+    if (await missing(`/v1/subscriptions/${id}/prices`, 'the price')) {
+        const points = must(await asc.get(`/v1/subscriptions/${id}/pricePoints?filter[territory]=${APPLE_SUBSCRIPTION_TERRITORY}&limit=${APPLE_PRICE_POINT_LIMIT}`), 'read the price points');
+        const pointId = findApplePricePoint(points.data, item.plan.gbpLabel);
+        if (pointId === null) throw new Error(`no ${item.plan.gbpLabel} ${SUBSCRIPTION_CURRENCY} price point for ${item.productId}`);
+        must(await asc.post('/v1/subscriptionPrices', appleSubscriptionPriceBody(id, pointId)), 'set the price');
+        did = true;
+    }
+    if (await missing(`/v1/subscriptions/${id}/introductoryOffers`, 'the free trial')) {
+        must(await asc.post('/v1/subscriptionIntroductoryOffers', appleTrialBody(id)), 'add the free trial');
+        did = true;
+    }
+    if (fresh) return Outcome.Created;
+    return did ? Outcome.Completed : Outcome.Exists;
+}
+
+async function ensureAppleGroup(asc, appId) {
+    const found = must(await asc.get(`/v1/apps/${appId}/subscriptionGroups`), 'look up subscription group');
+    const existing = (found.data ?? []).find((group) => group?.attributes?.referenceName === APPLE_GROUP_NAME)?.id;
+    if (existing !== undefined) return existing;
+    const groupId = must(await asc.post('/v1/subscriptionGroups', appleSubscriptionGroupBody(appId)), 'create subscription group').data.id;
+    must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the group listing');
+    return groupId;
+}
+
+/** Pure: Partner Center's create-add-on body for a subscription shell. UNVERIFIED: that the submission API accepts productType Subscription; if it answers 409 or an error, create the add-on by hand. */
+export function microsoftSubscriptionBody(item, storeAppId) {
+    return { applicationIds: [storeAppId], productId: item.productId, productType: 'Subscription' };
 }
 
 // ---- running ----
@@ -555,6 +778,8 @@ async function openStore(store) {
 }
 
 async function createOne(store, session, book) {
+    if (store === Store.Apple && book.kind === 'subscription') return createAppleSubscription(session.asc, book, session.appId, session);
+    if (store === Store.Google && book.kind === 'subscription') return createPlaySubscription(session.token, book);
     if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId);
     if (store === Store.Google) return createPlayProduct(session.token, book);
     session.existing ??= await microsoftExistingIds(session.token);
@@ -583,6 +808,7 @@ function printResults(store, results) {
     console.log(`${STORE_TITLES[store]}:`);
     for (const { book, outcome, message } of results) console.log(`  ${outcome}: ${book.productId}${message ? ` (${message})` : ''}`);
     MANUAL_STEPS[store].forEach((step) => console.log(`  by hand: ${step}`));
+    SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
 }
 
 async function main() {
@@ -590,14 +816,14 @@ async function main() {
     const books = paidBooksFrom(readContentEntries(options.contentRoot));
     if (!options.apply) {
         console.log(`DRY RUN (nothing is created; add --apply to create): ${books.length} paid book(s)`);
-        options.stores.forEach((store) => console.log(planLines(store, books).join('\n')));
+        options.stores.forEach((store) => console.log([...planLines(store, books), ...subscriptionPlanLines(store)].join('\n')));
         if (books.some((book) => book.problem !== null)) process.exitCode = 1; // review #9: a scripted pre-check must not pass what --apply would refuse
         return;
     }
     let failed = false;
     for (const store of options.stores) {
         try {
-            const results = await applyStore(store, books);
+            const results = await applyStore(store, [...books, ...subscriptionItemsFor(store)]); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop
             failed ||= results.some((result) => result.outcome === Outcome.Failed);
             printResults(store, results);
         } catch (error) {

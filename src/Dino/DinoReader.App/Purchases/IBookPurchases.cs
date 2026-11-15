@@ -1,3 +1,5 @@
+using DinoReader.Core;
+
 namespace DinoReader;
 
 /// <summary>How a Buy ended (Slice 346). Nothing changes on <see cref="Cancelled"/> and <see cref="Failed"/>; <see cref="Pending"/> is shown as waiting and re-read on the next open.</summary>
@@ -11,7 +13,8 @@ public enum BuyOutcome
 
 /// <summary>
 /// What the platform store said right now (Slice 346): the store's own formatted price per product, the products the signed-in store account owns, the ones waiting for approval, and a
-/// purchase proof per owned product (the token the Worker checks with the store). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked; <see cref="PricesFailed"/> is true when it was asked but its price query ended in an error (Slice 358: a non-OK Play response code, a StoreKit request failure or timeout, a Windows Store error), as opposed to answering with no price; <see cref="Restricted"/> is true when the device forbids purchases (iOS Screen Time), which is an answer and not a fault.
+/// purchase proof per owned product (the token the Worker checks with the store). The prices of the subscription plans are under <see cref="SubscriptionProducts.Monthly"/> and <see cref="SubscriptionProducts.Yearly"/>; while the subscription runs
+/// its product is in <c>Owned</c> with its proof, and <c>Subscription</c> is the store's answer about it (null when this read did not ask, so nothing is concluded from silence; a store that knows none answers <see cref="SubscriptionStatus.None"/>). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked; <see cref="PricesFailed"/> is true when it was asked but its price query ended in an error (Slice 358: a non-OK Play response code, a StoreKit request failure or timeout, a Windows Store error), as opposed to answering with no price; <see cref="Restricted"/> is true when the device forbids purchases (iOS Screen Time), which is an answer and not a fault.
 /// </summary>
 public sealed record PurchaseSnapshot(
     IReadOnlyDictionary<string, string> Prices,
@@ -20,7 +23,9 @@ public sealed record PurchaseSnapshot(
     IReadOnlyDictionary<string, string> Proofs,
     bool Reachable,
     bool PricesFailed = false,
-    bool Restricted = false)
+    bool Restricted = false,
+    SubscriptionStatus? Subscription = null,
+    IReadOnlyDictionary<string, DateTimeOffset>? PurchasedAt = null)
 {
     public static PurchaseSnapshot Empty { get; } = new(
         new Dictionary<string, string>(), new HashSet<string>(), new HashSet<string>(), new Dictionary<string, string>(), false);
@@ -49,4 +54,7 @@ public interface IBookPurchases
 
     /// <summary>Opens the store's own "redeem a code" screen; false when the platform has none to open.</summary>
     Task<bool> RedeemCodeAsync();
+
+    /// <summary>Slice 384: opens the store's own subscription page (cancel and change plan happen there, never in the app); false when it could not be opened.</summary>
+    Task<bool> ManageSubscriptionAsync();
 }
