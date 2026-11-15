@@ -1,6 +1,6 @@
 # Slice 387 item 3: open the shelf on the iOS simulator (run it with the Pro Max device pattern: the fit numbers show room for the full title there) and assert the full title "My stories" is visible,
 # so a title cut to "My s..." fails. The Debug-only shelf-fit.log in the app's data folder holds the header's measurements; dinoreader-ios-sim.yml prints it in its "Shelf fit lines" step.
-# No ids (the id mapping on iOS is unconfirmed): the visible words.
+# The first wait uses the visible words; the final assert uses the id GalleryTitle (iOS flows already use it).
 appId: uk.sirous.dinoreader.dbg
 name: Shelf header fit lines (iOS diagnostics)
 ---
@@ -14,4 +14,7 @@ name: Shelf header fit lines (iOS diagnostics)
     visible: "My stories|Stories"
     timeout: 90000
 - waitForAnimationToEnd
-- assertVisible: "My stories"
+# The shelf holds two title labels (full and short words), the unchosen one at Opacity 0: assert through the shown label's id so an invisible label cannot satisfy this.
+- assertVisible:
+    id: GalleryTitle
+    text: "My stories"

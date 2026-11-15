@@ -15,10 +15,11 @@ internal sealed class ShelfHeader : Grid
 	private const double RailNameSpacing = 10;
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
-	private readonly Label _title = new() { AutomationId = "GalleryTitle", FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
-	// Measures the title's words. It sits in the title's own cell so it has a native view (a label outside a layout has no Handler and measures about 0), but nobody sees or touches it:
-	// transparent, hidden from the accessibility tree, empty between measures, one pixel high (so no row grows) and left-aligned (a star column never widens for it).
-	private readonly Label _probe = new() { FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1, Opacity = 0, InputTransparent = true, HeightRequest = 1, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Center };
+	private const string TitleAutomationId = "GalleryTitle";
+	// Slice 387 item 3 (two failed iOS runs: a live label whose Text was swapped kept a stale short width; a probe label in the cell laid out 0 x 0): two title labels in the title's cell, one with the full words and
+	// one with the short words, each with a Text that never changes after it is set. Both stay IsVisible (each has a native view to measure); Fit shows one by Opacity 1 and gives it the id and the accessibility tree.
+	private readonly Label _titleFull = NewTitle();
+	private readonly Label _titleShort = NewTitle();
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -35,20 +36,28 @@ internal sealed class ShelfHeader : Grid
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		GrownUps = UiUsage.Press(new PillButton("GalleryGrownUps", coral: false), UiControls.OpenCorner, () => GrownUpsRequested?.Invoke()); // Slice 352: counted before the gate opens
 		_iconFrame.Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill };
-		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
-		AutomationProperties.SetIsInAccessibleTree(_probe, false);
-		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
-		_title.GestureRecognizers.Add(tap);
-		Children.Add(_row);
+		foreach (Label title in Titles())
+		{
+			SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
+			var tap = new TapGestureRecognizer();
+			tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
+			title.GestureRecognizers.Add(tap);
+			title.HandlerChanged += (_, _) => Fit(); // Slice 387: a no-op without both handlers, so a rebuilt label is measured only once it has a native view
 #if DEBUG
-		_title.SizeChanged += (_, _) => LogTitleSize();
+			title.SizeChanged += (_, _) => LogTitleSize(title);
 #endif
+		}
+
+		Children.Add(_row);
 		SizeChanged += (_, _) => FitWhenWidthChanged();
 		GrownUps.HandlerChanged += (_, _) => FitWhenPillChanged(); // Slice 387: the pill can only be measured once it has a native view
-		_probe.HandlerChanged += (_, _) => Fit(); // Slice 387 review: a no-op without a handler, so a rebuilt probe is measured only once it has a native view
 		GrownUps.SizeChanged += (_, _) => FitWhenPillChanged(); // and its words grow with the font scale
 	}
+
+	// Both carry the id the flows look for (MAUI allows an AutomationId to be set once, so it cannot move between them); only the shown one is in the accessibility tree, which is what the flows and the VM checks read.
+	private static Label NewTitle() => new() { AutomationId = TitleAutomationId, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center, Opacity = 0, InputTransparent = true };
+
+	private IEnumerable<Label> Titles() => [_titleFull, _titleShort];
 
 	/// <summary>The "Grown-ups" pill; a tap runs the gate (the page decides).</summary>
 	public PillButton GrownUps { get; }
@@ -81,7 +90,8 @@ internal sealed class ShelfHeader : Grid
 		_iconFrame.WidthRequest = sizes.Icon;
 		_iconFrame.HeightRequest = sizes.Icon;
 		_iconFrame.StrokeShape = new RoundRectangle { CornerRadius = sizes.IconRadius };
-		_title.FontSize = sizes.Title;
+		_titleFull.FontSize = sizes.Title;
+		_titleShort.FontSize = sizes.Title;
 		_flag.SetRound(sizes.FlagButton, sizes.Flag);
 		_flag.IsVisible = flagShown;
 		GrownUps.Apply(sizes.PillHeight, sizes.PillLabel, sizes.PillPadLeft, sizes.PillPadRight, sizes.PillGap, sizes.PillIcon, fullWidth: _isRail);
@@ -124,8 +134,8 @@ internal sealed class ShelfHeader : Grid
 		_row.Padding = new Thickness(_sizes.Header.Left, _sizes.Header.Top, _sizes.Header.Right, _sizes.Header.Bottom);
 		_row.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)];
 		_row.Add(_iconFrame, 0, 0);
-		_row.Add(_title, 1, 0);
-		_row.Add(_probe, 1, 0);
+		_row.Add(_titleFull, 1, 0);
+		_row.Add(_titleShort, 1, 0);
 		_row.Add(_flag, 2, 0);
 		_row.Add(GrownUps, 3, 0);
 	}
@@ -141,8 +151,8 @@ internal sealed class ShelfHeader : Grid
 		_nameRow.ColumnSpacing = RailNameSpacing;
 		_nameRow.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)];
 		_nameRow.Add(_iconFrame, 0, 0);
-		_nameRow.Add(_title, 1, 0);
-		_nameRow.Add(_probe, 1, 0);
+		_nameRow.Add(_titleFull, 1, 0);
+		_nameRow.Add(_titleShort, 1, 0);
 		_nameRow.Add(_flag, 2, 0);
 		_row.Add(_nameRow, 0, 0);
 		_row.Add(GrownUps, 0, 1);
@@ -175,13 +185,14 @@ internal sealed class ShelfHeader : Grid
 	/// <summary>Chooses the title that fits the row: "My stories", "Stories", or none. A no-op until the header has a width.</summary>
 	public void Fit()
 	{
-		if (Width <= 0 || _probe.Handler is null)
+		SetTitleTexts();
+		if (Width <= 0 || _titleFull.Handler is null || _titleShort.Handler is null)
 		{
-			return; // the probe re-added by a rebuild has no native view yet and would measure about 0; its HandlerChanged fits again
+			return; // a label re-added by a rebuild has no native view yet and would measure about 0; its HandlerChanged fits again
 		}
 
-		double full =MeasureTitle(AppResources.Gallery_Title) + ShelfTitleRules.TitleSlack;
-		double shortWidth = MeasureTitle(AppResources.Gallery_ShelfTitleShort) + ShelfTitleRules.TitleSlack;
+		double full = MeasureTitle(_titleFull) + ShelfTitleRules.TitleSlack;
+		double shortWidth = MeasureTitle(_titleShort) + ShelfTitleRules.TitleSlack;
 		double flag = _flagShown ? _sizes.FlagButton : 0;
 		_lastPill = PillRoom();
 		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, _lastPill, _sizes.HeaderGap);
@@ -189,16 +200,39 @@ internal sealed class ShelfHeader : Grid
 #if DEBUG
 		LogFit(full, shortWidth, available, flag); // Slice 387 item 3: the numbers behind the iOS "My s..." cut
 #endif
-		_title.IsVisible = TitleState != ShelfTitle.Hidden;
-		_title.Text = TitleState == ShelfTitle.Short ? AppResources.Gallery_ShelfTitleShort : AppResources.Gallery_Title;
-		OwnScript.InOwnScriptAligned(_title);
+		ShowTitle(_titleFull, TitleState == ShelfTitle.Full);
+		ShowTitle(_titleShort, TitleState == ShelfTitle.Short);
 		Fitted?.Invoke(TitleState);
+	}
+
+	// The shown label is opaque, touchable and in the accessibility tree; the other is transparent, transparent to touch and out of the tree.
+	private static void ShowTitle(Label title, bool shown)
+	{
+		title.Opacity = shown ? 1 : 0;
+		title.InputTransparent = !shown;
+		AutomationProperties.SetIsInAccessibleTree(title, shown);
+	}
+
+	// A label's Text is set only when it differs (a language change), never during a measure: a changed Text is what left the live label's size stale on iOS.
+	private void SetTitleTexts()
+	{
+		SetText(_titleFull, AppResources.Gallery_Title);
+		SetText(_titleShort, AppResources.Gallery_ShelfTitleShort);
+	}
+
+	private static void SetText(Label title, string text)
+	{
+		if (title.Text != text)
+		{
+			title.Text = text;
+			OwnScript.InOwnScriptAligned(title);
+		}
 	}
 
 #if DEBUG
 	private void LogFit(double full, double shortWidth, double available, double flag)
 	{
-		string line = $"[Shelf] fit Width={Width:0.#} rail={_isRail} full={full:0.#} shortWidth={shortWidth:0.#} available={available:0.#} pillRoom={_lastPill:0.#} pillWidth={GrownUps.Width:0.#} flag={flag:0.#} icon={_sizes.Icon:0.#} gap={_sizes.HeaderGap:0.#} state={TitleState} titleFont={_title.FontSize:0.#}";
+		string line = $"[Shelf] fit Width={Width:0.#} rail={_isRail} full={full:0.#} shortWidth={shortWidth:0.#} available={available:0.#} pillRoom={_lastPill:0.#} pillWidth={GrownUps.Width:0.#} flag={flag:0.#} icon={_sizes.Icon:0.#} gap={_sizes.HeaderGap:0.#} state={TitleState} titleFont={_titleFull.FontSize:0.#}";
 		WriteFitFile(line);
 	}
 
@@ -227,9 +261,9 @@ internal sealed class ShelfHeader : Grid
 		}
 	}
 
-	private void LogTitleSize()
+	private void LogTitleSize(Label title)
 	{
-		string line = $"[Shelf] title laid-out Width={_title.Width:0.#} Height={_title.Height:0.#} text='{_title.Text}' visible={_title.IsVisible} headerWidth={Width:0.#} pillWidth={GrownUps.Width:0.#}";
+		string line = $"[Shelf] title laid-out Width={title.Width:0.#} Height={title.Height:0.#} text='{title.Text}' opacity={title.Opacity:0.#} state={TitleState} headerWidth={Width:0.#} pillWidth={GrownUps.Width:0.#}";
 		WriteFitFile(line);
 	}
 #endif
@@ -240,19 +274,6 @@ internal sealed class ShelfHeader : Grid
 		return Math.Max(0, Width - _sizes.RailPadding.Left - _sizes.RailPadding.Right - _sizes.Icon - flag - (gaps * RailNameSpacing));
 	}
 
-	// Slice 387 item 3 (iOS run 43675329629: the live title laid out 76.7 wide, the width of the short text measured last, in a 202 wide room): the measure used to rewrite the live label's Text, which
-	// left its cached size at the last probe. It now uses a never-shown probe label, so the live title's Text is set once per Fit, to the final choice.
-	private double MeasureTitle(string text)
-	{
-		_probe.FontSize = _title.FontSize;
-		_probe.FontFamily = _title.FontFamily;
-		_probe.FontAutoScalingEnabled = _title.FontAutoScalingEnabled;
-		_probe.CharacterSpacing = _title.CharacterSpacing;
-		_probe.LineHeight = _title.LineHeight;
-		_probe.Text = text;
-		OwnScript.InOwnScript(_probe); // the Persian family a Farsi title gets, before it is measured
-		double width = _probe.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
-		_probe.Text = string.Empty;
-		return width;
-	}
+	// Each title label measures its own fixed words (no Text swap, no probe): its desired width with no limit.
+	private static double MeasureTitle(Label title) => title.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
 }
