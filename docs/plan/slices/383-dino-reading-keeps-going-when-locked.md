@@ -1,7 +1,7 @@
 ### Slice 383 — Dino: a book keeps reading when the phone is locked
 **Product:** Dino
 
-*Built 2026-11-15 (wave 7), not merged. Verified on the emulator and on the S21 (pack path, about 6 s locked); a long locked read and iOS are not yet verified.*
+*Built 2026-11-15 (wave 7), merged as PR #1169 (59fe69c5). Verified on the emulator and on the S21 (pack path, about 6 s locked); a long locked read and iOS are not yet verified.*
 
 **Touches:** `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `src/Dino/DinoReader.App/ReadingSession.cs`, `src/Dino/DinoReader.Core/SilentBeat.cs`, `src/Dino/DinoReader.Core/BeatCoverFacts.cs`, `src/Dino/DinoReader.App/WindowForeground.cs`, `src/Dino/DinoReader.App/Platforms/Android/**` (only if a media playback service or manifest entry is needed), `src/Dino/DinoReader.App/Platforms/iOS/Info.plist` (only if a background mode is missing), `tests/Dino/DinoReader.Tests/SilentBeatTests.cs`, `tests/Dino/DinoReader.Tests/BeatCoverFactsTests.cs`, `.maestro/dino/silent-piece-beat-lock.yaml`, `.maestro/dino/read-while-locked.yaml` (new), `src/Dino/DinoReader.App/CLAUDE.md`, `src/Dino/DinoReader.App/Platforms/iOS/**` (only the audio-session code, if the iOS side needs it), `docs/plan/slices/383-dino-reading-keeps-going-when-locked.md`
 
@@ -40,7 +40,7 @@
   - Skipped #5 (`reviews/pr-1169-check.md`): "Now a one-bool wrapper (Hidden = !PageShown)" - low.
 - Applied: high #3, #4 (both flows now fail against the old behaviour: they expect the silent piece to pass while locked), #5 and #8 (dead window-foreground inputs and `WindowForeground` removed), #9 (finish line names pages read of the page count), #10 (ticks corrected); medium #1 (the pages record is cleared on `StartAtAsync`) and #3 (test bookkeeping under `#if DEBUG`; #2's bool became `volatile` with it).
 - Skipped #7 (`reviews/pr-1169-high.md`): "is written on every Window.Stopped" - low; the line now says only that the window stopped.
-- Test count (`reviews/pr-1169-medium.md`): `BeatCoverFactsTests` fell from 2809 to 34 cases because its exhaustive window-and-page input theory lost its window inputs; other test classes are unchanged (per-class lists in `s383/tmp/perclass-*.txt`).
+- Test count (`reviews/pr-1169-medium.md`): `BeatCoverFactsTests` fell from 2809 to 34 cases because its exhaustive window-and-page input theory lost its window inputs; other test classes are unchanged (the per-class lists in `s383/tmp/perclass-*.txt` were deleted with the worktree, not kept).
 - Skipped #2 (`reviews/pr-1169-medium.md`): "`_windowStopped` plain bool written on UI thread, read on beat thread, no volatile" - not skipped in effect: made volatile while moving it under `#if DEBUG` (#3).
 - Skipped #4 (`reviews/pr-1169-medium.md`): "nothing shows the read survives Doze/iOS suspension with the screen off" - a device question, already in Not yet verified above.
 - Skipped #5 (`reviews/pr-1169-medium.md`): "the flow cannot assert an absent line" - low, the flow's reading-to-the-end check is what counts.
@@ -65,7 +65,7 @@
 - S21, real lock: Good Enough in Farsi plays to the end with the screen locked (logcat shows every page read while `mWakefulness` is Asleep or Dozing).
 - iOS: compile on Windows; TestFlight check that a book plays to the end with the iPhone locked.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 Goes in `src/Dino/DinoReader.App/CLAUDE.md`, replacing the older window rule there:
 - A playing read and its silent beats go on while the window is stopped (lock, screen off, Home, another app); only a gate or sheet over the page pauses a silent beat (`BeatCoverFacts.Hidden = !PageShown`). (Slice 383: docs/plan/slices/383-dino-reading-keeps-going-when-locked.md)
 

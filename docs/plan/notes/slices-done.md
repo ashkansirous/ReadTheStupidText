@@ -270,6 +270,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 382 | Dino reorder: the held book keeps wiggling, a drag needs no hold in edit mode, covers sharp on first open | built, not yet verified | #1162 | | [382-dino-reorder-held-book-wiggles-plain-drag.md](../slices/382-dino-reorder-held-book-wiggles-plain-drag.md) |
 | 386 | Dino: the `default-view-per-book` flow fails on main (`"Picture only.*Selected" is visible`); find the cause and fix it | verified | #1163 | | [386-dino-default-view-per-book-flow-fails.md](../slices/386-dino-default-view-per-book-flow-fails.md) |
 | 391 | Dino Windows: Enter on the first-run story-languages step does not open the book picker (`dino-onboarding-keys` fails), which blocks `dino-reorder` on the VM | built | #1170 | | [391-dino-windows-first-run-enter-on-story-languages.md](../slices/391-dino-windows-first-run-enter-on-story-languages.md) |
+| 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | built, not yet verified | #1169 | | [383-dino-reading-keeps-going-when-locked.md](../slices/383-dino-reading-keeps-going-when-locked.md) |
 
 ## Shared
 
