@@ -1,9 +1,9 @@
 ### Slice 383 — Dino: a book keeps reading when the phone is locked
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `src/Dino/DinoReader.App/ReadingSession.cs`, `src/Dino/DinoReader.Core/SilentBeat.cs`, `src/Dino/DinoReader.Core/BeatCoverFacts.cs`, `src/Dino/DinoReader.App/WindowForeground.cs`, `src/Dino/DinoReader.App/Platforms/Android/**` (only if a media playback service or manifest entry is needed), `src/Dino/DinoReader.App/Platforms/iOS/Info.plist` (only if a background mode is missing), `tests/Dino/DinoReader.Tests/SilentBeatTests.cs`, `tests/Dino/DinoReader.Tests/BeatCoverFactsTests.cs`, `.maestro/dino/silent-piece-beat-lock.yaml`, `.maestro/dino/read-while-locked.yaml` (new), `src/Dino/DinoReader.App/CLAUDE.md`
+**Touches:** `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `src/Dino/DinoReader.App/ReadingSession.cs`, `src/Dino/DinoReader.Core/SilentBeat.cs`, `src/Dino/DinoReader.Core/BeatCoverFacts.cs`, `src/Dino/DinoReader.App/WindowForeground.cs`, `src/Dino/DinoReader.App/Platforms/Android/**` (only if a media playback service or manifest entry is needed), `src/Dino/DinoReader.App/Platforms/iOS/Info.plist` (only if a background mode is missing), `tests/Dino/DinoReader.Tests/SilentBeatTests.cs`, `tests/Dino/DinoReader.Tests/BeatCoverFactsTests.cs`, `.maestro/dino/silent-piece-beat-lock.yaml`, `.maestro/dino/read-while-locked.yaml` (new), `src/Dino/DinoReader.App/CLAUDE.md`, `src/Dino/DinoReader.App/Platforms/iOS/**` (only the audio-session code, if the iOS side needs it), `docs/plan/slices/383-dino-reading-keeps-going-when-locked.md`
 
 **Why.** The user reported this on 2026-11-14, Dino 1.129.0, while reading a book in Farsi to their daughter: "it simply stopped playing. then I unlocked the phone and it started to read again. there might be a problem with phone staying in locked screen. we should fix it cause I dont want my daughter to look at the screen while I play it for her."
 
