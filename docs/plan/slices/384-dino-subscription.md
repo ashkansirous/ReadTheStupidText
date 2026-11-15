@@ -1,7 +1,7 @@
 # Slice 384 — Dino: a monthly and yearly subscription for every book, alongside buying single books
 **Product:** Dino
 
-*Built 2026-11-15 (wave 2026-11-15), PR #1174, merge pending. Verified on the Android emulator only; see Not yet verified.*
+*Built 2026-11-15 (wave 2026-11-15), merged as PR #1174 (7548ec1d). Verified on the Android emulator only; see Not yet verified.*
 
 **Touches:** `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs` (new), `src/Dino/DinoReader.Core/AppConfig.cs`, `src/Dino/DinoReader.Core/StoreCatalog.cs`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/StorePage.xaml*`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/BookUpdater.cs`, `src/Dino/DinoReader.App/ShelfAudioPacks*.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `src/Dino/DinoReader.App/CLAUDE.md`, `worker/entitlements/**`, `worker/products.ts`, `worker/stories.ts`, `worker/index.ts` (added in review: wires the subscription route), `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/entitlements.test.mjs`, `worker/stories.test.mjs`, `worker/CLAUDE.md`, `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/subscription.yaml` (new), `.maestro/dino/paid-books.yaml` (scroll to the second Buy pill below the subscription card), `docs/store-listings/dino/**`, `site/dino/privacy.html`, `src/Dino/DinoReader.App/GrownUpGate.cs`, `src/Dino/DinoReader.App/GrownUpMode.cs`, `src/Dino/DinoReader.App/GrownUpHeader.cs`, `src/Dino/DinoReader.App/BackupPage.xaml.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/StoryTile.cs` (added during build: lapsed tile flag), `docs/plan/slices/384-dino-subscription.md`
 
@@ -195,7 +195,7 @@ Eleven findings files under the reviews folder (all read to the last finding); e
 - Android emulator `emulator-5554`, build `ed97db36e0c6`: `subscription`, `paid-books` and `open-book` flows PASS (runs 1-4; logs `reviews/wave8-device/*-run4.log`).
 - `grown-ups-button` fails the same way on main's build `90f93c61710d` (GalleryDone visible on Settings; `reviews/wave8-device/grown-ups-button-main.log`), so it is not this slice's.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 None from this slice's brief.
 

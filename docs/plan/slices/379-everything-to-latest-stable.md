@@ -1,7 +1,7 @@
 # Slice 379 — Every library, SDK and toolchain to the latest stable version
 **Product:** Shared
 
-*Part A (items 1-6) built, PR #1175, not merged; part B (items 7-9, .NET 11) still planned.*
+*Part A (items 1-6) built, merged as PR #1175 (04205ffc); part B (items 7-9, .NET 11) still planned.*
 
 **Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/AndroidRelease.props` (message text only), `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md` (workload-set text only), `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `CLAUDE.md` (root, item 9 only), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
 
@@ -42,7 +42,7 @@ Part A inventory (built 2026-11-15; no extra source files needed a change, the T
 | .NET SDK (Android, Dino Windows `setup-dotnet`) | 10.0.402 | 10.0.404 | no | latest 10.0 SDK; `global.json` stays at the floor `10.0.401` with `rollForward: latestPatch` (any installed 10.0.4xx at or above it), so a machine on 10.0.402 builds and 10.0.404 rolls forward |
 | .NET SDK (iOS `setup-dotnet`, store-screenshots) | 10.0.401 | unchanged | - | kept exactly as before: an iOS SDK 10.0.404 + workload set 10.0.401 + Xcode 26.6 pairing was never run on `macos-26`; unchanged until Xcode 27 is on the runners (review #1 and #2) |
 | Android and Dino Windows workload set | 10.0.402 | 10.0.404 | no | Android SDK still 36.1.118 (the `AndroidRelease.props` check holds) |
-| iOS workload set and Xcode | 10.0.401, Xcode 26.6 | unchanged | - | blocker: every workload set after 10.0.401 carries iOS SDK 27.x (10.0.402 = 27.0.10722, 10.0.404 = 27.2.10000, needs Xcode 27), and the `macos-26` image lists Xcode 26.6 at most (https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md, read 2026-11-15). Move the iOS pins with Part B or when the image has Xcode 27 |
+| iOS workload set and Xcode | 10.0.401, Xcode 26.6 | unchanged | - | blocker: every workload set after 10.0.401 carries iOS SDK 27.x (10.0.402 = 27.0.10722, 10.0.404 = 27.2.10000, needs Xcode 27), and the `macos-26` image lists Xcode 26.6 at most (https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md, read 2026-11-15). Correction (coordinator, 2026-11-15): GitHub has an `xcode-27` image (`runs-on: xcode-27`, macOS 27, Xcode 27.0-27.2, public preview; actions/runner-images issue 14404), so the blocker is "iOS jobs not yet moved to `xcode-27`", not "no runner has Xcode 27". Move the iOS pins with Part B by switching the iOS jobs to that image |
 | Microsoft.Extensions.DependencyInjection / Logging.Debug | 10.0.9 / 10.0.0 | 10.0.15 | no | 11.0.0 is Part B |
 | Microsoft.WindowsAppSDK | 2.1.3 | 2.6.5 | minor | App builds; notes: 2.4.0 moves unpackaged `LocalSettings` registry path (App is MSIX, not affected) |
 | Microsoft.Windows.SDK.BuildTools / .WinApp | 10.0.28000.1839 / 0.3.1 | 10.0.28000.2957 / 0.8.0 | 0.x | App builds |
@@ -96,6 +96,6 @@ Part B — .NET 11:
 - TestFlight build of each app.
 - RTST Scan flow.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 Already edited on the branch: the SDK floor and iOS pin note in `.github/CLAUDE.md` (Slice 379: docs/plan/slices/379-everything-to-latest-stable.md).
