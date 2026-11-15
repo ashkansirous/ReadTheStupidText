@@ -15,7 +15,7 @@ internal sealed class ShelfHeader : Grid
 	private const double RailNameSpacing = 10;
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
-	private readonly Label _title = new() { AutomationId = "GalleryTitle", FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
+	private readonly Label _title = new() { AutomationId = "GalleryTitle", FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -23,6 +23,7 @@ internal sealed class ShelfHeader : Grid
 	private bool _isRail;
 	private bool _flagShown;
 	private double _lastWidth;
+	private double _lastPill;
 
 	public ShelfHeader(StoryLanguageButton flag)
 	{
@@ -37,6 +38,8 @@ internal sealed class ShelfHeader : Grid
 		_title.GestureRecognizers.Add(tap);
 		Children.Add(_row);
 		SizeChanged += (_, _) => FitWhenWidthChanged();
+		GrownUps.HandlerChanged += (_, _) => FitWhenPillChanged(); // Slice 387: the pill can only be measured once it has a native view
+		GrownUps.SizeChanged += (_, _) => FitWhenPillChanged(); // and its words grow with the font scale
 	}
 
 	/// <summary>The "Grown-ups" pill; a tap runs the gate (the page decides).</summary>
@@ -144,6 +147,21 @@ internal sealed class ShelfHeader : Grid
 		}
 	}
 
+	private void FitWhenPillChanged()
+	{
+		double pill = PillRoom();
+		if (Math.Abs(pill - _lastPill) > 0.5)
+		{
+			Fit();
+		}
+	}
+
+	private double PillRoom()
+	{
+		int length = AppResources.Gallery_GrownUpsPill.Length;
+		return ShelfTitleRules.PillWidth(GrownUps.Width, GrownUps.WidthWithLabel(), length, _sizes.PillLabel, _sizes.PillPadLeft, _sizes.PillPadRight, _sizes.PillIcon, _sizes.PillGap);
+	}
+
 	/// <summary>Chooses the title that fits the row: "My stories", "Stories", or none. A no-op until the header has a width.</summary>
 	public void Fit()
 	{
@@ -152,10 +170,11 @@ internal sealed class ShelfHeader : Grid
 			return;
 		}
 
-		double full = MeasureTitle(AppResources.Gallery_Title);
-		double shortWidth = MeasureTitle(AppResources.Gallery_ShelfTitleShort);
+		double full = MeasureTitle(AppResources.Gallery_Title) + ShelfTitleRules.TitleSlack;
+		double shortWidth = MeasureTitle(AppResources.Gallery_ShelfTitleShort) + ShelfTitleRules.TitleSlack;
 		double flag = _flagShown ? _sizes.FlagButton : 0;
-		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, GrownUps.WidthWithLabel(), _sizes.HeaderGap);
+		_lastPill = PillRoom();
+		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, _lastPill, _sizes.HeaderGap);
 		TitleState = ShelfTitleRules.Fit(available, full, shortWidth);
 		_title.IsVisible = TitleState != ShelfTitle.Hidden;
 		_title.Text = TitleState == ShelfTitle.Short ? AppResources.Gallery_ShelfTitleShort : AppResources.Gallery_Title;
