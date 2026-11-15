@@ -1,7 +1,7 @@
 # Slice 390 — Dino iOS purchases: StoreKit 2
 **Product:** Dino
 
-*Parked 2026-11-15 (night 2026-11-14-1547, wave 7): waits for the user's choice of route.*
+*Built 2026-11-15, merged as PR #1189 (b0c4aa27); not yet verified on the iPhone (sandbox buy and restore). Item 4 passed on the branch: dinoreader-ios 43712501183 (XCFramework built, app compiled) and dinoreader-ios-sim 43714895380 (flow passed on attempt 2; attempt 1 timed out on `StoryTile`, the known flaky wait, Slice 393 item 23).*
 
 **Decision (user, 2026-11-15): route (a)**, our own small Swift wrapper over StoreKit 2 (products, buy, restore, owned books), built into an XCFramework by a macOS/Xcode CI step and called from `IosPurchases.cs`; no Plugin.InAppBilling. The Worker's purchase check takes StoreKit 2's signed transaction (JWS) for iOS. The sandbox buy and restore on the user's iPhone goes to Not yet verified.
 
@@ -20,7 +20,7 @@
 - [x] 1. Check the StoreKit 2 binding available to .NET for iOS with `library-docs` before writing code. (Done in the park note; context7 `/dotnet/macios` re-checked 2026-11-15: no StoreKit 2 binding, native frameworks load through `NativeReference` + `NativeLibrary`.)
 - [x] 2. Move `IosPurchases` to StoreKit 2 with the same behaviour for the shared `IPurchases` contract (products, buy, restore, owned books, receipt sent to the server). Built: `Platforms/iOS/StoreKit2` (Swift file, C functions via `@_cdecl`, built into `DinoStoreKit.xcframework` by `build-xcframework.sh`), `StoreKit2Bridge.cs`, `IosPurchases.cs`, pure `DinoReader.Core/StoreKit2Answers.cs`; the proof is the transaction's JWS and the Worker (`worker/entitlements/apple-jws.ts`, `apple.ts`) verifies it to Apple Root CA - G3, still accepting plain transaction ids from older builds.
 - [x] 3. Remove the `CA1422` suppression; the build passes with the gate on. (`net10.0-ios` Debug compiles on Windows with the gate; the macOS jobs still owe the XCFramework and signed build.)
-- [ ] 4. The macOS CI jobs `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` pass on the branch (they build the XCFramework first).
+- [x] 4. (2026-11-15: 43712501183, 43714895380) The macOS CI jobs `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` pass on the branch (they build the XCFramework first).
 
 ## Verification
 
@@ -33,7 +33,7 @@
 
 #### Not yet verified
 
-- The Swift wrapper and the XCFramework have never been compiled (Windows has no Xcode): `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` on the branch are the first proof.
+- The signed Release build with the static XCFramework: first proven by release-dino after the merge.
 - Sandbox buy and restore on the user's iPhone with a TestFlight build (a paid book and a subscription plan; Restore on a second install).
 - The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
 
