@@ -39,15 +39,9 @@ public class PausedNoticePolicyTests
     public void The_paused_marker_keeps_the_pack_id_and_the_reason_as_separate_fields()
     {
         var lines = new List<string>();
-        var previous = PackDownloadLog.Sink;
-        PackDownloadLog.Sink = lines.Add;
-        try
+        using (PackDownloadLog.CaptureScope(lines.Add))
         {
             PackDownloadHost.LogService(PackDownloadHost.PausedNotifiedAction, "piper-fr", PackDownloadHost.PausedReasonOffline);
-        }
-        finally
-        {
-            PackDownloadLog.Sink = previous;
         }
 
         Assert.Contains(lines, line => line.EndsWith("paused-notified pack=piper-fr reason=offline", StringComparison.Ordinal));
