@@ -1,7 +1,7 @@
 # Slice 380 — Dino Android: product details through the listener only, Slice 358 probe removed
 **Product:** Dino
 
-*Built (wave 2026-11-15), PR #1159.*
+*Built (wave 2026-11-15), merged as PR #1159 (58be727).*
 
 **Touches:** `src/Dino/DinoReader.App/Platforms/Android/Purchases/AndroidPurchases.cs`, `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt`, `docs/plan/slices/380-dino-android-listener-only-details.md`
 
@@ -76,6 +76,6 @@ books query (`QueryOwnedAsync`) stays as it is.
 
 - S21 with a Play internal-track build shows a price for every product and one `product details:` line per refresh (needs the next batched release).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-15)
 
 - Dino Android billing (`AndroidPurchases.cs`): query product details only through the listener overload; never `client.QueryProductDetailsAsync` (empty result, dotnet/android-libraries #1396; revisit with the binding upgrade, Slice 379). (Slice 380: docs/plan/slices/380-dino-android-listener-only-details.md)

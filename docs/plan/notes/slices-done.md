@@ -264,6 +264,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
 | 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | built, not yet verified | #1048, #1097 | | [359-dino-back-cover-picture.md](../slices/359-dino-back-cover-picture.md) |
 | 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | built, not yet verified | #1101, #1113 | | [375-dino-two-picture-sizes.md](../slices/375-dino-two-picture-sizes.md) |
+| 380 | Dino Android: product details through the Play listener only (the async wrapper is always empty, dotnet/android-libraries #1396), Slice 358 probe removed | built | #1159 | — | [380-dino-android-listener-only-details.md](../slices/380-dino-android-listener-only-details.md) |
 
 ## Shared
 
@@ -380,6 +381,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 342 | Listening page: Farsi voice pack | built (#1098); second listen waits for an interactive session | #1098 | | [342-farsi-voice-pack.md](../slices/342-farsi-voice-pack.md) |
 | 376 | Feedback loop 2026-11-13-1149 leftovers (Dino Store submit 401, skip-first-run hook, RTST Farsi flow, selftest mapping, pack version in counts, Worker doc wording, two ClaudeSkills checks) | built | #1130 | | [376-feedback-loop-2026-11-13-1149-leftovers.md](../slices/376-feedback-loop-2026-11-13-1149-leftovers.md) |
 | 378 | Build warnings gate: current GitHub Actions (no Node 20), warnings that fail the build, Android 9-11 scan crop fix | built | #1146 | | [378-build-warnings-gate.md](../slices/378-build-warnings-gate.md) |
+| 388 | Shared tests: `PackDownloadLogTests.UserCancelIsNotLoggedAsAStall` failed once in CI (another test's `PACKDL stall` line leaked into the shared capture); make the capture per test | built | #1156 | — | [388-shared-pack-download-log-capture-per-test.md](../slices/388-shared-pack-download-log-capture-per-test.md) |
+| 389 | Tooling: the `tools/emulator` preflight picks an installed JDK when `JAVA_HOME` points at a removed one, and prints which | built | #1158 | — | [389-tooling-emulator-preflight-picks-an-installed-jdk.md](../slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md) |
 
 ## Batch ordering notes
 
