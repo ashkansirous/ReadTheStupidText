@@ -202,7 +202,7 @@ internal sealed class ShelfHeader : Grid
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 		try
 		{
-			File.AppendAllText(Path.Combine(FileSystem.AppDataDirectory, "shelf-fit.log"), line + "\n");
+			File.AppendAllText(System.IO.Path.Combine(FileSystem.AppDataDirectory, "shelf-fit.log"), line + "\n");
 		}
 		catch (Exception)
 		{
