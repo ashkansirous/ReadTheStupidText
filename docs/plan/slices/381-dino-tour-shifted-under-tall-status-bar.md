@@ -1,9 +1,9 @@
 ### Slice 381 — Dino: the first-run tour's highlights and tooltips sit lower than the real buttons on a tall status bar
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/CornerTour.cs`, `src/Dino/DinoReader.Core/TourGeometry.cs` (new, only if the offset rule is pulled out as pure code), `tests/Dino/DinoReader.Tests/TourGeometryTests.cs` (new, same condition), `.maestro/dino/onboarding-tour-position.yaml` (new), `src/Dino/DinoReader.App/Testing/DinoTestCommands.cs` (a log line with the copy's and the target's bounds), `src/Dino/DinoReader.App/CLAUDE.md`
+**Touches:** `src/Dino/DinoReader.App/CornerTour.cs`, `src/Dino/DinoReader.Core/TourGeometry.cs` (new, only if the offset rule is pulled out as pure code), `tests/Dino/DinoReader.Tests/TourGeometryTests.cs` (new, same condition), `.maestro/dino/onboarding-tour-position.yaml` (new), `src/Dino/DinoReader.App/Testing/DinoTestCommands.cs` (a log line with the copy's and the target's bounds), `src/Dino/DinoReader.App/CLAUDE.md`, `docs/plan/slices/381-dino-tour-shifted-under-tall-status-bar.md`
 
 **Why.** The user reported this on 2026-11-14, Dino 1.129.0, on a Pixel 10 Pro: "the intro was shifted down. everything including the top button, the tool tip for it and the tool tip for store and the rest." Their screenshots: the copy of the "Child's shelf" button is drawn below the real one with its tooltip under it, and the "Grown-ups" copy on the child's shelf sits below the real chip.
 
