@@ -415,6 +415,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Aankopen herstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Een code inwisselen</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>De aankoop is niet gelukt. Probeer het opnieuw.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>De abonnementsinstellingen konden niet worden geopend. Probeer het opnieuw.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Sommige boeken kosten een beetje. Ze worden gekocht met je winkelaccount en er wordt niets over jou of je kind naar ons gestuurd.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Wachten op de winkel…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Je aankopen worden gecontroleerd…</value></data>

@@ -61,7 +61,13 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     {
         try
         {
-            return await platform.ManageSubscriptionAsync();
+            bool opened = await platform.ManageSubscriptionAsync();
+            if (!opened)
+            {
+                fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // the platform's own sheet or page failed without throwing (iOS: a StoreKit error); the page says so
+            }
+
+            return opened;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

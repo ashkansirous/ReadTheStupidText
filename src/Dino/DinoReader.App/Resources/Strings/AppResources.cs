@@ -436,6 +436,7 @@ public static class AppResources
 	public static string Store_RestorePurchases => Get();
 	public static string Store_RedeemCode => Get();
 	public static string Store_BuyFailed => Get();
+	public static string Store_ManageFailed => Get();
 	// Slice 364 (Missing States mock S1-S3): the server-error lines, the Free tag, the "Bought books before?" card and the restore result lines.
 	public static string Error_PaymentRequired => Get();
 	public static string Error_Server => Get();

@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurar compras</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Resgatar um código</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>A compra não foi concluída. Tente novamente.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Não foi possível abrir as configurações da assinatura. Tente novamente.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Alguns livros custam um pouco. São comprados pela sua conta da loja, e nada sobre você ou seu filho é enviado para nós.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Aguardando a loja…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Verificando suas compras…</value></data>

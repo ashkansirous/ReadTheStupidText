@@ -419,6 +419,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restore purchases</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Redeem a code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>The purchase didn’t go through. Please try again.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Couldn’t open the subscription settings. Please try again.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Some books cost a little. They are bought through your store account, and nothing about you or your child is sent to us.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Waiting for the store…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Checking your purchases…</value></data>

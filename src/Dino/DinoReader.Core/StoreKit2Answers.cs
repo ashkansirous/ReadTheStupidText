@@ -104,14 +104,14 @@ public static class StoreKit2Answers
         return new StoreKitBuyAnswer(outcome, transaction);
     }
 
-    /// <summary>True when the answer is <c>ok</c> (restore and redeem answer nothing else); false for a failure or an unreadable answer.</summary>
+    /// <summary>True when the answer is <c>ok</c> (restore, redeem and the Manage Subscriptions sheet answer nothing else); false for a failure or an unreadable answer.</summary>
     public static bool IsOk(string json)
     {
         using JsonDocument? doc = Open(json);
         return doc is not null;
     }
 
-    /// <summary>The <c>error</c> of a failed answer (<c>domain:code</c> or <see cref="Unsupported"/>), or null when it was ok or unreadable.</summary>
+    /// <summary>The <c>error</c> of a failed answer (<c>domain:code</c>, <see cref="Unsupported"/> or <see cref="NoScene"/>), or null when it was ok or unreadable.</summary>
     public static string? Error(string json)
     {
         try

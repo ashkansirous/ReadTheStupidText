@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>恢复购买</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>兑换代码</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>购买没有成功，请重试。</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>无法打开订阅设置，请重试。</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>有些书需要付一点费用。购买通过你的商店账户完成，我们不会收到任何关于你或你孩子的信息。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>正在等待商店…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>正在检查你的购买…</value></data>

@@ -416,6 +416,7 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurer les achats</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Utiliser un code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>L’achat n’a pas abouti. Veuillez réessayer.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Impossible d’ouvrir les réglages de l’abonnement. Veuillez réessayer.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Certains livres coûtent un peu. Ils s’achètent avec votre compte de la boutique, et rien sur vous ni sur votre enfant ne nous est envoyé.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>En attente de la boutique…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Vérification de vos achats…</value></data>
