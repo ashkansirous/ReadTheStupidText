@@ -77,6 +77,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
+- **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
+- **Device:** Windows Hyper-V VM subscription flow.
+- **You:** real store sandbox (Play licence tester, Apple sandbox) after the store setup.
+- **Device:** Worker route `GET /api/stories/subscription` live, after the batched release deploy.
+- **Device:** `store-products.mjs` request shapes (UNVERIFIED, never run with `--apply`).
+- **Device:** offline 3-day lock on a real device.
+- **You:** restore on iOS.
+
 ### Slice 383: Dino: a book keeps reading when the phone is locked ([slice](slices/383-dino-reading-keeps-going-when-locked.md))
 - **Device:** A long locked read (1 minute or more, three-little-pigs with its real Farsi pack on the S21 dev install; `KEYCODE_WAKEUP` before `open-book`): a silent beat's delay is not stalled by Doze.
 - **You:** iOS TestFlight: a book plays to the end with the iPhone locked, the silent beat's delay runs, and `OnDisappearing` does not pause it on lock.
@@ -536,6 +545,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 379 part A: Everything to the latest stable ([slice](slices/379-everything-to-latest-stable.md))
+- **Device:** iOS jobs on CI after merge (SDK 10.0.401 / Xcode 26.6 pins).
+- **Device:** Node 26 in the release scripts (first release run).
+- **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
+- **Device:** ARM64 MSIX.
+- **Device:** Windows tray read in the Hyper-V VM.
+- **You:** TestFlight build of each app.
+- **Device:** RTST Scan flow.
 
 ### Slice 389: Tooling: the emulator preflight picks an installed JDK ([slice](slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md))
 - **Device:** `run-flows.ps1` end to end with a removed `JAVA_HOME` (cached build, then `-NoBuild`): the `Confirm-EmulatorPreflight` wiring prints the chosen JDK, and with no JDK at all it exits 7. The pick and the Maestro preflight themselves passed on emulator-5554.

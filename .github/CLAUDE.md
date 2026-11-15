@@ -96,7 +96,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **iOS toolchain pin:** the iOS workflows install dotnet 10.0.401 exactly (not 10.0.404: an iOS SDK/workload-set pairing off 10.0.401 was never run on macos-26; Slice 379) with workload set 10.0.401
 > (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27 (every workload set after 10.0.401 carries
-> iOS SDK 27.x; checked 2026-11-15, Slice 379). Bump the SDK, workload set and Xcode together, once Xcode 27 is on the runners. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
+> iOS SDK 27.x; checked 2026-11-15, Slice 379). GitHub does have an `xcode-27` image (`runs-on: xcode-27`, macOS 27, Xcode 27.0-27.2, public preview; actions/runner-images issue 14404), so the pins can move by switching the iOS jobs to it. Bump the SDK, workload set and Xcode together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
 > **Android toolchain pin (Slice 72):** `android.yml` and `dinoreader-android.yml` pin dotnet 10.0.404 + workload set
 > 10.0.404 (Android SDK 36.1.118, the first with R8 obfuscation). `src/Shared/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
