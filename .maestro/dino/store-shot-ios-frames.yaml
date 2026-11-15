@@ -53,7 +53,7 @@ name: Store screenshots, Dino Reader, iOS
 - openLink: "dino-test://enter-grown-up"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 3000
     optional: true
 - runFlow:
     when:
@@ -85,12 +85,17 @@ name: Store screenshots, Dino Reader, iOS
 - assertNotVisible:
     text: ".*(Would Like to Access the Microphone|Don.t Allow).*"
 - takeScreenshot: store-dino-ios-2-record
-# No relaunch here: set-language rebuilds the window's root (DinoTestCommands.cs, RebuildRoot), so the record intro is gone and a new shelf is up whatever screen the flow was on.
+# Back to the kids' shelf before set-language: relaunch keeping the data (no clearState), as store-shot-phone.yaml does. set-language rebuilds the root (DinoTestCommands.cs SetLanguage, App.xaml.cs RebuildRoot) but GrownUpMode survives it, so from the record intro (grown-up mode on) run 43733772461 got a corner shelf, not the kids' shelf, and the iPhone 6.5" link timed out (code=60) with the intro screen up. A relaunch builds a new window, and CreateWindow leaves grown-up mode (App.xaml.cs:68).
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
 # Shot 3: the same page as shot 1 in Farsi. set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
 - openLink: "dino-test://set-language?lang=fa&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 3000
     optional: true
 - runFlow:
     when:
@@ -98,9 +103,9 @@ name: Store screenshots, Dino Reader, iOS
     commands:
       - tapOn:
           text: Open
-# Wait for a string only the Farsi shelf shows (Gallery_Title, Gallery_ShelfTitleShort or Gallery_ForGrownUps in AppResources.fa.resx), not StoryTile: the English shelf has it too.
+# Wait for a string only the Farsi shelf shows (Gallery_Title "داستان‌های من", Gallery_ShelfTitleShort "داستان‌ها" or the grown-ups pill Gallery_GrownUpsPill "بزرگ‌ترها" in AppResources.fa.resx; Gallery_ForGrownUps is the gate page's text, not the shelf's), not StoryTile: the English shelf has it too.
 - extendedWaitUntil:
-    visible: ".*(داستان|برای بزرگسالان).*"
+    visible: ".*(داستان|بزرگ).*"
     timeout: 60000
 - extendedWaitUntil:
     visible:
@@ -119,7 +124,7 @@ name: Store screenshots, Dino Reader, iOS
 - openLink: "dino-test://open-book?id=three-little-pigs&page=6"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 3000
     optional: true
 - runFlow:
     when:
@@ -147,7 +152,7 @@ name: Store screenshots, Dino Reader, iOS
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 3000
     optional: true
 - runFlow:
     when:
@@ -167,7 +172,7 @@ name: Store screenshots, Dino Reader, iOS
 - openLink: "dino-test://enter-grown-up?tab=books"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 3000
     optional: true
 - runFlow:
     when:

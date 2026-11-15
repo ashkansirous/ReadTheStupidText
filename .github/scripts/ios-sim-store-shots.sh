@@ -19,6 +19,10 @@ OUT="${4:?out folder}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/null}"
 FAILED=0
+# Maestro waits this long (milliseconds, MAESTRO_DRIVER_STARTUP_TIMEOUT) for its iOS driver to answer; the 6.9" simulator missed the default twice (run 43733772461).
+DRIVER_STARTUP_TIMEOUT_MS=180000
+# One try plus one retry per device.
+FLOW_ATTEMPTS=2
 
 # One line per device: label | ';'-separated device-type name patterns, in order | sizes App Store Connect accepts for that slot (WxH, portrait).
 device_specs() {
@@ -99,13 +103,41 @@ collect_shots() {
 # Runs the flow on a booted simulator; prints Maestro's hierarchy when it fails.
 run_flow() {
   local udid="$1" flow_run="$2" test_out="$3" rc=0
-  maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run" || rc=$?
+  MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run" || rc=$?
   if [ "$rc" != "0" ]; then
     echo "::group::maestro hierarchy"
     maestro --device "$udid" hierarchy || true
     echo "::endgroup::"
   fi
   return "$rc"
+}
+
+# Empties the attempt's output folder and removes the flow's shots from the working directory (Maestro may write them there), so a retry never mixes in a shot of the attempt before.
+reset_attempt() {
+  local test_out="$1" name
+  rm -rf "$test_out"
+  mkdir -p "$test_out"
+  while IFS= read -r name; do
+    [ -n "$name" ] && rm -f "$PWD/$name.png"
+  done < <(flow_shots)
+}
+
+# Runs the flow, and once more on a fresh output folder when the first attempt failed (run 43733772461: "iOS driver not ready in time" on the iPhone 6.9", twice, before any step ran).
+# Only the last attempt's shots are collected. Returns the last attempt's status.
+run_flow_with_retry() {
+  local udid="$1" flow_run="$2" test_out="$3" attempt=1
+  while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
+    reset_attempt "$test_out"
+    if run_flow "$udid" "$flow_run" "$test_out"; then
+      return 0
+    fi
+    if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
+      echo "::warning::attempt $attempt of the store-shot flow failed on $udid; retrying once on a fresh output folder (its shots are discarded)"
+      note "- RETRY: attempt $attempt failed, the flow runs once more (shots of the failed attempt discarded)"
+    fi
+    attempt=$((attempt + 1))
+  done
+  return 1
 }
 
 # One device: boot, install, run, collect, delete the simulator. Any failure is recorded and the next device still runs.
@@ -125,7 +157,7 @@ shoot_device() {
     test_out="$RUNNER_TEMP/maestro-out-$label"
     if ! prepare_flow "$bundle_id" "$flow_run"; then
       problem "$label: the appId line was not swapped for $bundle_id"
-    elif run_flow "$udid" "$flow_run" "$test_out"; then
+    elif run_flow_with_retry "$udid" "$flow_run" "$test_out"; then
       collect_shots "$label" "$accepted" "$test_out"
     else
       problem "$label: the flow failed"
