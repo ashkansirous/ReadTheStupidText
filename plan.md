@@ -20,7 +20,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 385 | RTST: the `voice-cancel-holds-scan-pack` flow fails on main's build (`PackStatusLabel is visible`); find whether the app or the flow is wrong, then fix it | planned | | | [385-rtst-voice-cancel-flow-fails-on-main.md](docs/plan/slices/385-rtst-voice-cancel-flow-fails-on-main.md) |
 
 ### Dino Reader
 
@@ -34,7 +33,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 382 | Dino reorder: the held book keeps wiggling, a drag needs no hold in edit mode, covers sharp on first open | planned | | | [382-dino-reorder-held-book-wiggles-plain-drag.md](docs/plan/slices/382-dino-reorder-held-book-wiggles-plain-drag.md) |
 | 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | planned | | | [383-dino-reading-keeps-going-when-locked.md](docs/plan/slices/383-dino-reading-keeps-going-when-locked.md) |
 | 384 | Dino: a monthly (£1.99) and yearly (£14.99) subscription with a 7-day trial for every paid book, alongside single-book sales; lapsed subscription books greyed for parents, hidden from the child | planned | | | [384-dino-subscription.md](docs/plan/slices/384-dino-subscription.md) |
-| 386 | Dino: the `default-view-per-book` flow fails on main (`"Picture only.*Selected" is visible`); find the cause and fix it | planned | | | [386-dino-default-view-per-book-flow-fails.md](docs/plan/slices/386-dino-default-view-per-book-flow-fails.md) |
 | 387 | Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button on iPhone 6.9" and 6.5"; fix the layout on iOS and Android alike | planned (items 1-2 merged #1157, Android verified; left: item 3, the iOS title still shortens with room to spare) | | | [387-dino-shelf-title-cut-by-grownups-button.md](docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md) |
 | 390 | Dino iOS purchases: StoreKit 1 (obsoleted from iOS 18) to StoreKit 2, then remove the file-scoped CA1422 suppression from Slice 378 | planned | | | [390-dino-ios-purchases-storekit-2.md](docs/plan/slices/390-dino-ios-purchases-storekit-2.md) |
 
@@ -95,7 +93,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 435 checks across 167 slices (Read The Stupid Text 29, Dino Reader 256, Shared 150), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 436 checks across 168 slices (Read The Stupid Text 29, Dino Reader 257, Shared 150), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Feedback loop 2026-11-14 open findings:** give the folder path with every "pictures saved" report; agents read a file before Edit instead of falling back to Python; no background forks in briefed agents; the user's leftover `Gemini_Generated_Image_*` downloads; confirming "3.1 Pro" in Gemini's picker; whether to push Good Enough's uncommitted `gedlg` work as a WIP branch (the user's call; they stopped the work) ([note](docs/plan/notes/2026-11-14-feedback-loop.md)).
 - **Tooling gap (Slice 362):** `Test-LogMarkerCanMatch` in `tools/emulator/common.ps1` tests a marker with " end" appended, so a marker ending mid-token (`lines=`) passes lint but can never match at run time; found in Slice 362's emulator run 2 ([slice](docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md)).
 - **Tooling follow-up (Slice 389):** `tools/emulator/store-screenshots.ps1` and the `tools/phone` Maestro launchers do not call `Set-ProcessJavaHome` (`tools/emulator/common.ps1`) yet, so a dead `JAVA_HOME` still breaks them ([slice](docs/plan/slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md)).

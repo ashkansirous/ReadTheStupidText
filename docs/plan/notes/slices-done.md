@@ -101,6 +101,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 341 | Listening page: Farsi short words never dropped | built | #993 | | [341-farsi-short-words-never-dropped.md](../slices/341-farsi-short-words-never-dropped.md) |
 | 361 | RTST `sentence-highlight` Maestro flow fails on the emulator: flow bug, fixed with a `SENTENCE_MOVED` marker | verified | #1051 | | [361-sentence-highlight-fails-on-emulator.md](../slices/361-sentence-highlight-fails-on-emulator.md) |
 | 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | built, not yet verified | #1090 | | [373-rtst-voice-rows-rt1-rt2.md](../slices/373-rtst-voice-rows-rt1-rt2.md) |
+| 385 | RTST: the `voice-cancel-holds-scan-pack` flow fails on main's build (`PackStatusLabel is visible`); find whether the app or the flow is wrong, then fix it | verified | #1165 | | [385-rtst-voice-cancel-flow-fails-on-main.md](../slices/385-rtst-voice-cancel-flow-fails-on-main.md) |
 
 ## Dino Reader
 
@@ -265,6 +266,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | built, not yet verified | #1048, #1097 | | [359-dino-back-cover-picture.md](../slices/359-dino-back-cover-picture.md) |
 | 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | built, not yet verified | #1101, #1113 | | [375-dino-two-picture-sizes.md](../slices/375-dino-two-picture-sizes.md) |
 | 380 | Dino Android: product details through the Play listener only (the async wrapper is always empty, dotnet/android-libraries #1396), Slice 358 probe removed | built | #1159 | — | [380-dino-android-listener-only-details.md](../slices/380-dino-android-listener-only-details.md) |
+| 386 | Dino: the `default-view-per-book` flow fails on main (`"Picture only.*Selected" is visible`); find the cause and fix it | verified | #1163 | | [386-dino-default-view-per-book-flow-fails.md](../slices/386-dino-default-view-per-book-flow-fails.md) |
 
 ## Shared
 

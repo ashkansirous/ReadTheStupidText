@@ -3,6 +3,8 @@
 
 *Built (wave 2026-10-30), PR #575.*
 
+*Corrected 2026-11-15 ([Slice 386](386-dino-default-view-per-book-flow-fails.md)): the statements below that Good Enough sets `textInPictures` and opens in Picture only are history. Slice 350 (Good Enough v9, text-free pictures) removed the flag from `content/dino/good-enough/book.json`, so Good Enough now opens in Picture + text; no shipped book sets it. The flow `default-view-per-book.yaml` was updated to match, and the "not shown failing on old main" line under Not yet verified is moot.*
+
 **Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/PictureTextPages.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `src/DinoReader.Core/StoryJson.cs`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `content/dino/good-enough/book.json`, the committed Good Enough starter package, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `.maestro/dino/default-view-per-book.yaml` (new), `src/DinoReader.App/ModeSwitch.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`
 
 **Why.** Good Enough's pages 1-7 have the story words drawn into the pictures. That is on purpose: it shows parents they can use their own pictures with words in them. **Never redraw them.** (**Reversed 2026-11-10 by the user: Good Enough is redrawn with no text; see Slice 350, docs/plan/slices/350-dino-high-res-pictures.md.**) But the book opens in Picture + text today, so kids see the words twice (in the picture and in the panel).
@@ -54,7 +56,7 @@ No other book has words drawn in its pictures (Elves and Shoemaker page 15's sho
 
 #### Not yet verified
 
-- The flow `default-view-per-book.yaml` has not been shown failing on old main.
+- ~~The flow `default-view-per-book.yaml` has not been shown failing on old main.~~ Moot (Slice 386).
 - Good Enough pages 8 and 10 not checked by eye.
 - Sideways (landscape) layout not checked.
 - Windows head not checked.
