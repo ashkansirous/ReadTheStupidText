@@ -17,6 +17,8 @@
   Slice 215: before every flow, and after a failed one, `pm path android` must answer and sys.boot_completed must be 1. If not, it prints `EMULATOR UNHEALTHY: <what>`, saves
   evidence (crash log, dumpsys meminfo, host free RAM and the qemu working set) under maestro-out\i<n>\unhealthy-*, restarts the emulator from a neutral folder and runs the flow once more.
   The second unhealthy check of a run exits 5 naming it.
+  Slice 389: Maestro needs a JDK (17 or newer); the preflight keeps a valid JAVA_HOME, else picks an installed one for this process, else accepts `java` on PATH, else prints `JDK not found` and exits 7
+  (a host tooling problem: install a JDK, do not restart the emulator).
   Slice 225: -Flow takes a flow name (`-Flow record-page-shows-words`); a path to the yaml is reduced to its name. It also finds a flow under .maestro/<app>/needs-file/ (run by name only; push its file first).
   The install check reads `pm list packages` one line per package; a stale Maestro driver is force-stopped before the ANR-dialog UI dump.
   Slice 241: (1) when a failed flow shows the app crashed or hit an ANR (crash buffer / ActivityManager), the remaining flows are NOT RUN (reported with the crash lines) instead of each waiting out
@@ -313,6 +315,7 @@ function Test-MaestroPreflight([string]$Maestro, [int]$TimeoutSeconds = $script:
 }
 
 function Confirm-EmulatorPreflight([string]$Maestro) {
+    if (-not (Set-ProcessJavaHome)) { exit $script:ExitJdkNotFound }   # Slice 389: a dead JAVA_HOME is replaced for this process; no JDK at all stops here with one line (exit 7, not the emulator's 5)
     if (Test-MaestroPreflight $Maestro $script:PreflightFirstTimeoutSeconds) { Write-Host 'PREFLIGHT passed: the emulator and the Maestro driver answer.'; return }
     Write-Host 'PREFLIGHT failed: cold-booting the emulator and trying once more.'
     Restart-Emulator

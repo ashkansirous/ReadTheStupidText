@@ -118,6 +118,9 @@ jobs:
       - name: No-voice flow skip self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-no-voice-skip.ps1
 
+      - name: JDK pick self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-jdk-pick.ps1
+
       - name: Dialog guard and closure-scope self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-dialog-guard.ps1
 
