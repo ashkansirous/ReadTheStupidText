@@ -85,6 +85,34 @@
 		<ImageAsset Include="Platforms\iOS\Resources\Assets.xcassets\**\*.*" Link="Assets.xcassets\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<!-- Slice 390: StoreKit 2 is Swift-only, so the iOS purchases call our own wrapper (Platforms/iOS/StoreKit2) through C function pointers
+	     (StoreKit2Bridge, hence AllowUnsafeBlocks). DinoStoreKit.xcframework is built by build-xcframework.sh (macOS and Xcode only: the Dino iOS workflows
+	     run it as their own step first, and this target runs it when the output is missing or older than the Swift sources) into obj/ and linked into the app as a static library (ForceLoad keeps the @_cdecl exports; LinkWithSwiftSystemLibraries links Swift's own libraries), reached by StoreKit2Bridge through DllImport("__Internal") (a dynamic framework from a Swift package archive did not build). Windows compile-only builds (-p:IncludeIos=true) have no Xcode: there the library is
+	     simply absent and nothing is added; on macOS a missing xcframework after the build step is a hard error. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LinkWithSwiftSystemLibraries>true</LinkWithSwiftSystemLibraries>
+		<DinoStoreKitDir>$(MSBuildProjectDirectory)/obj/DinoStoreKit</DinoStoreKitDir>
+		<DinoStoreKitXcframework>$(DinoStoreKitDir)/DinoStoreKit.xcframework</DinoStoreKitXcframework>
+	</PropertyGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<DinoStoreKitSource Include="Platforms/iOS/StoreKit2/build-xcframework.sh;Platforms/iOS/StoreKit2/Sources/**/*.swift" />
+	</ItemGroup>
+	<Target Name="BuildDinoStoreKit" Inputs="@(DinoStoreKitSource)" Outputs="$(DinoStoreKitXcframework)/Info.plist" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And $([MSBuild]::IsOSPlatform('OSX'))">
+		<Exec Command="bash &quot;$(MSBuildProjectDirectory)/Platforms/iOS/StoreKit2/build-xcframework.sh&quot; &quot;$(DinoStoreKitDir)&quot;" />
+	</Target>
+	<Target Name="AddDinoStoreKitFramework" BeforeTargets="BeforeBuild" DependsOnTargets="BuildDinoStoreKit" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<Error Condition="$([MSBuild]::IsOSPlatform('OSX')) And !Exists('$(DinoStoreKitXcframework)/Info.plist')" Text="DinoStoreKit.xcframework is missing at $(DinoStoreKitXcframework) after build-xcframework.sh (Slice 390)." />
+		<ItemGroup Condition="Exists('$(DinoStoreKitXcframework)/Info.plist')">
+			<NativeReference Include="$(DinoStoreKitXcframework)">
+				<Kind>Static</Kind>
+				<ForceLoad>true</ForceLoad>
+				<SmartLink>False</SmartLink>
+				<Frameworks>StoreKit Foundation</Frameworks>
+			</NativeReference>
+		</ItemGroup>
+	</Target>
+
 	<!-- App icon: deliberately NO <MauiIcon>. MauiIcon generates a mipmap/appicon adaptive icon
 	     and rewrites the manifest's android:icon, which would overwrite the ready-made "Book hug"
 	     set in Platforms/Android/Resources/mipmap-*. Those folders are picked up as Android

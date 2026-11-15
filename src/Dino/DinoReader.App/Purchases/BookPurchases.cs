@@ -9,7 +9,7 @@ namespace DinoReader;
 /// listeners when it changed. Nothing here is saved: on launch and whenever the store page opens the app asks the store again, so a book bought or redeemed outside the app shows as owned
 /// without pressing Restore. A store that cannot be reached leaves the last snapshot in place.
 /// </summary>
-public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null)
+public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null) : IDisposable
 {
     // Slice 384: the Worker that asks Apple or Google for the subscription's real end date (iOS and Android; Windows keeps its own end date). The host registers none, so the app uses the real client.
     private readonly ISubscriptionEnd _end = subscriptionEnd ?? new SubscriptionEndClient();
@@ -20,6 +20,11 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
     private readonly SemaphoreSlim _gate = new(1, 1);
     private PurchaseSnapshot _snapshot = PurchaseSnapshot.Empty;
+
+    // Slice 390: the listing of the last read, re-read when the platform store reports an update (an approved Ask to Buy, a renewal, a refund).
+    private readonly object _listedLock = new(); // _lastListed is written by the page's thread and read on the platform's update thread
+    private StoreItem[]? _lastListed;
+    private int _listening;
 
     /// <summary>Raised after a read that changed the snapshot, on whatever thread ran it; a subscriber that touches UI marshals itself.</summary>
     public event EventHandler? Changed;
@@ -38,6 +43,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private volatile bool _hasInternet;
     private volatile bool _lastPricesFailed;
     private string _reportedProblem = string.Empty;
+    private bool _reportedIncomplete;
 
     /// <summary>How the latest read went (Slice 358); <see cref="BookAccess.Plan"/> turns it into the card's strip. One rule on every platform: a device with no internet has not reached the store (the sand strip); with internet any failed price query is a failure (the red strip).</summary>
     public StoreAnswer Answer => BookAccess.AnswerOf(_hasInternet, _lastPricesFailed, _snapshot.Restricted);
@@ -119,9 +125,64 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     public string? ProofHeader(bool paidBooksOn, StoreItem item) =>
         BookAccess.ProofHeader(paidBooksOn, item, Snapshot.Proofs, platform.StoreName);
 
+    private void ListenForStoreUpdates()
+    {
+        if (Interlocked.Exchange(ref _listening, 1) == 0)
+        {
+            PurchaseUpdates.StoreChanged += OnStoreChanged;
+            if (PurchaseUpdates.TakeMissed())
+            {
+                MarkStale(); // an update came before anyone listened: the read that follows must not be skipped as fresh
+                OnStoreChanged(); // and the store is read again now, so a missed purchase shows without waiting for another listing
+            }
+        }
+    }
+
+    /// <summary>Stops listening to the static store updates, so a discarded instance is not kept alive and does not read the store twice.</summary>
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _listening, 0) == 1)
+        {
+            PurchaseUpdates.StoreChanged -= OnStoreChanged;
+        }
+    }
+
+    private void OnStoreChanged()
+    {
+        StoreItem[]? listed;
+        lock (_listedLock)
+        {
+            listed = _lastListed;
+        }
+
+        if (listed is not null)
+        {
+            _ = ReadAfterStoreUpdateAsync(listed);
+        }
+    }
+
+    private async Task ReadAfterStoreUpdateAsync(StoreItem[] listed)
+    {
+        try
+        {
+            await ReadAsync(listed, restore: false, interactive: false, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // no-fallback: a failed background re-read keeps the last snapshot; the next refresh reports the store's problem
+            PurchaseTrace.Line($"re-read after a store update failed: {ex.GetType().Name}");
+        }
+    }
+
     private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
     {
         StoreItem[] listed = [.. items];
+        lock (_listedLock)
+        {
+            _lastListed = listed;
+        }
+
+        ListenForStoreUpdates();
         string[] products = [.. listed.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
         await _gate.WaitAsync(cancel);
         try
@@ -291,6 +352,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             return;
         }
 
+        ReportIncompleteOnce(read);
         if (hasInternet)
         {
             ReportPriceProblem(items, read);
@@ -299,6 +361,18 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         if (read.Owned.Any(product => !read.Proofs.ContainsKey(product)))
         {
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // an owned book has no proof to send (Windows: no Store ID key), so its files are not asked for until the next read
+        }
+    }
+
+    // Slice 390: a read in which the store could not verify one entitlement (it is left out, the verified ones are the whole read) is one store fallback per change, not one per read.
+    private void ReportIncompleteOnce(PurchaseSnapshot read)
+    {
+        bool before = _reportedIncomplete;
+        _reportedIncomplete = read.Incomplete;
+        if (read.Incomplete && !before)
+        {
+            PurchaseTrace.Line("store read incomplete: an entitlement could not be verified and was left out");
+            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
         }
     }
 

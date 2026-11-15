@@ -12,6 +12,7 @@ public class AppDelegate : MauiUIApplicationDelegate
 	public override bool FinishedLaunching(UIKit.UIApplication application, NSDictionary? launchOptions)
 	{
 		IosPackStorage.ExcludePacksFromBackup();
+		_ = StoreKit2Bridge.Load(); // Slice 390: the Transaction.updates listener runs from launch, so an Ask to Buy approval or renewal arriving before the first refresh is not finished unseen (the first refresh reads Apple's list anyway)
 		return base.FinishedLaunching(application, launchOptions);
 	}
 
