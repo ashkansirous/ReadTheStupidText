@@ -228,8 +228,7 @@ Fix: Apple's in-app sheet `AppStore.showManageSubscriptions(in:)` (iOS 15+; the 
 
 From review (`reviews/s384m-medium.md`), follow-ups, not changed: #1 after the 10-minute timeout the sheet may still be open and its later close is not re-read (the next store read picks it up); #2 a repeat tap while the sheet is open does nothing visible; #3 on Android and Windows a false from the link opener now reports `StoreFailed` though no store failed (telemetry reason only); #4 a StoreKit error shows the failure message with no web fallback; #5 a `foregroundInactive` scene can be chosen during a transition; #6 the tap is ignored silently while another external activity runs.
 
-Not yet verified:
-- Manage subscription on a TestFlight iPhone shows Apple's sheet with the sandbox subscription, and the status is read again when it closes (a cancel made there shows only once the plan ends; the app has no "will not renew" card line) (the Swift side is proven by `dinoreader-ios` on the branch, the behaviour only on a device).
+**Verified by the user, 2026-11-15** (dino-v1.131.1 on TestFlight, "it worked"): Manage subscription opens Apple's sheet with the sandbox subscription, and cancelling there works. Also verified the same day: subscribing on iOS ("the subscription worked").
 
 ## Play subscription script review (2026-11-15)
 
