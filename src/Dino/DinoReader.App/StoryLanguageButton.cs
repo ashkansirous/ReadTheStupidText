@@ -303,7 +303,7 @@ public sealed class StoryLanguageButton : Border
 	/// <summary>On a picture (the sideways layouts) the button sits on the same white chip as the back button.</summary>
 	public void SetOnPicture(bool onPicture, Color chip)
 	{
-		Shadow = onPicture ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null;
+		Shadow = onPicture ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null!;
 		if (onPicture)
 		{
 			_idle = chip.WithAlpha(ChipAlpha);

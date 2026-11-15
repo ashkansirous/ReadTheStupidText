@@ -1,12 +1,45 @@
 # Store listing: Farsi (`fa`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Persian, right to left. Locales: Play `fa` (Play's list names fa, fa-AE, fa-AF, fa-IR); Microsoft Store `fa` (to be confirmed at push). **App Store: not supported.** Apple's App Store localization list (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) has 50 languages and Persian is not one; so there is no Farsi App Store text, it is not mapped to another language. Layout as in `fr.md` (Microsoft description = Description with "Google Play" replaced by "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Persian, right to left. Locales: Play `fa` (Play's list names fa, fa-AE, fa-AF, fa-IR); Microsoft Store `fa` (to be confirmed at push). **App Store: not supported.** Apple's App Store localization list (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) has 50 languages and Persian is not one; so there is no Farsi App Store text, it is not mapped to another language. Layout as in `fr.md` (Microsoft description = Description with "Google Play" replaced by "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): داستان‌هایی که بلند خوانده می‌شوند، با صدایی جدا برای هر شخصیت.
+Play short description (<= 80): هر شخصیت صدای خودش را دارد و مادربزرگ می‌تواند صدایش را برای گرگ ضبط کند
 Play search phrases used in the text: قصه شب, قصه کودکان, کتاب تصویری, کتاب‌خوانی
 App Store: none (Persian is not an App Store locale)
 Microsoft search terms (7): قصه کودکان; قصه شب; کتاب تصویری; داستان صوتی; کتاب کودک; صدای شخصیت‌ها; قصه‌خوانی
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+در دینو بوک ریدر (Dino Book Reader) هر شخصیت صدای خودش را دارد. راوی داستان را تعریف می‌کند، گرگ و بچه‌خوک‌ها هر کدام صدای خودشان را دارند، و پدر، مادر یا پدربزرگ و مادربزرگ می‌توانند صدای خودشان را برای هر شخصیتی ضبط کنند: مادربزرگ می‌تواند گرگ باشد.
+
+هر داستان به ۱۵ زبان است، برای خانواده‌هایی که کنار زبان مدرسه زبان خانه را هم نگه می‌دارند: فارسی، عربی، سوئدی، نروژی، دانمارکی، فنلاندی و بیشتر. یک بزرگسال دو یا سه زبان داستان را انتخاب می‌کند و کودک می‌تواند هنگام خواندن بین آن‌ها جابه‌جا شود، همان داستان را بشنود و واژه‌ها را به هر دو زبان یاد بگیرد.
+
+بدون تبلیغ. بدون حساب کاربری. داستان دانلودشده بدون اینترنت خوانده می‌شود و ضبط‌های شما روی دستگاه شما می‌ماند.
+
+چهار داستان تصویری رایگان است: شیر و موش، آدمک زنجبیلی، سه بچه‌خوک و ایکس جای گنج را نشان می‌دهد. هر داستان دیگر را یک بار می‌خرید و برای شما می‌ماند، هر کدام ۰٫۹۹ دلار (Google Play قیمت را به ارز شما نشان می‌دهد). یک بزرگسال پشت قفل بزرگسالان می‌خرد و می‌تواند خریدهای قبلی را هر زمان بازیابی کند.
+
+برای کودکان ۳ تا ۹ سال
+کودکان گوش می‌دهند، به تصویرها نگاه می‌کنند و دنبال می‌کنند: مناسب قصه‌ی پیش از خواب و برای کودکان دوزبانه که واژه‌ها را به دو زبان یاد می‌گیرند. یک بزرگسال برنامه را تنظیم می‌کند، کتاب‌ها را انتخاب می‌کند و صداها را پشت قفل بزرگسالان ضبط می‌کند.
+
+قصه‌های کلاسیک، با ملایمت بازگو شده
+کتاب‌های تصویری دست‌چین‌شده، هر کدام برای کودکان خردسال بازگو شده، با یک تصویر در هر صفحه.
+
+و بیشتر
+- هر جمله هنگام خوانده شدن روشن می‌شود.
+- فقط تصویر، فقط متن، یا تصویر و متن.
+- سرعت خواندن از ۰٫۸ برابر تا ۱٫۲ برابر و صداهای حیوانات که می‌توانید روشن یا خاموش کنید.
+- یک پوسته‌ی شبانه برای وقت خواب.
+- هر شخصیت، در هر صفحه و به هر زبان داستان ضبط می‌شود؛ ضبط‌ها پشتیبان‌گیری و بازیابی می‌شوند.
+
+زبان‌ها
+انگلیسی، عربی، چینی، دانمارکی، هلندی، فارسی، فنلاندی، فرانسوی، آلمانی، ژاپنی، نروژی، پرتغالی، روسی، اسپانیایی و سوئدی: برنامه، داستان‌ها و صداها.
+
+امن و خصوصی
+- بدون تبلیغ و بدون حساب کاربری. ما چیزی درباره‌ی شما یا خریدتان نگه نمی‌داریم؛ گواه فروشگاه بررسی و فراموش می‌شود.
+- خرید، تنظیمات، ضبط صدا و پشتیبان‌گیری پشت قفل بزرگسالان هستند.
+- شمارش‌های اختیاری و ناشناس استفاده، بدون نام یا شناسه، که از تنظیمات قابل خاموش کردن است.
 
 ## Description
 

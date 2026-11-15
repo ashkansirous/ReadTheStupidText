@@ -336,6 +336,7 @@ public static class AppResources
 	public static string Gallery_BackToShelf => Get();
 	public static string Gallery_Reorder => Get();
 	public static string Gallery_ReorderHint => Get();
+	public static string Cover_Waiting => Get();
 	public static string Reorder_SaveFailedTitle => Get();
 	public static string Reorder_SaveFailedBody => Get();
 	public static string Book_ReadNow => Get();
@@ -454,6 +455,19 @@ public static class AppResources
 	public static string Store_FooterPaid => Get();
 	public static string Wait_BuyingBook => Get();
 	public static string Wait_CheckingPurchases => Get();
+	// Slice 384: the subscription card on the Store tab and the lapsed-book actions on the parents' shelf.
+	public static string Sub_Title => Get();
+	public static string Sub_Line => Get();
+	public static string Sub_Monthly => Get();
+	public static string Sub_Yearly => Get();
+	public static string Sub_Terms => Get();
+	public static string Sub_TermsLink => Get();
+	public static string Sub_PrivacyLink => Get();
+	public static string Sub_Manage => Get();
+	public static string Sub_Active => Get();
+	public static string Sub_Again => Get();
+	public static string Sub_BuyThis => Get();
+	public static string Sub_Locked => Get();
 	public static string Backup_Missing => Get();
 	public static string Backup_MissingNote => Get();
 	public static string Backup_MissingNoteStore => Get();

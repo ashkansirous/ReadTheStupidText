@@ -37,7 +37,7 @@ Dino Reader:
 - `src/Dino/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
 - `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus), `dino-story-illustrator` (Gemini pictures, Sonnet, up to four in parallel, JS-only input, one `gemini-lock`) and `dino-story-reviewer` (Opus, after each; its pass is required to ship); the main thread only coordinates.
 - `.claude/skills/farsi-review-book/SKILL.md` — the Farsi pronunciation review, one book at a time (Slice 154): run it through the repo agent `farsi-review` (Sonnet); later books prefill the user's earlier answers.
-- `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text goes through the global `store-listing` agent (draft, then apply after the user approves).
+- `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text and screenshots go through the global `store-listing` agent in apply mode: written, checked against `.claude/skills/store-listing/SKILL.md`, pushed and read back, never shown to the user for a yes (user, 2026-11-15).
 
 Shared:
 
@@ -141,6 +141,8 @@ dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj
 The `tests.yml` workflow (called by `release-shared.yml`, once per product run) runs them on every push/PR that
 touches app code (docs-only changes skip it) and **gates** the build and release jobs,
 so a failing test blocks the release.
+
+- Tests capture `PackDownloadLog` through `PackDownloadLog.CaptureScope`, never by setting the static `PackDownloadLog.Sink`: the sink is process-wide and parallel tests' lines leak into it. A test that must exercise the global `Sink` goes in the non-parallel collection (`tests/Shared/Shared.Tests/PackDownloadLogGlobalSinkTests.cs`). (Slice 388: docs/plan/slices/388-shared-pack-download-log-capture-per-test.md)
 
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 

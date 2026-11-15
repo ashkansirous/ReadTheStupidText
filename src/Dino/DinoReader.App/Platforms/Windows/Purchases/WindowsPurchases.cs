@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
+using DinoReader.Core;
 using Windows.Services.Store;
 
 namespace DinoReader;
@@ -14,6 +15,7 @@ public sealed class WindowsPurchases : IBookPurchases
     private const string DurableKind = "Durable";
     private const string TicketPath = "/api/stories/windows-ticket";
     private const string RedeemAddress = "https://account.microsoft.com/billing/redeem";
+    private const string ManageAddress = "https://account.microsoft.com/services"; // the Microsoft account's own subscriptions page
     private const string PublisherUserId = "dino"; // names no person: the Store ID key needs some value, and this one is the same for everybody
     private static readonly HttpClient Http = new(new HttpClientHandler { UseCookies = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(20) };
 
@@ -31,9 +33,9 @@ public sealed class WindowsPurchases : IBookPurchases
         }
 
         (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(context);
-        (HashSet<string> owned, bool ok) = await QueryOwnedAsync(context);
+        (HashSet<string> owned, bool ok, SubscriptionStatus? subscription) = await QueryOwnedAsync(context);
         Dictionary<string, string> proofs = await ProofsAsync(context, owned);
-        return new PurchaseSnapshot(prices, owned, new HashSet<string>(), proofs, ok, pricesFailed);
+        return new PurchaseSnapshot(prices, owned, new HashSet<string>(), proofs, ok, pricesFailed, Subscription: subscription);
     }
 
     // The Store has no separate restore: the account's add-ons are read again.
@@ -114,13 +116,38 @@ public sealed class WindowsPurchases : IBookPurchases
         return (prices, failed);
     }
 
-    private static async Task<(HashSet<string> Owned, bool Ok)> QueryOwnedAsync(StoreContext context)
+    private static async Task<(HashSet<string> Owned, bool Ok, SubscriptionStatus? Subscription)> QueryOwnedAsync(StoreContext context)
     {
         StoreProductQueryResult result = await context.GetUserCollectionAsync([DurableKind]);
         bool ok = result.ExtendedError is null || result.ExtendedError.HResult == 0;
         HashSet<string> owned = [.. result.Products.Values.Select(p => p.InAppOfferToken).Where(token => !string.IsNullOrEmpty(token))];
-        return (owned, ok);
+        return (owned, ok, ok ? SubscriptionOf(result.Products.Values) : null);
     }
+
+    // Slice 384: a subscription add-on is a durable add-on whose collection data carries its end date and whether it is a trial (Windows.Services.Store StoreCollectionData); the newest end among the plans decides, and an end in
+    // the past is no subscription. A failed read is no answer (null), never "no subscription".
+    private static SubscriptionStatus SubscriptionOf(IEnumerable<StoreProduct> products)
+    {
+        SubscriptionStatus? best = null;
+        foreach (StoreProduct product in products.Where(p => SubscriptionProducts.Is(p.InAppOfferToken)))
+        {
+            StoreCollectionData? data = product.Skus.Select(sku => sku.CollectionData).FirstOrDefault(d => d is not null);
+            DateTimeOffset? ends = data is null ? null : data.EndDate;
+            if (ends is { } end && end <= DateTimeOffset.UtcNow)
+            {
+                continue;
+            }
+
+            if (best?.EndsAt is null || (ends is { } later && later > best.EndsAt))
+            {
+                best = new SubscriptionStatus(data?.IsTrial == true ? SubscriptionState.Trial : SubscriptionState.Active, ends, product.InAppOfferToken);
+            }
+        }
+
+        return best ?? SubscriptionStatus.None;
+    }
+
+    public async Task<bool> ManageSubscriptionAsync() => await Launcher.Default.OpenAsync(new Uri(ManageAddress));
 
     // One Store ID key covers every product of the account; the Worker reads the whole list with it.
     private static async Task<Dictionary<string, string>> ProofsAsync(StoreContext context, HashSet<string> owned)

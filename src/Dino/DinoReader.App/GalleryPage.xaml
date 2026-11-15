@@ -40,7 +40,7 @@
 
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
             <VerticalStackLayout Spacing="{DynamicResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
-                <Grid>
+                <Grid Opacity="{Binding TileOpacity}">
                     <local:StoryCover AutomationId="StoryTile" ShadowDepth="{DynamicResource TileShadowOffset}">
                         <local:StoryCover.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
@@ -48,11 +48,19 @@
                     </local:StoryCover>
                     <local:TileOverlay OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
-                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle">
+                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle" Opacity="{Binding TileOpacity}">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoryTapped" />
                     </Label.GestureRecognizers>
                 </Label>
+                <!-- Slice 384: a book the ended subscription locked (parents' shelf only; the child's shelf does not get the tile): what it is and the two ways to open it again. -->
+                <VerticalStackLayout IsVisible="{Binding IsLapsed}" Spacing="4">
+                    <Label AutomationId="LapsedNote" Text="{Binding LockedLabel}" FontSize="11.5" TextColor="{StaticResource Muted}" LineBreakMode="TailTruncation" MaxLines="2" />
+                    <Button AutomationId="LapsedSubscribe" Text="{Binding SubscribeAgainLabel}" HeightRequest="34" CornerRadius="17" Padding="8,0" FontSize="12" FontAttributes="Bold"
+                            BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnLapsedSubscribeClicked" />
+                    <Button AutomationId="LapsedBuy" Text="{Binding BuyThisLabel}" HeightRequest="34" CornerRadius="17" Padding="8,0" FontSize="12" FontAttributes="Bold"
+                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnLapsedBuyClicked" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </DataTemplate>
 

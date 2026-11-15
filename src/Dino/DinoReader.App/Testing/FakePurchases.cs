@@ -35,16 +35,32 @@ internal sealed class FakePurchases : IBookPurchases
 
     /// <summary>The test store's line for a book, sold with its fake product when the hook said so (by its stem or its id).</summary>
     public static StoreItem Marked(StoreItem item, string stem) =>
-        _paidNames.Contains(item.Id) || _paidNames.Contains(stem) ? item with { Sale = BookSale.Paid, ProductId = ProductOf(item.Id), UnlockedBy = [ProductOf(item.Id)] } : item;
+        _paidNames.Contains(item.Id) || _paidNames.Contains(stem) ? item with { Sale = BookSale.Paid, ProductId = ProductOf(item.Id), UnlockedBy = [ProductOf(item.Id), .. SubscriptionProducts.All] } : item; // like the Worker's list: the subscription products unlock every paid book (Slice 384)
 
     public Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel) => Task.FromResult(Snapshot(productIds));
 
     public Task<PurchaseSnapshot> RestoreAsync(IReadOnlyCollection<string> productIds, CancellationToken cancel) => Task.FromResult(Snapshot(productIds));
 
+    /// <summary>Slice 384: the pretend subscription (set by a Buy of a plan, or the <c>fake-subscription</c> hook); null = the store knows none. The plan products' prices are fixed.</summary>
+    public SubscriptionStatus? Subscription { get; set; }
+
+    private const string MonthlyPrice = "£1.99";
+    private const string YearlyPrice = "£14.99";
+
+    public Task<bool> ManageSubscriptionAsync()
+    {
+        WriteMarker($"{Marker} manage subscription opened");
+        return Task.FromResult(true);
+    }
+
     public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
     {
         await Task.Delay(800, cancel); // long enough for the wait overlay (it appears after 500 ms)
-        if (NextBuy == BuyOutcome.Bought)
+        if (NextBuy == BuyOutcome.Bought && SubscriptionProducts.Is(productId))
+        {
+            Subscription = new SubscriptionStatus(SubscriptionState.Trial, DateTimeOffset.UtcNow.AddDays(7), productId);
+        }
+        else if (NextBuy == BuyOutcome.Bought)
         {
             OwnedProducts.Add(productId);
         }
@@ -78,9 +94,23 @@ internal sealed class FakePurchases : IBookPurchases
             return PurchaseSnapshot.Empty;
         }
 
-        Dictionary<string, string> prices = productIds.ToDictionary(p => p, _ => Price);
+        Dictionary<string, string> prices = productIds.Where(p => !SubscriptionProducts.Is(p)).ToDictionary(p => p, _ => Price);
+        if (productIds.Any(SubscriptionProducts.Is))
+        {
+            prices[SubscriptionProducts.Monthly] = MonthlyPrice;
+            prices[SubscriptionProducts.Yearly] = YearlyPrice;
+        }
+
+        var owned = new HashSet<string>(OwnedProducts);
         Dictionary<string, string> proofs = OwnedProducts.ToDictionary(p => p, p => "fake-token-" + p);
-        return new PurchaseSnapshot(prices, new HashSet<string>(OwnedProducts), new HashSet<string>(PendingProducts), proofs, true);
+        SubscriptionStatus status = Subscription ?? SubscriptionStatus.None;
+        if (SubscriptionAccess.IsEntitled(status.State) && status.ProductId is { } plan)
+        {
+            owned.Add(plan);
+            proofs[plan] = "fake-sub-token-" + plan;
+        }
+
+        return new PurchaseSnapshot(prices, owned, new HashSet<string>(PendingProducts), proofs, true, Subscription: status);
     }
 }
 #endif

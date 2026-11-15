@@ -103,7 +103,7 @@ public class VoicePackSetupTests
     {
         var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
         var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "fa" });
         await setup.StartAsync();
         await packs.FirstDownloadStarted;
@@ -651,13 +651,13 @@ public class VoicePackSetupTests
         var unwind = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         packs.UnwindGate = unwind.Task;
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
 
         Task tap = installer.StartAsync(PackStartReason.User); // the old run is still unwinding
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
 
         Assert.False(tap.IsCompleted);
         Assert.Equal(1, packs.DownloadCalls); // chained after the old run: never two runs at once
@@ -690,7 +690,7 @@ public class VoicePackSetupTests
         (VoicePackInstaller installer, FakePacks packs, _, FakeNotifier notifier, MemoryVoiceCancelStore store) = await CancelledInstallerAsync();
 
         notifier.Raise(); // same language "fa": the automatic start must not lift the hold
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         Assert.Equal("fa", store.Read());
         Assert.Equal(1, packs.DownloadCalls);
@@ -831,7 +831,7 @@ public class VoicePackSetupTests
     {
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task first = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
 
@@ -851,7 +851,7 @@ public class VoicePackSetupTests
         var unwind = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         packs.UnwindGate = unwind.Task;
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         var seen = new List<PackInstallState>();
@@ -900,7 +900,7 @@ public class VoicePackSetupTests
         var settings = new FakeSettings { Language = "fa" };
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         settings.Language = "en"; // moved on under the running download
@@ -918,7 +918,7 @@ public class VoicePackSetupTests
         var unwind = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         packs.UnwindGate = unwind.Task;
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         object oldRun = typeof(VoicePackInstaller).GetField("_current", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(installer)!;
@@ -952,7 +952,7 @@ public class VoicePackSetupTests
         var store = new MemoryVoiceCancelStore();
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         store.Write("fa"); // a hold left while the run is alive
@@ -977,7 +977,7 @@ public class VoicePackSetupTests
         var notifier = new FakeNotifier();
         var store = new MemoryVoiceCancelStore();
         var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier, null, store);
-        packs.BlockFirstDownload();
+        _ = packs.BlockFirstDownload();
         Task run = installer.StartAsync(PackStartReason.User);
         await packs.FirstDownloadStarted;
         settings.Language = "en";

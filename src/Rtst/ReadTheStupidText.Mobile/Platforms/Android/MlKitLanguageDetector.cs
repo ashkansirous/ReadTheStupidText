@@ -27,5 +27,5 @@ public sealed class MlKitLanguageDetector : ILanguageDetector
     }
 
     private static IdentifiedLanguage? BestGuess(Java.Lang.Object? result) =>
-        result?.JavaCast<Java.Util.IList>()?.ToEnumerable<IdentifiedLanguage>().MaxBy(g => g.Confidence);
+        result?.JavaCast<Java.Util.IList>()?.ToEnumerable<IdentifiedLanguage>().OfType<IdentifiedLanguage>().MaxBy(g => g.Confidence);
 }

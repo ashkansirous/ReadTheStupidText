@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Sagor</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Ändra ordning</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Tryck och håll på en bok och dra den sedan till en ny plats. Ditt barns hylla visar samma ordning.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Dra en bok till en ny plats. Ditt barns hylla visar samma ordning.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Väntar på omslagsbilden</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara den nya ordningen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Något använder fortfarande filen. Tryck på Klar för att försöka igen, eller Avbryt för att behålla den gamla ordningen.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Läs nu</value></data>
@@ -417,6 +418,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Vissa böcker kostar lite. De köps via ditt butikskonto, och inget om dig eller ditt barn skickas till oss.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Väntar på butiken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Kontrollerar dina köp …</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Alla böcker med ett abonnemang</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Öppna alla böcker så länge du prenumererar. Böcker du köper är dina för alltid.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Prova gratis, sedan {0} per månad</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Prova gratis, sedan {0} per år</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 dagar gratis för nya prenumeranter. Därefter förnyas det automatiskt varje månad eller varje år till det visade priset, tills du säger upp i ditt butikskonto. Du kan säga upp när som helst.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Användarvillkor</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Integritetspolicy</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Hantera abonnemang</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Du prenumererar. Alla böcker är öppna.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Prenumerera igen</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Köp den här boken</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnemanget har tagit slut</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>

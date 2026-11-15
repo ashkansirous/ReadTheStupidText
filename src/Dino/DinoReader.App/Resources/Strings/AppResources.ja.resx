@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>おはなし</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>並べ替え</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を長押ししてから、新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>表紙の絵を待っています</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>新しい順番を保存できませんでした</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。「完了」でもう一度試すか、「キャンセル」で元の順番のままにします。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>今すぐ読む</value></data>
@@ -418,6 +419,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>有料の本もあります。購入はストアのアカウントで行われ、あなたやお子さまの情報は私たちには送られません。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>ストアの応答を待っています…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>購入内容を確認しています…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>すべての本を、ひとつの定期購入で</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>定期購入中は、すべての本が読めます。購入した本はずっとあなたのものです。</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>無料で試す。その後は月 {0}</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>無料で試す。その後は年 {0}</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>新規の方は7日間無料。その後は表示の料金で毎月または毎年自動的に更新され、ストアのアカウントで解約するまで続きます。いつでも解約できます。</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>利用規約</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>プライバシーポリシー</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>定期購入の管理</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>定期購入中です。すべての本が読めます。</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>もう一度定期購入</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>この本を購入</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>ロック中：定期購入が終了しました</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>ストアにある無料の本は自動で戻ります。ストアで配信が終わった本は戻りませんが、録音はバックアップファイルに残ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>

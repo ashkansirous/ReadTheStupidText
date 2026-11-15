@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Text;
 using Android.App;
 using Android.Content;
@@ -46,6 +47,7 @@ internal static class AndroidCrashHooks
         }
     }
 
+    [SupportedOSPlatform("android30.0")]
     private static NativeCrash? ToNative(ApplicationExitInfo info)
     {
         string? kind = KindOf((ApplicationExitInfoReason)info.Reason);
@@ -58,6 +60,7 @@ internal static class AndroidCrashHooks
         return new NativeCrash(kind, info.Reason.ToString(), info.Description ?? string.Empty, ReadTrace(info, kind), time, null, null, time);
     }
 
+    [SupportedOSPlatform("android30.0")]
     private static string? KindOf(ApplicationExitInfoReason reason) => reason switch
     {
         ApplicationExitInfoReason.CrashNative => "native",
@@ -80,6 +83,7 @@ internal static class AndroidCrashHooks
     }
 
     // An ANR trace is text; a native crash's trace is a tombstone in protobuf, so it is kept as base64 for an offline decoder.
+    [SupportedOSPlatform("android30.0")]
     private static string ReadTrace(ApplicationExitInfo info, string kind)
     {
         try

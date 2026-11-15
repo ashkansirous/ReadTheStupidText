@@ -5,12 +5,13 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { appleChecker, resetAppleTokenCache } from "./entitlements/apple.ts";
 import { GateAnswer, MAX_CACHED, NOT_OWNED_CACHE_MS, createPaidGate, resetOwnedCache } from "./entitlements/gate.ts";
+import { SUBSCRIPTION_REFUSAL_CACHE_MS, createSubscriptionSource, resetSubscriptionCache } from "./entitlements/subscription.ts";
 import { googleChecker, resetGoogleTokenCache } from "./entitlements/google.ts";
 import { microsoftChecker, ownedFromItems, resetMicrosoftTokenCache, serviceTicket } from "./entitlements/microsoft.ts";
 import { base64UrlEncode } from "./entitlements/jwt.ts";
 import { parseProof } from "./entitlements/proof.ts";
 import { CANNOT_VERIFY, Verdict, checked } from "./entitlements/types.ts";
-import { APP_PACKAGE_ID, productsUnlocking, unlocksBook } from "./products.ts";
+import { APP_PACKAGE_ID, SUBSCRIPTION_MONTHLY_PRODUCT, SUBSCRIPTION_PRODUCT, SUBSCRIPTION_PRODUCTS, SUBSCRIPTION_YEARLY_PRODUCT, productsUnlocking, unlocksBook } from "./products.ts";
 import { serveObject } from "./downloads.ts";
 import { handleStories, parseMeta, toListItem } from "./stories.ts";
 
@@ -66,9 +67,11 @@ test("a proof is store, product and token; anything else is refused", () => {
 });
 
 test("a product unlocks a list of books: a per-book product is one, a bundle row is more", () => {
-  assert.deepEqual(productsUnlocking(BOOK, PRODUCT, {}), [PRODUCT]);
-  assert.deepEqual(productsUnlocking(BOOK, PRODUCT, { [BUNDLE]: [BOOK, FREE_BOOK] }), [PRODUCT, BUNDLE]);
-  assert.deepEqual(productsUnlocking(BOOK, null, {}), []);
+  assert.deepEqual(productsUnlocking(BOOK, PRODUCT, {}), [PRODUCT, ...SUBSCRIPTION_PRODUCTS]);
+  assert.deepEqual(productsUnlocking(BOOK, PRODUCT, { [BUNDLE]: [BOOK, FREE_BOOK] }), [PRODUCT, BUNDLE, ...SUBSCRIPTION_PRODUCTS]);
+  assert.deepEqual(productsUnlocking(BOOK, null, {}), [...SUBSCRIPTION_PRODUCTS]);
+  assert.equal(unlocksBook([SUBSCRIPTION_YEARLY_PRODUCT], BOOK, PRODUCT, {}), true); // Slice 384: a subscription product unlocks every paid book, also one with no product of its own
+  assert.equal(unlocksBook([SUBSCRIPTION_MONTHLY_PRODUCT], BOOK, null, {}), true);
   assert.equal(unlocksBook([BUNDLE], BOOK, PRODUCT, { [BUNDLE]: [BOOK, FREE_BOOK] }), true);
   assert.equal(unlocksBook([BUNDLE], "ffffffffffffffffffffffffffffffff", PRODUCT, { [BUNDLE]: [BOOK] }), false);
   assert.equal(unlocksBook([OTHER], BOOK, PRODUCT, {}), false);
@@ -144,6 +147,72 @@ test("Microsoft: the customer's active durable add-ons are the owned list", asyn
   assert.deepEqual(await microsoftChecker.check(proof, ENV, refused.fetcher), CANNOT_VERIFY);
 });
 
+// Slice 384: the subscription checks. A proof for a subscription product is read for its end date; expired, revoked or lapsed never counts.
+const HOUR = 3_600_000;
+
+test("Google subscription: active, cancelled-not-expired and grace count; expired state, a past expiry or another product do not", async () => {
+  fresh();
+  const proof = parseProof(`android:${SUBSCRIPTION_PRODUCT}:subtok`);
+  const token = ["oauth2.googleapis.com", json({ access_token: "at" })];
+  const line = (productId, offset) => ({ productId, expiryTime: new Date(Date.now() + offset).toISOString() });
+  const body = (state, items) => json({ subscriptionState: state, lineItems: items });
+  for (const state of ["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_CANCELED", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD"]) {
+    const ok = recorded([token, ["/subscriptionsv2/tokens/subtok", body(state, [line(SUBSCRIPTION_PRODUCT, HOUR)])]]);
+    assert.deepEqual(await googleChecker.check(proof, ENV, ok.fetcher), checked([SUBSCRIPTION_PRODUCT]), state);
+    assert.ok(ok.calls.find((call) => call.url.includes("subscriptionsv2")).url.includes(`/applications/${APP_PACKAGE_ID}/purchases/subscriptionsv2/tokens/`));
+  }
+  for (const [state, items] of [["SUBSCRIPTION_STATE_EXPIRED", [line(SUBSCRIPTION_PRODUCT, -HOUR)]], ["SUBSCRIPTION_STATE_ON_HOLD", [line(SUBSCRIPTION_PRODUCT, HOUR)]], ["SUBSCRIPTION_STATE_PAUSED", [line(SUBSCRIPTION_PRODUCT, HOUR)]], ["SUBSCRIPTION_STATE_ACTIVE", [line(SUBSCRIPTION_PRODUCT, -HOUR)]], ["SUBSCRIPTION_STATE_ACTIVE", [line("other.sub", HOUR)]]]) {
+    const no = recorded([token, ["/subscriptionsv2/", body(state, items)]]);
+    assert.deepEqual(await googleChecker.check(proof, ENV, no.fetcher), checked([]), state);
+  }
+  const pastGrace = recorded([token, ["/subscriptionsv2/", body("SUBSCRIPTION_STATE_IN_GRACE_PERIOD", [line(SUBSCRIPTION_PRODUCT, -HOUR)])]]); // grace: Play still entitles, though expiryTime is the missed renewal date
+  assert.deepEqual(await googleChecker.check(proof, ENV, pastGrace.fetcher), checked([SUBSCRIPTION_PRODUCT]));
+  const graceOther = recorded([token, ["/subscriptionsv2/", body("SUBSCRIPTION_STATE_IN_GRACE_PERIOD", [line("other.sub", -HOUR)])]]);
+  assert.deepEqual(await googleChecker.check(proof, ENV, graceOther.fetcher), checked([]));
+  const unknown = recorded([token, ["/subscriptionsv2/", json({}, 404)]]);
+  assert.deepEqual(await googleChecker.check(proof, ENV, unknown.fetcher), checked([]));
+  const broken = recorded([token, ["/subscriptionsv2/", json({}, 503)]]);
+  assert.deepEqual(await googleChecker.check(proof, ENV, broken.fetcher), CANNOT_VERIFY);
+});
+
+test("Apple subscription: the latest transaction must be active or in grace, ahead of now, unrevoked, ours and in production", async () => {
+  fresh();
+  const proof = parseProof(`ios:${SUBSCRIPTION_MONTHLY_PRODUCT}:2000000777`);
+  const tx = (extra) => signedTransaction({ bundleId: APP_PACKAGE_ID, productId: SUBSCRIPTION_MONTHLY_PRODUCT, environment: "Production", expiresDate: Date.now() + HOUR, ...extra });
+  const status = (code, extra) => json({ data: [{ subscriptionGroupIdentifier: "g", lastTransactions: [{ status: code, signedTransactionInfo: tx(extra) }] }] });
+  for (const code of [1, 4]) {
+    const ok = recorded([["api.storekit.apple.com", status(code)]]);
+    assert.deepEqual(await appleChecker.check(proof, ENV, ok.fetcher), checked([SUBSCRIPTION_MONTHLY_PRODUCT]), String(code));
+    assert.ok(ok.calls[0].url.endsWith("/inApps/v1/subscriptions/2000000777"));
+  }
+  const grace = recorded([["api.storekit.apple.com", status(4, { expiresDate: Date.now() - HOUR })]]); // billing grace: the transaction's own end is already past, Apple's status still says paid
+  assert.deepEqual(await appleChecker.check(proof, ENV, grace.fetcher), checked([SUBSCRIPTION_MONTHLY_PRODUCT]));
+  const graceRevoked = recorded([["api.storekit.apple.com", status(4, { expiresDate: Date.now() - HOUR, revocationDate: 1 })]]);
+  assert.deepEqual(await appleChecker.check(proof, ENV, graceRevoked.fetcher), checked([]));
+  for (const [code, extra] of [[2, {}], [3, {}], [5, {}], [1, { expiresDate: Date.now() - HOUR }], [1, { revocationDate: 1 }], [1, { environment: "Sandbox" }], [1, { bundleId: "other.app" }], [1, { productId: PRODUCT }], [1, { expiresDate: undefined }]]) {
+    const no = recorded([["api.storekit.apple.com", status(code, extra)]]);
+    assert.deepEqual(await appleChecker.check(proof, ENV, no.fetcher), checked([]), JSON.stringify([code, extra]));
+  }
+  const none = recorded([["api.storekit.apple.com", json({}, 404)]]);
+  assert.deepEqual(await appleChecker.check(proof, ENV, none.fetcher), checked([]));
+  const down = recorded([["api.storekit.apple.com", json({}, 500)]]);
+  assert.deepEqual(await appleChecker.check(proof, ENV, down.fetcher), CANNOT_VERIFY);
+  const staging = { ...ENV, APPLE_IAP_ALLOW_SANDBOX: "true" };
+  const sandbox = recorded([["api.storekit.apple.com", json({}, 404)], ["api.storekit-sandbox.apple.com", status(1, { environment: "Sandbox" })]]);
+  assert.deepEqual(await appleChecker.check(proof, staging, sandbox.fetcher), checked([SUBSCRIPTION_MONTHLY_PRODUCT]));
+});
+
+test("Microsoft subscription: an add-on whose end date has passed is not owned, even while its status reads Active", () => {
+  const now = Date.parse("2026-11-15T12:00:00Z");
+  const items = [
+    { productType: "Durable", status: "Active", inAppOfferToken: SUBSCRIPTION_YEARLY_PRODUCT, endDate: "2026-12-15T12:00:00Z" },
+    { productType: "Durable", status: "Active", inAppOfferToken: SUBSCRIPTION_MONTHLY_PRODUCT, endDate: "2026-11-14T12:00:00Z" },
+    { productType: "Durable", status: "Active", inAppOfferToken: PRODUCT, endDate: "9999-12-31T00:00:00Z" },
+    { productType: "Durable", status: "Active", inAppOfferToken: OTHER },
+  ];
+  assert.deepEqual(ownedFromItems(items, now), [SUBSCRIPTION_YEARLY_PRODUCT, PRODUCT, OTHER]);
+});
+
 test("Microsoft: the ticket handed to the app and the token that queries are two audiences, cached apart (check7 #1)", async () => {
   fresh();
   const proof = parseProof("windows::STOREIDKEY");
@@ -207,6 +276,15 @@ test("gate: no proof, a malformed proof, another book's product and a store that
   assert.equal(await gateWith({ owned: [OTHER] }).gate(`android:${OTHER}:t`, book), GateAnswer.BadProof);
   assert.equal(await gateWith({ verdict: CANNOT_VERIFY }).gate(`android:${PRODUCT}:t`, book), GateAnswer.CannotVerify);
   assert.equal(await gateWith({ owned: [PRODUCT] }).gate(`android:${PRODUCT}:t`, book), GateAnswer.Allowed);
+});
+
+test("gate: a subscription proof opens any paid book, bought or not; nothing owned (an expired one) does not", async () => {
+  fresh();
+  const book = { id: BOOK, productId: PRODUCT };
+  assert.equal(await gateWith({ owned: [SUBSCRIPTION_PRODUCT] }).gate(`android:${SUBSCRIPTION_PRODUCT}:t`, book), GateAnswer.Allowed);
+  assert.equal(await gateWith({ owned: [SUBSCRIPTION_YEARLY_PRODUCT] }).gate(`ios:${SUBSCRIPTION_YEARLY_PRODUCT}:t`, { id: BOOK, productId: null }), GateAnswer.Allowed);
+  assert.equal(await gateWith({ owned: [] }).gate(`android:${SUBSCRIPTION_PRODUCT}:expired`, book), GateAnswer.BadProof);
+  assert.equal(await gateWith({ owned: [SUBSCRIPTION_MONTHLY_PRODUCT] }).gate("windows::KEY", book), GateAnswer.Allowed);
 });
 
 // Captures console.warn lines while `run` runs.
@@ -445,7 +523,7 @@ test("routes: a free book, the cover and the list never need proof, and the list
   const free = list.stories.find((story) => story.id === FREE_BOOK);
   assert.equal(paid.access, "paid");
   assert.equal(paid.productId, PRODUCT);
-  assert.deepEqual(paid.unlockedBy, [PRODUCT]);
+  assert.deepEqual(paid.unlockedBy, [PRODUCT, ...SUBSCRIPTION_PRODUCTS]);
   assert.equal(free.access, "free");
   assert.deepEqual(free.unlockedBy, []);
 });
@@ -505,4 +583,150 @@ test("routes: the Windows ticket is served only when a ticket source has one, ne
   let key = "";
   await call(async (clientKey) => { key = clientKey; return { none: true }; });
   assert.equal(key, "1.2.3.4");
+});
+
+// Slice 384 (finding 2): the subscription's state and end date for the app.
+const subscriptionSource = (overrides = {}) =>
+  createSubscriptionSource({ enabled: async () => true, env: ENV, fetcher: overrides.fetcher ?? (async () => json({}, 500)), limit: overrides.limit });
+const askSubscription = (source, header, headers = {}) =>
+  handleStories(new Request("https://x.test/api/stories/subscription", { headers: { ...(header ? { "X-Purchase-Proof": header } : {}), "CF-Connecting-IP": "1.2.3.4", ...headers } }), { DOWNLOADS: storeBucket() }, "", serveObject, undefined, undefined, source);
+
+test("Google subscription status: active, grace and expired carry their end date; an unknown token is expired with none", async () => {
+  fresh();
+  const end = new Date(Date.now() + HOUR).toISOString();
+  const past = new Date(Date.now() - HOUR).toISOString();
+  const token = ["oauth2.googleapis.com", json({ access_token: "at" })];
+  const proof = parseProof(`android:${SUBSCRIPTION_PRODUCT}:subtok`);
+  const line = (expiryTime) => ({ productId: SUBSCRIPTION_PRODUCT, expiryTime });
+  for (const [state, expiry, want] of [["SUBSCRIPTION_STATE_ACTIVE", end, "active"], ["SUBSCRIPTION_STATE_CANCELED", end, "active"], ["SUBSCRIPTION_STATE_IN_GRACE_PERIOD", end, "grace"], ["SUBSCRIPTION_STATE_EXPIRED", past, "expired"]]) {
+    const store = recorded([token, ["/subscriptionsv2/", json({ subscriptionState: state, lineItems: [line(expiry)] })]]);
+    const result = await googleChecker.subscription(proof, ENV, store.fetcher);
+    assert.deepEqual(result, { verdict: Verdict.Checked, status: { state: want, expiresAt: expiry } }, state);
+  }
+  const graceStore = recorded([token, ["/subscriptionsv2/", json({ subscriptionState: "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", lineItems: [line(past)] })]]);
+  const graceResult = await googleChecker.subscription(proof, ENV, graceStore.fetcher); // grace with a past expiryTime: still grace, ending no earlier than now
+  assert.equal(graceResult.status.state, "grace");
+  assert.ok(Date.parse(graceResult.status.expiresAt) > Date.now() - 60_000);
+  for (const noExpiry of [{ productId: SUBSCRIPTION_PRODUCT }, { productId: SUBSCRIPTION_PRODUCT, expiryTime: "not a date" }]) {
+    const missing = recorded([token, ["/subscriptionsv2/", json({ subscriptionState: "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", lineItems: [noExpiry] })]]);
+    assert.deepEqual(await googleChecker.check(proof, ENV, recorded([token, ["/subscriptionsv2/", json({ subscriptionState: "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", lineItems: [noExpiry] })]]).fetcher), checked([SUBSCRIPTION_PRODUCT])); // the gate serves it ...
+    const missingResult = await googleChecker.subscription(proof, ENV, missing.fetcher); // ... so the status route says grace, not expired
+    assert.equal(missingResult.status.state, "grace");
+    assert.ok(Date.parse(missingResult.status.expiresAt) > Date.now() - 60_000);
+  }
+  const gone = recorded([token, ["/subscriptionsv2/", json({}, 410)]]);
+  assert.deepEqual((await googleChecker.subscription(proof, ENV, gone.fetcher)).status, { state: "expired", expiresAt: null }); // only a 410 says expired
+  for (const code of [400, 404, 503]) {
+    const unsure = recorded([token, ["/subscriptionsv2/", json({}, code)]]);
+    assert.equal((await googleChecker.subscription(proof, ENV, unsure.fetcher)).verdict, Verdict.CannotVerify, String(code)); // not yet propagated, a bad token, a store outage: the app keeps its record
+  }
+});
+
+test("Apple subscription status: grace ends at the renewal info's grace date, a revoked one is revoked, the best of several plans wins", async () => {
+  fresh();
+  const proof = parseProof(`ios:${SUBSCRIPTION_MONTHLY_PRODUCT}:2000000777`);
+  const tx = (extra) => signedTransaction({ bundleId: APP_PACKAGE_ID, productId: SUBSCRIPTION_MONTHLY_PRODUCT, environment: "Production", expiresDate: Date.now() + HOUR, ...extra });
+  const body = (...lasts) => json({ data: [{ subscriptionGroupIdentifier: "g", lastTransactions: lasts }] });
+  const ask = async (...lasts) => (await appleChecker.subscription(proof, ENV, recorded([["api.storekit.apple.com", body(...lasts)]]).fetcher)).status;
+  const activeEnd = Date.now() + HOUR;
+  assert.deepEqual(await ask({ status: 1, signedTransactionInfo: tx({ expiresDate: activeEnd }) }), { state: "active", expiresAt: new Date(activeEnd).toISOString() });
+  const graceEnd = Date.now() + 2 * HOUR;
+  assert.deepEqual(await ask({ status: 4, signedTransactionInfo: tx({ expiresDate: Date.now() - HOUR }), signedRenewalInfo: signedTransaction({ gracePeriodExpiresDate: graceEnd }) }), { state: "grace", expiresAt: new Date(graceEnd).toISOString() });
+  for (const renewal of [{}, { signedRenewalInfo: "garbage" }, { signedRenewalInfo: signedTransaction({}) }]) { // no renewal info, undecodable, or no gracePeriodExpiresDate: grace counts from now, not the past expiresDate
+    const lapsed = await ask({ status: 4, signedTransactionInfo: tx({ expiresDate: Date.now() - 5 * 24 * HOUR }), ...renewal });
+    assert.equal(lapsed.state, "grace");
+    assert.ok(Date.parse(lapsed.expiresAt) > Date.now() - 60_000);
+  }
+  for (const badGrace of ["not a number", Date.now() - 3 * HOUR]) { // a non-numeric or already-past grace date: still grace, ending no earlier than now
+    const odd = await ask({ status: 4, signedTransactionInfo: tx({ expiresDate: Date.now() - 5 * 24 * HOUR }), signedRenewalInfo: signedTransaction({ gracePeriodExpiresDate: badGrace }) });
+    assert.equal(odd.state, "grace");
+    assert.ok(Date.parse(odd.expiresAt) > Date.now() - 60_000);
+  }
+  assert.equal((await ask({ status: 5, signedTransactionInfo: tx({}) })).state, "revoked");
+  assert.equal((await ask({ status: 1, signedTransactionInfo: tx({ revocationDate: 1 }) })).state, "revoked");
+  assert.equal((await ask({ status: 2, signedTransactionInfo: tx({ expiresDate: Date.now() - HOUR }) })).state, "expired");
+  assert.equal((await ask({ status: 1, signedTransactionInfo: tx({ expiresDate: Date.now() - HOUR }) })).state, "expired"); // a status the transaction contradicts is not paid
+  assert.equal((await ask({ status: 2, signedTransactionInfo: tx({ expiresDate: Date.now() - HOUR }) }, { status: 1, signedTransactionInfo: tx({ expiresDate: activeEnd }) })).state, "active");
+  assert.deepEqual(await ask({ status: 1, signedTransactionInfo: tx({ bundleId: "other.app" }) }), { state: "expired", expiresAt: null });
+  for (const code of [400, 404, 500]) {
+    assert.equal((await appleChecker.subscription(proof, ENV, recorded([["api.storekit.apple.com", json({}, code)]]).fetcher)).verdict, Verdict.CannotVerify, String(code)); // only the status values say expired
+  }
+});
+
+test("subscription route: 200 with state and end date, never cached; same error codes as the paid gate", async () => {
+  fresh();
+  resetSubscriptionCache();
+  const end = new Date(Date.now() + HOUR).toISOString();
+  const fetcher = recorded([["oauth2.googleapis.com", json({ access_token: "at" })], ["/subscriptionsv2/", json({ subscriptionState: "SUBSCRIPTION_STATE_ACTIVE", lineItems: [{ productId: SUBSCRIPTION_PRODUCT, expiryTime: end }] })]]).fetcher;
+  const source = subscriptionSource({ fetcher });
+  const good = await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:subtok`);
+  assert.equal(good.status, 200);
+  assert.equal(good.headers.get("Cache-Control"), "no-cache");
+  assert.deepEqual(await good.json(), { state: "active", expiresAt: end });
+  assert.equal((await askSubscription(source, null)).status, 402);
+  assert.equal((await askSubscription(source, "garbage")).status, 403);
+  assert.equal((await askSubscription(source, `android:${PRODUCT}:tok`)).status, 403); // a book's proof is not a subscription's
+  assert.equal((await askSubscription(source, "windows::tok")).status, 403); // Windows keeps its local end date
+  assert.equal((await askSubscription(undefined, `android:${SUBSCRIPTION_PRODUCT}:tok`)).status, 404);
+  const off = createSubscriptionSource({ enabled: async () => false, env: ENV, fetcher: async () => json({}) });
+  assert.equal((await askSubscription(off, `android:${SUBSCRIPTION_PRODUCT}:tok`)).status, 404);
+});
+
+test("subscription route: a store that cannot be asked is 503 with no body; the limiter answers 429 and a cached proof skips it", async () => {
+  fresh();
+  resetSubscriptionCache();
+  const down = subscriptionSource({ fetcher: recorded([["oauth2.googleapis.com", json({ access_token: "at" })], ["/subscriptionsv2/", json({}, 503)]]).fetcher });
+  const unavailable = await askSubscription(down, `android:${SUBSCRIPTION_PRODUCT}:down`);
+  assert.equal(unavailable.status, 503);
+  assert.equal(await unavailable.text(), "");
+  const fetcher = recorded([["oauth2.googleapis.com", json({ access_token: "at" })], ["/subscriptionsv2/", json({}, 410)]]).fetcher;
+  let allowed = 1;
+  const source = subscriptionSource({ fetcher, limit: async () => { allowed -= 1; return allowed >= 0; } });
+  assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:one`)).status, 200);
+  assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:one`)).status, 200); // remembered: no store call, no limit used
+  assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:two`)).status, 429);
+});
+
+test("subscription route: a cannot-verify answer is remembered briefly (so retries spend no limiter slot or store call); a rate-limited one never is", async () => {
+  fresh();
+  resetSubscriptionCache();
+  const store = recorded([["oauth2.googleapis.com", json({ access_token: "at" })], ["/subscriptionsv2/", json({}, 503)]]);
+  let slots = 0;
+  const source = subscriptionSource({ fetcher: store.fetcher, limit: async () => { slots += 1; return slots <= 2; } });
+  for (let i = 0; i < 3; i += 1) assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:out`)).status, 503);
+  assert.equal(slots, 1);
+  assert.equal(store.calls.filter((call) => call.url.includes("subscriptionsv2")).length, 1);
+  const real = Date.now;
+  try {
+    Date.now = () => real() + SUBSCRIPTION_REFUSAL_CACHE_MS + 1;
+    assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:out`)).status, 503); // asked again after the time
+    assert.equal(slots, 2);
+    assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:out`)).status, 503); // cached again
+    Date.now = () => real() + 2 * SUBSCRIPTION_REFUSAL_CACHE_MS + 2;
+    assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:out`)).status, 429); // limit spent
+    assert.equal((await askSubscription(source, `android:${SUBSCRIPTION_PRODUCT}:out`)).status, 429);
+    assert.equal(slots, 4); // a 429 is never cached: each call asked the limiter
+  } finally {
+    Date.now = real;
+  }
+});
+
+test("subscription route: HEAD answers without a store lookup or a limiter slot; a check that throws is 503 and logged by name", async () => {
+  fresh();
+  resetSubscriptionCache();
+  let asked = 0;
+  const counting = async () => { asked += 1; return { kind: "status" }; };
+  const head = await handleStories(new Request("https://x.test/api/stories/subscription", { method: "HEAD", headers: { "X-Purchase-Proof": `android:${SUBSCRIPTION_PRODUCT}:tok` } }), { DOWNLOADS: storeBucket() }, "", serveObject, undefined, undefined, counting);
+  assert.equal(head.status, 200);
+  assert.equal(asked, 0);
+  const warnings = [];
+  const warn = console.warn;
+  console.warn = (line) => warnings.push(String(line));
+  try {
+    const broken = await askSubscription(async () => { throw new TypeError("secret detail"); }, `android:${SUBSCRIPTION_PRODUCT}:tok`);
+    assert.equal(broken.status, 503);
+  } finally {
+    console.warn = warn;
+  }
+  assert.deepEqual(warnings, ["subscription check threw TypeError"]);
 });

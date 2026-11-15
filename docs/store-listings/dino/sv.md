@@ -1,14 +1,47 @@
 # Store listing: Swedish (`sv`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Not pushed yet.** Locales: Play `sv-SE`; App Store `sv`; Microsoft Store `sv`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `sv-SE`; App Store `sv`; Microsoft Store `sv`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): Sagor som läses högt, med en egen röst för varje figur.
+Play short description (<= 80): Varje figur har en egen röst - och mormor kan spela in sin som vargen
 Play search phrases used in the text: godnattsagor, sagor för barn, bilderböcker, högläsning
 App Store subtitle (<= 30): En röst för varje figur
 App Store keywords (<= 100 bytes): barnsagor,godnattsagor,sagor,bilderböcker,barnböcker,högläsning,berättelser,spela in
 App Store promotional text (<= 170): Sagor som läses högt för barn 3 till 9 år, med en röst för varje figur och plats för din egen. Inga annonser. Fyra gratis, resten 0,99 USD. 15 språk.
 Microsoft search terms (7): barnsagor; högläsning; godnattsagor; bilderböcker; sagor; barnböcker; figurröster
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+I Dino Book Reader har varje figur sin egen röst. Berättaren berättar sagan, vargen och de små grisarna låter var och en som sig själv, och en förälder eller en mor- eller farförälder kan spela in sin egen röst som vilken figur som helst: mormor kan vara vargen.
+
+Varje saga finns på 15 språk, för familjer som behåller ett hemspråk vid sidan av skolspråket: persiska, arabiska, svenska, norska, danska, finska och fler. En vuxen väljer två eller tre sagospråk, och barnet kan byta mellan dem under läsningen, höra samma saga och lära sig orden på båda språken.
+
+Inga annonser. Inget konto. En nedladdad saga fungerar offline, och dina inspelningar stannar på din enhet.
+
+Fyra illustrerade sagor är gratis: Lejonet och musen, Pepparkaksgubben, De tre små grisarna och X markerar skatten. Varje annan saga köper du en gång och behåller, 0,99 USD styck (Google Play visar priset i din egen valuta). En vuxen köper bakom de vuxnas spärr och kan återställa tidigare köp när som helst.
+
+FÖR BARN FRÅN 3 TILL 9 ÅR
+Barnen lyssnar, tittar på bilderna och följer med: bra för godnattsagor och för tvåspråkiga barn som lär sig ord på två språk. En vuxen ställer in allt, väljer böckerna och spelar in röster bakom de vuxnas spärr.
+
+KLASSISKA SAGOR, SAKTMODIGT ÅTERBERÄTTADE
+Handplockade bilderböcker, var och en återberättad för små barn, med en bild på varje sida.
+
+MER ATT GLÄDJAS ÅT
+- Varje mening lyser upp när den läses.
+- Bara bild, bara text, eller bild och text.
+- Lästakt från 0,8x till 1,2x och djurljud som du kan slå på eller av.
+- Ett nattläge för läggdags.
+- Spela in vilken figur som helst, på vilken sida som helst, på vilket sagospråk som helst; säkerhetskopiera och återställ inspelningarna.
+
+SPRÅK
+Engelska, arabiska, kinesiska, danska, nederländska, persiska, finska, franska, tyska, japanska, norska, portugisiska, ryska, spanska och svenska: appen, sagorna och rösterna.
+
+TRYGGT OCH PRIVAT
+- Inga annonser och inget konto att skapa. Vi sparar inget om dig eller ditt köp; butikens bevis kontrolleras och glöms.
+- Köp, inställningar, inspelning och säkerhetskopior ligger bakom en spärr för vuxna.
+- Valfri anonym användningsstatistik utan namn eller identifierare, som kan stängas av i Inställningar.
 
 ## Description
 

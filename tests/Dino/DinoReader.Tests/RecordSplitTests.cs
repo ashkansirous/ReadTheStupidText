@@ -288,7 +288,7 @@ public sealed class RecordSplitTests
         const string text = "Yek bar. \"Salam!\"";
         var translated = new TranslatedStory([new StoryPage(text)], text, [new SentenceSpan(0, 8), new SentenceSpan(9, 17)]);
 
-        RecordBook inFarsi = RecordSplitBook.WithTranslatedText(book, translated);
+        RecordBook inFarsi = RecordSplitBook.WithTranslatedText(book, translated)!;
 
         Assert.Equal(["Yek bar.", "\"Salam!\""], inFarsi.Sentences.Select(s => s.Text));
         Assert.Equal([0, 1], inFarsi.Sentences.Select(s => s.Index));

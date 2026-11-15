@@ -77,6 +77,49 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
+- **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
+- **Device:** Windows Hyper-V VM subscription flow.
+- **You:** real store sandbox (Play licence tester, Apple sandbox) after the store setup.
+- **Device:** Worker route `GET /api/stories/subscription` live, after the batched release deploy.
+- **Device:** `store-products.mjs` request shapes (UNVERIFIED, never run with `--apply`).
+- **Device:** offline 3-day lock on a real device.
+- **You:** restore on iOS.
+
+### Slice 383: Dino: a book keeps reading when the phone is locked ([slice](slices/383-dino-reading-keeps-going-when-locked.md))
+- **Device:** A long locked read (1 minute or more, three-little-pigs with its real Farsi pack on the S21 dev install; `KEYCODE_WAKEUP` before `open-book`): a silent beat's delay is not stalled by Doze.
+- **You:** iOS TestFlight: a book plays to the end with the iPhone locked, the silent beat's delay runs, and `OnDisappearing` does not pause it on lock.
+- **Device:** Another app in front with the screen on: the read goes on (no device run covers it).
+
+### Slice 391: Dino Windows: Enter on the first-run story-languages step opens no book picker ([slice](slices/391-dino-windows-first-run-enter-on-story-languages.md))
+- **Device:** `dino-reorder` on the VM (item 3; Slice 382's open Windows check) was not reached: `dino-onboarding-keys` passed on the final build `50c83d7c6389`, but the prerequisite `dino-launch` then failed ("the shelf did not show", app left on onboarding step 5 of 6), so `dino-reorder` stopped with "SETUP FAILURE: need two books on the shelf, found 0". Likely a harness gap in `tools/desktop-vm` (finish or skip onboarding before `dino-launch`), not app code.
+
+### Slice 381: Dino: first-run tour placement under a tall status bar ([slice](slices/381-dino-tour-shifted-under-tall-status-bar.md))
+- **Device:** The tall-cutout overlay was enabled for the Pixel-size run but not read back, so the 149 px status bar of the repro may not have been active.
+- **Device:** The flow was not shown failing on the old build (without the fix).
+- **Device:** Farsi (RTL) placement: whether the layer mirrors `Margin.Left` under RTL.
+- **Device:** S21: `onboarding-tour-position` not run.
+- **Device:** iOS notch / Dynamic Island: the copies on their targets (simulator workflow or TestFlight).
+- **Device:** Small screenshots of the Child's shelf and Grown-ups stops with the copy over the real control.
+
+### Slice 382: Dino reorder: held book wiggles, plain drag ([slice](slices/382-dino-reorder-held-book-wiggles-plain-drag.md))
+- **Device:** Windows VM `dino-reorder` (mouse drag, keyboard path, the new hint): blocked by the `dino-onboarding-keys` first-run Enter failure (Slice 391).
+- **Device:** S21: the same checks as the emulator (covers sharp on first open, plain swipe drag, held book wiggles, Done saves, Cancel restores).
+- **Device:** iOS pan (simulator or TestFlight): the scroll view waits for the cover's pan, no scroll before the drag, a tap on a cover still lifts.
+- **Device:** The drag's drop slot: the Maestro flow only proves that a drag happens, not where the book lands.
+- **Device:** Tap-lift a cover, then drag another cover: the new drag takes over the lift; look at it on a device.
+
+### Slice 386: Dino: the default-view-per-book flow fails on main ([slice](slices/386-dino-default-view-per-book-flow-fails.md))
+- **Device:** no test-store book has carried `textInPictures` since Slice 350, so the device path of the Picture-only default (story.json `TextInPictures` -> `Story.Mode` -> `PictureTextPages.IsPictureOnly` -> `ModeSwitch`) is covered only by the `Story.Mode` unit tests (`TextInPicturesTests.cs`), not by any flow.
+
+### Slice 387: Dino: the shelf title cut by the Grown-ups button ([slice](slices/387-dino-shelf-title-cut-by-grownups-button.md))
+- **Device:** The title's seven taps open the developer switch while the short label sits above the full one at Opacity 0 (InputTransparent), on iOS and Windows; and on Windows the VM checks (`Find-UiaById 'GalleryTitle'`) find only the full label, so they miss a shelf whose title is Short or Hidden.
+- **Device:** Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
+- **Device:** The iPhone shots (run 43657945195, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException`, twice); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
+
+### Slice 380: Dino Android: product details through the listener only ([slice](slices/380-dino-android-listener-only-details.md))
+- **Device:** S21 with a Play internal-track build shows a price for every product and one `product details:` line per refresh (needs the next batched release).
+
 ### Slice 375: Dino: every picture in two sizes ([slice](slices/375-dino-two-picture-sizes.md))
 
 - **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
@@ -190,7 +233,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 322: Dino's silent beats pause when the screen locks ([slice](slices/322-dino-beat-pauses-on-screen-lock.md))
 - **You:** iOS (no Mac): the same `Window.Stopped`/`Resumed` handlers, not run.
-- **Device:** Windows head: `WindowForeground` returns unknown and `Deactivated` is unhandled; not run on the VM.
 - **Device:** Edge cases reverted after the second strike: a window re-subscribe while an event fact is newer than the platform read, and a null `Platform.CurrentActivity`.
 - **Device:** Harness flake risk (`reviews/s322-check-final3.md` #1-#3): the screen cycle could sleep the display during the flow's final launch/assert or setup waits.
 
@@ -385,6 +427,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iPhone: pre-made audio rate and playback, and a real store download fetching live packs.
 
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
+- **Device:** The audio-backed flow `ios-read-audio.yaml` passes reliably on main: two runs on main failed for harness reasons, no app crash (43649148563 StoryTile 60 s wait timed out after skip-first-run; 43650858536 Maestro `XCUITestServerError` Unreachable); the branch run 43646782384 passed.
 - **You:** The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - **Device:** The window size on a real phone.
 - **Device:** The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt for dino-test:// links is tapped (prompt text, timing, locale), the `.ips` file naming, the Jetsam `largestProcess` field.
@@ -455,7 +498,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Slice 197 (PR #583): no stale "Downloading" status after the download ends; notification Cancel mid-download then nothing restarts; iOS TestFlight ... [full text](notes/2026-10-30-outstanding-detail.md#o016) ([slice](slices/197-dino-download-now-tap-dropped.md))
 
 ### Slice 196: dino default view per book ([slice](slices/196-dino-default-view-per-book.md))
-- **Device:** Slice 196 (PR #575): the flow `default-view-per-book.yaml` not yet shown failing on old main; Good Enough pages 8 and 10 by eye; landscape layout; ... [full text](notes/2026-10-30-outstanding-detail.md#o008) ([slice](slices/196-dino-default-view-per-book.md))
+- **Device:** Slice 196 (PR #575): Good Enough pages 8 and 10 by eye; landscape layout; ... [full text](notes/2026-10-30-outstanding-detail.md#o008) ([slice](slices/196-dino-default-view-per-book.md))
 
 ### Slice 192: dino store credits in every language ([slice](slices/192-dino-store-credits-in-every-language.md))
 - **Device:** Slice 192 (PR #582): live `meta.json` refreshed (all 15 books in `/api/stories` carry `creditsByLanguage`, checked 2026-10-30); ... [full text](notes/2026-10-30-outstanding-detail.md#o012) ([slice](slices/192-dino-store-credits-in-every-language.md))
@@ -503,6 +546,27 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 379 part A: Everything to the latest stable ([slice](slices/379-everything-to-latest-stable.md))
+- **Device:** iOS jobs on CI after merge (SDK 10.0.401 / Xcode 26.6 pins).
+- **Device:** Node 26 in the release scripts (first release run).
+- **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
+- **Device:** ARM64 MSIX.
+- **Device:** Windows tray read in the Hyper-V VM.
+- **You:** TestFlight build of each app.
+- **Device:** RTST Scan flow.
+
+### Slice 389: Tooling: the emulator preflight picks an installed JDK ([slice](slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md))
+- **Device:** `run-flows.ps1` end to end with a removed `JAVA_HOME` (cached build, then `-NoBuild`): the `Confirm-EmulatorPreflight` wiring prints the chosen JDK, and with no JDK at all it exits 7. The pick and the Maestro preflight themselves passed on emulator-5554.
+
+### Slice 388: Shared tests: `PackDownloadLogTests` capture leaks another test's line ([slice](slices/388-shared-pack-download-log-capture-per-test.md))
+- **Logs:** the shared tests job stays green over the next releases (no foreign PACKDL line); the CI flake was not reproduced locally.
+
+### Slice 378: Build warnings gate ([slice](slices/378-build-warnings-gate.md))
+- **Device:** The scan-crop fix on an API 28-30 emulator image: no Android 9-11 system image is installed, and no flow scans a real page, so a scan flow is needed as well.
+- **Device:** The first release run after merge: no Node 20 warnings, `tracks:` accepted by upload-google-play v1.1.5, GitTools v4.7.0 `configFilePath` (including `windows.yml`'s restored config), setup-node v7 caching.
+- **Device:** A TestFlight build with the gate on.
+- **Device:** Android 36 `ToggleSwitch` `CheckedState` (`ToggleSwitchAccessibility.cs`).
 
 ### Slice 317: Feedback loop 2026-11-08-0106 leftovers ([slice](slices/317-feedback-loop-2026-11-08-0106-leftovers.md))
 - Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).
@@ -627,7 +691,7 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 - **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
-- **Device:** The tablet store-shot flows (`store-shot-tablet.yaml`, Dino and RTST) have never been run.
+- **Device:** The iOS store shots, first run on main (43650776897): a look at each Dino iPhone 6.9"/6.5" shot; the Dino iPad 13" flow (`Tap on id: ReadingBack... FAILED`) and the RTST flows on all three devices (`PackStatusLabel is not visible... FAILED`) failed.
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
 - **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).

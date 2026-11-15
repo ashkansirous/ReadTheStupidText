@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Verhalen</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Opnieuw ordenen</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Houd een boek ingedrukt en sleep het naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Sleep een boek naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Wachten op de omslagafbeelding</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>De nieuwe volgorde kon niet worden opgeslagen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Iets gebruikt het bestand nog. Tik op Klaar om het opnieuw te proberen, of op Annuleren om de oude volgorde te houden.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Nu lezen</value></data>
@@ -417,6 +418,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Sommige boeken kosten een beetje. Ze worden gekocht met je winkelaccount en er wordt niets over jou of je kind naar ons gestuurd.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Wachten op de winkel…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Je aankopen worden gecontroleerd…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Alle boeken met één abonnement</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Open alle boeken zolang je geabonneerd bent. Boeken die je koopt blijven altijd van jou.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Probeer gratis, daarna {0} per maand</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Probeer gratis, daarna {0} per jaar</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 dagen gratis voor nieuwe abonnees. Daarna verlengt het zichzelf elke maand of elk jaar tegen de getoonde prijs, tot je opzegt in je winkelaccount. Je kunt op elk moment opzeggen.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Gebruiksvoorwaarden</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Privacybeleid</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Abonnement beheren</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Je bent geabonneerd. Alle boeken zijn open.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Opnieuw abonneren</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Dit boek kopen</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Vergrendeld: het abonnement is afgelopen</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Boeken om terug te halen uit de winkel</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis boeken komen vanzelf terug. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis boeken die nog in de winkel staan, komen vanzelf terug. Een boek dat de winkel niet meer aanbiedt, komt niet terug, maar de opnames blijven in het back-upbestand. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>

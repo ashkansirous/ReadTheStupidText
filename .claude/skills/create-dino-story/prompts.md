@@ -28,9 +28,9 @@ is about twice the height of the pigs">. Each character appears exactly once. <S
 ```
 Make the book cover. <STYLE> Portrait 3:4. The characters, with their outfits: <Name 1: look, what
 they wear and do NOT wear>, <Name 2: ...>. Exactly <k> characters. <Scene: the main characters together, the story's key
-place>. <Villain, if any, shown silly not scary>. Every character stays whole in the top 70% of the
-picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above the 70% line. The
-bottom 30% is calm scene (<grass, flowers, floor or water>) with no character or any part of one in it,
+place>. <Villain, if any, shown silly not scary>. Every character stays whole in the top 68% of the
+picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above the 68% line. The
+bottom 32% is calm scene (<grass, flowers, floor or water>) with no character or any part of one in it,
 never a plain empty strip. <SIZE>
 ```
 
@@ -71,8 +71,8 @@ characters and details only around the edges as described. <SCENE> <SIZE>
   top of the picture is plain soft pale blue sky with just a faint watercolour wash and one or two tiny faint
   clouds, no characters.
 
-Four-legged animals stay on four legs (a "walking away" sample had the Lion upright on two legs). The 70% line
-rule does not apply to a back cover; its open area is the middle.
+Four-legged animals stay on four legs (a "walking away" sample had the Lion upright on two legs). The bottom-strip
+rule (prompt 32%, check 27%) does not apply to a back cover; its open area is the middle.
 
 ## Page
 
@@ -81,8 +81,8 @@ Page <n>. <STYLE> Portrait 3:4, no text or letters anywhere. Characters on this 
 as in the pasted picture: <Name: look, what they wear and do NOT wear>. Scene: <time of
 day, place>. <Who does what, with each character's outfit in brackets>. <Who is NOT on this page>.
 Exactly <k> <characters>, each appearing once. Nobody is hurt or in danger. Every character stays
-whole in the TOP 70% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all
-end above the 70% line. The bottom 30% is calm scene (<grass, flowers, floor or water>) with no
+whole in the TOP 68% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all
+end above the 68% line. The bottom 32% is calm scene (<grass, flowers, floor or water>) with no
 character or any part of one in it, never a plain empty strip. <SIZE>
 ```
 
@@ -110,5 +110,5 @@ Do not argue in the same chat. One prompt per chat is the rule (Slice 350), and 
 
 ```
 Draw a single picture. <STYLE> Portrait 3:4. <Full scene description from scratch, every character
-with outfit, the count, indoor/outdoor, the top-70% rule: every character whole above the 70% line, feet and tails included.> <SIZE>
+with outfit, the count, indoor/outdoor, the top-68% rule: every character whole above the 68% line, feet and tails included, the bottom 32% only scene.> <SIZE>
 ```

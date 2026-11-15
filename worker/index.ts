@@ -24,6 +24,8 @@ import type { WindowsTicketSource } from "./stories";
 import { serviceTicket } from "./entitlements/microsoft";
 import { createPaidGate } from "./entitlements/gate";
 import type { PaidGate, StoreCallLimit } from "./entitlements/gate";
+import { createSubscriptionSource } from "./entitlements/subscription";
+import type { SubscriptionSource } from "./entitlements/subscription";
 import type { EntitlementEnv } from "./entitlements/types";
 import { handleSonos, isSonosPath } from "./sonos";
 import { handleAlexa, isAlexaPath } from "./alexa";
@@ -83,18 +85,18 @@ function storeCallLimitFor(env: Env): StoreCallLimit {
 
 // Slice 346: paid books. `paidBooks.enabled` (default off) in the Dino config object, read through the same short cache as the other switches;
 // the store keys are Worker secrets, and while one is missing that store answers "cannot verify" (403), never "owned".
-function paidGateFor(env: Env): { readonly gate: PaidGate; readonly ticket: WindowsTicketSource } {
+function paidGateFor(env: Env): { readonly gate: PaidGate; readonly ticket: WindowsTicketSource; readonly subscription: SubscriptionSource } {
   const enabled = configCheck(env, APP_CONFIG_KEY, "paidBooks", (config) => config.paidBooks.enabled);
   const fetcher = (input: string, init?: RequestInit) => fetch(input, init);
-  const gate = createPaidGate({ enabled, env: env as Env & EntitlementEnv, fetcher, limit: storeCallLimitFor(env) });
-  return { gate, ticket: windowsTicketFor(env, enabled, fetcher) };
+  const options = { enabled, env: env as Env & EntitlementEnv, fetcher, limit: storeCallLimitFor(env) };
+  return { gate: createPaidGate(options), ticket: windowsTicketFor(env, enabled, fetcher), subscription: createSubscriptionSource(options) }; // Slice 384: the subscription route shares the gate's switch and store-call limit
 }
 
 function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   const paid = paidGateFor(env);
-  return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject, paid.gate, paid.ticket);
+  return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject, paid.gate, paid.ticket, paid.subscription);
 }
 
 // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).

@@ -46,7 +46,7 @@ public sealed class StarterStories(IStoryLibrary library)
 	public bool InstallComplete => _complete;
 
 	/// <summary>The shelf's start-up pass: finishes a store swap a crash interrupted (no book is bundled any more, Slice 261). Safe to call again and from several places (the gallery, the book updater):
-	/// calls wait for the one pass. In a Debug build it also waits for the test shelf a flow asked for (<see cref="Testing.TestBooks"/>), so the first shelf read already holds it.</summary>
+	/// calls wait for the one pass. In a Debug build it also waits for the test shelf a flow asked for (<c>Testing.TestBooks</c>), so the first shelf read already holds it.</summary>
 	public async Task InstallOnceAsync()
 	{
 		await _gate.WaitAsync();

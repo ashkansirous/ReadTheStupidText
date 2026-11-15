@@ -196,7 +196,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Historier</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Endre rekkefølge</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Trykk og hold på en bok, og dra den til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Dra en bok til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Venter på omslagsbildet</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre den nye rekkefølgen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Noe bruker fortsatt filen. Trykk Ferdig for å prøve igjen, eller Avbryt for å beholde den gamle rekkefølgen.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Les nå</value></data>
@@ -417,6 +418,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Noen bøker koster litt. De kjøpes med butikkontoen din, og ingenting om deg eller barnet ditt sendes til oss.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Sjekker kjøpene dine …</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Alle bøker med ett abonnement</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Åpne alle bøker så lenge du abonnerer. Bøker du kjøper, er dine for alltid.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Prøv gratis, deretter {0} i måneden</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Prøv gratis, deretter {0} i året</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 dager gratis for nye abonnenter. Deretter fornyes det automatisk hver måned eller hvert år til prisen som vises, til du sier opp i butikkontoen din. Du kan si opp når som helst.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Vilkår for bruk</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Personvernerklæring</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Administrer abonnement</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Du abonnerer. Alle bøker er åpne.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Abonner på nytt</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Kjøp denne boken</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnementet er avsluttet</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøker kommer tilbake av seg selv. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøker som fortsatt er i butikken, kommer tilbake av seg selv. En bok butikken ikke lenger har, kommer ikke tilbake, men opptakene blir i sikkerhetskopifilen. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>

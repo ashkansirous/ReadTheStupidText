@@ -114,7 +114,7 @@ public sealed class RecordingLanguageTests : IDisposable
         Story story = Make();
         await library.AddAsync(story);
         Story old = StoryRecordings.WithClip(story, new StoryClipKey(0, 0, 0, "sv"), new PageRecording("sv", 5));
-        await File.WriteAllTextAsync(Path.Combine(_root, "lib", story.Id, "story.json"), AsOldFile(StoryJson.Serialize(old)));
+        await File.WriteAllTextAsync(Path.Combine(_root, "lib", story.Id, "story.json"), AsOldFile(StoryJson.Serialize(old)), TestContext.Current.CancellationToken);
 
         Story read;
         using (MainLanguage.Is("fa"))
@@ -122,7 +122,7 @@ public sealed class RecordingLanguageTests : IDisposable
             read = (await library.GetAsync(story.Id))!;
         }
 
-        string onDisk = await File.ReadAllTextAsync(Path.Combine(_root, "lib", story.Id, "story.json"));
+        string onDisk = await File.ReadAllTextAsync(Path.Combine(_root, "lib", story.Id, "story.json"), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, StoryRecordings.Count(read, "fa"));
         Assert.Contains("RecordingSchema", onDisk);
@@ -180,20 +180,20 @@ public sealed class RecordingLanguageTests : IDisposable
         Story old = StoryRecordings.WithClip(story, new StoryClipKey(0, 0, 0, "sv"), new PageRecording("sv", 5));
         string path = Path.Combine(_root, "lib", story.Id, "story.json");
         string oldFile = AsOldFile(StoryJson.Serialize(old));
-        await File.WriteAllTextAsync(path, oldFile);
+        await File.WriteAllTextAsync(path, oldFile, TestContext.Current.CancellationToken);
 
         Story early;
         using (MainLanguage.Is(null))
         {
             early = (await library.GetAsync(story.Id))!;
-            Assert.Equal(oldFile, await File.ReadAllTextAsync(path)); // the file is untouched
+            Assert.Equal(oldFile, await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken)); // the file is untouched
             await library.UpdateAsync(early with { Title = "Pigs again" }); // a save by a host that read early keeps the clips waiting
         }
 
         Assert.Equal(0, StoryRecordings.Count(early, "en"));
         Assert.Equal(0, StoryRecordings.Count(early, "sv"));
         Assert.Equal(1, StoryRecordings.Count(early)); // the clip is still there, filed under no language yet
-        Assert.DoesNotContain("\"RecordingSchema\": 2", await File.ReadAllTextAsync(path));
+        Assert.DoesNotContain("\"RecordingSchema\": 2", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
 
         Story later;
         using (MainLanguage.Is("de"))
@@ -202,7 +202,7 @@ public sealed class RecordingLanguageTests : IDisposable
         }
 
         Assert.Equal(1, StoryRecordings.Count(later, "de"));
-        Assert.Contains("\"RecordingSchema\": 2", await File.ReadAllTextAsync(path));
+        Assert.Contains("\"RecordingSchema\": 2", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
     }
 
     [Fact]

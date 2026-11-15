@@ -1,0 +1,134 @@
+name: store-screenshots
+
+# Slice 291 item 5 (iOS part): the App Store screenshots of both apps from a macOS simulator, the same frames as the Play ones
+# (.maestro/<app>/needs-file/store-shot-phone.yaml): iPhone 6.9", iPhone 6.5" and iPad 13". Manual only (workflow_dispatch), never on a
+# push or pull request. Per app (a job each, in parallel): build the Debug iossimulator-arm64 app (same macOS image, Xcode and workload
+# as dinoreader-ios-sim.yml), then .github/scripts/ios-sim-store-shots.sh boots each simulator, installs the app and Maestro runs
+# .maestro/<app>/store-shot-ios-frames.yaml; each PNG is size-checked against what App Store Connect takes.
+# Zero Actions artifacts (Batch 8): the PNGs go to a DRAFT GitHub Release `store-shots-<app>-<run id>` (Release assets do not count
+# toward the storage quota, a draft creates no tag and is never picked up by find-release.sh, which skips drafts). Fetch them with
+# the `gh release download` line printed in the step summary; delete the draft (`gh release delete <tag> --cleanup-tag`) when done.
+#
+# Dispatch: gh workflow run store-screenshots.yml --ref <branch> -f app=both   (app: both | dino | rtst)
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Which app to shoot.'
+        required: true
+        type: choice
+        options:
+          - both
+          - dino
+          - rtst
+        default: both
+
+permissions:
+  contents: read
+
+jobs:
+  shots:
+    name: shots-${{ matrix.app }}
+    timeout-minutes: 120
+    runs-on: macos-26
+    permissions:
+      contents: write   # gh release create --draft (the shots' home)
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(inputs.app == 'both' && '["dino","rtst"]' || format('["{0}"]', inputs.app)) }}
+    env:
+      APP: ${{ matrix.app }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Per-app settings
+        run: |
+          set -euo pipefail
+          if [ "$APP" = "dino" ]; then
+            {
+              echo "PROJECT=src/Dino/DinoReader.App/DinoReader.App.csproj"
+              echo "BUILD_DIR=src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64"
+            } >> "$GITHUB_ENV"
+          else
+            {
+              echo "PROJECT=src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj"
+              echo "BUILD_DIR=src/Rtst/ReadTheStupidText.Mobile/bin/Debug/net10.0-ios/iossimulator-arm64"
+            } >> "$GITHUB_ENV"
+          fi
+          echo "FLOW=.maestro/$APP/store-shot-ios-frames.yaml" >> "$GITHUB_ENV"
+          echo "OUT_DIR=$RUNNER_TEMP/shots" >> "$GITHUB_ENV"
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      # Same toolchain pin as dinoreader-ios.yml and ios.yml (workload set 10.0.401 needs Xcode 26.6). Bump them together.
+      - name: Select Xcode 26.6
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install the .NET MAUI iOS workload (pinned)
+        run: |
+          set -euo pipefail
+          dotnet --version
+          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload --version
+
+      # Maestro needs Java 17 or newer.
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Debug, because the test hooks (skip-first-run, open-book, ...) exist in Debug builds only. A test-only build must clear the live
+      # remote config minVersion gate, so the version is stamped high (same property form as dinoreader-ios-sim.yml).
+      - name: Build the Debug simulator app
+        run: >
+          dotnet build "$PROJECT"
+          -f net10.0-ios
+          -p:IncludeAndroid=false
+          -c Debug
+          -p:RuntimeIdentifier=iossimulator-arm64
+          -p:ApplicationDisplayVersion=99.0.0
+          -p:ApplicationVersion=99
+
+      - name: Install Maestro
+        run: bash .github/scripts/ios-sim-install-maestro.sh
+
+      - name: Take the shots on three simulators
+        id: shots
+        timeout-minutes: 90
+        run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR"
+
+      # Runs even when a device failed: the shots that did come out are kept. The draft is skipped when there are none.
+      - name: Hand the shots over (draft release, no artifact)
+        if: always()
+        run: |
+          set -euo pipefail
+          if ! find "$OUT_DIR" -name '*.png' -print -quit 2>/dev/null | grep -q .; then
+            echo "::warning::No screenshot was taken: nothing to hand over."
+            exit 0
+          fi
+          TAG="store-shots-$APP-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          FILES=()
+          while IFS= read -r png; do
+            FILES+=("$png")
+          done < <(find "$OUT_DIR" -name '*.png' | sort)
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+            --title "Store screenshots, $APP, run $GITHUB_RUN_ID" \
+            --notes "App Store screenshots of $APP from run $GITHUB_RUN_ID (store-screenshots.yml). Delete this draft once the PNGs are fetched." \
+            "${FILES[@]}"
+          {
+            echo "### Shots of $APP: ${#FILES[@]} PNG(s) in the draft release \`$TAG\`"
+            echo '```'
+            echo "gh release download $TAG --repo $GITHUB_REPOSITORY --dir <folder>"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

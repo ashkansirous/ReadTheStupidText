@@ -38,6 +38,26 @@ public static class ShelfTitleRules
         return shortWidth <= availableWidth ? ShelfTitle.Short : ShelfTitle.Hidden;
     }
 
+    private const double GlyphWidthFactor = 0.6; // an average bold glyph, in em, for a pill that could not be measured
+    /// <summary>Added to a measured title width: a measure can be a pixel short once the platform rounds it.</summary>
+    public const double TitleSlack = 2;
+
+    /// <summary>
+    /// The width the Grown-ups pill takes: its laid-out width when it has one (> 0); before layout its measured width; and only when that measure is clearly unmeasured
+    /// (at or below padding + icon: a pill with no native view reads 0 or its padding, Slice 387, iOS clipped "My stories" to "My sto") an estimate of the words, which the laid-out width replaces.
+    /// </summary>
+    public static double PillWidth(double laidOut, double measured, int labelLength, double labelSize, double padLeft, double padRight, double icon, double gap)
+    {
+        double fixedParts = padLeft + padRight + icon;
+        bool measureIsReal = measured > fixedParts;
+        if (laidOut > 0)
+        {
+            return measureIsReal ? Math.Max(laidOut, measured) : laidOut; // a squeezed layout is only ever narrower than what the pill needs
+        }
+
+        return measureIsReal ? measured : fixedParts + gap + (labelLength * labelSize * GlyphWidthFactor);
+    }
+
     /// <summary>The width left for the title in a header row: the row less its sides, the icon, the flag button (0 when not shown), the pill and the gaps between the pieces (one per piece after the first).</summary>
     public static double AvailableForTitle(double rowWidth, double sides, double icon, double flagButton, double pill, double gap)
     {

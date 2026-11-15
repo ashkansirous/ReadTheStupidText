@@ -368,7 +368,7 @@ public sealed class AudioPackStoreTests : IDisposable
         await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
         await store.InstallAsync(other, "fa", Info(zip), null, CancellationToken.None);
 
-        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(new HashSet<string> { Book.ToUpperInvariant() }));
+        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(new HashSet<string> { Book.ToUpperInvariant() }), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, store.InstalledVersion(Book, "fa"));
         Assert.Null(store.InstalledVersion(other, "fa"));
@@ -393,7 +393,7 @@ public sealed class AudioPackStoreTests : IDisposable
         AudioPackStore store = Store(new FakeFetcher(zip));
         await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
 
-        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(new HashSet<string>()));
+        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(new HashSet<string>()), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, store.InstalledVersion(Book, "fa"));
     }
@@ -405,7 +405,7 @@ public sealed class AudioPackStoreTests : IDisposable
         AudioPackStore store = Store(new FakeFetcher(zip));
         await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
 
-        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(null));
+        await store.SweepAsync(() => Task.FromResult<ISet<string>?>(null), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, store.InstalledVersion(Book, "fa"));
     }
@@ -423,7 +423,7 @@ public sealed class AudioPackStoreTests : IDisposable
         await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
 
         Assert.Null(await library.TryListSourceIdsAsync());
-        await store.SweepAsync(library.TryListSourceIdsAsync);
+        await store.SweepAsync(library.TryListSourceIdsAsync, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, store.InstalledVersion(Book, "fa"));
     }
@@ -443,7 +443,7 @@ public sealed class AudioPackStoreTests : IDisposable
         await store.InstallAsync(Book, "fa", Info(fa), null, CancellationToken.None);
         await Store(new FakeFetcher(nb)).InstallAsync(Book, "nb", Info(nb), null, CancellationToken.None);
 
-        await store.DeleteBookAsync(Book);
+        await store.DeleteBookAsync(Book, TestContext.Current.CancellationToken);
 
         Assert.Null(store.InstalledVersion(Book, "fa"));
         Assert.Null(store.InstalledVersion(Book, "nb"));
@@ -562,7 +562,7 @@ public sealed class AudioPackStoreTests : IDisposable
         var progress = new SignalProgress(reachedStall);
 
         Task<PackInstall> install = store.InstallAsync(Book, "fa", Info(zip), progress, cancel.Token, new FailingAudioPackFetcher(new FakeFetcher(zip), PackFailureInjection.Stall));
-        await reachedStall.Task.WaitAsync(TimeSpan.FromSeconds(30)); // the fetch wrote its first bytes and reported them: it is running, about to hang
+        await reachedStall.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken); // the fetch wrote its first bytes and reported them: it is running, about to hang
         Assert.False(install.IsCompleted);
 
         cancel.Cancel();

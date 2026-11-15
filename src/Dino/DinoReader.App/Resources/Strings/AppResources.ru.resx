@@ -195,7 +195,8 @@
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Истории</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Нажмите на книгу и удерживайте, затем перетащите её на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Перетащите книгу на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Cover_Waiting" xml:space="preserve"><value>Ожидание картинки обложки</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Файл всё ещё занят. Нажмите «Готово», чтобы повторить, или «Отмена», чтобы оставить прежний порядок.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Читать сейчас</value></data>
@@ -418,6 +419,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Некоторые книги стоят немного. Их покупают через аккаунт магазина, и ничего о вас или вашем ребёнке нам не отправляется.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Ждём ответа магазина…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Проверяем ваши покупки…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Все книги по одной подписке</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Пока действует подписка, открыты все книги. Купленные вами книги остаются у вас навсегда.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Попробуйте бесплатно, затем {0} в месяц</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Попробуйте бесплатно, затем {0} в год</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 дней бесплатно для новых подписчиков. Потом подписка продлевается сама каждый месяц или каждый год по указанной цене, пока вы не отмените её в аккаунте магазина. Отменить можно в любой момент.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Условия использования</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Политика конфиденциальности</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Управление подпиской</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Вы подписаны. Все книги открыты.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Подписаться снова</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Купить эту книгу</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Закрыто: подписка закончилась</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Бесплатные книги, которые ещё есть в магазине, возвращаются сами. Книга, которую магазин больше не предлагает, не вернётся, но её записи останутся в файле копии. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>

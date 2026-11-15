@@ -69,7 +69,7 @@ public sealed class KokoroNanRescueTests
         var debug = new List<string>();
 
         RescueResult result = await SilentOutputGuard.RescueAsync(
-            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), lines.Add, debug: debug.Add,
+            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), lines.Add, debug: debug.Add, token: TestContext.Current.CancellationToken,
             singleThreadGenerate: () =>
             {
                 singleCalls++;
@@ -91,7 +91,7 @@ public sealed class KokoroNanRescueTests
         int singleCalls = 0;
 
         RescueResult result = await SilentOutputGuard.RescueAsync(
-            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { },
+            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, token: TestContext.Current.CancellationToken,
             singleThreadGenerate: () =>
             {
                 singleCalls++;
@@ -106,7 +106,7 @@ public sealed class KokoroNanRescueTests
     public async Task NoSingleThreadEngineMeansAPlainRetryAfterNan()
     {
         var takes = new Queue<SpokenTake>([NanTake(), Tone(400)]);
-        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { });
+        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, token: TestContext.Current.CancellationToken);
         Assert.False(result.GaveUp);
     }
 
@@ -126,7 +126,7 @@ public sealed class KokoroNanRescueTests
         var debug = new List<string>();
 
         RescueResult result = await SilentOutputGuard.RescueAsync(
-            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, debug: debug.Add,
+            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, debug: debug.Add, token: TestContext.Current.CancellationToken,
             singleThreadGenerate: () => throw new OutOfMemoryException());
 
         Assert.False(result.GaveUp);
@@ -138,7 +138,7 @@ public sealed class KokoroNanRescueTests
     {
         var takes = new Queue<SpokenTake>([NanTake()]);
         await Assert.ThrowsAsync<OperationCanceledException>(() => SilentOutputGuard.RescueAsync(
-            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { },
+            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, token: TestContext.Current.CancellationToken,
             singleThreadGenerate: () => throw new OperationCanceledException()));
     }
 
@@ -151,7 +151,7 @@ public sealed class KokoroNanRescueTests
         var takes = new Queue<SpokenTake>([silent, silent, silent]);
 
         RescueResult result = await SilentOutputGuard.RescueAsync(
-            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, fallback: () => Task.FromResult<SpokenTake?>(siblingWithNan));
+            "Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, fallback: () => Task.FromResult<SpokenTake?>(siblingWithNan), token: TestContext.Current.CancellationToken);
 
         Assert.True(result.GaveUp);
         Assert.Equal(0, TakeStats.From(result.Take).NanCount);
@@ -162,7 +162,7 @@ public sealed class KokoroNanRescueTests
     {
         var takes = new Queue<SpokenTake>([NanTake(), NanTake(), NanTake()]);
 
-        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { });
+        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), _ => { }, token: TestContext.Current.CancellationToken);
 
         Assert.True(result.GaveUp);
         Assert.All(result.Take.Samples, s => Assert.True(float.IsFinite(s)));
@@ -175,7 +175,7 @@ public sealed class KokoroNanRescueTests
         var takes = new Queue<SpokenTake>([ToneWithOneNan(), new SpokenTake(new float[Rate / 4], Rate), NanTake()]);
         var lines = new List<string>();
 
-        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), lines.Add);
+        RescueResult result = await SilentOutputGuard.RescueAsync("Ann.", Kokoro, 1.0, () => Task.FromResult(takes.Dequeue()), lines.Add, token: TestContext.Current.CancellationToken);
 
         Assert.True(result.GaveUp);
         Assert.Equal(0, TakeStats.From(result.Take).NanCount);
@@ -195,13 +195,13 @@ public sealed class KokoroNanRescueTests
         var onTakes = new Queue<SpokenTake>([NanTake(), Tone(400)]);
         await SilentOutputGuard.RescueUnitAsync(
             "Ann.", Kokoro, 1.0, false, _ => Task.FromResult(onTakes.Dequeue()), _ => { },
-            singleThread: Single, nanRescue: KokoroNanRescue.SingleThreadRetry);
+            singleThread: Single, nanRescue: KokoroNanRescue.SingleThreadRetry, token: TestContext.Current.CancellationToken);
         Assert.Equal(1, singleCalls);
 
         var offTakes = new Queue<SpokenTake>([NanTake(), Tone(400)]);
         await SilentOutputGuard.RescueUnitAsync(
             "Ann.", Kokoro, 1.0, false, _ => Task.FromResult(offTakes.Dequeue()), _ => { },
-            singleThread: Single, nanRescue: KokoroNanRescue.Off);
+            singleThread: Single, nanRescue: KokoroNanRescue.Off, token: TestContext.Current.CancellationToken);
         Assert.Equal(1, singleCalls);
     }
 
@@ -219,7 +219,7 @@ public sealed class KokoroNanRescueTests
                 multi++;
                 return Task.FromResult(multi % 2 == 0 ? NanTake() : Tone(300));
             },
-            _ => { }, debug: debug.Add, probe: true,
+            _ => { }, token: TestContext.Current.CancellationToken, debug: debug.Add, probe: true,
             singleThread: _ =>
             {
                 single++;
@@ -240,7 +240,7 @@ public sealed class KokoroNanRescueTests
     public async Task ProbeWithoutASingleThreadEngineLogsOnlyTheMultiThreadArm()
     {
         var debug = new List<string>();
-        await SilentOutputGuard.RescueUnitAsync("Ann.", Kokoro, 1.0, false, _ => Task.FromResult(Tone(300)), _ => { }, debug: debug.Add, probe: true);
+        await SilentOutputGuard.RescueUnitAsync("Ann.", Kokoro, 1.0, false, _ => Task.FromResult(Tone(300)), _ => { }, token: TestContext.Current.CancellationToken, debug: debug.Add, probe: true);
         Assert.Single(debug, d => d.StartsWith("short line probe", StringComparison.Ordinal));
     }
 

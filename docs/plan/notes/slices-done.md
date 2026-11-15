@@ -101,6 +101,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 341 | Listening page: Farsi short words never dropped | built | #993 | | [341-farsi-short-words-never-dropped.md](../slices/341-farsi-short-words-never-dropped.md) |
 | 361 | RTST `sentence-highlight` Maestro flow fails on the emulator: flow bug, fixed with a `SENTENCE_MOVED` marker | verified | #1051 | | [361-sentence-highlight-fails-on-emulator.md](../slices/361-sentence-highlight-fails-on-emulator.md) |
 | 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | built, not yet verified | #1090 | | [373-rtst-voice-rows-rt1-rt2.md](../slices/373-rtst-voice-rows-rt1-rt2.md) |
+| 385 | RTST: the `voice-cancel-holds-scan-pack` flow fails on main's build (`PackStatusLabel is visible`); find whether the app or the flow is wrong, then fix it | verified | #1165 | | [385-rtst-voice-cancel-flow-fails-on-main.md](../slices/385-rtst-voice-cancel-flow-fails-on-main.md) |
 
 ## Dino Reader
 
@@ -264,6 +265,15 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
 | 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | built, not yet verified | #1048, #1097 | | [359-dino-back-cover-picture.md](../slices/359-dino-back-cover-picture.md) |
 | 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | built, not yet verified | #1101, #1113 | | [375-dino-two-picture-sizes.md](../slices/375-dino-two-picture-sizes.md) |
+| 380 | Dino Android: product details through the Play listener only (the async wrapper is always empty, dotnet/android-libraries #1396), Slice 358 probe removed | built | #1159 | — | [380-dino-android-listener-only-details.md](../slices/380-dino-android-listener-only-details.md) |
+| 381 | Dino: the first-run tour's highlights and tooltips sit lower than the real buttons under a tall status bar (Pixel 10 Pro), Android and iOS, with a position check | built, not yet verified | #1164 | | [381-dino-tour-shifted-under-tall-status-bar.md](../slices/381-dino-tour-shifted-under-tall-status-bar.md) |
+| 382 | Dino reorder: the held book keeps wiggling, a drag needs no hold in edit mode, covers sharp on first open | built, not yet verified | #1162 | | [382-dino-reorder-held-book-wiggles-plain-drag.md](../slices/382-dino-reorder-held-book-wiggles-plain-drag.md) |
+| 387 | Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button on iPhone 6.9" and 6.5"; fix the layout on iOS and Android alike | built, not yet verified | #1157, #1168 | | [387-dino-shelf-title-cut-by-grownups-button.md](../slices/387-dino-shelf-title-cut-by-grownups-button.md) |
+| 386 | Dino: the `default-view-per-book` flow fails on main (`"Picture only.*Selected" is visible`); find the cause and fix it | verified | #1163 | | [386-dino-default-view-per-book-flow-fails.md](../slices/386-dino-default-view-per-book-flow-fails.md) |
+| 392 | Dino: the `grown-ups-button` flow fails on main (`GalleryDone` still visible on Settings, step 19); find whether the app or the flow is wrong and fix it | built | #1180 | | [392-dino-grown-ups-button-flow-fails.md](../slices/392-dino-grown-ups-button-flow-fails.md) |
+| 391 | Dino Windows: Enter on the first-run story-languages step does not open the book picker (`dino-onboarding-keys` fails), which blocks `dino-reorder` on the VM | built | #1170 | | [391-dino-windows-first-run-enter-on-story-languages.md](../slices/391-dino-windows-first-run-enter-on-story-languages.md) |
+| 384 | Dino: a monthly (£1.99) and yearly (£14.99) subscription with a 7-day trial for every paid book, alongside single-book sales; lapsed subscription books greyed for parents, hidden from the child | built, not yet verified | #1174 | | [384-dino-subscription.md](../slices/384-dino-subscription.md) |
+| 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | built, not yet verified | #1169 | | [383-dino-reading-keeps-going-when-locked.md](../slices/383-dino-reading-keeps-going-when-locked.md) |
 
 ## Shared
 
@@ -379,6 +389,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 371 | Tidy by product 6/6: src, tests and tools folders grouped by product | built | #1109 | | [371-folders-by-product.md](../slices/371-folders-by-product.md) |
 | 342 | Listening page: Farsi voice pack | built (#1098); second listen waits for an interactive session | #1098 | | [342-farsi-voice-pack.md](../slices/342-farsi-voice-pack.md) |
 | 376 | Feedback loop 2026-11-13-1149 leftovers (Dino Store submit 401, skip-first-run hook, RTST Farsi flow, selftest mapping, pack version in counts, Worker doc wording, two ClaudeSkills checks) | built | #1130 | | [376-feedback-loop-2026-11-13-1149-leftovers.md](../slices/376-feedback-loop-2026-11-13-1149-leftovers.md) |
+| 378 | Build warnings gate: current GitHub Actions (no Node 20), warnings that fail the build, Android 9-11 scan crop fix | built | #1146 | | [378-build-warnings-gate.md](../slices/378-build-warnings-gate.md) |
+| 388 | Shared tests: `PackDownloadLogTests.UserCancelIsNotLoggedAsAStall` failed once in CI (another test's `PACKDL stall` line leaked into the shared capture); make the capture per test | built | #1156 | — | [388-shared-pack-download-log-capture-per-test.md](../slices/388-shared-pack-download-log-capture-per-test.md) |
+| 389 | Tooling: the `tools/emulator` preflight picks an installed JDK when `JAVA_HOME` points at a removed one, and prints which | built | #1158 | — | [389-tooling-emulator-preflight-picks-an-installed-jdk.md](../slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md) |
 
 ## Batch ordering notes
 

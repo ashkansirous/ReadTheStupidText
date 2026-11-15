@@ -25,6 +25,7 @@ public sealed class StoryLanguagePicker : ContentView
 	private const double OnboardingBoxSize = 28;
 	private const double OnboardingFlagSize = 28;
 	private const double OnboardingRowHeight = 56;
+	private static readonly TimeSpan RetryFocusDelay = TimeSpan.FromMilliseconds(100);
 	private const string RowIdPrefix = "StoryLanguageRow-";
 	private readonly Dictionary<string, Button> _rowButtons = [];
 
@@ -90,6 +91,7 @@ public sealed class StoryLanguagePicker : ContentView
 			Set = StoryLanguages.Current(); // Settings saves every tick at once
 		}
 
+		string? focusedRow = _rowButtons.FirstOrDefault(pair => pair.Value.IsFocused).Key; // Slice 391: the rows below are new buttons; the keyboard focus must stay on the same language
 		_shelfHosts.Clear();
 		_shelfCards.Clear();
 		_rowButtons.Clear();
@@ -111,6 +113,10 @@ public sealed class StoryLanguagePicker : ContentView
 			StrokeShape = new RoundRectangle { CornerRadius = CardCorner },
 			Content = rows,
 		};
+		if (focusedRow is not null)
+		{
+			RefocusRow(focusedRow);
+		}
 	}
 
 	private View Row(string code)
@@ -174,8 +180,38 @@ public sealed class StoryLanguagePicker : ContentView
 			return false;
 		}
 
-		_ = ToggleAsync(code);
+		_ = ToggleAsync(code); // Rebuild keeps the focus on this row
 		return true;
+	}
+
+	// The old focused button was destroyed by Rebuild, so WinUI moved the focus elsewhere (the VM trace: the next Space and Enter found no target). Focus() is tried once the new row is in the tree, and once more when it is loaded.
+	private void RefocusRow(string code)
+	{
+		Dispatcher.Dispatch(() =>
+		{
+			if (!_rowButtons.TryGetValue(code, out Button? button))
+			{
+				return;
+			}
+
+			bool focused = button.Focus();
+			TraceRefocus(code, focused, retry: false);
+			if (!focused)
+			{
+				RetryFocusWhenLoaded(code, button);
+			}
+		});
+	}
+
+	// No Loaded subscription: a Button's iOS view is not safe for one (LifecycleSubscriptionTests); a short delay lets the new button be laid out.
+	private void RetryFocusWhenLoaded(string code, Button button) =>
+		Dispatcher.DispatchDelayed(RetryFocusDelay, () => TraceRefocus(code, button.Focus(), retry: true));
+
+	private static void TraceRefocus(string code, bool focused, bool retry)
+	{
+#if WINDOWS
+		WindowTrace.Write($"Dino keyboard: story language row {code} refocus{(retry ? " (retry)" : string.Empty)} {(focused ? "ok" : "failed")}");
+#endif
 	}
 
 	// Mock N2: flag 28, the name 16 semibold (the app language's second line 12.5 grey), the 28 box at the end (grey with a white check for the locked app language, brand when ticked, a 2 px ring when not).

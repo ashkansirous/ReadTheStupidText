@@ -3,7 +3,7 @@ namespace DinoReader;
 /// <summary>
 /// Keeps the screen on while a book plays aloud (Slice 126). All state is read and written on the UI thread
 /// only (every public call hops there), so no locks are needed. The page that wants the screen is the owner,
-/// so a page leaving cannot undo the page that replaced it. <see cref="Refresh"/> applies the state again,
+/// so a page leaving cannot undo the page that replaced it. <see cref="Suspend"/> applies the state again,
 /// because iOS clears the idle timer in the background and Android drops the window flag when the window is
 /// recreated.
 /// </summary>

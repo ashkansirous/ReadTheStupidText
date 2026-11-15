@@ -33,6 +33,27 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
         return new AndroidOcrPage(detection, decoder, stream, orientation, width, height, _fallbacks);
     }
 
+    // The one-argument overloads exist only from API 31 (the apps run from 28); older versions need the (x, false) ones, which API 31 deprecates.
+    private static BitmapRegionDecoder? OpenFromPath(string path)
+    {
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            return BitmapRegionDecoder.NewInstance(path);
+        }
+
+        return BitmapRegionDecoder.NewInstance(path, false);
+    }
+
+    private static BitmapRegionDecoder? OpenFromStream(Stream stream)
+    {
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            return BitmapRegionDecoder.NewInstance(stream);
+        }
+
+        return BitmapRegionDecoder.NewInstance(stream, false);
+    }
+
     // Null decoder when the format has none: crops then come from the detection image.
     private (BitmapRegionDecoder? Decoder, Stream? Stream) TryOpenRegionDecoder(string imagePath)
     {
@@ -42,11 +63,11 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
             string? local = ScannedText.ToLocalPath(imagePath);
             if (local is not null)
             {
-                return (BitmapRegionDecoder.NewInstance(local), null);
+                return (OpenFromPath(local), null);
             }
 
             stream = AndroidImageSource.Open(_context, imagePath);
-            BitmapRegionDecoder? decoder = BitmapRegionDecoder.NewInstance(stream);
+            BitmapRegionDecoder? decoder = OpenFromStream(stream);
             if (decoder is null)
             {
                 stream.Dispose();

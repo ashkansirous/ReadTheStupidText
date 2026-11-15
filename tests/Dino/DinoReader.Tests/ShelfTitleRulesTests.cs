@@ -49,6 +49,55 @@ public class ShelfTitleRulesTests
         Assert.True(wideRoom > narrowRoom);
     }
 
+    [Theory]
+    [InlineData(0)] // measured before the pill has a native view (Slice 387)
+    [InlineData(45)] // just its padding and icon (11 + 14 + 20)
+    public void An_unmeasured_pill_is_estimated_so_the_title_does_not_take_its_room(double measured)
+    {
+        double pill = ShelfTitleRules.PillWidth(0, measured, 9, 15, 11, 14, 20, 6); // "Grown-ups", not laid out yet
+        double room = ShelfTitleRules.AvailableForTitle(393, 30, 44, 48, pill, 10);
+
+        Assert.True(pill >= 11 + 14 + 20 + 6 + (9 * 15 * 0.6));
+        Assert.Equal(ShelfTitle.Short, ShelfTitleRules.Fit(room, 150, 80));
+    }
+
+    [Fact]
+    public void A_real_measure_is_kept_even_when_it_is_smaller_than_the_estimate()
+    {
+        Assert.Equal(69, ShelfTitleRules.PillWidth(0, 69, 9, 15, 11, 14, 20, 6)); // the estimate would be 132
+        Assert.Equal(300, ShelfTitleRules.PillWidth(0, 300, 9, 15, 11, 14, 20, 6));
+    }
+
+    [Theory]
+    [InlineData(80, 0)]
+    [InlineData(80, 45)]
+    [InlineData(80, 69)]
+    public void The_laid_out_width_wins_over_a_smaller_or_unreal_measure(double laidOut, double measured)
+    {
+        Assert.Equal(laidOut, ShelfTitleRules.PillWidth(laidOut, measured, 9, 15, 11, 14, 20, 6));
+    }
+
+    [Fact]
+    public void A_squeezed_layout_narrower_than_the_real_measure_gives_the_measure()
+    {
+        Assert.Equal(132, ShelfTitleRules.PillWidth(60, 132, 9, 15, 11, 14, 20, 6));
+    }
+
+    [Theory]
+    [InlineData(-1)] // MAUI's width before the first layout
+    [InlineData(0)]
+    public void A_pill_not_laid_out_yet_falls_back_to_the_measure(double laidOut)
+    {
+        Assert.Equal(69, ShelfTitleRules.PillWidth(laidOut, 69, 9, 15, 11, 14, 20, 6));
+    }
+
+    [Fact]
+    public void The_title_slack_decides_a_title_exactly_as_wide_as_its_room()
+    {
+        Assert.Equal(ShelfTitle.Full, ShelfTitleRules.Fit(100, 100, 60));
+        Assert.Equal(ShelfTitle.Short, ShelfTitleRules.Fit(100, 100 + ShelfTitleRules.TitleSlack, 60));
+    }
+
     [Fact]
     public void Without_a_flag_the_title_has_the_flags_room()
     {

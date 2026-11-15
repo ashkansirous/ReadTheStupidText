@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
-  Saves a check copy of a picture with a red line at 70% of its height and the bottom 30% tinted,
+  Saves a check copy of a picture with a red line at 73% of its height and the bottom 27% tinted
+  (the user, 2026-11-15: prompts ask Gemini for the bottom 32% free; the check passes at 27%, 5 points of
+  wiggle room; the name line70 is kept so every caller still works),
   so the full-size check can see whether any part of a character (feet, tail, a held berry) sits
   in the strip the app's words cover (Slice 350, 2026-11-13). It only draws the guide; the checker
   reads the copy and judges where each character ends. Since Slice 375 it draws on the picture's
@@ -23,7 +25,7 @@
 #>
 param(
     [Parameter(Mandatory)][string]$Picture,
-    [ValidateRange(0.05, 0.95)][double]$Fraction = 0.70,
+    [ValidateRange(0.05, 0.95)][double]$Fraction = 0.73,
     [string]$OutDir
 )
 $ErrorActionPreference = 'Stop'

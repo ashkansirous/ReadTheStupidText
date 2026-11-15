@@ -21,8 +21,6 @@ public sealed class PackDownloadLogTests
             PackDownloadLog.Failed("p1", 3, PackDownloadResult.Offline);
         });
 
-        lines = lines.Where(line => line.Contains("pack=p1")).ToList(); // other tests may write to the shared sink at the same time
-
         Assert.Equal(
             [
                 "PACKDL start pack=p1 offset=5",
@@ -54,15 +52,9 @@ public sealed class PackDownloadLogTests
     [Fact]
     public void ThrowingSinkNeverEscapes()
     {
-        PackDownloadLog.Sink = _ => throw new InvalidOperationException("sink");
-        try
-        {
-            PackDownloadLog.Start("p-throw", 0);
-        }
-        finally
-        {
-            PackDownloadLog.Sink = null;
-        }
+        using IDisposable scope = PackDownloadLog.CaptureScope(_ => throw new InvalidOperationException("sink"));
+
+        PackDownloadLog.Start("p-throw", 0);
     }
 
     [Fact]
@@ -73,8 +65,8 @@ public sealed class PackDownloadLogTests
 
         List<string> lines = await CaptureAsync(async () =>
         {
-            Assert.Equal(10, await guarded.ReadAsync(new byte[64]));
-            await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[64]));
+            Assert.Equal(10, await guarded.ReadAsync(new byte[64], TestContext.Current.CancellationToken));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await guarded.ReadAsync(new byte[64], TestContext.Current.CancellationToken));
         });
 
         Assert.Contains("PACKDL stall pack=p-body phase=body bytes=1010", lines);
@@ -102,14 +94,9 @@ public sealed class PackDownloadLogTests
     private static async Task<List<string>> CaptureAsync(Func<Task> action)
     {
         var lines = new ConcurrentQueue<string>();
-        PackDownloadLog.Sink = lines.Enqueue;
-        try
+        using (PackDownloadLog.CaptureScope(lines.Enqueue)) // per test: a parallel test's lines never enter it
         {
             await action();
-        }
-        finally
-        {
-            PackDownloadLog.Sink = null;
         }
 
         return lines.ToList();

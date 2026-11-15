@@ -79,7 +79,7 @@ public sealed class ModeSwitch : Border
 	private void Render()
 	{
 		BackgroundColor = _onPicture ? _theme.TextCard.WithAlpha(ChipAlpha) : _theme.ControlFill;
-		Shadow = _onPicture ? new Shadow { Brush = Brush.Black, Opacity = ChipShadowOpacity, Radius = ShadowRadius * 1.5f, Offset = new Point(0, ShadowOffsetY * 2) } : null;
+		Shadow = _onPicture ? new Shadow { Brush = Brush.Black, Opacity = ChipShadowOpacity, Radius = ShadowRadius * 1.5f, Offset = new Point(0, ShadowOffsetY * 2) } : null!;
 		Content = new HorizontalStackLayout
 		{
 			Spacing = TrackGap,
@@ -108,7 +108,7 @@ public sealed class ModeSwitch : Border
 			StrokeThickness = 0,
 			BackgroundColor = active ? ActiveFill() : Colors.Transparent,
 			StrokeShape = new RoundRectangle { CornerRadius = CellCorner },
-			Shadow = active ? new Shadow { Brush = Brush.Black, Opacity = ShadowOpacity, Radius = ShadowRadius, Offset = new Point(0, ShadowOffsetY) } : null,
+			Shadow = active ? new Shadow { Brush = Brush.Black, Opacity = ShadowOpacity, Radius = ShadowRadius, Offset = new Point(0, ShadowOffsetY) } : null!,
 			Content = Glyph(icon, active ? ActiveIcon() : _theme.ControlIcon),
 		};
 		SemanticProperties.SetDescription(cell, active ? $"{label}{DescriptionSeparator}{ReadingText.ModeSelected}" : label);

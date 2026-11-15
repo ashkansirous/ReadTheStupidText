@@ -121,7 +121,7 @@ public sealed class ShelfOrderTests : IDisposable
         string b = StoryIds.New();
         await library.AddAsync(Make(a, 1));
         await library.AddAsync(Make(b, 2));
-        await File.WriteAllTextAsync(Path.Combine(_root, ShelfOrder.FileName), "}{");
+        await File.WriteAllTextAsync(Path.Combine(_root, ShelfOrder.FileName), "}{", TestContext.Current.CancellationToken);
 
         Assert.Equal([b, a], (await library.ListAsync()).Select(s => s.Id));
     }

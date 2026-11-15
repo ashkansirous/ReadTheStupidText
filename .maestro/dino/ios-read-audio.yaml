@@ -1,0 +1,217 @@
+# Slice 244 item 1: the audio-backed run of ios-read-back-reread-background.yaml. Same rounds (read, Back mid-sentence, read again, change page, background and return, three times), but the book is read with its
+# REAL pre-made audio pack, so the player, the memory use and the suspension behind the 2026-11 iOS crashes are exercised (run 2 had premade_audio:no_pack, so no clip ever played).
+# Online: test-store mode=off (the live store, no fixture list) and the fetch-audio-pack hook (Debug only) downloads audio-fa-v3.zip (about 1.6 MB, free book, listed on the live store) through the
+# real pack store; open-book waits for that download (up to 120 s) before the first read, so no fixed sleep is needed. Read-only against the store: nothing live changes.
+# Platform-neutral ids; hooks per platform as in the base flow (launch arguments on the first launch, then launchApp with stopApp: false on Android and openLink on the dino-test:// URL on iOS).
+# The CI iOS simulator (dinoreader-ios-sim.yml, input flow) copies it with the dev appId swapped for the bundle id and the expect-log lines removed; the workflow then looks for the clip lines in the app log.
+# To see it fail against the old behaviour: with the pack missing (the listing has no Farsi pack, or the fetch fails) "HOOK fetch-audio-pack ok" never appears and no "[AudioPack] premade clip plays" line is
+# logged, because the read falls back to the device voice (which still shows Pause, so only the log markers tell the two apart).
+# Keeps the app's data (no clearState); the real pack stays installed for the dev install.
+# expect-clips
+# expect-log: HOOK test-store ok off
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK fetch-audio-pack ok
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK open-book opened page=1
+# expect-log: [Reading] left the page, read stopped
+appId: uk.sirous.dinoreader.dbg
+name: Read with the real audio pack, Back, read again, change page, background and return, three times
+---
+- launchApp:
+    arguments:
+      cmd: test-store
+      mode: "off"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: skip-first-run
+            lang: fa
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - openLink: "dino-test://skip-first-run?lang=fa"
+      # iOS asks "Open in <app>?" for a custom-scheme link: Open is tapped only while that prompt's own text is on screen (never an app control labelled Open).
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Fetch the real Farsi pack (runs in the background; the first open-book below waits for it).
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: fetch-audio-pack
+            id: three-little-pigs
+            lang: fa
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - openLink: "dino-test://fetch-audio-pack?id=three-little-pigs&lang=fa"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+- repeat:
+    times: 3
+    commands:
+      # Open and read; the Play control describes itself as Pause (توقف in Farsi) while the read is Playing.
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: open-book
+                  id: three-little-pigs
+                  play: "1"
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://open-book?id=three-little-pigs&play=1"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 150000
+      - extendedWaitUntil:
+          visible: "Pause|توقف"
+          timeout: 90000
+      # The proof of a pack-backed read: the reading page's sound pill (ReadingAudioStatus) shows only while the current piece has no clip (ReadingPage.ShowAudioStatus), as "Getting ... n%" while
+      # the pack downloads and "no sound" on the device voice. Waiting for it to go (up to 120 s, which covers the pack install) fails the flow when no pack ever installs, instead of passing on the device voice.
+      - extendedWaitUntil:
+          notVisible:
+            id: ReadingAudioStatus
+          timeout: 120000
+      # Let the first clip play for a few seconds, then Back mid-sentence.
+      - extendedWaitUntil:
+          visible:
+            id: PremadeAudioNeverShown
+          timeout: 6000
+          optional: true
+      # A clip has had time to start: the pill must still be gone (it would show "no sound" if the read fell back to the device voice).
+      - assertNotVisible:
+          id: ReadingAudioStatus
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
+      # Read again, then change page while the read goes on.
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: open-book
+                  id: three-little-pigs
+                  play: "1"
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://open-book?id=three-little-pigs&play=1"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 30000
+      - extendedWaitUntil:
+          visible: "Pause|توقف"
+          timeout: 90000
+      - swipe:
+          direction: LEFT
+      - assertVisible:
+          id: ReadingSurface
+      # Background the app while it reads, then bring it back (the state hook is the way back to the foreground).
+      - pressKey: home
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - launchApp:
+                stopApp: false
+                arguments:
+                  cmd: state
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - openLink: "dino-test://state"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open
+      # A dead app fails these waits: the app must still be running after every iteration.
+      - extendedWaitUntil:
+          visible:
+            id: ReadingSurface
+          timeout: 30000
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: set-language
+            lang: en
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - openLink: "dino-test://set-language?lang=en"
+      - runFlow:
+          when:
+            platform: iOS
+            visible: ".*Open in.*"
+          commands:
+            - tapOn:
+                text: Open

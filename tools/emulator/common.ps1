@@ -123,6 +123,7 @@ function Wait-BootCompleted([int]$TimeoutSeconds, $Process = $null) {
 # ---- Slice 215: emulator health. On 2026-10-30 (11:32) the emulator's system_server died after hours of runs: `pm` was gone, sys.boot_completed still read 1,
 # and the next flow failed at its first step, which an agent read as an app failure. run-flows.ps1 checks this before every flow and after a failed one.
 $script:ExitEmulatorUnhealthy = 5
+$script:ExitJdkNotFound = 7   # Slice 389: a host tooling problem (no usable JDK for Maestro), not a dead emulator; run-flows.ps1's header lists it
 $script:BootCompletedValue = '1'
 $script:PmPathPattern = '(?m)^package:'  # a line of `pm path` output; an error text that merely contains the word does not match
 
@@ -201,7 +202,8 @@ function Get-FlowName([string]$Flow) {
 function Find-FlowFiles([string]$FlowDir, [string]$Flow) {
     $name = Get-FlowName $Flow
     $own = @(Get-ChildItem $FlowDir -Filter '*.yaml' -File -ErrorAction SilentlyContinue)
-    if (-not $name) { return @($own | Sort-Object Name) }
+    # Slice 291: a store-shot-* flow (the iOS ones sit beside the other flows; the Android ones in needs-file/) runs by name only, never in a whole-folder run.
+    if (-not $name) { return @($own | Where-Object { $_.BaseName -notlike 'store-shot-*' } | Sort-Object Name) }
     $hit = @($own | Where-Object { $_.BaseName -eq $name })
     if ($hit.Count -eq 0) { $hit = @(Get-ChildItem (Join-Path $FlowDir 'needs-file') -Filter '*.yaml' -File -ErrorAction SilentlyContinue | Where-Object { $_.BaseName -eq $name }) }
     return $hit
@@ -556,4 +558,100 @@ function Save-EmulatorEvidence([string]$Dir) {
     $host_ += "`r`nqemu pid: $qemuPid working set: $(if ($qemu) { '{0:n0} MB' -f ($qemu.WorkingSet64 / 1MB) } else { 'process not found' })"
     $host_ | Out-File (Join-Path $Dir 'host-memory.txt') -Encoding utf8
     Write-Host "EMULATOR UNHEALTHY evidence saved to $Dir (logcat-crash.txt, dumpsys-meminfo.txt, host-memory.txt)."
+}
+
+# Slice 389: Maestro needs a live JDK. A machine JAVA_HOME that points at a removed JDK failed every preflight (Slice 291 worked around it by hand).
+function Test-JdkHome([string]$JdkHome) {
+    if ([string]::IsNullOrWhiteSpace($JdkHome)) { return $false }
+    return (Test-Path -LiteralPath (Join-Path $JdkHome 'bin\java.exe')) -or (Test-Path -LiteralPath (Join-Path $JdkHome 'bin/java'))
+}
+
+# Best first (see the end of the function): every folder under the search roots (and the roots themselves, for Android Studio's jbr) that holds bin\java, ordered by the version in the folder name.
+function Get-InstalledJdkHomes([string[]]$Roots) {
+    $found = foreach ($root in $Roots) {
+        if (-not (Test-Path -LiteralPath $root)) { continue }
+        if (Test-JdkHome $root) { Get-JdkInfo $root ''; continue }   # a root that is itself a JDK (Android Studio's jbr)
+        foreach ($dir in (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)) {
+            if (Test-JdkHome $dir.FullName) { Get-JdkInfo $dir.FullName $dir.Name }
+        }
+    }
+    # Maestro's docs recommend Java 17 or 21: newest major in 17..21 first, then newer ones (newest first); below 17 and unreadable versions are ignored.
+    $ok = @($found | Where-Object { $_.Major -ge 17 })
+    $pref = @($ok | Where-Object { $_.Major -le 21 } | Sort-Object Major, Minor, Patch -Descending)
+    $rest = @($ok | Where-Object { $_.Major -gt 21 } | Sort-Object Major, Minor, Patch -Descending)
+    return @(@($pref) + @($rest) | ForEach-Object { $_.Path })
+}
+
+# Slice 389 review: the version comes from the JDK's own `release` file (JAVA_VERSION="21.0.11", old style "1.8.0_292" means 8), else from a jdk-NN style token in the folder name.
+# A name that cannot be parsed gives Major 0 (ignored), never an error. Pure; returns Path, Major, Minor, Patch.
+function Get-JdkInfo([string]$JdkHome, [string]$FolderName) {
+    $text = ''
+    $releaseFile = Join-Path $JdkHome 'release'
+    if (Test-Path -LiteralPath $releaseFile) {
+        $line = Get-Content -LiteralPath $releaseFile -ErrorAction SilentlyContinue | Where-Object { $_ -match '^\s*JAVA_VERSION\s*=' } | Select-Object -First 1
+        if ($line) { $text = ($line -replace '^\s*JAVA_VERSION\s*=\s*', '').Trim().Trim('"') }
+    }
+    if (-not $text) {
+        $m = [regex]::Match($FolderName, '(?i)(?:jdk|java|openjdk|temurin|corretto|zulu|jbr)[-_ ]?(\d{1,3}(?:\.\d{1,3}){0,2})')
+        if ($m.Success) { $text = $m.Groups[1].Value }
+    }
+    $n = [regex]::Match($text, '^(\d{1,3})(?:\.(\d{1,3}))?(?:\.(\d{1,3}))?')
+    $parts = @(1..3 | ForEach-Object { if ($n.Success -and $n.Groups[$_].Success) { [int]$n.Groups[$_].Value } else { 0 } })
+    if ($parts[0] -eq 1 -and $n.Groups[2].Success) { $parts = @($parts[1], $parts[2], 0) }   # 1.8.0_292 is Java 8
+    if (-not $n.Success -and -not $FolderName) { $parts = @(17, 0, 0) }   # a root with no release file and no name (Android Studio's jbr): taken as 17
+    return [pscustomobject]@{ Path = $JdkHome; Major = $parts[0]; Minor = $parts[1]; Patch = $parts[2] }
+}
+
+function Get-JdkSearchRoots {
+    $roots = @((Join-Path $HOME '.jdks'))
+    $vendors = @('Eclipse Adoptium', 'Microsoft', 'Java', 'Amazon Corretto', 'Zulu')
+    foreach ($pf in @($env:ProgramFiles, ${env:ProgramFiles(x86)})) { if ($pf) { foreach ($v in $vendors) { $roots += (Join-Path $pf $v) } } }
+    if ($env:ProgramFiles) { $roots += (Join-Path $env:ProgramFiles 'Android\Android Studio\jbr') }
+    return $roots
+}
+
+# Returns the JDK home to use: a valid JAVA_HOME first, else the newest installed one, else $null.
+function Select-JdkHome([string]$CurrentJavaHome, [string[]]$Roots) {
+    $current = if ($CurrentJavaHome) { $CurrentJavaHome.Trim().Trim('"').Trim() } else { '' }   # a quoted or padded JAVA_HOME is still a path
+    if ((Test-JdkHome $current) -and (Test-JdkVersionOk $current)) { return $current }
+    return (Get-InstalledJdkHomes $Roots | Select-Object -First 1)
+}
+
+# A JAVA_HOME below Java 17 fails Maestro with an unsupported class version; an unreadable version is given the benefit of the doubt.
+function Test-JdkVersionOk([string]$JdkHome) {
+    $major = (Get-JdkInfo $JdkHome (Split-Path -Leaf $JdkHome)).Major
+    return ($major -eq 0) -or ($major -ge 17)
+}
+
+# The major version in `java -version` output (openjdk version "21.0.2", java version "1.8.0_292"); 0 when it cannot be read. Pure.
+function Get-JavaMajorFromVersionText([string]$Text) {
+    $m = [regex]::Match("$Text", 'version\s+"(\d{1,3})(?:\.(\d{1,3}))?')
+    if (-not $m.Success) { return 0 }
+    if ($m.Groups[1].Value -eq '1' -and $m.Groups[2].Success) { return [int]$m.Groups[2].Value }   # "1.8.0_292" is Java 8
+    return [int]$m.Groups[1].Value
+}
+
+# Maestro's own launcher falls back to `java` on PATH when JAVA_HOME is unset, so a working one of Java 17 or newer counts as a JDK found
+# (a Java 8 or an unreadable stub fails Maestro with an unsupported class version).
+function Test-JavaOnPath {
+    if (-not (Get-Command java -CommandType Application -ErrorAction SilentlyContinue)) { return $false }
+    $saved = $ErrorActionPreference; $ErrorActionPreference = 'Continue'   # java -version writes to stderr
+    try { $text = (& java -version 2>&1 | ForEach-Object { "$_" }) -join "`n" } catch { $text = '' } finally { $ErrorActionPreference = $saved }
+    return ((Get-JavaMajorFromVersionText $text) -ge 17)
+}
+
+# Per process only, never the machine environment. Prints the choice; one line and $false when no JDK exists.
+# $Roots and $JavaOnPath are for the self-test. A bad JAVA_HOME is removed when only `java` on PATH is left, because the launcher would try it first and fail.
+function Set-ProcessJavaHome([string[]]$Roots = (Get-JdkSearchRoots), [bool]$JavaOnPath = (Test-JavaOnPath)) {
+    $chosen = Select-JdkHome $env:JAVA_HOME $Roots
+    if (-not $chosen -and $JavaOnPath) {
+        if ($env:JAVA_HOME) { Write-Host "JDK: JAVA_HOME is unusable ($($env:JAVA_HOME)); using java on PATH for this run only."; $env:JAVA_HOME = $null } else { Write-Host 'JDK: JAVA_HOME is not set; using java on PATH.' }
+        return $true
+    }
+    if (-not $chosen) { Write-Host 'JDK not found: JAVA_HOME is missing or points at a removed or too old (below 17) JDK, no Java 17 or newer is on PATH and no JDK is installed under ~/.jdks, Program Files (Eclipse Adoptium, Microsoft, Java, Amazon Corretto, Zulu) or Android Studio.'; return $false }
+    if ($chosen -eq $env:JAVA_HOME) { Write-Host "JDK: JAVA_HOME is valid ($chosen)."; return $true }
+    if ($chosen -eq "$($env:JAVA_HOME)".Trim().Trim('"').Trim()) { $env:JAVA_HOME = $chosen; return $true }
+    Write-Host "JDK: JAVA_HOME is $(if ($env:JAVA_HOME) { "unusable ($($env:JAVA_HOME))" } else { 'not set' }); using $chosen for this run only."
+    $env:JAVA_HOME = $chosen
+    return $true
 }

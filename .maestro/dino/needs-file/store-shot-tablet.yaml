@@ -1,16 +1,31 @@
-# Slice 291 item 5: the Play store screenshots of Dino Reader (tablet), taken by tools/emulator/store-screenshots.ps1 -App dino -Form tablet (the shot names store-dino-tablet-<n>-<screen> become the PNG names).
-# Shelf, a book open on page 2, and the Books tab, held upright, English, on the starter books (no live store, nothing downloaded or read aloud).
+# Slice 291 items 5 and 8: the Play store screenshots of Dino Reader (tablet), taken by tools/emulator/store-screenshots.ps1 -App dino -Form tablet (the shot names store-dino-tablet-<n>-<screen> become the PNG names).
+# Five shots, held upright, in the order of the store-listing skill's table (one difference per shot, strongest first): a character's line on the reading page, the record intro "Who will you record?",
+# the same page in Farsi (the test books carry fa.json; no voice pack is needed, set-language voice=0), the grown-ups Books tab (no price anywhere on it), the kids' shelf.
+# No live store, no Get, Buy or Redeem: the store page shows prices and no shot uses it.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened
 # expect-log: HOOK enter-grown-up ok
+# expect-log: HOOK set-language ok fa
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshots, Dino Reader, tablet
 onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
+  - extendedWaitUntil:
+      visible:
+        id: StoryTile
+      timeout: 60000
   - setOrientation: PORTRAIT
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter books and the Debug test store only and needs no pack or own book (the shots show a fresh shelf).
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the four test books, needs no pack or own book, and the shots show a fresh shelf. The microphone permission is granted again at this launch because clearState revokes it, so no dialog covers the recording screen.
     clearState: true
+    permissions:
+      all: allow
     arguments:
       cmd: skip-first-run
       lang: en
@@ -22,20 +37,20 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
-- takeScreenshot: store-dino-tablet-1-shelf
+# Shot 1: page 6 of Three Little Pigs opens with the Wolf speaking, so a character line is lit.
 - launchApp:
     stopApp: false
     arguments:
       cmd: open-book
       id: three-little-pigs
-      page: "2"
+      page: "6"
 - extendedWaitUntil:
     visible:
       id: ReadingSurface
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
-- takeScreenshot: store-dino-tablet-2-reading
+- takeScreenshot: store-dino-tablet-1-reading
 - tapOn:
     id: ReadingBack
     waitToSettleTimeoutMs: 300
@@ -43,6 +58,82 @@ onFlowComplete:
     visible:
       id: GalleryTitle
     timeout: 15000
+# Shot 2: the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    text: ".*Three Little Pigs.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: "Record your voice"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroStart
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-tablet-2-record
+# Back to the shelf without recording anything: relaunch keeping the data (no clearState).
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Shot 3: the same page as shot 1 in Farsi. set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: fa
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+# The shelf starts the Farsi audio fetch; wait until its bar and Cancel are gone so no banner covers the shot.
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-fa
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "6"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-tablet-3-language
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+# Shot 4: the grown-ups corner, Books tab (the books list shows no price).
 - launchApp:
     stopApp: false
     arguments:
@@ -50,8 +141,23 @@ onFlowComplete:
       tab: books
 - extendedWaitUntil:
     visible:
+      id: GalleryDone
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+# No price in a store image (Apple 2.3.7): fail rather than shoot one.
+- assertNotVisible:
+    text: ".*[$£€].*"
+- takeScreenshot: store-dino-tablet-4-grownups
+# Shot 5: the kids' shelf of illustrated books.
+- launchApp
+- extendedWaitUntil:
+    visible:
       id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
     timeout: 15000
-- assertVisible:
-    id: GalleryDone
-- takeScreenshot: store-dino-tablet-3-books
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-tablet-5-shelf
