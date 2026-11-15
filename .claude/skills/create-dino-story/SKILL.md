@@ -263,7 +263,7 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   2. `pwsh .claude/skills/create-dino-story/gemini-step.ps1 prepare -Owner <owner> -Picture <line-up>[,<place sheet>]` (usage check, lock
      Take, clipboard; two files go on the clipboard as a file list so one ctrl+v may attach both). From here the lock is HELD: release it
      (`gemini-step.ps1 release -Owner <owner>`) on every path out, including a stop or a failure. The lock goes stale 180 s after Take, so do step 3
-     in the very next call (its wait is 15 s); if more than 2 minutes pass first, run `put` (it Touches) before pasting.
+     in the very next call (its wait is 15 s); if more than 2 minutes pass first, run `gemini-step.ps1 touch -Owner <owner>` (refreshes the lock only; never `put`, which would replace a two-picture clipboard) before pasting.
   3. One browser batch: ctrl+v (own `tabId`), then `await window.__waitAttached(<n>)` (a number = pasted; text = failed: click the prompt
      box once and paste again, or `gemini-step.ps1 put -Owner <owner> -Picture <second file>` (refused if you no longer hold the lock) and paste the
      second alone; still failing: release and report).
@@ -278,9 +278,9 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   The lock covers only steps 2-3 (clipboard Put to the confirmed paste) and step 5 (save); the `__grab` click inside step 4 is outside the lock, which is
   safe because `save` takes only a download of exactly the printed size. A rejected picture is a new chat: start again at step 1 (at most 3 tries).
   **Loader, one line, once per page load and again after every new chat** (the page reload of step 1 drops the script; the file stores itself
-  in the profile's localStorage on its first injection; the version is a hash of the file's source): `localStorage.grabver==='d4a160c7'?(eval(localStorage.grabsrc),typeof window.__drawPicture):'STALE'`
+  in the profile's localStorage on its first injection; the version is a hash of the file's source): `localStorage.grabver==='8531151f'?(eval(localStorage.grabsrc),typeof window.__drawPicture):'STALE'`
   must answer `function`. `STALE` (or an error from `eval`) means the stored copy is missing or old: inject `gemini-grab.js` whole once with
-  `javascript_tool` (it answers `ready d4a160c7` and stores itself), then use the loader from then on. `gemini-grab.test.mjs` fails when this hash is not the file's.
+  `javascript_tool` (it answers `ready 8531151f` and stores itself), then use the loader from then on. `gemini-grab.test.mjs` fails when this hash is not the file's.
   **Recovery per chat** (rule 3, *Recover before you redraw*): open the chat, load, then one call
   `await window.__recoverChat()` (scrolls up to load every picture, then downloads each one oldest first, at least 20 s apart (a smaller `gapMs` is raised to 20 s), waiting inside the
   script; never use `sleep` calls) answers `RECOVER <n> pictures | 1: <size> | 2: <size> ...` (one size per picture, 0 = no blob); then one

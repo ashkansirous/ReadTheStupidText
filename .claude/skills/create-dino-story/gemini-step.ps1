@@ -4,7 +4,9 @@
 #       usage check (stops at 99%), lock Take, clipboard Put (two files: PutFiles, one ctrl+v for both). Run it only AFTER the
 #       new chat, loader, health check and model check passed (the lock is held from here: one clipboard writer). Then ctrl+v in your
 #       own tab and `await __waitAttached(<n>)` in the SAME next step (the lock goes stale 180 s after Take, and waitAttached gives up after 15 s,
-#       so one browser batch right after prepare is covered; if more than 2 minutes pass, run `put` first, which Touches). The lock is HELD: run `release` as soon as that returns, and on ANY failure or stop.
+#       so one browser batch right after prepare is covered; if more than 2 minutes pass, run `touch` first). The lock is HELD: run `release` as soon as that returns, and on ANY failure or stop.
+#   pwsh gemini-step.ps1 touch -Owner <owner>   refreshes the held lock's timestamp only (the clipboard is left alone, so a two-picture file list
+#       survives). Refuses unless <owner> still holds the lock (a stale takeover means: release, start again from prepare).
 #   pwsh gemini-step.ps1 put -Owner <owner> -Picture <file>   second picture only: when one paste attached just one of two. Refuses
 #       unless <owner> still holds the lock (a stale takeover means: release, start again from prepare).
 #   pwsh gemini-step.ps1 release -Owner <owner>
@@ -18,7 +20,7 @@
 #       prints one line per picture, MISSING for a download that never arrived (Chrome dropped it).
 # Exit codes: 0 done; 1 a step failed (the line says which); 2 saved but the small copy failed (never download again).
 param(
-  [Parameter(Mandatory = $true, Position = 0)][ValidateSet('prepare', 'put', 'release', 'save', 'collect')][string]$Verb,
+  [Parameter(Mandatory = $true, Position = 0)][ValidateSet('prepare', 'put', 'touch', 'release', 'save', 'collect')][string]$Verb,
   [string]$Owner,
   [string]$Picture,   # one file, or two joined by a comma (pwsh -File passes a comma list as one string)
   [string]$Path,
@@ -90,6 +92,13 @@ function Invoke-Put {
   Stop-Step "PUT $($pictures[0]) (exit $($put.Code))" $put.Code
 }
 
+function Invoke-Touch {
+  Assert-Owner
+  $touch = Invoke-Script 'gemini-lock.ps1' @('Touch', $Owner)
+  if ($touch.Code -ne 0) { Stop-Step "FAILED: $Owner does not hold the lock: $($touch.Text -replace '\s+', ' ')" }
+  Stop-Step "TOUCHED $Owner"
+}
+
 function Invoke-Release {
   Assert-Owner
   $release = Invoke-Script 'gemini-lock.ps1' @('Release', $Owner)
@@ -157,6 +166,7 @@ function Invoke-Collect {
 switch ($Verb) {
   'prepare' { Invoke-Prepare }
   'put' { Invoke-Put }
+  'touch' { Invoke-Touch }
   'release' { Invoke-Release }
   'save' { Invoke-Save }
   'collect' { Invoke-Collect }

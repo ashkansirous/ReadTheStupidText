@@ -273,15 +273,17 @@ if (!window.__grabReady) {
   const chatKey = () => `chat:${(window.location && window.location.pathname) || ''}`;
   window.__drawPicture = async (prompt, pictures, options) => {
     const maxMs = (options && options.maxMs) || 150000;
+    const sentKey = chatKey(); // read before the send: the SPA may change the URL only later (refreshed below once drawn)
     if (window.__drawSent === chatKey() || document.querySelectorAll('user-query').length > 0 || downloadButtons().length > 0) return 'REFUSED: this chat already has a sent message or a picture (one prompt per chat: start a new chat, or read this one with __recoverChat)';
     const attached = await window.__waitAttached(pictures);
     if (attached !== pictures) return `REFUSED: ${attached}`;
     const sent = await window.__setupPicture(prompt, pictures);
-    if (!/^ok:/.test(sent)) { if (/^(SENT|UNCONFIRMED)/.test(sent)) window.__drawSent = chatKey(); return sent; }
-    window.__drawSent = chatKey();
+    if (!/^ok:/.test(sent)) { if (/^(SENT|UNCONFIRMED)/.test(sent)) window.__drawSent = sentKey; return sent; }
+    window.__drawSent = sentKey;
     const start = Date.now();
     let state = 'WAITING 0';
     while (!state.startsWith('READY') && Date.now() - start < maxMs) state = await window.__waitForPicture(Math.min(40000, maxMs - (Date.now() - start)));
+    window.__drawSent = chatKey(); // the chat's own URL by now, so a later new chat at the old path is not refused
     if (!state.startsWith('READY')) return `${sent} | ${state}: not drawn within ${maxMs / 1000} s (read the chat; never send the prompt again in this chat)`;
     const grabbed = await window.__grab(1);
     const bytes = blobSizes(grabbed).join(','); // only a real blob list ("image/jpeg 123"); an error string gives none

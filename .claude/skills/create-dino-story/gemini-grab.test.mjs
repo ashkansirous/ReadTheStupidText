@@ -120,7 +120,7 @@ test('__drawPicture returns an error answer from __grab as an error, never as by
   assert.match(await window.__drawPicture(PROMPT, 1), /bytes=1234,99$/);
 });
 
-test('__drawPicture sends only once per page load even when called again', async () => {
+test('__drawPicture sends only once per chat even when called again', async () => {
   const { window } = drawPage({ earlier: false });
   let setups = 0;
   window.__waitAttached = async () => 1;
@@ -138,6 +138,19 @@ test('__drawPicture refuses a second send in the same chat but not in a new chat
   window.__waitAttached = async () => 1;
   window.__setupPicture = async () => 'ok: create-image';
   window.__waitForPicture = async () => 'READY 1';
+  window.__grab = async () => 'image/jpeg 5';
+  await window.__drawPicture(PROMPT, 1);
+  assert.match(await window.__drawPicture(PROMPT, 1), /^REFUSED/);
+  window.location = { pathname: '/app' };
+  assert.match(await window.__drawPicture(PROMPT, 1), /bytes=5$/);
+});
+
+test('__drawPicture: a URL that updates after the send still refuses that chat and lets a new chat at the old path through', async () => {
+  const { window } = drawPage({ earlier: false });
+  window.location = { pathname: '/app' };
+  window.__waitAttached = async () => 1;
+  window.__setupPicture = async () => 'ok: create-image';
+  window.__waitForPicture = async () => { window.location = { pathname: '/app/late' }; return 'READY 1'; };
   window.__grab = async () => 'image/jpeg 5';
   await window.__drawPicture(PROMPT, 1);
   assert.match(await window.__drawPicture(PROMPT, 1), /^REFUSED/);
