@@ -1,7 +1,9 @@
 # Slice 379 — Every library, SDK and toolchain to the latest stable version
 **Product:** Shared
 
-*Part A (items 1-6) built, PR #1175, not merged; part B (items 7-9, .NET 11) still planned.*
+*Part A (items 1-6) built, merged as PR #1175 (04205ffc, 2026-11-15). Part B (items 7-9, .NET 11): in progress (wave 2026-11-15), draft PR.*
+
+**Part B correction (coordinator, 2026-11-15):** part A's note that Xcode 27 is not on the runners is wrong. GitHub has an `xcode-27` image (runs-on `xcode-27`, macOS 27, Xcode 27.0/27.1/27.2; marked public preview), see runner-images issue 14404 and `images/macos/xcode-27-arm64-Readme.md`. Part B moves the iOS jobs to it, with the .NET 11 iOS workload, and corrects the `.github/CLAUDE.md` note.
 
 **Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/AndroidRelease.props` (message text only), `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md` (workload-set text only), `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `CLAUDE.md` (root, item 9 only), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
 
