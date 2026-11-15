@@ -9,10 +9,20 @@ public static class PurchaseUpdates
     /// <summary>Raised on a thread-pool thread, never on the platform's native thread; subscribers must not throw (<see cref="Raise"/> catches anyway).</summary>
     public static event Action? StoreChanged;
 
+    private static int s_missed;
+
+    /// <summary>True once when an update was raised while nobody listened yet (the listener runs from launch, the first read subscribes later); the new subscriber then marks its last read stale.</summary>
+    public static bool TakeMissed() => Interlocked.Exchange(ref s_missed, 0) == 1;
+
     public static void Raise()
     {
         try
         {
+            if (StoreChanged is null)
+            {
+                Volatile.Write(ref s_missed, 1);
+            }
+
             StoreChanged?.Invoke();
         }
         catch (Exception ex)

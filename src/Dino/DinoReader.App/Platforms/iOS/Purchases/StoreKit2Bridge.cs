@@ -56,7 +56,6 @@ internal sealed unsafe class StoreKit2Bridge
             {
                 s_tried = true;
                 s_bridge = TryCreate();
-                s_bridge?.StartUpdates();
             }
 
             return s_bridge;
@@ -115,13 +114,16 @@ internal sealed unsafe class StoreKit2Bridge
         return task;
     }
 
-    // A build without the library (no XCFramework step) fails the first export call; that is the same as none, and every call then answers a failed store, which BookPurchases reports.
+    // With __Internal a missing library is a link error, so on a normal build none of this throws. The catch only keeps a symbol the runtime cannot find (for example a trimmed one) from crashing the app at launch:
+    // there is then no bridge, every caller answers a failed store, and BookPurchases reports it. The updates listener starts here too, inside the same guard, because this is called from the launch path.
     private static StoreKit2Bridge? TryCreate()
     {
         try
         {
             _ = NativeCanPay();
-            return new StoreKit2Bridge();
+            var bridge = new StoreKit2Bridge();
+            bridge.StartUpdates();
+            return bridge;
         }
         catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
         {

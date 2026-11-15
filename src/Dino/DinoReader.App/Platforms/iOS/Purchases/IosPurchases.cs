@@ -8,8 +8,13 @@ namespace DinoReader;
 /// then asks the App Store Server API (transaction ids from a build before this one are still accepted). The Apple ID's entitlements are read silently from Apple's own list on every refresh, so nothing is kept on the device and
 /// a new device sees its purchases at once; only the Restore purchases button asks Apple to sync (it can ask for the Apple ID password).
 /// </summary>
-public sealed class IosPurchases : IBookPurchases
+public sealed class IosPurchases : IBookPurchases, IDisposable
 {
+    private static readonly TimeSpan LateAnswerTimeout = TimeSpan.FromMinutes(15);
+    private readonly CancellationTokenSource _closing = new();
+    private readonly object _knownLock = new();
+    private StoreKitEntitlements? _lastRead; // the last read that reached Apple's list: what an incomplete read keeps (never dropping a known book)
+
     private const string RedeemAddress = "https://apps.apple.com/redeem";
     private const string ManageAddress = "https://apps.apple.com/account/subscriptions";
     private static readonly TimeSpan QueryTimeout = TimeSpan.FromSeconds(20);
@@ -20,6 +25,14 @@ public sealed class IosPurchases : IBookPurchases
     private readonly HashSet<string> _pending = [];
 
     public IosPurchases() => StoreKit2Bridge.ProductUpdated += OnProductUpdated;
+
+    /// <summary>Unsubscribes from the static StoreKit update event and ends any late-answer wait, so this instance is not kept alive.</summary>
+    public void Dispose()
+    {
+        StoreKit2Bridge.ProductUpdated -= OnProductUpdated;
+        _closing.Cancel();
+        _closing.Dispose();
+    }
 
     public string StoreName => PurchaseProofs.IosStore;
 
@@ -39,7 +52,7 @@ public sealed class IosPurchases : IBookPurchases
         }
 
         (Dictionary<string, string> prices, bool pricesFailed) = restricted ? (new Dictionary<string, string>(), false) : await QueryPricesAsync(bridge, productIds, cancel); // a failed or timed-out request is a failed query; whether the store was reached is BookPurchases' call (the device's internet)
-        StoreKitEntitlements? owned = await ReadEntitlementsAsync(bridge, cancel);
+        StoreKitEntitlements? owned = KeepKnown(await ReadEntitlementsAsync(bridge, cancel));
         return Snapshot(prices, owned) with { PricesFailed = pricesFailed, Restricted = restricted };
     }
 
@@ -101,16 +114,38 @@ public sealed class IosPurchases : IBookPurchases
         return await Launcher.Default.OpenAsync(new Uri(RedeemAddress)); // the sheet could not be shown (no framework, iOS before 16, no scene)
     }
 
-    private static async Task DeliverLateAnswerAsync(Task<string> request)
+    // An incomplete read (one entitlement did not verify) keeps the books of the last read for the products it cannot see; the result becomes the last read either way.
+    private StoreKitEntitlements? KeepKnown(StoreKitEntitlements? read)
+    {
+        if (read is null)
+        {
+            return null;
+        }
+
+        lock (_knownLock)
+        {
+            StoreKitEntitlements merged = read.KeepingKnown(_lastRead);
+            _lastRead = merged;
+            return merged;
+        }
+    }
+
+    private async Task DeliverLateAnswerAsync(Task<string> request)
     {
         try
         {
-            string answer = await request;
+            string answer = await request.WaitAsync(LateAnswerTimeout, _closing.Token);
             if (StoreKit2Answers.Buy(answer)?.Outcome == StoreKit2Answers.Bought)
             {
                 PurchaseTrace.Line("buy completed after the page closed");
                 PurchaseUpdates.Raise();
             }
+        }
+        catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
+        {
+            // no-fallback: giving up a wait for a purchase that never answered is not a store fault; the next refresh reads Apple's list
+            StoreKit2Bridge.Abandon(request); // no answer came in time (or the app is closing): the waiting entry goes, so nothing is left waiting
+            PurchaseTrace.Line("late buy answer given up");
         }
         catch (Exception ex)
         {
@@ -166,7 +201,7 @@ public sealed class IosPurchases : IBookPurchases
             return new PurchaseSnapshot(prices, new HashSet<string>(), pending, new Dictionary<string, string>(), Reachable: false); // Apple's list could not be read: BookPurchases keeps the last snapshot
         }
 
-        return new PurchaseSnapshot(prices, owned.Owned, pending, owned.Proofs, Reachable: true, Subscription: owned.Subscription(DateTimeOffset.UtcNow), PurchasedAt: owned.PurchasedAt.ToDictionary(e => e.Key, e => e.Value));
+        return new PurchaseSnapshot(prices, owned.Owned, pending, owned.Proofs, Reachable: true, Subscription: owned.Subscription(DateTimeOffset.UtcNow), PurchasedAt: owned.PurchasedAt.ToDictionary(e => e.Key, e => e.Value), Incomplete: owned.Incomplete);
     }
 
     // Failed is true when the request failed or timed out (billing_error when the device has internet); products Apple does not know come back as no price (prices_missing).

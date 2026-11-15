@@ -58,4 +58,15 @@ Files: `reviews/s390-high.md` (pass 1) and `reviews/s390-medium.md` (pass 2).
 - Medium #7 (static handler never unsubscribed, `_lastListed` unlocked): applied; `BookPurchases` is `IDisposable` and unsubscribes, `_lastListed` is read and written under a lock.
 - Medium #8 (failed JWS cached as not owned): applied; a JWS that fails verification is `CANNOT_VERIFY` for books too; a verified one that is not ours stays "not owned".
 
+Third pass (`reviews/s390-check.md`):
+
+- #1 (one unverified entitlement fails the whole read): applied; the read keeps the verified ones, `StoreKitEntitlements.KeepingKnown` adds the last read's books for products it cannot see, and `BookPurchases` reports one `StoreFailed` per change. This replaces the "failed read" rule of medium #3 above.
+- #2 (Sandbox JWS refused is cached as not owned): applied; it is `CANNOT_VERIFY` (not cached). The production Worker has `APPLE_IAP_ALLOW_SANDBOX` set (`wrangler secret list`, 2026-11-15); the switch rule stays.
+- #3 (updates before the first read): applied; `PurchaseUpdates` notes an update raised with no listener and `BookPurchases` marks its read stale when it subscribes.
+- #4 (static `ProductUpdated` never unsubscribed): applied; `IosPurchases` and `SwitchablePurchases` are `IDisposable`.
+- #6 (dead catch in `TryCreate`): applied; comment corrected, the updates start is inside the same guard, the no-bridge case is still handled by every caller.
+- #7 (late-answer task never ends): applied; it times out after 15 minutes or on dispose and drops its waiting entry.
+- Skipped #5 (`reviews/s390-check.md`): "every JWS verification failure (forgery included) is now CANNOT_VERIFY, so forged proofs are never negatively cached; repeated full chain verification costs CPU only" - CPU only, no wrong answer.
+- Skipped #8 (`reviews/s390-check.md`): "arm64 device and simulator slices only; an x64 simulator build fails to link (workflows pin arm64; same limit as before)" - arm64-only as before.
+
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.

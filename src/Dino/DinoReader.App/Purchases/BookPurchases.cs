@@ -43,6 +43,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private volatile bool _hasInternet;
     private volatile bool _lastPricesFailed;
     private string _reportedProblem = string.Empty;
+    private bool _reportedIncomplete;
 
     /// <summary>How the latest read went (Slice 358); <see cref="BookAccess.Plan"/> turns it into the card's strip. One rule on every platform: a device with no internet has not reached the store (the sand strip); with internet any failed price query is a failure (the red strip).</summary>
     public StoreAnswer Answer => BookAccess.AnswerOf(_hasInternet, _lastPricesFailed, _snapshot.Restricted);
@@ -129,6 +130,10 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         if (Interlocked.Exchange(ref _listening, 1) == 0)
         {
             PurchaseUpdates.StoreChanged += OnStoreChanged;
+            if (PurchaseUpdates.TakeMissed())
+            {
+                MarkStale(); // an update came before anyone listened: the read that follows must not be skipped as fresh
+            }
         }
     }
 
@@ -346,6 +351,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             return;
         }
 
+        ReportIncompleteOnce(read);
         if (hasInternet)
         {
             ReportPriceProblem(items, read);
@@ -354,6 +360,18 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         if (read.Owned.Any(product => !read.Proofs.ContainsKey(product)))
         {
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // an owned book has no proof to send (Windows: no Store ID key), so its files are not asked for until the next read
+        }
+    }
+
+    // Slice 390: a read in which the store could not verify one entitlement (the others are kept, plus the books known before) is one store fallback per change, not one per read.
+    private void ReportIncompleteOnce(PurchaseSnapshot read)
+    {
+        bool before = _reportedIncomplete;
+        _reportedIncomplete = read.Incomplete;
+        if (read.Incomplete && !before)
+        {
+            PurchaseTrace.Line("store read incomplete: an entitlement could not be verified, the books known before are kept");
+            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
         }
     }
 

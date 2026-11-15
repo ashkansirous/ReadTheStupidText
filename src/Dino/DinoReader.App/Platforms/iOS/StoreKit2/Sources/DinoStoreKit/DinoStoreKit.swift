@@ -108,7 +108,7 @@ public func dinoSkBuy(_ productId: UnsafePointer<CChar>, _ requestId: Int32, _ c
 }
 
 /// What the Apple ID owns now, read silently (no password prompt): `{"ok":true,"transactions":[{...}],"latest":[{...}]}`. `transactions` are the verified, unrevoked, unexpired
-/// entitlements (`incomplete` is true when one could not be verified, and the caller then treats the read as failed); `latest` is the newest verified transaction of each product id given (the subscription plans), expired or not, so a lapsed plan is seen as lapsed rather than as unknown.
+/// entitlements (`incomplete` is true when one could not be verified: the verified ones are still listed, and the caller keeps the books it knew from the earlier read); `latest` is the newest verified transaction of each product id given (the subscription plans), expired or not, so a lapsed plan is seen as lapsed rather than as unknown.
 @_cdecl("dino_sk_entitlements")
 public func dinoSkEntitlements(_ idsJson: UnsafePointer<CChar>, _ requestId: Int32, _ callback: DinoCallback) {
     let latestIds = idsOf(idsJson)

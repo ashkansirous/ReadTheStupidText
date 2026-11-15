@@ -25,7 +25,8 @@ public sealed record PurchaseSnapshot(
     bool PricesFailed = false,
     bool Restricted = false,
     SubscriptionStatus? Subscription = null,
-    IReadOnlyDictionary<string, DateTimeOffset>? PurchasedAt = null)
+    IReadOnlyDictionary<string, DateTimeOffset>? PurchasedAt = null,
+    bool Incomplete = false)
 {
     public static PurchaseSnapshot Empty { get; } = new(
         new Dictionary<string, string>(), new HashSet<string>(), new HashSet<string>(), new Dictionary<string, string>(), false);

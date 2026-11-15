@@ -17,6 +17,27 @@ public class StoreKit2AnswersTests
         StoreKit2Answers.Entitlements($$"""{"ok":true,"transactions":[{{current}}],"latest":[{{latest}}]}""")!;
 
     [Fact]
+    public void AnIncompleteRead_KeepsTheVerifiedOnes_AndTheEarlierReadsProductsItCannotSee()
+    {
+        StoreKitEntitlements earlier = Read(Tx(Book, NowMs - Day) + "," + Tx("other", NowMs - Day));
+        StoreKitEntitlements incomplete = StoreKit2Answers.Entitlements($$"""{"ok":true,"transactions":[{{Tx("new", NowMs)}}],"latest":[],"incomplete":true}""")!;
+
+        Assert.True(incomplete.Incomplete);
+        Assert.Equal(["new"], incomplete.Owned);
+        Assert.Equal(new[] { "new", "other", Book }, incomplete.KeepingKnown(earlier).Owned.Order(StringComparer.Ordinal).ToArray());
+    }
+
+    [Fact]
+    public void ACompleteRead_ReplacesTheEarlierOne()
+    {
+        StoreKitEntitlements earlier = Read(Tx(Book, NowMs - Day));
+        StoreKitEntitlements complete = Read(Tx("new", NowMs));
+
+        Assert.False(complete.Incomplete);
+        Assert.Equal(["new"], complete.KeepingKnown(earlier).Owned);
+    }
+
+    [Fact]
     public void Prices_AreTheAppStoresOwnText_AndUnknownIdsAreListed()
     {
         var read = StoreKit2Answers.Prices("""{"ok":true,"products":[{"id":"a","price":"$1.99","trial":false}],"invalid":["b"]}""");
@@ -30,7 +51,6 @@ public class StoreKit2AnswersTests
     [InlineData("not json")]
     [InlineData("""{"ok":true}""")]
     [InlineData("""{"ok":true,"transactions":null,"latest":[]}""")]
-    [InlineData("""{"ok":true,"transactions":[],"latest":[],"incomplete":true}""")]
     public void AFailedOrUnreadableAnswer_IsNullNeverEmpty(string json)
     {
         Assert.Null(StoreKit2Answers.Prices(json));

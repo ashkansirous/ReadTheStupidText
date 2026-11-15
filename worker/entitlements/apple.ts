@@ -203,7 +203,7 @@ async function resolved(proof: Proof, roots: readonly string[] | undefined, allo
   const found = await transactionIdOf(proof, roots);
   if (found === null) return NOT_A_PROOF;
   if (found === UNVERIFIED) return UNVERIFIED;
-  return found.environment === ENVIRONMENT_SANDBOX && !allowSandbox ? NOT_A_PROOF : found;
+  return found.environment === ENVIRONMENT_SANDBOX && !allowSandbox ? UNVERIFIED : found; // a verified Sandbox JWS on a Worker without the switch is not "owns nothing": it is not cached, so App Review and TestFlight buys unlock once the Worker allows Sandbox
 }
 
 async function checkOwned(found: Resolved, env: EntitlementEnv, key: AppleKey, fetcher: Fetcher): Promise<CheckResult> {
