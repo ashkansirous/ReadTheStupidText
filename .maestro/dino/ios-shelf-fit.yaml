@@ -9,9 +9,9 @@ name: Shelf header fit lines (iOS diagnostics)
     arguments:
       cmd: skip-first-run
       lang: en
-# A shelf element first: if the first-run screen was not skipped, this fails clearly instead of the title wait.
+# A shelf element first: if the first-run screen was not skipped, this fails clearly instead of the title wait. The title (full or short), not the pill, whose iOS accessibility label is the longer "Grown-ups' corner, locked".
 - extendedWaitUntil:
-    visible: "Grown-ups"
+    visible: "My stories|Stories"
     timeout: 90000
 - waitForAnimationToEnd
 - assertVisible: "My stories"

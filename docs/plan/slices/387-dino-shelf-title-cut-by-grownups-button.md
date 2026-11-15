@@ -57,6 +57,10 @@ The first iOS store-screenshot run on main (Slice 291, run 43650776897) shows th
 - Skipped #4 (`reviews/s387-high.md`): "Fit is triggered from the pill's HandlerChanged and SizeChanged as well as the header's" - low, redundant work only; the 0.5 pt guard bounds the passes.
 - Skipped #5 (`reviews/s387-high.md`): "Switching the title from NoWrap to TailTruncation hides residual under-estimates" - low; the ellipsis is the slice's own ask ("shortens with an ellipsis").
 - Skipped #6 (`reviews/s387-high.md`): "The slack test only shows WithSlack adds 2; it does not exercise the clipping case it names." - low; WithSlack is gone, the test now pins the TitleSlack boundary.
+- Skipped #3 (`reviews/s387b-check.md`): "_title.FontFamily is never reset after Persian; probe copies the stale family after a Farsi->English switch." - low (pre-existing).
+- Skipped #4 (`reviews/s387b-check.md`): "four Text writes and ~6 property writes per measure invalidate layout each Fit; skip when unchanged." - low (perf).
+- Skipped #5 (`reviews/s387b-check.md`): "probe is after the title in z-order; harmless while empty and InputTransparent." - low.
+- Skipped #6 (`reviews/s387b-check.md`): "sync file write on UI thread, static flag" - low, Debug only.
 - Skipped #8 (`reviews/s387-high.md`): "Slice is in progress but items are unticked, and the Touches line lists files not changed." - the docs pass ticks items and fixes Touches; the missing Not yet verified line is added above.
 - Skipped #7 (`reviews/s387b-high.md`): "`device_patterns` is passed unvalidated to ios-sim-boot.sh. A typo matches no device type and dies with "no device type accepted" only after the expensive macOS build." - low; a typo fails with a clear message, no change.
 - Skipped #8 (`reviews/s387b-high.md`): "Do not mark item 3 fixed until an iOS run shows the laid-out title Width at or above the full width in the 202-wide room." - process note, no code change; the next iOS shelf-fit run on the Pro Max pattern settles it (the flow now asserts the full "My stories".)

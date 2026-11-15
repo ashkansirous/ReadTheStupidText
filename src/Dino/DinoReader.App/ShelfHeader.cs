@@ -46,6 +46,7 @@ internal sealed class ShelfHeader : Grid
 #endif
 		SizeChanged += (_, _) => FitWhenWidthChanged();
 		GrownUps.HandlerChanged += (_, _) => FitWhenPillChanged(); // Slice 387: the pill can only be measured once it has a native view
+		_probe.HandlerChanged += (_, _) => Fit(); // Slice 387 review: a no-op without a handler, so a rebuilt probe is measured only once it has a native view
 		GrownUps.SizeChanged += (_, _) => FitWhenPillChanged(); // and its words grow with the font scale
 	}
 
@@ -174,12 +175,12 @@ internal sealed class ShelfHeader : Grid
 	/// <summary>Chooses the title that fits the row: "My stories", "Stories", or none. A no-op until the header has a width.</summary>
 	public void Fit()
 	{
-		if (Width <= 0)
+		if (Width <= 0 || _probe.Handler is null)
 		{
-			return;
+			return; // the probe re-added by a rebuild has no native view yet and would measure about 0; its HandlerChanged fits again
 		}
 
-		double full = MeasureTitle(AppResources.Gallery_Title) + ShelfTitleRules.TitleSlack;
+		double full =MeasureTitle(AppResources.Gallery_Title) + ShelfTitleRules.TitleSlack;
 		double shortWidth = MeasureTitle(AppResources.Gallery_ShelfTitleShort) + ShelfTitleRules.TitleSlack;
 		double flag = _flagShown ? _sizes.FlagButton : 0;
 		_lastPill = PillRoom();
