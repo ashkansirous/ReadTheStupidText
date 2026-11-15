@@ -6,7 +6,9 @@ description: What a store listing of Read The Stupid Text or Dino Reader says an
 # Store listing: what to say, what to show
 
 This skill decides the **content** of a listing. Pushing it is the global `store-listing` agent's job
-(draft, diff against live, apply after the user's yes, read back); this skill never calls a store API.
+(write, diff against live, push text and shots, read back), with no review round: the user's ask is the
+go, and Claude checks the text and every shot against this skill itself (user, 2026-11-15). This skill
+never calls a store API.
 Field limits, image sizes, caption and subscription rules per store: [`stores.md`](stores.md) (official
 pages, read 2026-11-14; re-check anything marked *not confirmed* or *search only*).
 
@@ -43,7 +45,7 @@ thing the person does or gets; then prices, languages, privacy, offline.
   Slice 291); the listing speaks to the grown-up.
 - One English source per store in `docs/store-listings/` (Dino: `dino/play.md`, `dino/appstore.md`,
   `dino/microsoft.md`; RTST: `en.md`, `appstore-rtst.md`), translations in `<lang>.md` beside them, made
-  from the English only after the user approved it.
+  from the English in the same pass (no approval of the English first).
 
 ### Selling a subscription
 

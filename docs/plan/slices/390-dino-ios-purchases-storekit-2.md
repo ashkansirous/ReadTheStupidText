@@ -3,6 +3,8 @@
 
 *Parked 2026-11-15 (night 2026-11-14-1547, wave 7): waits for the user's choice of route.*
 
+**Decision (user, 2026-11-15): route (a)**, our own small Swift wrapper over StoreKit 2 (products, buy, restore, owned books), built into an XCFramework by a macOS/Xcode CI step and called from `IosPurchases.cs`; no Plugin.InAppBilling. The Worker's purchase check takes StoreKit 2's signed transaction (JWS) for iOS. The sandbox buy and restore on the user's iPhone goes to Not yet verified.
+
 **Park note.** Item 1's check (`library-docs`: context7 and the dotnet/macios wiki `BINDINGS` and `docs/native-library-interop.md`) found no StoreKit 2 binding in .NET for iOS: StoreKit 2 is Swift-only. Two routes: (a) our own Swift wrapper built into an XCFramework (needs a macOS/Xcode build step in CI), or (b) Plugin.InAppBilling 10.x (StoreKit 2 by default through its own Swift shim; its README says only Android and Windows are actively maintained). StoreKit 2 also hands out JWS signed transactions instead of the app receipt that item 2 says is "sent to the server", so the Worker's purchase check changes too. StoreKit 1 still works at runtime on iOS 18 (deprecation warning only, per dotnet/macios `src/storekit.cs`). It waits for the user's choice between a new third-party dependency and our own Swift code, for a real-money path no wave can test on an iPhone.
 
 **Touches:** `src/Dino/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs` (and any new file beside it), `tests/Shared/Shared.Tests/FallbackGuardBaseline.txt` only if a catch changes, `docs/plan/slices/390-dino-ios-purchases-storekit-2.md`
