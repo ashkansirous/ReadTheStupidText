@@ -15,7 +15,8 @@ param(
   [Parameter(Mandatory = $true)][string]$Path,
   [int]$WaitSeconds = 30,
   [long[]]$Bytes = @(),
-  [switch]$Untouched
+  [switch]$Untouched,
+  [int]$FreshSeconds = 120   # how old a download may be; gemini-step.ps1 collect raises it for a recovery that spans minutes
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -23,7 +24,7 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot '..\..\..\tools\dino\picture-review-copy.ps1')   # New-ReviewCopy, the one resize function (Slice 375)
 
 $saveQuality = 95L
-$freshSeconds = 120
+$freshSeconds = $FreshSeconds
 $downloads = Join-Path $env:USERPROFILE 'Downloads'
 $namePattern = 'Gemini_Generated_Image_*'
 $failedFolder = Join-Path $downloads '.gemini-failed'

@@ -5,6 +5,15 @@
 // poll `window.__clipResult` for "WxH" and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
 // Slice 356 adds `__attachmentCount()` (confirms the line-up paste) and `await __setupPicture(prompt, pictures[, {dryRun}])`
 // (Create image, 3:4, the prompt and Send in one call).
+// Slice 350 tooling: `await __drawPicture(prompt, pictures)` does attachment wait + __setupPicture + __waitForPicture + __grab in one call and
+// returns one line; `await __recoverChat()` downloads every picture of the open chat about 20 s apart. This whole file stores itself in
+// localStorage ('grabsrc' + 'grabver') on its first injection per browser profile; later tabs and new chats re-inject with the one-line loader
+// in SKILL.md (step 6), never by pasting this file again.
+(function grabMain() {
+// The version is a hash of this function's own source (CR removed), so a changed file can never keep an old version. SKILL.md's loader
+// line names the hash; gemini-grab.test.mjs fails when it differs. After editing this file, copy the new hash from that test's message.
+const hashOf = text => { let h = 0x811c9dc5; for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+const GRAB_VERSION = hashOf(grabMain.toString().replace(/\r/g, ''));
 if (!window.__grabReady) {
   window.__grabReady = true;
   window.__blobs = [];
@@ -124,6 +133,16 @@ if (!window.__grabReady) {
   // 'UNKNOWN' (not a number) when the composer area can't be found: screenshot once and carry on click by click.
   window.__attachmentCount = () => { const n = attachedPictures(composer().area); return n === null ? 'UNKNOWN' : n; };
   const pause = ms => new Promise(r => setTimeout(r, ms));
+  const MIN_RECOVER_GAP_MS = 20000;
+  // Sizes out of a __grab answer ("image/jpeg 123,image/png 456"). An error answer ("no such picture: 0 on the page", "no blob") has none.
+  const blobSizes = text => [...String(text).matchAll(/image\/[\w.+-]+ (\d+)/g)].map(m => Number(m[1]));
+  // The model check: the label of the mode picker button (aria-label "Open mode picker, currently Pro" gives "Pro"; 3.1 Pro shows as "Pro").
+  // Returns 'NO PICKER' when the button is missing. Compare it with the model the brief names before any prompt.
+  window.__modelLabel = () => {
+    const label = [...document.querySelectorAll('button')].map(b => b.getAttribute('aria-label') || '')
+      .map(l => /^Open mode picker, currently (.+)$/.exec(l)).find(Boolean);
+    return label ? label[1].trim() : 'NO PICKER';
+  };
   const waitFor = async (test, maxMs = 5000) => {
     for (let waited = 0; waited < maxMs; waited += 250) {
       const found = test();
@@ -238,5 +257,65 @@ if (!window.__grabReady) {
     if (plain(now.text).length < 20) return `SENT WITHOUT TEXT: the sent message shows "${now.text.slice(0, 60)}"`;
     return `UNCONFIRMED: the sent message starts "${now.text.slice(0, 60)}"`;
   };
+  // Slice 350 tooling. Waits until exactly `pictures` pictures are attached (the paste check, no screenshot); returns the count
+  // as a number, or a string ('UNKNOWN' / 'n attached') on failure. Release the lock only after this returns a number.
+  window.__waitAttached = async (pictures, maxMs = 15000) => {
+    const ok = await waitFor(() => window.__attachmentCount() === pictures, maxMs);
+    return ok ? pictures : `FAILED: ${window.__attachmentCount()} attached after ${maxMs / 1000} s, expected ${pictures}`;
+  };
+  const downloadButtons = () => [...document.querySelectorAll('button')]
+    .filter(b => (b.getAttribute('aria-label') || '') === 'Download full size image');
+  // One call per picture: wait for the pasted attachment(s), __setupPicture (Create image, 3:4, prompt, checked Send),
+  // __waitForPicture until the picture exists, then __grab(1). Sends exactly what __setupPicture sends; nothing new.
+  // Returns one line: '<setup line> | READY <n> | grabbed <type size> | bytes=<n>' (pass bytes to `gemini-step.ps1 save`), or the
+  // first problem (a __setupPicture answer, 'WAITING <n>: not drawn within ...', 'grabbed no blob'). Never send again into the same chat.
+  // The send mark is keyed to the chat (its URL path), so a new chat is not refused; a second send in the same chat still is.
+  const chatKey = () => `chat:${(window.location && window.location.pathname) || ''}`;
+  window.__drawPicture = async (prompt, pictures, options) => {
+    const maxMs = (options && options.maxMs) || 150000;
+    const sentKey = chatKey(); // read before the send: the SPA may change the URL only later (refreshed below once drawn)
+    if (window.__drawSent === chatKey() || document.querySelectorAll('user-query').length > 0 || downloadButtons().length > 0) return 'REFUSED: this chat already has a sent message or a picture (one prompt per chat: start a new chat, or read this one with __recoverChat)';
+    const attached = await window.__waitAttached(pictures);
+    if (attached !== pictures) return `REFUSED: ${attached}`;
+    const sent = await window.__setupPicture(prompt, pictures);
+    if (!/^ok:/.test(sent)) { if (/^(SENT|UNCONFIRMED)/.test(sent)) window.__drawSent = sentKey; return sent; }
+    window.__drawSent = sentKey;
+    const start = Date.now();
+    let state = 'WAITING 0';
+    while (!state.startsWith('READY') && Date.now() - start < maxMs) state = await window.__waitForPicture(Math.min(40000, maxMs - (Date.now() - start)));
+    window.__drawSent = chatKey(); // the chat's own URL by now, so a later new chat at the old path is not refused
+    if (!state.startsWith('READY')) return `${sent} | ${state}: not drawn within ${maxMs / 1000} s (read the chat; never send the prompt again in this chat)`;
+    const grabbed = await window.__grab(1);
+    const bytes = blobSizes(grabbed).join(','); // only a real blob list ("image/jpeg 123"); an error string gives none
+    return bytes ? `${sent} | ${state} | grabbed ${grabbed} | bytes=${bytes}` : `${sent} | ${state} | grabbed: ${grabbed} (call __grab(1) once more)`;
+  };
+  // Recovery, one call per chat: loads the chat's older pictures (scrolls up until the count stops growing), then downloads every
+  // "Download full size image" button, oldest first, `gapMs` (default 20000) apart, waiting inside the script. Returns
+  // 'RECOVER <n> pictures | 1: <size> | 2: <size> ...' (one size per picture, the largest blob, 0 = no blob; the list feeds `gemini-step.ps1 collect -Bytes`). The gap is never under 20 s.
+  // Chrome may drop every download after the first from a tab (Freddy recover, 2026-11-14): the sizes here are what Gemini
+  // served, `collect` reports which files really arrived.
+  window.__recoverChat = async options => {
+    const gap = Math.max(Number(options && options.gapMs) || 0, MIN_RECOVER_GAP_MS); // never faster than 20 s: Chrome drops quick repeat downloads
+    let last = -1;
+    for (let round = 0; round < 8 && downloadButtons().length !== last; round++) {
+      last = downloadButtons().length;
+      const scroller = document.querySelector('infinite-scroller') || document.scrollingElement;
+      if (scroller) scroller.scrollTop = 0;
+      await pause(1500);
+    }
+    const total = downloadButtons().length;
+    const lines = [];
+    for (let n = total; n >= 1; n--) {
+      const grabbed = await window.__grab(n);
+      lines.push(`${total - n + 1}: ${Math.max(0, ...blobSizes(grabbed))}`); // one size per picture (the largest blob); 0 = no blob
+      if (n > 1) await pause(gap);
+    }
+    return `RECOVER ${total} pictures | ${lines.join(' | ')}`;
+  };
 })();
-'ready'
+try {
+  localStorage.setItem('grabsrc', `(${grabMain.toString()})()`);
+  localStorage.setItem('grabver', GRAB_VERSION);
+} catch (e) { }
+return 'ready ' + GRAB_VERSION;
+})();
