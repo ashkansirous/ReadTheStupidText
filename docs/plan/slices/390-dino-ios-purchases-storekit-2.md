@@ -15,13 +15,20 @@
 
 ## Work
 
-- [ ] 1. Check the StoreKit 2 binding available to .NET for iOS with `library-docs` before writing code.
-- [ ] 2. Move `IosPurchases` to StoreKit 2 with the same behaviour for the shared `IPurchases` contract (products, buy, restore, owned books, receipt sent to the server).
-- [ ] 3. Remove the `CA1422` suppression; the build passes with the gate on.
+- [x] 1. Check the StoreKit 2 binding available to .NET for iOS with `library-docs` before writing code. (Done in the park note; context7 `/dotnet/macios` re-checked 2026-11-15: no StoreKit 2 binding, native frameworks load through `NativeReference` + `NativeLibrary`.)
+- [x] 2. Move `IosPurchases` to StoreKit 2 with the same behaviour for the shared `IPurchases` contract (products, buy, restore, owned books, receipt sent to the server). Built: `Platforms/iOS/StoreKit2` (Swift package, C functions via `@_cdecl`, built into `DinoStoreKit.xcframework` by `build-xcframework.sh`), `StoreKit2Bridge.cs`, `IosPurchases.cs`, pure `DinoReader.Core/StoreKit2Answers.cs`; the proof is the transaction's JWS and the Worker (`worker/entitlements/apple-jws.ts`, `apple.ts`) verifies it to Apple Root CA - G3, still accepting plain transaction ids from older builds.
+- [x] 3. Remove the `CA1422` suppression; the build passes with the gate on. (`net10.0-ios` Debug compiles on Windows with the gate; the macOS jobs still owe the XCFramework and signed build.)
+- [ ] 4. The macOS CI jobs `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` pass on the branch (they build the XCFramework first).
 
 ## Verification
 
 - `net10.0-ios` Dino builds with the gate on and no suppression.
 - A sandbox purchase and a restore on a TestFlight build (a check for the user's iPhone, listed in Not yet verified when built).
+
+#### Not yet verified
+
+- The Swift wrapper and the XCFramework have never been compiled (Windows has no Xcode): `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` on the branch are the first proof.
+- Sandbox buy and restore on the user's iPhone with a TestFlight build (a paid book and a subscription plan; Restore on a second install).
+- The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.

@@ -21,6 +21,10 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private readonly SemaphoreSlim _gate = new(1, 1);
     private PurchaseSnapshot _snapshot = PurchaseSnapshot.Empty;
 
+    // Slice 390: the listing of the last read, re-read when the platform store reports an update (an approved Ask to Buy, a renewal, a refund).
+    private StoreItem[]? _lastListed;
+    private int _listening;
+
     /// <summary>Raised after a read that changed the snapshot, on whatever thread ran it; a subscriber that touches UI marshals itself.</summary>
     public event EventHandler? Changed;
 
@@ -119,9 +123,41 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     public string? ProofHeader(bool paidBooksOn, StoreItem item) =>
         BookAccess.ProofHeader(paidBooksOn, item, Snapshot.Proofs, platform.StoreName);
 
+    private void ListenForStoreUpdates()
+    {
+        if (Interlocked.Exchange(ref _listening, 1) == 0)
+        {
+            PurchaseUpdates.StoreChanged += OnStoreChanged;
+        }
+    }
+
+    private void OnStoreChanged()
+    {
+        StoreItem[]? listed = _lastListed;
+        if (listed is not null)
+        {
+            _ = ReadAfterStoreUpdateAsync(listed);
+        }
+    }
+
+    private async Task ReadAfterStoreUpdateAsync(StoreItem[] listed)
+    {
+        try
+        {
+            await ReadAsync(listed, restore: false, interactive: false, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // no-fallback: a failed background re-read keeps the last snapshot; the next refresh reports the store's problem
+            PurchaseTrace.Line($"re-read after a store update failed: {ex.GetType().Name}");
+        }
+    }
+
     private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
     {
         StoreItem[] listed = [.. items];
+        _lastListed = listed;
+        ListenForStoreUpdates();
         string[] products = [.. listed.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
         await _gate.WaitAsync(cancel);
         try

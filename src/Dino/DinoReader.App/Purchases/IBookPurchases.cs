@@ -42,7 +42,7 @@ public interface IBookPurchases
 
     /// <summary>
     /// Asks the store for the prices of <paramref name="productIds"/> and for everything the account owns. <paramref name="interactive"/> is true when a grown-up opened the store page or pressed a
-    /// button. No platform may prompt for a password here: iOS reads its kept list of seen purchases (StoreKit 1 has no silent owned list) and only <see cref="RestoreAsync"/> replays with Apple.
+    /// button. No platform may prompt for a password here: iOS reads Apple's own entitlements silently (StoreKit 2, nothing is kept on the device) and only <see cref="RestoreAsync"/> asks Apple to sync, which may prompt.
     /// </summary>
     Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel);
 

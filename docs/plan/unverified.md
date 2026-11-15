@@ -77,6 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 390: Dino iOS purchases on StoreKit 2 ([slice](slices/390-dino-ios-purchases-storekit-2.md))
+- **You:** on the user's iPhone with a TestFlight build, a sandbox Buy of a paid book and of a subscription plan, then Restore purchases (also on a second install): the book downloads with the proof, the plan shows its real end date.
+- **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain.
+
 ### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
 - **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
 - **Device:** Windows Hyper-V VM subscription flow.

@@ -114,6 +114,11 @@ jobs:
           dotnet workload install maui-ios --version 10.0.401
           dotnet workload --version
 
+      # Slice 390: StoreKit 2 is Swift-only, so Dino's iOS purchases call our own wrapper, built here into an XCFramework (device + simulator)
+      # that DinoReader.App.csproj adds as a NativeReference. The csproj would build it too when missing; this step makes a Swift error its own line in the log.
+      - name: Build the StoreKit 2 XCFramework
+        run: bash src/Dino/DinoReader.App/Platforms/iOS/StoreKit2/build-xcframework.sh src/Dino/DinoReader.App/obj/DinoStoreKit
+
       # Simulator build: needs no certificate or profile. Skipped when the signed
       # publish below runs, which compiles the same code in Release. Debug on
       # purpose: a Release simulator build runs the full trim/AOT pipeline (~59
