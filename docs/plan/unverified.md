@@ -77,6 +77,21 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 381: Dino: first-run tour placement under a tall status bar ([slice](slices/381-dino-tour-shifted-under-tall-status-bar.md))
+- **Device:** The tall-cutout overlay was enabled for the Pixel-size run but not read back, so the 149 px status bar of the repro may not have been active.
+- **Device:** The flow was not shown failing on the old build (without the fix).
+- **Device:** Farsi (RTL) placement: whether the layer mirrors `Margin.Left` under RTL.
+- **Device:** S21: `onboarding-tour-position` not run.
+- **Device:** iOS notch / Dynamic Island: the copies on their targets (simulator workflow or TestFlight).
+- **Device:** Small screenshots of the Child's shelf and Grown-ups stops with the copy over the real control.
+
+### Slice 382: Dino reorder: held book wiggles, plain drag ([slice](slices/382-dino-reorder-held-book-wiggles-plain-drag.md))
+- **Device:** Windows VM `dino-reorder` (mouse drag, keyboard path, the new hint): blocked by the `dino-onboarding-keys` first-run Enter failure (Slice 391).
+- **Device:** S21: the same checks as the emulator (covers sharp on first open, plain swipe drag, held book wiggles, Done saves, Cancel restores).
+- **Device:** iOS pan (simulator or TestFlight): the scroll view waits for the cover's pan, no scroll before the drag, a tap on a cover still lifts.
+- **Device:** The drag's drop slot: the Maestro flow only proves that a drag happens, not where the book lands.
+- **Device:** Tap-lift a cover, then drag another cover: the new drag takes over the lift; look at it on a device.
+
 ### Slice 386: Dino: the default-view-per-book flow fails on main ([slice](slices/386-dino-default-view-per-book-flow-fails.md))
 - **Device:** no test-store book has carried `textInPictures` since Slice 350, so the device path of the Picture-only default (story.json `TextInPictures` -> `Story.Mode` -> `PictureTextPages.IsPictureOnly` -> `ModeSwitch`) is covered only by the `Story.Mode` unit tests (`TextInPicturesTests.cs`), not by any flow.
 
