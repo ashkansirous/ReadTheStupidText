@@ -92,7 +92,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
 
       - name: Flow lint self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-lint-flows.ps1

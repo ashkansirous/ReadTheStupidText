@@ -242,7 +242,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
 
       # Which of this product's targets this run builds, from the files changed since the product's last
       # published tag and whether its major moved.
