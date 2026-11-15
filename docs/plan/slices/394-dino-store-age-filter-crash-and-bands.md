@@ -47,6 +47,10 @@ The user (2026-11-15), on Android:
 4. **The author filter follows the same rule:** the author row shows only when the band holds two or more authors (one author filters nothing). Today it hides only at zero.
 5. **The crash is fixed in the code too,** not only hidden by dropping the empty chip: an empty result can still happen (a cached list offline, a future book with no range, a band that empties after a refresh).
 
+## Mock added 2026-11-15
+
+The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" card (`PurchaseArea`) from the Store and moves Restore and Redeem to the Store first line, Settings and the 402 strip: that is Slice 396. Item 2 below (the `PlacePurchaseArea` move) is therefore done by Slice 396, which deletes the card and the move (the mock supersedes keeping two toggled views). Item 1 (prove the crash) still runs first; if the crash is not the card move, Slice 396 does not fix it and items 2-3 are re-scoped. The mock's chips are "All ages", "5 & under", "6–8", as Decision 3 says.
+
 ## Work
 
 - [ ] 1. Prove the crash: run the store on the Android emulator (Debug, `test-store`), tap "9–12", and read the exception from logcat (and the crash store if wrangler's login is available). Write the stack here. If it is not the `PurchaseArea` move, re-scope items 2-3 before building.
