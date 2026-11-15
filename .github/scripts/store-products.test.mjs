@@ -14,7 +14,7 @@ import {
 } from './store-products.mjs';
 
 import {
-    SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
+    applePlanForAvailability, appleRetryDelayMs, retryingAsc, SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionAvailabilityBody, applePricePlan, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
     playSubscriptionBody, playSubscriptionStage, playTrialOfferBody, subscriptionItemsFor, subscriptionPlanLines,
 } from './store-products.mjs';
 
@@ -394,9 +394,14 @@ test('Slice 384: the Apple subscription bodies carry the product id, the plan pe
     const body = appleSubscriptionBody(monthly, 'g1').data;
     assert.deepEqual([body.attributes.productId, body.attributes.subscriptionPeriod, body.attributes.groupLevel, body.relationships.group.data.id], ['uk.sirous.dinoreader.sub.monthly', 'ONE_MONTH', 2, 'g1']);
     assert.deepEqual([appleSubscriptionBody(yearly, 'g1').data.attributes.subscriptionPeriod, appleSubscriptionBody(yearly, 'g1').data.attributes.groupLevel], ['ONE_YEAR', 1]);
+    assert.equal('availableInAllTerritories' in body.attributes, false, 'Apple rejected this attribute on the create call (2026-11-15)');
     assert.equal(appleSubscriptionPriceBody('s1', 'pp').data.relationships.subscriptionPricePoint.data.id, 'pp');
-    const trial = appleTrialBody('s1').data;
-    assert.deepEqual([trial.attributes.offerMode, trial.attributes.duration, trial.attributes.numberOfPeriods], ['FREE_TRIAL', 'ONE_WEEK', 1]);
+    const availability = appleSubscriptionAvailabilityBody('s1', ['GBR', 'USA']).data;
+    assert.deepEqual([availability.type, availability.attributes.availableInNewTerritories, availability.relationships.subscription.data.id, availability.relationships.availableTerritories.data], ['subscriptionAvailabilities', true, 's1', [{ type: 'territories', id: 'GBR' }, { type: 'territories', id: 'USA' }]]);
+    const trial = appleTrialBody('s1', 'FRA').data;
+    assert.deepEqual([trial.attributes.offerMode, trial.attributes.duration, trial.attributes.numberOfPeriods, trial.relationships.territory.data.id], ['FREE_TRIAL', 'ONE_WEEK', 1, 'FRA']);
+    const plan = applePricePlan('gbp', [{ id: 'fr', relationships: { territory: { data: { id: 'FRA' } } } }]);
+    assert.deepEqual([...plan], [['GBR', 'gbp'], ['FRA', 'fr']]);
     assert.deepEqual(microsoftSubscriptionBody(monthly, 'store1'), { applicationIds: ['store1'], productId: monthly.productId, productType: 'Subscription' });
 });
 
@@ -409,22 +414,214 @@ test('Slice 384: an Apple subscription is created with group, listing, price and
         'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
         'POST /v1/subscriptions': okJson({ data: { id: 's1' } }),
         'POST /v1/subscriptionLocalizations': okJson({ data: {} }),
+        'GET /v1/territories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }] }),
+        'POST /v1/subscriptionAvailabilities': okJson({ data: {} }),
+        'GET /v1/subscriptions/s1/subscriptionAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }] }),
         'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: [{ id: 'pfr', relationships: { territory: { data: { id: 'FRA' } } } }] }),
         'POST /v1/subscriptionPrices': okJson({ data: {} }),
         'POST /v1/subscriptionIntroductoryOffers': okJson({ data: {} }),
     });
     assert.equal(await createAppleSubscription(fresh, monthly, '1', {}), Outcome.Created);
-    assert.deepEqual(fresh.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionGroups', 'POST /v1/subscriptionGroupLocalizations', 'POST /v1/subscriptions', 'POST /v1/subscriptionLocalizations', 'POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers']);
+    assert.deepEqual(fresh.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionGroups', 'POST /v1/subscriptionGroupLocalizations', 'POST /v1/subscriptions', 'POST /v1/subscriptionLocalizations', 'POST /v1/subscriptionAvailabilities', 'POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers', 'POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers']);
+    const territoryEntries = (ids) => okJson({ data: ids.map((id) => ({ id: `x${id}`, relationships: { territory: { data: { id } } } })) });
     const whole = fakeAsc({
         'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: monthly.productId } }] }),
         'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ id: 'l' }] }),
-        'GET /v1/subscriptions/s1/prices': okJson({ data: [{ id: 'p' }] }),
-        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [{ id: 'o' }] }),
+        'GET /v1/subscriptions/s1/subscriptionAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }] }),
+        'GET /v1/subscriptions/s1/prices': territoryEntries(['GBR', 'FRA']),
+        'GET /v1/subscriptions/s1/introductoryOffers': territoryEntries(['GBR', 'FRA']),
+        'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: [{ id: 'pfr', relationships: { territory: { data: { id: 'FRA' } } } }] }),
     });
     assert.equal(await createAppleSubscription(whole, monthly, '1', { groupId: 'g1' }), Outcome.Exists);
     assert.equal(whole.calls.filter((c) => c.startsWith('POST')).length, 0);
-    const noPoint = fakeAsc({ 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }), 'POST /v1/subscriptions': okJson({ data: { id: 's1' } }), 'POST /v1/subscriptionLocalizations': okJson({ data: {} }), 'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [] }) });
+    const half = fakeAsc({
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: monthly.productId } }] }),
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ id: 'l' }] }),
+        'GET /v1/subscriptions/s1/subscriptionAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }] }),
+        'GET /v1/subscriptions/s1/prices': territoryEntries(['GBR']),
+        'GET /v1/subscriptions/s1/introductoryOffers': territoryEntries(['GBR', 'FRA']),
+        'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: [{ id: 'pfr', relationships: { territory: { data: { id: 'FRA' } } } }] }),
+        'POST /v1/subscriptionPrices': okJson({ data: {} }),
+    });
+    assert.equal(await createAppleSubscription(half, monthly, '1', { groupId: 'g1' }), Outcome.Completed);
+    assert.deepEqual(half.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionPrices']);
+    const noPoint = fakeAsc({ 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }), 'POST /v1/subscriptions': okJson({ data: { id: 's1' } }), 'POST /v1/subscriptionLocalizations': okJson({ data: {} }), 'GET /v1/territories': okJson({ data: [{ id: 'GBR' }] }), 'POST /v1/subscriptionAvailabilities': okJson({ data: {} }), 'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [] }) });
     await assert.rejects(createAppleSubscription(noPoint, monthly, '1', { groupId: 'g1' }), /no 1.99 GBP price point/);
+});
+
+test('Slice 384: a rerun after a failed first run finds the group, adds its missing display name and does not create a second group', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const asc = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }),
+        'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [] }),
+        'POST /v1/subscriptionGroupLocalizations': okJson({ data: {} }),
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: monthly.productId } }] }),
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ id: 'l' }] }),
+        'GET /v1/subscriptions/s1/subscriptionAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }] }),
+        'GET /v1/subscriptions/s1/prices': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: [] }),
+        'POST /v1/subscriptionPrices': okJson({ data: {} }),
+        'POST /v1/subscriptionIntroductoryOffers': okJson({ data: {} }),
+    });
+    assert.equal(await createAppleSubscription(asc, monthly, '1', {}), Outcome.Completed);
+    assert.deepEqual(asc.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionGroupLocalizations', 'POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers']);
+});
+
+const APPLE_NEXT = 'https://api.appstoreconnect.apple.com';
+const link = (path) => ({ next: `${APPLE_NEXT}${path}` });
+const territoryEntry = (id, territory) => ({ id, relationships: territory === undefined ? { territory: { links: { related: 'x' } } } : { territory: { data: { id: territory } } } });
+const territoryList = (ids, extra = {}) => okJson({ data: ids.map((id) => territoryEntry(`e${id}`, id)), ...extra });
+
+/** An existing, fully listed Apple subscription (s1) whose price, trial and equalisation answers the caller supplies. */
+function existingSubscription(monthly, routes) {
+    return fakeAsc({
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: monthly.productId } }] }),
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ id: 'l' }] }),
+        'GET /v1/subscriptions/s1/subscriptionAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }, { id: 'DEU' }] }),
+        'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: [{ id: 'pfr', ...territoryEntry('pfr', 'FRA') }, { id: 'pde', ...territoryEntry('pde', 'DEU') }] }),
+        'POST /v1/subscriptionPrices': okJson({ data: {} }),
+        'POST /v1/subscriptionIntroductoryOffers': okJson({ data: {} }),
+        ...routes,
+    });
+}
+const noSleep = async () => {};
+
+test('Slice 384 review #3: done-sets are read with include=territory; an entry that names no territory is not an error: nothing of that kind is posted and the end report says so', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const notes = [];
+    const unplacedOffer = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/prices': territoryList(['GBR', 'FRA', 'DEU']), 'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [territoryEntry('x1', undefined)] }) });
+    assert.equal(await createAppleSubscription(unplacedOffer, monthly, '1', { groupId: 'g1', sleep: noSleep, notes }), Outcome.Exists);
+    assert.equal(unplacedOffer.calls.filter((c) => c.startsWith('POST')).length, 0, 'no offer is posted beside one that cannot be placed');
+    assert.ok(unplacedOffer.calls.some((c) => c.includes('/v1/subscriptions/s1/introductoryOffers?include=territory')));
+    assert.match(notes.join('\n'), /free-trial entry names no territory/);
+    const unplacedPrice = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/prices': okJson({ data: [{ id: 'x' }] }), 'GET /v1/subscriptions/s1/introductoryOffers': territoryList(['GBR', 'FRA', 'DEU']) });
+    assert.equal(await createAppleSubscription(unplacedPrice, monthly, '1', { groupId: 'g1', sleep: noSleep, notes }), Outcome.Exists);
+    assert.match(notes.join('\n'), /price entry names no territory/);
+});
+
+test('Slice 384 review #4: the plan covers the availability Apple holds (read back), not every territory', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const partial = existingSubscription(monthly, {
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: [{ id: 'GBR' }, { id: 'FRA' }] }),
+        'GET /v1/subscriptions/s1/prices': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [] }),
+    });
+    await createAppleSubscription(partial, monthly, '1', { groupId: 'g1', sleep: noSleep });
+    assert.equal(partial.calls.filter((c) => c === 'POST /v1/subscriptionPrices').length, 2, 'GBR and FRA only, never DEU');
+    assert.ok(partial.calls.some((c) => c.startsWith('GET /v1/subscriptionAvailabilities/a/availableTerritories')));
+});
+
+test('Slice 384 review #5: one progress line per 20 territories, with counts', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const ids = Array.from({ length: 45 }, (_, i) => `T${i}`);
+    const asc = existingSubscription(monthly, {
+        'GET /v1/subscriptionAvailabilities/a/availableTerritories': okJson({ data: ids.map((id) => ({ id })) }),
+        'GET /v1/subscriptions/s1/prices': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [] }),
+        'GET /v1/subscriptionPricePoints/p199/equalizations': okJson({ data: ids.map((id) => ({ id: `p${id}`, ...territoryEntry(`p${id}`, id) })) }),
+    });
+    const lines = [];
+    await createAppleSubscription(asc, monthly, '1', { groupId: 'g1', sleep: noSleep, log: (line) => lines.push(line) });
+    assert.equal(lines.length, 2);
+    assert.match(lines[0], /20 of 45 territories handled \(20 ok, 0 failed\)/);
+    assert.match(lines[1], /40 of 45/);
+});
+
+test('Slice 384 review #6: the group display name is posted only when its list was read and is empty; a 404 or other failure stops with a clear message', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const group = { 'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }), 'POST /v1/subscriptionGroupLocalizations': okJson({ data: {} }) };
+    for (const status of [404, 500]) {
+        const asc = fakeAsc({ ...group, 'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { status, ok: false, json: null } });
+        await assert.rejects(createAppleSubscription(asc, monthly, '1', {}), new RegExp(`could not read it \\(HTTP ${status}\\)`));
+        assert.equal(asc.calls.filter((c) => c.startsWith('POST')).length, 0);
+    }
+    const present = fakeAsc({ ...group, 'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l' }] }), 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }) });
+    await assert.rejects(createAppleSubscription(present, monthly, '1', {}));
+    assert.equal(present.calls.includes('POST /v1/subscriptionGroupLocalizations'), false, 'a listed localization is never posted again');
+});
+
+test('Slice 384 review #1/#4/#7: prices and trials are read over every page, so a rerun posts nothing again; a list past the safety cap is an error', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const paged = (path) => (call) => (call.includes('page=2') ? territoryList(['DEU']) : territoryList(['GBR', 'FRA'], { links: link(`${path}?include=territory&page=2`) }));
+    const asc = existingSubscription(monthly, {
+        'GET /v1/subscriptions/s1/prices': (call) => paged('/v1/subscriptions/s1/prices')(call),
+        'GET /v1/subscriptions/s1/introductoryOffers': (call) => paged('/v1/subscriptions/s1/introductoryOffers')(call),
+    });
+    assert.equal(await createAppleSubscription(asc, monthly, '1', { groupId: 'g1', sleep: noSleep }), Outcome.Exists);
+    assert.equal(asc.calls.filter((c) => c.startsWith('POST')).length, 0);
+    const endless = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/prices': () => territoryList(['GBR'], { links: link('/v1/subscriptions/s1/prices?include=territory&page=2') }) });
+    await assert.rejects(createAppleSubscription(endless, monthly, '1', { groupId: 'g1', sleep: noSleep }), /more than \d+ pages/);
+});
+
+test('Slice 384 review #2/#7: the GBR price point is found by territory filter over every page and must match exactly; none is a clear error', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const pointRoute = (pages) => (path) => (path.includes('page=2') ? okJson({ data: pages[1] }) : okJson({ data: pages[0], links: link('/v1/subscriptions/s1/pricePoints?filter[territory]=GBR&page=2') }));
+    const late = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/pricePoints': pointRoute([[{ id: 'p1', attributes: { customerPrice: '0.49' } }], [{ id: 'p199', attributes: { customerPrice: '1.99' } }]]) });
+    await createAppleSubscription(late, monthly, '1', { groupId: 'g1', sleep: noSleep });
+    assert.ok(late.calls.some((c) => c.startsWith('GET /v1/subscriptions/s1/pricePoints?filter[territory]=GBR')));
+    const near = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p', attributes: { customerPrice: '1.9' } }, { id: 'q', attributes: { customerPrice: '2.99' } }] }) });
+    await assert.rejects(createAppleSubscription(near, monthly, '1', { groupId: 'g1', sleep: noSleep }), /no 1.99 GBP price point/);
+});
+
+test('Slice 384 review #1: a territory with no equalised point is skipped and listed, the rest are priced; a point with no territory is left out of the plan', async () => {
+    assert.equal(applePricePlan('gbp', [{ id: 'x', relationships: {} }]).size, 1);
+    const plan = applePricePlan('gbp', [{ id: 'fr', ...territoryEntry('fr', 'FRA') }, { id: 'us', ...territoryEntry('us', 'USA') }]);
+    assert.deepEqual([...applePlanForAvailability(plan, ['GBR', 'FRA']).plan], [['GBR', 'gbp'], ['FRA', 'fr']]);
+    const gapped = applePlanForAvailability(plan, ['GBR', 'FRA', 'DEU', 'ITA']);
+    assert.deepEqual([[...gapped.plan.keys()], gapped.skipped], [['GBR', 'FRA'], ['DEU', 'ITA']]);
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const notes = [];
+    const gap = existingSubscription(monthly, { 'GET /v1/subscriptions/s1/prices': okJson({ data: [] }), 'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [] }), 'GET /v1/subscriptionPricePoints/p199/equalizations': territoryList(['FRA']) });
+    assert.equal(await createAppleSubscription(gap, monthly, '1', { groupId: 'g1', sleep: noSleep, notes }), Outcome.Completed);
+    assert.equal(gap.calls.filter((c) => c === 'POST /v1/subscriptionPrices').length, 2, 'GBR and FRA are priced');
+    assert.match(notes.join('\n'), /1 territory\(ies\).*skipped: DEU/);
+});
+
+test('Slice 384 review #2: GETs are retried, a POST only after a 429 with Retry-After; any other POST failure is recorded, the loop goes on, and a rerun posts only the missing ones', async () => {
+    const waits = [];
+    let attempts = 0;
+    const flaky = retryingAsc({ get: async () => (attempts++ === 0 ? { status: 429, ok: false, json: null, retryAfter: '2' } : okJson({ data: [] })), post: async () => okJson({}) }, async (ms) => waits.push(ms));
+    assert.equal((await flaky.get('/x')).status, 200);
+    assert.deepEqual(waits, [2000]);
+    let serverErrors = 0;
+    const post5xx = retryingAsc({ get: async () => okJson({}), post: async () => (serverErrors++, { status: 500, ok: false, json: null, retryAfter: null }) }, noSleep);
+    assert.equal((await post5xx.post('/x')).status, 500);
+    assert.equal(serverErrors, 1, 'a POST that got a 5xx may have been applied, so it is not sent again');
+    let throttled = 0;
+    const post429 = retryingAsc({ get: async () => okJson({}), post: async () => (throttled++ === 0 ? { status: 429, ok: false, json: null, retryAfter: '1' } : okJson({})) }, noSleep);
+    assert.equal((await post429.post('/x')).status, 200);
+    let bare = 0;
+    const post429Bare = retryingAsc({ get: async () => okJson({}), post: async () => (bare++, { status: 429, ok: false, json: null, retryAfter: null }) }, noSleep);
+    await post429Bare.post('/x');
+    assert.equal(bare, 1, 'a 429 without Retry-After is not retried');
+    assert.deepEqual([appleRetryDelayMs(null, 0), appleRetryDelayMs(undefined, 2), appleRetryDelayMs('0', 3), appleRetryDelayMs('9999', 0)], [1000, 4000, 0, 60000]);
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    let frPosts = 0;
+    const failing = existingSubscription(monthly, {
+        'GET /v1/subscriptions/s1/prices': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [] }),
+        'POST /v1/subscriptionPrices': (path, body) => (body.data.relationships.subscriptionPricePoint.data.id === 'pfr' ? (frPosts++, { status: 503, ok: false, json: null }) : okJson({ data: {} })),
+    });
+    await assert.rejects(createAppleSubscription(failing, monthly, '1', { groupId: 'g1', sleep: noSleep }), /1 of 3 territories failed, rerun.*FRA/);
+    assert.equal(frPosts, 1, 'a failed POST is not repeated');
+    assert.equal(failing.calls.filter((c) => c === 'POST /v1/subscriptionIntroductoryOffers').length, 2, 'GBR and DEU still got their trial');
+    const rerun = existingSubscription(monthly, {
+        'GET /v1/subscriptions/s1/prices': territoryList(['GBR', 'DEU']),
+        'GET /v1/subscriptions/s1/introductoryOffers': territoryList(['GBR', 'DEU']),
+    });
+    assert.equal(await createAppleSubscription(rerun, monthly, '1', { groupId: 'g1', sleep: noSleep }), Outcome.Completed);
+    assert.deepEqual(rerun.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers']);
 });
 
 test('Slice 384: the dry run lists the subscription and what is left by hand for each store, and makes no store call', () => {

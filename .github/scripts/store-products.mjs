@@ -27,7 +27,7 @@
  *              so its price (0.99 USD), listing and submission are set in Partner Center by hand, and the Partner Center payout and tax profile must exist.
  *
  * Slice 384 adds the Dino subscription (a monthly 1.99 GBP and a yearly 14.99 GBP plan, 7-day free trial) to the same run, after the books: Play one subscription with two base plans and trial offers, Apple one group with
- * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its request shapes are UNVERIFIED (no --apply has run); the dry run lists them and what is left by hand.
+ * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its Apple request shapes are checked against Apple's App Store Connect API docs (developer.apple.com/documentation/appstoreconnectapi, read through context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) and the first --apply answer (the create call has no availableInAllTerritories); the Play and Microsoft shapes are still UNVERIFIED. The dry run lists them and what is left by hand.
  *
  * Run live on 2026-11-13 against all three stores (Play: 11 created and activated; Apple: 11 created; Partner Center: 11 add-on shells created). Request shapes the
  * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
@@ -73,6 +73,13 @@ const REQUEST_TIMEOUT_MS = 30000;
 const APPLE_PRICE_POINT_LIMIT = 200;
 const APPLE_PRICE_POINT_MAX_PAGES = 20;
 const APPLE_TERRITORY_LIMIT = 200;
+const APPLE_LIST_MAX_PAGES = 50;
+const APPLE_RETRY_MAX = 5;
+const APPLE_PROGRESS_EVERY = 20;
+const APPLE_RETRY_BASE_MS = 1000;
+const APPLE_RETRY_MAX_MS = 60000;
+const HTTP_TOO_MANY = 429;
+const HTTP_SERVER_ERROR = 500;
 const APPLE_TERRITORY_MAX_PAGES = 10;
 const APPLE_API_ORIGIN = 'https://api.appstoreconnect.apple.com';
 const HTTP_NOT_FOUND = 404;
@@ -681,28 +688,42 @@ export function appleSubscriptionGroupBody(appId) {
     return { data: { type: 'subscriptionGroups', attributes: { referenceName: APPLE_GROUP_NAME }, relationships: { app: { data: { type: 'apps', id: appId } } } } };
 }
 
-/** Pure: the group's en-US display name (POST /v1/subscriptionGroupLocalizations). UNVERIFIED shape. */
+/** Pure: the group's en-US display name (POST /v1/subscriptionGroupLocalizations). Checked against Apple's docs (subscription-group-localizations-v1, 2026-11-15). */
 export function appleGroupLocalizationBody(groupId) {
     return { data: { type: 'subscriptionGroupLocalizations', attributes: { name: 'Dino Book Reader', locale: APPLE_LOCALE }, relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: groupId } } } } };
 }
 
-/** Pure: one auto-renewing subscription of the group (POST /v1/subscriptions); the yearly plan is level 1 (the best), the monthly level 2. */
+/** Pure: one auto-renewing subscription of the group (POST /v1/subscriptions; checked against Apple's docs, managing-auto-renewable-subscriptions, 2026-11-15, minus availableInAllTerritories, which the live API rejected on 2026-11-15); the yearly plan is level 1 (the best), the monthly level 2. */
 export function appleSubscriptionBody(item, groupId) {
     return {
         data: {
             type: 'subscriptions',
-            attributes: { name: `Every book (${item.plan.id})`, productId: item.productId, subscriptionPeriod: item.plan.applePeriod, familySharable: false, groupLevel: item.plan.appleLevel, availableInAllTerritories: true, reviewNote: 'Opens every book while subscribed. Purchases sit behind the grown-ups gate.' },
+            attributes: { name: `Every book (${item.plan.id})`, productId: item.productId, subscriptionPeriod: item.plan.applePeriod, familySharable: false, groupLevel: item.plan.appleLevel, reviewNote: 'Opens every book while subscribed. Purchases sit behind the grown-ups gate.' },
             relationships: { group: { data: { type: 'subscriptionGroups', id: groupId } } },
         },
     };
 }
 
-/** Pure: the en-US name and description of an Apple subscription (POST /v1/subscriptionLocalizations). UNVERIFIED shape. */
+/** Pure: the en-US name and description of an Apple subscription (POST /v1/subscriptionLocalizations). Checked against Apple's docs (managing-auto-renewable-subscriptions, 2026-11-15; the pre-4.4.1 route, deprecated but available). */
 export function appleSubscriptionLocalizationBody(item, subscriptionId) {
     return { data: { type: 'subscriptionLocalizations', attributes: { name: SUBSCRIPTION_TITLE, description: cut(SUBSCRIPTION_DESCRIPTION, APPLE_DESCRIPTION_MAX), locale: APPLE_LOCALE }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
 }
 
-/** Pure: the price of the base territory (POST /v1/subscriptionPrices): the price point's id, applied now (startDate null); other territories follow Apple's equalisation when set by hand or by a later run. */
+/** Pure: the territory availability of a subscription (POST /v1/subscriptionAvailabilities): every territory, as Apple adds new ones. The create call itself has no availableInAllTerritories (Apple answered so on the first --apply). */
+export function appleSubscriptionAvailabilityBody(subscriptionId, territoryIds) {
+    return {
+        data: {
+            type: 'subscriptionAvailabilities',
+            attributes: { availableInNewTerritories: true },
+            relationships: {
+                subscription: { data: { type: 'subscriptions', id: subscriptionId } },
+                availableTerritories: { data: territoryIds.map((id) => ({ type: 'territories', id })) },
+            },
+        },
+    };
+}
+
+/** Pure: the price of one territory (POST /v1/subscriptionPrices): the price point's id (it belongs to one territory), applied now (startDate null). The base territory gets the chosen price point, every other territory its equalised one. */
 export function appleSubscriptionPriceBody(subscriptionId, pricePointId) {
     return {
         data: {
@@ -713,15 +734,15 @@ export function appleSubscriptionPriceBody(subscriptionId, pricePointId) {
     };
 }
 
-/** Pure: the 7-day free trial (POST /v1/subscriptionIntroductoryOffers). UNVERIFIED: duration ONE_WEEK, one period, in the base territory. */
-export function appleTrialBody(subscriptionId) {
+/** Pure: the 7-day free trial of one territory (POST /v1/subscriptionIntroductoryOffers): duration ONE_WEEK, one period, FREE_TRIAL; an offer is per territory. */
+export function appleTrialBody(subscriptionId, territoryId = APPLE_SUBSCRIPTION_TERRITORY) {
     return {
         data: {
             type: 'subscriptionIntroductoryOffers',
             attributes: { duration: 'ONE_WEEK', offerMode: 'FREE_TRIAL', numberOfPeriods: 1 },
             relationships: {
                 subscription: { data: { type: 'subscriptions', id: subscriptionId } },
-                territory: { data: { type: 'territories', id: APPLE_SUBSCRIPTION_TERRITORY } },
+                territory: { data: { type: 'territories', id: territoryId } },
             },
         },
     };
@@ -740,28 +761,161 @@ export async function createAppleSubscription(asc, item, appId, session = {}) {
         must(await asc.post('/v1/subscriptionLocalizations', appleSubscriptionLocalizationBody(item, id)), 'add the en-US listing');
         did = true;
     }
-    if (await missing(`/v1/subscriptions/${id}/prices`, 'the price')) {
-        const points = must(await asc.get(`/v1/subscriptions/${id}/pricePoints?filter[territory]=${APPLE_SUBSCRIPTION_TERRITORY}&limit=${APPLE_PRICE_POINT_LIMIT}`), 'read the price points');
-        const pointId = findApplePricePoint(points.data, item.plan.gbpLabel);
-        if (pointId === null) throw new Error(`no ${item.plan.gbpLabel} ${SUBSCRIPTION_CURRENCY} price point for ${item.productId}`);
-        must(await asc.post('/v1/subscriptionPrices', appleSubscriptionPriceBody(id, pointId)), 'set the price');
+    if (await missing(`/v1/subscriptions/${id}/subscriptionAvailability`, 'the availability')) {
+        must(await asc.post('/v1/subscriptionAvailabilities', appleSubscriptionAvailabilityBody(id, await appleTerritoryIds(asc))), 'set availability');
         did = true;
     }
-    if (await missing(`/v1/subscriptions/${id}/introductoryOffers`, 'the free trial')) {
-        must(await asc.post('/v1/subscriptionIntroductoryOffers', appleTrialBody(id)), 'add the free trial');
-        did = true;
-    }
+    if (await appleSubscriptionPricesAndTrial(asc, item, id, fresh, session)) did = true;
     if (fresh) return Outcome.Created;
     return did ? Outcome.Completed : Outcome.Exists;
 }
 
+/**
+ * What a subscription's prices or introductory offers already cover: `territories` (the ids its entries name) and `unplaced` (true when an entry names no territory, e.g. one made by hand for all territories).
+ * Apple's docs (context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) show a territory relationship with data only when asked with include=territory, and say nothing of an all-territories entry,
+ * so an entry that names none is read as "there is already one here" and nothing of that kind is posted. None on a fresh subscription.
+ */
+async function appleDoneTerritories(asc, path, what, fresh) {
+    if (fresh) return { territories: new Set(), unplaced: false };
+    const entries = await appleListAll(asc, `${path}?include=territory&limit=${APPLE_TERRITORY_LIMIT}`, `check ${what}`, { missingIsEmpty: true });
+    const named = entries.map(entryTerritory);
+    return { territories: new Set(named.filter((territory) => territory !== null)), unplaced: named.includes(null) };
+}
+
+/** Pure: the territory id an entry of a list read with include=territory names, or null when it names none. */
+export function entryTerritory(entry) {
+    const territory = entry?.relationships?.territory?.data?.id;
+    return typeof territory === 'string' ? territory : null;
+}
+
+/** Pure: the price point per territory for a plan: the base territory's own point, then its equalised points (the list of Apple's equalisation answers). A point that names no territory cannot be placed and is left out. */
+export function applePricePlan(basePointId, equalized) {
+    const plan = new Map([[APPLE_SUBSCRIPTION_TERRITORY, basePointId]]);
+    for (const point of equalized) {
+        const territory = entryTerritory(point);
+        if (territory !== null && typeof point.id === 'string' && !plan.has(territory)) plan.set(territory, point.id);
+    }
+    return plan;
+}
+
+/** Pure: the plan narrowed to the territories of the availability; `skipped` lists the availability territories the plan has no price point for (they are reported, not posted). */
+export function applePlanForAvailability(plan, territoryIds) {
+    const skipped = territoryIds.filter((territory) => !plan.has(territory));
+    return { plan: new Map(territoryIds.filter((territory) => plan.has(territory)).map((territory) => [territory, plan.get(territory)])), skipped };
+}
+
+/** The territory ids Apple actually holds in a subscription's availability, read back (the availability may be partial or older than this run). */
+async function appleHeldTerritoryIds(asc, id) {
+    const availability = must(await asc.get(`/v1/subscriptions/${id}/subscriptionAvailability`), 'read the availability back').data;
+    if (typeof availability?.id !== 'string') throw new Error('read the availability back: Apple gave no availability id');
+    const territories = await appleListAll(asc, `/v1/subscriptionAvailabilities/${availability.id}/availableTerritories?limit=${APPLE_TERRITORY_LIMIT}`, 'read the available territories');
+    return territories.map((territory) => territory.id);
+}
+
+/** Every entry of a paged App Store Connect list, following every `links.next`; a list longer than the safety cap is an error, never a silent cut. */
+async function appleListAll(asc, path, what, { missingIsEmpty = false } = {}) {
+    const all = [];
+    for (let page = 0; path !== null && page < APPLE_LIST_MAX_PAGES; page++) {
+        const response = await asc.get(path);
+        if (missingIsEmpty && page === 0 && response.status === HTTP_NOT_FOUND) return [];
+        const json = must(response, what);
+        all.push(...(json.data ?? []));
+        path = applePagePath(json.links?.next);
+    }
+    if (path !== null) throw new Error(`${what}: more than ${APPLE_LIST_MAX_PAGES} pages, so the list would be incomplete`);
+    return all;
+}
+
+/** Pure: the delay before a retry, in ms: Apple's Retry-After (seconds) when given, else doubling from one second; capped. */
+export function appleRetryDelayMs(retryAfter, attempt) {
+    const seconds = Number(retryAfter);
+    const given = retryAfter !== null && retryAfter !== undefined && retryAfter !== '' && Number.isFinite(seconds) && seconds >= 0;
+    return Math.min(given ? seconds * 1000 : APPLE_RETRY_BASE_MS * 2 ** attempt, APPLE_RETRY_MAX_MS);
+}
+
+const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Whether a response may be sent again: a GET after a 429 or 5xx; a POST only after a 429 that names a Retry-After (Apple did not accept it). A POST that got a 5xx may have been applied, so it is never repeated. */
+function canRetry(isPost, response) {
+    if (isPost) return response.status === HTTP_TOO_MANY && response.retryAfter !== null && response.retryAfter !== undefined && response.retryAfter !== '';
+    return response.status === HTTP_TOO_MANY || response.status >= HTTP_SERVER_ERROR;
+}
+
+/** An App Store Connect client whose GETs retry a 429 or 5xx, and whose POSTs retry only a 429 with Retry-After (honouring it), a fixed number of times. */
+export function retryingAsc(asc, sleep = realSleep) {
+    const again = (call, isPost) => async (...args) => {
+        let response = await call(...args);
+        for (let attempt = 0; attempt < APPLE_RETRY_MAX && canRetry(isPost, response); attempt++) {
+            await sleep(appleRetryDelayMs(response.retryAfter, attempt));
+            response = await call(...args);
+        }
+        return response;
+    };
+    return { get: again((...args) => asc.get(...args), false), post: again((...args) => asc.post(...args), true) };
+}
+
+/** Sets the price (GBR point plus equalised points for every other territory) and the 7-day free trial, in each territory that lacks them. True when anything was posted. */
+async function appleSubscriptionPricesAndTrial(plainAsc, item, id, fresh, session) {
+    const asc = retryingAsc(plainAsc, session.sleep);
+    session.notes ??= [];
+    const priced = await appleDoneTerritories(asc, `/v1/subscriptions/${id}/prices`, 'the prices', fresh);
+    const trialled = await appleDoneTerritories(asc, `/v1/subscriptions/${id}/introductoryOffers`, 'the free trial', fresh);
+    if (priced.unplaced) session.notes.push(`${item.productId}: a price entry names no territory (made by hand?), so no price was posted; check it in App Store Connect`);
+    if (trialled.unplaced) session.notes.push(`${item.productId}: a free-trial entry names no territory (made by hand?), so no trial was posted; check it in App Store Connect`);
+    const points = await appleListAll(asc, `/v1/subscriptions/${id}/pricePoints?filter[territory]=${APPLE_SUBSCRIPTION_TERRITORY}&limit=${APPLE_PRICE_POINT_LIMIT}`, 'read the price points');
+    const pointId = findApplePricePoint(points, item.plan.gbpLabel);
+    if (pointId === null) throw new Error(`no ${item.plan.gbpLabel} ${SUBSCRIPTION_CURRENCY} price point for ${item.productId}`);
+    const equalized = await appleListAll(asc, `/v1/subscriptionPricePoints/${pointId}/equalizations?include=territory&limit=${APPLE_PRICE_POINT_LIMIT}`, 'read the equalised prices');
+    const { plan, skipped } = applePlanForAvailability(applePricePlan(pointId, equalized), await appleHeldTerritoryIds(asc, id));
+    if (skipped.length > 0) session.notes.push(`${item.productId}: ${skipped.length} territory(ies) have no equalised price point and were skipped: ${skipped.join(', ')}`);
+    return appleSetTerritories(asc, item.productId, id, plan, { priced, trialled }, session);
+}
+
+/** Posts the missing price and trial of each territory; a territory whose POST failed is recorded and the loop goes on, then the run fails naming them (a rerun reads what is done first and does only those). True when anything was posted. */
+async function appleSetTerritories(asc, productId, id, plan, { priced, trialled }, session) {
+    const log = session.log ?? console.log;
+    let did = false;
+    let posted = 0;
+    let position = 0;
+    const failed = [];
+    for (const [territory, territoryPointId] of plan) {
+        try {
+            if (!priced.unplaced && !priced.territories.has(territory)) {
+                must(await asc.post('/v1/subscriptionPrices', appleSubscriptionPriceBody(id, territoryPointId)), `set the ${territory} price`);
+                did = true;
+            }
+            if (!trialled.unplaced && !trialled.territories.has(territory)) {
+                must(await asc.post('/v1/subscriptionIntroductoryOffers', appleTrialBody(id, territory)), `add the ${territory} free trial`);
+                did = true;
+            }
+            posted++;
+        } catch (error) {
+            failed.push(`${territory} (${error.message})`);
+        }
+        if (++position % APPLE_PROGRESS_EVERY === 0) log(`  ${productId}: ${position} of ${plan.size} territories handled (${posted} ok, ${failed.length} failed)`);
+    }
+    if (failed.length > 0) throw new Error(`${failed.length} of ${plan.size} territories failed, rerun to finish only those: ${failed.join('; ')}`);
+    return did;
+}
+
+/** The group of the app, created with its en-US display name when missing; a group the failed first run left without a display name gets it now. */
 async function ensureAppleGroup(asc, appId) {
     const found = must(await asc.get(`/v1/apps/${appId}/subscriptionGroups`), 'look up subscription group');
     const existing = (found.data ?? []).find((group) => group?.attributes?.referenceName === APPLE_GROUP_NAME)?.id;
-    if (existing !== undefined) return existing;
-    const groupId = must(await asc.post('/v1/subscriptionGroups', appleSubscriptionGroupBody(appId)), 'create subscription group').data.id;
-    must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the group listing');
+    const groupId = existing ?? must(await asc.post('/v1/subscriptionGroups', appleSubscriptionGroupBody(appId)), 'create subscription group').data.id;
+    if (existing === undefined || (await appleGroupListingMissing(asc, groupId))) {
+        must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the group listing');
+    }
     return groupId;
+}
+
+/** True only when the group's localization list was read successfully and is empty; a 404 or any other failure stops the step (posting again on a guess would hit a 409). */
+async function appleGroupListingMissing(asc, groupId) {
+    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations`);
+    if (!response.ok) throw new Error(`check the group listing: could not read it (HTTP ${response.status}), so the group's display name was not posted; rerun when App Store Connect answers`);
+    const data = response.json?.data;
+    if (!Array.isArray(data)) throw new Error('check the group listing: Apple gave no list, so the group\'s display name was not posted');
+    return data.length === 0;
 }
 
 /** Pure: Partner Center's create-add-on body for a subscription shell. UNVERIFIED: that the submission API accepts productType Subscription; if it answers 409 or an error, create the add-on by hand. */
@@ -772,7 +926,7 @@ export function microsoftSubscriptionBody(item, storeAppId) {
 // ---- running ----
 
 async function openStore(store) {
-    if (store === Store.Apple) return { asc: appleClientFromEnv(), appId: APPS.dino.id };
+    if (store === Store.Apple) return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [] };
     if (store === Store.Google) return { token: await googleToken() };
     return { token: await microsoftToken(), existing: undefined, storeAppId: requireEnv('MS_STORE_APP_ID') };
 }
@@ -801,12 +955,14 @@ export async function applyStore(store, books, open = openStore, create = create
             results.push({ book, outcome: Outcome.Failed, message: error.message });
         }
     }
+    results.notes = session?.notes ?? []; // things a run left undone without failing (skipped territories ...), printed in the end report
     return results;
 }
 
 function printResults(store, results) {
     console.log(`${STORE_TITLES[store]}:`);
     for (const { book, outcome, message } of results) console.log(`  ${outcome}: ${book.productId}${message ? ` (${message})` : ''}`);
+    (results.notes ?? []).forEach((note) => console.log(`  NOT DONE: ${note}`));
     MANUAL_STEPS[store].forEach((step) => console.log(`  by hand: ${step}`));
     SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
 }
