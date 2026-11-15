@@ -2,45 +2,49 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
-using Foundation;
 
 namespace DinoReader;
 
 /// <summary>
-/// The C# end of <c>Platforms/iOS/StoreKit2</c> (Slice 390): loads <c>DinoStoreKit.framework</c> from the app's Frameworks folder (the same way IosSherpaLibrary finds its framework) and calls its C functions through
-/// function pointers. Each call hands over a request id and the one callback; the answer is a JSON string that completes that request's task. Answers come on a Swift thread, so completing is all the callback does.
-/// <see cref="Load"/> is null when the framework is not in the app (a build that skipped the XCFramework step): the caller reports a failed store, never throws.
+/// The C# end of <c>Platforms/iOS/StoreKit2</c> (Slice 390): calls the C functions of <c>libDinoStoreKit.a</c> (linked into the app as a static library) through <c>DllImport("__Internal")</c>, passing the callback as a
+/// function pointer. Each call hands over a request id and the one callback; the answer is a JSON string that completes that request's task. Answers come on a Swift thread, so completing is all the callback does.
+/// <see cref="Load"/> is null when the library is not in the app (a build that skipped the XCFramework step): the caller reports a failed store, never throws.
 /// </summary>
 internal sealed unsafe class StoreKit2Bridge
 {
-    private const string FrameworkName = "DinoStoreKit";
-
     private static readonly object LoadGate = new();
     private static readonly ConcurrentDictionary<int, TaskCompletionSource<string>> Waiting = new();
     private static StoreKit2Bridge? s_bridge;
     private static bool s_tried;
     private static int s_lastRequest;
 
-    private readonly delegate* unmanaged<int> _canPay;
-    private readonly delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void> _products;
-    private readonly delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void> _buy;
-    private readonly delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void> _entitlements;
-    private readonly delegate* unmanaged<int, delegate* unmanaged<int, byte*, void>, void> _restore;
-    private readonly delegate* unmanaged<int, delegate* unmanaged<int, byte*, void>, void> _redeem;
-    private readonly delegate* unmanaged<delegate* unmanaged<int, byte*, void>, void> _startUpdates;
+    // The Swift exports are linked into the app as a static library (DinoReader.App.csproj), so each one is an explicit __Internal reference the linker resolves at build time.
+    [DllImport("__Internal", EntryPoint = "dino_sk_can_pay")]
+    private static extern int NativeCanPay();
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_products")]
+    private static extern void NativeProducts(byte* idsJson, int requestId, delegate* unmanaged<int, byte*, void> callback);
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_buy")]
+    private static extern void NativeBuy(byte* productId, int requestId, delegate* unmanaged<int, byte*, void> callback);
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_entitlements")]
+    private static extern void NativeEntitlements(byte* idsJson, int requestId, delegate* unmanaged<int, byte*, void> callback);
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_restore")]
+    private static extern void NativeRestore(int requestId, delegate* unmanaged<int, byte*, void> callback);
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_redeem")]
+    private static extern void NativeRedeem(int requestId, delegate* unmanaged<int, byte*, void> callback);
+
+    [DllImport("__Internal", EntryPoint = "dino_sk_start_updates")]
+    private static extern void NativeStartUpdates(delegate* unmanaged<int, byte*, void> callback);
 
     /// <summary>Raised with the product id when the transaction listener sees an update (a renewal, an approved Ask to Buy, a purchase made elsewhere); on a Swift thread.</summary>
     public static event Action<string>? ProductUpdated;
 
-    private StoreKit2Bridge(IntPtr library)
+    private StoreKit2Bridge()
     {
-        _canPay = (delegate* unmanaged<int>)Export(library, "dino_sk_can_pay");
-        _products = (delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_products");
-        _buy = (delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_buy");
-        _entitlements = (delegate* unmanaged<byte*, int, delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_entitlements");
-        _restore = (delegate* unmanaged<int, delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_restore");
-        _redeem = (delegate* unmanaged<int, delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_redeem");
-        _startUpdates = (delegate* unmanaged<delegate* unmanaged<int, byte*, void>, void>)Export(library, "dino_sk_start_updates");
     }
 
     /// <summary>The loaded wrapper, started once; null when the framework or one of its functions is missing.</summary>
@@ -59,7 +63,7 @@ internal sealed unsafe class StoreKit2Bridge
         }
     }
 
-    public bool CanMakePayments => _canPay() == 1;
+    public bool CanMakePayments => NativeCanPay() == 1;
 
     // A UTF-8, NUL-terminated copy of the input lives for the call only: the Swift side copies what it needs before it returns.
     public Task<string> ProductsAsync(IReadOnlyCollection<string> productIds)
@@ -67,7 +71,7 @@ internal sealed unsafe class StoreKit2Bridge
         (int id, Task<string> task) = Register();
         fixed (byte* text = Utf8(JsonSerializer.Serialize(productIds)))
         {
-            _products(text, id, &OnAnswer);
+            NativeProducts(text, id, &OnAnswer);
         }
 
         return task;
@@ -78,7 +82,7 @@ internal sealed unsafe class StoreKit2Bridge
         (int id, Task<string> task) = Register();
         fixed (byte* text = Utf8(productId))
         {
-            _buy(text, id, &OnAnswer);
+            NativeBuy(text, id, &OnAnswer);
         }
 
         return task;
@@ -90,7 +94,7 @@ internal sealed unsafe class StoreKit2Bridge
         (int id, Task<string> task) = Register();
         fixed (byte* text = Utf8(JsonSerializer.Serialize(planIds)))
         {
-            _entitlements(text, id, &OnAnswer);
+            NativeEntitlements(text, id, &OnAnswer);
         }
 
         return task;
@@ -100,41 +104,34 @@ internal sealed unsafe class StoreKit2Bridge
     public Task<string> SyncAsync()
     {
         (int id, Task<string> task) = Register();
-        _restore(id, &OnAnswer);
+        NativeRestore(id, &OnAnswer);
         return task;
     }
 
     public Task<string> RedeemAsync()
     {
         (int id, Task<string> task) = Register();
-        _redeem(id, &OnAnswer);
+        NativeRedeem(id, &OnAnswer);
         return task;
     }
 
+    // A build without the library (no XCFramework step) fails the first export call; that is the same as none, and every call then answers a failed store, which BookPurchases reports.
     private static StoreKit2Bridge? TryCreate()
     {
-        string path = Path.Combine(NSBundle.MainBundle.BundlePath, "Frameworks", $"{FrameworkName}.framework", FrameworkName);
-        if (!NativeLibrary.TryLoad(path, out IntPtr library))
-        {
-            PurchaseTrace.Line("storekit2 framework not loaded");
-            return null;
-        }
-
         try
         {
-            return new StoreKit2Bridge(library);
+            _ = NativeCanPay();
+            return new StoreKit2Bridge();
         }
-        catch (EntryPointNotFoundException)
+        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
         {
-            // no-fallback: a framework without the expected functions is the same as none; every call then answers a failed store, which BookPurchases reports
-            PurchaseTrace.Line("storekit2 framework lacks a function");
+            // no-fallback: see the comment above; the trace line is the report
+            PurchaseTrace.Line($"storekit2 library missing: {ex.GetType().Name}");
             return null;
         }
     }
 
-    private static IntPtr Export(IntPtr library, string name) => NativeLibrary.GetExport(library, name);
-
-    private void StartUpdates() => _startUpdates(&OnAnswer);
+    private void StartUpdates() => NativeStartUpdates(&OnAnswer);
 
     private static byte[] Utf8(string input) => Encoding.UTF8.GetBytes(input + "\0");
 

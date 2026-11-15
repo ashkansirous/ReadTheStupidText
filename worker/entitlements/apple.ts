@@ -161,9 +161,10 @@ async function checkSubscriptionStatus(proof: Proof, token: string, allowSandbox
 // Slice 390: a build with StoreKit 2 sends the transaction's signed JWS as the token; an older build sends the transaction id. A JWS is verified against Apple's root first
 // (apple-jws.ts); the checks below then run on the transaction id inside it (the original one for a subscription, whose statuses answer covers every renewal), so Apple's
 // answer about revocation and the plan stays the last word. A token that is not a JWS is a transaction id from a build before StoreKit 2 and goes through unchanged.
-// A verified Sandbox JWS (TestFlight and App Review buys are Sandbox) is accepted on every Worker, as Apple advises for receipts: the sandbox host is asked about it and the result records the environment.
+// A verified Sandbox JWS (TestFlight and App Review buys are Sandbox) is accepted only when the Worker allows sandbox (APPLE_IAP_ALLOW_SANDBOX), the same rule as a plain transaction id: a production Worker refuses it, so a sandbox tester never buys free.
 const JWS_PREFIX = "eyJ";
 const NOT_A_PROOF = "not-a-proof";
+const UNVERIFIED = "unverified";
 
 interface Resolved {
   readonly proof: Proof;
@@ -186,9 +187,10 @@ function idOf(payload: Record<string, unknown>, name: string): string | null {
   return typeof value === "string" && /^\d+$/.test(value) ? value : null;
 }
 
-async function transactionIdOf(proof: Proof, roots: readonly string[] | undefined): Promise<Resolved | null> {
+async function transactionIdOf(proof: Proof, roots: readonly string[] | undefined): Promise<Resolved | null | typeof UNVERIFIED> {
   const payload = await verifyAppleSignedPayload(proof.token, roots === undefined ? {} : { roots });
-  if (payload === null || !isOurs(payload, proof.productId)) return null;
+  if (payload === null) return UNVERIFIED; // clock skew, a chain change or a malformed header is not proof of a forgery: never cached as "not owned"
+  if (!isOurs(payload, proof.productId)) return null;
   const environment = payload["environment"];
   if (environment !== ENVIRONMENT_PRODUCTION && environment !== ENVIRONMENT_SANDBOX) return null;
   const id = idOf(payload, isSubscriptionProduct(proof.productId) ? "originalTransactionId" : "transactionId");
@@ -196,15 +198,18 @@ async function transactionIdOf(proof: Proof, roots: readonly string[] | undefine
 }
 
 /** The proof to check with Apple: the same one for a transaction id, one carrying the verified transaction id and environment for a JWS, or NOT_A_PROOF for a JWS that does not verify. */
-async function resolved(proof: Proof, roots: readonly string[] | undefined): Promise<Resolved | typeof NOT_A_PROOF> {
+async function resolved(proof: Proof, roots: readonly string[] | undefined, allowSandbox: boolean): Promise<Resolved | typeof NOT_A_PROOF | typeof UNVERIFIED> {
   if (!isSignedTransaction(proof.token)) return { proof, environment: null };
-  return (await transactionIdOf(proof, roots)) ?? NOT_A_PROOF;
+  const found = await transactionIdOf(proof, roots);
+  if (found === null) return NOT_A_PROOF;
+  if (found === UNVERIFIED) return UNVERIFIED;
+  return found.environment === ENVIRONMENT_SANDBOX && !allowSandbox ? NOT_A_PROOF : found;
 }
 
 async function checkOwned(found: Resolved, env: EntitlementEnv, key: AppleKey, fetcher: Fetcher): Promise<CheckResult> {
   const { proof, environment } = found;
   const sandboxJws = environment === ENVIRONMENT_SANDBOX;
-  const allowSandbox = sandboxAllowed(env) || sandboxJws;
+  const allowSandbox = sandboxAllowed(env);
   const firstHost = sandboxJws ? SANDBOX_HOST : PRODUCTION_HOST;
   const token = await bearer(key);
   if (isSubscriptionProduct(proof.productId)) return withEnvironment(await checkSubscription(proof, token, allowSandbox, firstHost, fetcher), environment);
@@ -223,8 +228,9 @@ export function createAppleChecker(roots?: readonly string[]): StoreChecker {
       const key = keyOf(env);
       if (key === null) return CANNOT_VERIFY;
       try {
-        const found = await resolved(sent, roots);
-        if (found === NOT_A_PROOF) return checked([]); // a signed transaction that is not Apple's, not ours or not for this product owns nothing
+        const found = await resolved(sent, roots, sandboxAllowed(env));
+        if (found === UNVERIFIED) return CANNOT_VERIFY; // a JWS that fails verification is not cached as "not owned" (same as the subscription path)
+        if (found === NOT_A_PROOF) return checked([]); // a verified transaction that is not ours, not for this product or Sandbox on a production Worker owns nothing
         return await checkOwned(found, env, key, fetcher);
       } catch {
         return CANNOT_VERIFY; // no-fallback: network or signing failure: we could not ask, which is never "owned"
@@ -234,10 +240,10 @@ export function createAppleChecker(roots?: readonly string[]): StoreChecker {
       const key = keyOf(env);
       if (key === null) return CANNOT_VERIFY_SUBSCRIPTION;
       try {
-        const found = await resolved(sent, roots);
-        if (found === NOT_A_PROOF) return CANNOT_VERIFY_SUBSCRIPTION; // a JWS that does not verify says nothing about the plan: the app keeps its record, never reads "expired"
+        const found = await resolved(sent, roots, sandboxAllowed(env));
+        if (found === NOT_A_PROOF || found === UNVERIFIED) return CANNOT_VERIFY_SUBSCRIPTION; // a JWS that does not verify says nothing about the plan: the app keeps its record, never reads "expired"
         const firstHost = found.environment === ENVIRONMENT_SANDBOX ? SANDBOX_HOST : PRODUCTION_HOST;
-        return await checkSubscriptionStatus(found.proof, await bearer(key), sandboxAllowed(env) || found.environment === ENVIRONMENT_SANDBOX, firstHost, fetcher);
+        return await checkSubscriptionStatus(found.proof, await bearer(key), sandboxAllowed(env), firstHost, fetcher);
       } catch {
         return CANNOT_VERIFY_SUBSCRIPTION; // no-fallback: we could not ask, which the app reads as "keep what you hold", never as expired
       }

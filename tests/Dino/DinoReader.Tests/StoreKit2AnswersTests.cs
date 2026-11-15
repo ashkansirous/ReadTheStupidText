@@ -29,6 +29,8 @@ public class StoreKit2AnswersTests
     [InlineData("""{"ok":false,"error":"SKErrorDomain:2"}""")]
     [InlineData("not json")]
     [InlineData("""{"ok":true}""")]
+    [InlineData("""{"ok":true,"transactions":null,"latest":[]}""")]
+    [InlineData("""{"ok":true,"transactions":[],"latest":[],"incomplete":true}""")]
     public void AFailedOrUnreadableAnswer_IsNullNeverEmpty(string json)
     {
         Assert.Null(StoreKit2Answers.Prices(json));

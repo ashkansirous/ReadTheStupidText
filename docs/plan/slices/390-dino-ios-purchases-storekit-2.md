@@ -16,7 +16,7 @@
 ## Work
 
 - [x] 1. Check the StoreKit 2 binding available to .NET for iOS with `library-docs` before writing code. (Done in the park note; context7 `/dotnet/macios` re-checked 2026-11-15: no StoreKit 2 binding, native frameworks load through `NativeReference` + `NativeLibrary`.)
-- [x] 2. Move `IosPurchases` to StoreKit 2 with the same behaviour for the shared `IPurchases` contract (products, buy, restore, owned books, receipt sent to the server). Built: `Platforms/iOS/StoreKit2` (Swift package, C functions via `@_cdecl`, built into `DinoStoreKit.xcframework` by `build-xcframework.sh`), `StoreKit2Bridge.cs`, `IosPurchases.cs`, pure `DinoReader.Core/StoreKit2Answers.cs`; the proof is the transaction's JWS and the Worker (`worker/entitlements/apple-jws.ts`, `apple.ts`) verifies it to Apple Root CA - G3, still accepting plain transaction ids from older builds.
+- [x] 2. Move `IosPurchases` to StoreKit 2 with the same behaviour for the shared `IPurchases` contract (products, buy, restore, owned books, receipt sent to the server). Built: `Platforms/iOS/StoreKit2` (Swift file, C functions via `@_cdecl`, built into `DinoStoreKit.xcframework` by `build-xcframework.sh`), `StoreKit2Bridge.cs`, `IosPurchases.cs`, pure `DinoReader.Core/StoreKit2Answers.cs`; the proof is the transaction's JWS and the Worker (`worker/entitlements/apple-jws.ts`, `apple.ts`) verifies it to Apple Root CA - G3, still accepting plain transaction ids from older builds.
 - [x] 3. Remove the `CA1422` suppression; the build passes with the gate on. (`net10.0-ios` Debug compiles on Windows with the gate; the macOS jobs still owe the XCFramework and signed build.)
 - [ ] 4. The macOS CI jobs `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` pass on the branch (they build the XCFramework first).
 
@@ -25,10 +25,37 @@
 - `net10.0-ios` Dino builds with the gate on and no suppression.
 - A sandbox purchase and a restore on a TestFlight build (a check for the user's iPhone, listed in Not yet verified when built).
 
+#### Changed while building
+
+- CI run 43711519466 failed: `xcodebuild archive` of the Swift package put its product in usr/local/lib, not in a framework. Packaging is now a static library: `swiftc -emit-library -static` per SDK into `DinoStoreKit.xcframework` (`-library`), `Package.swift` removed, the csproj links it as a `Static` NativeReference (ForceLoad, `LinkWithSwiftSystemLibraries`), and `StoreKit2Bridge.cs` calls the exports through `DllImport("__Internal")`.
+
 #### Not yet verified
 
 - The Swift wrapper and the XCFramework have never been compiled (Windows has no Xcode): `dinoreader-ios.yml` and `dinoreader-ios-sim.yml` on the branch are the first proof.
 - Sandbox buy and restore on the user's iPhone with a TestFlight build (a paid book and a subscription plan; Restore on a second install).
 - The Worker's JWS check against a real Apple StoreKit 2 transaction (tests use a throwaway chain; the pin is the SHA-256 of Apple Root CA - G3).
+
+## From review
+
+Files: `reviews/s390-high.md` (pass 1) and `reviews/s390-medium.md` (pass 2).
+
+- High #1 (hasOid searched the whole TBS): applied; the marker OID is read from the certificate's extensions only.
+- High #2 (redeem timeout opens the web page over the sheet): applied; no timeout, and medium #5 narrows the web fallback further.
+- High #3 (revoked subscription transaction): applied; revoked transactions are dropped in `StoreKit2Answers.Entitlements`.
+- High #4 (transaction update only clears pending): applied; the update raises `PurchaseUpdates.StoreChanged` and BookPurchases re-reads.
+- High #5 (exception in the native callback): applied; `OnAnswer` catches everything and hands updates to the thread pool.
+- High #6 (price query and entitlements read in sequence): skipped: low, an offline wait only, no wrong result.
+- High #7 (AskAsync timer and waiting entry): applied; the timer is cancelled on every path and an abandoned request leaves the waiting list.
+- High #8 (Sandbox JWS refused in production): superseded by medium #1. A verified Sandbox JWS is accepted only where `APPLE_IAP_ALLOW_SANDBOX` is set, so the TestFlight Sandbox check in Not yet verified must target a Worker with that switch (staging); the production Worker refuses it by design.
+- High #9 (duplicate JWS test, mutable trusted roots): applied; `isJws` is shared and the roots are a `createAppleChecker(roots)` argument.
+- High #10 (IBookPurchases summary): applied; the paragraph now says iOS reads Apple's entitlements silently.
+- Medium #1 (Sandbox JWS accepted on production): applied; the same rule as a plain transaction id (slice 346), tests changed to the opposite.
+- Medium #2 (non-array `transactions` read as "owns nothing"): applied; it is a failed read (null).
+- Medium #3 (unverified entitlement skipped silently): applied; the Swift answer carries `incomplete`, C# treats it as a failed read, so BookPurchases keeps the last snapshot and reports `StoreUnreachable` when online.
+- Medium #4 (BuyAsync cancel): applied differently: no `Abandon` (it would discard the late answer); a caller cancel hands the request to `DeliverLateAnswerAsync`, which raises `PurchaseUpdates` when the purchase completes, so the book unlocks; the bridge removes the waiting entry when the answer arrives.
+- Medium #5 (redeem opens the web page on any failure): applied; the page opens only when the bridge is missing or the answer is `unsupported`.
+- Medium #6 (updates listener starts late): applied; `AppDelegate.FinishedLaunching` loads the bridge, which starts the listener.
+- Medium #7 (static handler never unsubscribed, `_lastListed` unlocked): applied; `BookPurchases` is `IDisposable` and unsubscribes, `_lastListed` is read and written under a lock.
+- Medium #8 (failed JWS cached as not owned): applied; a JWS that fails verification is `CANNOT_VERIFY` for books too; a verified one that is not ours stays "not owned".
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's choice of StoreKit 2 route (own Swift XCFramework or Plugin.InAppBilling 10.x)`.

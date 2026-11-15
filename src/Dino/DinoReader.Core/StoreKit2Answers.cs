@@ -81,9 +81,14 @@ public static class StoreKit2Answers
     public static StoreKitEntitlements? Entitlements(string json)
     {
         using JsonDocument? doc = Open(json);
-        if (doc is null || !doc.RootElement.TryGetProperty("transactions", out JsonElement current))
+        if (doc is null || !doc.RootElement.TryGetProperty("transactions", out JsonElement current) || current.ValueKind != JsonValueKind.Array)
         {
-            return null;
+            return null; // no list, or not a list: a failed read, never "owns nothing"
+        }
+
+        if (doc.RootElement.TryGetProperty("incomplete", out JsonElement incomplete) && incomplete.ValueKind == JsonValueKind.True)
+        {
+            return null; // the wrapper saw an entitlement it could not verify: the listing is incomplete, so it is a failed read and owned books are never dropped (the last snapshot stays)
         }
 
         IReadOnlyList<StoreKitTransaction> latest = doc.RootElement.TryGetProperty("latest", out JsonElement last) ? Transactions(last) : [];

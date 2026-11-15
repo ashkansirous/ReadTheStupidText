@@ -106,31 +106,38 @@ test("Apple checker: a JWS that is forged, for another app or product, or a sand
   try {
     const never = recorded([["api.storekit", json({})]]);
     const forged = jws(transaction()).split(".");
-    const cases = [
+    const unverified = [
       [forged[0], encode(transaction({ transactionId: "2999999999" })), forged[2]].join("."),
+      jws(transaction({ environment: "Production" }), { x5c: [LEAF_DER_BASE64, INTERMEDIATE_DER_BASE64, INTERMEDIATE_DER_BASE64] }), // not three distinct certificates ending in the root
+    ];
+    for (const token of unverified) assert.deepEqual(await appleChecker.check(parseProof(`ios:${PRODUCT}:${token}`), ENV, never.fetcher), CANNOT_VERIFY, token.slice(0, 20)); // a failed verification is never cached as "not owned"
+    const cases = [
       jws(transaction({ bundleId: "other.app" })),
       jws(transaction({ productId: `${APP_PACKAGE_ID}.book.red-riding-hood` })),
       jws(transaction({ transactionId: "not-a-number" })),
       jws(transaction({ environment: "Xcode" })),
       jws(transaction({ productId: "other.app.book.goldilocks" }), { x5c: CHAIN }), // a product that is not one of ours, whatever the proof says
-      jws(transaction({ environment: "Production" }), { x5c: [LEAF_DER_BASE64, INTERMEDIATE_DER_BASE64, INTERMEDIATE_DER_BASE64] }), // not three distinct certificates ending in the root
+      jws(transaction({ environment: "Sandbox" })), // verified, but a production Worker refuses Sandbox
     ];
     for (const token of cases) assert.deepEqual(await appleChecker.check(parseProof(`ios:${PRODUCT}:${token}`), ENV, never.fetcher), checked([]), token.slice(0, 20));
     assert.equal(never.calls.length, 0);
     // the real root: a test-chain JWS is not Apple's
-    assert.deepEqual(await realChecker.check(parseProof(`ios:${PRODUCT}:${jws(transaction())}`), ENV, never.fetcher), checked([]));
+    assert.deepEqual(await realChecker.check(parseProof(`ios:${PRODUCT}:${jws(transaction())}`), ENV, never.fetcher), CANNOT_VERIFY);
     assert.equal(never.calls.length, 0);
   } finally {
     resetAppleTokenCache();
   }
 });
 
-test("Apple checker: the production Worker (no sandbox switch) accepts a verified Sandbox JWS, asks the sandbox host and records the environment", async () => {
+test("Apple checker: the production Worker (no sandbox switch) refuses a verified Sandbox JWS; a Worker that allows sandbox asks the sandbox host and records the environment", async () => {
   resetAppleTokenCache();
   const sandbox = { bundleId: APP_PACKAGE_ID, productId: PRODUCT, environment: "Sandbox" };
-  const apple = recorded([["api.storekit-sandbox.apple.com", json({ signedTransactionInfo: unsigned(sandbox) })]]);
   const proof = parseProof(`ios:${PRODUCT}:${jws(transaction({ environment: "Sandbox" }))}`);
-  const result = await appleChecker.check(proof, ENV, apple.fetcher);
+  const refused = recorded([["api.storekit", json({})]]);
+  assert.deepEqual(await appleChecker.check(proof, ENV, refused.fetcher), checked([]));
+  assert.equal(refused.calls.length, 0);
+  const apple = recorded([["api.storekit-sandbox.apple.com", json({ signedTransactionInfo: unsigned(sandbox) })]]);
+  const result = await appleChecker.check(proof, { ...ENV, APPLE_IAP_ALLOW_SANDBOX: "true" }, apple.fetcher);
   assert.deepEqual(result, { ...checked([PRODUCT]), environment: "Sandbox" });
   assert.equal(apple.calls.length, 1);
   assert.ok(apple.calls[0].url.startsWith("https://api.storekit-sandbox.apple.com/inApps/v1/transactions/2000000123"));
@@ -199,7 +206,7 @@ test("Apple checker: a subscription JWS asks the statuses by its original transa
     assert.equal(status.status.state, "active");
     const forged = parseProof(`ios:${SUBSCRIPTION_MONTHLY_PRODUCT}:${[...token.split(".").slice(0, 2), "AAAA"].join(".")}`);
     assert.deepEqual(await appleChecker.subscription(forged, ENV, apple.fetcher), CANNOT_VERIFY_SUBSCRIPTION);
-    assert.deepEqual(await appleChecker.check(forged, ENV, apple.fetcher), checked([]));
+    assert.deepEqual(await appleChecker.check(forged, ENV, apple.fetcher), CANNOT_VERIFY);
   } finally {
     resetAppleTokenCache();
   }

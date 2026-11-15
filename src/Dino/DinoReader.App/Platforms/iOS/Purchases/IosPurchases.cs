@@ -64,7 +64,18 @@ public sealed class IosPurchases : IBookPurchases
             return BuyOutcome.Failed;
         }
 
-        string answer = await bridge.BuyAsync(productId).WaitAsync(cancel); // no timeout: Apple's purchase sheet waits for the person
+        Task<string> request = bridge.BuyAsync(productId);
+        string answer;
+        try
+        {
+            answer = await request.WaitAsync(cancel); // no timeout: Apple's purchase sheet waits for the person
+        }
+        catch (OperationCanceledException)
+        {
+            _ = DeliverLateAnswerAsync(request); // the page closed while Apple's sheet was open: a purchase that still completes unlocks the book through a re-read; the bridge drops the waiting entry when the answer arrives
+            throw;
+        }
+
         StoreKitBuyAnswer? bought = StoreKit2Answers.Buy(answer);
         PurchaseTrace.Line($"buy answer outcome={bought?.Outcome ?? "unreadable"}");
         return bought is null ? BuyOutcome.Failed : OutcomeOf(productId, bought.Outcome);
@@ -80,7 +91,32 @@ public sealed class IosPurchases : IBookPurchases
             return true;
         }
 
-        return await Launcher.Default.OpenAsync(new Uri(RedeemAddress)); // the sheet could not be shown (no framework, iOS before 16, no scene, or Apple refused it)
+        bool sheetUnavailable = answer is null || StoreKit2Answers.Error(answer) == StoreKit2Answers.Unsupported;
+        if (!sheetUnavailable)
+        {
+            PurchaseTrace.Line($"redeem sheet failed error={StoreKit2Answers.Error(answer!)}"); // a StoreKit error is the sheet failing, not the sheet being unavailable: the page says it did not work, the web page stays closed
+            return false;
+        }
+
+        return await Launcher.Default.OpenAsync(new Uri(RedeemAddress)); // the sheet could not be shown (no framework, iOS before 16, no scene)
+    }
+
+    private static async Task DeliverLateAnswerAsync(Task<string> request)
+    {
+        try
+        {
+            string answer = await request;
+            if (StoreKit2Answers.Buy(answer)?.Outcome == StoreKit2Answers.Bought)
+            {
+                PurchaseTrace.Line("buy completed after the page closed");
+                PurchaseUpdates.Raise();
+            }
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: a late answer that cannot be read only means the next refresh reads Apple's list instead
+            PurchaseTrace.Line($"late buy answer failed: {ex.GetType().Name}");
+        }
     }
 
     // Slice 384: Apple's own subscriptions page, where a subscription is cancelled or its plan changed.

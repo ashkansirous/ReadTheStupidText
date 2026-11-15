@@ -9,7 +9,7 @@ namespace DinoReader;
 /// listeners when it changed. Nothing here is saved: on launch and whenever the store page opens the app asks the store again, so a book bought or redeemed outside the app shows as owned
 /// without pressing Restore. A store that cannot be reached leaves the last snapshot in place.
 /// </summary>
-public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null)
+public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null) : IDisposable
 {
     // Slice 384: the Worker that asks Apple or Google for the subscription's real end date (iOS and Android; Windows keeps its own end date). The host registers none, so the app uses the real client.
     private readonly ISubscriptionEnd _end = subscriptionEnd ?? new SubscriptionEndClient();
@@ -22,6 +22,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private PurchaseSnapshot _snapshot = PurchaseSnapshot.Empty;
 
     // Slice 390: the listing of the last read, re-read when the platform store reports an update (an approved Ask to Buy, a renewal, a refund).
+    private readonly object _listedLock = new(); // _lastListed is written by the page's thread and read on the platform's update thread
     private StoreItem[]? _lastListed;
     private int _listening;
 
@@ -131,9 +132,23 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
+    /// <summary>Stops listening to the static store updates, so a discarded instance is not kept alive and does not read the store twice.</summary>
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _listening, 0) == 1)
+        {
+            PurchaseUpdates.StoreChanged -= OnStoreChanged;
+        }
+    }
+
     private void OnStoreChanged()
     {
-        StoreItem[]? listed = _lastListed;
+        StoreItem[]? listed;
+        lock (_listedLock)
+        {
+            listed = _lastListed;
+        }
+
         if (listed is not null)
         {
             _ = ReadAfterStoreUpdateAsync(listed);
@@ -156,7 +171,11 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
     {
         StoreItem[] listed = [.. items];
-        _lastListed = listed;
+        lock (_listedLock)
+        {
+            _lastListed = listed;
+        }
+
         ListenForStoreUpdates();
         string[] products = [.. listed.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
         await _gate.WaitAsync(cancel);
