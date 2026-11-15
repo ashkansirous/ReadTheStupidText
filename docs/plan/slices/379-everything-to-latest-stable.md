@@ -1,9 +1,9 @@
 # Slice 379 — Every library, SDK and toolchain to the latest stable version
 **Product:** Shared
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
+**Touches:** `global.json`, `Directory.Build.props`, `src/**/*.csproj`, `tests/**/*.csproj`, `tools/**/*.csproj`, `package.json`, `package-lock.json`, `tools/dino/sound-words-test/requirements.txt`, `.github/workflows/*.yml`, `.github/dependabot.yml`, `.github/CLAUDE.md`, `src/Shared/SherpaOnnxVersion.props` (onnxruntime only, see decisions), `CLAUDE.md` (root, item 9 only), `docs/plan/slices/379-everything-to-latest-stable.md`, plus whatever source files a new version's breaking changes require (listed here when found)
 
 ## Why
 
@@ -14,7 +14,7 @@ State on 2026-11-14 (read that day):
 - **.NET:** `global.json` pins SDK `10.0.401` (`rollForward: latestPatch`); workflows pin `10.0.401` (iOS) and `10.0.402` (Android, Dino Windows). Latest releases (`releases-index.json`): .NET 11.0 SDK `11.0.100` (released 2026-11-10, active) and .NET 10.0 SDK `10.0.404`. `MauiVersion` 10.0.130 (`Directory.Build.props:7`).
 - **Node:** workflows use `node-version: 22` (8) and `24` (1). Latest LTS on nodejs.org: v26.13.1. npm devDependencies: `typescript ^5.9.3`, `wrangler ^4.151.3`.
 - **Others:** 57 `PackageReference` lines across the csproj files; `python-version: "3.12"` (one workflow) and `tools/dino/sound-words-test/requirements.txt`; `java-version: '17'`; Xcode 26.6 on `macos-26` (`.github/CLAUDE.md`, iOS toolchain pin).
-- No Dependabot or Renovate config.
+- `.github/dependabot.yml` exists (Slice 378) with the github-actions ecosystem only; item 6 extends it.
 
 ## Decisions
 
