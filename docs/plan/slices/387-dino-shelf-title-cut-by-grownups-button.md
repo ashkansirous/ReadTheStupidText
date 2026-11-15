@@ -1,9 +1,9 @@
 # Slice 387 — Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button
 **Product:** Dino
 
-*In progress: items 1-2 built and merged in PR #1157 (Android verified); item 3 (the iOS truncation) planned.*
+*Items 1-2 merged in PR #1157 (Android verified). Item 3 in progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/ShelfHeader.cs` (the shelf header is built in code), `src/Dino/DinoReader.Core/ShelfTitleRules.cs`, `tests/Dino/DinoReader.Tests/ShelfTitleRulesTests.cs`, `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`
+**Touches:** `src/Dino/DinoReader.App/ShelfHeader.cs` (the shelf header is built in code), `src/Dino/DinoReader.Core/ShelfTitleRules.cs`, `tests/Dino/DinoReader.Tests/ShelfTitleRulesTests.cs`, `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`, `.github/workflows/dinoreader-ios-sim.yml` and `.github/workflows/store-screenshots.yml` (only to read or print the Debug fit line), `.maestro/dino/**` (only a flow that prints or captures the fit line)
 
 ## Why
 
