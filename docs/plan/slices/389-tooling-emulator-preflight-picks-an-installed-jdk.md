@@ -1,9 +1,9 @@
 # Slice 389 — Tooling: the emulator preflight picks an installed JDK
 **Product:** Shared
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `tools/emulator/common.ps1`, `tools/emulator/preflight.yaml` only if it needs a change, `tools/CLAUDE.md` (drop or reword the JAVA_HOME rule from Slice 291), `docs/plan/slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md`
+**Touches:** `tools/emulator/common.ps1`, `tools/emulator/run-flows.ps1` (`Test-MaestroPreflight` launches Maestro), `tools/emulator/preflight.yaml` only if it needs a change, `tools/CLAUDE.md` (drop or reword the JAVA_HOME rule from Slice 291), `docs/plan/slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md`
 
 ## Why
 
