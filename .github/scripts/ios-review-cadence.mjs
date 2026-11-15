@@ -118,7 +118,7 @@ export function createAscClient({ token, fetchImpl = fetch }) {
             signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         const json = parseJson(await response.text());
-        return { status: response.status, ok: response.ok, json };
+        return { status: response.status, ok: response.ok, json, retryAfter: response.headers?.get?.('retry-after') ?? null };
     }
     return {
         get: (path) => request(Method.Get, path),

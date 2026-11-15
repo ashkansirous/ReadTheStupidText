@@ -205,6 +205,12 @@ None from this slice's brief.
 - Windows Hyper-V VM subscription flow.
 - Real store sandbox (Play licence tester, Apple sandbox) after store setup.
 - Worker route `GET /api/stories/subscription` live, after the batched release deploy.
-- `store-products.mjs` request shapes (UNVERIFIED, never run with `--apply`).
+- `store-products.mjs` request shapes: Apple subscription shapes checked against the App Store Connect API docs (2026-11-15, after the first `--apply --store apple` failed on `availableInAllTerritories`); the first successful live run is the proof. Play and Microsoft shapes still UNVERIFIED.
+
+## App Store subscription creation fix (2026-11-15, user: "I still dont see the subscriptions")
+
+Cause, read live: App Store Connect had no subscription group for app 6825053435, so iOS returned no plan prices and the Store page kept the subscription card hidden (StorePage.xaml.cs `ApplySubscriptionCard`). The script's Apple subscription calls were rewritten per the docs: separate availability call, per-territory prices from the GBR point's equalisations and per-territory 7-day trials, no automatic retry of a POST, a rerun reads what Apple holds first.
+
+From review (`reviews/s384a-check.md`), follow-ups, not changed: #1 if GBR is ever missing from the held availability, the base price and trial are not posted and no note says so (availability is posted for every territory, so GBR is held); #2 a territory Apple refuses permanently fails on every rerun and is listed each time. Low: an existing price's amount is not compared; an entry with no territory only adds a note; notes are lost when no session is passed.
 - Offline 3-day lock on a real device.
 - Restore on iOS.
