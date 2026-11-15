@@ -1,0 +1,197 @@
+# Slice 384 (a monthly and yearly subscription for every book, next to buying single books): the scripted device check, with the Debug pretend store (hooks fake-purchases and fake-subscription) and the Debug test store: no
+# money, no real store account, no Worker. Written, not yet run (the device stage runs it after the two reviews).
+# The test store lists 4 books; fake-purchases marks two of them as sold. The flow buys one book, subscribes (the pretend sheet starts the 7-day trial), downloads the other sold book through the subscription, lapses the
+# subscription, checks the lapsed book is greyed on the parents' screen (Subscribe again / Buy this book) and gone from the child's shelf while the bought book and the free books never move, then renews it and checks the book is
+# back at once with no download.
+# Against the old behaviour (no subscription card, nothing ever locks) the card, the lapsed actions and the shelf markers all fail.
+# Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it.
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK fake-purchases ok on paid=2 owned=0
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Subscription] card visible=True active=False monthly=True yearly=True
+# expect-log: [Purchases] subscription state=Trial grants=True
+# expect-log: [Subscription] card visible=True active=True
+# expect-log: HOOK fake-subscription ok expired
+# expect-log: [Purchases] subscription state=Expired grants=False
+# expect-log: [Subscription] shelf total=4 shown=4 lapsed=1 grownUp=True
+# expect-log: [Subscription] shelf total=4 shown=3 lapsed=1 grownUp=False
+# expect-log: HOOK fake-subscription ok active
+# expect-log: [Purchases] subscription state=Active grants=True
+# expect-log: [Subscription] shelf total=4 shown=4 lapsed=0 grownUp=False
+appId: uk.sirous.dinoreader.dbg
+name: A subscription opens every paid book; when it ends a subscription book greys out for parents and leaves the child's shelf, and renewing brings it back
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, the kept subscription and book records); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so the sold books are not on the shelf and no subscription is kept.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+# The sale is set before the first run is skipped: skip-first-run then puts only the two unsold (free) test books on the shelf.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man,three-little-pigs"
+      price: "$0.99"
+      buy: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+# The subscription card heads the list with both plans, the store's own price and the trial, then the terms and the links Apple and Google require.
+- extendedWaitUntil:
+    visible:
+      id: StoreSubscriptionCard
+    timeout: 30000
+- assertVisible:
+    text: 'Try free, then .*1\.99 a month'
+- assertVisible:
+    text: 'Try free, then .*14\.99 a year'
+- assertVisible:
+    id: StoreSubscriptionTerms
+- assertVisible:
+    id: StoreSubscriptionTermsLink
+- assertVisible:
+    id: StoreSubscriptionPrivacyLink
+- assertVisible:
+    id: StoreSubscriptionManage
+# Buy one book on its own first: a bought book must never be affected by the subscription later.
+# The subscription card heads the list and pushes the second Buy pill below the fold, so scroll to it.
+- scrollUntilVisible:
+    element:
+      text: 'Buy .*\$0\.99.*'
+      index: 1
+    timeout: 30000
+# Scroll back to the first pill by its title and tap that very pill (the scroll above may have moved it off the top).
+- scrollUntilVisible:
+    element:
+      text: 'Buy The Three Little Pigs.*'
+    direction: UP
+    timeout: 20000
+- tapOn:
+    text: 'Buy The Three Little Pigs.*'
+- extendedWaitUntil:
+    notVisible:
+      text: 'Buy The Three Little Pigs.*'
+    timeout: 60000
+# Subscribe monthly: the pretend sheet starts the trial; the card then says the subscription runs and its plan buttons are gone.
+- scrollUntilVisible:
+    element:
+      id: StoreSubscribeMonthly
+    direction: UP
+    timeout: 20000
+- tapOn:
+    id: StoreSubscribeMonthly
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible: "You are subscribed. Every book is open."
+    timeout: 60000
+- assertNotVisible:
+    id: StoreSubscribeMonthly
+# The other sold book is now one to Get (the subscription opens it); downloading it records that the subscription alone opened it.
+- extendedWaitUntil:
+    visible: "Get"
+    timeout: 30000
+- tapOn:
+    text: "Get"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible: "Get"
+    timeout: 60000
+# The subscription ends: the store says so at once (online). The Books tab greys the subscription book with its two actions; the bought book and the free books carry on.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: expired
+      days: "-1"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+# The hook only opens the mode on the tab it was already on; tap the Books tab itself.
+- tapOn:
+    id: CornerTabBooks
+    waitToSettleTimeoutMs: 300
+- scrollUntilVisible:
+    element:
+      id: LapsedSubscribe
+    timeout: 30000
+- assertVisible:
+    id: LapsedBuy
+- assertVisible:
+    id: LapsedNote
+- assertVisible:
+    id: StoryTile
+# The child's shelf leaves the locked book out (three books are left: two free and the bought one); its files stay on the device.
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 10000
+- assertNotVisible:
+    id: LapsedSubscribe
+- assertVisible:
+    id: StoryTile
+# Renewing brings the book back at once: it is on the shelf again with no new download, and nothing is greyed.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: active
+      days: "30"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+- tapOn:
+    id: CornerTabBooks
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+# The fake store's refresh clears the lapsed state a moment after the hook returns, so wait for it rather than assert once.
+- extendedWaitUntil:
+    notVisible:
+      id: LapsedSubscribe
+    timeout: 30000
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 10000
+- assertNotVisible:
+    id: LapsedBuy

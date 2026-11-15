@@ -422,6 +422,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>Some books cost a little. They are bought through your store account, and nothing about you or your child is sent to us.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Waiting for the store…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Checking your purchases…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Every book, one subscription</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Open every book while you subscribe. Books you buy stay yours for good.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Try free, then {0} a month</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Try free, then {0} a year</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 days free for new subscribers. After that it renews by itself every month or every year at the price shown, until you cancel in your store account. Cancel any time.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Terms of use</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Privacy policy</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Manage subscription</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>You are subscribed. Every book is open.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Subscribe again</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Buy this book</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Locked: the subscription ended</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Free books come back by themselves. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Free books still in the store come back by themselves. A book the store no longer lists does not come back, but its recordings stay in the backup file. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>

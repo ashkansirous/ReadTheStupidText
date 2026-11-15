@@ -419,6 +419,18 @@
   <data name="Store_FooterPaid" xml:space="preserve"><value>بعض الكتب لها ثمن بسيط. تُشترى عبر حساب المتجر الخاص بك، ولا يُرسل إلينا أي شيء عنك أو عن طفلك.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>في انتظار المتجر…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>جارٍ فحص مشترياتك…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>كل الكتب باشتراك واحد</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>افتح كل الكتب ما دام اشتراكك قائمًا. الكتب التي تشتريها تبقى لك دائمًا.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>جرّب مجانًا، ثم {0} شهريًا</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>جرّب مجانًا، ثم {0} سنويًا</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 أيام مجانًا للمشتركين الجدد. بعد ذلك يتجدد الاشتراك تلقائيًا كل شهر أو كل سنة بالسعر المعروض حتى تلغيه من حساب المتجر. يمكنك الإلغاء في أي وقت.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>شروط الاستخدام</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>سياسة الخصوصية</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>إدارة الاشتراك</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>أنت مشترك. كل الكتب مفتوحة.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>اشترك مرة أخرى</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>اشترِ هذا الكتاب</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>مقفل: انتهى الاشتراك</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>كتب تُستعاد من المتجر</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>تعود الكتب المجانية من تلقاء نفسها. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>تعود الكتب المجانية الموجودة في المتجر من تلقاء نفسها. أما الكتاب الذي لم يعد المتجر يعرضه فلا يعود، لكن تسجيلاته تبقى في ملف النسخة الاحتياطية. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>

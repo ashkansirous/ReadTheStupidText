@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using DinoReader.Core;
 using Foundation;
 using StoreKit;
 using UIKit;
@@ -18,6 +19,7 @@ namespace DinoReader;
 public sealed class IosPurchases : IBookPurchases
 {
     private const string RedeemAddress = "https://apps.apple.com/redeem";
+    private const string ManageAddress = "https://apps.apple.com/account/subscriptions";
     private static readonly TimeSpan QueryTimeout = TimeSpan.FromSeconds(20);
 
     private readonly Observer _observer = new();
@@ -80,6 +82,9 @@ public sealed class IosPurchases : IBookPurchases
 
         return await Launcher.Default.OpenAsync(new Uri(RedeemAddress));
     }
+
+    // Slice 384: Apple's own subscriptions page, where a subscription is cancelled or its plan changed.
+    public async Task<bool> ManageSubscriptionAsync() => await Launcher.Default.OpenAsync(new Uri(ManageAddress));
 
     private void Observe()
     {
@@ -188,7 +193,124 @@ public sealed class IosPurchases : IBookPurchases
         private void Keep() => Preferences.Default.Set(KeptKey, System.Text.Json.JsonSerializer.Serialize(_owned));
 
         public PurchaseSnapshot Snapshot(Dictionary<string, string> prices) =>
-            new(prices, new HashSet<string>(_owned.Keys), new HashSet<string>(_pending), new Dictionary<string, string>(_owned), true);
+            new(prices, new HashSet<string>(_owned.Keys), new HashSet<string>(_pending), new Dictionary<string, string>(_owned), true, Subscription: SubscriptionNow(), PurchasedAt: PurchasedAtNow());
+
+        private Dictionary<string, DateTimeOffset> PurchasedAtNow()
+        {
+            lock (_subLock)
+            {
+                return _subLast.ToDictionary(e => e.Key, e => DateTimeOffset.FromUnixTimeSeconds(e.Value));
+            }
+        }
+
+        // Slice 384: StoreKit 1 gives no expiry date on the device, so the end is worked out from the kept transaction: its date plus the period it paid for (the 7 days of a free trial when it was the account's first
+        // purchase of a plan with a free trial, else a month or a year), pushed on by each renewal the observer is told of (the queue delivers renewals when the app runs). This estimate is used only until the first
+        // Worker answer: BookPurchases asks the Worker (Apple's all-statuses answer) after each read and keeps the real end date, so a reinstall's old transaction or a renewal delivered late no longer decides. The newest end among the kept plans decides the estimate.
+        private const string SubEndsKey = "dino.ios.subscription.ends";
+        private readonly Dictionary<string, long> _subEnds = LoadSubEnds();
+        private readonly HashSet<string> _subTrial = [];
+        private readonly object _subLock = new(); // the observer's callbacks and a background read both touch _subEnds, _subTrial and _subNewest
+        private const string SubNewestKey = "dino.ios.subscription.newest";
+        private long _subNewest = Preferences.Default.Get(SubNewestKey, 0L); // unix seconds of the newest subscription transaction kept (0: none)
+        private const string SubLastKey = "dino.ios.subscription.last";
+        private readonly Dictionary<string, long> _subLast = LoadSubLast(); // product to the unix seconds of its newest transaction (restored ones count by their original date): the proof sent to the Worker is the newest one's
+
+        private static Dictionary<string, long> LoadSubLast()
+        {
+            try
+            {
+                string json = Preferences.Default.Get(SubLastKey, string.Empty);
+                return json.Length == 0 ? [] : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, long>>(json) ?? [];
+            }
+            catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidCastException)
+            {
+                // no-fallback: an unreadable list only loses the tie-break between plans; the next transaction writes it again
+                return [];
+            }
+        }
+
+        private static Dictionary<string, long> LoadSubEnds()
+        {
+            try
+            {
+                string json = Preferences.Default.Get(SubEndsKey, string.Empty);
+                return json.Length == 0 ? [] : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, long>>(json) ?? [];
+            }
+            catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidCastException)
+            {
+                // no-fallback: an unreadable kept end is no end; the next renewal or Restore purchases writes it again
+                return [];
+            }
+        }
+
+        private SubscriptionStatus SubscriptionNow()
+        {
+            KeyValuePair<string, long>[] kept;
+            HashSet<string> trials;
+            long newest;
+            lock (_subLock)
+            {
+                kept = [.. _subEnds];
+                trials = [.. _subTrial];
+                newest = _subNewest;
+            }
+
+            if (kept.Length == 0)
+            {
+                return new SubscriptionStatus(SubscriptionState.Unknown, null, null, DeviceReadKind.Estimated); // nothing kept is no information, not a lapse: SubscriptionAccess.Merge leaves the record unchanged
+            }
+
+            (string product, long ends) = kept.MaxBy(e => e.Value);
+            DateTimeOffset end = DateTimeOffset.FromUnixTimeSeconds(ends);
+            // No grace here: the 3 days after an end date are applied once, by SubscriptionAccess.Grants, on the end this status carries. A kept end that has passed stays Active (a renewal the queue has not delivered yet
+            // is not a lapse), so the books lock exactly 3 days after it, not 6.
+            SubscriptionState state = trials.Contains(product) && DateTimeOffset.UtcNow <= end ? SubscriptionState.Trial : SubscriptionState.Active;
+            return new SubscriptionStatus(state, end, product, DeviceReadKind.Estimated, newest > 0 ? DateTimeOffset.FromUnixTimeSeconds(newest) : null);
+        }
+
+        private void NoteSubscription(string product, SKPaymentTransaction transaction)
+        {
+            // Apple (SKPaymentTransaction.transactionDate / .original): a Restored transaction is a new transaction whose transactionDate is when it entered the queue (the restore time), and `original` is the
+            // transaction that was restored; so a Restore reads the original's date and never counts as a new purchase or renewal. Only a Purchased transaction (a purchase or a renewal the queue delivers) can be newest.
+            bool restored = transaction.TransactionState == SKPaymentTransactionState.Restored;
+            NSDate? stamp = restored ? (transaction.OriginalTransaction ?? transaction).TransactionDate : transaction.TransactionDate;
+            DateTimeOffset start = stamp is { } date ? new DateTimeOffset((DateTime)date) : DateTimeOffset.UtcNow; // NSDate converts to a UTC DateTime
+            // Only a first purchase gets the trial estimate: a restored transaction (a reinstall, another device) may be long past its trial, and its true end comes from the Worker.
+            bool trial;
+            DateTimeOffset end;
+            lock (_subLock)
+            {
+                bool firstPurchase = transaction.TransactionState == SKPaymentTransactionState.Purchased && transaction.OriginalTransaction is null && _subEnds.Count == 0;
+                trial = firstPurchase && Products.TryGetValue(product, out SKProduct? known) && known.IntroductoryPrice?.PaymentMode == SKProductDiscountPaymentMode.FreeTrial;
+                end = trial ? start + TrialLength : (product == SubscriptionProducts.Yearly ? start.AddYears(1) : start.AddMonths(1));
+                if (!_subEnds.TryGetValue(product, out long held) || end.ToUnixTimeSeconds() > held)
+                {
+                    _subEnds[product] = end.ToUnixTimeSeconds();
+                    Preferences.Default.Set(SubEndsKey, System.Text.Json.JsonSerializer.Serialize(_subEnds));
+                }
+
+                if (trial)
+                {
+                    _subTrial.Add(product);
+                }
+
+                if (!_subLast.TryGetValue(product, out long lastSeen) || start.ToUnixTimeSeconds() > lastSeen)
+                {
+                    _subLast[product] = start.ToUnixTimeSeconds();
+                    Preferences.Default.Set(SubLastKey, System.Text.Json.JsonSerializer.Serialize(_subLast));
+                }
+
+                if (!restored && start.ToUnixTimeSeconds() > _subNewest)
+                {
+                    _subNewest = start.ToUnixTimeSeconds();
+                    Preferences.Default.Set(SubNewestKey, _subNewest);
+                }
+            }
+
+            PurchaseTrace.Line($"subscription transaction product={product} trial={trial} ends={end:yyyy-MM-dd}");
+        }
+
+        private static readonly TimeSpan TrialLength = TimeSpan.FromDays(7);
 
         public Task NextRestoreAsync()
         {
@@ -229,7 +351,13 @@ public sealed class IosPurchases : IBookPurchases
                 case SKPaymentTransactionState.Restored:
                     _pending.Remove(product);
                     _owned[product] = (transaction.OriginalTransaction ?? transaction).TransactionIdentifier ?? string.Empty;
+                    if (SubscriptionProducts.Is(product))
+                    {
+                        NoteSubscription(product, transaction); // the end is saved before the owned product, so a kill between them cannot leave owned-without-end
+                    }
+
                     Keep();
+
                     queue.FinishTransaction(transaction);
                     Complete(product, BuyOutcome.Bought);
                     break;

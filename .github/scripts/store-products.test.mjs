@@ -13,6 +13,11 @@ import {
     appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull, isNonJsonBody,
 } from './store-products.mjs';
 
+import {
+    SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
+    playSubscriptionBody, playSubscriptionStage, playTrialOfferBody, subscriptionItemsFor, subscriptionPlanLines,
+} from './store-products.mjs';
+
 const SCRIPT = fileURLToPath(new URL('./store-products.mjs', import.meta.url));
 
 const entries = [
@@ -328,6 +333,119 @@ test('Slice 346 medium #7: every Apple territory page is read, and a list that n
 test('Slice 346 medium #8: a malformed book.json is named in the error', () => {
     const fs = { readdirSync: () => [{ name: 'bad', isDirectory: () => true }], existsSync: () => true, readFileSync: () => '{oops' };
     assert.throws(() => readContentEntries('root', fs), /bad.book\.json is not valid JSON/);
+});
+
+// ---- Slice 384: the subscription ----
+
+test('Slice 384: Play gets one subscription with both plans, Apple and Microsoft one product per plan; the ids match the Worker and the app', () => {
+    assert.equal(SUBSCRIPTION_PRODUCT_ID, 'uk.sirous.dinoreader.sub');
+    assert.deepEqual(subscriptionItemsFor(Store.Google).map((item) => item.productId), [SUBSCRIPTION_PRODUCT_ID]);
+    for (const store of [Store.Apple, Store.Microsoft]) {
+        assert.deepEqual(subscriptionItemsFor(store).map((item) => item.productId), ['uk.sirous.dinoreader.sub.monthly', 'uk.sirous.dinoreader.sub.yearly']);
+    }
+    assert.deepEqual(SUBSCRIPTION_PLANS.map((plan) => [plan.id, plan.gbpLabel, plan.playPeriod]), [['monthly', '1.99', 'P1M'], ['yearly', '14.99', 'P1Y']]);
+    assert.equal(TRIAL_DAYS, 7);
+});
+
+test('Slice 384: the Play body has a priced base plan per plan from its converted price, and the trial offer is free for 7 days for new subscribers of this subscription', () => {
+    const converted = (units) => ({ convertedRegionPrices: { GB: { price: { currencyCode: 'GBP', units, nanos: 990000000 } } }, convertedOtherRegionsPrice: { usdPrice: { currencyCode: 'USD', units: '2', nanos: 0 }, eurPrice: { currencyCode: 'EUR', units: '2', nanos: 0 } } });
+    const body = playSubscriptionBody({ monthly: converted('1'), yearly: converted('14') });
+    assert.equal(body.productId, SUBSCRIPTION_PRODUCT_ID);
+    assert.deepEqual(body.basePlans.map((plan) => [plan.basePlanId, plan.autoRenewingBasePlanType.billingPeriodDuration, plan.regionalConfigs[0].price.units]), [['monthly', 'P1M', '1'], ['yearly', 'P1Y', '14']]);
+    assert.equal(body.basePlans[0].otherRegionsConfig.newSubscriberAvailability, true);
+    const offer = playTrialOfferBody(SUBSCRIPTION_PLANS[0], ['GB', 'US']);
+    assert.equal(offer.offerId, 'trial');
+    assert.equal(offer.phases[0].duration, 'P7D');
+    assert.deepEqual(offer.phases[0].regionalConfigs.map((c) => c.regionCode), ['GB', 'US']);
+    assert.deepEqual(offer.phases[0].regionalConfigs[0].free, {});
+    assert.deepEqual(offer.targeting, { acquisitionRule: { scope: { thisSubscription: {} } } });
+});
+
+test('Slice 384: a Play subscription is created whole, a half-made one is finished, and a live one is left alone', async () => {
+    const log = [];
+    const live = { basePlans: [{ basePlanId: 'monthly', state: 'ACTIVE' }, { basePlanId: 'yearly', state: 'ACTIVE' }] };
+    assert.equal(playSubscriptionStage(live, { monthly: 'ACTIVE', yearly: 'ACTIVE' }), PlayStage.Active);
+    assert.equal(playSubscriptionStage(live, { monthly: 'ACTIVE' }), PlayStage.Inactive);
+    assert.equal(playSubscriptionStage({ basePlans: [{ basePlanId: 'monthly', state: 'ACTIVE' }] }, {}), PlayStage.Missing);
+    const request = (subscription, offerState) => async (_token, method, path) => {
+        log.push(`${method} ${path.split('?')[0]}`);
+        if (method === 'GET' && path.includes('/offers/')) return offerState ? okJson({ state: offerState }) : { status: 404, ok: false, json: null };
+        if (method === 'GET') return subscription ? okJson(subscription) : { status: 404, ok: false, json: null };
+        if (path.startsWith('pricing')) return okJson({ convertedRegionPrices: { GB: { price: { currencyCode: 'GBP', units: '1', nanos: 990000000 } } } });
+        return okJson({});
+    };
+    const [item] = subscriptionItemsFor(Store.Google);
+    assert.equal(await createPlaySubscription('t', item, request(live, 'ACTIVE')), Outcome.Exists);
+    assert.deepEqual(log.filter((line) => !line.startsWith('GET')), []);
+    log.length = 0;
+    assert.equal(await createPlaySubscription('t', item, request(null, null)), Outcome.Created);
+    assert.ok(log.some((line) => line === 'POST subscriptions'), log.join('\n'));
+    assert.equal(log.filter((line) => line.includes(':activate')).length, 4); // two base plans and two trial offers
+    assert.equal(log.filter((line) => line.includes('/offers') && line.startsWith('POST') && !line.includes(':activate')).length, 2);
+    log.length = 0;
+    const draft = { basePlans: [{ basePlanId: 'monthly', state: 'DRAFT' }, { basePlanId: 'yearly', state: 'ACTIVE' }] };
+    assert.equal(await createPlaySubscription('t', item, request(draft, 'ACTIVE')), Outcome.Completed);
+    assert.equal(log.filter((line) => line.startsWith('POST')).length, 1);
+    assert.ok(log.some((line) => line.includes('basePlans/monthly:activate')));
+});
+
+test('Slice 384: the Apple subscription bodies carry the product id, the plan period, the price point and a one-week free trial', () => {
+    const [monthly, yearly] = subscriptionItemsFor(Store.Apple);
+    const body = appleSubscriptionBody(monthly, 'g1').data;
+    assert.deepEqual([body.attributes.productId, body.attributes.subscriptionPeriod, body.attributes.groupLevel, body.relationships.group.data.id], ['uk.sirous.dinoreader.sub.monthly', 'ONE_MONTH', 2, 'g1']);
+    assert.deepEqual([appleSubscriptionBody(yearly, 'g1').data.attributes.subscriptionPeriod, appleSubscriptionBody(yearly, 'g1').data.attributes.groupLevel], ['ONE_YEAR', 1]);
+    assert.equal(appleSubscriptionPriceBody('s1', 'pp').data.relationships.subscriptionPricePoint.data.id, 'pp');
+    const trial = appleTrialBody('s1').data;
+    assert.deepEqual([trial.attributes.offerMode, trial.attributes.duration, trial.attributes.numberOfPeriods], ['FREE_TRIAL', 'ONE_WEEK', 1]);
+    assert.deepEqual(microsoftSubscriptionBody(monthly, 'store1'), { applicationIds: ['store1'], productId: monthly.productId, productType: 'Subscription' });
+});
+
+test('Slice 384: an Apple subscription is created with group, listing, price and trial; a whole one is left alone; a missing price point is an error', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const fresh = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [] }),
+        'POST /v1/subscriptionGroups': okJson({ data: { id: 'g1' } }),
+        'POST /v1/subscriptionGroupLocalizations': okJson({ data: {} }),
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
+        'POST /v1/subscriptions': okJson({ data: { id: 's1' } }),
+        'POST /v1/subscriptionLocalizations': okJson({ data: {} }),
+        'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [{ id: 'p199', attributes: { customerPrice: '1.99' } }] }),
+        'POST /v1/subscriptionPrices': okJson({ data: {} }),
+        'POST /v1/subscriptionIntroductoryOffers': okJson({ data: {} }),
+    });
+    assert.equal(await createAppleSubscription(fresh, monthly, '1', {}), Outcome.Created);
+    assert.deepEqual(fresh.calls.filter((c) => c.startsWith('POST')), ['POST /v1/subscriptionGroups', 'POST /v1/subscriptionGroupLocalizations', 'POST /v1/subscriptions', 'POST /v1/subscriptionLocalizations', 'POST /v1/subscriptionPrices', 'POST /v1/subscriptionIntroductoryOffers']);
+    const whole = fakeAsc({
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: monthly.productId } }] }),
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ id: 'l' }] }),
+        'GET /v1/subscriptions/s1/prices': okJson({ data: [{ id: 'p' }] }),
+        'GET /v1/subscriptions/s1/introductoryOffers': okJson({ data: [{ id: 'o' }] }),
+    });
+    assert.equal(await createAppleSubscription(whole, monthly, '1', { groupId: 'g1' }), Outcome.Exists);
+    assert.equal(whole.calls.filter((c) => c.startsWith('POST')).length, 0);
+    const noPoint = fakeAsc({ 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }), 'POST /v1/subscriptions': okJson({ data: { id: 's1' } }), 'POST /v1/subscriptionLocalizations': okJson({ data: {} }), 'GET /v1/subscriptions/s1/pricePoints': okJson({ data: [] }) });
+    await assert.rejects(createAppleSubscription(noPoint, monthly, '1', { groupId: 'g1' }), /no 1.99 GBP price point/);
+});
+
+test('Slice 384: the dry run lists the subscription and what is left by hand for each store, and makes no store call', () => {
+    for (const store of ALL_STORES) {
+        const lines = subscriptionPlanLines(store).join('\n');
+        assert.match(lines, /1\.99 GBP and yearly 14\.99 GBP, 7-day free trial/);
+        assert.match(lines, /would create uk\.sirous\.dinoreader\.sub/);
+        assert.match(lines, /by hand:/);
+    }
+    assert.match(subscriptionPlanLines(Store.Microsoft).join('\n'), /Partner Center/);
+    const root = mkdtempSync(join(tmpdir(), 'dry-sub-'));
+    try {
+        mkdirSync(join(root, 'ok'));
+        writeFileSync(join(root, 'ok', 'book.json'), '{"title":"Ok"}');
+        const env = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot };
+        const result = spawnSync(process.execPath, [SCRIPT, '--content', root], { env, encoding: 'utf8' });
+        assert.equal(result.status, 0);
+        assert.match(result.stdout, /subscription, monthly 1\.99 GBP and yearly 14\.99 GBP/);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
 });
 
 test('Slice 346 medium #9: a dry run exits non-zero when a book has an invalid product id', () => {
