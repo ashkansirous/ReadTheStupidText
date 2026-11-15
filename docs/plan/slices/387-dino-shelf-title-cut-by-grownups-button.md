@@ -1,9 +1,9 @@
 # Slice 387 — Dino: the shelf title "My stories" is cut to "My sto" by the Grown-ups button
 **Product:** Dino
 
-*Planned.*
+*In progress (wave 2026-11-15), draft PR.*
 
-**Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml` and its code-behind (the shelf header; confirm in item 1), `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`
+**Touches:** `src/Dino/DinoReader.App/ShelfHeader.cs` (the shelf header is built in code), `src/Dino/DinoReader.Core/ShelfTitleRules.cs`, `src/Dino/DinoReader.App/CornerShell.cs` (`PillButton`), `tests/Dino/DinoReader.Tests/ShelfTitleRulesTests.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml` and its code-behind, `docs/plan/slices/387-dino-shelf-title-cut-by-grownups-button.md`
 
 ## Why
 
