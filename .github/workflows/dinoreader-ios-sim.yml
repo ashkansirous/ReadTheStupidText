@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: '.maestro/dino/ios-read-back-reread-background.yaml'
+      device_patterns:
+        description: 'Slice 387: optional SIM_DEVICE_PATTERNS for ios-sim-boot.sh (e.g. Pro Max), empty = the smallest iPhone'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -30,6 +35,7 @@ jobs:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64
       FLOW: ${{ inputs.flow || '.maestro/dino/ios-read-back-reread-background.yaml' }}
+      SIM_DEVICE_PATTERNS: ${{ inputs.device_patterns }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -152,6 +158,17 @@ jobs:
           rc=0
           bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/flow-start" || rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # Slice 387 item 3: the Debug shelf fit lines, from the whole log (the collect step keeps only the last 3000 lines, which can drop the launch layout).
+      - name: Shelf fit lines
+        if: always()
+        run: |
+          set -uo pipefail
+          if [ -z "${SIM_UDID:-}" ] || [ -z "${PROCESS_NAME:-}" ]; then
+            echo "No simulator or app was set up: nothing to show."
+            exit 0
+          fi
+          xcrun simctl spawn "$SIM_UDID" log show --last 60m --style compact --predicate "process == \"$PROCESS_NAME\"" 2>&1 | grep -F '[Shelf]' | head -n 200 || echo "no [Shelf] lines in the app log"
 
       # Audio-backed flow only (a flow with a '# expect-clips' header line): did a real pack clip play? The proof is the flow itself: it waits until the reading page's sound pill
       # (ReadingAudioStatus, shown only while the current piece has no clip) is gone, so a read on the device voice fails the flow. This step only adds the log counts: the app's test-hook
