@@ -16,6 +16,7 @@ internal sealed class ShelfHeader : Grid
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Label _title = new() { AutomationId = "GalleryTitle", FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
+	private readonly Label _probe = new() { FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1 }; // measures the title's words; never added to a layout
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -185,16 +186,7 @@ internal sealed class ShelfHeader : Grid
 		_title.IsVisible = TitleState != ShelfTitle.Hidden;
 		_title.Text = TitleState == ShelfTitle.Short ? AppResources.Gallery_ShelfTitleShort : AppResources.Gallery_Title;
 		OwnScript.InOwnScriptAligned(_title);
-		RemeasureTitle();
 		Fitted?.Invoke(TitleState);
-	}
-
-	// Slice 387 item 3 (iOS run 43675329629: the title laid out 76.7 wide, the width of the short text measured last, in a 202 wide room): MeasureTitle leaves the label's cached size at the last
-	// probe, and the Text change that follows is swallowed while the header is laid out. Ask for a fresh measure now and once more after the layout pass.
-	private void RemeasureTitle()
-	{
-		_title.InvalidateMeasure();
-		Dispatcher.Dispatch(_title.InvalidateMeasure);
 	}
 
 #if DEBUG
@@ -205,13 +197,23 @@ internal sealed class ShelfHeader : Grid
 	}
 
 	// Slice 387 item 3: the iOS unified log does not carry Console or Debug output, so the lines go to a file the iOS simulator workflow copies out of the app's data folder.
+	// The file is truncated by the first write of each app start, so a kept data folder never mixes launches. The lines stay out of TestHookLog (one line per state change, grepped by the Android flows).
+	private static bool _fitFileStarted;
+
 	private static void WriteFitFile(string line)
 	{
-		System.Diagnostics.Debug.WriteLine(line);
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
 		try
 		{
-			File.AppendAllText(System.IO.Path.Combine(FileSystem.AppDataDirectory, "shelf-fit.log"), line + "\n");
+			string path = System.IO.Path.Combine(FileSystem.AppDataDirectory, "shelf-fit.log");
+			if (_fitFileStarted)
+			{
+				File.AppendAllText(path, line + "\n");
+			}
+			else
+			{
+				_fitFileStarted = true;
+				File.WriteAllText(path, line + "\n");
+			}
 		}
 		catch (Exception)
 		{
@@ -232,9 +234,13 @@ internal sealed class ShelfHeader : Grid
 		return Math.Max(0, Width - _sizes.RailPadding.Left - _sizes.RailPadding.Right - _sizes.Icon - flag - (gaps * RailNameSpacing));
 	}
 
+	// Slice 387 item 3 (iOS run 43675329629: the live title laid out 76.7 wide, the width of the short text measured last, in a 202 wide room): the measure used to rewrite the live label's Text, which
+	// left its cached size at the last probe. It now uses a never-shown probe label, so the live title's Text is set once per Fit, to the final choice.
 	private double MeasureTitle(string text)
 	{
-		_title.Text = text;
-		return _title.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
+		_probe.FontSize = _title.FontSize;
+		_probe.FontFamily = _title.FontFamily;
+		_probe.Text = text;
+		return _probe.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
 	}
 }

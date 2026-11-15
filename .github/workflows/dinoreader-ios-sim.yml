@@ -161,7 +161,7 @@ jobs:
 
       # Slice 387 item 3: the Debug shelf fit lines. The unified log does not carry them on iOS, so the Debug build writes them to shelf-fit.log in the app's data folder; copy it out of the container.
       - name: Shelf fit lines
-        if: always()
+        if: ${{ always() && contains(env.FLOW, 'shelf-fit') }}
         run: |
           set -uo pipefail
           if [ -z "${SIM_UDID:-}" ] || [ -z "${BUNDLE_ID:-}" ]; then
