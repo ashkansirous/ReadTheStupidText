@@ -16,10 +16,12 @@ internal sealed class ShelfHeader : Grid
 
 	private readonly Border _iconFrame = new() { StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private const string TitleAutomationId = "GalleryTitle";
+	private const string ShortTitleAutomationId = "GalleryTitleShort";
 	// Slice 387 item 3 (two failed iOS runs: a live label whose Text was swapped kept a stale short width; a probe label in the cell laid out 0 x 0): two title labels in the title's cell, one with the full words and
-	// one with the short words, each with a Text that never changes after it is set. Both stay IsVisible (each has a native view to measure); Fit shows one by Opacity 1 and gives it the id and the accessibility tree.
-	private readonly Label _titleFull = NewTitle();
-	private readonly Label _titleShort = NewTitle();
+	// one with the short words, each with a Text that only changes with the language. Both stay IsVisible (each has a native view to measure); Fit shows one by Opacity 1 and puts it in the accessibility tree.
+	// The full one carries the id the flows look for (GalleryTitle); the short one has its own (GalleryTitleShort), and starts out of the tree so only the full one is findable before the first Fit.
+	private readonly Label _titleFull = NewTitle(TitleAutomationId, inTree: true);
+	private readonly Label _titleShort = NewTitle(ShortTitleAutomationId, inTree: false);
 	private readonly StoryLanguageButton _flag;
 	private readonly Grid _row = new();
 	private readonly Grid _nameRow = new();
@@ -36,7 +38,7 @@ internal sealed class ShelfHeader : Grid
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		GrownUps = UiUsage.Press(new PillButton("GalleryGrownUps", coral: false), UiControls.OpenCorner, () => GrownUpsRequested?.Invoke()); // Slice 352: counted before the gate opens
 		_iconFrame.Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill };
-		foreach (Label title in Titles())
+		foreach (Label title in new[] { _titleFull, _titleShort })
 		{
 			SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 			var tap = new TapGestureRecognizer();
@@ -54,10 +56,13 @@ internal sealed class ShelfHeader : Grid
 		GrownUps.SizeChanged += (_, _) => FitWhenPillChanged(); // and its words grow with the font scale
 	}
 
-	// Both carry the id the flows look for (MAUI allows an AutomationId to be set once, so it cannot move between them); only the shown one is in the accessibility tree, which is what the flows and the VM checks read.
-	private static Label NewTitle() => new() { AutomationId = TitleAutomationId, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center, Opacity = 0, InputTransparent = true };
-
-	private IEnumerable<Label> Titles() => [_titleFull, _titleShort];
+	// MAUI allows an AutomationId to be set once, so each label keeps its own id for good; Fit moves the accessibility tree and the opacity between them.
+	private static Label NewTitle(string automationId, bool inTree)
+	{
+		var title = new Label { AutomationId = automationId, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center, Opacity = 0, InputTransparent = true };
+		AutomationProperties.SetIsInAccessibleTree(title, inTree);
+		return title;
+	}
 
 	/// <summary>The "Grown-ups" pill; a tap runs the gate (the page decides).</summary>
 	public PillButton GrownUps { get; }
@@ -185,14 +190,21 @@ internal sealed class ShelfHeader : Grid
 	/// <summary>Chooses the title that fits the row: "My stories", "Stories", or none. A no-op until the header has a width.</summary>
 	public void Fit()
 	{
-		SetTitleTexts();
+		if (SetTitleTexts())
+		{
+			InvalidateTitles();
+			Dispatcher.Dispatch(Fit); // a new Text is measured only after the next layout pass: iOS returns the old text's width in the same pass (run 43675329629)
+			return;
+		}
+
 		if (Width <= 0 || _titleFull.Handler is null || _titleShort.Handler is null)
 		{
 			return; // a label re-added by a rebuild has no native view yet and would measure about 0; its HandlerChanged fits again
 		}
 
-		double full = MeasureTitle(_titleFull) + ShelfTitleRules.TitleSlack;
-		double shortWidth = MeasureTitle(_titleShort) + ShelfTitleRules.TitleSlack;
+		// Each title label measures its own fixed words (no Text swap, no probe): its desired width with no limit.
+		double full = _titleFull.Measure(double.PositiveInfinity, double.PositiveInfinity).Width + ShelfTitleRules.TitleSlack;
+		double shortWidth = _titleShort.Measure(double.PositiveInfinity, double.PositiveInfinity).Width + ShelfTitleRules.TitleSlack;
 		double flag = _flagShown ? _sizes.FlagButton : 0;
 		_lastPill = PillRoom();
 		double available = _isRail ? RailRoom(flag) : ShelfTitleRules.AvailableForTitle(Width, _sizes.Header.Left + _sizes.Header.Right, _sizes.Icon, flag, _lastPill, _sizes.HeaderGap);
@@ -213,20 +225,36 @@ internal sealed class ShelfHeader : Grid
 		AutomationProperties.SetIsInAccessibleTree(title, shown);
 	}
 
-	// A label's Text is set only when it differs (a language change), never during a measure: a changed Text is what left the live label's size stale on iOS.
-	private void SetTitleTexts()
+	// A label's Text is set only when it differs (a language change), and Fit never measures in the pass that set it: a changed Text is what left the live label's size stale on iOS. Returns whether a Text changed.
+	// The script (direction, alignment, font) is applied at every call, and the font goes back to the default when the words are not Persian.
+	private bool SetTitleTexts()
 	{
-		SetText(_titleFull, AppResources.Gallery_Title);
-		SetText(_titleShort, AppResources.Gallery_ShelfTitleShort);
+		bool changed = SetText(_titleFull, AppResources.Gallery_Title);
+		changed |= SetText(_titleShort, AppResources.Gallery_ShelfTitleShort);
+		return changed;
 	}
 
-	private static void SetText(Label title, string text)
+	private static bool SetText(Label title, string text)
 	{
-		if (title.Text != text)
+		bool changed = title.Text != text;
+		if (changed)
 		{
 			title.Text = text;
-			OwnScript.InOwnScriptAligned(title);
 		}
+
+		OwnScript.InOwnScriptAligned(title);
+		if (title.FlowDirection != FlowDirection.RightToLeft)
+		{
+			title.FontFamily = null; // InOwnScript never resets the Persian family after a switch back
+		}
+
+		return changed;
+	}
+
+	private void InvalidateTitles()
+	{
+		_titleFull.InvalidateMeasure();
+		_titleShort.InvalidateMeasure();
 	}
 
 #if DEBUG
@@ -273,7 +301,4 @@ internal sealed class ShelfHeader : Grid
 		int gaps = flag > 0 ? 2 : 1;
 		return Math.Max(0, Width - _sizes.RailPadding.Left - _sizes.RailPadding.Right - _sizes.Icon - flag - (gaps * RailNameSpacing));
 	}
-
-	// Each title label measures its own fixed words (no Text swap, no probe): its desired width with no limit.
-	private static double MeasureTitle(Label title) => title.Measure(double.PositiveInfinity, double.PositiveInfinity).Width;
 }
