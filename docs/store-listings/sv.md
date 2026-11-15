@@ -1,30 +1,35 @@
 # Store listing: Swedish (`sv`)
 
-> **Machine draft by Claude, new 2026-11-13 (Slice 374) from `en.md` and `appstore-rtst.md`; needs a native read (line in `docs/plan/unverified.md`). Not pushed yet.** Locales: Play `sv-SE`; App Store `sv`; Microsoft Store `sv`. Composition as in `fr.md`.
+> **Machine draft by Claude, new 2026-11-13 (Slice 374) from `en.md` and `appstore-rtst.md`; needs a native read (line in `docs/plan/unverified.md`). Rewritten What / Why / Who / Features and pushed 2026-11-15 (Slice 291): Play and App Store live; Microsoft Store with the next RTST release.** Locales: Play `sv-SE`; App Store `sv`; Microsoft Store `sv`. Composition as in `fr.md`.
 
 Search terms (Microsoft Store, 7, each <= 30 chars): uppläsning; text till tal; tts; läs text högt; läs markerad text; pdf-uppläsare; naturliga röster offline
-Short description (Play <= 80; first line of the Microsoft description): Läs upp vilken text som helst med naturliga röster offline, 0,5x till 2x.
+Short description (Play <= 80; first line of the Microsoft description): Naturliga röster läser upp vilken text som helst, offline, på 15 språk.
 App Store subtitle (<= 30): Läs upp vilken text som helst
 App Store keywords (<= 100 bytes): tal,röst,tts,pdf,docx,skanna,ocr,lyssna,uppläsare,offline,berättare,översätt,ljud
-App Store promotional text (<= 170): Lyssna i stället för att stirra på en skärm. Klistra in text, öppna en PDF- eller Word-fil eller skanna en sida och tryck på spela. Naturliga röster offline, 0,5x-2x.
+App Store promotional text (<= 170): Lyssna i stället för att stirra på en skärm. Naturliga röster på 15 språk läser upp inklistrad text, PDF- och Word-filer eller en skannad sida, offline.
 
 ## Long description (Microsoft Store <= 10,000 chars; Google Play <= 4,000)
 
 Read The Stupid Text läser upp vilken text som helst, så att du kan lyssna i stället för att stirra på en skärm.
 
+Rösterna låter naturliga och körs på din enhet, så din text lämnar den aldrig.
+
+För dig som hellre lyssnar än läser: en lång artikel, en PDF, studieanteckningar, en sida ur en bok eller en text på ett språk du läser långsamt.
+
 I Windows bor den i aktivitetsfältets meddelandefält. Markera text i nästan vilken app som helst, eller kopiera den, så läses den upp direkt. Tryck på Ctrl+Win+R för att läsa det du har kopierat. (Terminaler rapporterar inte markeringar, så kopiera texten där.)
 
 I Android kan du klistra in eller skriva text, öppna en .txt-, .pdf- eller .docx-fil eller skanna en sida med kameran och sedan trycka på spela.
 
-- Naturligt klingande röster som körs på din enhet
-- Lästakt från 0,5x till 2x
+- Naturligt klingande röster på 15 språk som körs på din enhet
+- Välj röst och uppläsningshastighet från 0,5x till 2x
+- Valfri översättning före uppläsningen, på din enhet (maskinöversättning, kvaliteten varierar; inte för alla språk)
 - Fungerar offline när ditt röstpaket är nedladdat (en enda nedladdning vid första start); dina texter, filer och skanningar lämnar aldrig din enhet
 - Inget konto och inga annonser
 - Valfri anonym användningsstatistik utan text, namn eller identifierare; stäng av den när som helst i Inställningar
 
 ## Google Play only: download note (append to the full description)
 
-Första gången du startar appen i Android laddar den ner ett röstpaket på cirka 145 MB, så den behöver internet en gång (Wi-Fi rekommenderas). Tills nedladdningen är klar läser appen med telefonens inbyggda röst. Skanning laddar också ner ett litet paket för textigenkänning på ditt språk. Bara dessa paket laddas ner: dina texter, filer och skanningar stannar på din enhet, och när rösten är installerad använder uppläsningen inte nätverket. Den enda andra användningen av nätverket är den valfria anonyma användningsstatistiken och kraschrapporterna, som du kan stänga av i Inställningar.
+Första gången du startar appen i Android laddar den ner ett röstpaket på cirka 145 MB, så den behöver internet en gång (Wi-Fi rekommenderas). Tills nedladdningen är klar läser appen med telefonens inbyggda röst. Skanning laddar också ner ett litet paket för textigenkänning på ditt språk. Första gången du översätter till eller från ett språk laddas också en översättningsmodell på cirka 30 MB ner en gång från Googles servrar; ingen av dina texter skickas. Bara dessa paket laddas ner: dina texter, filer och skanningar stannar på din enhet, och när rösten är installerad använder uppläsningen inte nätverket. Den enda andra användningen av nätverket är den valfria anonyma användningsstatistiken och kraschrapporterna, som du kan stänga av i Inställningar.
 
 ## Microsoft Store only: download note (append to the full description)
 
@@ -34,15 +39,19 @@ Första gången du startar appen i Windows laddar den ner ett röstpaket för di
 
 Read The Stupid Text läser upp vilken text som helst, så att du kan lyssna i stället för att stirra på en skärm.
 
+Rösterna låter naturliga och körs på din enhet, så din text lämnar den aldrig.
+
+För dig som hellre lyssnar än läser: en lång artikel, en PDF, studieanteckningar, en sida ur en bok eller en text på ett språk du läser långsamt.
+
 Klistra in eller skriv text, öppna en .txt-, .pdf- eller .docx-fil eller skanna en sida med kameran och tryck sedan på spela. Varje mening markeras medan den läses.
 
-- Naturligt klingande röster som körs på din iPhone eller iPad
-- Lästakt från 0,5x till 2x
+- Naturligt klingande röster på 15 språk som körs på din enhet
+- Välj röst och uppläsningshastighet från 0,5x till 2x
 - Fungerar offline när din röst är nedladdad; dina texter, filer och skanningar lämnar aldrig din enhet
-- Valfri översättning på enheten (av som standard)
+- Valfri översättning på enheten, när en text är på ett annat språk (inte för alla språk)
 - Inget konto och inga annonser
 - Valfri anonym användningsstatistik utan text, namn eller identifierare; stäng av den när som helst i Inställningar
 
-Första gången du öppnar appen laddar den ner en röst för ditt språk på cirka 145 MB, så den behöver internet en gång (Wi-Fi rekommenderas). Tills nedladdningen är klar läser appen med enhetens inbyggda röst. Skanning laddar också ner ett litet paket för textigenkänning på ditt språk. Bara dessa paket laddas ner: dina texter, filer och skanningar stannar på din enhet, och när rösten är installerad använder uppläsningen inte nätverket.
+Första gången du öppnar appen laddar den ner en röst för ditt språk på cirka 145 MB, så den behöver internet en gång (Wi-Fi rekommenderas). Tills nedladdningen är klar läser appen med enhetens inbyggda röst. Skanning laddar också ner ett litet paket för textigenkänning på ditt språk. Första gången du översätter till eller från ett språk laddas också en översättningsmodell på cirka 30 MB ner en gång från Googles servrar; ingen av dina texter skickas. Bara dessa paket laddas ner: dina texter, filer och skanningar stannar på din enhet, och när rösten är installerad använder uppläsningen inte nätverket. Rösterna läser på det språk du väljer i Inställningar; en text på ett annat språk läses med iPhones egen röst.
 
 Read The Stupid Text finns också för Windows (ett verktyg i meddelandefältet som läser upp det du markerar eller kopierar) och för Android.
