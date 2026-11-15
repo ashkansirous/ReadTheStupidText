@@ -2,6 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
+using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
+using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -24,7 +26,8 @@ internal sealed class CornerTour : Grid
 	private const double PointerSize = 18;
 	private const double CardCorner = 28;
 	private const double EdgeMargin = 12;
-	private const double LiftGrow = 6;
+	private const double LiftGrow = TourGeometry.LiftGrow;
+	private const int CopyChildIndex = 1; // every stop with a target adds the scrim, then the lifted copy
 	private const double ChildCardBottom = 40;
 	private const double WelcomeTop = 190;
 
@@ -37,6 +40,8 @@ internal sealed class CornerTour : Grid
 	private readonly BoxView _scrim = new() { Color = Color.FromArgb(ScrimColour) };
 	private TourStop _stop = TourStop.Welcome;
 	private int _showVersion;
+	private int _placementMisses; // Debug flow check: stops drawn off their target or unreadable in this tour
+	private int _fallbackReportedVersion = -1; // the one-sided screen read is reported once per drawn stop
 
 	public CornerTour(Func<CornerTab, View> tabView, Func<View> childShelfPill, Func<View> grownUpsPill, Action<CornerTab> selectTab, Action showShelf, Action finish)
 	{
@@ -64,6 +69,7 @@ internal sealed class CornerTour : Grid
 	{
 		IsActive = true;
 		IsVisible = true;
+		_placementMisses = 0;
 		Show(TourStop.Welcome);
 	}
 
@@ -97,6 +103,7 @@ internal sealed class CornerTour : Grid
 
 	private void End()
 	{
+		LogPlacementSummary();
 		IsActive = false;
 		IsVisible = false;
 		_drawing = false;
@@ -108,6 +115,7 @@ internal sealed class CornerTour : Grid
 	// Empties the layer and stops the rings first: a ring's repeating animation would otherwise keep running on a view that is no longer shown.
 	private void ClearLayer()
 	{
+		StopWatchingPlacement();
 		foreach (PulseRing ring in Children.OfType<PulseRing>())
 		{
 			ring.Stop();
@@ -163,7 +171,8 @@ internal sealed class CornerTour : Grid
 			return;
 		}
 
-		if (Width <= 0 || Height <= 0 || (NeedsBounds(stop) && BoundsOf(stop) is null))
+		Rect? bounds = NeedsBounds(stop) ? BoundsOf(stop, allowLayoutFallback: retries == 0) : null; // read once: the copy is drawn at the rect the guard accepted
+		if (Width <= 0 || Height <= 0 || (NeedsBounds(stop) && bounds is null))
 		{
 			if (retries > 0)
 			{
@@ -188,37 +197,226 @@ internal sealed class CornerTour : Grid
 				DrawWelcome();
 				break;
 			case TourStop.ShelfPointer:
-				DrawShelfPointer();
+				DrawShelfPointer(bounds!.Value);
 				break;
 			case TourStop.ChildShelf:
-				DrawChildShelf();
+				DrawChildShelf(bounds!.Value);
 				break;
 			default:
-				DrawTab(stop);
+				DrawTab(stop, bounds!.Value);
 				break;
+		}
+
+		if (NeedsBounds(stop) && ScreenPositionReadable) // Windows cannot read a screen position, so there is nothing to compare there
+		{
+			WatchPlacement(stop, version);
 		}
 	}
 
-	private static bool NeedsBounds(TourStop stop) => stop != TourStop.Welcome;
-
-	private Rect? BoundsOf(TourStop stop) => stop switch
+	// Slice 381, Debug only: where the drawn copy and its real target are on the screen, in dp, once the copy has been laid out. aligned=yes when the copy's centre is within 4 dp of the target's; the flow
+	// onboarding-tour-position expects it for every stop, so a copy drawn a status bar too low fails it. The target is read again here, so a target that moved since the draw shows up too.
+	private void LogPlacement(TourStop stop, int version, View copy)
 	{
-		TourStop.Books => BoundsIn(_tabView(CornerTab.Books)),
-		TourStop.Store => BoundsIn(_tabView(CornerTab.Store)),
-		TourStop.Settings => BoundsIn(_tabView(CornerTab.Settings)),
-		TourStop.ShelfPointer => BoundsIn(_childShelfPill()),
-		TourStop.ChildShelf => BoundsIn(_grownUpsPill()),
+#if DEBUG
+		if (version != _showVersion || !IsActive || BoundsTargetOf(stop) is not { } target)
+		{
+			return;
+		}
+
+		if (ScreenBounds(copy) is not { } copyBounds || ScreenBounds(target) is not { } targetBounds)
+		{
+			_placementMisses++;
+			TourLog($"stop={stop} placement unreadable");
+			return;
+		}
+
+		bool aligned = TourGeometry.IsAligned(copyBounds, targetBounds);
+		_placementMisses += aligned ? 0 : 1;
+		TourLog($"stop={stop} aligned={(aligned ? "yes" : "no")} copy={Format(copyBounds)} target={Format(targetBounds)}");
+#endif
+	}
+
+	// Debug only: the placement is read as soon as the copy has been laid out (the first size change, or at once when it already is), not after a fixed delay, so a tap right after the card shows cannot drop it.
+	private void WatchPlacement(TourStop stop, int version)
+	{
+#if DEBUG
+		if (Children.Count <= CopyChildIndex || Children[CopyChildIndex] is not View copy)
+		{
+			_placementMisses++;
+			TourLog($"stop={stop} placement unreadable");
+			return;
+		}
+
+		if (copy.Width > 0 && copy.Height > 0)
+		{
+			Dispatcher.Dispatch(() => LogPlacement(stop, version, copy));
+			return;
+		}
+
+		WatchUntilLaidOut(stop, version, copy);
+#endif
+	}
+
+#if DEBUG
+	private View? _watchedCopy; // the copy whose first layout is awaited, so the handler can be dropped when the stop ends
+	private EventHandler? _watchHandler;
+#endif
+
+	private void WatchUntilLaidOut(TourStop stop, int version, View copy)
+	{
+#if DEBUG
+		EventHandler onLaidOut = (_, _) =>
+		{
+			if (copy.Width <= 0 || copy.Height <= 0)
+			{
+				return;
+			}
+
+			StopWatchingPlacement();
+			Dispatcher.Dispatch(() => LogPlacement(stop, version, copy));
+		};
+		_watchedCopy = copy;
+		_watchHandler = onLaidOut;
+		copy.SizeChanged += onLaidOut;
+#endif
+	}
+
+	// Called whenever the layer is emptied (a new stop, a redraw, the end of the tour): a copy that never got laid out keeps no handler, and so no reference to the tour.
+	private void StopWatchingPlacement()
+	{
+#if DEBUG
+		if (_watchedCopy is not null && _watchHandler is not null)
+		{
+			_watchedCopy.SizeChanged -= _watchHandler;
+		}
+
+		_watchedCopy = null;
+		_watchHandler = null;
+#endif
+	}
+
+	// Debug only: one line when the tour ends, counting the stops that were drawn off their target or could not be read. The flow expects misaligned=0, so a misplaced draw that a later redraw corrected still fails it.
+	private void LogPlacementSummary() => TourLog($"placement misaligned={_placementMisses}");
+
+	private static string Format(TourRect rect) => FormattableString.Invariant($"{rect.X:0.#},{rect.Y:0.#},{rect.Width:0.#},{rect.Height:0.#}");
+
+	private VisualElement? BoundsTargetOf(TourStop stop) => stop switch
+	{
+		TourStop.Books => _tabView(CornerTab.Books),
+		TourStop.Store => _tabView(CornerTab.Store),
+		TourStop.Settings => _tabView(CornerTab.Settings),
+		TourStop.ShelfPointer => _childShelfPill(),
+		TourStop.ChildShelf => _grownUpsPill(),
 		_ => null,
 	};
 
-	// Where a view is on the gallery, in the layer's own coordinates (the layer fills the gallery's grid): the sum of its offsets up to the gallery.
-	private Rect? BoundsIn(VisualElement view)
+	private static bool NeedsBounds(TourStop stop) => stop != TourStop.Welcome;
+
+	private Rect? BoundsOf(TourStop stop, bool allowLayoutFallback = true) => BoundsTargetOf(stop) is { } target ? BoundsIn(target, allowLayoutFallback) : null;
+
+	private static Rect ToRect(TourRect rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
+
+	private static TourRect ToTourRect(Rect rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
+
+	// Android and iOS can read a view's place on the screen; Windows cannot (and has no bar under the page), so it keeps the layout sum without a report.
+#if ANDROID || IOS
+	private static readonly bool ScreenPositionReadable = true;
+#else
+	private static readonly bool ScreenPositionReadable = false;
+#endif
+
+	// Where a view is, in the layer's own coordinates (Slice 381): both the view and the layer are read where they are on the screen, and the copy goes at the difference. The sum of layout offsets misses the inset
+	// the gallery pads itself by under a status bar (it draws under it), which put every copy a status-bar height too low. Without a platform view (Windows, which has no bar under the page) the layout sum stands.
+	// A view or the layer that is not attached to a window yet reads as unreadable (null) so Draw tries again on the next layout; on the last try the layout sum is used and the fallback is reported.
+	private Rect? BoundsIn(VisualElement view, bool allowLayoutFallback)
 	{
 		if (view.Width <= 0 || view.Height <= 0 || view.Handler is null)
 		{
 			return null;
 		}
 
+		if (ScreenBounds(view) is { } onScreen && ScreenBounds(this) is { } layer)
+		{
+			return ToRect(TourGeometry.InLayer(onScreen, layer.X, layer.Y));
+		}
+
+		if (!ScreenPositionReadable)
+		{
+			return LayoutBoundsIn(view);
+		}
+
+		if (!allowLayoutFallback)
+		{
+			return null;
+		}
+
+		ReportLayoutFallback();
+		return LayoutBoundsIn(view);
+	}
+
+	// Release gets the old status-bar offset again when only one of the two screen positions can be read: that is a fallback, reported once per drawn stop.
+	private void ReportLayoutFallback()
+	{
+		if (_fallbackReportedVersion == _showVersion)
+		{
+			return;
+		}
+
+		_fallbackReportedVersion = _showVersion;
+		DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.LayoutFailed); // Slice 381: a tour copy is placed from layout offsets, so it can sit a status bar too low
+	}
+
+	// A view's rectangle on the screen in dp; null when its platform view is not there yet or the platform has no screen position to read.
+	private static TourRect? ScreenBounds(VisualElement view)
+	{
+		if (view.Width <= 0 || view.Height <= 0 || ScreenOrigin(view) is not { } origin)
+		{
+			return null;
+		}
+
+		return new TourRect(origin.X, origin.Y, view.Width, view.Height);
+	}
+
+	private static Point? ScreenOrigin(VisualElement view)
+	{
+#if ANDROID
+		return AndroidScreenOrigin(view);
+#elif IOS
+		return IosScreenOrigin(view);
+#else
+		return null;
+#endif
+	}
+
+#if ANDROID
+	private static Point? AndroidScreenOrigin(VisualElement view)
+	{
+		if (view.Handler?.PlatformView is not Android.Views.View native || !native.IsAttachedToWindow)
+		{
+			return null; // not in a window yet: GetLocationOnScreen would answer 0,0
+		}
+
+		int[] xy = new int[2];
+		native.GetLocationOnScreen(xy);
+		float density = native.Resources?.DisplayMetrics?.Density ?? 1f;
+		return new Point(xy[0] / density, xy[1] / density);
+	}
+#elif IOS
+	private static Point? IosScreenOrigin(VisualElement view)
+	{
+		if (view.Handler?.PlatformView is not UIKit.UIView native || native.Window is null)
+		{
+			return null; // not in a window yet: the conversion would land in the view's own root space
+		}
+
+		CoreGraphics.CGPoint origin = native.ConvertPointToView(CoreGraphics.CGPoint.Empty, null); // null: the window's own space, points
+		return new Point(origin.X, origin.Y);
+	}
+#endif
+
+	// The sum of a view's layout offsets up to the gallery: the old way, kept where the screen position cannot be read.
+	private Rect? LayoutBoundsIn(VisualElement view)
+	{
 		double x = view.X;
 		double y = view.Y;
 		Element? parent = view.Parent;
@@ -280,9 +478,8 @@ internal sealed class CornerTour : Grid
 
 	// ---- N8b, a tab ----
 
-	private void DrawTab(TourStop stop)
+	private void DrawTab(TourStop stop, Rect tab)
 	{
-		Rect tab = BoundsOf(stop)!.Value;
 		View lift = TabReplica(stop, tab);
 		Children.Add(lift);
 		PulseRing ring = RingAround(tab, TileCorner);
@@ -322,9 +519,8 @@ internal sealed class CornerTour : Grid
 
 	// ---- N9, the Child's shelf pointer ----
 
-	private void DrawShelfPointer()
+	private void DrawShelfPointer(Rect pill)
 	{
-		Rect pill = BoundsOf(TourStop.ShelfPointer)!.Value;
 		var content = new HorizontalStackLayout
 		{
 			Spacing = 6, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
@@ -354,9 +550,8 @@ internal sealed class CornerTour : Grid
 
 	// ---- N10, the child's shelf ----
 
-	private void DrawChildShelf()
+	private void DrawChildShelf(Rect pill)
 	{
-		Rect pill = BoundsOf(TourStop.ChildShelf)!.Value;
 		var content = new HorizontalStackLayout
 		{
 			Spacing = 6, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
@@ -414,18 +609,20 @@ internal sealed class CornerTour : Grid
 	{
 		copy.HorizontalOptions = LayoutOptions.Start;
 		copy.VerticalOptions = LayoutOptions.Start;
-		copy.WidthRequest = at.Width + (2 * LiftGrow);
-		copy.HeightRequest = at.Height + (2 * LiftGrow);
-		copy.Margin = new Thickness(at.X - LiftGrow, at.Y - LiftGrow, 0, 0);
+		TourRect lifted = TourGeometry.LiftedCopy(ToTourRect(at));
+		copy.WidthRequest = lifted.Width;
+		copy.HeightRequest = lifted.Height;
+		copy.Margin = new Thickness(lifted.X, lifted.Y, 0, 0);
 		return copy;
 	}
 
 	private static PulseRing RingAround(Rect at, double corner)
 	{
+		TourRect lifted = TourGeometry.LiftedCopy(ToTourRect(at));
 		var ring = new PulseRing(corner + LiftGrow)
 		{
-			HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start, WidthRequest = at.Width + (2 * LiftGrow), HeightRequest = at.Height + (2 * LiftGrow),
-			Margin = new Thickness(at.X - LiftGrow, at.Y - LiftGrow, 0, 0), AutomationId = "TourRing",
+			HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start, WidthRequest = lifted.Width, HeightRequest = lifted.Height,
+			Margin = new Thickness(lifted.X, lifted.Y, 0, 0), AutomationId = "TourRing",
 		};
 		return ring;
 	}
