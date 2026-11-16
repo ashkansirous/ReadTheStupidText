@@ -109,3 +109,7 @@ Repo items in this PR; ClaudeSkills items 12, 13, 14, 18 in a ClaudeSkills PR (b
 - The VM test-package compile step on the next Dino Windows run.
 - `gemini-grab.js` on a non-English Gemini page.
 - Item 9: the Mono SIGSEGV at cold start; no crash-store match, needs a device run (10 cold starts).
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: items 12 and 13 and item 8's hook half did not pass review after three rounds each in wave 2 (needs a redesign, run-wave two strikes); item 9 needs a device; item 6 waits for the user's audience decision (Slice 346) (code merged #1129 and ClaudeSkills #221)`.
+
+**Item 13 note (feedback loop 2026-11-14-1547):** when item 13 is rebuilt, the user changes the ClaudeSkills `home/settings.json` `PreToolUse` entry `"matcher": "Agent"` that runs `brief-plan-guard.mjs` to `"matcher": "Agent|SendMessage"` (their turn only), given as a worktree file at the line; the plan.md *Waiting on the user* line for it was removed because it blocks nothing until then.

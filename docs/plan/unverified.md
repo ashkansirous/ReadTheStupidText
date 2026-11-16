@@ -77,6 +77,21 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 390: Dino iOS purchases on StoreKit 2 ([slice](slices/390-dino-ios-purchases-storekit-2.md))
+- **Not a user to-do (the sandbox Buy was done by the user, 2026-11-15: "I tried the sandbox buy!"; never ask again):** not stated by the user and so still unverified: a subscription plan showing its real end date, and Restore purchases (also on a second install), on an iPhone with a TestFlight build.
+- **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain.
+
+### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
+- **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
+- **Device:** Windows Hyper-V VM subscription flow.
+- **You:** real store sandbox (Play licence tester, Apple sandbox) after the store setup.
+- **Device:** Worker route `GET /api/stories/subscription` live, after the batched release deploy.
+- **Device:** `store-products.mjs` request shapes: the Apple and Play runs went through live on 2026-11-15; the Microsoft shapes are still unverified.
+- **Device:** offline 3-day lock on a real device.
+- **You:** restore on iOS.
+- **Device:** the app's subscription card shows each plan's name, length and price before buying (Apple requires it in the app; not checked on a screen).
+- **Device:** the plans showing in the iOS app (sandbox/TestFlight) now that the products exist.
+
 ### Slice 383: Dino: a book keeps reading when the phone is locked ([slice](slices/383-dino-reading-keeps-going-when-locked.md))
 - **Device:** A long locked read (1 minute or more, three-little-pigs with its real Farsi pack on the S21 dev install; `KEYCODE_WAKEUP` before `open-book`): a silent beat's delay is not stalled by Doze.
 - **You:** iOS TestFlight: a book plays to the end with the iPhone locked, the silent beat's delay runs, and `OnDisappearing` does not pause it on lock.
@@ -104,6 +119,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** no test-store book has carried `textInPictures` since Slice 350, so the device path of the Picture-only default (story.json `TextInPictures` -> `Story.Mode` -> `PictureTextPages.IsPictureOnly` -> `ModeSwitch`) is covered only by the `Story.Mode` unit tests (`TextInPicturesTests.cs`), not by any flow.
 
 ### Slice 387: Dino: the shelf title cut by the Grown-ups button ([slice](slices/387-dino-shelf-title-cut-by-grownups-button.md))
+- **Device:** The title's seven taps open the developer switch while the short label sits above the full one at Opacity 0 (InputTransparent), on iOS and Windows; and on Windows the VM checks (`Find-UiaById 'GalleryTitle'`) find only the full label, so they miss a shelf whose title is Short or Hidden.
 - **Device:** Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
 - **Device:** The iPhone shots (run 43657945195, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException`, twice); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
 
@@ -537,6 +553,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 379 part A: Everything to the latest stable ([slice](slices/379-everything-to-latest-stable.md))
+- **Device:** iOS jobs on CI after merge (SDK 10.0.401 / Xcode 26.6 pins).
+- **Device:** Node 26 in the release scripts (first release run).
+- **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
+- **Device:** ARM64 MSIX.
+- **Device:** Windows tray read in the Hyper-V VM.
+- **You:** TestFlight build of each app.
+- **Device:** RTST Scan flow.
+
 ### Slice 389: Tooling: the emulator preflight picks an installed JDK ([slice](slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md))
 - **Device:** `run-flows.ps1` end to end with a removed `JAVA_HOME` (cached build, then `-NoBuild`): the `Confirm-EmulatorPreflight` wiring prints the chosen JDK, and with no JDK at all it exits 7. The pick and the Maestro preflight themselves passed on emulator-5554.
 
@@ -672,7 +697,11 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
 - **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
-- **Device:** The iOS store shots, first run on main (43650776897): a look at each Dino iPhone 6.9"/6.5" shot; the Dino iPad 13" flow (`Tap on id: ReadingBack... FAILED`) and the RTST flows on all three devices (`PackStatusLabel is not visible... FAILED`) failed.
+- **You:** A native read of the 14 machine-translated RTST listings (ar, da, de, es, fi, fr, ja, nb, nl, pt, ru, sv, zh, fa), already live on Play and the App Store (fa on Play only).
+- **Device:** The RTST iOS store shots: the RTST flows on all three devices failed in the 2026-11-14 run (`PackStatusLabel is not visible... FAILED`) and have not been retaken. (Dino's iPhone and iPad sets are done, run 43748250465, 2026-11-15.)
+- **Device:** Whether App Store localizations without screenshots show the en-US set (Apple's docs do not say); read it on the App Store page once Dino is live.
+- **Device:** The resume path of `store-screenshots.yml` (no job failed in run 43761667169), its `resume_run` input, and the RTST single-flow unit.
+- **You:** A native read of the 15 machine-translated App Store subscription texts (Dino; also Slice 384).
 
 ### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
 - **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).

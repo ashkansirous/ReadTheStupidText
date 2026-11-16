@@ -3,6 +3,10 @@ name: appstore-submit
 # Manual: attaches an iOS app's newest processed build to its editable App Store version (renamed to
 # the build's marketing version, or a new version when the last is live) and submits it for review,
 # release type "after approval". One review waiting per app, never cancels (Decision 154, Slice 147).
+# Every in-app purchase of the app in READY_TO_SUBMIT goes into the same draft (Apple: an app's first
+# in-app purchases must be submitted with a new version); a refused add fails the run before submitting.
+# So does every READY_TO_SUBMIT subscription, with its group's version while that is PREPARE_FOR_SUBMISSION
+# (Slice 291); the result line says how many in-app purchases and subscriptions went with the version.
 # The first submission's listing (screenshots, privacy, age rating) is filled in App Store Connect by
 # hand; until then the job fails and prints what Apple says is missing.
 

@@ -416,9 +416,22 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurar compras</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Canjear un código</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>La compra no se completó. Inténtalo de nuevo.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>No se pudo abrir la configuración de la suscripción. Inténtalo de nuevo.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Algunos libros cuestan un poco. Se compran con tu cuenta de la tienda y no se nos envía nada sobre ti ni sobre tu hijo.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Esperando a la tienda…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Revisando tus compras…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Todos los libros con una suscripción</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Abre todos los libros mientras estés suscrito. Los libros que compres son tuyos para siempre.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Prueba gratis y luego {0} al mes</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Prueba gratis y luego {0} al año</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 días gratis para nuevos suscriptores. Después se renueva solo cada mes o cada año al precio indicado, hasta que canceles en tu cuenta de la tienda. Cancela cuando quieras.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Condiciones de uso</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Política de privacidad</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Gestionar suscripción</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Estás suscrito. Todos los libros están abiertos.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Suscribirse de nuevo</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Comprar este libro</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Bloqueado: la suscripción terminó</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Libros que se recuperan de la tienda</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Los libros gratuitos vuelven solos. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Los libros gratuitos que siguen en la tienda vuelven solos. Un libro que la tienda ya no ofrece no vuelve, pero sus grabaciones se quedan en el archivo de la copia. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>

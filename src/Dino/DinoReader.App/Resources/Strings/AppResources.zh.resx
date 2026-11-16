@@ -416,9 +416,22 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>恢复购买</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>兑换代码</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>购买没有成功，请重试。</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>无法打开订阅设置，请重试。</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>有些书需要付一点费用。购买通过你的商店账户完成，我们不会收到任何关于你或你孩子的信息。</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>正在等待商店…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>正在检查你的购买…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>一个订阅，所有书</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>订阅期间可阅读所有书。你购买的书永远属于你。</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>免费试用，之后每月 {0}</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>免费试用，之后每年 {0}</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>新订阅用户可免费试用7天。之后将按所示价格每月或每年自动续订，直到你在商店账户中取消。可随时取消。</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>使用条款</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>隐私政策</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>管理订阅</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>你已订阅，所有书均已解锁。</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>重新订阅</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>购买这本书</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>已锁定：订阅已结束</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>免费的书会自动回来。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>仍在商店里的免费书会自动回来。商店已下架的书不会回来，但它的录音仍保存在备份文件里。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>

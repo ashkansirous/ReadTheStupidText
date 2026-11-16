@@ -26,6 +26,9 @@
  *   Microsoft: API creates the durable add-on shell only (Store submission API, create add-on). No API for the price: an add-on on Pricing Version 2 makes the API answer an unknown tier,
  *              so its price (0.99 USD), listing and submission are set in Partner Center by hand, and the Partner Center payout and tax profile must exist.
  *
+ * Slice 384 adds the Dino subscription (a monthly 1.99 GBP and a yearly 14.99 GBP plan, 7-day free trial) to the same run, after the books: Play one subscription with two base plans and trial offers, Apple one group with
+ * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its Apple request shapes are checked against Apple's App Store Connect API docs (developer.apple.com/documentation/appstoreconnectapi, read through context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) and the first --apply answer (the create call has no availableInAllTerritories); the Play shapes are checked against the Google Play Developer API reference (developers.google.com/android-publisher/api-ref/rest/v3, read through context7 /websites/developers_google_android-publisher and the pages themselves, 2026-11-15; no --apply has run yet); the Microsoft shapes are still UNVERIFIED. The dry run lists them and what is left by hand.
+ *
  * Run live on 2026-11-13 against all three stores (Play: 11 created and activated; Apple: 11 created; Partner Center: 11 add-on shells created). Request shapes the
  * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
  */
@@ -70,6 +73,13 @@ const REQUEST_TIMEOUT_MS = 30000;
 const APPLE_PRICE_POINT_LIMIT = 200;
 const APPLE_PRICE_POINT_MAX_PAGES = 20;
 const APPLE_TERRITORY_LIMIT = 200;
+const APPLE_LIST_MAX_PAGES = 50;
+const APPLE_RETRY_MAX = 5;
+const APPLE_PROGRESS_EVERY = 20;
+const APPLE_RETRY_BASE_MS = 1000;
+const APPLE_RETRY_MAX_MS = 60000;
+const HTTP_TOO_MANY = 429;
+const HTTP_SERVER_ERROR = 500;
 const APPLE_TERRITORY_MAX_PAGES = 10;
 const APPLE_API_ORIGIN = 'https://api.appstoreconnect.apple.com';
 const HTTP_NOT_FOUND = 404;
@@ -442,7 +452,7 @@ async function playRequest(token, method, path, body) {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const text = await response.text();
-    return { status: response.status, ok: response.ok, json: jsonOrNull(text), empty: text.trim() === '', nonJson: isNonJsonBody(text), head: text.slice(0, NON_JSON_HEAD_CHARS) };
+    return { status: response.status, ok: response.ok, retryAfter: response.headers.get('retry-after'), json: jsonOrNull(text), empty: text.trim() === '', nonJson: isNonJsonBody(text), head: text.slice(0, NON_JSON_HEAD_CHARS) };
 }
 
 /** Pure: where a Play product stands from its GET answer: no buy option (`missing`), a buy option that is not live (`inactive`), or live (`active`). */
@@ -454,6 +464,7 @@ export function playProductStage(product) {
 
 export const PlayStage = { Missing: 'missing', Inactive: 'inactive', Active: 'active' };
 const PLAY_STATE_ACTIVE = 'ACTIVE';
+const PLAY_STATE_DRAFT = 'DRAFT';
 
 async function activatePlayBuyOption(token, book, request) {
     must(await request(token, 'POST', `oneTimeProducts/${encodeURIComponent(book.productId)}/purchaseOptions:batchUpdateStates`, activateBody(book)), 'activate the buy option');
@@ -536,7 +547,8 @@ async function microsoftExistingIds(token) {
 export async function createMicrosoftProduct(token, book, existing, storeAppId, { request = microsoftRequest, list = microsoftExistingIds } = {}) {
     const wanted = normalProductId(book.productId);
     if (existing.has(wanted)) return Outcome.Exists;
-    const response = await request(token, 'POST', `${MS_API}/inappproducts`, microsoftAddOnBody(book, storeAppId));
+    const body = book.kind === 'subscription' ? microsoftSubscriptionBody(book, storeAppId) : microsoftAddOnBody(book, storeAppId);
+    const response = await request(token, 'POST', `${MS_API}/inappproducts`, body);
     if (response.status === HTTP_CONFLICT) {
         const fresh = await list(token);
         if (fresh.has(wanted)) return Outcome.Exists;
@@ -546,15 +558,537 @@ export async function createMicrosoftProduct(token, book, existing, storeAppId, 
     return Outcome.Created;
 }
 
+// ---- Subscription (Slice 384) ----
+// One subscription per store with a monthly (1.99 GBP) and a yearly (14.99 GBP) plan and a 7-day free trial for new subscribers; the stores fill in other countries (Play: convertRegionPrices; Apple: equalised price points).
+// Play: one subscription with two base plans and a trial offer on each. Apple: one subscription group with two products. Microsoft: two subscription add-on shells (price, period and trial are set in Partner Center by hand).
+// Every request shape below follows the stores' docs read 2026-11-15 and is marked UNVERIFIED (Microsoft) or "checked against" its doc page (Apple, Play) until a real --apply has run once; this script's dry run (the default) is all that has run for Play.
+
+export const SUBSCRIPTION_PRODUCT_ID = `${PACKAGE_NAME}.sub`;
+export const TRIAL_DAYS = 7;
+export const TRIAL_OFFER_ID = 'trial';
+export const SUBSCRIPTION_CURRENCY = 'GBP';
+const APPLE_SUBSCRIPTION_TERRITORY = 'GBR';
+const APPLE_GROUP_NAME = 'Dino Book Reader subscription';
+const SUBSCRIPTION_TITLE = 'Dino Book Reader: every book';
+const SUBSCRIPTION_DESCRIPTION = 'Opens every book in Dino Book Reader while you subscribe.';
+export const SUBSCRIPTION_PLANS = [
+    { id: 'monthly', productId: `${SUBSCRIPTION_PRODUCT_ID}.monthly`, playPeriod: 'P1M', applePeriod: 'ONE_MONTH', appleLevel: 2, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '1', nanos: 990000000 }, gbpLabel: '1.99' },
+    { id: 'yearly', productId: `${SUBSCRIPTION_PRODUCT_ID}.yearly`, playPeriod: 'P1Y', applePeriod: 'ONE_YEAR', appleLevel: 1, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '14', nanos: 990000000 }, gbpLabel: '14.99' },
+];
+
+/** Pure: what a store gets created for the subscription. Play has one subscription holding both plans; Apple and Microsoft one product per plan. */
+export function subscriptionItemsFor(store) {
+    if (store === Store.Google) return [{ kind: 'subscription', title: SUBSCRIPTION_TITLE, productId: SUBSCRIPTION_PRODUCT_ID, plans: SUBSCRIPTION_PLANS, problem: null }];
+    return SUBSCRIPTION_PLANS.map((plan) => ({ kind: 'subscription', title: `${SUBSCRIPTION_TITLE} (${plan.id})`, productId: plan.productId, plan, problem: null }));
+}
+
+/** Pure: the dry-run lines for the subscription of one store. */
+export function subscriptionPlanLines(store) {
+    const lines = [`${STORE_TITLES[store]}: subscription, ${SUBSCRIPTION_PLANS.map((plan) => `${plan.id} ${plan.gbpLabel} ${SUBSCRIPTION_CURRENCY}`).join(' and ')}, ${TRIAL_DAYS}-day free trial`];
+    for (const item of subscriptionItemsFor(store)) lines.push(`  would create ${item.productId} ("${item.title}")`);
+    if (store === Store.Google) lines.push(`  other regions: converted from the tax-exclusive equivalent of the GB price (convertRegionPrices takes tax-exclusive, answers tax-inclusive); --apply prints GB, US, DE, JP, AU, CA prices per plan before it creates anything`);
+    return [...lines, ...SUBSCRIPTION_MANUAL_STEPS[store].map((step) => `  by hand: ${step}`)];
+}
+
+export const SUBSCRIPTION_MANUAL_STEPS = {
+    [Store.Apple]: [
+        'add the review screenshot to each subscription and the subscription group\'s localisation if App Store Connect asks, then submit them for review with an app version (https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions)',
+    ],
+    [Store.Google]: [
+        'nothing left once the merchant account is done (Play Console > Monetise with Play > Subscriptions)',
+    ],
+    [Store.Microsoft]: [
+        'for each subscription add-on set the period (1 month, 1 year), the price (1.99 GBP, 14.99 GBP), the 7-day free trial, its listing and submit it in Partner Center (the submission API cannot set a subscription\'s price or trial)',
+    ],
+};
+
+/** Pure: Play's subscription (POST .../subscriptions?productId=...&regionsVersion.version=...): one en-GB listing and a base plan per plan, priced per region from the converted GBP price. Checked against monetization.subscriptions.create and the Subscription, SubscriptionListing (title, description up to 200 chars, up to four benefits) and BasePlan pages, 2026-11-15; the regionsVersion object is sent as the query parameter regionsVersion.version. */
+export function playSubscriptionBody(convertedByPlan) {
+    return {
+        packageName: PACKAGE_NAME,
+        productId: SUBSCRIPTION_PRODUCT_ID,
+        listings: [{ languageCode: PLAY_LISTING_LANGUAGE, title: SUBSCRIPTION_TITLE, description: SUBSCRIPTION_DESCRIPTION, benefits: ['Every book opens', 'New books included'] }],
+        basePlans: SUBSCRIPTION_PLANS.map((plan) => playBasePlanBody(plan, convertedByPlan[plan.id])),
+    };
+}
+
+/** Pure: the region price list of a base plan: Play's converted price per region, except the GB one, which is the plan's own GBP price (the conversion's input is tax exclusive and its output tax inclusive, so Play's GB answer would be 1.99 plus VAT). */
+export function playPlanRegionalConfigs(plan, converted) {
+    const byRegion = new Map(Object.entries(converted?.convertedRegionPrices ?? {}).map(([regionCode, entry]) => [regionCode, entry.price]));
+    byRegion.set(PLAY_REGION_GB, plan.gbp);
+    return [...byRegion].map(([regionCode, price]) => ({ regionCode, newSubscriberAvailability: true, price }));
+}
+
+/** Checked against developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions (BasePlan, AutoRenewingBasePlanType, RegionalBasePlanConfig, OtherRegionsBasePlanConfig), 2026-11-15. */
+function playBasePlanBody(plan, converted) {
+    const other = converted?.convertedOtherRegionsPrice;
+    const body = {
+        basePlanId: plan.id,
+        autoRenewingBasePlanType: { billingPeriodDuration: plan.playPeriod, resubscribeState: 'RESUBSCRIBE_STATE_ACTIVE' },
+        regionalConfigs: playPlanRegionalConfigs(plan, converted),
+    };
+    if (other?.usdPrice && other?.eurPrice) body.otherRegionsConfig = { usdPrice: other.usdPrice, eurPrice: other.eurPrice, newSubscriberAvailability: true };
+    return body;
+}
+
+/** Pure: the 7-day free trial offer of one base plan (POST .../basePlans/<plan>/offers?offerId=trial&regionsVersion.version=...): free for new subscribers of this subscription, in every region the plan is sold in. Checked against monetization.subscriptions.basePlans.offers.create and the SubscriptionOffer, SubscriptionOfferPhase (recurrenceCount, duration ISO 8601, one phase config per offer region), RegionalSubscriptionOfferPhaseConfig (free: {}), OtherRegionsSubscriptionOfferPhaseConfig (free), RegionalSubscriptionOfferConfig, OtherRegionsSubscriptionOfferConfig (otherRegionsNewSubscriberAvailability) and AcquisitionTargetingRule (scope.thisSubscription) pages, 2026-11-15. No offerTags are sent: the docs name the field but not the shape of an OfferTag, and the app picks the offer by its id. */
+export function playTrialOfferBody(plan, regionCodes, withOtherRegions = true) {
+    const phase = { recurrenceCount: 1, duration: `P${TRIAL_DAYS}D`, regionalConfigs: regionCodes.map((regionCode) => ({ regionCode, free: {} })) };
+    const body = {
+        packageName: PACKAGE_NAME,
+        productId: SUBSCRIPTION_PRODUCT_ID,
+        basePlanId: plan.id,
+        offerId: TRIAL_OFFER_ID,
+        phases: [phase],
+        regionalConfigs: regionCodes.map((regionCode) => ({ regionCode, newSubscriberAvailability: true })),
+        targeting: { acquisitionRule: { scope: { thisSubscription: {} } } },
+    };
+    // Only a base plan that has an otherRegionsConfig can have an offer with one.
+    if (withOtherRegions) {
+        phase.otherRegionsConfig = { free: {} };
+        body.otherRegionsConfig = { otherRegionsNewSubscriberAvailability: true };
+    }
+    return body;
+}
+
+/** Pure: the held base plan of a subscription Play answered. */
+function playHeldPlan(subscription, planId) {
+    return (subscription?.basePlans ?? []).find((entry) => entry?.basePlanId === planId);
+}
+
+/** Pure: whether a held base plan's GB price is the plan's own (same units and nanos); a plan with no GB price never matches. */
+export function playHeldGbPriceMatches(subscription, plan) {
+    const price = (playHeldPlan(subscription, plan.id)?.regionalConfigs ?? []).find((config) => config?.regionCode === PLAY_REGION_GB)?.price;
+    return price !== undefined && String(price.units ?? '0') === String(plan.gbp.units) && Number(price.nanos ?? 0) === plan.gbp.nanos;
+}
+
+/** Pure: where a Play subscription stands: no subscription (`missing`), a base plan or trial not live (`inactive`), or all live (`active`). */
+export function playSubscriptionStage(subscription, trials) {
+    const plans = subscription?.basePlans ?? [];
+    if (SUBSCRIPTION_PLANS.some((plan) => !plans.some((base) => base?.basePlanId === plan.id))) return PlayStage.Missing;
+    const live = SUBSCRIPTION_PLANS.every((plan) => plans.find((base) => base.basePlanId === plan.id).state === PLAY_STATE_ACTIVE && trials?.[plan.id] === PLAY_STATE_ACTIVE);
+    return live ? PlayStage.Active : PlayStage.Inactive;
+}
+
+/** The state of a plan's trial offer from its GET answer: undefined only for a 404 with a JSON body; any other failure throws, never a reason to create (a duplicate would be posted). */
+function playOfferStateOf(answer, plan) {
+    if (answer.nonJson === true) throw nonJsonError(`look up the ${plan.id} trial offer`, answer);
+    if (answer.ok) return answer.json?.state ?? 'UNKNOWN';
+    if (answer.status !== HTTP_NOT_FOUND) throw new Error(`look up the ${plan.id} trial offer: HTTP ${answer.status}`);
+    return undefined;
+}
+
+/** Pure: the regions a held base plan is sold in (its regionalConfigs); throws when it names none, so a trial is never made for GB only. */
+export function playHeldRegions(subscription, planId) {
+    const codes = (playHeldPlan(subscription, planId)?.regionalConfigs ?? []).map((config) => config?.regionCode).filter((code) => typeof code === 'string');
+    if (codes.length === 0) throw new Error(`Play lists no regions for the ${planId} base plan, so the trial offer's regions are unknown`);
+    return codes;
+}
+
+/** Pure: a Play request that sends a GET again after a 429 or 5xx and a write again only after a 429 (Play did not apply it), up to APPLE_RETRY_MAX times, waiting Retry-After when given. */
+export function retryingPlay(request, sleep = realSleep, log = () => {}) {
+    return async (token, method, path, body) => {
+        let response = await request(token, method, path, body);
+        for (let attempt = 0; attempt < APPLE_RETRY_MAX && canRetryPlay(method, response); attempt++) {
+            log(`  Play answered ${response.status} to ${method} ${path.split('?')[0]}; trying again (${attempt + 1} of ${APPLE_RETRY_MAX})`);
+            await sleep(appleRetryDelayMs(response.retryAfter, attempt));
+            response = await request(token, method, path, body);
+        }
+        return response;
+    };
+}
+
+function canRetryPlay(method, response) {
+    return method === 'GET' ? response.status === HTTP_TOO_MANY || response.status >= HTTP_SERVER_ERROR : response.status === HTTP_TOO_MANY;
+}
+
+/** Pure: the regions version a Play write uses: PLAY_REGIONS_VERSION, else the version Play named in a conversion, else the default. */
+export function playRegionsVersion(converted) {
+    return process.env.PLAY_REGIONS_VERSION ?? converted?.regionVersion?.version ?? PLAY_DEFAULT_REGIONS_VERSION;
+}
+
+/**
+ * Creates the Play subscription with both base plans and trial offers, or finishes a half-created one (each base plan and offer that is not live is created or activated). It reads what Play holds first
+ * (subscriptions.get, then each base plan's trial offer) and posts only what is missing, so a rerun never posts a duplicate. A plan that fails does not stop the other; the failures are listed in one error.
+ */
+export async function createPlaySubscription(token, item, rawRequest = playRequest, { sleep = realSleep, log = console.log } = {}) {
+    const request = retryingPlay(rawRequest, sleep, log);
+    const base = `subscriptions/${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}`;
+    const existing = await request(token, 'GET', base);
+    if (!existing.ok && existing.status !== HTTP_NOT_FOUND) throw new Error(`look up subscription: HTTP ${existing.status}`);
+    if (existing.nonJson === true) throw nonJsonError('look up subscription', existing);
+    const trials = {};
+    for (const plan of item.plans) trials[plan.id] = existing.ok ? playOfferStateOf(await request(token, 'GET', `${base}/basePlans/${plan.id}/offers/${TRIAL_OFFER_ID}`), plan) : undefined;
+    const stage = existing.ok ? playSubscriptionStage(existing.json, trials) : PlayStage.Missing;
+    log(`  ${SUBSCRIPTION_PRODUCT_ID}: Play holds ${existing.ok ? 'the subscription' : 'nothing'} (${stage})`);
+    if (stage === PlayStage.Active) return Outcome.Exists;
+    if (existing.ok && stage === PlayStage.Missing) throw new Error(`the subscription exists without all its base plans; Play's create call cannot add them, so add the missing base plan(s) in Play Console (${base})`);
+    const { regionsQuery, converted } = existing.ok ? await playQueryForHeld(token, existing.json, item, request) : await playCreateSubscription(token, item, request, log);
+    const failed = [];
+    for (const plan of item.plans) {
+        try {
+            await finishPlayPlan(token, plan, { held: existing.ok ? existing.json : undefined, offerState: trials[plan.id], converted: converted[plan.id], regionsQuery, request, log });
+        } catch (error) {
+            failed.push(`${plan.id} (${error.message})`);
+        }
+    }
+    if (failed.length > 0) throw new Error(`${failed.length} of ${item.plans.length} plans failed, rerun to finish only those: ${failed.join('; ')}`);
+    return existing.ok ? Outcome.Completed : Outcome.Created;
+}
+
+const MICROS = 1e6;
+const NANOS_PER_MICRO = 1000;
+const PLAY_PREVIEW_REGIONS = ['GB', 'US', 'DE', 'JP', 'AU', 'CA'];
+
+/** Pure: a Money as whole millionths of its unit. */
+function moneyMicros(money) {
+    return Math.round(Number(money.units ?? 0) * MICROS + Number(money.nanos ?? 0) / NANOS_PER_MICRO);
+}
+
+/** Pure: a Money from whole millionths of a unit. */
+function moneyFromMicros(currencyCode, micros) {
+    return { currencyCode, units: String(Math.floor(micros / MICROS)), nanos: (micros % MICROS) * NANOS_PER_MICRO };
+}
+
+/**
+ * Pure: the tax-exclusive GB price to convert from, so that the plan's price is what a GB customer pays. Play's convertRegionPrices takes a tax-EXCLUSIVE price and answers tax-INCLUSIVE prices
+ * ("price: The intital price to convert other regions from. Tax exclusive." / "ConvertedRegionPrice.price: The converted price tax inclusive."), so converting 1.99 straight would give GB 1.99 plus VAT
+ * and every other region a price built on that inflated base. `firstAnswer` is the conversion of the plan's price as is: its GB answer is 1.99 times (1 + VAT), so the exclusive price is 1.99 / (1 + VAT).
+ * Returns null when the answer names no GB price.
+ */
+export function playTaxExclusiveInput(plan, firstAnswer) {
+    const gross = firstAnswer?.convertedRegionPrices?.[PLAY_REGION_GB]?.price;
+    if (gross === undefined) return null;
+    const wanted = moneyMicros(plan.gbp);
+    return moneyFromMicros(plan.gbp.currencyCode, Math.round((wanted * wanted) / moneyMicros(gross)));
+}
+
+/** Pure: the preview lines for a conversion: the plan's GB price next to the converted price (tax inclusive) of 5 big regions. */
+export function playPriceLines(plan, converted) {
+    const priceOf = (code) => (code === PLAY_REGION_GB ? plan.gbp : converted?.convertedRegionPrices?.[code]?.price);
+    const parts = PLAY_PREVIEW_REGIONS.map((code) => {
+        const price = priceOf(code);
+        return `${code} ${price === undefined ? 'none' : `${(moneyMicros(price) / MICROS).toFixed(2)} ${price.currencyCode}`}`;
+    });
+    return [`  ${plan.id} prices (tax inclusive, converted from the tax-exclusive GB price): ${parts.join(', ')}`];
+}
+
+/** Converts a plan's GB price the way Play Console does for a typed base price: from its tax-exclusive equivalent, so no region is priced from a VAT-inflated base. */
+async function playConvertPlan(request, token, plan, log) {
+    const first = must(await request(token, 'POST', 'pricing:convertRegionPrices', { price: plan.gbp }), `convert the ${plan.id} price`);
+    const input = playTaxExclusiveInput(plan, first);
+    if (input === null) {
+        throw new Error(`${plan.id}: Play's conversion named no GB price, so the tax-exclusive base is unknown; nothing was created (converting from ${plan.gbpLabel} as it is would price other regions from a VAT-inflated base)`);
+    }
+    return must(await request(token, 'POST', 'pricing:convertRegionPrices', { price: input }), `convert the ${plan.id} tax-exclusive price`);
+}
+
+/** For a subscription Play already holds: PLAY_REGIONS_VERSION, else the version the held resource names, else one conversion call to read Play's current version (the offer POST needs the version the plans were made with). */
+async function playQueryForHeld(token, held, item, request) {
+    let version = process.env.PLAY_REGIONS_VERSION ?? held?.regionsVersion?.version;
+    if (version === undefined) {
+        const answer = must(await request(token, 'POST', 'pricing:convertRegionPrices', { price: item.plans[0].gbp }), 'read the Play regions version');
+        version = playRegionsVersion(answer);
+    }
+    return { regionsQuery: `regionsVersion.version=${encodeURIComponent(version)}`, converted: {} };
+}
+
+/** Converts each plan's price, then creates the subscription (both base plans, in DRAFT) in one call. */
+async function playCreateSubscription(token, item, request, log) {
+    const converted = {};
+    for (const plan of item.plans) {
+        converted[plan.id] = await playConvertPlan(request, token, plan, log);
+        for (const line of playPriceLines(plan, converted[plan.id])) log(line);
+    }
+    const regionsQuery = `regionsVersion.version=${encodeURIComponent(playRegionsVersion(converted[item.plans[0].id]))}`;
+    log(`  ${SUBSCRIPTION_PRODUCT_ID}: creating the subscription with ${item.plans.length} base plans`);
+    must(await request(token, 'POST', `subscriptions?productId=${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}&${regionsQuery}`, playSubscriptionBody(converted)), 'create the subscription');
+    return { regionsQuery, converted };
+}
+
+/** Pure: whether a conversion answer names the GB region (the plans are sold from GBP). */
+export function playHasGbPrice(converted) {
+    return converted?.convertedRegionPrices?.[PLAY_REGION_GB] !== undefined;
+}
+
+/** Activates one base plan that is not live, then creates (when missing) and activates its trial offer. */
+async function finishPlayPlan(token, plan, { held, offerState, converted, regionsQuery, request, log }) {
+    const base = `subscriptions/${encodeURIComponent(SUBSCRIPTION_PRODUCT_ID)}/basePlans/${plan.id}`;
+    const planState = playHeldPlan(held, plan.id)?.state;
+    if (held && !playHeldGbPriceMatches(held, plan)) throw new Error(`the held ${plan.id} base plan's GB price is not ${plan.gbpLabel} ${SUBSCRIPTION_CURRENCY}; no offer is made for it and it is not activated, fix the price in Play Console (${base})`);
+    if (planState !== PLAY_STATE_ACTIVE) {
+        must(await request(token, 'POST', `${base}:activate`, {}), `activate the ${plan.id} base plan`);
+        log(`  ${plan.productId}: base plan activated`);
+    }
+    if (offerState === PLAY_STATE_ACTIVE) return;
+    if (offerState !== undefined && offerState !== PLAY_STATE_DRAFT) {
+        log(`  ${plan.productId}: the trial offer is ${offerState}; left alone (never re-activated by this script), activate it in Play Console if it should be live (${base}/offers/${TRIAL_OFFER_ID})`);
+        return;
+    }
+    if (offerState === undefined) {
+        const regions = held ? playHeldRegions(held, plan.id) : playPlanRegionalConfigs(plan, converted).map((config) => config.regionCode);
+        const other = converted?.convertedOtherRegionsPrice;
+        const withOther = held ? playHeldPlan(held, plan.id)?.otherRegionsConfig !== undefined : Boolean(other?.usdPrice && other?.eurPrice);
+        must(await request(token, 'POST', `${base}/offers?offerId=${TRIAL_OFFER_ID}&${regionsQuery}`, playTrialOfferBody(plan, regions, withOther)),`create the ${plan.id} trial offer`);
+        log(`  ${plan.productId}: trial offer created for ${regions.length} regions`);
+    }
+    must(await request(token, 'POST', `${base}/offers/${TRIAL_OFFER_ID}:activate`, {}), `activate the ${plan.id} trial offer`);
+    log(`  ${plan.productId}: trial offer activated`);
+}
+
+const PLAY_REGION_GB = 'GB';
+
+/** Pure: App Store Connect's subscription group (POST /v1/subscriptionGroups). */
+export function appleSubscriptionGroupBody(appId) {
+    return { data: { type: 'subscriptionGroups', attributes: { referenceName: APPLE_GROUP_NAME }, relationships: { app: { data: { type: 'apps', id: appId } } } } };
+}
+
+/** Pure: the group's en-US display name (POST /v1/subscriptionGroupLocalizations). Checked against Apple's docs (subscription-group-localizations-v1, 2026-11-15). */
+export function appleGroupLocalizationBody(groupId) {
+    return { data: { type: 'subscriptionGroupLocalizations', attributes: { name: 'Dino Book Reader', locale: APPLE_LOCALE }, relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: groupId } } } } };
+}
+
+/** Pure: one auto-renewing subscription of the group (POST /v1/subscriptions; checked against Apple's docs, managing-auto-renewable-subscriptions, 2026-11-15, minus availableInAllTerritories, which the live API rejected on 2026-11-15); the yearly plan is level 1 (the best), the monthly level 2. */
+export function appleSubscriptionBody(item, groupId) {
+    return {
+        data: {
+            type: 'subscriptions',
+            attributes: { name: `Every book (${item.plan.id})`, productId: item.productId, subscriptionPeriod: item.plan.applePeriod, familySharable: false, groupLevel: item.plan.appleLevel, reviewNote: 'Opens every book while subscribed. Purchases sit behind the grown-ups gate.' },
+            relationships: { group: { data: { type: 'subscriptionGroups', id: groupId } } },
+        },
+    };
+}
+
+/** Pure: the en-US name and description of an Apple subscription (POST /v1/subscriptionLocalizations). Checked against Apple's docs (managing-auto-renewable-subscriptions, 2026-11-15; the pre-4.4.1 route, deprecated but available). */
+export function appleSubscriptionLocalizationBody(item, subscriptionId) {
+    return { data: { type: 'subscriptionLocalizations', attributes: { name: SUBSCRIPTION_TITLE, description: cut(SUBSCRIPTION_DESCRIPTION, APPLE_DESCRIPTION_MAX), locale: APPLE_LOCALE }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
+}
+
+/** Pure: the territory availability of a subscription (POST /v1/subscriptionAvailabilities): every territory, as Apple adds new ones. The create call itself has no availableInAllTerritories (Apple answered so on the first --apply). */
+export function appleSubscriptionAvailabilityBody(subscriptionId, territoryIds) {
+    return {
+        data: {
+            type: 'subscriptionAvailabilities',
+            attributes: { availableInNewTerritories: true },
+            relationships: {
+                subscription: { data: { type: 'subscriptions', id: subscriptionId } },
+                availableTerritories: { data: territoryIds.map((id) => ({ type: 'territories', id })) },
+            },
+        },
+    };
+}
+
+/** Pure: the price of one territory (POST /v1/subscriptionPrices): the price point's id (it belongs to one territory), applied now (startDate null). The base territory gets the chosen price point, every other territory its equalised one. */
+export function appleSubscriptionPriceBody(subscriptionId, pricePointId) {
+    return {
+        data: {
+            type: 'subscriptionPrices',
+            attributes: { startDate: null, preserveCurrentPrice: false },
+            relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } }, subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: pricePointId } } },
+        },
+    };
+}
+
+/** Pure: the 7-day free trial of one territory (POST /v1/subscriptionIntroductoryOffers): duration ONE_WEEK, one period, FREE_TRIAL; an offer is per territory. */
+export function appleTrialBody(subscriptionId, territoryId = APPLE_SUBSCRIPTION_TERRITORY) {
+    return {
+        data: {
+            type: 'subscriptionIntroductoryOffers',
+            attributes: { duration: 'ONE_WEEK', offerMode: 'FREE_TRIAL', numberOfPeriods: 1 },
+            relationships: {
+                subscription: { data: { type: 'subscriptions', id: subscriptionId } },
+                territory: { data: { type: 'territories', id: territoryId } },
+            },
+        },
+    };
+}
+
+/** Creates one Apple subscription (and the group once per run), or completes a half-created one: group, product, listing, price and trial are each checked and only the missing ones are done. */
+export async function createAppleSubscription(asc, item, appId, session = {}) {
+    session.groupId ??= await ensureAppleGroup(asc, appId);
+    const found = must(await asc.get(`/v1/subscriptionGroups/${session.groupId}/subscriptions`), 'look up subscription');
+    const existingId = (found.data ?? []).find((entry) => entry?.attributes?.productId === item.productId)?.id;
+    const id = existingId ?? must(await asc.post('/v1/subscriptions', appleSubscriptionBody(item, session.groupId)), 'create subscription').data.id;
+    const fresh = existingId === undefined;
+    let did = fresh;
+    const missing = async (path, what) => fresh || !(await appleStepDone(asc, path, what));
+    if (await missing(`/v1/subscriptions/${id}/subscriptionLocalizations`, 'the en-US listing')) {
+        must(await asc.post('/v1/subscriptionLocalizations', appleSubscriptionLocalizationBody(item, id)), 'add the en-US listing');
+        did = true;
+    }
+    if (await missing(`/v1/subscriptions/${id}/subscriptionAvailability`, 'the availability')) {
+        must(await asc.post('/v1/subscriptionAvailabilities', appleSubscriptionAvailabilityBody(id, await appleTerritoryIds(asc))), 'set availability');
+        did = true;
+    }
+    if (await appleSubscriptionPricesAndTrial(asc, item, id, fresh, session)) did = true;
+    if (fresh) return Outcome.Created;
+    return did ? Outcome.Completed : Outcome.Exists;
+}
+
+/**
+ * What a subscription's prices or introductory offers already cover: `territories` (the ids its entries name) and `unplaced` (true when an entry names no territory, e.g. one made by hand for all territories).
+ * Apple's docs (context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) show a territory relationship with data only when asked with include=territory, and say nothing of an all-territories entry,
+ * so an entry that names none is read as "there is already one here" and nothing of that kind is posted. None on a fresh subscription.
+ */
+async function appleDoneTerritories(asc, path, what, fresh) {
+    if (fresh) return { territories: new Set(), unplaced: false };
+    const entries = await appleListAll(asc, `${path}?include=territory&limit=${APPLE_TERRITORY_LIMIT}`, `check ${what}`, { missingIsEmpty: true });
+    const named = entries.map(entryTerritory);
+    return { territories: new Set(named.filter((territory) => territory !== null)), unplaced: named.includes(null) };
+}
+
+/** Pure: the territory id an entry of a list read with include=territory names, or null when it names none. */
+export function entryTerritory(entry) {
+    const territory = entry?.relationships?.territory?.data?.id;
+    return typeof territory === 'string' ? territory : null;
+}
+
+/** Pure: the price point per territory for a plan: the base territory's own point, then its equalised points (the list of Apple's equalisation answers). A point that names no territory cannot be placed and is left out. */
+export function applePricePlan(basePointId, equalized) {
+    const plan = new Map([[APPLE_SUBSCRIPTION_TERRITORY, basePointId]]);
+    for (const point of equalized) {
+        const territory = entryTerritory(point);
+        if (territory !== null && typeof point.id === 'string' && !plan.has(territory)) plan.set(territory, point.id);
+    }
+    return plan;
+}
+
+/** Pure: the plan narrowed to the territories of the availability; `skipped` lists the availability territories the plan has no price point for (they are reported, not posted). */
+export function applePlanForAvailability(plan, territoryIds) {
+    const skipped = territoryIds.filter((territory) => !plan.has(territory));
+    return { plan: new Map(territoryIds.filter((territory) => plan.has(territory)).map((territory) => [territory, plan.get(territory)])), skipped };
+}
+
+/** The territory ids Apple actually holds in a subscription's availability, read back (the availability may be partial or older than this run). */
+async function appleHeldTerritoryIds(asc, id) {
+    const availability = must(await asc.get(`/v1/subscriptions/${id}/subscriptionAvailability`), 'read the availability back').data;
+    if (typeof availability?.id !== 'string') throw new Error('read the availability back: Apple gave no availability id');
+    const territories = await appleListAll(asc, `/v1/subscriptionAvailabilities/${availability.id}/availableTerritories?limit=${APPLE_TERRITORY_LIMIT}`, 'read the available territories');
+    return territories.map((territory) => territory.id);
+}
+
+/** Every entry of a paged App Store Connect list, following every `links.next`; a list longer than the safety cap is an error, never a silent cut. */
+async function appleListAll(asc, path, what, { missingIsEmpty = false } = {}) {
+    const all = [];
+    for (let page = 0; path !== null && page < APPLE_LIST_MAX_PAGES; page++) {
+        const response = await asc.get(path);
+        if (missingIsEmpty && page === 0 && response.status === HTTP_NOT_FOUND) return [];
+        const json = must(response, what);
+        all.push(...(json.data ?? []));
+        path = applePagePath(json.links?.next);
+    }
+    if (path !== null) throw new Error(`${what}: more than ${APPLE_LIST_MAX_PAGES} pages, so the list would be incomplete`);
+    return all;
+}
+
+/** Pure: the delay before a retry, in ms: Apple's Retry-After (seconds) when given, else doubling from one second; capped. */
+export function appleRetryDelayMs(retryAfter, attempt) {
+    const seconds = Number(retryAfter);
+    const given = retryAfter !== null && retryAfter !== undefined && retryAfter !== '' && Number.isFinite(seconds) && seconds >= 0;
+    return Math.min(given ? seconds * 1000 : APPLE_RETRY_BASE_MS * 2 ** attempt, APPLE_RETRY_MAX_MS);
+}
+
+const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Whether a response may be sent again: a GET after a 429 or 5xx; a POST only after a 429 that names a Retry-After (Apple did not accept it). A POST that got a 5xx may have been applied, so it is never repeated. */
+function canRetry(isPost, response) {
+    if (isPost) return response.status === HTTP_TOO_MANY && response.retryAfter !== null && response.retryAfter !== undefined && response.retryAfter !== '';
+    return response.status === HTTP_TOO_MANY || response.status >= HTTP_SERVER_ERROR;
+}
+
+/** An App Store Connect client whose GETs retry a 429 or 5xx, and whose POSTs retry only a 429 with Retry-After (honouring it), a fixed number of times. */
+export function retryingAsc(asc, sleep = realSleep) {
+    const again = (call, isPost) => async (...args) => {
+        let response = await call(...args);
+        for (let attempt = 0; attempt < APPLE_RETRY_MAX && canRetry(isPost, response); attempt++) {
+            await sleep(appleRetryDelayMs(response.retryAfter, attempt));
+            response = await call(...args);
+        }
+        return response;
+    };
+    return { get: again((...args) => asc.get(...args), false), post: again((...args) => asc.post(...args), true) };
+}
+
+/** Sets the price (GBR point plus equalised points for every other territory) and the 7-day free trial, in each territory that lacks them. True when anything was posted. */
+async function appleSubscriptionPricesAndTrial(plainAsc, item, id, fresh, session) {
+    const asc = retryingAsc(plainAsc, session.sleep);
+    session.notes ??= [];
+    const priced = await appleDoneTerritories(asc, `/v1/subscriptions/${id}/prices`, 'the prices', fresh);
+    const trialled = await appleDoneTerritories(asc, `/v1/subscriptions/${id}/introductoryOffers`, 'the free trial', fresh);
+    if (priced.unplaced) session.notes.push(`${item.productId}: a price entry names no territory (made by hand?), so no price was posted; check it in App Store Connect`);
+    if (trialled.unplaced) session.notes.push(`${item.productId}: a free-trial entry names no territory (made by hand?), so no trial was posted; check it in App Store Connect`);
+    const points = await appleListAll(asc, `/v1/subscriptions/${id}/pricePoints?filter[territory]=${APPLE_SUBSCRIPTION_TERRITORY}&limit=${APPLE_PRICE_POINT_LIMIT}`, 'read the price points');
+    const pointId = findApplePricePoint(points, item.plan.gbpLabel);
+    if (pointId === null) throw new Error(`no ${item.plan.gbpLabel} ${SUBSCRIPTION_CURRENCY} price point for ${item.productId}`);
+    const equalized = await appleListAll(asc, `/v1/subscriptionPricePoints/${pointId}/equalizations?include=territory&limit=${APPLE_PRICE_POINT_LIMIT}`, 'read the equalised prices');
+    const { plan, skipped } = applePlanForAvailability(applePricePlan(pointId, equalized), await appleHeldTerritoryIds(asc, id));
+    if (skipped.length > 0) session.notes.push(`${item.productId}: ${skipped.length} territory(ies) have no equalised price point and were skipped: ${skipped.join(', ')}`);
+    return appleSetTerritories(asc, item.productId, id, plan, { priced, trialled }, session);
+}
+
+/** Posts the missing price and trial of each territory; a territory whose POST failed is recorded and the loop goes on, then the run fails naming them (a rerun reads what is done first and does only those). True when anything was posted. */
+async function appleSetTerritories(asc, productId, id, plan, { priced, trialled }, session) {
+    const log = session.log ?? console.log;
+    let did = false;
+    let posted = 0;
+    let position = 0;
+    const failed = [];
+    for (const [territory, territoryPointId] of plan) {
+        try {
+            if (!priced.unplaced && !priced.territories.has(territory)) {
+                must(await asc.post('/v1/subscriptionPrices', appleSubscriptionPriceBody(id, territoryPointId)), `set the ${territory} price`);
+                did = true;
+            }
+            if (!trialled.unplaced && !trialled.territories.has(territory)) {
+                must(await asc.post('/v1/subscriptionIntroductoryOffers', appleTrialBody(id, territory)), `add the ${territory} free trial`);
+                did = true;
+            }
+            posted++;
+        } catch (error) {
+            failed.push(`${territory} (${error.message})`);
+        }
+        if (++position % APPLE_PROGRESS_EVERY === 0) log(`  ${productId}: ${position} of ${plan.size} territories handled (${posted} ok, ${failed.length} failed)`);
+    }
+    if (failed.length > 0) throw new Error(`${failed.length} of ${plan.size} territories failed, rerun to finish only those: ${failed.join('; ')}`);
+    return did;
+}
+
+/** The group of the app, created with its en-US display name when missing; a group the failed first run left without a display name gets it now. */
+async function ensureAppleGroup(asc, appId) {
+    const found = must(await asc.get(`/v1/apps/${appId}/subscriptionGroups`), 'look up subscription group');
+    const existing = (found.data ?? []).find((group) => group?.attributes?.referenceName === APPLE_GROUP_NAME)?.id;
+    const groupId = existing ?? must(await asc.post('/v1/subscriptionGroups', appleSubscriptionGroupBody(appId)), 'create subscription group').data.id;
+    if (existing === undefined || (await appleGroupListingMissing(asc, groupId))) {
+        must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the group listing');
+    }
+    return groupId;
+}
+
+/** True only when the group's localization list was read successfully and is empty; a 404 or any other failure stops the step (posting again on a guess would hit a 409). */
+async function appleGroupListingMissing(asc, groupId) {
+    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations`);
+    if (!response.ok) throw new Error(`check the group listing: could not read it (HTTP ${response.status}), so the group's display name was not posted; rerun when App Store Connect answers`);
+    const data = response.json?.data;
+    if (!Array.isArray(data)) throw new Error('check the group listing: Apple gave no list, so the group\'s display name was not posted');
+    return data.length === 0;
+}
+
+/** Pure: Partner Center's create-add-on body for a subscription shell. UNVERIFIED: that the submission API accepts productType Subscription; if it answers 409 or an error, create the add-on by hand. */
+export function microsoftSubscriptionBody(item, storeAppId) {
+    return { applicationIds: [storeAppId], productId: item.productId, productType: 'Subscription' };
+}
+
 // ---- running ----
 
 async function openStore(store) {
-    if (store === Store.Apple) return { asc: appleClientFromEnv(), appId: APPS.dino.id };
+    if (store === Store.Apple) return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [] };
     if (store === Store.Google) return { token: await googleToken() };
     return { token: await microsoftToken(), existing: undefined, storeAppId: requireEnv('MS_STORE_APP_ID') };
 }
 
 async function createOne(store, session, book) {
+    if (store === Store.Apple && book.kind === 'subscription') return createAppleSubscription(session.asc, book, session.appId, session);
+    if (store === Store.Google && book.kind === 'subscription') return createPlaySubscription(session.token, book);
     if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId);
     if (store === Store.Google) return createPlayProduct(session.token, book);
     session.existing ??= await microsoftExistingIds(session.token);
@@ -576,13 +1110,16 @@ export async function applyStore(store, books, open = openStore, create = create
             results.push({ book, outcome: Outcome.Failed, message: error.message });
         }
     }
+    results.notes = session?.notes ?? []; // things a run left undone without failing (skipped territories ...), printed in the end report
     return results;
 }
 
 function printResults(store, results) {
     console.log(`${STORE_TITLES[store]}:`);
     for (const { book, outcome, message } of results) console.log(`  ${outcome}: ${book.productId}${message ? ` (${message})` : ''}`);
+    (results.notes ?? []).forEach((note) => console.log(`  NOT DONE: ${note}`));
     MANUAL_STEPS[store].forEach((step) => console.log(`  by hand: ${step}`));
+    SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
 }
 
 async function main() {
@@ -590,14 +1127,14 @@ async function main() {
     const books = paidBooksFrom(readContentEntries(options.contentRoot));
     if (!options.apply) {
         console.log(`DRY RUN (nothing is created; add --apply to create): ${books.length} paid book(s)`);
-        options.stores.forEach((store) => console.log(planLines(store, books).join('\n')));
+        options.stores.forEach((store) => console.log([...planLines(store, books), ...subscriptionPlanLines(store)].join('\n')));
         if (books.some((book) => book.problem !== null)) process.exitCode = 1; // review #9: a scripted pre-check must not pass what --apply would refuse
         return;
     }
     let failed = false;
     for (const store of options.stores) {
         try {
-            const results = await applyStore(store, books);
+            const results = await applyStore(store, [...books, ...subscriptionItemsFor(store)]); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop
             failed ||= results.some((result) => result.outcome === Outcome.Failed);
             printResults(store, results);
         } catch (error) {

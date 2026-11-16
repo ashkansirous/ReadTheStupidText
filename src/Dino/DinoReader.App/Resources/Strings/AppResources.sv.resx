@@ -415,9 +415,22 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Återställ köp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lös in en kod</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>Köpet gick inte igenom. Försök igen.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Det gick inte att öppna prenumerationsinställningarna. Försök igen.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Vissa böcker kostar lite. De köps via ditt butikskonto, och inget om dig eller ditt barn skickas till oss.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>Väntar på butiken …</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Kontrollerar dina köp …</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Alla böcker med ett abonnemang</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Öppna alla böcker så länge du prenumererar. Böcker du köper är dina för alltid.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Prova gratis, sedan {0} per månad</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Prova gratis, sedan {0} per år</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 dagar gratis för nya prenumeranter. Därefter förnyas det automatiskt varje månad eller varje år till det visade priset, tills du säger upp i ditt butikskonto. Du kan säga upp när som helst.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Användarvillkor</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Integritetspolicy</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Hantera abonnemang</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Du prenumererar. Alla böcker är öppna.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Prenumerera igen</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Köp den här boken</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnemanget har tagit slut</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>

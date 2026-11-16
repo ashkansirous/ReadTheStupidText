@@ -188,9 +188,16 @@ test('runApp testflight: a 409 STATE_ERROR fails with Apple text, a missing grou
     assert.match(missing.message, /Rofagha/);
 });
 
+/** No in-app purchases and no subscriptions: the lists a plain app (RTST) answers with. */
+const noProducts = {
+    [`GET /v1/apps/${APPS.rtst.id}/inAppPurchasesV2`]: { json: { data: [] } },
+    [`GET /v1/apps/${APPS.rtst.id}/subscriptionGroups`]: { json: { data: [] } },
+};
+
 test('runApp appstore: renames the editable version, attaches the build, submits, never cancels', async () => {
     const editable = { id: 'v1', attributes: { versionString: '1.0', appVersionState: 'PREPARE_FOR_SUBMISSION' }, relationships: {} };
     const { asc, calls } = fakeAsc({
+        ...noProducts,
         'GET /v1/builds': buildsReply,
         [`GET /v1/apps/${APPS.rtst.id}/appStoreVersions`]: { json: { data: [editable] } },
         'GET /v1/reviewSubmissions': { json: { data: [] } },
@@ -218,6 +225,7 @@ const editableVersion = { id: 'v1', attributes: { versionString: '1.0', appVersi
 
 function appStoreRoutes(extra) {
     return {
+        ...noProducts,
         'GET /v1/builds': buildsReply,
         [`GET /v1/apps/${APPS.rtst.id}/appStoreVersions`]: { json: { data: [editableVersion] } },
         'PATCH /v1/appStoreVersions/v1/relationships/build': { status: 204 },
@@ -248,6 +256,218 @@ test('appstore: a reused draft without the version gets the item', async () => {
     }));
     assert.equal((await runApp(asc, Mode.AppStore, 'rtst')).outcome, Outcome.Submitted);
     assert.ok(calls.some(([method, path]) => method === 'POST' && path === '/v1/reviewSubmissionItems'));
+});
+
+const rtstId = APPS.rtst.id;
+const iap = (id, state) => ({ id, attributes: { state, productId: `book.${id}` } });
+const iapVersions = (id) => ({ json: { data: [{ id: `${id}-v1`, attributes: { version: '1', state: 'PREPARE_FOR_SUBMISSION' } }, { id: `${id}-v2`, attributes: { version: '2', state: 'PREPARE_FOR_SUBMISSION' } }] } });
+const newDraftRoutes = (extra) => appStoreRoutes({
+    'GET /v1/reviewSubmissions?': { json: { data: [] } },
+    'POST /v1/reviewSubmissions': { status: 201, json: { data: { id: 'rs1' } } },
+    'POST /v1/reviewSubmissionItems': { status: 201 },
+    ...extra,
+});
+const purchasePosts = (calls) => calls.filter(([method, , body]) => method === 'POST' && body.data.relationships.inAppPurchaseVersion);
+const versionIdOf = ([, , body]) => body.data.relationships.inAppPurchaseVersion.data.id;
+
+test('appstore: every READY_TO_SUBMIT in-app purchase joins the draft through its newest version', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT'), iap('p2', 'APPROVED'), iap('p3', 'READY_TO_SUBMIT')] } },
+        'GET /v2/inAppPurchases/p1/versions': iapVersions('p1'),
+        'GET /v2/inAppPurchases/p3/versions': iapVersions('p3'),
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /submitted for App Store review with 2 in-app purchases and 0 subscriptions$/);
+    assert.deepEqual(purchasePosts(calls).map(versionIdOf), ['p1-v2', 'p3-v2']);
+    assert.equal(purchasePosts(calls)[0][2].data.relationships.inAppPurchaseVersion.data.type, 'inAppPurchaseVersions');
+});
+
+test('appstore: no in-app purchase ready adds none and says 0', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'APPROVED')] } },
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /with 0 in-app purchases and 0 subscriptions$/);
+    assert.equal(purchasePosts(calls).length, 0);
+});
+
+test('appstore: an in-app purchase the reused draft already holds is not added twice but still counts', async () => {
+    const held = { relationships: { inAppPurchaseVersion: { data: { id: 'p1-v2' } } } };
+    const version = { relationships: { appStoreVersion: { data: { id: 'v1' } } } };
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        'GET /v1/reviewSubmissions?': { json: { data: [{ id: 'rs1', attributes: { state: 'READY_FOR_REVIEW' } }] } },
+        'GET /v1/reviewSubmissions/rs1/items': { json: { data: [version, held] } },
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT'), iap('p3', 'READY_TO_SUBMIT')] } },
+        'GET /v2/inAppPurchases/p1/versions': iapVersions('p1'),
+        'GET /v2/inAppPurchases/p3/versions': iapVersions('p3'),
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.match(result.message, /with 2 in-app purchases and 0 subscriptions$/);
+    assert.deepEqual(purchasePosts(calls).map(versionIdOf), ['p3-v2']);
+});
+
+test('appstore: a refused in-app purchase add fails with Apple text and never submits the draft', async () => {
+    const refusal = { status: 409, json: { errors: [{ detail: 'The product is not ready' }] } };
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT')] } },
+        'GET /v2/inAppPurchases/p1/versions': iapVersions('p1'),
+    }));
+    const failing = { ...asc, post: async (path, body) => (body.data.relationships.inAppPurchaseVersion ? { ...refusal, ok: false } : asc.post(path, body)) };
+    const result = await runApp(failing, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /POST \/v1\/reviewSubmissionItems failed \(409\): The product is not ready/);
+    assert.ok(!calls.some(([method, path]) => method === 'PATCH' && path === '/v1/reviewSubmissions/rs1'));
+});
+
+test('appstore: the product list is paged through links.next', async () => {
+    const next = `https://api.appstoreconnect.apple.com/v1/apps/${rtstId}/inAppPurchasesV2?cursor=abc&limit=50`;
+    const routes = newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2?cursor=abc`]: { json: { data: [iap('p2', 'READY_TO_SUBMIT')] } },
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2?limit=50`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT')], links: { next } } },
+        'GET /v2/inAppPurchases/p1/versions': iapVersions('p1'),
+        'GET /v2/inAppPurchases/p2/versions': iapVersions('p2'),
+    });
+    delete routes[`GET /v1/apps/${rtstId}/inAppPurchasesV2`];
+    const { asc, calls } = fakeAsc(routes);
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.match(result.message, /with 2 in-app purchases and 0 subscriptions$/);
+    assert.deepEqual(purchasePosts(calls).map(versionIdOf), ['p1-v2', 'p2-v2']);
+});
+
+test('appstore: the newest PREPARE_FOR_SUBMISSION version is taken, not simply the highest number; a missing number counts lowest', async () => {
+    const rows = (id) => ({ json: { data: [
+        { id: `${id}-v3`, attributes: { version: '3', state: 'READY_FOR_SALE' } },
+        { id: `${id}-vx`, attributes: { state: 'PREPARE_FOR_SUBMISSION' } },
+        { id: `${id}-v2`, attributes: { version: '2', state: 'PREPARE_FOR_SUBMISSION' } },
+    ] } });
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT')] } },
+        'GET /v2/inAppPurchases/p1/versions': rows('p1'),
+    }));
+    assert.equal((await runApp(asc, Mode.AppStore, 'rtst')).outcome, Outcome.Submitted);
+    assert.deepEqual(purchasePosts(calls).map(versionIdOf), ['p1-v2']);
+});
+
+test('appstore: a product or subscription left in another state (MISSING_METADATA, REJECTED) is named in the message, the app is still submitted', async () => {
+    const routes = groupRoutes('PREPARE_FOR_SUBMISSION', {
+        'GET /v1/subscriptionGroups/g1/subscriptions': { json: { data: [sub('s1', 'READY_TO_SUBMIT'), sub('s2', 'REJECTED'), sub('s3', 'IN_REVIEW')] } },
+    });
+    const { asc } = fakeAsc(newDraftRoutes({
+        ...routes,
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT'), iap('p2', 'MISSING_METADATA'), iap('p3', 'APPROVED'), iap('p4', 'WAITING_FOR_REVIEW')] } },
+        'GET /v2/inAppPurchases/p1/versions': iapVersions('p1'),
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /with 1 in-app purchases and 1 subscriptions; not submitted: book\.p2 MISSING_METADATA, sub\.s2 REJECTED$/);
+});
+
+test('appstore: a READY_TO_SUBMIT product with no PREPARE_FOR_SUBMISSION version fails the app and submits nothing', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes({
+        [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'READY_TO_SUBMIT')] } },
+        'GET /v2/inAppPurchases/p1/versions': { json: { data: [{ id: 'p1-v1', attributes: { version: '1', state: 'READY_FOR_SALE' } }] } },
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /book\.p1 is READY_TO_SUBMIT but has no PREPARE_FOR_SUBMISSION version; nothing was submitted/);
+    assert.ok(!calls.some(([method, path]) => method === 'PATCH' && path === '/v1/reviewSubmissions/rs1'));
+});
+
+test('appstore: a READY_TO_SUBMIT subscription with no PREPARE_FOR_SUBMISSION version fails the app and submits nothing', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes(groupRoutes('PREPARE_FOR_SUBMISSION', {
+        'GET /v1/subscriptions/s3/versions': versionRows('s3', 'READY_FOR_SALE'),
+    })));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /sub\.s3 is READY_TO_SUBMIT but has no PREPARE_FOR_SUBMISSION version/);
+    assert.ok(!calls.some(([method, path]) => method === 'PATCH' && path === '/v1/reviewSubmissions/rs1'));
+});
+
+test('appstore: a list that is still paging after the page limit throws instead of returning a cut list', async () => {
+    const next = `https://api.appstoreconnect.apple.com/v1/apps/${rtstId}/inAppPurchasesV2?limit=50`;
+    const routes = newDraftRoutes({ [`GET /v1/apps/${rtstId}/inAppPurchasesV2`]: { json: { data: [iap('p1', 'APPROVED')], links: { next } } } });
+    const { asc, calls } = fakeAsc(routes);
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /has more than 20 pages; refusing to work from a cut list/);
+    assert.ok(!calls.some(([method, path]) => method === 'PATCH' && path === '/v1/reviewSubmissions/rs1'));
+});
+
+test('appstore: a draft item list that is still paging after the page limit fails the app', async () => {
+    const next = 'https://api.appstoreconnect.apple.com/v1/reviewSubmissions/rs1/items?cursor=x';
+    const { asc } = fakeAsc(newDraftRoutes({
+        'GET /v1/reviewSubmissions?': { json: { data: [{ id: 'rs1', attributes: { state: 'READY_FOR_REVIEW' } }] } },
+        'GET /v1/reviewSubmissions/rs1/items': { json: { data: [], links: { next } } },
+    }));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /reviewSubmissions\/rs1\/items has more than 20 pages/);
+});
+
+const sub = (id, state) =>({ id, attributes: { state, productId: `sub.${id}` } });
+const versionRows = (id, state) => ({ json: { data: [{ id: `${id}-v1`, attributes: { version: '1', state } }, { id: `${id}-v2`, attributes: { version: '2', state } }] } });
+const groupRoutes = (groupState, extra = {}) => ({
+    [`GET /v1/apps/${rtstId}/subscriptionGroups`]: { json: { data: [{ id: 'g1' }] } },
+    'GET /v1/subscriptionGroups/g1/subscriptions': { json: { data: [sub('s1', 'READY_TO_SUBMIT'), sub('s2', 'APPROVED'), sub('s3', 'READY_TO_SUBMIT')] } },
+    'GET /v1/subscriptionGroups/g1/versions': versionRows('g1', groupState),
+    'GET /v1/subscriptions/s1/versions': versionRows('s1', 'PREPARE_FOR_SUBMISSION'),
+    'GET /v1/subscriptions/s3/versions': versionRows('s3', 'PREPARE_FOR_SUBMISSION'),
+    ...extra,
+});
+const itemPosts = (calls, relationship) => calls.filter(([method, , body]) => method === 'POST' && body.data.relationships?.[relationship]);
+const relIdOf = (relationship) => ([, , body]) => body.data.relationships[relationship].data.id;
+
+test('appstore: a group with ready subscriptions adds its group version, then each ready subscription version', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes(groupRoutes('PREPARE_FOR_SUBMISSION')));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /with 0 in-app purchases and 2 subscriptions$/);
+    const order = calls.filter(([method, path]) => method === 'POST' && path === '/v1/reviewSubmissionItems').map(([, , body]) => Object.keys(body.data.relationships).find((key) => key.startsWith('subscription'))).filter(Boolean);
+    assert.deepEqual(order, ['subscriptionGroupVersion', 'subscriptionVersion', 'subscriptionVersion']);
+    assert.deepEqual(itemPosts(calls, 'subscriptionVersion').map(relIdOf('subscriptionVersion')), ['s1-v2', 's3-v2']);
+    assert.equal(itemPosts(calls, 'subscriptionGroupVersion')[0][2].data.relationships.subscriptionGroupVersion.data.type, 'subscriptionGroupVersions');
+});
+
+test('appstore: an already approved group adds only its subscriptions', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes(groupRoutes('READY_FOR_SALE')));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.match(result.message, /and 2 subscriptions$/);
+    assert.equal(itemPosts(calls, 'subscriptionGroupVersion').length, 0);
+    assert.equal(itemPosts(calls, 'subscriptionVersion').length, 2);
+});
+
+test('appstore: subscription items the reused draft already holds are not added twice but still count', async () => {
+    const version = { relationships: { appStoreVersion: { data: { id: 'v1' } } } };
+    const heldGroup = { relationships: { subscriptionGroupVersion: { data: { id: 'g1-v2' } } } };
+    const heldSub = { relationships: { subscriptionVersion: { data: { id: 's1-v2' } } } };
+    const { asc, calls } = fakeAsc(newDraftRoutes(groupRoutes('PREPARE_FOR_SUBMISSION', {
+        'GET /v1/reviewSubmissions?': { json: { data: [{ id: 'rs1', attributes: { state: 'READY_FOR_REVIEW' } }] } },
+        'GET /v1/reviewSubmissions/rs1/items': { json: { data: [version, heldGroup, heldSub] } },
+    })));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.match(result.message, /and 2 subscriptions$/);
+    assert.equal(itemPosts(calls, 'subscriptionGroupVersion').length, 0);
+    assert.deepEqual(itemPosts(calls, 'subscriptionVersion').map(relIdOf('subscriptionVersion')), ['s3-v2']);
+});
+
+test('appstore: a refused subscription add fails with Apple text and never submits the draft', async () => {
+    const refusal = { status: 409, json: { errors: [{ detail: 'The subscription is not ready' }] } };
+    const { asc, calls } = fakeAsc(newDraftRoutes(groupRoutes('PREPARE_FOR_SUBMISSION')));
+    const failing = { ...asc, post: async (path, body) => (body.data.relationships.subscriptionVersion ? { ...refusal, ok: false } : asc.post(path, body)) };
+    const result = await runApp(failing, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /POST \/v1\/reviewSubmissionItems failed \(409\): The subscription is not ready/);
+    assert.ok(!calls.some(([method, path]) => method === 'PATCH' && path === '/v1/reviewSubmissions/rs1'));
+});
+
+test('appstore: an app with no subscription group says 0 subscriptions', async () => {
+    const { asc, calls } = fakeAsc(newDraftRoutes({}));
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /with 0 in-app purchases and 0 subscriptions$/);
+    assert.equal(itemPosts(calls, 'subscriptionVersion').length, 0);
 });
 
 test('appstore: an unknown marketing version fails and writes nothing', async () => {
@@ -373,6 +593,7 @@ test('appstore: a rejected submit lists the associated errors on one line', asyn
     const editable = { id: 'v1', attributes: { versionString: '1.0', appVersionState: 'PREPARE_FOR_SUBMISSION' }, relationships: {} };
     const meta = { associatedErrors: { '/v1/appStoreVersions/v1': [{ detail: 'Copyright is required' }] } };
     const { asc } = fakeAsc({
+        ...noProducts,
         'GET /v1/builds': buildsReply,
         [`GET /v1/apps/${APPS.rtst.id}/appStoreVersions`]: { json: { data: [editable] } },
         'GET /v1/reviewSubmissions': { json: { data: [] } },

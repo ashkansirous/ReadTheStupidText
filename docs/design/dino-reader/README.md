@@ -1112,3 +1112,28 @@ script, regenerate the tables.
 | G1 | Hold, Windows 1100 × 760 | 363 |
 | G2 | The sum, Windows | 363 |
 | G3 | Phone landscape (and tablets) | 363 |
+
+## Subscription — `Dino Reader 2026-11-15 Subscription.dc.html`
+
+- **Source:** claude.ai canvas <https://claude.ai/artifact/3q5QxXBNX3jNwTJyq3U9tk#artboard-ade82c3e8fd2> (same canvas, page "Dino Reader 2026-11-15 Subscription").
+- **Copied:** 2026-11-15, read with the Artifact tool and copied byte for byte.
+- **Covers:** Slice 384 (built with no mock) redrawn, plus the states it has no screen for; fed into Slices 396-399.
+- **User's prompt:** "have we added this desing to the plan? have we implemented it?" then "update the plan with the design."
+- **End questions:** the Save tag, yearly first and the tour tip are planned as drawn (Slices 397 and 399); change if the user says otherwise.
+
+| # | Screen (caption) | Feeds |
+|---|---|---|
+| SB1 | Offer (new subscriber) | 397 |
+| SB2 | Trial already used | 397 |
+| SB3 | Subscribed, in the free trial | 397 |
+| SB4 | Payment problem (grace) | 397 |
+| SB5 | Ended | 397 |
+| SB6 | Books tab after a lapse | 398 |
+| SB7 | Offline, end date passed | 398 |
+| SB8 | Child's shelf after a lapse | 398 |
+| SB9 | Settings, Books and buying | 399 |
+| SB10 | Windows Store, 1100 × 760 | 397 |
+| RR1 | Restore, from the top of the Store | 396 |
+| RR2 | Restored | 396 |
+| RR3 | Nothing found, and Redeem a code | 396 |
+| RR4 | "Bought it already?" | 396 |

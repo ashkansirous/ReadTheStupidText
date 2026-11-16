@@ -29,7 +29,7 @@ export const OWNED_CACHE_MS = 5 * 60_000;
 export const NOT_OWNED_CACHE_MS = 30_000;
 export const MAX_CACHED = 500;
 
-const CHECKERS: Readonly<Record<StoreName, StoreChecker>> = {
+export const CHECKERS: Readonly<Record<StoreName, StoreChecker>> = {
   [Store.Android]: googleChecker,
   [Store.Ios]: appleChecker,
   [Store.Windows]: microsoftChecker,
@@ -42,7 +42,7 @@ interface Cached {
 
 const ownedCache = new Map<string, Cached>();
 
-async function proofKey(proof: Proof): Promise<string> {
+export async function proofKey(proof: Proof): Promise<string> {
   const bytes = new TextEncoder().encode(`${proof.store}\n${proof.productId}\n${proof.token}`);
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
   return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");

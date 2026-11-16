@@ -2,14 +2,28 @@ name: store-screenshots
 
 # Slice 291 item 5 (iOS part): the App Store screenshots of both apps from a macOS simulator, the same frames as the Play ones
 # (.maestro/<app>/needs-file/store-shot-phone.yaml): iPhone 6.9", iPhone 6.5" and iPad 13". Manual only (workflow_dispatch), never on a
-# push or pull request. Per app (a job each, in parallel): build the Debug iossimulator-arm64 app (same macOS image, Xcode and workload
-# as dinoreader-ios-sim.yml), then .github/scripts/ios-sim-store-shots.sh boots each simulator, installs the app and Maestro runs
-# .maestro/<app>/store-shot-ios-frames.yaml; each PNG is size-checked against what App Store Connect takes.
-# Zero Actions artifacts (Batch 8): the PNGs go to a DRAFT GitHub Release `store-shots-<app>-<run id>` (Release assets do not count
-# toward the storage quota, a draft creates no tag and is never picked up by find-release.sh, which skips drafts). Fetch them with
-# the `gh release download` line printed in the step summary; delete the draft (`gh release delete <tag> --cleanup-tag`) when done.
+# push or pull request. One job per app and device (matrix app x device, in parallel, fail-fast off, 55 minutes each): every job builds the
+# Debug iossimulator-arm64 app itself (same macOS image, Xcode and workload as dinoreader-ios-sim.yml; no build output is passed between
+# jobs, the repo allows zero Actions artifacts), then .github/scripts/ios-sim-store-shots.sh boots that one simulator, installs the app and
+# Maestro runs the store-shot flows: Dino one flow per shot (.maestro/dino/store-shot-ios-<n>-<screen>.yaml, each its own Maestro run with
+# a 7-minute limit, a failed shot retried once on its own, a shot already taken kept), RTST its single .maestro/rtst/store-shot-ios-frames.yaml
+# (10-minute limit per attempt).
+# Each PNG is size-checked against what App Store Connect takes; the job summary says which shots the device produced.
+# Zero Actions artifacts (Batch 8): each job's PNGs go to its own DRAFT GitHub Release `store-shots-<app>-<device>-<run id>` (a tag unique per
+# job, so jobs never race to create one, and the same for every attempt of the run; Release assets do not count toward the storage quota, a
+# draft creates no tag and is never picked up by find-release.sh, which skips drafts). Fetch them with the `gh release download` line printed
+# in each job's step summary; delete the draft (`gh release delete <tag> --cleanup-tag`) when done.
+# HOW TO RESUME (a job timed out, was cancelled or lost a shot): each shot is uploaded to the draft as soon as it is taken, and every job starts by
+# downloading the PNGs its draft already holds into its output folder; the script keeps a PNG that has the expected name and an accepted size and
+# retakes only the rest. So: `gh run rerun <run id> --failed` (same run, same drafts), or a new dispatch with `-f resume_run=<run id>` (starts from
+# that run's drafts and copies their PNGs into this run's own drafts).
 #
-# Dispatch: gh workflow run store-screenshots.yml --ref <branch> -f app=both   (app: both | dino | rtst)
+# Dispatch: gh workflow run store-screenshots.yml --ref <branch> -f app=both -f device=all
+#   app: both | dino | rtst      device: all | iphone-6.5 | ipad-13 | iphone-6.9 (one device alone, e.g. to redo a failed one)
+#   resume_run: optional run id whose draft releases supply the shots already taken (only a run on this same commit; this run's own draft wins)
+# Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 2700 s (45 min), its step 48 min, the job 55 min (about 6 min of
+# setup before the step, a minute or two of hand-over after it). The worst case (boot 300 + five shots x two attempts x 420 + a restart 300 =
+# 4800 s) does not fit one job; the script then stops starting attempts, names the missing shots, exits 1, and the rerun finishes it.
 
 on:
   workflow_dispatch:
@@ -23,14 +37,29 @@ on:
           - dino
           - rtst
         default: both
+      device:
+        description: 'Which simulator to shoot on.'
+        required: true
+        type: choice
+        options:
+          - all
+          - iphone-6.5
+          - ipad-13
+          - iphone-6.9
+        default: all
+      resume_run:
+        description: 'Optional run id: start from the shots in that run draft releases (store-shots-<app>-<device>-<run id>).'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   shots:
-    name: shots-${{ matrix.app }}
-    timeout-minutes: 120
+    name: shots-${{ matrix.app }}-${{ matrix.device }}
+    timeout-minutes: 55
     runs-on: xcode-27
     permissions:
       contents: write   # gh release create --draft (the shots' home)
@@ -38,9 +67,12 @@ jobs:
       fail-fast: false
       matrix:
         app: ${{ fromJSON(inputs.app == 'both' && '["dino","rtst"]' || format('["{0}"]', inputs.app)) }}
+        device: ${{ fromJSON(inputs.device == 'all' && '["iphone-6.5","ipad-13","iphone-6.9"]' || format('["{0}"]', inputs.device)) }}
     env:
       APP: ${{ matrix.app }}
+      DEVICE: ${{ matrix.device }}
       GH_TOKEN: ${{ github.token }}
+      RESUME_RUN: ${{ inputs.resume_run }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,14 +84,19 @@ jobs:
             {
               echo "PROJECT=src/Dino/DinoReader.App/DinoReader.App.csproj"
               echo "BUILD_DIR=src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64"
+              # One flow per shot; the script expands the glob and runs them in name order.
+              echo "FLOW=.maestro/dino/store-shot-ios-[0-9]-*.yaml"
+              # One PNG per flow file; the script fails the device when fewer exist at the end.
+              echo "EXPECTED_SHOTS=5"
             } >> "$GITHUB_ENV"
           else
             {
               echo "PROJECT=src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj"
               echo "BUILD_DIR=src/Rtst/ReadTheStupidText.Mobile/bin/Debug/net11.0-ios/iossimulator-arm64"
+              echo "FLOW=.maestro/rtst/store-shot-ios-frames.yaml"
+              echo "EXPECTED_SHOTS=4"
             } >> "$GITHUB_ENV"
           fi
-          echo "FLOW=.maestro/$APP/store-shot-ios-frames.yaml" >> "$GITHUB_ENV"
           echo "OUT_DIR=$RUNNER_TEMP/shots" >> "$GITHUB_ENV"
 
       - name: Set up .NET 11
@@ -103,32 +140,87 @@ jobs:
       - name: Install Maestro
         run: bash .github/scripts/ios-sim-install-maestro.sh
 
-      - name: Take the shots on three simulators
-        id: shots
-        timeout-minutes: 90
-        run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR"
+      # Resume: the PNGs this run's own draft release already holds are downloaded into the output folder; only when it holds none, and resume_run
+      # is a run on this same commit, that run's draft is used. This run's draft is created (and given those PNGs) so each shot can be uploaded
+      # the moment it is taken; a failed create fails the step.
+      - name: Fetch earlier shots and open this run's draft release
+        run: |
+          set -euo pipefail
+          TAG="store-shots-$APP-$DEVICE-$GITHUB_RUN_ID"
+          DIR="$OUT_DIR/$DEVICE"
+          mkdir -p "$DIR"
+          have_png() { ls "$DIR"/*.png >/dev/null 2>&1; }
+          # 1. This run's own draft first (a rerun of this run, or a resume_run dispatch that already took shots).
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --clobber 2>/dev/null || true
+          # 2. Only when it is absent or holds no PNG: the draft of resume_run, and only from a run on the same commit (an older commit may
+          #    have other flows or UI, and its PNGs would pass the size check).
+          if ! have_png && [ -n "${RESUME_RUN:-}" ] && [ "$RESUME_RUN" != "$GITHUB_RUN_ID" ]; then
+            SRC_SHA="$(gh run view "$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha 2>/dev/null || true)"
+            if [ "$SRC_SHA" = "$GITHUB_SHA" ]; then
+              gh release download "store-shots-$APP-$DEVICE-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --clobber 2>/dev/null || true
+            else
+              echo "::warning::resume_run $RESUME_RUN is not on this commit (its sha: ${SRC_SHA:-unknown}, this run: $GITHUB_SHA): starting with no shots"
+              echo "- resume_run $RESUME_RUN ignored: it ran on another commit (${SRC_SHA:-sha unknown}), so all shots are taken" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          if have_png; then
+            echo "Earlier shots kept:"
+            ls -1 "$DIR"
+          else
+            echo "::notice::no earlier shots: all shots are taken"
+          fi
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "Store screenshots, $APP, $DEVICE, run $GITHUB_RUN_ID" \
+              --notes "App Store screenshots of $APP on $DEVICE from run $GITHUB_RUN_ID (store-screenshots.yml). Delete this draft once the PNGs are fetched."
+            # Also proves on the first run that gh finds a draft by its tag (the shot uploads and the hand-over depend on it).
+            if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "::error::the draft release $TAG was created but gh cannot find it by tag"
+              exit 1
+            fi
+            if have_png; then
+              gh release upload "$TAG" "$DIR"/*.png --clobber --repo "$GITHUB_REPOSITORY"
+            fi
+          fi
+          echo "STORE_SHOTS_TAG=$TAG" >> "$GITHUB_ENV"
 
-      # Runs even when a device failed: the shots that did come out are kept. The draft is skipped when there are none.
+      # About 6 minutes of setup come before this step (3 min 20 s measured, run 43748250465); the script starts no attempt after 45
+      # minutes (SCRIPT_BUDGET_SECONDS 2700; the worst case, 4800 s, does not fit and the rerun finishes it), and the hand-over step below
+      # needs a minute or two. A shot attempt is killed after 7 minutes (a driver start of up to 3 + the longest shot), the RTST unit after 10.
+      - name: Take the shots on the simulator
+        id: shots
+        timeout-minutes: 48
+        run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR" "$DEVICE"
+
+      # Runs even when a shot failed: the shots that did come out are kept. Each was already uploaded when taken; this uploads them all again,
+      # so a failed per-shot upload is made good.
       - name: Hand the shots over (draft release, no artifact)
         if: always()
         run: |
           set -euo pipefail
+          TAG="store-shots-$APP-$DEVICE-$GITHUB_RUN_ID"
           if ! find "$OUT_DIR" -name '*.png' -print -quit 2>/dev/null | grep -q .; then
             echo "::warning::No screenshot was taken: nothing to hand over."
+            echo "### $APP on $DEVICE: no shot was taken" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          TAG="store-shots-$APP-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           FILES=()
           while IFS= read -r png; do
             FILES+=("$png")
           done < <(find "$OUT_DIR" -name '*.png' | sort)
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
-            --title "Store screenshots, $APP, run $GITHUB_RUN_ID" \
-            --notes "App Store screenshots of $APP from run $GITHUB_RUN_ID (store-screenshots.yml). Delete this draft once the PNGs are fetched." \
-            "${FILES[@]}"
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "Store screenshots, $APP, $DEVICE, run $GITHUB_RUN_ID" \
+              --notes "App Store screenshots of $APP on $DEVICE from run $GITHUB_RUN_ID (store-screenshots.yml). Delete this draft once the PNGs are fetched."
+          fi
+          gh release upload "$TAG" "${FILES[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           {
-            echo "### Shots of $APP: ${#FILES[@]} PNG(s) in the draft release \`$TAG\`"
+            echo "### Shots of $APP on $DEVICE: ${#FILES[@]} PNG(s) in the draft release \`$TAG\`"
+            for png in "${FILES[@]}"; do
+              echo "- $(basename "$png")"
+            done
             echo '```'
             echo "gh release download $TAG --repo $GITHUB_REPOSITORY --dir <folder>"
             echo '```'
+            echo "Resume what is missing: gh run rerun $GITHUB_RUN_ID --failed (or a new dispatch with -f resume_run=$GITHUB_RUN_ID)"
           } >> "$GITHUB_STEP_SUMMARY"

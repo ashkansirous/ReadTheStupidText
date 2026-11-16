@@ -5,7 +5,7 @@
 
 > **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
-*Parked: second listen needs an Artifact listening page (interactive session); 3 extra-ezafe items.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
+*Third listen later (user 2026-11-15, PR #1183, 626ffbab); 3 extra-ezafe items open.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
 *Park note (night 2026-11-14-0726):* parked again by housekeeping 1 for the same reason (the second listen needs an Artifact page; headless wave sessions have no Artifact tool). Moved back to `planned` by the 2026-11-14-0726 feedback loop per the user's 2026-11-01 rule; a night run can only re-park it, so it needs an interactive session.
 
@@ -71,9 +71,13 @@ Result: the missing-ezafe fix (Ganji Adabi, the default voice, and Slice 342's c
 
 Third listen page (2026-11-14, same page, `v3-*` answers, 16 clips): https://claude.ai/artifact/Cfes6Q7N1HvgG3HYnmHMjY . Gyro `gyro-1` evidence: the app's `SherpaEngineFactory.Generate` returns the engine samples untrimmed (no trim or silence step in `src/`); rendered as the app does, the WAV ends with 0.00-0.04 s of silence and the phonemizer output has the word (`xˈuːb ˈast`). Gyro simply says it very short: the unit with «است» is only about 0.11 s longer than the same unit without it (Ganji +0.37 s, Mana +0.20 s). So it is the model, not the renderer. The page also has comma / ZWNJ / length-scale 1.15 variants for `ganji-2`, `gyro-2`, `gyro-3`.
 
+**User answer 2026-11-15:** third listen "later". The page stays up with its `v3-*` answers empty; no wave renders or asks again until the user opens it.
+
 - [ ] Fix: `gyro-1` (Gyro, «... خیلی خوب است.»): the final «است» ("ast") is not spoken (second listen, 2026-11-14). Find whether the sentence-final word is cut by the renderer (trailing audio trimmed, end-of-sentence handling) or by the model; fix through the review gate; re-render for a third listen.
 - [ ] Fix: the extra-ezafe items (`ganji-2`, `gyro-2` now on «روز» too, `gyro-3`): no text mark stops them (espeak's phonemes are already right). Try the cheapest model-side options first and render each on one page for a third listen: a short break between the two words (comma or zero-width non-joiner at render time), a different noise/length scale for these two voices, or the same sentence on the other pack voices. If none works, record it as the model's limit for Ganji and Gyro (the default voice, Ganji Adabi, and Mana are right).
 
 ## Verification
 
 The user's answers are recorded here. Each wrong item has a fix merged and its clip re-rendered on the same page for a second listen. Second listen done 2026-11-14 (above): the default voice is right; Ganji's and Gyro's open items need a third listen after their fixes.
+
+**Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: the second listen is an Artifact listening page, which needs an interactive session (headless waves have no Artifact tool) (3 extra-ezafe items; park reason in the slice file; the second listen of 342, built in #1098, is the same page: [342](docs/plan/slices/342-farsi-voice-pack.md))`.

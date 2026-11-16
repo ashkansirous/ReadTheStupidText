@@ -416,9 +416,22 @@
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurer les achats</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Utiliser un code</value></data>
   <data name="Store_BuyFailed" xml:space="preserve"><value>L’achat n’a pas abouti. Veuillez réessayer.</value></data>
+  <data name="Store_ManageFailed" xml:space="preserve"><value>Impossible d’ouvrir les réglages de l’abonnement. Veuillez réessayer.</value></data>
   <data name="Store_FooterPaid" xml:space="preserve"><value>Certains livres coûtent un peu. Ils s’achètent avec votre compte de la boutique, et rien sur vous ni sur votre enfant ne nous est envoyé.</value></data>
   <data name="Wait_BuyingBook" xml:space="preserve"><value>En attente de la boutique…</value></data>
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Vérification de vos achats…</value></data>
+  <data name="Sub_Title" xml:space="preserve"><value>Tous les livres avec un abonnement</value></data>
+  <data name="Sub_Line" xml:space="preserve"><value>Ouvrez tous les livres tant que vous êtes abonné. Les livres que vous achetez restent à vous pour toujours.</value></data>
+  <data name="Sub_Monthly" xml:space="preserve"><value>Essai gratuit, puis {0} par mois</value></data>
+  <data name="Sub_Yearly" xml:space="preserve"><value>Essai gratuit, puis {0} par an</value></data>
+  <data name="Sub_Terms" xml:space="preserve"><value>7 jours gratuits pour les nouveaux abonnés. Ensuite, l’abonnement se renouvelle tout seul chaque mois ou chaque année au prix affiché, jusqu’à ce que vous le résiliiez dans votre compte de la boutique. Résiliation possible à tout moment.</value></data>
+  <data name="Sub_TermsLink" xml:space="preserve"><value>Conditions d’utilisation</value></data>
+  <data name="Sub_PrivacyLink" xml:space="preserve"><value>Politique de confidentialité</value></data>
+  <data name="Sub_Manage" xml:space="preserve"><value>Gérer l’abonnement</value></data>
+  <data name="Sub_Active" xml:space="preserve"><value>Vous êtes abonné. Tous les livres sont ouverts.</value></data>
+  <data name="Sub_Again" xml:space="preserve"><value>Se réabonner</value></data>
+  <data name="Sub_BuyThis" xml:space="preserve"><value>Acheter ce livre</value></data>
+  <data name="Sub_Locked" xml:space="preserve"><value>Verrouillé : l’abonnement est terminé</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Livres à récupérer depuis la boutique</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Les livres gratuits reviennent tout seuls. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Les livres gratuits encore dans la boutique reviennent tout seuls. Un livre que la boutique ne propose plus ne revient pas, mais ses enregistrements restent dans le fichier de sauvegarde. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>

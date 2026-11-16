@@ -1,27 +1,32 @@
 # Store listing: Farsi (RTL) (`fa`)
 
-> **Machine draft by Claude, completed 2026-11-13 (Slice 374) against the current `en.md`; needs a native read (line in `docs/plan/unverified.md`). Not pushed yet.** Locales: Play `fa`; Microsoft Store `fa` (to be confirmed at push). **App Store: Persian is not an App Store localization** (Apple's list of 50 languages, https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13, does not include it), so there is no Farsi App Store text for RTST and it is not mapped to another language. Composition as in `fr.md`, without the App Store parts.
+> **Machine draft by Claude, completed 2026-11-13 (Slice 374) against the current `en.md`; needs a native read (line in `docs/plan/unverified.md`). Rewritten What / Why / Who / Features and pushed 2026-11-15 (Slice 291): Play live; Microsoft Store with the next RTST release.** Locales: Play `fa`; Microsoft Store `fa` (to be confirmed at push). **App Store: Persian is not an App Store localization** (Apple's list of 50 languages, https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13, does not include it), so there is no Farsi App Store text for RTST and it is not mapped to another language. Composition as in `fr.md`, without the App Store parts.
 
 Search terms (Microsoft Store, 7, each <= 30 chars): خواندن با صدای بلند; تبدیل متن به گفتار; تی تی اس; خواندن متن انتخاب‌شده; خواننده‌ی پی‌دی‌اف; صداهای طبیعی آفلاین; متن‌خوان
-Short description (Play <= 80; first line of the Microsoft description): هر متنی را با صدای طبیعی و بدون اینترنت بلند بخوانید، با سرعت ۰٫۵ تا ۲ برابر.
+Short description (Play <= 80; first line of the Microsoft description): صداهای طبیعی هر متنی را آفلاین و به ۱۵ زبان با صدای بلند می‌خوانند.
 
 ## Long description (Microsoft Store <= 10,000 chars; Google Play <= 4,000)
 
 Read The Stupid Text هر متنی را بلند می‌خواند تا به‌جای خیره شدن به صفحه، گوش کنید.
 
+صداها طبیعی‌اند و روی دستگاه شما اجرا می‌شوند، پس متن شما هرگز از آن بیرون نمی‌رود.
+
+برای کسانی که شنیدن را به خواندن ترجیح می‌دهند: یک مقاله بلند، یک PDF، یادداشت‌های درسی، یک صفحه کتاب یا متنی به زبانی که کند می‌خوانید.
+
 در ویندوز در نوار وظیفه (سینی سیستم) می‌نشیند. در تقریباً هر برنامه‌ای متنی را انتخاب یا کپی کنید تا بلافاصله خوانده شود. برای خواندن آنچه کپی کرده‌اید، Ctrl+Win+R را فشار دهید. (ترمینال‌ها انتخاب را گزارش نمی‌کنند، پس متن را در آن‌ها کپی کنید.)
 
 در اندروید، متنی را بچسبانید یا تایپ کنید، فایل .txt، .pdf یا .docx را باز کنید، یا صفحه‌ای را با دوربین اسکن کنید و سپس پخش را بزنید.
 
-- صداهای طبیعی که روی دستگاه شما اجرا می‌شوند
-- سرعت خواندن از ۰٫۵ تا ۲ برابر
+- صداهای طبیعی به ۱۵ زبان که روی دستگاه شما اجرا می‌شوند
+- انتخاب صدا و سرعت خواندن از ۰٫۵x تا ۲x
+- ترجمهٔ اختیاری پیش از خواندن، روی دستگاه شما (ترجمهٔ ماشینی، کیفیت متغیر است، نه برای همه‌ی زبان‌ها)
 - پس از دانلود بسته‌ی صدا بدون اینترنت کار می‌کند (یک دانلود یک‌باره در اولین اجرا)؛ متن‌ها، فایل‌ها و اسکن‌های شما هرگز دستگاهتان را ترک نمی‌کنند
 - بدون حساب کاربری و بدون تبلیغات
 - شمارش‌های اختیاری و ناشناس استفاده، بدون متن، نام یا شناسه؛ هر زمان از تنظیمات خاموش‌شان کنید
 
 ## Google Play only: download note (append to the full description)
 
-اولین بار که برنامه را در اندروید اجرا می‌کنید، بسته‌ی صدایی حدود ۱۴۵ مگابایت دانلود می‌کند، پس یک بار به اینترنت نیاز دارد (Wi-Fi توصیه می‌شود). تا پایان دانلود، برنامه با صدای داخلی گوشی می‌خواند. اسکن هم یک بسته‌ی کوچک تشخیص متن برای زبان شما دانلود می‌کند. فقط همین بسته‌ها دانلود می‌شوند: متن‌ها، فایل‌ها و اسکن‌های شما روی دستگاهتان می‌مانند و پس از نصب صدا، خواندن از شبکه استفاده نمی‌کند. تنها کاربرد دیگر شبکه، شمارش‌های اختیاری و ناشناس استفاده و گزارش‌های خرابی است که می‌توانید از تنظیمات خاموش کنید.
+اولین بار که برنامه را در اندروید اجرا می‌کنید، بسته‌ی صدایی حدود ۱۴۵ مگابایت دانلود می‌کند، پس یک بار به اینترنت نیاز دارد (Wi-Fi توصیه می‌شود). تا پایان دانلود، برنامه با صدای داخلی گوشی می‌خواند. اسکن هم یک بسته‌ی کوچک تشخیص متن برای زبان شما دانلود می‌کند. اولین بار که از یا به یک زبان ترجمه می‌کنید، یک مدل ترجمه حدود ۳۰ مگابایت هم یک بار از سرورهای Google دانلود می‌شود؛ هیچ بخشی از متن شما ارسال نمی‌شود. فقط همین بسته‌ها دانلود می‌شوند: متن‌ها، فایل‌ها و اسکن‌های شما روی دستگاهتان می‌مانند و پس از نصب صدا، خواندن از شبکه استفاده نمی‌کند. تنها کاربرد دیگر شبکه، شمارش‌های اختیاری و ناشناس استفاده و گزارش‌های خرابی است که می‌توانید از تنظیمات خاموش کنید.
 
 ## Microsoft Store only: download note (append to the full description)
 

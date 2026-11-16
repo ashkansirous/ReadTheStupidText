@@ -186,9 +186,10 @@ accepted picture's actual size in the art record. The size line never changed th
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"every character stays whole
-in the top 70% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above
-the 70% line. The bottom 30% is calm scene (grass, flowers, floor or water) with no character or any part
-of one in it, never a plain empty strip"**. "Faces and action" alone is not enough: 3.1 Pro kept the faces
+in the top 68% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above
+the 68% line. The bottom 32% is calm scene (grass, flowers, floor or water) with no character or any part
+of one in it, never a plain empty strip"**. The prompt asks for 32% free and the check (step 5) passes at
+27% free, the 73% line: 5 points of wiggle room (the user, 2026-11-15). "Faces and action" alone is not enough: 3.1 Pro kept the faces
 up and still walked the Mouse's body, feet and berry into the bottom strip (Slice 350, 2026-11-13). When
 the phone is upright the words panel covers up to 30% of the picture from the bottom (Slice 122; before
 it, 58%, which is why the Slice 119 pigs pictures used the top 40%).
@@ -218,8 +219,8 @@ trousers or none).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
 - [ ] No text, letters, words or signs anywhere (signatures included).
-- [ ] **Every character is whole above the 70% line** (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (for a scratch candidate it uses the `<name>.small.jpg` beside it and writes the overlay beside it, or into `-OutDir <folder>`; for a picture whose path has a `\content\dino\` segment, in any checkout, it writes the small copy and overlay to `%TEMP%\line70\<12-hex hash of the full path>\`, never into the repo; `-OutDir` overrides both) and read the `<picture>.line70.png` whose path it prints (red line at 70%, bottom 30% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
-- [ ] The bottom 30% is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
+- [ ] **Every character is whole above the 73% line** (at least the bottom 27% free of characters; prompts ask for 32%, the user, 2026-11-15) (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (for a scratch candidate it uses the `<name>.small.jpg` beside it and writes the overlay beside it, or into `-OutDir <folder>`; for a picture whose path has a `\content\dino\` segment, in any checkout, it writes the small copy and overlay to `%TEMP%\line70\<12-hex hash of the full path>\`, never into the repo; `-OutDir` overrides both) and read the `<picture>.line70.png` whose path it prints (red line at 73%, bottom 27% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
+- [ ] The bottom of the picture is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
 - [ ] Every character has the right number of arms, hands, legs, paws and wings (Slice 350: a lion with three hands, an extra limb).
 - [ ] Objects and tools have their real shape, not melted or twisted.
@@ -250,6 +251,44 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   `await window.__waitForPicture()` right after: it returns `READY <n>` the moment the new picture exists (call it again
   on `WAITING`). Grab and save at once. Wait for anything else the same way (a thumbnail after a paste, a menu): check
   for it in a short loop, don't sleep a fixed time.
+- **The short per-picture sequence (Slice 350 tooling; every step resends the agent's whole context, so steps are the cost).
+  One illustrator agent per picture; its brief gives only that page's prompt lines, and it never reads `gemini-grab.js` or the whole
+  slice file.** Steps, each one assistant turn (calls in one bullet go out together):
+  **Lock owner: `<stem>-<page>` (the cover is `<stem>-cover`), one per picture**, so two agents on one book never share an owner.
+  1. Browser batch, no lock yet: open `https://gemini.google.com/app` in the same tab (new chat), then `javascript_tool` with the loader line
+     below, then `window.__geminiHealth()` and `window.__modelLabel()`. **Model check:** `__modelLabel()` returns the mode picker's label (the
+     button whose aria-label reads "Open mode picker, currently Pro"; 3.1 Pro shows as `Pro`) and must equal the model the brief names. A
+     different label (Flash-Lite, anything else) or `NO PICKER` = stop, set the picker to the brief's model, check again, and send no prompt
+     before it matches. Health `CAPTCHA` or `HUNG` = stop and report.
+  2. `pwsh .claude/skills/create-dino-story/gemini-step.ps1 prepare -Owner <owner> -Picture <line-up>[,<place sheet>]` (usage check, lock
+     Take, clipboard; two files go on the clipboard as a file list so one ctrl+v may attach both). From here the lock is HELD: release it
+     (`gemini-step.ps1 release -Owner <owner>`) on every path out, including a stop or a failure. The lock goes stale 180 s after Take, so do step 3
+     in the very next call (its wait is 15 s); if more than 2 minutes pass first, run `gemini-step.ps1 touch -Owner <owner>` (refreshes the lock only; never `put`, which would replace a two-picture clipboard) before pasting.
+  3. One browser batch: ctrl+v (own `tabId`), then `await window.__waitAttached(<n>)` (a number = pasted; text = failed: click the prompt
+     box once and paste again, or `gemini-step.ps1 put -Owner <owner> -Picture <second file>` (refused if you no longer hold the lock) and paste the
+     second alone; still failing: release and report).
+  4. `gemini-step.ps1 release -Owner <owner>` **and** `await window.__drawPicture(<prompt>, <n>)` together: one call that waits for the
+     attachment(s), runs `__setupPicture`, `__waitForPicture` and `__grab(1)` and returns one line ending `bytes=<n>` (only a real blob list gives
+     bytes; any other answer is an error to read); a line with a problem is `__setupPicture`'s or `__sendChecked`'s own answer, with their rules.
+     `__drawPicture` refuses a chat that already has a sent message or a picture: never send again in a chat that sent.
+  5. `gemini-step.ps1 save -Owner <owner> -Path <out folder>/cand-<page>.jpg -Bytes <n>` (`-Bytes` is required; it refuses without a positive size):
+     lock, untouched save of a download of exactly that size, small copy, `line70`, unlock;
+     prints one line `SAVED <path> <WxH> <bytes> | small <path> | line70 <overlay>` (exit 2 = saved, small copy failed: never download again).
+  6. Read the small copy and the line70 overlay together (step 5's check); then rename or delete.
+  The lock covers only steps 2-3 (clipboard Put to the confirmed paste) and step 5 (save); the `__grab` click inside step 4 is outside the lock, which is
+  safe because `save` takes only a download of exactly the printed size. A rejected picture is a new chat: start again at step 1 (at most 3 tries).
+  **Loader, one line, once per page load and again after every new chat** (the page reload of step 1 drops the script; the file stores itself
+  in the profile's localStorage on its first injection; the version is a hash of the file's source): `localStorage.grabver==='8531151f'?(eval(localStorage.grabsrc),typeof window.__drawPicture):'STALE'`
+  must answer `function`. `STALE` (or an error from `eval`) means the stored copy is missing or old: inject `gemini-grab.js` whole once with
+  `javascript_tool` (it answers `ready 8531151f` and stores itself), then use the loader from then on. `gemini-grab.test.mjs` fails when this hash is not the file's.
+  **Recovery per chat** (rule 3, *Recover before you redraw*): open the chat, load, then one call
+  `await window.__recoverChat()` (scrolls up to load every picture, then downloads each one oldest first, at least 20 s apart (a smaller `gapMs` is raised to 20 s), waiting inside the
+  script; never use `sleep` calls) answers `RECOVER <n> pictures | 1: <size> | 2: <size> ...` (one size per picture, 0 = no blob); then one
+  `gemini-step.ps1 collect -Owner <owner> -Path <folder>/<chat prefix> -Bytes <the sizes, comma-separated, in order>` saves them as `<prefix>-1`, `-2`...
+  untouched with small copies, skips a name already saved (a re-run is safe) and prints MISSING for any download that never arrived. About 3 steps a chat. Chrome wrote only the first download of a tab
+  in the 2026-11-14 Freddy run (probably its "multiple automatic downloads" block, which a real user click resets; unverified): if
+  `collect` reports MISSING for the later ones, allow automatic downloads for gemini.google.com once in Chrome's site settings
+  (`chrome://settings/content/automaticDownloads`, a user step) and run the chat again; a chat must not need a new tab per picture.
 - **Save through the download, not the clipboard** (2026-10-26): inject `gemini-grab.js` with
   `javascript_tool` (once per page load; again after a reload or new chat), run `await window.__grab(1)` (clicks
   the newest picture's button), then

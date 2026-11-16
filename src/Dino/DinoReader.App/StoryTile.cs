@@ -11,6 +11,18 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public string Title => DisplayTitle ?? Story.Title;
 
+	/// <summary>Slice 384: the subscription that opened this book has ended: greyed out on the parents' shelf with Subscribe again and Buy this book (the child's shelf does not get the tile at all).</summary>
+	public bool IsLapsed { get; init; }
+
+	/// <summary>The cover and title of a locked book are dimmed; the two actions under them are not.</summary>
+	public double TileOpacity => IsLapsed ? 0.45 : 1.0;
+
+	public string LockedLabel => AppResources.Sub_Locked;
+
+	public string SubscribeAgainLabel => AppResources.Sub_Again;
+
+	public string BuyThisLabel => AppResources.Sub_BuyThis;
+
 	public bool HasImage => CoverImagePath is not null;
 
 	public bool ShowGeneratedCover => CoverImagePath is null;
@@ -48,19 +60,19 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 	/// <summary>The chip's text, also what a screen reader says.</summary>
 	public string YourVoiceLabel => AppResources.Record_You;
 
-	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null)
+	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null, bool lapsed = false)
 	{
 		string? image = library.TryResolveFile(story.Id, story.CoverImageFile);
-		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode) { DisplayTitle = displayTitle };
+		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode) { DisplayTitle = displayTitle, IsLapsed = lapsed };
 	}
 }
 
 /// <summary>Maps the Core layout (<see cref="GalleryLayout"/>) onto the grid's items.</summary>
 public static class GalleryItems
 {
-	public static List<StoryTile> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null) =>
+	public static List<StoryTile> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null, Func<Story, bool>? lapsedOf = null) =>
 		GalleryLayout.Build(stories)
-			.Select(e => StoryTile.From(e.Story, library, mode, titleOf?.Invoke(e.Story)))
+			.Select(e => StoryTile.From(e.Story, library, mode, titleOf?.Invoke(e.Story), lapsedOf?.Invoke(e.Story) ?? false))
 			.ToList();
 }
 

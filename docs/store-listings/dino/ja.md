@@ -1,14 +1,47 @@
 # Store listing: Japanese (`ja`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `ja-JP`; App Store `ja`; Microsoft Store `ja`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `ja-JP`; App Store `ja`; Microsoft Store `ja`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): 登場人物ごとに声が違う、読み聞かせ絵本アプリ。
+Play short description (<= 80): 登場人物ごとに声が違う。おばあちゃんが自分の声でオオカミ役も
 Play search phrases used in the text: 読み聞かせ, 絵本, 寝る前のお話, 子ども向け童話
 App Store subtitle (<= 30): 登場人物ごとに違う声
 App Store keywords (<= 100 bytes): 絵本,読み聞かせ,童話,子供,寝る前,昔話,おはなし,幼児,録音,知育
 App Store promotional text (<= 170): 3歳から9歳の子ども向けの読み聞かせ絵本。登場人物ごとに声が違い、ご家族の声も録音できます。広告なし。4話は無料、ほかは1話0.99ドル。15言語対応。
 Microsoft search terms (7): 読み聞かせ; 絵本; 寝る前のお話; 童話; 子供向け; 昔話; 登場人物の声
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+Dino Book Reader では、登場人物ごとに声が違います。ナレーターがお話を語り、オオカミも子ぶたたちもそれぞれの声で話し、お父さん、お母さん、おじいちゃん、おばあちゃんは、どの登場人物にも自分の声を録音できます。おばあちゃんがオオカミになれます。
+
+どのお話も15言語で楽しめます。学校の言語のほかに家庭の言語を大切にしているご家族に向けて、ペルシャ語、アラビア語、スウェーデン語、ノルウェー語、デンマーク語、フィンランド語などに対応しています。おとなの方が2つか3つのお話の言語を選ぶと、お子さまは読みながら切り替えられ、同じお話を聞いて、2つの言語で言葉を覚えられます。
+
+広告なし。アカウント不要。ダウンロード済みのお話はオフラインで読め、録音はお使いの端末にだけ残ります。
+
+4つの絵本は無料です：ライオンとネズミ、ジンジャーブレッドマン、3びきのこぶた、Xが宝のしるし。ほかのお話は1話ずつ一度買えばずっと使えます。1話0.99ドルです（Google Playにはお使いの通貨で価格が表示されます）。購入はおとなの方がペアレンタルゲートの向こうで行い、以前の購入はいつでも復元できます。
+
+3歳から9歳のお子さまに
+お子さまは聞いて、絵を見て、目で追います。寝る前のお話にも、2つの言語で言葉を覚えるバイリンガルのお子さまにも向いています。設定、本選び、声の録音は、おとなの方がペアレンタルゲートの向こうで行います。
+
+定番のお話を、やさしく語り直して
+厳選した絵本を、小さなお子さま向けに語り直しました。どのページにも絵があります。
+
+ほかにも
+- 読み上げている文が光ります。
+- 絵だけ、文字だけ、絵と文字の3つの表示。
+- 読み上げ速度は0.8倍から1.2倍、動物の効果音はオンとオフを切り替えられます。
+- 寝る前に使える夜のテーマ。
+- どの登場人物も、どのページでも、どのお話の言語でも録音でき、録音はバックアップと復元ができます。
+
+対応言語
+英語、アラビア語、中国語、デンマーク語、オランダ語、ペルシャ語、フィンランド語、フランス語、ドイツ語、日本語、ノルウェー語、ポルトガル語、ロシア語、スペイン語、スウェーデン語に、アプリ、お話、声が対応しています。
+
+安心とプライバシー
+- 広告なし、アカウント不要。あなたや購入についての情報は保存せず、ストアの証明は確認後に破棄されます。
+- 購入、設定、録音、バックアップはペアレンタルゲートの向こうにあります。
+- 名前や識別子を含まない匿名の利用回数の集計は任意で、設定からオフにできます。
 
 ## Description
 

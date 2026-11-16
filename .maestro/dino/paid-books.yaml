@@ -59,8 +59,9 @@ onFlowComplete:
     timeout: 30000
 # Sold books show the store's own price on a Buy pill. Single-quoted regex with the dollar sign escaped (a bare $ is an end anchor); the pill may be read by its hint "Buy <title> for $0.99" too.
 # Both sold books have a pill, so a second match (index 1) exists.
-- extendedWaitUntil:
-    visible:
+# Slice 384: the subscription card heads the list and pushes the second Buy pill below the fold, so scroll to it.
+- scrollUntilVisible:
+    element:
       text: 'Buy .*\$0\.99.*'
       index: 1
     timeout: 30000
@@ -72,14 +73,18 @@ onFlowComplete:
 - assertVisible:
     id: StoreRedeemCode
 # Buy: the store's sheet is pretended (about 1 s, so the wait overlay shows), then the book downloads like any other and its Buy pill goes away: only the other sold book keeps one.
+# The scroll above may have moved the first pill off the top, so scroll back to it by its title and tap that very pill.
+- scrollUntilVisible:
+    element:
+      text: 'Buy The Three Little Pigs.*'
+    direction: UP
+    timeout: 20000
 - tapOn:
-    text: 'Buy .*\$0\.99.*'
-    index: 0
+    text: 'Buy The Three Little Pigs.*'
 # The wait overlay shows and goes within about 2 s, too brief to catch on screen: the usage line "[Usage] seq=N wait_shown" (expect-log above) proves it appeared.
 - extendedWaitUntil:
     notVisible:
-      text: 'Buy .*\$0\.99.*'
-      index: 1
+      text: 'Buy The Three Little Pigs.*'
     timeout: 60000
 - assertVisible:
     text: 'Buy .*\$0\.99.*'

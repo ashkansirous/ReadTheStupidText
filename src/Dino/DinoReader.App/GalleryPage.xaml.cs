@@ -400,6 +400,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		StoreClient store = _services.GetRequiredService<StoreClient>();
 		store.LibraryChanged -= OnLibraryChanged;
 		store.LibraryChanged += OnLibraryChanged;
+		store.Sales.Purchases.Changed -= OnPurchasesChanged; // Slice 384: a subscription that ended or came back locks or opens its books
+		store.Sales.Purchases.Changed += OnPurchasesChanged;
 		ShelfAudioPacks shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
 		shelfAudio.Changed -= OnShelfAudioChanged;
 		shelfAudio.Changed += OnShelfAudioChanged;
@@ -522,9 +524,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		CancelSheetCount();
 		_mode.PropertyChanged -= OnModeChanged;
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
+		_services.GetRequiredService<StoreClient>().Sales.Purchases.Changed -= OnPurchasesChanged;
 		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
 		_services.GetRequiredService<StagedBookUpdates>().Staged -= OnBookUpdateStaged;
 	}
+
+	// Slice 384: the store said something new (raised on any thread); the shelf is built again so a lapsed subscription's books grey out or leave, and a renewed one's come back.
+	private void OnPurchasesChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(async () =>
+	{
+		await RefreshShelfAsync();
+	});
 
 	// Slice 313: a newer book text was staged while the shelf shows (raised on a background thread). The refresh applies it behind the "Updating your books" overlay when the shelf is free;
 	// the packs made for the new text follow through StagedBookUpdates.Swapped (ShelfAudioPacks plans again), so nothing is retried here: a text that could not be applied waits for the next appearing.
@@ -594,6 +603,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		ApplyMode();
 		ShowScreen();
+		_ = RequestShelfRefresh(true); // Slice 384: the child's shelf leaves out the books a lapsed subscription locked; the parents' shows them greyed, so the tiles are built again for the new mode
 		if (!_mode.IsGrownUp)
 		{
 			_settingsTab?.Reset(); // the next visit to the corner starts at the Settings list
@@ -697,7 +707,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ReorderLog($"shelf order {string.Join(",", stories.Select(s => s.Id))}");
 #endif
 		_items.Clear();
-		foreach (StoryTile item in GalleryItems.Build(stories, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage)))
+		BookSales sales = _services.GetRequiredService<BookSales>();
+		IReadOnlyList<Story> shown = _mode.IsGrownUp ? stories : [.. stories.Where(story => !sales.IsLapsed(story))]; // Slice 384: a lapsed subscription's books are removed from the child's shelf, greyed on the parents'; their files stay
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf total={stories.Count} shown={shown.Count} lapsed={stories.Count(story => sales.IsLapsed(story))} grownUp={_mode.IsGrownUp}"); // the subscription flow's expect-log markers
+#endif
+		foreach (StoryTile item in GalleryItems.Build(shown, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage), story => sales.IsLapsed(story)))
 		{
 			_items.Add(item);
 		}
@@ -1364,6 +1379,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private Task OpenTileAsync(StoryTile tile)
 	{
 		UiUsage.Tap(UiControls.Book); // Slice 352: on the shelf it starts the read, in the corner it opens the book's sheet; the screen in the count says which
+		if (tile.IsLapsed)
+		{
+			return Task.CompletedTask; // Slice 384: a greyed book opens nothing; its tile carries its two actions (Subscribe again, Buy this book)
+		}
+
 		return _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
 	}
 
@@ -1532,9 +1552,42 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #if DEBUG
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now leaves the corner and opens {story.Id}"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
 #endif
+		if (_services.GetRequiredService<BookSales>().IsLapsed(story))
+		{
+			return; // Slice 384: a book the ended subscription locked is not opened; it offers Subscribe again and Buy this book
+		}
+
 		FirstRunState.HandoverPending = false;
 		_mode.Leave();
 		await _actions.ReadAsync(Navigation, story, ReadOrigins.Corner);
+	}
+
+	// Slice 384: the greyed book's two actions on the parents' shelf. Subscribe again opens the Store tab where the plans are; Buy this book opens the store's own sheet for the book (the wait overlay shows past 500 ms).
+	private void OnLapsedSubscribeClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet and the tab switch is counted as the Store screen
+
+	private async void OnLapsedBuyClicked(object? sender, EventArgs e)
+	{
+		// no-tap-count: as above, the store sheet's outcome is the fact that matters and the store holds it
+		if (TileOf(sender) is { } tile && _mode.IsGrownUp)
+		{
+			await _busy.RunAsync(() => BuyLapsedBookAsync(tile.Story.Id));
+		}
+	}
+
+	private async Task BuyLapsedBookAsync(string bookId)
+	{
+		StoreClient store = _services.GetRequiredService<StoreClient>();
+		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false, async _ =>
+		{
+			StoreListing listing = await store.ListAsync(CancellationToken.None);
+			StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, bookId, StringComparison.OrdinalIgnoreCase));
+			string? product = item?.Products.FirstOrDefault(p => !SubscriptionProducts.Is(p));
+			return product is null ? BuyOutcome.Failed : await store.Sales.Purchases.BuyAsync(product, listing.Items, CancellationToken.None);
+		});
+		if (outcome == BuyOutcome.Failed && _mode.IsGrownUp)
+		{
+			await DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_BuyFailed, AppResources.Common_Ok); // as the store page does: a purchase that did not go through says so
+		}
 	}
 
 	private async Task OpenSheetRecordAsync()

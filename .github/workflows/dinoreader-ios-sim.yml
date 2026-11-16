@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: '.maestro/dino/ios-read-back-reread-background.yaml'
+      device_patterns:
+        description: 'Slice 387: optional SIM_DEVICE_PATTERNS for ios-sim-boot.sh (e.g. Pro Max), empty = the smallest iPhone'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -30,6 +35,7 @@ jobs:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
       BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64
       FLOW: ${{ inputs.flow || '.maestro/dino/ios-read-back-reread-background.yaml' }}
+      SIM_DEVICE_PATTERNS: ${{ inputs.device_patterns }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -66,6 +72,10 @@ jobs:
           dotnet --version
           dotnet workload install maui-ios --version 11.0.100
           dotnet workload --version
+
+      # Slice 390: Dino's StoreKit 2 wrapper (Swift) as an XCFramework; same step as dinoreader-ios.yml.
+      - name: Build the StoreKit 2 XCFramework
+        run: bash src/Dino/DinoReader.App/Platforms/iOS/StoreKit2/build-xcframework.sh src/Dino/DinoReader.App/obj/DinoStoreKit
 
       # Maestro needs Java 17 or newer.
       - name: Set up Java 17
@@ -152,6 +162,26 @@ jobs:
           rc=0
           bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/flow-start" || rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # Slice 387 item 3: the Debug shelf fit lines. The unified log does not carry them on iOS, so the Debug build writes them to shelf-fit.log in the app's data folder; copy it out of the container.
+      - name: Shelf fit lines
+        if: ${{ always() && contains(env.FLOW, 'shelf-fit') }}
+        run: |
+          set -uo pipefail
+          if [ -z "${SIM_UDID:-}" ] || [ -z "${BUNDLE_ID:-}" ]; then
+            echo "No simulator or app was set up: nothing to show."
+            exit 0
+          fi
+          DATA="$(xcrun simctl get_app_container "$SIM_UDID" "$BUNDLE_ID" data 2>&1)" || { echo "no data container: $DATA"; exit 0; }
+          echo "data container: $DATA"
+          FIT="$(find "$DATA" -name shelf-fit.log -print -quit 2>/dev/null)"
+          if [ -z "$FIT" ]; then
+            echo "no shelf-fit.log in the app's data folder; files:"
+            find "$DATA" -maxdepth 4 -type f | head -n 60
+            exit 0
+          fi
+          echo "== $FIT"
+          head -n 200 "$FIT"
 
       # Audio-backed flow only (a flow with a '# expect-clips' header line): did a real pack clip play? The proof is the flow itself: it waits until the reading page's sound pill
       # (ReadingAudioStatus, shown only while the current piece has no clip) is gone, so a read on the device voice fails the flow. This step only adds the log counts: the app's test-hook

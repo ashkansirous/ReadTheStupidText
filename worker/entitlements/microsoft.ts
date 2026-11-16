@@ -29,6 +29,7 @@ interface CollectionItem {
   readonly inAppOfferToken?: unknown;
   readonly productType?: unknown;
   readonly status?: unknown;
+  readonly endDate?: unknown;
 }
 
 function appOf(env: EntitlementEnv): MicrosoftApp | null {
@@ -123,8 +124,14 @@ export async function serviceTicket(env: EntitlementEnv, fetcher: Fetcher): Prom
   }
 }
 
-export function ownedFromItems(items: readonly CollectionItem[]): string[] {
-  const active = items.filter((item) => item.productType === PRODUCT_TYPE_DURABLE && item.status === STATUS_ACTIVE);
+/** Slice 384: a subscription add-on item carries the date its paid period ends (`endDate`); one in the past is a lapsed subscription even if its status still reads Active. An item with no readable date (a plain durable add-on) has no end. */
+function hasEnded(item: CollectionItem, now: number): boolean {
+  const end = typeof item.endDate === "string" ? Date.parse(item.endDate) : Number.NaN;
+  return !Number.isNaN(end) && end <= now;
+}
+
+export function ownedFromItems(items: readonly CollectionItem[], now: number = Date.now()): string[] {
+  const active = items.filter((item) => item.productType === PRODUCT_TYPE_DURABLE && item.status === STATUS_ACTIVE && !hasEnded(item, now));
   return active.map((item) => item.inAppOfferToken).filter((token): token is string => typeof token === "string" && token !== "");
 }
 

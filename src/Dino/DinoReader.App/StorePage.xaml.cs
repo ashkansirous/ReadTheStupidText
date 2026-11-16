@@ -377,6 +377,8 @@ public partial class StorePage : ContentView, ICornerTabView
 		_mode = mode;
 		_usage = usage;
 		StoryList.ItemsSource = _rows;
+		StoreRoot.Children.Remove(SubscriptionCard); // Slice 384: the card is the head of the book list, so it scrolls away with the books
+		StoryList.Header = SubscriptionCard;
 		BuildChips();
 		ShowAuthor();
 		WaitOverlay overlay = DinoWait.OverPage(); // Slice 346: a purchase or a restore waits for the store; over 500 ms shows the shared wait overlay
@@ -443,7 +445,68 @@ public partial class StorePage : ContentView, ICornerTabView
 		BoughtBeforeTitle.Text = AppResources.Store_BoughtBeforeTitle;
 		BoughtBeforeLine.Text = StoreText.BoughtBeforeLine(DeviceInfo.Platform, DeviceInfo.Idiom);
 		FooterLabel.Text = sold ? AppResources.Store_FooterPaid : AppResources.Store_Footer;
+		ApplySubscriptionCard();
 		PlacePurchaseArea();
+	}
+
+	// Slice 384: the card shows while books are sold and the store priced a plan (both plans with their own recurring price and the trial line), or while the subscription runs (then it says so, and keeps Manage).
+	private void ApplySubscriptionCard()
+	{
+		bool sold = _client.Sales.SwitchKnownOn;
+		IReadOnlyDictionary<string, string> prices = _client.Sales.Purchases.Snapshot.Prices;
+		string? monthly = prices.GetValueOrDefault(SubscriptionProducts.Monthly);
+		string? yearly = prices.GetValueOrDefault(SubscriptionProducts.Yearly);
+		bool active = sold && _client.Sales.SubscriptionActive;
+		SubscriptionCard.IsVisible = sold && (active || BookAccess.HasPrice(monthly) || BookAccess.HasPrice(yearly));
+		SubscriptionLine.Text = active ? AppResources.Sub_Active : AppResources.Sub_Line;
+		SubscriptionPlans.IsVisible = !active;
+		SubscribeMonthlyButton.IsVisible = BookAccess.HasPrice(monthly);
+		SubscribeYearlyButton.IsVisible = BookAccess.HasPrice(yearly);
+		SubscribeMonthlyButton.Text = BookAccess.HasPrice(monthly) ? AppResources.Format(AppResources.Sub_Monthly, monthly!) : string.Empty;
+		SubscribeYearlyButton.Text = BookAccess.HasPrice(yearly) ? AppResources.Format(AppResources.Sub_Yearly, yearly!) : string.Empty;
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)}");
+#endif
+	}
+
+	// no-tap-count (all five subscription presses): the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet, and a new one is outside Slice 384's files; the store sheet's outcome is the fact that matters and the store holds it
+	private async void OnSubscribeMonthlyClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => SubscribeAsync(SubscriptionProducts.Monthly)); // no-tap-count: see above
+
+	private async void OnSubscribeYearlyClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => SubscribeAsync(SubscriptionProducts.Yearly)); // no-tap-count: see above
+
+	// Slice 384: opens the store's own purchase sheet for the plan (behind the grown-ups gate like a book); the wait overlay shows past 500 ms. Cancelled changes nothing; a failure says so plainly. Whatever the sheet
+	// did, the store is read again and every row and the card follow it (a subscription that started opens the paid books for download at once).
+	private async Task SubscribeAsync(string plan)
+	{
+		RestoreResultView.IsVisible = false;
+		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
+			_ => _client.Sales.Purchases.BuyAsync(plan, _allRows.Select(r => r.Item), CancellationToken.None));
+		await ReplanRowsAsync();
+		if (_mode.IsGrownUp && outcome == BuyOutcome.Failed)
+		{
+			await AlertAsync(AppResources.Store_BuyFailed);
+		}
+	}
+
+	private async void OnSubscriptionTermsTapped(object? sender, TappedEventArgs e) => // no-tap-count: a link to the store's terms page, see above
+		await _external.RunAsync(() => Launcher.Default.OpenAsync(new Uri(SubscriptionLinks.TermsFor(_client.Sales.Purchases.StoreName))));
+
+	private async void OnSubscriptionPrivacyTapped(object? sender, TappedEventArgs e) => // no-tap-count: a link to the privacy page, see above
+		await _external.RunAsync(() => Launcher.Default.OpenAsync(new Uri(SubscriptionLinks.Privacy)));
+
+	// Slice 384: false means the store's sheet or page failed (BookPurchases has reported it): the grown-up is told. A tap while the store's sheet is already open does nothing.
+	private async void OnSubscriptionManageTapped(object? sender, TappedEventArgs e) // no-tap-count: opens the store's own subscription page, see above
+	{
+		if (_external.IsActive)
+		{
+			return;
+		}
+
+		bool opened = await _external.RunAsync(_client.Sales.Purchases.ManageSubscriptionAsync);
+		if (!opened)
+		{
+			await AlertAsync(AppResources.Store_ManageFailed);
+		}
 	}
 
 	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
@@ -847,7 +910,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	// Slice 346: Buy opens the store's own sheet (the grown-up corner is behind the gate; mode is re-checked after each wait). Cancelled and failed change nothing; a bought book downloads as any other.
 	private async Task BuyAsync(StoreRow row)
 	{
-		string? product = row.Item.Products.FirstOrDefault();
+		string? product = row.Item.Products.FirstOrDefault(p => !SubscriptionProducts.Is(p)); // the book's own product (or a bundle), never a subscription plan
 		if (product is null)
 		{
 			return;
@@ -910,7 +973,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	// and counted like the fetched ones. A Get tap that lands while the run is going is awaited, never started twice.
 	private async Task PutRestoredBooksOnShelfAsync(CancellationToken cancel)
 	{
-		List<StoreRow> bought = _allRows.Where(r => StoreRowRestore.NeedsFetch(_client.Sales.PlanFor(r.Item, onShelf: false))).ToList();
+		IReadOnlySet<string> ownedNow = _client.Sales.Purchases.Snapshot.Owned;
+		List<StoreRow> bought = _allRows.Where(r => BookAccess.BoughtProduct(r.Item, ownedNow) is not null && StoreRowRestore.NeedsFetch(_client.Sales.PlanFor(r.Item, onShelf: false))).ToList(); // Slice 384: Restore brings back bought books only; a subscription opens the rest on demand, never all at once
 		List<StoreRow> arriving = bought.Where(r => r.State is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Downloading).ToList();
 		int alreadyDownloading = arriving.Count(r => r.IsDownloading);
 		foreach (StoreRow row in arriving)
@@ -935,6 +999,12 @@ public partial class StorePage : ContentView, ICornerTabView
 #if DEBUG
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
 #endif
+		if (line == RestoreLine.NothingToRestore && _client.Sales.SubscriptionActive)
+		{
+			ShowRestoreText(AppResources.Sub_Active, found: true); // Slice 384: Restore also brings back a running subscription
+			return;
+		}
+
 		ShowRestoreLine(line, arrived);
 	}
 

@@ -32,7 +32,8 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    - every speaker named and spelled the same everywhere.
 3. Write or update the art record: the house style line, one line per character (species, relative size,
    outfit and colours, one prop, the detail that tells look-alikes apart) and the picture plan, one line per
-   page (the one action, who is in it with a count, where, time of day). Copy the picture-plan checklist from
+   page (the one action, who is in it with a count, where, time of day). Write the bottom rule as "the bottom 32% is
+   scene, every character whole above 68%" (older art.md files say 70/30; that is history, never copy it). Copy the picture-plan checklist from
    `.claude/skills/dino-storytelling/SKILL.md` section 4 into the art record and tick it.
    If pictures already exist, mark which pages keep their picture and which need a new one.
    Animals (Slice 152, Decision 157): every character is an animal or "none", stored in the book. The builder takes the animal from an animal word in the

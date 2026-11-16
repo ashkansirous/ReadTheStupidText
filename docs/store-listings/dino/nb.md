@@ -1,14 +1,47 @@
 # Store listing: Norwegian Bokmål (`nb`), Dino Book Reader
 
-**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-14); App Store and Microsoft Store not pushed yet.** Locales: Play `no-NO`; App Store `no`; Microsoft Store `nb` (Partner Center name to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
+**Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `no-NO`; App Store `no`; Microsoft Store `nb` (Partner Center name to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
 Title (<= 30): Dino Book Reader
-Play short description (<= 80): Historier lest høyt, med en egen stemme til hver figur.
+Play short description (<= 80): Hver figur har sin egen stemme - og bestemor kan spille inn sin som ulven
 Play search phrases used in the text: godnatthistorier, eventyr for barn, bildebøker, høytlesing
 App Store subtitle (<= 30): En stemme til hver figur
 App Store keywords (<= 100 bytes): barnehistorier,godnatthistorier,eventyr,bildebøker,barnebøker,høytlesing,fortellinger,ta opp
 App Store promotional text (<= 170): Historier lest høyt for barn fra 3 til 9 år, med en stemme til hver figur og plass til din egen. Ingen reklame. Fire gratis, resten 0,99 USD. 15 språk.
 Microsoft search terms (7): barnehistorier; høytlesing; godnatthistorier; bildebøker; eventyr; barnebøker; figurstemmer
+
+## Google Play full description (<= 4,000), live 2026-11-15
+
+Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
+
+I Dino Book Reader har hver figur sin egen stemme. Fortelleren forteller historien, ulven og de små grisene låter hver for seg, og en forelder eller besteforelder kan spille inn sin egen stemme som en hvilken som helst figur: bestemor kan være ulven.
+
+Hver historie finnes på 15 språk, for familier som holder på et hjemmespråk ved siden av skolespråket: persisk, arabisk, svensk, norsk, dansk, finsk og flere. En voksen velger to eller tre historiespråk, og barnet kan bytte mellom dem mens det leser, høre den samme historien og lære ordene på begge språk.
+
+Ingen reklame. Ingen konto. En nedlastet historie fungerer uten nett, og opptakene dine blir på enheten din.
+
+Fire illustrerte historier er gratis: Løven og musa, Pepperkakemannen, De tre små grisene og X markerer skatten. Hver annen historie kjøper du én gang og beholder, 0,99 USD per stykk (Google Play viser prisen i din egen valuta). En voksen kjøper bak de voksnes lås og kan gjenopprette tidligere kjøp når som helst.
+
+FOR BARN FRA 3 TIL 9 ÅR
+Barna lytter, ser på bildene og følger med: fint til godnatthistorier og for tospråklige barn som lærer ord på to språk. En voksen setter det opp, velger bøkene og spiller inn stemmer bak de voksnes lås.
+
+KLASSISKE EVENTYR, FORTALT MYKT
+Håndplukkede bildebøker, hver gjenfortalt for små barn, med et bilde på hver side.
+
+OG MER
+- Hver setning lyser opp mens den leses.
+- Bare bilde, bare tekst, eller bilde og tekst.
+- Lesehastighet fra 0,8x til 1,2x og dyrelyder du kan slå på eller av.
+- Et nattema til leggetid.
+- Spill inn hvilken som helst figur, på hvilken som helst side, på hvilket som helst historiespråk; ta sikkerhetskopi og gjenopprett opptakene.
+
+SPRÅK
+Engelsk, arabisk, kinesisk, dansk, nederlandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk: appen, historiene og stemmene.
+
+TRYGT OG PRIVAT
+- Ingen reklame og ingen konto å opprette. Vi lagrer ingenting om deg eller kjøpet ditt; butikkens bevis sjekkes og glemmes.
+- Kjøp, innstillinger, opptak og sikkerhetskopier ligger bak de voksnes lås.
+- Valgfri anonym bruksstatistikk uten navn eller identifikatorer, som kan slås av i Innstillinger.
 
 ## Description
 
