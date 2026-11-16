@@ -1,7 +1,7 @@
 # Slice 401 — Dino iOS: declare the app's 15 languages so the App Store lists them
 **Product:** Dino
 
-*Planned and started 2026-11-16 at the user's "do it". Dino Book Reader 1.131.1 went live on the App Store on 2026-11-16 with "Language: EN" only (iTunes lookup `languageCodesISO2A` = `["EN"]` in us, gb, se, de), although the store listing and the app's screens are translated into 15 languages.*
+*Built 2026-11-16, merged as PR #1212 (b95701ba), not yet verified on the App Store (see Not yet verified). Planned and started 2026-11-16 at the user's "do it". Dino Book Reader 1.131.1 went live on the App Store on 2026-11-16 with "Language: EN" only (iTunes lookup `languageCodesISO2A` = `["EN"]` in us, gb, se, de), although the store listing and the app's screens are translated into 15 languages.*
 
 **Touches:** `src/Dino/DinoReader.App/Platforms/iOS/Info.plist`, `src/Dino/DinoReader.App/Platforms/iOS/Resources/*.lproj/InfoPlist.strings` (new), `src/Dino/DinoReader.App/DinoReader.App.csproj`, this slice file.
 

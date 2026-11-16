@@ -1,7 +1,7 @@
 # Slice 402 — Dino: App Store header and search-results pictures
 **Product:** Dino
 
-*Planned and started 2026-11-16 at the user's "yes" to making a picture for App Store Connect's empty "Header and Search Results" slots (iOS App Version 1.131.1, Product Page Information).*
+*Items 1-3 built 2026-11-16, merged as PR #1214 (cf278cd0); item 4 (place the approved pictures) still open. Planned and started 2026-11-16 at the user's "yes" to making a picture for App Store Connect's empty "Header and Search Results" slots (iOS App Version 1.131.1, Product Page Information).*
 
 **Touches:** `docs/store-listings/creative/dino/` (new), this slice file. No app code.
 
