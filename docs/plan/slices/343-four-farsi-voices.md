@@ -5,7 +5,7 @@
 
 > **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
-*Third listen later (user 2026-11-15, PR #1183, 626ffbab); 3 extra-ezafe items open.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
+*Third listen done 2026-11-16 (answers below); 3 extra-ezafe items and `gyro-1` open as build work.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
 *Park note (night 2026-11-14-0726):* parked again by housekeeping 1 for the same reason (the second listen needs an Artifact page; headless wave sessions have no Artifact tool). Moved back to `planned` by the 2026-11-14-0726 feedback loop per the user's 2026-11-01 rule; a night run can only re-park it, so it needs an interactive session.
 
@@ -72,6 +72,37 @@ Result: the missing-ezafe fix (Ganji Adabi, the default voice, and Slice 342's c
 Third listen page (2026-11-14, same page, `v3-*` answers, 16 clips): https://claude.ai/artifact/Cfes6Q7N1HvgG3HYnmHMjY . Gyro `gyro-1` evidence: the app's `SherpaEngineFactory.Generate` returns the engine samples untrimmed (no trim or silence step in `src/`); rendered as the app does, the WAV ends with 0.00-0.04 s of silence and the phonemizer output has the word (`xˈuːb ˈast`). Gyro simply says it very short: the unit with «است» is only about 0.11 s longer than the same unit without it (Ganji +0.37 s, Mana +0.20 s). So it is the model, not the renderer. The page also has comma / ZWNJ / length-scale 1.15 variants for `ganji-2`, `gyro-2`, `gyro-3`.
 
 **User answer 2026-11-15:** third listen "later". The page stays up with its `v3-*` answers empty; no wave renders or asks again until the user opens it.
+
+### Third listen (2026-11-16, same page, `v3-*` answers; user pressed Done 2026-11-16 21:03Z)
+
+Answers word for word (candidate, verdict, note). The "unchanged" clips carry no verdict, only a note; the page stored an empty verdict for them.
+
+- ganji-2 unchanged: (no verdict) "it says "sobhe" instead of "sobh""
+- ganji-2 comma («صبح، یک»): ok
+- ganji-2 zero-width non-joiner («صبح‌ یک»): ok
+- ganji-2 slower (length scale 1.15): ok
+- gyro-1 take 1 (as the app plays it): bad, "say "have kheili khoob oost""
+- gyro-1 take 2 (as the app plays it): ok
+- gyro-1 slower (length scale 1.15): ok
+- gyro-2 unchanged: (no verdict) "says "har rooze" instead of "har rooz""
+- gyro-2 comma («روز، صبح»): ok
+- gyro-2 zero-width non-joiner: bad, "says "har rooze" instead of "har rooz""
+- gyro-2 slower (length scale 1.15): bad, "says "har rooze" instead of "har rooz""
+- gyro-3 unchanged: bad, "say "25 daftare kharid" instead of "25 daftar""
+- gyro-3 comma («دفتر، خرید»): ok
+- gyro-3 zero-width non-joiner: ok
+- gyro-3 slower (length scale 1.15): ok
+
+What this decides (by the fix item above: cheapest model-side options first, otherwise record the model's limit):
+
+- Extra ezafe, `ganji-2`: comma, zero-width non-joiner and slower pace each fixed it.
+- Extra ezafe, `gyro-3`: comma, zero-width non-joiner and slower pace each fixed it.
+- Extra ezafe, `gyro-2` («روز»): only the comma fixed it; zero-width non-joiner and slower pace did not.
+- `gyro-1` («است» not spoken): no text candidate was offered. The two takes of the unchanged render differed (take 1 bad, take 2 ok), and slower pace was ok. The note on take 1 reads differently from the earlier "misses ast"; the user wrote "say "have kheili khoob oost"".
+- reading: the comma is the one candidate that fixed all three extra-ezafe clips, so it is the likely render-time fix for all three; whether it can be applied at text-prep time without changing how the app reads other sentences is not decided by the answers and stays a build item. The `gyro-1` fault looks intermittent (one take bad, one ok), so one good take is not proof; slower pace is a candidate, not a settled fix.
+- The model's-limit fallback in the fix item does not apply to the extra-ezafe clips, since a candidate worked for each.
+
+The user's listening is done; no further listen is asked for unless a build item says so. The two fix items above stay unticked: they are build work (Claude's) and not started.
 
 - [ ] Fix: `gyro-1` (Gyro, «... خیلی خوب است.»): the final «است» ("ast") is not spoken (second listen, 2026-11-14). Find whether the sentence-final word is cut by the renderer (trailing audio trimmed, end-of-sentence handling) or by the model; fix through the review gate; re-render for a third listen.
 - [ ] Fix: the extra-ezafe items (`ganji-2`, `gyro-2` now on «روز» too, `gyro-3`): no text mark stops them (espeak's phonemes are already right). Try the cheapest model-side options first and render each on one page for a third listen: a short break between the two words (comma or zero-width non-joiner at render time), a different noise/length scale for these two voices, or the same sentence on the other pack voices. If none works, record it as the model's limit for Ganji and Gyro (the default voice, Ganji Adabi, and Mana are right).
