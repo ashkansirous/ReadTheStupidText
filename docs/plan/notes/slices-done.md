@@ -280,6 +280,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 379 | Every library, SDK and toolchain to the latest stable (.NET 11, NuGet, Node LTS, npm, Python, Java), Dependabot for NuGet and npm | built, not yet verified | #1175, #1176 | — | [379-everything-to-latest-stable.md](../slices/379-everything-to-latest-stable.md) |
 | 193 | German store listings for both apps | built | #1128 | — | [193-german-store-listings.md](../slices/193-german-store-listings.md) |
 | 317 | Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows, Store submit retry) | built | #1121, ClaudeSkills #218 | — | [317-feedback-loop-2026-11-08-0106-leftovers.md](../slices/317-feedback-loop-2026-11-08-0106-leftovers.md) |
 | 9 | Local neural voices (sherpa-onnx + Supertonic-3) | built | — | — | [09-local-neural-voices.md](../slices/09-local-neural-voices.md) |
