@@ -223,3 +223,15 @@ Redraw round (full review fail, Giant scale): each prompt pasted the line-up plu
 | 15 | 1 | 1792x2400 | accepted first time |
 
 Third redraw round (re-review fail): page 5 now matches page 1's thatched cottage (first try had an extra cow copied from the reference, rejected; second try accepted), page 7 has a thatched cottage far below with no writing, page 12 has an empty basket with exactly one golden egg going in. Version unchanged.
+
+### High-res pack (Slice 350, 2026-11-16)
+
+Full-size 1792x2400 originals, untouched Gemini files, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (the originals stay in the working folder; `back-cover.jpg` kept as it was).
+
+- Recovered from the user's Gemini chats (chat id, original size in bytes): cover c14 a4d49d59dc0fb849 (2557631); 1 c27 31da4230e735e8c6 (3072661); 2 c01x, chat 0a53ddc41aa07721 (2789748); 5 c28 244a1950a58e7b97 (2790384); 6 c06 22e332360ede3923 (3207636); 7 c08 6bb8f8b4cf62e316 (2697591); 8 c21 14a6b9720dc33700 (2255175); 9 c19 999299d34f1bba14 (2510083); 10 c31 525ff863c70d346f (2589366); 11 c18 a775c5f8cdd68ca3 (2700999); 12 c16 afb19ec1b1c8d77f (2305553); 13 c03 9807b57c96b21d2f (2807947); 14 c10 ecfc628c53d5216d (3014746).
+- Redrawn in new chats: page 3 chat 4796ba6e737b7ef6, 2984529 bytes (a full-size copy of the accepted 896x1200 picture's composition, same scene). Page 4 try 2 accepted, chat 31c76efe1e122777, 3224747 bytes (try 1 rejected: Jack and Mother faced forward; a plain green strip at the bottom): both now look up at the beanstalk, the white painted edge is gone, the bottom of grass runs full-bleed. Page 15 try b accepted, chat e6672a2705f2d5c2, 3058205 bytes (try a, chat e9930a4c23d5a447, rejected: feet, bed legs and quilt hem below the 73% line): pulled back so the bed and the people end above the line, floorboards below. Check rows are in the redraw `checks.md` files (scratch folder).
+- App copies (item E): only `pictures/3.jpg`, `4.jpg` and `15.jpg` replaced, prepared from the high-res originals; every other app picture and the cover are unchanged.
+
+Not redrawn, for the user: pages 2 (donkey and cart), 7 (Mother's hem and foot, about 78%) and 13 (Mother and the beanstalk) cross the 73% line, and pages 10-12 and the cover touch it. They stay as they are because the user said on 2026-11-10 that the rest of the book is fine.
+
+Full review 2026-11-16 (dino-story-reviewer): **PASS**. Non-blocking notes for the user: the cottage differs across accepted pages (white plaster with a 4-pane window and picket fence on 3-4; half-timbered with a rail fence on 1 and 5; page 4 matches page 3); the bottom 10% is plain white on 2, 8, 10, 11 and one flat colour on 1, 5, 6, 14 (real scene only on 3, 4, 7, 13, 15); on page 4 the cow looks up with its eyes only.
