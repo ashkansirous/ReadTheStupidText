@@ -120,9 +120,41 @@ jobs:
           echo "bundle id $BUNDLE_ID, process $PROCESS_NAME"
           xcrun simctl install "$SIM_UDID" "$APP"
 
+      # Slice 379 part B: prove a cold start without Maestro (the iOS 27.2 run 43935624690 never got a driver, so it said nothing
+      # about the UIKit scene lifecycle). Launch, wait, then fail when the app's launchd job is gone or a crash report exists.
+      # `launchctl list` inside the simulator is the same check the flow step uses (UIKitApplication:<bundle id>).
+      # ios-sim-collect.sh prints the app's log and crash reports (exit 3 on a report); its log predicate is
+      # process == <CFBundleExecutable>, the name the unified log uses for the app's own lines.
+      - name: Cold-start the app without Maestro
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          touch "$RUNNER_TEMP/cold-start"
+          xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
+          sleep 20
+          RUNNING="$(xcrun simctl spawn "$SIM_UDID" launchctl list || true)"
+          alive=1
+          if grep -q "UIKitApplication:$BUNDLE_ID" <<<"$RUNNING"; then alive=0; fi
+          crash_rc=0
+          bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/cold-start" || crash_rc=$?
+          xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" || true
+          if [ "$alive" != "0" ]; then
+            echo "::error::The app is not running 20 s after launch: it exited or crashed on a cold start."
+            exit 1
+          fi
+          if [ "$crash_rc" != "0" ]; then
+            echo "::error::The app left a crash report on a cold start."
+            exit 1
+          fi
+          echo "cold start ok: $BUNDLE_ID still running after 20 s, no crash report"
+
       # The flow's appId is the Android dev package; the iOS app's bundle id has no .dbg suffix.
+      # MAESTRO_DRIVER_STARTUP_TIMEOUT (milliseconds): run 43935624690 on iOS 27.2 died with "iOS driver not ready in time"
+      # while the XCTest driver was first built and started on the cold runner.
       - name: Run the flow
         id: flow
+        env:
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: '600000'
         run: |
           set -uo pipefail
           FLOW_RUN="$RUNNER_TEMP/flow.yaml"
