@@ -48,3 +48,4 @@ Item 9 names the unit: 50,000 bytes.
 ## Decisions
 
 - Parked for the user: the loop ran outside the implementation phase, and these were not reviewed by the user.
+  - Checked 2026-11-16: no item names an ask for the user. The row goes back to planned (items 12-15 need an emulator or VM).
