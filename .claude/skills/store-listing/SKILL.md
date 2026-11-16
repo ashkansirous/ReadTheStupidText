@@ -93,9 +93,19 @@ app screens only. A difference with no shot is a gap: add the flow to the listin
 **Captions:** one short benefit line per shot (under ~40 characters, at most 20% of the image, the real
 screen below it), translated with the listing; never a price, buying terms, ranking, "best", "new" or a
 call to action ("Download now"); details in `stores.md` (*Captions*). The payment message lives in the
-text, not in a caption. Take each listing
-language's shots in that language where the flow allows (`lang: fa`, `ar`, `de`, ...); otherwise the
-English shots with translated captions.
+text, not in a caption.
+
+**Screen language (user, 2026-11-16, every store and every device size):** the global listing and every
+European listing show the app in **English**. The shot that proves "other languages" shows **German or
+French**, never Farsi, Arabic or Chinese. A Farsi, Arabic or Chinese screen appears only in that language's
+own local listing (`fa`, `ar`, `zh-*`). Other listings use the English shots with translated captions.
+
+**A full shelf in every shot (user, 2026-11-16):** a shot of the child's shelf or the grown-ups' pages
+(Books, Store) shows enough books to fill the screen, never four lonely covers. The old shots showed four
+because `skip-first-run` puts only the four test books on the shelf (`src/Dino/DinoReader.App/Testing/CLAUDE.md`).
+Before the shot run, put the whole live store catalogue (all 15 books, real covers) on the shelf through a
+Debug hook, never a real purchase; until that hook exists, no shelf or book shot is taken. Check each shelf
+or book shot: no empty rows, no "no stories" state, only the last row may be part-filled.
 
 ### Dino (phone portrait; tablet the same screens)
 
@@ -132,6 +142,8 @@ from the VM. Same rules.
 2. Write the English text (and any not-yet-live version) into the repo.
 3. Take the shots by script (headless emulator), never by hand. Look at every shot's small copy: no
    banners, dialogs, debug marks, blank covers or prices; each shows the difference it is meant to prove.
+   Check each shot's screen language against the language rule in section 2 and every shelf or book
+   shot for a full screen of books; a shot that fails either is retaken, never uploaded.
 4. Show the user the English text as a diff against live, plus the shot list with captions. Nothing is
    translated or pushed before their yes.
 5. Translations and keywords per language, then the `store-listing` agent applies text and images and
