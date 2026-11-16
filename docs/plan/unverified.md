@@ -77,6 +77,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 402: Dino App Store header and search-results pictures ([slice](slices/402-dino-app-store-creative-assets.md))
+- **Device:** how the pictures look in App Store search on an iOS 27 device.
+
+### Slice 401: Dino iOS app languages ([slice](slices/401-dino-ios-app-languages.md))
+- **Device:** the App Store "Languages" line lists the 15 languages (needs the next version reviewed and released).
+- **You:** the German microphone prompt on a real iPhone.
+
 ### Slice 390: Dino iOS purchases on StoreKit 2 ([slice](slices/390-dino-ios-purchases-storekit-2.md))
 - **Not a user to-do (the sandbox Buy was done by the user, 2026-11-15: "I tried the sandbox buy!"; never ask again):** not stated by the user and so still unverified: a subscription plan showing its real end date, and Restore purchases (also on a second install), on an iPhone with a TestFlight build.
 - **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain.
