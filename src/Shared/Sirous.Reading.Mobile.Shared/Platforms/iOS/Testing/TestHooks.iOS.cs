@@ -13,11 +13,25 @@ public static partial class TestHooks
 {
 	private static bool _launchHookRun;
 
-	// Mid-flow: the test URL (Maestro openLink). At launch: the flow's launchApp arguments, which iOS exposes as user defaults ("-cmd skip-first-run").
+	// Slice 379 part B: under the UIKit scene lifecycle (required by the iOS 27 SDK) the application-level OpenUrl and OnActivated no longer fire, so the scene events carry them.
+	// Mid-flow: the test URL (Maestro openLink, SceneOpenUrl). A URL that launches the app arrives in the scene's connection options (SceneWillConnect; MAUI does not replay it).
+	// At launch: the flow's launchApp arguments, which iOS exposes as user defaults ("-cmd skip-first-run"), read when the scene becomes active.
 	static partial void AddLaunchHandlers(MauiAppBuilder builder, string urlScheme) =>
 		builder.ConfigureLifecycleEvents(events => events.AddiOS(ios => ios
-			.OpenUrl((_, url, _) => HandleUrl(url?.AbsoluteString, urlScheme))
-			.OnActivated(_ => RunLaunchArguments())));
+			.SceneOpenUrl((_, contexts) => HandleUrlContexts(contexts, urlScheme))
+			.SceneWillConnect((_, _, options) => HandleUrlContexts(options.UrlContexts, urlScheme))
+			.SceneOnActivated(_ => RunLaunchArguments())));
+
+	private static bool HandleUrlContexts(NSSet<UIKit.UIOpenUrlContext>? contexts, string urlScheme)
+	{
+		bool handled = false;
+		foreach (UIKit.UIOpenUrlContext context in contexts?.ToArray() ?? [])
+		{
+			handled |= HandleUrl(context.Url?.AbsoluteString, urlScheme);
+		}
+
+		return handled;
+	}
 
 	private static void RunLaunchArguments()
 	{

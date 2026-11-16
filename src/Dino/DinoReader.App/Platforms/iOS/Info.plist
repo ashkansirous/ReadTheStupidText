@@ -33,6 +33,25 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<!-- Slice 379 part B: apps built with the iOS 27 SDK must use the UIKit scene lifecycle (MT7199). The scene delegate is Platforms/iOS/SceneDelegate.cs;
+	     the configuration name and the delegate name are fixed by MAUI. Multiple windows stay off, which keeps the single-window behaviour. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>__MAUI_DEFAULT_SCENE_CONFIGURATION__</string>
+					<key>UISceneDelegateClassName</key>
+					<string>SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<!-- The app icon is named by <AppIcon> in DinoReader.App.csproj; the SDK refuses XSAppIconAssets here too. -->
 	<!-- App Store Connect rejects an iPad-capable app without a launch screen (90475). There is no
 	     MauiSplashScreen (it would generate other art), so this plain system launch screen
