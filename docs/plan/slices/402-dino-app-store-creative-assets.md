@@ -37,3 +37,4 @@ App Store Connect now has two optional "creative asset" slots (App Store Connect
 ## Review
 
 - Pass 1 (high), `reviews/402-high.md`: fixed 3 (rejection path and confirm the API names in item 4) and the "JPEG or PNG" wording from 7. Skipped 1 (header cards sit a little right of centre): the image is already in Apple's review, and moving them would need a re-upload and a new review for a small layout change. Skipped 2 (compose script not kept): it is a one-off; the Decisions and item 1 describe the picture well enough to make it again. Skipped 4, 5, 6: notes only; the open lines go to `plan.md` in the index pass.
+- Pass 2 (medium), `reviews/402-medium.md`: 5 findings, none fixed. 1 and 5 were already skipped in pass 1. 2 (tight bottom margin, last row 4 + 3) is layout taste on an image already in review. 3 is right: item 4 stays open, so the slice stays open after this merge. 4 is covered by item 4 (list every localization, read back each).
