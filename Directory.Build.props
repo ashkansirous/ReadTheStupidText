@@ -4,7 +4,7 @@
 	     previously undefined, so MAUI came from whatever workload the machine happened to have.
 	     Slice 72. Bump here only. -->
 	<PropertyGroup>
-		<MauiVersion>10.0.130</MauiVersion>
+		<MauiVersion>11.0.10</MauiVersion>
 	</PropertyGroup>
 
 	<!-- Warnings that can hide a real bug fail the build in every project (Slice 378): not awaited, platform-version

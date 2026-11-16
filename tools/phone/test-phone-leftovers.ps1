@@ -86,8 +86,8 @@ Assert-Equal 'Assert-BuildPathLength throws on known-too-long' $true $threw
 $pkg = 'uk.sirous.readthestupidtext.dbg'
 $debugArgs = Get-PhoneBuildArguments 'P.csproj' 'A' $pkg 'android-arm64' $false
 $aotArgs = Get-PhoneBuildArguments 'P.csproj' 'A' $pkg 'android-arm64' $true
-Assert-Equal 'debug: no AOT flag' $false (($debugArgs -join ' ') -match 'RunAOTCompilation')
-Assert-Equal 'aot: AOT flags added to the debug command' (($debugArgs + '-p:RunAOTCompilation=true' + '-p:AndroidEnableProfiledAot=false') -join ' ') ($aotArgs -join ' ')
+Assert-Equal 'debug: no AOT flag' $false (($debugArgs -join ' ') -match 'PublishReadyToRun')
+Assert-Equal 'aot: ReadyToRun flags added to the debug command' (($debugArgs + '-p:PublishReadyToRun=true' + '-p:PublishTrimmed=true') -join ' ') ($aotArgs -join ' ')
 Assert-Equal 'rid and package in the command' $true ((($debugArgs -join ' ') -match 'RuntimeIdentifier=android-arm64') -and (($debugArgs -join ' ') -match [regex]::Escape("ApplicationId=$pkg")))
 Assert-Equal 'x64 rid for the emulator' $true ((Get-PhoneBuildArguments 'P' 'A' $pkg 'android-x64' $false) -contains '-p:RuntimeIdentifier=android-x64')
 Assert-Equal 'quoting only where there are spaces' 'a "b c"' ((ConvertTo-ProcessArguments @('a', 'b c')) -join ' ')

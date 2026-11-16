@@ -1,6 +1,6 @@
 name: tests
 
-# The pure-logic unit tests (net10.0-windows: they reference Infrastructure), in two projects (Slice 368):
+# The pure-logic unit tests (net11.0-windows: they reference Infrastructure), in two projects (Slice 368):
 # tests/Shared/Shared.Tests (the engine both apps ship) and tests/Rtst/ReadTheStupidText.Tests (RTST's own). Slice 128: they run for
 # RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml. release-shared.yml calls this workflow twice:
 # `shared-test` (suite: shared) whenever any product output builds, and `rtst-test` (suite: rtst) when an RTST output builds,
@@ -117,7 +117,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job
@@ -135,7 +135,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job

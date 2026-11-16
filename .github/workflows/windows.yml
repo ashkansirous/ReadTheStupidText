@@ -105,7 +105,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job

@@ -12,6 +12,10 @@ UDID="${1:?simulator udid}"
 PROCESS="${2:?process name}"
 MARKER="${3:-}"
 SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/null}"
+# Optional bounds (Slice 379 part B: `log show --last 30m` took about 4 minutes on an iOS 27.2 simulator); the defaults are the old behaviour.
+LOG_WINDOW="${SIM_LOG_WINDOW:-30m}"
+LOG_LINES="${SIM_LOG_LINES:-3000}"
+REPORT_WAIT_TRIES="${SIM_REPORT_WAIT_TRIES:-15}"
 REPORTS="$HOME/Library/Logs/DiagnosticReports"
 
 # Crash reports of the app: macOS names them <process>-<date>.ips (the simulator writes to the host's folder).
@@ -44,8 +48,8 @@ print_reports() {
 
 print_log() {
   local out
-  out=$(xcrun simctl spawn "$UDID" log show --last 30m --style compact --predicate "process == \"$PROCESS\"" 2>&1 | tail -n 3000)
-  echo "::group::log of $PROCESS (last 3000 lines)"
+  out=$(xcrun simctl spawn "$UDID" log show --last "$LOG_WINDOW" --style compact --predicate "process == \"$PROCESS\"" 2>&1 | tail -n "$LOG_LINES")
+  echo "::group::log of $PROCESS (last $LOG_LINES lines, window $LOG_WINDOW)"
   echo "$out"
   echo "::endgroup::"
   { echo "### Log of $PROCESS (last 200 lines)"; echo '```'; echo "$out" | tail -n 200; echo '```'; } >> "$SUMMARY"
@@ -54,7 +58,7 @@ print_log() {
 # macOS writes the .ips a little after the process dies: give it up to 30 s to appear before counting.
 wait_for_reports() {
   local i
-  for i in $(seq 1 15); do
+  for i in $(seq 1 "$REPORT_WAIT_TRIES"); do
     if [ -n "$(find_reports)" ]; then
       return 0
     fi

@@ -164,6 +164,8 @@ function New-AppCrashProbe([string]$Serial, [string]$Package, [hashtable]$Seen, 
 function Test-RetryableMonoCrash([string]$CrashLog, [string]$Package, [int]$MaxUptime = 20) {
     $block = Get-PackageSigsegvBlock $CrashLog $Package
     if (-not $block) { return $false }
+    # TODO(379B device run): .NET 11 runs CoreCLR, so a cold-start SIGSEGV no longer shows libmonosgen. The .NET for Android docs give no CoreCLR crash signature;
+    # on the emulator capture `adb logcat -b crash -d` after a native crash of the CoreCLR build, add the backtrace library name here and a fixture to test-speed.ps1.
     if ($block -notmatch 'libmonosgen|\.NET TP Worker') { return $false }
     $uptime = Get-CrashProcessUptime $CrashLog $Package
     return ($null -ne $uptime -and $uptime -le $MaxUptime)

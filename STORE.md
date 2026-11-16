@@ -340,7 +340,7 @@ German uses the Supertonic-3 pack (`supertonic-3` lists `de` from pack version 4
 
 The shipped (**Release**) MSIX is built **.NET self-contained**
 (`<SelfContained>true</SelfContained>`, scoped to non-Debug in
-`ReadTheStupidText.App.csproj`), so the **.NET 10 runtime is bundled inside the
+`ReadTheStupidText.App.csproj`), so the **.NET 11 runtime is bundled inside the
 package**. The **Windows App SDK** runtime stays framework-dependent
 (`Microsoft.WindowsAppRuntime.2`, auto-installed by the Store) —
 `WindowsAppSDKSelfContained` is deliberately **not** set.
@@ -763,7 +763,7 @@ rejected.
 
 ## iOS / TestFlight (Slice 48, Decision 70)
 
-The iOS app is the same MAUI project (`net10.0-ios`), built on a macOS runner by
+The iOS app is the same MAUI project (`net11.0-ios`), built on a macOS runner by
 `release-rtst.yml`'s `build-ios` job (`ios.yml`). Every merge that touches iOS (or shared Mobile/core
 code) lands a build in TestFlight; the App Store release itself stays a manual
 step in App Store Connect. No `actions/upload-artifact`: the signed `.ipa` goes to
@@ -816,7 +816,7 @@ needed (Decision 60); the packs folder is excluded from iCloud backup.
 
 Dino Book Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
 package identity, the same developer account. The package is `src/Dino/DinoReader.App` (a MAUI WinUI head,
-`net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release-dino.yml`'s `build-dinowin` job
+`net11.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release-dino.yml`'s `build-dinowin` job
 as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
 `DinoReader.App_<x.y.z.0>_<arch>.msix`. Like Read The Stupid Text's, the Release package is built .NET
 **self-contained** (Store certification 10.2.4.1); the Windows App SDK stays framework-dependent. There is no

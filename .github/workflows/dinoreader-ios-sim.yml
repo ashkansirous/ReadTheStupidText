@@ -30,10 +30,10 @@ permissions:
 jobs:
   simulator:
     timeout-minutes: 90
-    runs-on: macos-26
+    runs-on: xcode-27
     env:
       PROJECT: src/Dino/DinoReader.App/DinoReader.App.csproj
-      BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64
+      BUILD_DIR: src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64
       FLOW: ${{ inputs.flow || '.maestro/dino/ios-read-back-reread-background.yaml' }}
       SIM_DEVICE_PATTERNS: ${{ inputs.device_patterns }}
     steps:
@@ -54,23 +54,23 @@ jobs:
           test -f "$FLOW" || { echo "::error::no such flow file: $FLOW"; exit 1; }
           echo "flow: $FLOW"
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.401'
+          dotnet-version: '11.0.100'
 
-      # Same toolchain pin as dinoreader-ios.yml (workload set 10.0.401 needs Xcode 26.6).
-      - name: Select Xcode 26.6
+      # Same toolchain pin as dinoreader-ios.yml (workload set 11.0.100 needs Xcode 27.2).
+      - name: Select Xcode 27.2
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
           xcodebuild -version
 
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |
           set -euo pipefail
           dotnet --version
-          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload install maui-ios --version 11.0.100
           dotnet workload --version
 
       # Slice 390: Dino's StoreKit 2 wrapper (Swift) as an XCFramework; same step as dinoreader-ios.yml.
@@ -89,7 +89,7 @@ jobs:
       - name: Build the Debug simulator app
         run: >
           dotnet build "$PROJECT"
-          -f net10.0-ios
+          -f net11.0-ios
           -p:IncludeAndroid=false
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64
@@ -120,9 +120,58 @@ jobs:
           echo "bundle id $BUNDLE_ID, process $PROCESS_NAME"
           xcrun simctl install "$SIM_UDID" "$APP"
 
+      # Slice 379 part B: prove a cold start without Maestro (the iOS 27.2 run 43935624690 never got a driver, so it said nothing
+      # about the UIKit scene lifecycle). Launch, wait, then fail when the app's launchd job is gone or a crash report exists.
+      # `launchctl list` inside the simulator is the same check the flow step uses (UIKitApplication:<bundle id>).
+      # ios-sim-collect.sh prints the app's log and crash reports (exit 3 on a report); its log predicate is
+      # process == <CFBundleExecutable>, the name the unified log uses for the app's own lines.
+      - name: Cold-start the app without Maestro
+        timeout-minutes: 6
+        run: |
+          set -euo pipefail
+          touch "$RUNNER_TEMP/cold-start"
+          xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
+          sleep 20
+          RUNNING="$(xcrun simctl spawn "$SIM_UDID" launchctl list || true)"
+          if grep -q "UIKitApplication:$BUNDLE_ID" <<<"$RUNNING"; then
+            echo "cold start: app alive after 20 s"
+            alive=0
+          else
+            echo "::error::cold start: the app is not running 20 s after launch: it exited or crashed."
+            alive=1
+          fi
+          # Evidence only, bounded: run 43939971777 spent 4.5 minutes in `log show --last 30m`. The log window is the last 3 minutes,
+          # 200 lines, 3 crash-report waits; a collector still running after 2 minutes is killed and is a warning, not a verdict.
+          crash_rc=0
+          SIM_LOG_WINDOW=3m SIM_LOG_LINES=200 SIM_REPORT_WAIT_TRIES=3 \
+            bash .github/scripts/ios-sim-collect.sh "$SIM_UDID" "$PROCESS_NAME" "$RUNNER_TEMP/cold-start" &
+          collector=$!
+          for _ in $(seq 1 60); do
+            if ! kill -0 "$collector" 2>/dev/null; then break; fi
+            sleep 2
+          done
+          if kill -0 "$collector" 2>/dev/null; then
+            echo "::warning::The log collector was still running after 2 minutes and was stopped: no crash-report verdict from it."
+            pkill -P "$collector" || true
+            kill "$collector" || true
+          else
+            wait "$collector" || crash_rc=$?
+          fi
+          xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" || true
+          if [ "$alive" != "0" ]; then exit 1; fi
+          if [ "$crash_rc" != "0" ]; then
+            echo "::error::The app left a crash report on a cold start."
+            exit 1
+          fi
+          echo "cold start ok: $BUNDLE_ID alive after 20 s, no crash report"
+
       # The flow's appId is the Android dev package; the iOS app's bundle id has no .dbg suffix.
+      # MAESTRO_DRIVER_STARTUP_TIMEOUT (milliseconds): run 43935624690 on iOS 27.2 died with "iOS driver not ready in time"
+      # while the XCTest driver was first built and started on the cold runner.
       - name: Run the flow
         id: flow
+        env:
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: '600000'
         run: |
           set -uo pipefail
           FLOW_RUN="$RUNNER_TEMP/flow.yaml"
@@ -188,7 +237,7 @@ jobs:
       # log is Console output on iOS and may not reach the unified log, and the rolling log file is not written in a Debug build (crash reporting is off there), so there is no file to read;
       # a missing line is therefore a warning, not proof the clip never played.
       - name: Check the pack clips played
-        if: always()
+        if: ${{ always() && steps.flow.outcome != 'skipped' }}
         run: |
           set -uo pipefail
           if ! grep -q '^# expect-clips' "$FLOW"; then

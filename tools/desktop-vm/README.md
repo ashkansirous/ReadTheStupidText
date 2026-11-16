@@ -13,7 +13,7 @@ tools\desktop-vm\Build-TestPackage.ps1 -App rtst        # or -App dino; prints t
 msbuild src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
   -p:GenerateAppxPackageOnBuild=true "-p:AppxPackageDir=D:\ReadTheStupidText-worktrees\_desktop-vm\pkgs\rtst\\" `
   -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false
-dotnet publish src/Dino/DinoReader.App -f net10.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64 -p:AppxPackageSigningEnabled=false
+dotnet publish src/Dino/DinoReader.App -f net11.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64 -p:AppxPackageSigningEnabled=false
 #    (Dino writes to src/Dino/DinoReader.App/AppPackages/; copy that folder to ...\_desktop-vm\pkgs\dino\)
 #    Slice 266: Build-TestPackage.ps1 also passes --artifacts-path <worktree>\.artifacts\win-<app> (msbuild: -p:ArtifactsPath=... -p:UseArtifactsOutput=true), so an Android build
 #    in the same worktree (.artifacts\emu-<app>) shares no obj folder and neither prints "Waiting for another build". A fixer's Windows fast check is this script, not a separate

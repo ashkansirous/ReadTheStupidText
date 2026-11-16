@@ -78,7 +78,7 @@ Notes:
 
 ## Tech stack
 
-- **.NET 10** + **C#**
+- **.NET 11** + **C#**
 - **WinUI 3** / **Windows App SDK 1.8** (packaged, single-project MSIX)
 - WinRT `Windows.Media.SpeechSynthesis` + `MediaPlayer` for text-to-speech
 - `H.NotifyIcon.WinUI` for the notification-area (tray) icon *(added in a later slice)*
@@ -89,9 +89,9 @@ Notes:
 ReadTheStupidText.slnx
 src/
   ReadTheStupidText.App/             WinUI 3 single-project MSIX app (UI, DI wiring)
-  Sirous.Reading.Application/     Use cases / orchestration (net10.0)
-  Sirous.Reading.Domain/          Entities, value objects, enums — no framework deps (net10.0)
-  Sirous.Reading.Infrastructure/  TTS, clipboard, UIA, OS integration (net10.0-windows)
+  Sirous.Reading.Application/     Use cases / orchestration (net11.0)
+  Sirous.Reading.Domain/          Entities, value objects, enums — no framework deps (net11.0)
+  Sirous.Reading.Infrastructure/  TTS, clipboard, UIA, OS integration (net11.0-windows)
 ```
 
 Dependency direction is one-way: `App → Application → Domain` and
@@ -100,7 +100,7 @@ Dependency direction is one-way: `App → Application → Domain` and
 ## Prerequisites
 
 - Windows 11
-- .NET 10 SDK
+- .NET 11 SDK
 - Windows App SDK 1.8 (restored via NuGet)
 
 The WinUI project template comes from the

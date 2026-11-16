@@ -3,7 +3,7 @@
 Loaded when you work under `src/Rtst/ReadTheStupidText.Mobile`. Shared platform code in
 `src/Shared/Sirous.Reading.Mobile.Shared` and the Dino Reader app have their own files. CI is in `.github/CLAUDE.md`.
 
-Mobile (Android): `dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`.
+Mobile (Android): `dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android`.
 On a Windows host Mobile.Shared also restores its Windows target (needs the `maui-windows` workload);
 where only `maui-android` is installed add `-p:IncludeWindows=false` (CI's Android and iOS jobs run on
 Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=true -p:IncludeWindows=false
@@ -23,7 +23,7 @@ Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=tru
 > translations) stays **100% offline**; only packs and ML Kit models are downloaded.
 > One **scoped GPL exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded
 > `piper-fa` and `piper-nb` packs (Slice 104), never in the repo or any package. **iOS** is the same MAUI project
-> (`net10.0-ios`) shipped to TestFlight from CI. (Decisions 59-71,
+> (`net11.0-ios`) shipped to TestFlight from CI. (Decisions 59-71,
 > `docs/plan/slices/43-57`; note: docs/plan/notes/claude-md-history.md)
 
 ## Structure
@@ -74,18 +74,18 @@ Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=tru
 ## Build and emulator
 
 ```bash
-dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android
+dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android
 ```
 
 Mobile.Shared adds a Windows target on every Windows host (Dino Reader's head), which needs the
 `maui-windows` workload. Where only `maui-android` is installed, add `-p:IncludeWindows=false`.
 
 Deploy to a device/emulator from Visual Studio (the **Mobile** project's Android
-debug target), or `dotnet build -t:Run -f net10.0-android` with a device/emulator
+debug target), or `dotnet build -t:Run -f net11.0-android` with a device/emulator
 already running. No AVD ships with this repo — set one up locally (or attach a
 physical device) before relying on a slice that touches the Mobile project.
 
-**iOS target (Slice 48, lifted 2026-10-21):** `Platforms/iOS` implements `IPlatformServices` (neural reading and Scan: see the iOS rules under Mobile voice packs). `net10.0-ios` is in the Mobile csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for iOS-only); compile-check on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net10.0-ios -p:IncludeIos=true --no-restore`. CI signing and TestFlight are in `.github/CLAUDE.md`. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
+**iOS target (Slice 48, lifted 2026-10-21):** `Platforms/iOS` implements `IPlatformServices` (neural reading and Scan: see the iOS rules under Mobile voice packs). `net11.0-ios` is in the Mobile csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for iOS-only); compile-check on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net11.0-ios -p:IncludeIos=true --no-restore`. CI signing and TestFlight are in `.github/CLAUDE.md`. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
 **Scan (Slice 45, lifted 2026-10-21):** Scan (Decision 64) uses the ML Kit Document Scanner (Android only, via `IDocumentScanner` registered only in `Platforms/Android`), now one page per Add (`ScanAsync(1)`; a scanner that can't limit pages, iOS, returns what it returns) from our own `CapturePage` (Slice 100, below). Without Play services it falls back to one `MediaPicker` photo, which is why the `CAMERA` + `IMAGE_CAPTURE` `<queries>` stay in the manifest. The csproj pins `AndroidX.Fragment.Ktx` 1.9.1 (the scanner's 1.8.8.1 collides with Fragment 1.9.1 in D8) and `Xamarin.GooglePlayServices.Tasks` must stay >= 118.4.1.3. A real scan needs a device signed in to Google. (Slice 45: docs/plan/slices/45-android-document-scanner.md; detail: docs/plan/notes/claude-md-history.md)
 
@@ -122,7 +122,7 @@ physical device) before relying on a slice that touches the Mobile project.
 - Multi-voice reading is `ISpeechReader.SpeakSegmentsAsync` (native only where `SupportsSegments`; else one voice). `ChunkChanged` may fire off the UI thread: marshal. (Slice 60: docs/plan/slices/60-per-character-voice-reading.md)
 
 - Release Android builds are R8-obfuscated (`src/Shared/AndroidRelease.props`, keep rules in `src/Shared/AndroidProguard.cfg`) and need
-  .NET SDK 10.0.4xx with workload set 10.0.404 as CI pins it (10.0.402 or newer; Android SDK >= 36.1.118); the build errors otherwise. A `NoSuchFieldError` or
+  .NET SDK 11.0.1xx with workload set 11.0.100 as CI pins it (Android SDK >= 36.1.118; 11.0.100 carries 37.x); the build errors otherwise. A `NoSuchFieldError` or
   `LinkageError` in Release only means R8 renamed a member a binding reads over JNI: add a keep rule, clean-rebuild (delete
   obj/bin Release), and smoke-test the Release APK on the emulator with `adb install -r --abi arm64-v8a`. Release ships
   arm64-v8a only. (Slice 72: docs/plan/slices/72-android-deps-r8-obfuscation.md)

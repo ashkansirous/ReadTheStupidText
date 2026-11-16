@@ -19,10 +19,10 @@ function Assert-Lines([string]$Name, [string[]]$Files, [string[]]$Expected) {
     }
 }
 
-$rtstAndroid = 'dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android'
-$dinoAndroid = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-android'
+$rtstAndroid = 'dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android'
+$dinoAndroid = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net11.0-android'
 $rtstWindows = 'dotnet build src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64'
-$dinoWindows = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
+$dinoWindows = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net11.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
 $rtstTests = 'dotnet test tests/Rtst/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj'
 $dinoTests = 'dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj'
 $sharedTests = 'dotnet test tests/Shared/Shared.Tests/Shared.Tests.csproj'

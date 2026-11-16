@@ -60,7 +60,7 @@ jobs:
   shots:
     name: shots-${{ matrix.app }}-${{ matrix.device }}
     timeout-minutes: 55
-    runs-on: macos-26
+    runs-on: xcode-27
     permissions:
       contents: write   # gh release create --draft (the shots' home)
     strategy:
@@ -83,7 +83,7 @@ jobs:
           if [ "$APP" = "dino" ]; then
             {
               echo "PROJECT=src/Dino/DinoReader.App/DinoReader.App.csproj"
-              echo "BUILD_DIR=src/Dino/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64"
+              echo "BUILD_DIR=src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64"
               # One flow per shot; the script expands the glob and runs them in name order.
               echo "FLOW=.maestro/dino/store-shot-ios-[0-9]-*.yaml"
               # One PNG per flow file; the script fails the device when fewer exist at the end.
@@ -92,30 +92,30 @@ jobs:
           else
             {
               echo "PROJECT=src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj"
-              echo "BUILD_DIR=src/Rtst/ReadTheStupidText.Mobile/bin/Debug/net10.0-ios/iossimulator-arm64"
+              echo "BUILD_DIR=src/Rtst/ReadTheStupidText.Mobile/bin/Debug/net11.0-ios/iossimulator-arm64"
               echo "FLOW=.maestro/rtst/store-shot-ios-frames.yaml"
               echo "EXPECTED_SHOTS=4"
             } >> "$GITHUB_ENV"
           fi
           echo "OUT_DIR=$RUNNER_TEMP/shots" >> "$GITHUB_ENV"
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.401'
+          dotnet-version: '11.0.100'
 
-      # Same toolchain pin as dinoreader-ios.yml and ios.yml (workload set 10.0.401 needs Xcode 26.6). Bump them together.
-      - name: Select Xcode 26.6
+      # Same toolchain pin as dinoreader-ios.yml and ios.yml (workload set 11.0.100 needs Xcode 27.2). Bump them together.
+      - name: Select Xcode 27.2
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
           xcodebuild -version
 
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |
           set -euo pipefail
           dotnet --version
-          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload install maui-ios --version 11.0.100
           dotnet workload --version
 
       # Maestro needs Java 17 or newer.
@@ -130,7 +130,7 @@ jobs:
       - name: Build the Debug simulator app
         run: >
           dotnet build "$PROJECT"
-          -f net10.0-ios
+          -f net11.0-ios
           -p:IncludeAndroid=false
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64

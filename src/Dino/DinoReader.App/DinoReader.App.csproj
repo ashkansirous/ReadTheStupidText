@@ -2,16 +2,16 @@
 
 	<!-- Dino Reader (Batch 10, Slice 58, Decision 72): a kids' book reader, a second MAUI app in
 	     this repo. Android always; iOS only where it can be built (Slice 67), with the same
-	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj: net10.0-ios is added on
+	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj: net11.0-ios is added on
 	     macOS or with -p:IncludeIos=true, so Windows and Linux builds never need Xcode, and the
-	     iOS CI job passes -p:IncludeAndroid=false. net10.0-windows10.0.19041.0 (Slice 67) is added on
+	     iOS CI job passes -p:IncludeAndroid=false. net11.0-windows10.0.19041.0 (Slice 67) is added on
 	     Windows only (an MSIX; no tray, no hotkey), and -p:IncludeWindows=false drops it. -->
 	<PropertyGroup>
-		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
-		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' == ''">net10.0-windows10.0.19041.0</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net11.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net11.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net11.0-ios'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' == ''">net11.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net11.0-windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>DinoReader</RootNamespace>
@@ -53,6 +53,9 @@
 		<ApplicationManifest>Platforms/Windows/app.manifest</ApplicationManifest>
 		<SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
+		<!-- MAUI 11 defaults Windows CollectionView to the new CollectionView2 handler; the gallery and store lists
+		     were built and checked on the old one, so keep it until they are checked on the new one (Slice 379). -->
+		<UseWindowsCollectionView2Handler>false</UseWindowsCollectionView2Handler>
 		<!-- Set here, not on the command line: a global RuntimeIdentifier also flows into Mobile.Shared and
 		     makes the package payload list its .pdb twice (APPX1101). CI passes only -p:Platform. -->
 		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
@@ -134,7 +137,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.15" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
 	</ItemGroup>
 
 	<!-- Slice 261: DINO_TEST_BOOKS compiles the test books and the test store in (Debug, or a Release package built with -p:DinoTestBooks=true for the Windows VM checks); DINO_TEST_STORE_ON also makes

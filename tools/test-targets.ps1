@@ -117,10 +117,10 @@ $testRules = @(
     @{ Pattern = '^(Directory\.(Build|Packages)\.(props|targets)|global\.json|nuget\.config|[^/]+\.slnx)$'; Tests = $bothTests }
 )
 $buildCommands = [ordered]@{
-    'rtst-android' = 'dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android'
-    'dino-android' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-android'
+    'rtst-android' = 'dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android'
+    'dino-android' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net11.0-android'
     'rtst-windows' = 'dotnet build src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64'
-    'dino-windows' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net10.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
+    'dino-windows' = 'dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -f net11.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64'
 }
 
 function Get-FastCheckTests([string[]]$Changed) {

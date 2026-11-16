@@ -13,7 +13,7 @@ output="${3:?usage: compile-dino-test-package.sh <project.csproj> <platform> <ou
 
 dotnet build "$project" --disable-build-servers \
   -o "$output" \
-  -f net10.0-windows10.0.19041.0 \
+  -f net11.0-windows10.0.19041.0 \
   -c Release \
   -p:IncludeAndroid=false \
   -p:Platform="$platform" \

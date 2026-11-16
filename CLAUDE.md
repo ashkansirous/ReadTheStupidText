@@ -50,7 +50,7 @@ Shared:
 
 ## Stack & conventions
 
-- **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 2.x** (the exact version is the `Microsoft.WindowsAppSDK` reference in `src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj`).
+- **.NET 11** (SDK 11.0.100, MAUI 11; Slice 379), **C#**, **WinUI 3 / Windows App SDK 2.x** (the exact version is the `Microsoft.WindowsAppSDK` reference in `src/Rtst/ReadTheStupidText.App/ReadTheStupidText.App.csproj`).
 - Solution file is `ReadTheStupidText.slnx` (the XML `slnx` format — not `.sln`).
 - Always confirm Windows App SDK / WinUI / `H.NotifyIcon` APIs and versions via
   **context7** before writing code against them — versions move fast.
@@ -73,20 +73,20 @@ Documents  →  Application
 DinoReader.Core → Application, Domain
 ```
 
-- **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
+- **Domain** (`net11.0`) — entities, value objects, enums. No framework deps.
   Reading speed is the **`PlaybackRate`** value object — a decimal multiplier
   (0.5–2.0, snapped to 0.05 steps), *not* an enum: the user picks a continuous
   rate, with `SpeedPresets` exposing the common stops (1/1.25/1.5/1.75/2) for the
   native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
   Also `SupertonicVoiceTable`/`SupertonicFiles` (Slice 31) — pure voice-catalog
   data, moved here from Infrastructure so Mobile can reuse it too.
-- **Application** (`net10.0`) — use cases / orchestration, interfaces. Also
+- **Application** (`net11.0`) — use cases / orchestration, interfaces. Also
   `LineReflow` (Slice 76, shared by both apps' read paths: `SpeechTextChunker`, Dino
   `StorySentences`/`StorySegmenter`), `SpeechTextChunker`/`ReadTimingTracker` (both `internal`, Slice 31) — pure
   chunking/timing logic shared by every `ISpeechReader` implementation on
   every platform (`InternalsVisibleTo` covers `ReadTheStupidText.Tests`, `Shared.Tests`, `Infrastructure`,
   `Mobile` and `Mobile.Shared`).
-- **Documents** (`net10.0`) — `PlainTextExtractor`/`PdfTextExtractor`/
+- **Documents** (`net11.0`) — `PlainTextExtractor`/`PdfTextExtractor`/
   `DocxTextExtractor`/`CompositeDocumentTextExtractor` (Slice 33). A portable
   library, not Infrastructure or Application: they need PdfPig/
   DocumentFormat.OpenXml (so not Application, which stays library-free) but
@@ -94,17 +94,17 @@ DinoReader.Core → Application, Domain
   Infrastructure (Windows) and Mobile (Android) reference this project and
   share the exact same extractors.
 - **DinoReader.Core** (`src/Dino/DinoReader.Core`) — pure dialogue library, references Application and Domain (details in its own file).
-- **Infrastructure** (`net10.0-windows`) — speech engines (local neural
+- **Infrastructure** (`net11.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; every platform downloads its voice as a pack
   (Slice 50; Windows since Slice 56, no model in the MSIX).
   Clipboard, UI Automation, startup task, OS integration.
-- **Windows.Tray** (`src/Rtst/ReadTheStupidText.Windows.Tray`, `net10.0-windows`, Slice 128, Decision 135) — tray-only
+- **Windows.Tray** (`src/Rtst/ReadTheStupidText.Windows.Tray`, `net11.0-windows`, Slice 128, Decision 135) — tray-only
   Win32/UIA code: global hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe and
   the startup task. Only `App` references it, so a tray edit does not rebuild or ship Dino Reader (which shares
   Infrastructure). Their interfaces (`IHotkeyService`, ...) and the activity log stay in Application/Domain, used by
   `ReadAloudService`. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
-- **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
+- **App** (`net11.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/Rtst/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/Dino/DinoReader.App`** — the
   MAUI apps, sharing `src/Shared/Sirous.Reading.Mobile.Shared`; see their own files (Dino Reader's Windows head and its publish command: `src/Dino/DinoReader.App/CLAUDE.md`).
 
@@ -116,9 +116,9 @@ Build and run commands: RTST tray in `src/Rtst/ReadTheStupidText.App/CLAUDE.md`,
 
 ## Tests
 
-There are three test projects (xUnit v3). `tests/Rtst/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows10.0.19041.0`),
+There are three test projects (xUnit v3). `tests/Rtst/ReadTheStupidText.Tests` (RTST-only logic, `net11.0-windows10.0.19041.0`),
 `tests/Shared/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards
-`FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/Dino/DinoReader.Tests`. A test whose
+`FallbackGuardTests` and `SherpaVersionPinTests`; `net11.0-windows10.0.19041.0`) and `tests/Dino/DinoReader.Tests`. A test whose
 subject only the RTST App, `Windows.Tray` or RTST `Mobile` reaches stays in `ReadTheStupidText.Tests`; anything Dino can
 reach goes in `Shared.Tests`. (Slice 368: docs/plan/slices/368-shared-tests-project.md) They cover the **pure** logic only — `PlaybackRate`, `SpeechTextChunker`,
 `SupertonicVoiceTable`, `ActivityLog`, and the `LocalSettingsStore` settings
@@ -132,7 +132,7 @@ dotnet test tests/Shared/Shared.Tests/Shared.Tests.csproj
 dotnet test tests/Rtst/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
 ```
 
-Dino Reader's pure library has its own suite (xUnit v3, plain `net10.0`, runs on any OS):
+Dino Reader's pure library has its own suite (xUnit v3, plain `net11.0`, runs on any OS):
 
 ```bash
 dotnet test tests/Dino/DinoReader.Tests/DinoReader.Tests.csproj

@@ -78,31 +78,38 @@ jobs:
       # Signed builds only when cutting a release: on PRs the output would be
       # discarded (nothing uploads) and the secrets needlessly exposed.
       SIGN_RELEASE: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && inputs.release == true }}
-      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
+      PUBLISH_DIR: src/Rtst/ReadTheStupidText.Mobile/bin/Release/net11.0-android/publish
       VERSION: ${{ inputs.version }}
     steps:
       # No LFS: the Android package carries no voice model (Slice 50).
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.404'
+          dotnet-version: '11.0.100'
 
-      # Slice 72: workload set 10.0.404 carries Android SDK 36.1.118, the first with
-      # AndroidR8ObfuscationMode (R8 obfuscation). A set only works with an SDK of its
-      # feature band, hence dotnet-version 10.0.404 above (same approach as ios.yml).
+      # Slice 72: a workload set carrying Android SDK 36.1.118 or newer has AndroidR8ObfuscationMode
+      # (R8 obfuscation); 11.0.100 carries 37.x. A set only works with an SDK of its
+      # feature band, hence dotnet-version 11.0.100 above (same approach as ios.yml).
       # maui-android, not bare "android": a CLI-only SDK install needs the
       # MAUI workload pieces too (NETSDK1147 otherwise).
       - name: Install the .NET MAUI Android workload
         run: |
           dotnet --version
-          dotnet workload install maui-android --version 10.0.404
+          dotnet workload install maui-android --version 11.0.100
+
+      # .NET 11 compiles against Android API 37 (XA5207 when android.jar for 37 is missing); the
+      # runner's SDK may only have older platforms, so this installs what the build needs (Slice 379).
+      - name: Install the Android SDK platform the build needs
+        run: |
+          dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -t:InstallAndroidDependencies -f net11.0-android "-p:AndroidSdkDirectory=$ANDROID_HOME" -p:AcceptAndroidSDKLicenses=true
+          ls -d "$ANDROID_HOME"/platforms/android-37*
 
       - name: Debug build (unsigned)
         if: ${{ env.SIGN_RELEASE != 'true' }}
-        run: dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+        run: dotnet build src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android -c Debug
 
       # The Release packaging path differs from Debug (the sherpa natives once went missing
       # only in Release), so PR builds also package an unsigned Release .aab and check it.
@@ -110,7 +117,7 @@ jobs:
       - name: Release package check (unsigned .aab)
         if: ${{ env.SIGN_RELEASE != 'true' }}
         run: |
-          dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
+          dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net11.0-android -c Release -p:AndroidPackageFormat=aab
           bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.readthestupidtext-Signed.aab
 
       - name: Decode upload keystore
@@ -127,7 +134,7 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: >
           dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
-          -f net10.0-android
+          -f net11.0-android
           -c Release
           -p:AndroidPackageFormat=aab
           -p:ApplicationDisplayVersion=${{ inputs.version }}
@@ -152,7 +159,7 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: >
           dotnet publish src/Rtst/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
-          -f net10.0-android
+          -f net11.0-android
           -c Release
           -p:AndroidPackageFormat=apk
           -p:ApplicationDisplayVersion=${{ inputs.version }}

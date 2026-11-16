@@ -71,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0 # `BookBuilder check` compares each book's version with the merge base with origin/main
 
-      - name: Set up .NET 10
+      - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json # Slice 353: one SDK pin for every job
