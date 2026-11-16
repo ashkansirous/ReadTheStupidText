@@ -185,6 +185,7 @@ through `library-docs` or `web-research` before building that part.
       shell. By hand: the Microsoft price, listing and submission; the Apple review screenshot and submission.
 - [ ] User-only: accept the Paid Apps agreement and fill bank and tax details in App Store Connect; set up a Google
       Payments merchant profile in Play Console; Microsoft payout and tax profile in Partner Center.
+      *2026-11-16:* Apple and Microsoft are done. Only Google's bank test deposit is left, and the user said not to remind them (2026-11-13, see the state read below). Kept unticked for that deposit only.
 - [x] Replace every "no in-app purchases" and "no account" line in `docs/store-listings/dino/*` and
       `site/dino/privacy.html`; say purchases go through the store and we keep nothing about the buyer. Check the
       `AndroidManifest.xml`, `Info.plist` and `PrivacyInfo.xcprivacy` network comments match what the app now sends.
