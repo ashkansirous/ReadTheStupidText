@@ -81,6 +81,22 @@
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<!-- The privacy manifest App Store Connect requires. -->
 		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+		<!-- Slice 401: the microphone prompt in the fifteen app languages; the folders, with CFBundleLocalizations in Info.plist, are so the App Store can list the app's languages. -->
+		<BundleResource Include="Platforms\iOS\Resources\en.lproj\InfoPlist.strings" LogicalName="en.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ar.lproj\InfoPlist.strings" LogicalName="ar.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\es.lproj\InfoPlist.strings" LogicalName="es.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fa.lproj\InfoPlist.strings" LogicalName="fa.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fr.lproj\InfoPlist.strings" LogicalName="fr.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ja.lproj\InfoPlist.strings" LogicalName="ja.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\da.lproj\InfoPlist.strings" LogicalName="da.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fi.lproj\InfoPlist.strings" LogicalName="fi.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\sv.lproj\InfoPlist.strings" LogicalName="sv.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\nb.lproj\InfoPlist.strings" LogicalName="nb.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\nl.lproj\InfoPlist.strings" LogicalName="nl.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\de.lproj\InfoPlist.strings" LogicalName="de.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\pt.lproj\InfoPlist.strings" LogicalName="pt.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ru.lproj\InfoPlist.strings" LogicalName="ru.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\zh-Hans.lproj\InfoPlist.strings" LogicalName="zh-Hans.lproj/InfoPlist.strings" />
 		<!-- Drop the SDK's default items for the catalog (their Link keeps the Platforms\iOS\Resources\
 		     prefix, which the old XSAppIconAssets plist key never matched), then add it back linked at Assets.xcassets\. -->
 		<BundleResource Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
