@@ -553,13 +553,22 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
-### Slice 379 part A: Everything to the latest stable ([slice](slices/379-everything-to-latest-stable.md))
-- **Device:** iOS jobs on CI after merge (SDK 10.0.401 / Xcode 26.6 pins).
+### Slice 379: Everything to the latest stable, .NET 11 ([slice](slices/379-everything-to-latest-stable.md))
+- **Device:** RTST cold start on iOS under the scene lifecycle (MT7199 fix; RTST only compiled on CI, Dino's cold start is shown), on an iOS 27 and an older iOS device or simulator; the Debug test hooks firing through `SceneOpenUrl`, `SceneWillConnect` and `SceneOnActivated` in RTST; file "Open in" / share hand-off (none is declared today).
+- **You:** background audio continuing with the screen locked (Slice 49 / Dino story) on an iPhone; the pack-download paused notification and the downloader's active/inactive stall clock under scenes; a Dino StoreKit purchase sheet presenting; `VisionKitDocumentScanner` presenting from `Platform.GetCurrentUIViewController()` in RTST (`reviews/pr-1176-check2.md` #1).
+- **Device:** the first release run after merge shows the TestFlight upload accepted (`altool` on `macos-26`, Xcode 26) for an .ipa built with Xcode 27.2 on `xcode-27` (`release-rtst.yml`, `release-dino.yml`).
+- **Device:** `store-screenshots.yml` and the iPad 13" / iPhone 6.5" types on the `xcode-27` image: the 2026-11-16 simulator run booted an iOS 27.2 iPhone only.
+- **Device:** capture a CoreCLR native crash on the emulator and write its signature into `tools/emulator/speed.ps1`'s launch-crash retry, which still matches only Mono (`TODO(379B device run)`).
+- **Device:** phone `-Variant aot` (`tools/phone`): `PublishReadyToRun` and `PublishTrimmed` on a Debug `dotnet build` may not ReadyToRun-compile, and trimming may strip the Debug test hooks; one `-Build -Variant aot` phone run settles it.
+- **Device:** `src/Shared/AndroidRelease.props` R8 guard still accepts the Android SDK pack floor 36.1.118: raise it to the 37.x pack once a release build shows the exact version.
+- **Device:** Dino store list under CoreCLR: the 2026-11-16 emulator run logged `[Usage] fallback store:store_unreachable` on the shelf and ran no store flow; run a store flow with its stub (`store-tags`). Slice 393 lists `store_unreachable` as a tooling item.
+- **Device:** start-time and speed under CoreCLR against the Mono numbers (`tools/emulator/speed.ps1`).
+- **Device:** Dino's per-page iOS status-bar icon colour (`StatusBarPageViewController`, Slice 325 A4) on the handler-based NavigationPage: the icons still follow each page.
+- **Device:** iOS NavigationPage/TabbedPage handlers (Dino); Windows CollectionView2 (opted out for Dino, so unchanged).
 - **Device:** Node 26 in the release scripts (first release run).
 - **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
 - **Device:** ARM64 MSIX.
 - **Device:** Windows tray read in the Hyper-V VM.
-- **You:** TestFlight build of each app.
 - **Device:** RTST Scan flow.
 
 ### Slice 389: Tooling: the emulator preflight picks an installed JDK ([slice](slices/389-tooling-emulator-preflight-picks-an-installed-jdk.md))
