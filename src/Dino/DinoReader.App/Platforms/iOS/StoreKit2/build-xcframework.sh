@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Slice 390: builds DinoStoreKit.xcframework (a static library for device and simulator, arm64) from Sources/DinoStoreKit/DinoStoreKit.swift.
-# macOS with Xcode only (the iOS workflows select Xcode 26.6 first). Usage: build-xcframework.sh <output-dir>
+# macOS with Xcode only (the iOS workflows select Xcode 27.2 first). Usage: build-xcframework.sh <output-dir>
 # The result is <output-dir>/DinoStoreKit.xcframework; an existing one is replaced. DinoReader.App.csproj runs this
 # before an iOS build when the output is missing or older than the Swift sources, and the Dino iOS workflows run it as
 # their own step first so a Swift error shows up on its own line of the log. A plain swiftc call, no Swift package:

@@ -106,7 +106,7 @@ jobs:
       - name: Install the Android SDK platform the build needs
         run: |
           dotnet build src/Dino/DinoReader.App/DinoReader.App.csproj -t:InstallAndroidDependencies -f net11.0-android "-p:AndroidSdkDirectory=$ANDROID_HOME" -p:AcceptAndroidSDKLicenses=true
-          test -d "$ANDROID_HOME/platforms/android-37"
+          ls -d "$ANDROID_HOME"/platforms/android-37*
 
       - name: Debug build (unsigned)
         if: ${{ env.SIGN_RELEASE != 'true' }}

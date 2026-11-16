@@ -693,7 +693,8 @@ function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$
     # Slice 225 item 23: --disable-build-servers (= -nodeReuse:false, UseSharedCompilation=false, UseRazorBuildServer=false) so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
     $arguments = @($Project, '-f', 'net11.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '--disable-build-servers', '-nodeReuse:false', '-p:UseSharedCompilation=false',
         "-p:RuntimeIdentifier=$Rid", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$Package")
-    if ($Aot) { $arguments += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
+    # .NET 11 runs CoreCLR: RunAOTCompilation (true or false) stops the build with XA1044. Its CoreCLR counterpart is ReadyToRun, which needs trimming (XA0119 otherwise).
+    if ($Aot) { $arguments += '-p:PublishReadyToRun=true', '-p:PublishTrimmed=true' }
     return $arguments
 }
 
