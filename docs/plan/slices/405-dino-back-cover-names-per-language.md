@@ -97,7 +97,7 @@ page, on the current version", item 6 covers it.
 *Open items:*
 
 - Farsi reteller line wraps inside the name («...توسط اشکان» / «سیروس») and the gap looks larger than the normal wrapped-line spacing. Keep a name on one line (non-breaking spaces) and check the gap. Not fixed in this slice.
-- After the merge (coordinator): upload all 15 bumped books to the store and compare `/api/stories` versions with `book.json`.
+- Done 2026-11-17: merged as PR #1235 (0ae568bc, in the night's batched release, so the merge skipped `dino-store.yml`); store upload run 44187449666 (dispatched by hand) concluded `success` and uploaded all 15 packages. `/api/stories` read afterwards: starters good-enough v10, three-little-pigs v16, gingerbread-man v13, tortoise-and-hare v13 match `book.json`; the live three-little-pigs v16 package's `story.json` carries `NamesByLanguage` (fa «اشکان سیروس»).
 - Item 6 stays open, conditional on the user's answer.
 
 #### For CLAUDE.md
