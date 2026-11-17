@@ -29,9 +29,9 @@ public sealed class BusyGuard
 	}
 
 	/// <summary>Runs <paramref name="work"/> once the running action (and any queued before it) is done, instead of dropping it: for a result that must be applied, such as an installed pack or leaving a page.</summary>
-	public async Task RunWhenFreeAsync(Func<Task> work)
+	public async Task RunWhenFreeAsync(Func<Task> work, CancellationToken cancel = default)
 	{
-		await _gate.WaitAsync();
+		await _gate.WaitAsync(cancel); // a cancelled wait never takes the gate, so nothing is left to release
 		try
 		{
 			await work();

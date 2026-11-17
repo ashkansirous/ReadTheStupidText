@@ -63,9 +63,9 @@ public class BusyGuardTests
             Interlocked.Increment(ref done);
         };
 
-        Task first = guard.RunWhenFreeAsync(work);
-        Task second = guard.RunWhenFreeAsync(work);
-        Task third = guard.RunWhenFreeAsync(work);
+        Task first = guard.RunWhenFreeAsync(work, TestContext.Current.CancellationToken);
+        Task second = guard.RunWhenFreeAsync(work, TestContext.Current.CancellationToken);
+        Task third = guard.RunWhenFreeAsync(work, TestContext.Current.CancellationToken);
         Assert.Equal(0, done);
 
         release.SetResult();
@@ -77,11 +77,30 @@ public class BusyGuardTests
     }
 
     [Fact]
+    public async Task RunWhenFreeAsync_ACancelledWaitNeverRunsAndLeavesTheGuardFree()
+    {
+        var guard = new BusyGuard();
+        var release = new TaskCompletionSource();
+        Task running = guard.RunWhenFreeAsync(() => release.Task, TestContext.Current.CancellationToken);
+        using var cts = new CancellationTokenSource();
+        bool ran = false;
+
+        Task queued = guard.RunWhenFreeAsync(() => { ran = true; return Task.CompletedTask; }, cts.Token);
+        cts.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => queued);
+        release.SetResult();
+        await running;
+
+        Assert.False(ran);
+        Assert.False(guard.IsBusy);
+    }
+
+    [Fact]
     public async Task RunWhenFreeAsync_ReleasesTheGuardWhenTheWorkThrows()
     {
         var guard = new BusyGuard();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => guard.RunWhenFreeAsync(() => throw new InvalidOperationException()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => guard.RunWhenFreeAsync(() => throw new InvalidOperationException(), TestContext.Current.CancellationToken));
 
         Assert.False(guard.IsBusy);
     }

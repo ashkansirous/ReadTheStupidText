@@ -1,19 +1,25 @@
 namespace DinoReader.Core;
 
-/// <summary>What the result line under the Store's "Bought books before?" card says after a restore (Slice 364, mock S3).</summary>
+/// <summary>What the dark message above the tab bar says after a restore (Slice 396, mock RR2 and RR3; was the result line under the "Bought books before?" card of Slice 364).</summary>
 public enum RestoreLine
 {
-    /// <summary>No line: the restore found books but none reached the shelf, and each failed row already says why.</summary>
+    /// <summary>No message: the restore found books but none reached the shelf, and each failed row already says why.</summary>
     None,
 
-    /// <summary>The green line: one book restored ("It's on the shelf").</summary>
+    /// <summary>One book restored ("It's on the shelf").</summary>
     RestoredOne,
 
-    /// <summary>The green line: several books restored ("They're on the shelf").</summary>
+    /// <summary>Several books restored ("They're on the shelf").</summary>
     RestoredMany,
 
-    /// <summary>The sand line: the account owns no book that is missing from the shelf.</summary>
-    NothingToRestore,
+    /// <summary>No book came back but a running subscription did ("You are subscribed. Every book is open.").</summary>
+    SubscriptionBack,
+
+    /// <summary>The account owns no book and no subscription: "Nothing bought with this ... account yet." with a Redeem a code action.</summary>
+    NothingFound,
+
+    /// <summary>The account owns books but every one is already on the shelf and no subscription runs: the green "On the shelf" message (nothing was missing, so nothing was fetched).</summary>
+    AllOnShelf,
 }
 
 /// <summary>Pure rules for a restore that puts the bought books on the shelf (Slice 364).</summary>
@@ -25,9 +31,10 @@ public static class StoreRowRestore
     /// <summary>
     /// The one place that decides the line, once the run has finished: <paramref name="fetched"/> books the restore fetched itself, <paramref name="alreadyDownloading"/> bought books that were
     /// already arriving when it started (awaited like the fetched ones), <paramref name="arrived"/> of those two groups that reached the shelf. Nothing owned off the shelf and nothing arriving
-    /// is the sand line; every book failed is no line (each row's own strip says why).
+    /// is the subscription line when a subscription runs, else the all-on-shelf line when <paramref name="ownsBooks"/> (the account owns a book, which is already on the shelf), else the nothing-found
+    /// line; every book failed is no line (each row's own strip says why).
     /// </summary>
-    public static RestoreLine LineFor(int fetched, int arrived, int alreadyDownloading)
+    public static RestoreLine LineFor(int fetched, int arrived, int alreadyDownloading, bool subscriptionActive = false, bool ownsBooks = false)
     {
         if (arrived > 1)
         {
@@ -39,6 +46,16 @@ public static class StoreRowRestore
             return RestoreLine.RestoredOne;
         }
 
-        return fetched + alreadyDownloading == 0 ? RestoreLine.NothingToRestore : RestoreLine.None;
+        if (fetched + alreadyDownloading != 0)
+        {
+            return RestoreLine.None;
+        }
+
+        if (subscriptionActive)
+        {
+            return RestoreLine.SubscriptionBack;
+        }
+
+        return ownsBooks ? RestoreLine.AllOnShelf : RestoreLine.NothingFound;
     }
 }

@@ -84,8 +84,7 @@
                     </Label.GestureRecognizers>
                 </Label>
                 <Label x:Name="ContentNote" AutomationId="GalleryCornerLine" Grid.Column="1" TextColor="{StaticResource Body}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="2" />
-                <!-- Slice 325 part B (frame T2): the Store tab's sub-line under its title, "Picked and cast for Dino", 14 / Muted. -->
-                <Label x:Name="ContentSub" AutomationId="GalleryStoreSub" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="False" FontSize="14" TextColor="{StaticResource Muted}" LineBreakMode="TailTruncation" MaxLines="2" />
+                <!-- Slice 396 (mock RR1): the Store tab's sub-line "Picked and cast for Dino" lives in StorePage's first line, beside Restore purchases. -->
             </Grid>
             <CollectionView Grid.Row="1" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" ItemTemplate="{StaticResource Selector}">
                 <CollectionView.ItemsLayout>

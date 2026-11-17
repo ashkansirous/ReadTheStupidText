@@ -993,8 +993,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		};
 		ContentTitle.Text = title;
 		_corner.SetTitle(title);
-		ContentSub.IsVisible = tab == CornerTab.Store;
-		ContentSub.Text = AppResources.Store_Subtitle;
 	}
 
 	// The cover, its title and the grown-ups' "⋯" dot follow the window's family; they are page resources the tiles bind to, written only when the value really changes.

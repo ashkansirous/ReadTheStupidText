@@ -55,8 +55,9 @@ onFlowComplete:
     visible:
       id: GalleryStoreSub
     timeout: 30000
-- extendedWaitUntil:
-    visible: "Get"
+# Slice 396: the Restore purchases line above the list pushes the Get row below the fold on the emulator, so scroll to it.
+- scrollUntilVisible:
+    element: "Get"
     timeout: 30000
 # Only now does the test store start refusing: the row is already on screen.
 - launchApp:
@@ -68,7 +69,8 @@ onFlowComplete:
     text: "Get"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible: "You need to buy this book first\\."
+    # Slice 396: the 402 strip ends with the inline "Bought it already? Restore purchases" link in the same label.
+    visible: "You need to buy this book first\\. Bought it already\\? Restore purchases"
     timeout: 30000
 # 404: the book is not in the Store any more: a red strip and no button (a retry could only fail the same way).
 - launchApp:

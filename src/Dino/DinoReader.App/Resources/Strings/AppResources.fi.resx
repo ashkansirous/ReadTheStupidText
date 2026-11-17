@@ -404,15 +404,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>Liian monta yritystä. Odota minuutti ja yritä uudelleen.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Tämä kirja ei ole enää kaupassa.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Ilmainen</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Oletko ostanut kirjoja aiemmin?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat palaavat myös tähän puhelimeen.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat palaavat myös tähän tablettiin.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat palaavat myös tähän puhelimeen.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat palaavat myös tähän tablettiin.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ostetut kirjat palaavat myös tähän tietokoneeseen.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Palautetaan…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Tällä Google-tilillä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Ostit sen jo? Palauta ostot</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 kirja palautettu. Se on hyllyssä.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} kirjaa palautettu. Ne ovat hyllyssä.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Tililtä ei löytynyt ostettuja kirjoja.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Kaupassa on ongelma</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Palauta ostot</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lunasta koodi</value></data>
