@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "61bb25b8f132413c82a4208827c7563b",
   "title": "Good Enough",
-  "version": 9,
+  "version": 10,
   "ageMin": 5,
   "ageMax": 8,
   "author": "Ashkan Sirous",
@@ -55,7 +55,7 @@
   "animals": {
     "Carrot": "Rabbit"
   },
-  "contentHash": "250ef391a4ec8dd7fa2bdef369ede51ec4d9566d286da861e2856c1a865cfa54",
+  "contentHash": "07e07cf4d1feab7b3e2aa9005789b5a02e5e9bcc6833168952763e3db9a2c763",
   "creditsByLanguage": {
     "ar": "كتاب مصوّر من دينو ريدر",
     "da": "En billedbog fra Dino Reader",
@@ -72,5 +72,49 @@
     "sv": "En bilderbok från Dino Reader",
     "zh": "恐龙阅读器绘本"
   },
-  "storyBy": "Ashkan Sirous"
+  "storyBy": "Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": {
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  }
 }

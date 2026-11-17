@@ -125,7 +125,7 @@ public static class StoryJson
             return [];
         }
 
-        var file = new BackCoverFile { StoryBy = cover.StoryBy, Retold = cover.Retold ? true : null, Illustration = cover.Illustration, Month = cover.MonthText, Picture = cover.PictureFile };
+        var file = new BackCoverFile { StoryBy = cover.StoryBy, Retold = cover.Retold ? true : null, Illustration = cover.Illustration, Month = cover.MonthText, Picture = cover.PictureFile, NamesByLanguage = cover.NamesByLanguage };
         return [new PageFile { Text = BackCoverEnglish.PageText(cover), ImageFile = cover.PictureFile, BackCover = file }]; // Slice 359: an older app shows the picture as the page's own
     }
 
@@ -142,7 +142,7 @@ public static class StoryJson
             throw new StoryFormatException("The story file has a back cover but no story pages.");
         }
 
-        return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month, file.Picture ?? OlderFilePicture(pages[lastIndex].ImageFile)));
+        return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month, file.Picture ?? OlderFilePicture(pages[lastIndex].ImageFile), file.NamesByLanguage));
     }
 
     // A file from before the Picture field names its back-cover picture as the last page's image; any other image there is not the back cover's.
@@ -530,6 +530,10 @@ public static class StoryJson
         /// <summary>Slice 359: the drawn back-cover picture's file name; absent for a book that still shows the live credits page.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Picture { get; set; }
+
+        /// <summary>Slice 405: each name as every reading language writes it (<c>{ "fa": { "Aesop": "ازوپ" } }</c>); absent in an older file, whose names then show as written.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, Dictionary<string, string>>? NamesByLanguage { get; set; }
     }
 
     private sealed class RegionFile

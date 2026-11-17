@@ -77,6 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 405: Dino back cover names per language ([slice](slices/405-dino-back-cover-names-per-language.md))
+- **Device:** iOS simulator back cover in Farsi and Japanese (no Mac here; `dinoreader-ios-sim.yml` is workflow_dispatch only and has no back-cover flow).
+- **You:** native read of the spellings chosen without a store-card source: ar «الأخوان غريم»; Perrault, Southey and Andersen in ar, fa, ja, ru, zh; ru «Эзоп».
+
 ### Slice 402: Dino App Store header and search-results pictures ([slice](slices/402-dino-app-store-creative-assets.md))
 - **Device:** how the pictures look in App Store search on an iOS 27 device.
 

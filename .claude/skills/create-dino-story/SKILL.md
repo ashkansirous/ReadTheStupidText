@@ -89,6 +89,10 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   `"traditional"` for a tale nobody owns) and `retold: true` for every book that is not the user's own. Own books: `storyBy` is the user's name (plus a co-author) and no `retold`.
   A classic needs its real original author, checked, never guessed (Potter, Aesop, Andersen, the Brothers Grimm...). The illustrator is Ashkan Sirous unless `illustration` says otherwise,
   and the month is the book's `added` date. Nobody types the page into `story.md`; `check` fails a book without `storyBy`. It shows as the last page in every reading mode (an older app reads it aloud).
+  **Slice 405: every name on it is written in the reading language.** `book.json` gets `namesByLanguage`: `{ "<lang>": { "<name as written in storyBy / the maker / illustration>": "<spelling>" } }` for
+  each of the 14 non-English languages and every name the back cover shows (each `storyBy` name, `Ashkan Sirous` for a retold book and the illustration, nothing for `"traditional"`). Take a name from the
+  same book's `creditsByLanguage` first, else the usual form in that language (de "Äsop", fr "Ésope", fa «ازوپ»); write it so it fits the app's label ("Story by {0}", so "den Brüdern Grimm", not "Brüder Grimm" after "von").
+  A Latin-script language keeps a personal name as written unless it has its own form. The builder (`Books.ReadInfo`) refuses a book that misses a name or language; `stamp` a starter after.
   **Slice 359: every book also gets a drawn back-cover picture** (one per book, no words in it, the middle left calm because the reader lays the credit lines over it): `content/dino/<stem>/back-cover.jpg`
   (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
   `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).

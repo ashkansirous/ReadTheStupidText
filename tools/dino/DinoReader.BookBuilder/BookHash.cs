@@ -6,7 +6,7 @@ namespace DinoReader.BookBuilder;
 
 /// <summary>
 /// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359), the complete <c>high-res/</c> set of a store book (Slice 375 B), translations, and the parts of <c>book.json</c>
-/// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals). The version is not in it: <c>check</c> compares the hash with the one stored
+/// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals, names by language). The version is not in it: <c>check</c> compares the hash with the one stored
 /// beside the version, so changing a book without <c>stamp</c> (which raises the version and stores the new hash) fails the check. Text files are hashed with LF line
 /// endings, so a Windows checkout and a Linux one agree.
 /// </summary>
@@ -57,11 +57,15 @@ internal static class BookHash
         var options = new JsonSerializerOptions(Books.JsonOptions) { WriteIndented = false };
         return JsonSerializer.Serialize(new
         {
-            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures, info.StoryBy, info.Retold, info.Illustration,
+            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures, info.StoryBy, info.Retold, info.Illustration, NamesByLanguage = SortedNames(info.NamesByLanguage),
             Animals = info.Animals?.OrderBy(a => a.Key, StringComparer.Ordinal).ToDictionary(a => a.Key, a => a.Value),
             NotAnimals = info.NotAnimals?.Order(StringComparer.Ordinal).ToArray(),
         }, options);
     }
+
+    // Slice 405: in a fixed order, so reordering the keys in book.json changes nothing.
+    private static SortedDictionary<string, SortedDictionary<string, string>>? SortedNames(Dictionary<string, Dictionary<string, string>>? names) =>
+        names is null ? null : new(names.ToDictionary(l => l.Key, l => new SortedDictionary<string, string>(l.Value, StringComparer.Ordinal)), StringComparer.Ordinal);
 
     private static void Add(IncrementalHash hash, string name, byte[] bytes)
     {

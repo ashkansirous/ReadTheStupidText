@@ -189,6 +189,119 @@ public class BackCoverTests
         Assert.NotEqual(BookHash.Of(book), BookHash.Of(other));
     }
 
+    private static readonly Dictionary<string, Dictionary<string, string>> Spelled = new()
+    {
+        ["fa"] = new() { ["Aesop"] = "ازوپ", ["Ashkan Sirous"] = "اشکان سیروس" },
+        ["de"] = new() { ["Aesop"] = "Äsop" },
+    };
+
+    [Fact]
+    public void NameIn_finds_the_spelling_and_falls_back_to_the_name_as_written()
+    {
+        BackCover cover = Retold with { NamesByLanguage = Spelled };
+
+        Assert.Equal("ازوپ", cover.NameIn("Aesop", "fa"));
+        Assert.Equal("Äsop", cover.NameIn("Aesop", "de"));
+        Assert.Equal("Ashkan Sirous", cover.NameIn("Ashkan Sirous", "de"));
+        Assert.Equal("Aesop", cover.NameIn("Aesop", "ja"));
+        Assert.Equal("Aesop", Retold.NameIn("Aesop", "fa"));
+    }
+
+    [Fact]
+    public void Names_by_language_round_trip_through_story_json_and_an_old_file_without_them_still_loads()
+    {
+        BackCover cover = Retold with { NamesByLanguage = Spelled };
+
+        Story back = StoryJson.Deserialize(StoryJson.Serialize(Make(cover)));
+
+        Assert.Equal("ازوپ", back.BackCover!.NameIn("Aesop", "fa"));
+        Assert.DoesNotContain("NamesByLanguage", StoryJson.Serialize(Make(Retold)));
+        Assert.Null(StoryJson.Deserialize(StoryJson.Serialize(Make(Retold))).BackCover!.NamesByLanguage);
+    }
+
+    [Fact]
+    public void The_shown_names_are_the_writers_the_maker_and_the_illustrator_and_nothing_for_a_traditional_tale()
+    {
+        Assert.Equal(["Elham Shafiei Gol", "Ashkan Sirous"], BackCover.ShownNames("Elham Shafiei Gol; Ashkan Sirous", false, null));
+        Assert.Equal(["Aesop", "Ashkan Sirous"], BackCover.ShownNames("Aesop", true, null));
+        Assert.Equal(["Ashkan Sirous"], BackCover.ShownNames(BackCover.Traditional, true, null));
+    }
+
+    [Fact]
+    public void Every_book_spells_every_back_cover_name_in_every_language()
+    {
+        foreach (BookFolder book in Books.All)
+        {
+            Assert.Null(Books.NamesByLanguageProblem(book.Info));
+            Assert.NotNull(book.BackCover!.NamesByLanguage);
+        }
+    }
+
+    [Fact]
+    public void The_builder_refuses_a_book_missing_a_language_or_a_name()
+    {
+        BookInfo info = Books.Folder("lion-and-mouse").Info;
+        var noJapanese = info.NamesByLanguage!.Where(l => l.Key != "ja").ToDictionary(l => l.Key, l => l.Value);
+        var noAesop = info.NamesByLanguage!.ToDictionary(l => l.Key, l => l.Value.Where(n => n.Key != "Aesop").ToDictionary(n => n.Key, n => n.Value));
+
+        Assert.Contains("ja/Aesop", Books.NamesByLanguageProblem(info with { NamesByLanguage = noJapanese })!);
+        Assert.Contains("fa/Aesop", Books.NamesByLanguageProblem(info with { NamesByLanguage = noAesop })!);
+        Assert.NotNull(Books.NamesByLanguageProblem(info with { NamesByLanguage = null }));
+    }
+
+    [Theory]
+    [InlineData("ar")]
+    [InlineData("fa")]
+    [InlineData("ja")]
+    [InlineData("zh")]
+    [InlineData("ru")]
+    public void The_builder_refuses_a_name_still_in_latin_letters_in_a_language_with_its_own_script(string language)
+    {
+        BookInfo info = Books.Folder("lion-and-mouse").Info;
+        var latin = info.NamesByLanguage!.ToDictionary(l => l.Key, l => new Dictionary<string, string>(l.Value));
+        latin[language]["Aesop"] = "Aesop";
+
+        string problem = Books.NamesByLanguageProblem(info with { NamesByLanguage = latin })!;
+
+        Assert.Contains($"{language}/Aesop", problem);
+        Assert.Contains("Latin letters", problem);
+    }
+
+    [Fact]
+    public void Back_covers_with_the_same_content_are_equal_and_a_different_spelling_is_not()
+    {
+        BackCover one = Retold with { NamesByLanguage = new() { ["fa"] = new() { ["Aesop"] = "ازوپ" } } };
+        BackCover same = Retold with { NamesByLanguage = new() { ["fa"] = new() { ["Aesop"] = "ازوپ" } } };
+        BackCover other = Retold with { NamesByLanguage = new() { ["fa"] = new() { ["Aesop"] = "اسوپ" } } };
+
+        Assert.Equal(one, same);
+        Assert.Equal(one.GetHashCode(), same.GetHashCode());
+        Assert.NotEqual(one, other);
+        Assert.NotEqual(one, Retold);
+    }
+
+    [Fact]
+    public void Joined_names_use_and_unless_one_holds_the_and_word_then_the_list()
+    {
+        static string And(string a, string b) => $"{a} + {b}";
+        static string List(string a, string b) => $"{a}, {b}";
+
+        Assert.Equal("A + B", BackCover.JoinSpelled(["A", "B"], "et", And, List));
+        Assert.Equal("A, Jacob et Wilhelm, B", BackCover.JoinSpelled(["A", "Jacob et Wilhelm", "B"], "et", And, List));
+        Assert.Equal("A + Bet", BackCover.JoinSpelled(["A", "Bet"], "et", And, List));
+        Assert.Equal("Only", BackCover.JoinSpelled(["Only"], "et", And, List));
+    }
+
+    [Fact]
+    public void The_hash_covers_the_names_by_language()
+    {
+        BookFolder book = Books.Folder("lion-and-mouse");
+        var changed = book.Info.NamesByLanguage!.ToDictionary(l => l.Key, l => new Dictionary<string, string>(l.Value));
+        changed["fa"]["Aesop"] = "something else";
+
+        Assert.NotEqual(BookHash.Of(book), BookHash.Of(new BookFolder(book.Stem, book.Dir, book.Info with { NamesByLanguage = changed })));
+    }
+
     [Fact]
     public void A_book_json_without_storyBy_fails_to_load()
     {

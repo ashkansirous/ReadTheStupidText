@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "966400017c494fb5b045786f53852c9e",
   "title": "The Three Little Pigs",
-  "version": 15,
+  "version": 16,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -57,7 +57,7 @@
     "Pop": "Pig",
     "Pim": "Pig"
   },
-  "contentHash": "7af8787196c9da7eccece9a4bf1418b34639ef863fe5c1efd8c1caf5e416629a",
+  "contentHash": "1edb6fdd9dd0db873b8846b67b2655c6d76ab27666e0f16c0288ce114e56289a",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -76,5 +76,49 @@
   },
   "storyBy": "traditional",
   "retold": true,
+  "namesByLanguage": {
+    "ar": {
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  },
   "access": "free"
 }

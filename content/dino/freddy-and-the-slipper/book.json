@@ -72,5 +72,21 @@
     "sv": "Av Elham Shafiei Gol och Ashkan Sirous",
     "zh": "作者：埃尔哈姆·沙菲伊·戈尔、阿什坎·西鲁斯"
   },
-  "storyBy": "Elham Shafiei Gol; Ashkan Sirous"
+  "storyBy": "Elham Shafiei Gol; Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": { "Elham Shafiei Gol": "إلهام شفيعي گل", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Elham Shafiei Gol": "الهام شفیعی گل", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Elham Shafiei Gol": "エルハム・シャフィエイ・ゴル", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Elham Shafiei Gol": "Эльхам Шафиеи Гол", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Elham Shafiei Gol": "Elham Shafiei Gol", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Elham Shafiei Gol": "埃尔哈姆·沙菲伊·戈尔", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
 }
