@@ -18,7 +18,7 @@ rename or delete; (7) the report. **Release the lock on every path out of steps 
 and every safety rule in it still holds: the model check, one prompt per chat, at most 3 tries, small copies only, the lock only
 around the paste and the save (never while Gemini draws), never solve a CAPTCHA.
 
-**Up to four illustrators run at once, on separate books or on page groups of the same book.** They share one Chrome, one Windows clipboard
+**Up to two illustrators run at once (the user, 2026-11-17), on separate books or on page groups of the same book.** Open your own tab with `tabs_create_mcp` and use only that `tabId`; never use a tab that `tabs_context_mcp` lists or hands you, and never close a tab or tab group you didn't open (SKILL.md step 6 has the known Gemini snags). They share one Chrome, one Windows clipboard
 (for pasting the line-up) and `Downloads`, so hold the lock around both shared moments, using
 your owner name (one per picture: `<stem>-<page>`, the cover `<stem>-cover`, so agents on the same book or group never share one; no commas; `<stem>` alone in `setup` mode): `pwsh gemini-lock.ps1 Take <owner>` before `gemini-clipboard.ps1 Put` + ctrl+v,
 and `Release <owner>` once the thumbnail shows; `Take <owner>` before `__grab` + `gemini-take-download.ps1`, and
