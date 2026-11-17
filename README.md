@@ -18,7 +18,7 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 > These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `rtst-v*` release automatically.
 
-**Android and iPhone/iPad:** Android is in beta on Google Play (testers) and iPhone/iPad on TestFlight; there is no direct APK download. Windows is Store-only.
+**Android and iPhone/iPad:** Android is live on [Google Play](https://play.google.com/store/apps/details?id=uk.sirous.readthestupidtext); iPhone/iPad is on TestFlight; there is no direct APK download. Windows is Store-only.
 
 **Android first launch:** the app asks for a language and downloads the ~145 MB voice pack (Wi-Fi advised). The phone's own voice reads until it arrives, and the app works offline afterwards.
 
@@ -26,7 +26,7 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 **iOS:** the iOS app has the neural voice (after the pack download), camera scanning with on-device text recognition, background audio, fifteen languages of voices, the head start, per-language text recognition and localised permission prompts (translation is Android-only for now).
 
-**Dino Book Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/Dino/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence (on scanned or PDF stories it shows the real pages); and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It ships four starter stories, readable in any of the fifteen languages (your own stories translate on Android), lets grown-ups browse and download free curated stories from the in-app store (nothing about the user is sent), and saves or restores all stories as one backup file; a first run asks for the language. It works in fifteen languages, with right-to-left layout for Farsi and Arabic.
+**Dino Book Reader** (live on the [Microsoft Store](https://apps.microsoft.com/detail/9N9VHRLCZXN5) and the [App Store](https://apps.apple.com/gb/app/dino-book-reader/id6825053435); Android is on the Google Play production track, not public yet): a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/Dino/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence (on scanned or PDF stories it shows the real pages); and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It ships four starter stories, readable in any of the fifteen languages (your own stories translate on Android), lets grown-ups browse and download free curated stories from the in-app store (nothing about the user is sent), and saves or restores all stories as one backup file; a first run asks for the language. It works in fifteen languages, with right-to-left layout for Farsi and Arabic.
 
 ## Status
 
