@@ -1,6 +1,8 @@
 # Slice 393 — Feedback loop 2026-11-14-1547 leftovers
 **Product:** Shared
 
+*In progress (wave 2026-11-17, night 2026-11-17-2105 wave 2), draft PR. ClaudeSkills items go in their own ClaudeSkills PR (worktree `D:/ClaudeSkills-worktrees/cs393`).*
+
 *Parked: feedback loop, waits for the user (2026-11-15; item 25 added, merged as PR #1184, 4e59bd1f). Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md)); nothing here is built until the user has looked at it.*
 
 *Planned 2026-11-16 (plan.md row set to `planned`, "none needs the user", 13dc9a0d): the park line above is history; waves build these items.*
