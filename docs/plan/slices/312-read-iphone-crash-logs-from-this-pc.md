@@ -12,7 +12,7 @@ Rule check: the real phone is wireless-debugging only for Android. For an iPhone
 ## Work
 
 - [x] 1. Context7 / `library-docs` for libimobiledevice (`idevicecrashreport`, `idevicepair`, Windows builds and the Apple Mobile Device Support driver it needs); check whether iTunes or Apple Devices is installed here. Write down what works on Windows 11 and what needs a one-time step from the user.
-- [ ] 2. Pair and pull: run `idevicecrashreport` against the iPhone (network if the pairing allows, else the one first-time cable pairing), keep the `.ips` files under the worktree's `tmp`, and list them by app and time.
+- [x] 2. Pair and pull (done 2026-11-17, see *Verified on the iPhone*): run `idevicecrashreport` against the iPhone (network if the pairing allows, else the one first-time cable pairing), keep the `.ips` files under the worktree's `tmp`, and list them by app and time.
 - [x] 3. A script `pull-iphone.ps1` that pulls the reports, filters to Dino and RTST by bundle id, and prints the newest crash per app with its exception type and the faulting thread's top frames; symbolicate with the dSYMs from Slice 243 when they exist (say so when they do not).
 - [x] 4. Document in `tools/phone/README.md`: how to run it, what the phone must be (unlocked, trusted, same network).
 
@@ -52,5 +52,19 @@ None beyond the `tools/CLAUDE.md` edit already made in this slice.
 
 #### Not yet verified
 
-- Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
-- The real `.ips` field names and header layout: the parser was written from the known iOS crash format and checked only against a synthetic fixture, so the first real file may need a tweak.
+None left from item 2; the open tool fixes are work items 5 and 6 below.
+
+## Verified on the iPhone (2026-11-17)
+
+The user plugged the iPhone 8 (iOS 16.7.16) into this PC and tapped Trust. What worked:
+
+- **Apple Devices from the Microsoft Store (9NP83LWLPZ9K) is not enough.** It keeps the phone connection inside its own app and opens no usbmuxd port, so `idevice_id`/`idevicepair` said "No device found". **Apple Mobile Device Support** (`winget install Apple.AppleMobileDeviceSupport`, 19.4.0.10) adds the *Apple Mobile Device Service*, listening on 127.0.0.1:27015; with it the tools find the phone.
+- libimobiledevice for Windows: `libimobiledevice.1.2.1-r1122-win-x64.zip` from the `libimobiledevice-win32/imobiledevice-net` release v1.3.17.
+- `idevicepair pair` first said "Please accept the trust dialog"; after the user tapped Trust it printed `SUCCESS: Paired`. The pull already worked a moment earlier through the pairing record Apple's service had written to `C:\ProgramData\Apple\Lockdown\<udid>.plist`.
+- `pull-iphone.ps1 -ToolPath <folder>` copied every report (reports stay on the phone) and printed: **Dino** one crash, 2026-11-15 15:21, 1.131.0 (`DinoReader.App-2026-11-15-152134.ips`, under `Retired/`); **RTST** none. The real crash file parsed with the fixture's field names (header line plus JSON body, `bundleID`, `captureTime`, `exception`, faulting thread frames): the parser needed no change for crash reports.
+- 12 of the phone's other reports (Apple's own `cpu_resource`, `diskwrites_resource`, `WiFiLQMMetrics`, `OTAUpdate`) are not header-plus-JSON and print a warning each; none is from Dino or RTST.
+
+## Work added 2026-11-17
+
+- [ ] 5. `pull-iphone.ps1`'s install hint and `tools/phone/README.md`: name Apple Mobile Device Support (`winget install Apple.AppleMobileDeviceSupport`) instead of Apple Devices, and the libimobiledevice-win32 v1.3.17 zip; keep the folder somewhere durable (not a session scratchpad).
+- [ ] 6. `pull-iphone.ps1`: skip non-crash reports (resource, metrics, OTA logs) by file name or header `bug_type` without a warning, so a warning means a real unreadable crash file; print the `termination` reason (watchdog `0x8BADF00D`, Jetsam), which the 2026-11-15 crash needed by hand.
