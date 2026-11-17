@@ -3,6 +3,8 @@
 
 *Parked: feedback loop, waits for the user (2026-11-15; item 25 added, merged as PR #1184, 4e59bd1f). Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md)); nothing here is built until the user has looked at it.*
 
+*Planned 2026-11-16 (plan.md row set to `planned`, "none needs the user", 13dc9a0d): the park line above is history; waves build these items.*
+
 **Touches:** `D:\ClaudeSkills` `skills/feedback-loop/check-review-skips.mjs`, `skills/voice-pick/SKILL.md`, `skills/run-all-waves/`, `tools/phone/`, `tools/desktop-vm/`, `.maestro/dino/`, slice files 243, 291, 317, 330, 346, 384, this slice file.
 
 Entry numbers are the digests' entries (`D:\ReadTheStupidText-worktrees\run-all-waves\2026-11-14-1547\fl\`, outside the repo, may be deleted).
