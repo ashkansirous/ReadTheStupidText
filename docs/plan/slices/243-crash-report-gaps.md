@@ -1,6 +1,8 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 **Product:** Shared
 
+*In progress (wave 2026-11-17, night 2026-11-17-2105 wave 2), draft PR: item 8 against the iOS 1.131.0 crash of 2026-11-15 (id `658ad15c-0a14-4b6e-b686-6307df1fe863`, Slice 400), the first new iOS crash from a build after #1122.*
+
 *Items 1, 2, 4, 6, 7 merged as PR #1122 (ca93e9fc, 2026-11-14 17:08Z); items 3 (#711) and 5 (#781) built earlier. Parked: item 8 waits for the next real iOS crash from a build that carries a dSYM; device checks are in Not yet verified.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
