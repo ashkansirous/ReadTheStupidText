@@ -186,3 +186,14 @@ Pages 10, 11 and 8 redrawn (3.5 Flash-Lite, 1792x2400). p10: old oak as on 12-14
 
 
 Run 4b: p11 redrawn with only Owl and Tortoise on the hill (the friends were dropped to stop Gemini drawing a duplicate Squirrel); passed on the second send (the first answer was an error, Try again worked). Plan line 11 updated to match.
+
+### High-res pack (Slice 350, 2026-11-17)
+
+Full-size 1792x2400 originals, untouched Gemini files, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (the originals stay in the working folder). `back-cover.jpg` was re-prepared through `-HighRes` too (353098 bytes, under the store's 1.5 MB limit). Every app picture in `pictures/` and `cover.jpg` is unchanged.
+
+- Recovered from the user's Gemini chats (chat id, original size in bytes), all recovered, none redrawn: cover c568 ca301dce6e7f1d7f (3260325); 1 c568 ca301dce6e7f1d7f (3176063); 2 c566 e8e2df26d74451b7 (2877860); 3 c566 e8e2df26d74451b7 (3018838); 4 c565 03141e7b532a5c31 (3260896); 5 c565 03141e7b532a5c31 (3742168); 6 c559 32d8a89365f68f96 (3442490); 7 c559 32d8a89365f68f96 (3845341); 8 c516 33376358d6ec33ca (2972576); 9 c555 ba068dbe85988380 (3340730); 10 c522 b76bf67927d7d545 (3036643); 11 c513 99350e860245da40 (3041757); 12 c533 c36380ccb9b17171 (3302616); 13 c533 c36380ccb9b17171 (3243590); 14 c530 a17b19483f34d048 (3760755). Each matched its accepted app picture by a 24x32 grey-mean score of 0.5 or less.
+- line70 passes on all 15 (every character above the 73% line).
+
+For the user (non-blocking): the bottom 27% is a plain strip (flat colour or paper, no scene) on the cover, 1, 2, 3, 4, 5, 6, 7, 9 and 10; pages 8, 11, 12, 13 and 14 have only light grass texture there.
+
+Full review 2026-11-17 (dino-story-reviewer): **PASS**. Notes for the user (accepted pictures, kept): page 5 Owl has no stick and the Tortoise's flower sits on her shell (Owl has no stick on 13-14 either); on page 4 the start line ends before the runners; on page 9 the Tortoise stands on her back legs; the back cover is a moonlit night while the story ends at sunset, and its two characters sit in the bottom strip; story text page 5 has an all-capitals "GO!" that a voice may spell out (a later text pass).
