@@ -1,9 +1,9 @@
 # Slice 396 — Dino: Restore purchases and Redeem a code leave the foot of the Store, into the Store's first line, the 402 strip and the result message
 **Product:** Dino
 
-*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 4, frames RR1-RR4). The mock trumps Slices 357 (S3), 358, 346 and 394 where they differ. Not built yet.*
+*In progress (wave 2026-11-17), draft PR.* *Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 4, frames RR1-RR4). The mock trumps Slices 357 (S3), 358, 346 and 394 where they differ. Not built yet.*
 
-**Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`PurchaseArea`, `PlacePurchaseArea`, `RestorePurchasesAsync`, the 402 strip), `src/Dino/DinoReader.Core/StoreRowRestore.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/` (a Restore flow), `tests/Dino/DinoReader.Tests/**`, `src/Dino/DinoReader.App/CLAUDE.md` (the rule lines named below), `docs/plan/slices/396-dino-restore-and-redeem-out-of-the-store-foot.md`
+**Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`PurchaseArea`, `PlacePurchaseArea`, `RestorePurchasesAsync`, the 402 strip), `src/Dino/DinoReader.Core/StoreRowRestore.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/` (a Restore flow), `tests/Dino/DinoReader.Tests/**`, `src/Dino/DinoReader.App/CLAUDE.md` (the rule lines named below), `docs/plan/slices/396-dino-restore-and-redeem-out-of-the-store-foot.md` Widened at claim (2026-11-17 premise check): `src/Dino/DinoReader.App/Platforms/Windows/DinoKeyboard.cs` (Ctrl+R), the redeem launchers `src/Dino/DinoReader.App/Platforms/{Android,iOS,Windows}/Purchases/*Purchases.cs`, `src/Dino/DinoReader.App/Purchases/{BookPurchases,IBookPurchases,SwitchablePurchases}.cs` (only if Redeem needs a new call), `docs/plan/notes/2026-11-17-dino-subscription-and-foldables-copy.md` (read only).
 
 ## Why
 
