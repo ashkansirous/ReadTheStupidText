@@ -9,6 +9,17 @@
 
 The 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`) draws this slice's screens. The built record above stays as it is; the remaining work is in Slices 396 (Restore and Redeem out of the Store foot), 397 (the Store card in every state, Save tag, wide layout), 398 (locked tiles, why-banner, offline notice) and 399 (Settings, Books and buying, tour tip). The mock trumps the build where they differ.
 
+## Design (2026-11-15 Subscription mock)
+
+`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, 14 frames, all UI (the books and covers in them are placeholder rows). Final string keys and English text for every frame: `docs/plan/notes/2026-11-17-dino-subscription-and-foldables-copy.md` (slices cite its keys and never invent wording). The built record above is not edited. The mock trumps the build where they differ; the slice named in each line builds it.
+
+- **SB1-SB5, SB10 (Store card states, built by Slice 397).** SB1 Offer (new subscriber, with the "Save 37%" tag), SB2 Trial already used (plain prices), SB3 Subscribed in the free trial (state line, "Included" tags, Manage), SB4 Payment problem (grace, "Fix payment"), SB5 Ended. SB1-SB5 are phone frames 375 wide; SB10 is the Windows Store at 1100 x 760 (words left, a 300-wide plan column right; the same split on tablets and phone landscape). Yearly is the main button, monthly second; "Save {0}%" sits on the yearly plan (user, 2026-11-16).
+- **RR1-RR4 (Restore and Redeem, Slice 396).** RR1 Restore from the Store's first line (and its in-progress state), RR2 Restored message, RR3 Nothing found with a Redeem action, RR4 the "Bought it already?" link on the 402 strip. The "Bought books before?" card at the foot of the Store goes (user, 2026-11-16).
+- **SB6-SB8 (Slice 398).** SB6 the parents' Books tab after a lapse (banner with two links, locked tiles with two pills), SB7 the offline notice (end date passed, inside the 3 days), SB8 the child's shelf after a lapse (only unlocked books).
+- **SB9 (Slice 399).** Settings with a "Books and buying" group: Subscription (state line), Restore purchases, Redeem a code, each with a helper line. The same page's end note on the corner tour: `Tour_TipStore` and the welcome card now name the subscription (the text is on the 2026-11-13 Onboarding page; user, 2026-11-16).
+- **Foldable screens** that show the Store card and Settings (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra) are in Slice 403.
+- Canvas furniture, not built: the Windows window chrome in SB10 (minimise, maximise, close), the status bars and "9:41" clocks.
+
 ## Why
 
 Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `true` in the live

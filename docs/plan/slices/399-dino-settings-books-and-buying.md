@@ -8,7 +8,11 @@
 ## Decisions (the mock, 2026-11-15)
 
 1. Slice 384 asks for a Manage subscription link "in the grown-ups area"; the build has it only inside the Store card. Settings gets it (the mock supersedes the build).
-2. **The tour Store tip names the subscription.** Mock end question 3: **drawn in the mock, change if the user says otherwise.** The mock quotes the fragment "…or every book with one subscription" and calls it a one-line change; no frame for it is in this mock file, so the line is the built `Tour_TipStore` with that fragment added (Slice 362 is built and owns the tip): "New stories, free and paid. Every book comes in all your family’s languages. Buy one book, or every book with one subscription. Bought before? Restore your books here." The last sentence stays true: Restore is on the Store first line (Slice 396).
+2. **The corner tour's Store tip and the welcome card mention the subscription.** User, 2026-11-16 (settled, never re-ask; mock end question 3 is answered). The 2026-11-13 Onboarding page draws both (the mock supersedes the earlier line here, which was written before that page had the text):
+   - `Tour_TipStore` (built text changes): "New stories, free and paid, or every book with one subscription. Every book comes in all your family’s languages. Bought before? Restore your books here." (Slice 362 is built and owns the tip; this slice changes it.) The last sentence stays true: Restore is on the Store first line (Slice 396).
+   - The welcome card's Store row (N8a, "Get books in the Store") line `Tour_StoreLine` changes from the built "Free and paid stories, in all your family’s languages." to the page's "Free and paid stories, or all of them with one subscription." (not in the 2026-11-17 copy note's table; the text is the Onboarding page's.)
+3. **Foldable Settings frames keep SB9's helper lines** under Restore purchases and Redeem a code (copy note open point, resolved: the mock's SB9 wins; the foldable pages simply did not draw them). Slice 403 builds the wide Settings with them.
+4. **Copy.** Every string of SB9, with its key, is in `docs/plan/notes/2026-11-17-dino-subscription-and-foldables-copy.md` (rows "Subscription SB9" and "Onboarding"); this slice cites those keys and invents no wording.
 
 ## Design (2026-11-15 Subscription mock, SB9; one phone frame 375 wide, UI)
 
@@ -16,13 +20,13 @@
   - "Subscription" (`Settings_Subscription`) with the state line under it: "Yearly · renews on 15 Nov 2027" (new `Settings_SubYearly` "Yearly · renews on {0}", `Settings_SubMonthly`), "Free trial until 22 Nov" (`Settings_SubTrial`), "Not subscribed" (`Settings_SubNone`), "Payment problem" (`Settings_SubGrace`). Opens the store subscription page, with an external-link icon, not a chevron. When not subscribed, the row opens the Store tab instead.
   - "Restore purchases" (`Store_RestorePurchases`) with the line "Books and a subscription bought with this Google account" (new `Settings_RestoreLine_Google`, `_Apple`, `_Microsoft` with "Apple ID" and "Microsoft account"): runs the Slice 396 restore.
   - "Redeem a code" (`Store_RedeemCode`) with the line "A gift or promotion code from Google Play" (new `Settings_RedeemLine_Google`, `_Apple` "…the App Store", `_Microsoft` "…the Microsoft Store"): opens the store redeem screen.
-- **Tour tip** as Decision 2, `Tour_TipStore` in all 15 languages.
+- **Tour tip and welcome card** as Decision 2: `Tour_TipStore` and `Tour_StoreLine` in all 15 languages (Onboarding page, frames N8a and the Store tip).
 
 ## Work
 
 - [ ] 1. Android: the group in Settings with the four state lines (from the Slice 397 state), Manage, Restore and Redeem.
 - [ ] 2. iOS and Windows: the same (the rail Settings tab on wide screens).
-- [ ] 3. Strings above and the changed `Tour_TipStore` in `AppResources.resx` and every `AppResources.<lang>.resx` (15 languages).
+- [ ] 3. Strings above and the changed `Tour_TipStore` and `Tour_StoreLine` in `AppResources.resx` and every `AppResources.<lang>.resx` (15 languages).
 - [ ] 4. Slice 362 is built, so it is not edited; this slice owns the tip change, and any Maestro tour flow that checks the tip text is updated.
 - [ ] 5. Maestro flow: Settings shows "Books and buying"; the state line follows `FakePurchases`; Restore from here gives the Slice 396 message.
 

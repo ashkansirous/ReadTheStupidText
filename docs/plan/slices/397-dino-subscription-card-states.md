@@ -11,11 +11,13 @@ The mock draws the subscription card in five states, where Slice 384 built one (
 
 ## Decisions (the mock, 2026-11-15)
 
-1. **Yearly first and primary, monthly second.** Mock end question 2 ("Prefer monthly first?"): **drawn in the mock, change if the user says otherwise.**
-2. **A "Save N%" tag on the yearly button.** Mock end question 1: **drawn in the mock, change if the user says otherwise.** N = 100 minus yearly / (12 x monthly) x 100 from the two store price numbers, rounded down; hidden when either price is missing or the saving is under 10%. SB1's example is 37%. It is a new claim on screen, worked out from the store's own prices on the device, never written in the app.
+1. **Yearly first and primary, monthly second.** User, 2026-11-16 (settled, never re-ask): yearly is the main button, monthly second, as drawn. (Mock end question 2, "Prefer monthly first?", is answered.)
+2. **A "Save {0}%" tag on the yearly plan.** User, 2026-11-16 (settled, never re-ask): the tag stays (mock end question 1 is answered). N = 100 minus yearly / (12 x monthly) x 100 from the two store price numbers, rounded down; hidden when either price is missing or the saving is under 10%. SB1's example is 37%. It is a new claim on screen, worked out from the store's own prices on the device, never written in the app.
 3. **Store prices are the store's own strings**, as built (Slice 384 Decision 2). Dates use the device's locale.
 4. **Trial eligibility (SB2).** When the store says the account cannot have the free trial (Play: no free-trial offer in the product details for this user; Microsoft: no trial SKU), the buttons show the plain price and the terms drop the trial sentence. iOS keeps "Try free" until it can ask StoreKit 2 (`isEligibleForIntroOffer`) through Slice 390's wrapper, which is built but not yet checked on the user's iPhone; once the wrapper answers, iOS follows the same rule. The mock says StoreKit 1 cannot tell.
 5. **The grace store name follows the platform** ("Google Play", "the App Store", "the Microsoft Store").
+6. **Store book rows show the mock's "Ages {0}–{1} · {2} min"** (copy note open point, resolved: the mock wins). New `Store_LengthMinutes` "{0} min" joins the built `Store_Ages` "Ages {0}–{1}" with " · " between; the built `Store_Length` ("{0} pages · {1} min") is no longer used on the row and goes if nothing else uses it.
+7. **Copy.** Every string of these frames, with its key, is in `docs/plan/notes/2026-11-17-dino-subscription-and-foldables-copy.md` (rows "Subscription SB1-SB5, SB10"); this slice cites those keys and invents no wording.
 
 ## Design (2026-11-15 Subscription mock, sections 1 and 3: SB1-SB5 are phone frames 375 wide, SB10 is the Windows frame 1100 x 760; all are UI, the books under the card are placeholder rows; Slice 384 is followed where the notes say built, the mock where they say new)
 
@@ -37,7 +39,8 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 - [ ] 3. iOS: the same states; grace from the Worker `grace` answer (Slice 384); eligibility from Slice 390 StoreKit 2 wrapper ("Try free" while it cannot answer); Fix payment opens the Apple manage sheet (Slice 384, *iOS Manage subscription*).
 - [ ] 4. Windows: the same states; trial eligibility from the SKU trial availability; the wide layout (SB10) and its Ctrl+R hint; the two add-on prices.
 - [ ] 5. Wide layout for tablets and phone landscape at 600 and wider (words left, 300-wide plan column right).
-- [ ] 6. Strings above in `AppResources.resx` and every `AppResources.<lang>.resx` (15 languages; `NoHardCodedUiTextTests`).
+- [ ] 5b. Store book rows: "Ages {0}–{1} · {2} min" (Decision 6) on every platform; "Included" and "Get" on SB3-SB4 rows.
+- [ ] 6. Strings above, plus `Store_LengthMinutes`, in `AppResources.resx` and every `AppResources.<lang>.resx` (15 languages; `NoHardCodedUiTextTests`).
 - [ ] 7. `FakePurchases` gains the states (trial used, trial, grace, ended); `.maestro/dino/subscription.yaml` checks each card title.
 
 ## Verification
@@ -50,3 +53,4 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 ## Out of scope
 
 - The parents Books tab (Slice 398) and Settings (Slice 399).
+- The foldable layouts of the card (inner screens: card side by side, plans in a 250 column) are Slice 403.
