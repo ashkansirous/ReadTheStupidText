@@ -435,7 +435,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		string? says = whole ? null : RecordCard.SaysOf(setup.Book, piece.Speaker);
 		RecordChip chip = _take is not null ? RecordChip.NewTake : KeptClip() is not null ? RecordChip.Recorded : RecordChip.None;
 		double font = RecordCard.FittedFontSize(whole, Width > 0 ? Width : RecordCardFit.ReferenceWindowWidth, Height > 0 ? Height : RecordCardFit.ReferenceWindowHeight); // the pieces are cut once for the reference card; a smaller card shows them smaller
-		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key);
+		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key, take.Piece.Cover);
 		var view = new RecordCardView(says, piece.Text, setup.Language, font, chip, Recording, replacesRest);
 		return RecordViews.WordsCard(view, PlayOldTakeAsync, KeepOldAsync);
 	}
@@ -765,12 +765,26 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 
 	// Clips already in the book that share a sentence with a piece: a clip of exactly that piece, or a legacy whole-page one, a part or a line cut differently (Slice 279). They are the "old take"
 	// of a new recording and go only when it is committed.
-	private IReadOnlyList<StoryClipKey> OldClipsOf(StoryClipKey key) =>
-		_story is { } story ? StoryRecordings.Clips(story).Select(c => c.Key).Where(k => k.Overlaps(key)).ToList() : [];
+	// Slice 395: for a part piece that includes the older sentence clips that hold its sentences.
+	private IReadOnlyList<StoryClipKey> OldClipsOf(RecordPiece piece)
+	{
+		if (_story is not { } story)
+		{
+			return [];
+		}
+
+		List<StoryClipKey> old = [.. StoryRecordings.Overlapping(story, piece.Key, piece.Cover)];
+		if (StoryRecordings.ClipOf(story, piece.Key) is not null)
+		{
+			old.Insert(0, piece.Key);
+		}
+
+		return old;
+	}
 
 	private async Task KeepTakeAsync(Take take)
 	{
-		if (OldClipsOf(take.Piece.Key).Count == 0)
+		if (OldClipsOf(take.Piece).Count == 0)
 		{
 			await SaveFirstTakeAsync(take);
 			return;
@@ -873,9 +887,10 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		try
 		{
 			Story latest = await _library.GetAsync(storyId) ?? _story!;
-			bool first = StoryRecordings.Clips(latest).All(c => !c.Key.Overlaps(key));
-			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key);
-			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName));
+			StoryRecordings.SentenceCover? cover = take.Piece.Cover; // Slice 395: a part clip also replaces the older sentence clips that hold its sentences
+			bool first = StoryRecordings.Overlapping(latest, key, cover).Count == 0 && StoryRecordings.ClipOf(latest, key) is null;
+			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key, cover);
+			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName), cover);
 			await _library.UpdateAsync(updated);
 			return new Committed(updated, replaced, first);
 		}
@@ -958,7 +973,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			StopPlayback();
 		}
 
-		if (PathOf(KeptClip() ?? (Piece is { } shown ? OldClipsOf(shown.Key).Select(k => (StoryClipKey?)k).FirstOrDefault() : null)) is { } path)
+		if (PathOf(KeptClip() ?? (Piece is { } shown ? OldClipsOf(shown).Select(k => (StoryClipKey?)k).FirstOrDefault() : null)) is { } path)
 		{
 			PlayFile(path, Playing.OldClip);
 		}

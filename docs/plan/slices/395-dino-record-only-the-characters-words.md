@@ -3,7 +3,7 @@
 
 *In progress (wave 2026-11-17), draft PR.* *Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day.*
 
-**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file. Widened at claim (2026-11-17 premise check): `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `RecordBooks.cs`, `GalleryPage.xaml.cs`, `OnboardingListenPage.cs`, `OnboardingVoicePage.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `StoryBackupReader.cs`, `StoryBackupState.cs`, `StoryPackageWriter.cs`, `StoryPackageReader.cs`, `FileStoryLibrary.cs`, `Story.cs`, `src/Dino/DinoReader.App/Testing/DinoTestCommands.Record.cs`. Platforms: shared Core and MAUI code, so Android, iOS and the Windows head run it; the device check is the Android emulator (shared UI).
+**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file. Widened at claim (2026-11-17 premise check): `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `RecordBooks.cs`, `GalleryPage.xaml.cs`, `OnboardingListenPage.cs`, `OnboardingVoicePage.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `StoryBackupReader.cs`, `StoryBackupState.cs`, `StoryPackageWriter.cs`, `StoryPackageReader.cs`, `FileStoryLibrary.cs`, `Story.cs`, `src/Dino/DinoReader.App/Testing/DinoTestCommands.Record.cs`, `src/Dino/DinoReader.Core/StarterUpdate.cs`, `src/Dino/DinoReader.App/StarterStories.cs` (review finding 8: the starter-update move of part clips). Platforms: shared Core and MAUI code, so Android, iOS and the Windows head run it; the device check is the Android emulator (shared UI).
 
 ## Why
 
@@ -50,3 +50,14 @@ The same holds for every character in every book.
 
 - Changing how a quote's speaker is guessed (`SpeakerAttributor`); this slice only uses it at a finer grain.
 - Re-recording or moving the parent's existing takes for them.
+
+## From review
+
+- Skipped #1 (`reviews/pr-1233-high.md`): "Recording one part deletes the whole older sentence clip (and its .m4a) covering it." - Decision 5: a parent who wants the cleaner split records the line again, and the re-recording replaces the older clip; one overlap rule (`StoryRecordings`, `OverlapRule`) now serves save, backup/package merge and the starter-update move.
+- Skipped #5 (`reviews/pr-1233-high.md`): "Part clips are written only to the new PartRecordings field; an older app that rewrites story.json, or a backup restored by one, drops them silently." - only an app downgrade or an older app restoring a newer backup can lose them; the store never downgrades.
+- Skipped #7 (`reviews/pr-1233-high.md`): "Every read start re-segments the whole book and re-runs speaker attribution; TakeOf rescans the span list per part clip." - low severity, not a correctness issue.
+- Skipped #1 (`reviews/pr-1233-check1-medium.md`): "ReplacesBeyond returns true whenever old clip and new key differ in kind, without comparing covered sentences." - low: the warning is only too cautious, nothing is lost that it does not name.
+- Skipped #2 (`reviews/pr-1233-check1-medium.md`): "Public ClipOf and IsRecorded each build a fresh Lazy, so each call on a page with a part clip re-segments the whole story." - low: a cost on long books, not a wrong result.
+- Skipped #3 (`reviews/pr-1233-check1-medium.md`): "Part clips live in a separate PartRecordings list, so an older build ignores them and drops them on its next save" - same as high #5: only an app downgrade drops them.
+- Skipped #5 (`reviews/pr-1233-check1-medium.md`): "WithPartTakes (TakeOf) runs before the cancel and pending-read checks and does file I/O plus ReportRecordingUnplayable." - low: at worst one extra unplayable report for a superseded read.
+- Skipped #9 (`reviews/pr-1233-check1-medium.md`): "Translated page keeps parts only if every lettered source part finds translated text" - Decision 6: "If its parts do not line up with the English ones for a page, that page falls back to today's sentence cards".

@@ -309,7 +309,7 @@ public sealed class ReadingSession
 
 		int page = PageOf(sentence);
 		(int pageFirst, int pageLast) = _pageSentences[page];
-		return pageFirst < 0 ? null : StoryRecordings.PlayingClips(story, _reading)
+		return pageFirst < 0 ? null : StoryRecordings.PlayingSentenceClips(story, _reading)
 			.Where(key => key.Page == page && ClipStands(key))
 			.Select(key => SpanOf(story, key, pageFirst, pageLast))
 			.FirstOrDefault(span => span is { } s && s.First <= sentence && sentence <= s.Last);
@@ -331,7 +331,7 @@ public sealed class ReadingSession
 	private ClipSpan? NextClipAfter(Story story, int position)
 	{
 		ClipSpan? next = null;
-		foreach (StoryClipKey key in StoryRecordings.PlayingClips(story, _reading).Where(k => ClipStands(k) && k.Page < _pageSentences.Length))
+		foreach (StoryClipKey key in StoryRecordings.PlayingSentenceClips(story, _reading).Where(k => ClipStands(k) && k.Page < _pageSentences.Length))
 		{
 			(int pageFirst, int pageLast) = _pageSentences[key.Page];
 			if (pageFirst >= 0 && SpanOf(story, key, pageFirst, pageLast) is { } span && _sentences[span.First].Start > position && (next is null || span.First < next.Value.First))
@@ -726,6 +726,7 @@ public sealed class ReadingSession
 		}
 
 		segments = StopBeforeRecordedPage(story, segments, fromPosition, id);
+		IReadOnlyList<VoicedSegment> played = segments.Count == 0 ? segments : WithPartTakes(story, segments, reading); // Slice 395 review: the voice is counted on what really plays, the parent's takes included
 		if (segments.Count == 0 && _continueRead is { } cut && cut.ReadId == id)
 		{
 			_continueRead = null;
@@ -733,7 +734,7 @@ public sealed class ReadingSession
 			return;
 		}
 
-		_voiceCount.Begin(id, reading, new VoiceToCount(story, segments, why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip
+		_voiceCount.Begin(id, reading, new VoiceToCount(story, played, why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip
 		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments), reading);
 		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never plays a clip
 		if (id != _pendingReadId)
@@ -742,7 +743,55 @@ public sealed class ReadingSession
 		}
 
 		bool shelfBook = UsageEvent.ShelfId(story.SourceId) is not null; // Slice 351: an own book never has a pack, so its silent pieces report nothing
-		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReasonFor(shelfBook, why.Reason, why.Misses), story, reading);
+		BeginSteps(played, id, cancellation, ClipMisses.SilentPieceReasonFor(shelfBook, why.Reason, why.Misses), story, reading);
+	}
+
+	// Slice 395: a part clip stands in for its quote parts only. The segments it covers become one step that plays the parent's take; every other segment (the narration, the characters not recorded) stays as it was
+	// voiced, so the book's own audio (premade or the speech engine) plays between the takes. A take whose file is gone, or whose parts the page no longer has, is not used and the book's own audio reads those parts.
+	private IReadOnlyList<VoicedSegment> WithPartTakes(Story story, IReadOnlyList<VoicedSegment> segments, string reading)
+	{
+		IReadOnlyList<StoryClipKey> keys = StoryRecordings.PlayingParts(story, reading).Where(ClipStands).ToList();
+		if (keys.Count == 0)
+		{
+			return segments;
+		}
+
+		IReadOnlyList<RecordPart> parts = RecordSplitBook.PartListOf(story); // the one list of the story's parts, the same the Record screen and the overlap rule use
+		var takes = new List<PartTake>();
+		foreach (StoryClipKey key in keys)
+		{
+			PartTake? take = TakeOf(story, key, parts);
+			if (take is { } found)
+			{
+				takes.Add(found);
+			}
+		}
+
+		IReadOnlyList<VoicedSegment> placed = RecordPartTakes.Apply(segments, takes);
+		RecordedClipLog($"[RecordedClip] part takes planned={takes.Count} segments={segments.Count}->{placed.Count} reading={reading}");
+		return placed;
+	}
+
+	private PartTake? TakeOf(Story story, StoryClipKey key, IReadOnlyList<RecordPart> parts)
+	{
+		List<RecordPart> onPage = parts.Where(s => s.Page == key.Page).ToList();
+		RecordPart? first = onPage.FirstOrDefault(s => s.Index == key.First);
+		RecordPart? last = onPage.FirstOrDefault(s => s.Index == key.Last);
+		string? path = _library.TryResolveFile(story.Id, StoryRecordings.FileOf(story, key, name => FileExists(story.Id, name)));
+		if (!RecordSplitBook.PartFits(parts, key) || first is null || last is null)
+		{
+			RecordedClipLog($"[RecordedClip] part take skipped {key}: the page has {onPage.Count} parts"); // recorded for other words: it stays in the story but never plays
+			return null;
+		}
+
+		if (path is null || !File.Exists(path))
+		{
+			ReportRecordingUnplayable(); // Slice 273 part B: the clip was to play a recording but its file is gone
+			RecordedClipLog($"[RecordedClip] missing {key}"); // the parts are read from the book's own audio
+			return null;
+		}
+
+		return new PartTake(first.SourceStart, last.SourceEnd, path);
 	}
 
 	// Slice 297: the first clip of a read has started playing, so its voice is counted now; a later clip, or a clip of another read, counts nothing (the pending count is taken once, and only by its own read).
@@ -836,6 +885,7 @@ public sealed class ReadingSession
 
 		_pendingAdvance = false;
 		_recorded = RecordedPlay.None; // a clip that was playing is over
+		MarkTakeEnd(read!);
 		read!.Index++;
 		if (read.Index >= read.Steps.Count)
 		{
@@ -845,6 +895,21 @@ public sealed class ReadingSession
 		}
 
 		RunStep(read);
+	}
+
+	// Slice 395 review: a part take that spans several sentences marks only its first one while it plays; when it ends, the last sentence it covers is marked, so the page dots and the highlight reach it.
+	private void MarkTakeEnd(StepRead read)
+	{
+		if (read.Steps[read.Index].Premade is not { } piece || PremadeClipMarker.TakeEndOf(piece) is not (>= 0 and int end)) // the take's own marker says where it ends, whichever segment of it the read started on
+		{
+			return;
+		}
+
+		int last = StorySentences.IndexAt(_sentences, end - 1);
+		if (last > StorySentences.IndexAt(_sentences, piece.SourceStart))
+		{
+			RunOnMain(() => MarkPiece(read, piece with { SourceStart = end - 1 }));
+		}
 	}
 
 	private bool IsPaused => _recorded == RecordedPlay.Paused || _restartStep is not null || (_silent.Active && _silent.HeldByPerson);
@@ -960,9 +1025,10 @@ public sealed class ReadingSession
 			return false;
 		}
 
+		bool parentsTake = PremadeClipMarker.IsTake(segment); // Slice 395: a parent's take (said by its clip key, not its file name) plays at its own pace, as a recorded sentence clip does; a pre-made clip follows the reading speed
 		try
 		{
-			double rate = ReadingSpeedPreference.LoadForPlayback().Value;
+			double rate = parentsTake ? 1.0 : ReadingSpeedPreference.LoadForPlayback().Value;
 			// The clip counts as playing before Play, so an ended or failed callback that reaches the main thread at once finds it playing and is handled, not dropped.
 			// Slice 288: but it is not audible until Play has returned, so loading time is never heard time (and a Play that throws raises no audible flip).
 			_playStarting = true;
@@ -986,6 +1052,10 @@ public sealed class ReadingSession
 		}
 
 		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)}) clip {Path.GetFileName(path)}");
+		if (parentsTake)
+		{
+			RecordedClipLog($"[RecordedClip] playing part take file={Path.GetFileName(path)} sentence={StorySentences.IndexAt(_sentences, segment.SourceStart)} reading={_reading}"); // Slice 395: the take of a part; the narration around it logs "premade clip plays" or is spoken
+		}
 		NoteFirstSound("premade clip", read.ReadId);
 		CountVoiceOnFirstClip(read.ReadId);
 		RunOnMain(() => MarkPiece(read, segment));

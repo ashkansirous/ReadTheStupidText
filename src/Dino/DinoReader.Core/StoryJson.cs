@@ -81,7 +81,8 @@ public static class StoryJson
         Cast = ToCastFiles(s.Cast),
         Translate = s.TranslateToMyLanguage,
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
-        PieceRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count),
+        PieceRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count, parts: false),
+        PartRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count, parts: true),
         RecordingSchema = StoryRecordings.Count(s) > 0 && !StoryRecordings.HasPendingClips(s) ? LanguageKeyedRecordings : null,
         UseRecordings = s.UseRecordings && StoryRecordings.Count(s) > 0 ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
@@ -93,7 +94,7 @@ public static class StoryJson
 
     // A file with clips and no schema mark predates Slice 286: its clips carry no language of their own.
     private static bool NeedsRecordingMigration(StoryFile f) =>
-        (f.RecordingSchema ?? 1) < LanguageKeyedRecordings && ((f.Recordings?.Count ?? 0) > 0 || (f.PieceRecordings?.Count ?? 0) > 0);
+        (f.RecordingSchema ?? 1) < LanguageKeyedRecordings && ((f.Recordings?.Count ?? 0) > 0 || (f.PieceRecordings?.Count ?? 0) > 0 || (f.PartRecordings?.Count ?? 0) > 0);
 
     private static Story FromFile(StoryFile f, string? migrateTo)
     {
@@ -112,8 +113,8 @@ public static class StoryJson
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language),
             CleanRecordings(f.Recordings, storyPages.Count, f.Language, migrateTo), f.UseRecordings == true, f.AnimalSounds != false,
-            f.TextInPictures == true, backCover, CleanPieces(f.PieceRecordings, storyPages.Count, f.Language, migrateTo));
-        return StoryRecordings.WithoutSharedFiles(story); // two clips never name one file (a hand edit, a restore): a re-record or delete of one would destroy the other's audio
+            f.TextInPictures == true, backCover, CleanAllPieces(f, storyPages.Count, migrateTo));
+        return StoryRecordings.WithoutSharedFiles(StoryRecordings.WithoutOverlaps(story)); // two clips never name one file (a hand edit, a restore): a re-record or delete of one would destroy the other's audio
     }
 
     // Slice 237: the back cover travels as one last page (its text the credits in English, for an older app that reads it like any page);
@@ -177,10 +178,23 @@ public static class StoryJson
     private static string ClipLanguage(string? stored, string storyLanguage, string? migrateTo) =>
         migrateTo ?? UiLanguage.Resolve(string.IsNullOrWhiteSpace(stored) ? storyLanguage : stored);
 
-    private static List<PieceRecordingFile>? ToPieceFiles(IReadOnlyDictionary<StoryClipKey, PageRecording>? pieces, int pageCount)
+    // Slice 395: the clips that stand in for parts are written in a list of their own (PartRecordings), so an older app, which would read a part range as sentences, never sees them.
+    private static IReadOnlyDictionary<StoryClipKey, PageRecording>? CleanAllPieces(StoryFile f, int pageCount, string? migrateTo)
+    {
+        IReadOnlyDictionary<StoryClipKey, PageRecording>? sentences = CleanPieces(f.PieceRecordings, pageCount, f.Language, migrateTo, parts: false);
+        IReadOnlyDictionary<StoryClipKey, PageRecording>? parts = CleanPieces(f.PartRecordings, pageCount, f.Language, migrateTo, parts: true);
+        if (parts is null)
+        {
+            return sentences;
+        }
+
+        return (sentences ?? new Dictionary<StoryClipKey, PageRecording>()).Concat(parts).ToDictionary(e => e.Key, e => e.Value);
+    }
+
+    private static List<PieceRecordingFile>? ToPieceFiles(IReadOnlyDictionary<StoryClipKey, PageRecording>? pieces, int pageCount, bool parts)
     {
         List<PieceRecordingFile> files = (pieces ?? new Dictionary<StoryClipKey, PageRecording>())
-            .Where(r => r.Key.IsValid && r.Key.Page < pageCount).OrderBy(r => r.Key.Page).ThenBy(r => r.Key.First).ThenBy(r => r.Key.Language, StringComparer.Ordinal)
+            .Where(r => r.Key.IsValid && r.Key.Page < pageCount && r.Key.IsPart == parts).OrderBy(r => r.Key.Page).ThenBy(r => r.Key.First).ThenBy(r => r.Key.Language, StringComparer.Ordinal)
             .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Key.Language.Length > 0 ? r.Key.Language : r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key) }).ToList();
         return files.Count == 0 ? null : files;
     }
@@ -197,12 +211,12 @@ public static class StoryJson
 
     // A piece for a page the story does not have, with a range that is not one, or that shares a sentence of the same language with an earlier piece, is dropped (a hand edit);
     // a missing language reads as the story's own. A migrated piece without a stored name keeps the name it had before the language key.
-    private static IReadOnlyDictionary<StoryClipKey, PageRecording>? CleanPieces(List<PieceRecordingFile>? pieces, int pageCount, string storyLanguage, string? migrateTo)
+    private static IReadOnlyDictionary<StoryClipKey, PageRecording>? CleanPieces(List<PieceRecordingFile>? pieces, int pageCount, string storyLanguage, string? migrateTo, bool parts)
     {
         var kept = new Dictionary<StoryClipKey, PageRecording>();
         foreach (PieceRecordingFile? r in pieces ?? [])
         {
-            var key = new StoryClipKey(r?.Page ?? -1, r?.First ?? -1, r?.Last ?? -1, StoryClipKey.NoLanguage);
+            var key = new StoryClipKey(r?.Page ?? -1, r?.First ?? -1, r?.Last ?? -1, StoryClipKey.NoLanguage) { IsPart = parts };
             if (r is not null && key.IsValid && key.Page < pageCount)
             {
                 key = key with { Language = ClipLanguage(r.Language, storyLanguage, migrateTo) }; // already a resolved code, or the pending (empty) one
@@ -461,6 +475,10 @@ public static class StoryJson
         /// <summary>The parent's recordings of a run of sentences (Slice 279): the file of each is <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/>; absent when there are none. An older app ignores the field.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<PieceRecordingFile>? PieceRecordings { get; set; }
+
+        /// <summary>The parent's recordings of a run of a page's parts, its quote and narration segments (Slice 395): the file of each is <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/> (a <c>p</c> before the range); absent when there are none. An older app ignores the field.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<PieceRecordingFile>? PartRecordings { get; set; }
 
         /// <summary>2 (<see cref="LanguageKeyedRecordings"/>) once every clip names its story language (Slice 286); absent in an older file, whose clips are filed under the main language on first read. An older app ignores the field.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

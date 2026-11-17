@@ -396,7 +396,7 @@ public sealed class StarterStories(IStoryLibrary library)
 		IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(extra, keep, wanted);
 		Story withPages = StarterUpdate.WithMovedRecordings(keep, extra, copied);
 		// The piece moves are decided against the story as it stands after the whole-page ones, so no file is copied for a range the story then skips (an orphan nothing would carry or delete).
-		var wantedClips = StarterUpdate.PieceMoves(extra, keep).Where(m => !StoryRecordings.Clips(withPages).Any(c => c.Key.Overlaps(m.To))).ToList();
+		var wantedClips = StarterUpdate.PieceMoves(extra, keep).Where(m => !StoryRecordings.Occupies(withPages, m.To)).ToList();
 		IReadOnlyList<StarterUpdate.ClipMove> copiedClips = await CopyClipsAsync(extra, keep, wantedClips);
 		if (copied.Count == 0 && copiedClips.Count == 0)
 		{

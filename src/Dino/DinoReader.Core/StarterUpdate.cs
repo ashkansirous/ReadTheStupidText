@@ -262,8 +262,7 @@ public static class StarterUpdate
         Story merged = target;
         foreach (ClipMove move in moves)
         {
-            bool covered = StoryRecordings.Clips(merged).Any(c => c.Key.Overlaps(move.To));
-            if (!covered)
+            if (!StoryRecordings.Occupies(merged, move.To)) // Slice 395: the one overlap rule, part and sentence clips alike
             {
                 merged = StoryRecordings.WithClip(merged, move.To, source.PieceRecordings![move.From] with { File = move.File });
             }
@@ -315,6 +314,7 @@ public static class StarterUpdate
         var taken = new HashSet<int>(); // pages taken by piece moves
         IReadOnlyList<int> storedCounts = RecordSplitBook.SentenceCounts(stored);
         IReadOnlyList<int> bundledCounts = RecordSplitBook.SentenceCounts(bundled);
+        (IReadOnlyList<int> Stored, IReadOnlyList<int> Bundled)? partCounts = pieces.Keys.Any(k => k.IsPart) ? (RecordSplitBook.PartCounts(stored), RecordSplitBook.PartCounts(bundled)) : null;
         foreach (int from in pieces.Keys.Where(k => k.IsValid && k.Page < stored.Pages.Count).Select(k => k.Page).Distinct().Order())
         {
             string text = stored.Pages[from].Text;
@@ -324,10 +324,19 @@ public static class StarterUpdate
             blocked.UnionWith(wholeMoves.Where(m => languages.Contains(UiLanguage.Resolve(stored.Recordings![m.From].Language))).Select(m => m.To));
             bool sameIndex = from < bundled.Pages.Count && !blocked.Contains(from) && string.Equals(bundled.Pages[from].Text, text, StringComparison.Ordinal);
             int to = sameIndex ? from : FirstFreePageWithText(bundled.Pages, text, blocked);
-            if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different sentence count means a different split (a language or break change): the range would cover other words
+            if (to < 0)
+            {
+                continue;
+            }
+
+            // A different sentence count means a different split (a language or break change): the range would cover other words. A part clip counts the page's segments the same way (Slice 395).
+            bool sentencesFit = storedCounts[from] == bundledCounts[to];
+            bool partsFit = partCounts is not null && partCounts.Value.Stored[from] == partCounts.Value.Bundled[to];
+            List<ClipMove> onPage = pieces.Keys.Where(k => k.IsValid && k.Page == from && (k.IsPart ? partsFit : sentencesFit)).Select(k => new ClipMove(k, k with { Page = to })).ToList();
+            if (onPage.Count > 0)
             {
                 taken.Add(to);
-                moves.AddRange(pieces.Keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to })));
+                moves.AddRange(onPage);
             }
         }
 
