@@ -77,6 +77,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 396: Dino Restore and Redeem out of the Store foot ([slice](slices/396-dino-restore-and-redeem-out-of-the-store-foot.md))
+- **Device:** iOS compile and iOS run of the Store's first-line Restore link and the result message.
+- **Device:** Windows head run on the VM: Ctrl+R and the first-line layout.
+- **You:** real-store Restore and Redeem on Play, the App Store and the Microsoft Store (sandbox, owner).
+- **You:** native read of the 14 machine-translated strings.
+- **Device:** screen reader announcement of the restore result (TalkBack, VoiceOver, Narrator).
+
 ### Slice 405: Dino back cover names per language ([slice](slices/405-dino-back-cover-names-per-language.md))
 - **Device:** iOS simulator back cover in Farsi and Japanese (no Mac here; `dinoreader-ios-sim.yml` is workflow_dispatch only and has no back-cover flow).
 - **You:** native read of the spellings chosen without a store-card source: ar «الأخوان غريم»; Perrault, Southey and Andersen in ar, fa, ja, ru, zh; ru «Эзоп».
