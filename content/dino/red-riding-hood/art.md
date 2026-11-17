@@ -244,3 +244,16 @@ down to cuddle her, Button curled on the quilt, no book; wording avoided "bed", 
 Pictures re-prepared into `Store/red-riding-hood`; version stays 4.
 
 Page 8 redrawn once more (Button moved up beside the girl's boots, level with the Wolf's paws; attempts: two baskets, then music notes, then accepted with "calm", one basket on her right elbow and "nothing floats"). Pictures and contact sheet re-prepared; version stays 4.
+
+### High-res pack (Slice 350, 2026-11-17)
+
+Full-size 1792x2400 originals (untouched Gemini files), kept in the working folder; `high-res/` holds the flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (all under 1.1 MB). `back-cover.jpg` was re-made through `-HighRes` too (store limit 1.5 MB; now 585212 bytes).
+
+- Recovered from the user's Gemini chats (chat id, original size in bytes): cover c19 c9dab1c90f695bb2 (3321198); 1 same chat c19 (3234815); 2 c20 1f370b996d9fc7a4 (2766670); 3 c11 41a0d65a9302125b (3515526); 5 c22 fb8bdeee22796d43 (3293344); 6 same chat c22 (3268111); 7 c10 d07ff752a0fb9e3c (3628192); 8 c05 a8266eba37204d3e (3177505); 10 c01 4f961f3f5f003fd0 (2970607); 11 c23 cb6224f6d728ebd2 (2775793); 12 c14 599e583ecccd80ae (2877763); 13 c12 371e0ce7da3bae6a (2701988); 14 c03 06bb55a4a82c3b52 (3027825).
+- Redrawn: page 4, chat 35859acb0a3a238a, 3365649 bytes. The user flagged that page 4 had page 5-7's forest without the berries; the new picture has page 5's background with the blackberry bushes (log, bushes both sides, trees, path), three characters, line70 pass.
+- Page 9: a full-size copy of the accepted 896x1200 picture (only that size existed), chat d6fe4ad59ad4f4de, 3258003 bytes; five characters, outfits match.
+- App copies (item E): only `pictures/4.jpg` replaced (prepared from the high-res original); every other app picture and the cover are unchanged. Store book, no stamp.
+
+For the user: page 9 has the puppy's and Wolf's paws on the 73% line (feet about 75-77%), exactly as in the picture you accepted. On page 4 the Wolf has both paws in his lap rather than one on his tummy. The recovered pages have a plain ground strip at the bottom (checked by line70; all characters are above the line).
+
+Full review 2026-11-17 (dino-story-reviewer): **PASS** (page 4 now shares page 5's forest with the berries; page 9 a faithful copy). Corrections and notes for the user (accepted pictures, kept): the line above understates the 73% line: pages 1, 2, 3, 11 and 12 cross it (worst page 3, the girl's boots and Button at about 82-83%), Button's paw touches it on the cover, and on page 9 Button's body below the head and the Wolf's lower legs are in the bottom strip; page 7 ("back at the fallen log") has a different log and bushes from 4-6, while page 6 ("further along the path") shares their background; page 6 has a faint pencil scribble by the Woodcutter's left boot; pages 4 and 5 now differ only in the Wolf's pose and the girl's face; the back cover is a picnic with cake, a scene the book doesn't have.
