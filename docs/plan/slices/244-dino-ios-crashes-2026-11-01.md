@@ -17,6 +17,10 @@ and works from the evidence below plus reproduction.
 `src/Dino/DinoReader.App/CLAUDE.md`, `.maestro/dino/**`, `.maestro/README.md`, `.github/workflows/dinoreader-ios-sim.yml` (new),
 `.github/scripts/ios-sim-*.sh` (new), `.github/CLAUDE.md`, `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`; widened after review pass 2 (coordinator, 2026-11-14): `.github/workflows/release-rtst.yml` and `.github/workflows/release-dino.yml` (path exclusions for the new test-only files), `.github/scripts/ship-targets.test.mjs` (its `RTST_EXTRA_NEGATIONS` list names the two new exclusions)
 
+## Park note (night 2026-11-17-2105, wave 1)
+
+**parked: waits on the user's iPhone 8 run (item 1) and a proven cause (item 6).** No `Touches` line for further work; nothing a headless wave can do.
+
 ## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
 
 - No test hook installs a real audio pack offline (TestStore.cs:122-131 builds a 4-byte fake clip for gingerbread-man `sv` only; `import-test-book` imports text only), so the audio-backed run uses the live store: a new flow `.maestro/dino/ios-read-audio.yaml` with `test-store mode=off`, which fetches a real `audio-<lang>-v<n>.zip` through `/api/stories` (AudioPackStore.cs:597), then 3 rounds of read, Back, re-read, background, as the Not yet verified line asks. The workflow gets a `flow` dispatch input (default stays the current flow).
