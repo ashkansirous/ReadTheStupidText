@@ -393,6 +393,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>٠١٢٣٤٥٦٧٨٩</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} و{1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>و</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}، {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>شراء {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>شراء {0} مقابل {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>اتصل بالإنترنت للشراء</value></data>

@@ -396,6 +396,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>January|February|March|April|May|June|July|August|September|October|November|December</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} and {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>and</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>Buy {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Buy {0} for {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connect to the internet to buy</value></data>

@@ -392,6 +392,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>tammikuu|helmikuu|maaliskuu|huhtikuu|toukokuu|kesäkuu|heinäkuu|elokuu|syyskuu|lokakuu|marraskuu|joulukuu</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} ja {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>ja</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>Osta {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Osta {0} hintaan {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Muodosta internetyhteys ostaaksesi</value></data>

@@ -91,5 +91,49 @@
     "zh": "恐龙阅读器绘本"
   },
   "storyBy": "Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": {
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  },
   "access": "free"
 }

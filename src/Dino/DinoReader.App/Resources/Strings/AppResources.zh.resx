@@ -393,6 +393,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0}和{1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>和</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}、{1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>购买 {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>以 {1} 购买 {0}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>请连接互联网后购买</value></data>

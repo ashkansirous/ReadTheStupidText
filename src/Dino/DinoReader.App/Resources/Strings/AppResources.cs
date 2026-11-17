@@ -426,6 +426,8 @@ public static class AppResources
 	public static string BackCover_Months => Get();
 	public static string BackCover_Digits => Get();
 	public static string BackCover_And => Get();
+	public static string BackCover_AndWord => Get();
+	public static string BackCover_List => Get();
 
 	// Slice 346: paid books (the store card, Restore purchases, Redeem a code) and a backup that holds state instead of books.
 	public static string Store_BuyFor => Get();
