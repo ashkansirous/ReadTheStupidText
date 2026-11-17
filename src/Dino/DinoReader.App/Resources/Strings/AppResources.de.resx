@@ -404,15 +404,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Dieses Buch ist nicht mehr im Shop.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Kostenlos</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Schon früher Bücher gekauft?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Mit diesem Microsoft-Konto gekaufte Bücher kommen auch auf diesem Computer zurück.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Wird wiederhergestellt …</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Mit diesem Google-Konto wurde noch nichts gekauft.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Mit dieser Apple-ID wurde noch nichts gekauft.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Mit diesem Microsoft-Konto wurde noch nichts gekauft.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Schon gekauft? Käufe wiederherstellen</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 Buch wiederhergestellt. Es steht im Regal.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} Bücher wiederhergestellt. Sie stehen im Regal.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Auf diesem Konto wurden keine gekauften Bücher gefunden.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Der Shop hat ein Problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Käufe wiederherstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Code einlösen</value></data>

@@ -402,15 +402,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>For mange forsøk. Vent ett minutt og prøv igjen.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Denne boka er ikke i butikken lenger.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Gratis</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Har du kjøpt bøker før?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Bøker kjøpt med denne Google-kontoen kommer også tilbake på denne telefonen.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Bøker kjøpt med denne Google-kontoen kommer også tilbake på dette nettbrettet.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Bøker kjøpt med denne Apple-ID-en kommer også tilbake på denne telefonen.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Bøker kjøpt med denne Apple-ID-en kommer også tilbake på dette nettbrettet.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Bøker kjøpt med denne Microsoft-kontoen kommer også tilbake på denne datamaskinen.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Gjenoppretter …</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Ingenting er kjøpt med denne Google-kontoen ennå.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Ingenting er kjøpt med denne Apple-ID-en ennå.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Ingenting er kjøpt med denne Microsoft-kontoen ennå.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Allerede kjøpt? Gjenopprett kjøp</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 bok gjenopprettet. Den står i hyllen.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} bøker gjenopprettet. De står i hyllen.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Fant ingen kjøpte bøker på denne kontoen.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Butikken har et problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Gjenopprett kjøp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Løs inn en kode</value></data>

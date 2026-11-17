@@ -1,0 +1,118 @@
+# Slice 396 (Restore purchases and Redeem a code leave the foot of the Store): the scripted device check for the Store's first line, the dark result message and the Redeem action, with the Debug pretend store (hook
+# fake-purchases) and the Debug test store: no money, no real store account, no Worker. Written, not yet run (the device stage runs it after the two reviews).
+# The test store lists 4 books; fake-purchases marks two of them as sold. First the account owns nothing: Restore purchases (the link on the Store's first line) says so in the dark message above the tab bar, naming the
+# store account (Google on Android, Apple ID on iOS), with a Redeem a code action inside it, and the message goes by itself after 5 seconds. Then the account owns both sold books: Restore says "2 books restored.", both
+# rows end on "On the shelf". The old "Bought books before?" card is nowhere.
+# Against the old behaviour (the card at the foot of the list, a result line under it, "No bought books found on this account.") the first-line link, the message, the Redeem action and the missing card all fail.
+# Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it. Windows (Ctrl+R) is checked by the desktop VM run.
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK fake-purchases ok on paid=2 owned=0
+# expect-log: HOOK skip-first-run ok
+# expect-log: [StoreRestore] toFetch=0 downloading=0 arrived=0 line=NothingFound
+# expect-log: [StoreRestore] message=NothingFound
+# expect-log: [Purchases] redeem opened
+# expect-log: HOOK fake-purchases ok on paid=2 owned=2
+# expect-log: [StoreRestore] toFetch=2 downloading=0 arrived=2 line=RestoredMany
+# expect-log: [StoreRestore] message=Restored
+appId: uk.sirous.dinoreader.dbg
+name: Restore purchases is on the Store's first line; nothing found says so with a Redeem a code action, and two bought books come back to the shelf
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, kept purchase records); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so the sold books are not on the shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+# The sale is set before the first run is skipped: skip-first-run then puts only the two unsold (free) test books on the shelf. The account owns nothing yet.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man,three-little-pigs"
+      price: "$0.99"
+      buy: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+# RR1: Restore purchases is on the Store's first line, no scroll; Redeem a code is not on it, and the old card is gone.
+- extendedWaitUntil:
+    visible:
+      id: StoreRestorePurchases
+    timeout: 30000
+- assertVisible: "Restore purchases"
+- assertNotVisible:
+    id: StoreRedeemCode
+- assertNotVisible: "Bought books before?"
+# RR3: nothing found: the dark message names the store account and holds the Redeem a code action.
+- tapOn:
+    id: StoreRestorePurchases
+# The message lives 5 seconds and every assert is a slow screen dump (about 3-12 s on the emulator), so the wait for the message text is the only step before the tap: tapping proves the action is there.
+- extendedWaitUntil:
+    visible: 'Nothing bought with this .* yet\.'
+    timeout: 30000
+# The Redeem action opens the store's own screen (pretended: the log line "[Purchases] redeem opened"): tapped right after the message showed; the message ends with the tap.
+- tapOn:
+    id: StoreRedeemCode
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: StoreRestorePurchases
+    timeout: 10000
+- assertNotVisible:
+    id: StoreRestoreResult
+# RR2: the account now owns both sold books (the pretend store is set again with owned=). Restore brings them back: the message says so and each row ends on "On the shelf".
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man,three-little-pigs"
+      owned: "gingerbread-man,three-little-pigs"
+      price: "$0.99"
+      buy: ok
+- tapOn:
+    id: StoreRestorePurchases
+- extendedWaitUntil:
+    visible: '2 books restored.*'
+    timeout: 60000
+- assertVisible:
+    id: StoreRestoreResult
+- assertNotVisible:
+    id: StoreRedeemCode
+- assertNotVisible: 'Buy .*\$0\.99.*'
+- scrollUntilVisible:
+    element:
+      text: "On the shelf"
+      index: 1
+    timeout: 30000
+# The message goes by itself after 5 seconds.
+- extendedWaitUntil:
+    notVisible:
+      id: StoreRestoreResult
+    timeout: 12000

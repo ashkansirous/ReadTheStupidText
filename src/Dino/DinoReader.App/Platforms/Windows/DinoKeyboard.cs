@@ -93,6 +93,24 @@ internal sealed class DinoKeyboard
 		return true;
 	}
 
+	// Slice 396: Ctrl+R on the Store tab runs Restore purchases (the rail shows "Ctrl+R" next to Store). Plain Ctrl, no Alt or Shift; a held key acts once; the Store tab decides whether it is showing and books are sold.
+	private static bool TryRestoreShortcut(object sender, KeyRoutedEventArgs e)
+	{
+		if (e.Key != VirtualKey.R || !IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || IsDown(VirtualKey.Shift) || e.KeyStatus.WasKeyDown || TextFieldHasFocus(sender)) // Ctrl+R in a text field is the field's
+		{
+			return false;
+		}
+
+		if (!StorePage.TryRestoreFromKeyboard())
+		{
+			return false;
+		}
+
+		e.Handled = true;
+		WindowTrace.Write("Dino keyboard: Ctrl+R used (Store tab, Restore purchases)");
+		return true;
+	}
+
 	private static RecordKey? RecordKeyOf(VirtualKey key) => key switch
 	{
 		VirtualKey.R => RecordKey.Record,
@@ -105,7 +123,7 @@ internal sealed class DinoKeyboard
 
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
 	{
-		if (TryRecordKey(sender, e))
+		if (TryRecordKey(sender, e) || TryRestoreShortcut(sender, e))
 		{
 			return;
 		}

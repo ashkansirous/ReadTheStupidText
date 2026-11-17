@@ -9,7 +9,7 @@
 # expect-log: [Purchases] snapshot owned=0 pending=0 prices=2
 # expect-log: outcome=Bought
 # expect-log: [Purchases] snapshot owned=1 pending=0 prices=2
-# expect-log: [Purchases] redeem opened
+# expect-log: [StoreRestore] message=Restored
 # expect-log: wait_shown
 appId: uk.sirous.dinoreader.dbg
 name: A sold book shows its price, buying it downloads it, and Restore and Redeem are in the Store tab
@@ -65,13 +65,15 @@ onFlowComplete:
       text: 'Buy .*\$0\.99.*'
       index: 1
     timeout: 30000
-# The "Bought books before?" card sits in the list's footer (Slice 364), behind the scroll on a long list.
+# Slice 396: Restore purchases is the link on the Store's first line (RR1), no scroll needed; Redeem a code is not on that line (it shows only inside the "nothing found" message), and the old card is gone.
 - scrollUntilVisible:
     element:
       id: StoreRestorePurchases
+    direction: UP
     timeout: 20000
-- assertVisible:
+- assertNotVisible:
     id: StoreRedeemCode
+- assertNotVisible: "Bought books before?"
 # Buy: the store's sheet is pretended (about 1 s, so the wait overlay shows), then the book downloads like any other and its Buy pill goes away: only the other sold book keeps one.
 # The scroll above may have moved the first pill off the top, so scroll back to it by its title and tap that very pill.
 - scrollUntilVisible:
@@ -88,31 +90,21 @@ onFlowComplete:
     timeout: 60000
 - assertVisible:
     text: 'Buy .*\$0\.99.*'
-# Restore purchases re-reads the store and says so in the result line under the card (no alert any more, Slice 364): the bought book is already on the shelf, so the sand line says nothing is missing.
-- scrollUntilVisible:
-    element:
-      id: StoreRestorePurchases
-    timeout: 20000
+# Restore purchases re-reads the store and says so in the dark message above the tab bar (Slice 396): the bought book is already on the shelf, so the green message says "On the shelf" (not "Nothing bought")
+# and holds no Redeem a code action (that one is checked in store-restore.yaml, where the account owns nothing).
 - tapOn:
     id: StoreRestorePurchases
-- scrollUntilVisible:
-    element:
-      id: StoreRestoreResult
-    timeout: 30000
-- assertVisible: "No bought books found on this account."
-# Redeem a code opens the store's own screen (pretended: the log line "[Purchases] redeem opened", checked by expect-log above) and the Store tab stays put.
-- tapOn:
-    id: StoreRedeemCode
-    waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible:
-      id: StoreRedeemCode
-    timeout: 10000
-# The second sold book is still for sale: one Buy pill remains (the list is scrolled to its foot, so scroll back up to it).
+      id: StoreRestoreResult
+    timeout: 30000
+- assertNotVisible: 'Nothing bought with this .* yet\.'
+- assertNotVisible:
+    id: StoreRedeemCode
+# The second sold book is still for sale: one Buy pill remains.
 - scrollUntilVisible:
     element:
       text: 'Buy .*\$0\.99.*'
-    direction: UP
     timeout: 20000
 - assertVisible:
     text: 'Buy .*\$0\.99.*'

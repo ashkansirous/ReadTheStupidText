@@ -25,10 +25,14 @@
         <Color x:Key="StripRedText">#A4462A</Color>
         <Color x:Key="StripSandFill">#F0E8D8</Color>
         <Color x:Key="StripSandText">#4a4460</Color>
-        <Color x:Key="ResultGreenFill">#DFF5E3</Color>
-        <Color x:Key="ResultGreenText">#1F5F23</Color>
-        <Color x:Key="CardButtonBorder">#d9d2c4</Color>
-        <Color x:Key="CardButtonText">#3a3450</Color>
+        <!-- Slice 396 (Subscription mock RR1-RR4): the Restore link, the dark message and the 402 strip's link. -->
+        <Color x:Key="RestoreLink">#4a46d6</Color>
+        <Color x:Key="MessageFill">#2b2540</Color>
+        <Color x:Key="MessageGreen">#7EE08A</Color>
+        <Color x:Key="MessageAmber">#FFC24D</Color>
+        <Color x:Key="MessageAction">#C9C3FF</Color>
+        <x:String x:Key="RestoreGlyph">M4 12a8 8 0 1 0 2.3-5.7M4 4.5V10h5.5</x:String>
+        <x:String x:Key="CheckGlyph">M4 12.5l5 5L20 6.5</x:String>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
             <!-- Slice 364 (Missing States mock S1-S3): the card is 12 padding, 10 between the row and the message strip under it. -->
@@ -139,7 +143,20 @@
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <shapes:Path Data="{StaticResource AlertGlyph}" Stroke="{StaticResource StripRedText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
                                      WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
-                        <Label Grid.Column="1" Text="{Binding ErrorText}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" />
+                        <!-- Slice 396 (mock RR4): a 402 adds "Bought it already? Restore purchases" after the sentence, brand colour, 600, underlined; it runs the same restore as the Store's first line. -->
+                        <!-- The tap and the accessibility action sit on the whole label (a span has neither); the handler acts only on a strip that carries the link (a 402). -->
+                        <Label Grid.Column="1" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" MinimumHeightRequest="36"
+                               SemanticProperties.Hint="{Binding BoughtItAlreadyText}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding ErrorLead}" />
+                                    <Span Text="{Binding BoughtItAlreadyText}" FontAttributes="Bold" TextDecorations="Underline" TextColor="{StaticResource RestoreLink}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBoughtItAlreadyTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </Grid>
                 </Border>
                 <Border AutomationId="StoreRowErrorCalm" IsVisible="{Binding HasCalmError}" Padding="12,9" BackgroundColor="{StaticResource StripSandFill}" StrokeThickness="0">
@@ -179,12 +196,12 @@
         </DataTemplate>
     </ContentView.Resources>
 
-    <Grid x:Name="StoreRoot" RowDefinitions="*,Auto">
-        <ActivityIndicator x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
+    <Grid x:Name="StoreRoot" RowDefinitions="Auto,*">
+        <ActivityIndicator x:Name="LoadingView" Grid.Row="1" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
+        <Grid x:Name="ListPanel" Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
@@ -253,35 +270,25 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Slice 364 (mock S3): the "Bought books before?" card, shown only while books are sold (the remote switch). It is the foot of the list while the list has books (the page moves it into the CollectionView footer)
-             and sits at the bottom of the page when the list is empty, filtered to nothing or offline, so Restore and Redeem are always reachable. Both buttons open the store's own screens; the grown-up corner is already behind the gate.
-             The result line of a restore sits under the card: green when books came to the shelf, sand when there was nothing to bring. -->
-        <VerticalStackLayout x:Name="PurchaseArea" Grid.Row="1" Spacing="10" Margin="0,14,0,0" IsVisible="False">
-                        <Border x:Name="BoughtBeforeCard" IsVisible="False" BackgroundColor="White" StrokeThickness="0" Padding="16">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="18" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="12">
-                                <Label x:Name="BoughtBeforeTitle" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
-                                <Label x:Name="BoughtBeforeLine" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                    <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Store_RestorePurchases}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnRestorePurchasesClicked" />
-                                    <Button x:Name="RedeemButton" Grid.Column="1" Text="{x:Static res:AppResources.Store_RedeemCode}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                                            BackgroundColor="Transparent" TextColor="{StaticResource CardButtonText}" BorderColor="{StaticResource CardButtonBorder}" BorderWidth="2" Clicked="OnRedeemCodeClicked" />
-                                </Grid>
-                            </VerticalStackLayout>
-                        </Border>
-                        <Border x:Name="RestoreResultView" IsVisible="False" Padding="12,10" StrokeThickness="0" BackgroundColor="{StaticResource ResultGreenFill}">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="14" />
-                            </Border.StrokeShape>
-                            <Label x:Name="RestoreResultLabel" AutomationId="StoreRestoreResult" FontSize="13.5" FontAttributes="Bold" LineHeight="1.4" TextColor="{StaticResource ResultGreenText}" />
-                        </Border>
-        </VerticalStackLayout>
+        <!-- Slice 396 (Subscription mock RR1, RR2, RR3): the Store's first line is "Restore purchases" at the right (the corner's own title row says "Store" and "Picked and cast for Dino" above it), shown only while books are sold
+             (the remote switch). A running restore turns its icon into a spinner and its text into "Restoring…"; nothing blocks (no wait overlay). Redeem a code is not here on purpose: it is in Settings (Slice 399) and in the message
+             that says nothing was found. The result is the dark message pinned above the tab bar for 5 seconds (RestoreResultView, the last child of the page). -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="18,4,14,2">
+        <Label AutomationId="GalleryStoreSub" Text="{x:Static res:AppResources.Store_Subtitle}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource Body}" VerticalOptions="Center" />
+        <HorizontalStackLayout x:Name="RestoreLinkRow" Grid.Column="1" IsVisible="False" HorizontalOptions="End" Spacing="6">
+            <shapes:Path x:Name="RestoreLineIcon" Data="{StaticResource RestoreGlyph}" Stroke="{StaticResource RestoreLink}" StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                         WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+            <ActivityIndicator x:Name="RestoreSpinner" Color="{StaticResource RestoreLink}" IsRunning="False" IsVisible="False" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+            <Label x:Name="RestoreLineLabel" AutomationId="StoreRestorePurchases" Text="{x:Static res:AppResources.Store_RestorePurchases}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}"
+                   VerticalOptions="Center" HeightRequest="36" VerticalTextAlignment="Center" />
+            <HorizontalStackLayout.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnRestorePurchasesClicked" />
+            </HorizontalStackLayout.GestureRecognizers>
+        </HorizontalStackLayout>
+        </Grid>
 
         <!-- Screen 22: offline, or the server cannot be reached. -->
-        <VerticalStackLayout x:Name="OfflineView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <VerticalStackLayout x:Name="OfflineView" Grid.Row="1" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="48" />
@@ -298,7 +305,7 @@
         </VerticalStackLayout>
 
         <!-- Screen 23: nothing new (an empty list, or every entry too new for this app). A normal state, not an error. The way back to the shelf is the corner's coral pill, so there is no button here. -->
-        <VerticalStackLayout x:Name="EmptyView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <VerticalStackLayout x:Name="EmptyView" Grid.Row="1" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" StrokeThickness="0" Opacity="0.9" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="26" />
@@ -310,5 +317,28 @@
             <Label Text="{x:Static res:AppResources.Store_EmptyBody}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
                    HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
+
+        <!-- Slice 396 (mock RR2, RR3): the result of a restore, a dark message pinned above the tab bar (14 in from each side, 10 up) for 5 seconds, never at the end of a list. Restored: a green check; nothing found: an amber
+             alert and the "Redeem a code" action inside the message. -->
+        <Border x:Name="RestoreResultView" Grid.Row="0" Grid.RowSpan="2" IsVisible="False" VerticalOptions="End" Margin="14,0,14,10" MinimumHeightRequest="48" Padding="14,10" StrokeThickness="0"
+                BackgroundColor="{StaticResource MessageFill}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="16" />
+            </Border.StrokeShape>
+            <Border.Shadow>
+                <Shadow Brush="#141028" Offset="0,10" Radius="24" Opacity="0.3" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <shapes:Path x:Name="RestoreResultIcon" Stroke="{StaticResource MessageGreen}" StrokeThickness="3" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                             WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                <Label x:Name="RestoreResultLabel" AutomationId="StoreRestoreResult" Grid.Column="1" FontSize="14" FontAttributes="Bold" LineHeight="1.35" TextColor="White" VerticalOptions="Center" />
+                <Label x:Name="RestoreRedeemAction" AutomationId="StoreRedeemCode" Grid.Column="2" IsVisible="False" Text="{x:Static res:AppResources.Store_RedeemCode}" FontSize="14" FontAttributes="Bold"
+                       TextColor="{StaticResource MessageAction}" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Store_RedeemCode}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRedeemCodeClicked" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
+        </Border>
     </Grid>
 </ContentView>

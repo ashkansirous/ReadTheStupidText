@@ -6,7 +6,7 @@ namespace DinoReader.Tests;
 public class StoreRowRestoreTests
 {
     [Theory]
-    [InlineData(0, 0, 0, RestoreLine.NothingToRestore)]
+    [InlineData(0, 0, 0, RestoreLine.NothingFound)]
     [InlineData(1, 1, 0, RestoreLine.RestoredOne)]
     [InlineData(2, 2, 0, RestoreLine.RestoredMany)]
     [InlineData(3, 2, 0, RestoreLine.RestoredMany)]
@@ -18,6 +18,27 @@ public class StoreRowRestoreTests
     public void The_line_follows_how_many_books_arrived(int fetched, int arrived, int alreadyDownloading, RestoreLine expected)
     {
         Assert.Equal(expected, StoreRowRestore.LineFor(fetched, arrived, alreadyDownloading));
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0, RestoreLine.SubscriptionBack)] // nothing to fetch but a subscription runs: Restore brought it back
+    [InlineData(0, 0, 1, RestoreLine.None)] // the only book arriving failed: no subscription line either
+    [InlineData(1, 1, 0, RestoreLine.RestoredOne)] // books that came back win over the subscription line
+    [InlineData(2, 2, 0, RestoreLine.RestoredMany)]
+    public void A_running_subscription_is_the_line_only_when_no_book_came_back(int fetched, int arrived, int alreadyDownloading, RestoreLine expected)
+    {
+        Assert.Equal(expected, StoreRowRestore.LineFor(fetched, arrived, alreadyDownloading, subscriptionActive: true));
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0, false, false, RestoreLine.NothingFound)]
+    [InlineData(0, 0, 0, false, true, RestoreLine.AllOnShelf)] // bought books all on the shelf already: restored, not "nothing bought"
+    [InlineData(0, 0, 0, true, true, RestoreLine.SubscriptionBack)]
+    [InlineData(0, 0, 1, false, true, RestoreLine.None)] // the only book arriving failed
+    [InlineData(1, 1, 0, false, true, RestoreLine.RestoredOne)]
+    public void Owned_books_that_are_all_on_the_shelf_are_not_nothing_bought(int fetched, int arrived, int alreadyDownloading, bool subscriptionActive, bool ownsBooks, RestoreLine expected)
+    {
+        Assert.Equal(expected, StoreRowRestore.LineFor(fetched, arrived, alreadyDownloading, subscriptionActive, ownsBooks));
     }
 
     [Theory]

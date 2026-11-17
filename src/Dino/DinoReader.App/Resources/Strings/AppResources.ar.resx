@@ -403,15 +403,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>لم يعد هذا الكتاب في المتجر.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>مجاني</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>هل اشتريت كتبًا من قبل؟</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Google هذا تعود إلى هذا الهاتف أيضًا.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Google هذا تعود إلى هذا الجهاز اللوحي أيضًا.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>الكتب التي اشتريتها بمعرّف Apple هذا تعود إلى هذا الهاتف أيضًا.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>الكتب التي اشتريتها بمعرّف Apple هذا تعود إلى هذا الجهاز اللوحي أيضًا.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>الكتب التي اشتريتها بحساب Microsoft هذا تعود إلى هذا الكمبيوتر أيضًا.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>جارٍ الاستعادة…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>لم يتم شراء أي شيء بحساب Google هذا بعد.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>لم يتم شراء أي شيء بمعرّف Apple هذا بعد.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>لم يتم شراء أي شيء بحساب Microsoft هذا بعد.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>اشتريته من قبل؟ استعادة المشتريات</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>تمت استعادة كتاب واحد. إنه على الرف.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>تمت استعادة {0} كتب. أصبحت على الرف.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>لم يتم العثور على كتب مشتراة في هذا الحساب.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>المتجر يواجه مشكلة</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>استعادة المشتريات</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>استبدال رمز</value></data>
