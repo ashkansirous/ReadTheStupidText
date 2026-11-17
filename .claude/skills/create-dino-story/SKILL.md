@@ -28,8 +28,8 @@ context free of screenshots, pictures and 14 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
-3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Up to four at once across the machine, on separate books or on page groups of one book** (the user's choice,
-   2026-10-26; page groups 2026-11-01). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Two at once across the machine, on separate books or on page groups of one book** (the user's choice,
+   2026-11-17, after two of four tabs got stuck on Love from Seagull Island; it was four from 2026-10-26; page groups 2026-11-01; the user may raise it again). **Each illustrator opens its own tab with `tabs_create_mcp` and uses only that `tabId`**: never a tab `tabs_context_mcp` lists or hands it (other illustrators' chats are there; 2026-11-17 one was handed two foreign tabs), and it never closes a tab or tab group it didn't open (one closed another's tab group the same day). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
    `javascript_tool` (`execCommand('insertText')`) and Send is only `await window.__sendChecked(<prompt>, <pictures>)`
    from `gemini-grab.js` (it refuses an empty or partial prompt box or a missing line-up, and reports a sent message
    without the prompt; that chat is spoiled: new chat, never patch it), never keyboard typing or
@@ -281,6 +281,12 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   in the profile's localStorage on its first injection; the version is a hash of the file's source): `localStorage.grabver==='8531151f'?(eval(localStorage.grabsrc),typeof window.__drawPicture):'STALE'`
   must answer `function`. `STALE` (or an error from `eval`) means the stored copy is missing or old: inject `gemini-grab.js` whole once with
   `javascript_tool` (it answers `ready 8531151f` and stores itself), then use the loader from then on. `gemini-grab.test.mjs` fails when this hash is not the file's.
+  **Three known snags (2026-11-17, Love from Seagull Island):** (a) the loader's `eval` can fail on Gemini with a Trusted Types error; then run
+  `const p=trustedTypes.createPolicy('dg'+Date.now(),{createScript:s=>s}); (0,eval)(p.createScript(localStorage.grabsrc))` instead. (b) `__drawPicture`'s
+  grab can return a small webp preview (about 40-60 KB) that writes no download: call `__grab(1)` again and save with the real jpeg size it prints.
+  (c) `javascript_tool` often times out at 45 s inside `__drawPicture` while the picture is still drawn: poll for the "Download full size image" button,
+  then `__grab(1)`; never send again. (`__drawPicture(prompt, 0)` with no paste refuses with an UNKNOWN attachment count: use `__markPictures`,
+  `__setupPicture(prompt, 0)`, `__waitForPicture`, `__grab(1)`.) After about 6 downloads a tab may stop writing files: a fresh own tab fixes it.
   **Recovery per chat** (rule 3, *Recover before you redraw*): open the chat, load, then one call
   `await window.__recoverChat()` (scrolls up to load every picture, then downloads each one oldest first, at least 20 s apart (a smaller `gapMs` is raised to 20 s), waiting inside the
   script; never use `sleep` calls) answers `RECOVER <n> pictures | 1: <size> | 2: <size> ...` (one size per picture, 0 = no blob); then one
