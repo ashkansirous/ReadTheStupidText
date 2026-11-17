@@ -92,7 +92,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   **Slice 359: every book also gets a drawn back-cover picture** (one per book, no words in it, the middle left calm because the reader lays the credit lines over it): `content/dino/<stem>/back-cover.jpg`
   (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
   `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).
-- Translations: `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
+- Translations, **only after the user has read and approved the English** (2026-11-17: a new book was translated before the user's read, then rewritten, and all 14 translations were lost). A new book's first round is English text and the picture plan only; the coordinator shows the user the English, and the writer translates once the user says it is right. `dotnet run --project tools/dino/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
   translate into `content/dino/<stem>/translations/<lang>.json` (every language in `UiLanguage.Supported`, 14 besides English).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.
 
