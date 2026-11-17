@@ -1,9 +1,9 @@
 # Slice 395 — Dino: recording a character shows and replaces only that character's words, not the narration around them
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day. Not built yet.*
+*In progress (wave 2026-11-17), draft PR.* *Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day.*
 
-**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file.
+**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file. Widened at claim (2026-11-17 premise check): `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `RecordBooks.cs`, `GalleryPage.xaml.cs`, `OnboardingListenPage.cs`, `OnboardingVoicePage.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `StoryBackupReader.cs`, `StoryBackupState.cs`, `StoryPackageWriter.cs`, `StoryPackageReader.cs`, `FileStoryLibrary.cs`, `Story.cs`, `src/Dino/DinoReader.App/Testing/DinoTestCommands.Record.cs`. Platforms: shared Core and MAUI code, so Android, iOS and the Windows head run it; the device check is the Android emulator (shared UI).
 
 ## Why
 
