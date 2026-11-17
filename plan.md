@@ -37,6 +37,8 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 399 | Dino: a "Books and buying" group in Settings (subscription state, Restore, Redeem) and the tour Store tip names the subscription | planned (from the 2026-11-15 Subscription mock) | | | [399-dino-settings-books-and-buying.md](docs/plan/slices/399-dino-settings-books-and-buying.md) |
 | 400 | Dino: the crashes first reported 2026-11-14/15 (stream close on Android, iOS scene-update watchdog) and the unexplained unclean exits | planned | | | [400-dino-crashes-2026-11-14.md](docs/plan/slices/400-dino-crashes-2026-11-14.md) |
 | 402 | Dino: App Store header and search-results pictures (items 1-3 built and submitted to Apple; item 4, placing them once approved, open) | in progress (items 1-3 built) | #1214 | | [402-dino-app-store-creative-assets.md](docs/plan/slices/402-dino-app-store-creative-assets.md) |
+| 403 | Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen | planned (scope approved 2026-11-17) | | | [403-dino-foldable-layouts.md](docs/plan/slices/403-dino-foldable-layouts.md) |
+| 404 | Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set | planned (scope approved 2026-11-17) | | | [404-dino-store-pictures-foldables-and-retake.md](docs/plan/slices/404-dino-store-pictures-foldables-and-retake.md) |
 
 ### Shared
 

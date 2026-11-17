@@ -15,6 +15,9 @@ The mock (section 4): the shipped "Bought books before?" card sits after every b
 2. Restore purchases and Redeem a code live in three places: (1) a Restore purchases link on the Store's first line (RR1); (2) Settings, Books and buying (Slice 399); (3) where it is needed: the 402 strip (RR4) and, for Redeem, the "nothing found" message (RR3).
 3. Redeem a code is kept out of the Store's first line on purpose (few families have a code; 375 wide has room for one link). Same rule on Windows; Ctrl+R restores from the Store tab.
 4. Results are a dark message pinned above the tab bar for 5 seconds, never at the end of a list. The wait overlay is not used: nothing blocks.
+5. **User, 2026-11-16 (settled, never re-ask): the "Bought books before?" card goes.** The mock's three places above are the whole answer. Its text, keys and every string for these frames are in `docs/plan/notes/2026-11-17-dino-subscription-and-foldables-copy.md` (rows "Subscription RR1-RR4"); this slice cites those keys and invents no wording.
+6. **Link to Slice 394 item 1 (the crash).** Two crash reports (Dino Android 1.129.2, `Java.Lang.IllegalStateException` "The specified child already has a parent" via `LayoutHandler.MapAdd`, on a tap) match `PurchaseArea` being moved by `PlacePurchaseArea` when the "9–12" chip empties the list. Removing `PurchaseArea` and `PlacePurchaseArea` likely fixes it (likely, not proven). Slice 394 item 1 still runs (it proves or disproves the cause), and its verification re-taps "9–12" on the build that has this slice.
+7. **"Nothing found" wording (the mock wins; the copy note's open point is resolved).** Restore with nothing found uses `Store_NothingBought_Google` / `_Apple` / `_Microsoft` ("Nothing bought with this Google account yet."; "Apple ID", "Microsoft account"), replacing the built `Store_NothingToRestore`, because Restore also brings back a subscription.
 
 ## Design (2026-11-15 Subscription mock, section 4: RR1-RR4; four phone frames, all UI; the books in them are placeholder rows; the mock disagrees with Slice 357 S3 and is followed)
 
@@ -23,6 +26,8 @@ The mock (section 4): the shipped "Bought books before?" card sits after every b
 - **RR3, Nothing found.** Same dark message, leading icon amber `#FFC24D` (circle with "!", 18 px): "Nothing bought with this Google account yet." with a **Redeem a code** action (`Store_RedeemCode`) inside the message. New strings per store: `Store_NothingBought_Google` "Nothing bought with this Google account yet.", `_Apple` "…with this Apple ID yet.", `_Microsoft` "…with this Microsoft account yet." (the mock names the Google one and says Apple ID and Microsoft account for the others). Redeem opens the store's own redeem screen, as built. The built `Store_NothingToRestore` ("No bought books found on this account.") is superseded.
 - **RR4, the 402 strip.** The strip under a book (built `Error_PaymentRequired` "You need to buy this book first.") gets a link "Bought it already? Restore purchases" (new `Store_BoughtItAlready`; the link runs the same restore). The same link goes on Slice 398's banner.
 - **Windows:** Ctrl+R on the Store tab runs Restore (the rail shows "Ctrl+R" next to Store in Slice 397's SB10).
+- **Copy keys (the 2026-11-17 copy note).** Built: `Store_RestorePurchases` "Restore purchases", `Store_Restored_One` / `_Other`, `Sub_Active`, `Store_RedeemCode` "Redeem a code", `Error_PaymentRequired`. New: `Store_Restoring` "Restoring…", `Store_NothingBought_Google` / `_Apple` / `_Microsoft`, `Store_BoughtItAlready` "Bought it already? Restore purchases". Gone: `Store_NothingToRestore`, `Store_BoughtBefore*`.
+- **Foldable frames** (iPhone Duo, Fold8, Fold8 Ultra: Restore purchases on the Store title row) are built by Slice 403; the Restore behaviour is this slice's.
 
 ## Work
 
@@ -36,7 +41,7 @@ The mock (section 4): the shipped "Bought books before?" card sits after every b
 
 ## Verification
 
-- Dino tests pass. Android emulator: the Restore flow in item 7, and tapping every age chip (Slice 394's flow) never crashes.
+- Dino tests pass. Android emulator: the Restore flow in item 7, and tapping every age chip (Slice 394's flow, which re-taps "9–12") never crashes.
 - iOS simulator and Windows VM: the first line and the message are shown; Ctrl+R on Windows.
 - The user taps Restore on the real stores (sandbox) after release.
 
