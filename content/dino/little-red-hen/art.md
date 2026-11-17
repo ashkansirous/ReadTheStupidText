@@ -189,3 +189,15 @@ one duck". Pages 12-14 fell in the 70-77% band slightly (blanket, Hen's feet); a
 | 13 | 1 | 1792x2400 | |
 | 14 | 3 | 1792x2400 | 1: four spades, Hen cut off by a hard edge; 2: two-storey brick house, friends posed not eager (full review); 3 passed, spring blossom only |
 | 15 | 1 | 1792x2400 | |
+
+### High-res pack (Slice 350, 2026-11-17)
+
+Full-size 1792x2400 originals, untouched Gemini files, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (every file under 1.5 MB, largest 1,028,909 bytes). `back-cover.jpg` was 2,168,073 bytes (over the store limit) and now goes through `-HighRes` too (351,279 bytes).
+
+- Recovered from the user's Gemini chats (scratch file, original size in bytes): 1 c32-1 (3288960); 2 c31-1 (3025745); 3 c29-1 (3073333); 4 c21-1 (3392396); 5 c02-1 (3587981); 6 c14-1 (3074369); 7 c13-1 (2693969); 8 c11-1 (3183852); 9 c10-1 (3209597); 10 c07-1 (3013854); 11 c06-1 (3168824); 12 c22-1 (3539165); 13 c05-1 (3403043); 15 c19-1 (3111320). Chat ids are in the recover run's `chats.txt` (scratch folder).
+- Redrawn in new chats: cover, chat 3346bdc8f9c6ca00, 3311057 bytes (a full-size copy of the accepted cover; no recovered picture matched it). Page 14, chat 8475796192bcc780, 3034295 bytes (try a, chat 19d6ec8ff3a2c943, rejected: Cat's spade upside down, Duck's not clearly held): the fix for the user's flag "the tools are distorted", where the Duck held a bare handle with no blade; now Dog, Cat and Duck each hold a whole spade. The recovered page 14 (c01-1) was not used.
+- App copies (item E): only `pictures/14.jpg` replaced, prepared from the high-res original; every other app picture and the cover are unchanged. Store book: no stamp.
+
+For the user: the cover's Hen has her feet below the 73% line, as in the accepted cover. Recovered pages' line70 notes: page 12 (picnic blanket edge) is at the line, and page 15 (shovels) is on the line; all other pages pass.
+
+Full review 2026-11-17 (dino-story-reviewer): **PASS** (page 14 spades checked on full-size crops). Notes for the user (accepted pictures, kept): the back-cover loaf is long while the book's loaf is round, and the friends sit in the bottom strip; the farmhouse and the kitchen window change from page to page (none is single-pane); page 14's spades are long-handled while page 15's are small.
