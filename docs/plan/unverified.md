@@ -719,10 +719,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - **Device:** The resume path of `store-screenshots.yml` (no job failed in run 43761667169), its `resume_run` input, and the RTST single-flow unit.
 - **You:** A native read of the 15 machine-translated App Store subscription texts (Dino; also Slice 384).
 
-### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
-- **You:** Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
-- **You:** The real `.ips` field names and header layout: the parser was written from the known iOS crash format and checked only against a synthetic fixture, so the first real file may need a tweak.
-
 ### Slice 297: Slice 267 follow-ups ([slice](slices/297-slice-267-follow-ups.md))
 - **You:** iOS wizard layout (no Mac or iPhone tonight).
 
