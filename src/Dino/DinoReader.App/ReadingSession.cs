@@ -967,10 +967,36 @@ public sealed class ReadingSession
 				return;
 			}
 
+			if (ExpandFailedTake(read, read.Index))
+			{
+				StartStep(read); // Slice 395 review: the take will not play, so the parts it stood for are read as the book would have
+				return;
+			}
+
 			step = read.Steps[read.Index] = PlaybackSteps.AsSilentPiece(step); // no usable clip: this piece is shown for a beat
 		}
 
 		BeginBeat(read, step);
+	}
+
+	// Slice 395 review: a parent's take that cannot play (its file is gone, or the player fails on it) is replaced, in the read's steps, by the steps of the parts it stood for, so none of those parts is lost.
+	// False when the step is no take (or stood for nothing): the caller shows it for a beat as before.
+	private static bool ExpandFailedTake(StepRead read, int index)
+	{
+		if (read.Steps[index].Premade is not { } piece || !PremadeClipMarker.IsTake(piece))
+		{
+			return false;
+		}
+
+		List<PremadeAudioPlan.Step> replacement = PlaybackSteps.Plan(PremadeClipMarker.CoveredOf(piece));
+		if (replacement.Count == 0)
+		{
+			return false;
+		}
+
+		read.Steps.RemoveAt(index);
+		read.Steps.InsertRange(index, replacement);
+		return true;
 	}
 
 	// Plays the animal's recording. A clip that is missing or will not play is skipped silently, never read as the sound word, and the read goes straight on (posted, so it
@@ -1181,7 +1207,11 @@ public sealed class ReadingSession
 
 		AudioPackLog.Write("premade clip failed while playing, the piece is shown for a beat");
 		ReportPieceFallback(read, index, Sirous.Reading.Application.Usage.FallbackReason.ClipUnplayable);
-		read.Steps[index] = PlaybackSteps.AsSilentPiece(read.Steps[index]);
+		if (!ExpandFailedTake(read, index))
+		{
+			read.Steps[index] = PlaybackSteps.AsSilentPiece(read.Steps[index]);
+		}
+
 		bool wasPaused = _recorded == RecordedPlay.Paused;
 		_player.Stop();
 		_recorded = RecordedPlay.None;

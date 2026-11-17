@@ -141,7 +141,7 @@ public static class RecordSplitWalk
         {
             if (clip.IsPart)
             {
-                AddPartPiece(pieces, book, parts, storyParts, clip, mode, ticked);
+                AddPartPiece(pieces, story, book, parts, storyParts, clip, mode, ticked);
                 continue;
             }
 
@@ -159,14 +159,14 @@ public static class RecordSplitWalk
     }
 
     // A part clip is the parts it names, as the book shows them (Slice 395); one whose parts the book no longer has is skipped, as a sentence clip whose sentences are gone is.
-    private static void AddPartPiece(List<RecordPiece> pieces, RecordBook book, IReadOnlyList<RecordPart> parts, Lazy<IReadOnlyList<RecordPart>> storyParts, StoryClipKey clip, RecordMode mode, IReadOnlySet<string> ticked)
+    private static void AddPartPiece(List<RecordPiece> pieces, Story story, RecordBook book, IReadOnlyList<RecordPart> parts, Lazy<IReadOnlyList<RecordPart>> storyParts, StoryClipKey clip, RecordMode mode, IReadOnlySet<string> ticked)
     {
         // The range is read from the story's one part list (a part in no sentence counts, as PartFits counts it); the words are the book's own where it shows the part (a translated page), else the list's.
         Dictionary<int, RecordPart> shown = parts.Where(p => p.Page == clip.Page).ToDictionary(p => p.Index);
         List<RecordPart> covered = shown.Count == 0 ? [] : storyParts.Value.Where(p => p.Page == clip.Page && p.Index >= clip.First && p.Index <= clip.Last).Select(p => shown.GetValueOrDefault(p.Index) ?? p).ToList();
         if (covered.Count == 0)
         {
-            AddSentencesOfPartClip(pieces, book, storyParts.Value, clip, mode, ticked);
+            AddSentencesOfPartClip(pieces, story, book, storyParts.Value, clip, mode, ticked);
             return;
         }
 
@@ -175,19 +175,25 @@ public static class RecordSplitWalk
             return;
         }
 
-        pieces.Add(new RecordPiece(clip, covered[0].Speaker, RecordSplit.TextOfParts(covered), covered.Min(p => p.FirstSentence), covered.Max(p => p.LastSentence)));
+        pieces.Add(RecordSplit.PartPiece(clip, covered[0].Speaker, RecordSplit.TextOfParts(covered), covered));
     }
 
     // Slice 395 review: a page cut into sentence cards in this language (its parts did not line up) still has its part clip; "Listen and change" shows it as the sentences it sits in, under its own key, so it plays, keeps and re-records as the clip it is.
-    private static void AddSentencesOfPartClip(List<RecordPiece> pieces, RecordBook book, IReadOnlyList<RecordPart> storyParts, StoryClipKey clip, RecordMode mode, IReadOnlySet<string> ticked)
+    private static void AddSentencesOfPartClip(List<RecordPiece> pieces, Story story, RecordBook book, IReadOnlyList<RecordPart> storyParts, StoryClipKey clip, RecordMode mode, IReadOnlySet<string> ticked)
     {
-        if (RecordSplitBook.CoverOfParts(storyParts, clip) is not { } cover)
+        if (StoryRecordings.StoredCoverOf(story, clip) is not { } cover) // the cover stored with the clip, never re-derived from the text
         {
             return;
         }
 
         List<RecordSentence> sentences = book.Sentences.Where(s => s.Page == clip.Page && s.Index >= cover.First && s.Index <= cover.Last).ToList();
-        string speaker = storyParts.First(p => p.Page == clip.Page && p.Index == clip.First).Speaker;
+        RecordPart? first = storyParts.FirstOrDefault(p => p.Page == clip.Page && p.Index == clip.First); // a story update may have dropped the part the clip names: the clip stays, it is just not listed
+        if (first is null)
+        {
+            return;
+        }
+
+        string speaker = first.Speaker;
         if (sentences.Count > 0 && (mode == RecordMode.WholePage || ticked.Contains(speaker)))
         {
             pieces.Add(new RecordPiece(clip, speaker, RecordSplit.TextOf(sentences), cover.First, cover.Last));

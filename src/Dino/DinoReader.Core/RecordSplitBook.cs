@@ -264,6 +264,7 @@ public static class RecordPartTakes
 
         var placed = new List<VoicedSegment>();
         var used = new HashSet<int>();
+        ILookup<int, VoicedSegment> covered = segments.ToLookup(s => TakeAt(takes, s.SourceStart));
         foreach (VoicedSegment segment in segments)
         {
             int take = TakeAt(takes, segment.SourceStart);
@@ -273,7 +274,7 @@ public static class RecordPartTakes
             }
             else if (segment.Transform is not AnimalClipMarker && used.Add(take))
             {
-                placed.Add(Marked(segment, takes[take]));
+                placed.Add(Marked(segment, takes[take], covered[take].ToList()));
             }
         }
 
@@ -295,6 +296,7 @@ public static class RecordPartTakes
 
     // The take replaces a pre-made clip marker's path, if the segment had one, and keeps whatever shaping was behind it. The take always plays from its start, so the step starts where the take starts: a read
     // that began inside the take (the earlier segments were already cut) highlights the take's first sentence, as a sentence clip started mid-clip does.
-    private static VoicedSegment Marked(VoicedSegment segment, PartTake take) =>
-        segment with { SourceStart = Math.Min(segment.SourceStart, take.SourceStart), Transform = new PremadeClipMarker(segment.Transform is PremadeClipMarker marker ? marker.Inner : segment.Transform, take.Path, IsPartTake: true, TakeEnd: take.SourceEnd) };
+    // The marker keeps the segments the take stands for (Slice 395 review), so a take that will not play at play time is replaced by them and the covered parts are still read.
+    private static VoicedSegment Marked(VoicedSegment segment, PartTake take, IReadOnlyList<VoicedSegment> covered) =>
+        segment with { SourceStart = Math.Min(segment.SourceStart, take.SourceStart), Transform = new PremadeClipMarker(segment.Transform is PremadeClipMarker marker ? marker.Inner : segment.Transform, take.Path, IsPartTake: true, TakeEnd: take.SourceEnd, Covered: covered) };
 }

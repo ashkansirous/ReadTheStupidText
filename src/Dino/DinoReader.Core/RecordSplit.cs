@@ -120,7 +120,15 @@ public static class RecordSplit
     }
 
     private static RecordPiece PieceOfParts(IReadOnlyList<RecordPart> run) =>
-        new(StoryClipKey.OfParts(run[0].Page, run[0].Index, run[^1].Index, StoryClipKey.NoLanguage), run[0].Speaker, TextOfParts(run), run.Min(p => p.FirstSentence), run.Max(p => p.LastSentence));
+        PartPiece(StoryClipKey.OfParts(run[0].Page, run[0].Index, run[^1].Index, StoryClipKey.NoLanguage), run[0].Speaker, TextOfParts(run), run);
+
+    /// <summary>A part piece of <paramref name="key"/> over <paramref name="run"/>, with the sentences the run sits in: only the parts that sit in a sentence count (a part in no sentence has -1 and must not turn the
+    /// cover into none), and a run with none of them has no cover (Slice 395).</summary>
+    public static RecordPiece PartPiece(StoryClipKey key, string speaker, string text, IReadOnlyList<RecordPart> run)
+    {
+        List<RecordPart> held = run.Where(p => p.InSentences).ToList();
+        return held.Count == 0 ? new RecordPiece(key, speaker, text) : new RecordPiece(key, speaker, text, held.Min(p => p.FirstSentence), held.Max(p => p.LastSentence));
+    }
 
     /// <summary>The words of a run of parts: side by side, no quote marks.</summary>
     public static string TextOfParts(IReadOnlyList<RecordPart> run) =>

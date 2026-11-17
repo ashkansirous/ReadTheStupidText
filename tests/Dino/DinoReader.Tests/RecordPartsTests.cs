@@ -115,6 +115,35 @@ public sealed class RecordPartsTests
     }
 
     [Fact]
+    public void A_part_clip_whose_first_part_is_gone_is_kept_and_not_listed_without_throwing()
+    {
+        Story story = Freddy();
+        (StoryClipKey first, _) = MummyDinner(story);
+        StoryClipKey gone = StoryClipKey.OfParts(first.Page, 90, 91, "en"); // the story no longer has parts 90-91 on that page
+        Story recorded = StoryRecordings.WithClip(story, gone, new PageRecording("en", 3, "rec-en-2-p91-92-0c0c0c0c.m4a"), new StoryRecordings.SentenceCover(0, 1));
+        RecordBook fallback = RecordSplitBook.WithTranslatedText(RecordSplitBook.Of(story), new TranslatedStory(story.Pages, story.Text, RecordSplitBook.SentencesOf(story)))!;
+
+        IReadOnlyList<RecordPiece> walked = RecordSplitWalk.Recorded(recorded, fallback, RecordMode.WholePage, new HashSet<string>(), "en");
+
+        Assert.Empty(walked);
+        Assert.NotNull(StoryRecordings.ClipOf(recorded, gone)); // nothing was deleted
+    }
+
+    [Fact]
+    public void Which_of_two_overlapping_clips_plays_does_not_depend_on_the_order_they_were_stored()
+    {
+        Story story = Freddy();
+        var wide = new StoryClipKey(0, 0, 1, "en");
+        var narrow = new StoryClipKey(0, 0, 0, "en");
+        PageRecording Rec(string file) => new("en", 2, file);
+        Story a = story with { UseRecordings = true, PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [wide] = Rec("w.m4a"), [narrow] = Rec("n.m4a") } };
+        Story b = story with { UseRecordings = true, PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [narrow] = Rec("n.m4a"), [wide] = Rec("w.m4a") } };
+
+        Assert.Equal(StoryRecordings.PlayingClips(a, "en"), StoryRecordings.PlayingClips(b, "en"));
+        Assert.Equal([narrow], StoryRecordings.PlayingClips(a, "en")); // the shorter run of the same start wins
+    }
+
+    [Fact]
     public void A_starter_update_moves_a_part_clip_only_when_the_page_has_the_same_parts()
     {
         Story story = Freddy();
@@ -158,30 +187,170 @@ public sealed class RecordPartsTests
     }
 
     [Fact]
-    public void A_part_clip_whose_parts_the_page_lacks_overlaps_every_other_clip_of_the_page()
+    public void A_part_clip_with_no_stored_cover_overlaps_no_sentence_clip_and_a_save_never_drops_a_sentence_clip_for_it()
     {
         Story phone = Freddy();
         (StoryClipKey part, _) = MummyDinner(phone);
         int count = RecordSplitBook.PartListOf(phone).Count(p => p.Page == part.Page);
-        StoryClipKey beyond = StoryClipKey.OfParts(part.Page, count - 1, count, "en");
+        StoryClipKey beyond = StoryClipKey.OfParts(part.Page, count - 1, count, "en"); // parts the page lacks: its cover can never be placed
         var sentences = new StoryClipKey(part.Page, 0, 0, "en");
         Story both = phone with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [beyond] = new("en", 3, "a.m4a"), [sentences] = new("en", 3, "b.m4a") } };
 
-        Assert.Equal([beyond], StoryRecordings.Overlapping(both, sentences));
-        Assert.Equal(sentences, Assert.Single(StoryRecordings.Clips(StoryRecordings.WithoutOverlaps(both))).Key); // the first clip in page order stays
+        Assert.Empty(StoryRecordings.Overlapping(both, sentences)); // review fault 1: an unknown cover is no overlap
+        Assert.DoesNotContain("b.m4a", StoryRecordings.ReplacedFiles(both, StoryClipKey.OfParts(part.Page, 0, 0, "en"), null)); // a new part clip with no cover to compare replaces no sentence clip
+        Story saved = StoryRecordings.WithClip(both, new StoryClipKey(part.Page, 1, 1, "en"), new PageRecording("en", 2, "c.m4a"));
+        Assert.Equal(3, StoryRecordings.Clips(saved).Count()); // the part clip and the older sentence clip both stay
+        Assert.Equal(3, StoryRecordings.Clips(StoryJson.Deserialize(StoryJson.Serialize(saved))).Count());
     }
 
     [Fact]
-    public void A_story_file_with_a_sentence_clip_and_a_part_clip_over_the_same_words_loads_with_one()
+    public void A_part_clip_in_no_sentence_never_drops_a_sentence_clip_beside_it()
     {
         Story story = Freddy();
         (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
         var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
-        Story both = story with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [part] = new("en", 3, null), [sentences] = new("en", 3, null) } };
+        Story withSentences = StoryRecordings.WithClip(story, sentences, new PageRecording("en", 3, "rec-en-2-1-2-0b0b0b0b.m4a"));
+
+        Story saved = StoryRecordings.WithClip(withSentences, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), null); // the part sits in no sentence: nothing to compare
+
+        Assert.Equal(2, StoryRecordings.Clips(saved).Count());
+        Assert.Empty(StoryRecordings.ReplacedFiles(withSentences, part, null));
+    }
+
+    [Fact]
+    public void The_cover_is_stored_with_the_clip_and_is_the_one_the_overlap_rule_uses_whatever_the_text_says_now()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, _) = MummyDinner(story);
+        var stored = new StoryRecordings.SentenceCover(5, 6); // not where the text puts the part today: the saved cover wins, nothing is re-derived
+        Story withPart = StoryRecordings.WithClip(story, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), stored);
+
+        Story back = StoryJson.Deserialize(StoryJson.Serialize(withPart));
+
+        Assert.Equal(stored, StoryRecordings.ClipOf(back, part)!.Cover);
+        Assert.Equal(stored, StoryRecordings.StoredCoverOf(back, part));
+        Assert.Empty(StoryRecordings.Overlapping(back, new StoryClipKey(part.Page, 0, 1, "en")));
+        Assert.Equal(part, Assert.Single(StoryRecordings.Overlapping(back, new StoryClipKey(part.Page, 6, 7, "en"))));
+    }
+
+    [Fact]
+    public void A_story_file_with_a_whole_page_clip_beside_newer_part_clips_loads_with_every_clip()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        Story withParts = StoryRecordings.WithClip(story, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), cover);
+        Story both = StoryRecordings.With(withParts, part.Page, new PageRecording("en", 9, null)); // a restored whole-page clip: it used to win by sort order and drop the part takes
 
         Story loaded = StoryJson.Deserialize(StoryJson.Serialize(both));
 
-        Assert.Single(StoryRecordings.Clips(loaded)); // never both on the page: one would speak the words twice
+        Assert.Equal(2, StoryRecordings.Clips(loaded).Count()); // review fault 2: load never drops a clip for overlapping another
+        Assert.Contains(StoryRecordings.Clips(loaded), c => c.Key.IsPart && c.Value.File == "rec-en-2-p2-2-0a0a0a0a.m4a");
+    }
+
+    [Fact]
+    public void A_story_file_with_a_sentence_clip_and_a_part_clip_over_the_same_words_keeps_both_and_plays_the_sentence_clip_only()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
+        Story both = story with
+        {
+            UseRecordings = true,
+            PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [part] = new PageRecording("en", 3, null).WithCover(cover), [sentences] = new("en", 3, null) },
+        };
+
+        Story loaded = StoryJson.Deserialize(StoryJson.Serialize(both));
+
+        Assert.Equal(2, StoryRecordings.Clips(loaded).Count());
+        Assert.Empty(StoryRecordings.PlayingParts(loaded, "en")); // one would speak the words twice
+        Assert.Equal(sentences, Assert.Single(StoryRecordings.PlayingSentenceClips(loaded, "en")));
+    }
+
+    [Fact]
+    public void A_part_clip_saved_before_covers_were_stored_loads_plays_and_is_kept()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, _) = MummyDinner(story);
+        Story legacy = story with { UseRecordings = true, PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [part] = new("en", 3, null) } };
+
+        Story loaded = StoryJson.Deserialize(StoryJson.Serialize(legacy));
+
+        Assert.Null(StoryRecordings.ClipOf(loaded, part)!.Cover);
+        Assert.Equal(part, Assert.Single(StoryRecordings.PlayingParts(loaded, "en")));
+    }
+
+    [Fact]
+    public void A_part_clip_with_no_stored_cover_does_not_play_on_a_sentence_clip_that_holds_its_words()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
+        Story both = story with { UseRecordings = true, PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [part] = new("en", 3, null), [sentences] = new("en", 3, null) } };
+
+        Story loaded = StoryJson.Deserialize(StoryJson.Serialize(both));
+
+        Assert.Equal(2, StoryRecordings.Clips(loaded).Count()); // the part clip is kept, with its file
+        Assert.Null(StoryRecordings.ClipOf(loaded, part)!.Cover);
+        Assert.Empty(StoryRecordings.PlayingParts(loaded, "en")); // review fault 3: it would speak the sentence clip's words twice
+        Assert.Equal(sentences, Assert.Single(StoryRecordings.PlayingSentenceClips(loaded, "en")));
+    }
+
+    [Fact]
+    public void A_part_clip_in_an_older_schema_file_keeps_the_file_name_it_stores_when_the_language_is_filed()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        Story saved = StoryRecordings.WithClip(story, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), cover);
+        string oldFile = System.Text.RegularExpressions.Regex.Replace(StoryJson.Serialize(saved), "\"RecordingSchema\":\\s*2,?", string.Empty);
+
+        Story migrated = StoryJson.Deserialize(oldFile, out bool wasOld, mainLanguage: "fa");
+
+        Assert.True(wasOld);
+        Assert.Equal("rec-en-2-p2-2-0a0a0a0a.m4a", StoryRecordings.FileOf(migrated, part.In("fa"))); // review fault 2: the clip still points at its real file, never a name nobody wrote
+    }
+
+    [Fact]
+    public void A_take_that_will_not_play_carries_the_segments_it_stood_for_so_they_are_still_read()
+    {
+        VoicedSegment[] segments = [Seg(0, 10), Seg(10, 20), Seg(20, 30), Seg(30, 40)];
+
+        IReadOnlyList<VoicedSegment> placed = RecordPartTakes.Apply(segments, [new PartTake(10, 30, "take.m4a")]);
+
+        Assert.Equal([segments[1], segments[2]], PremadeClipMarker.CoveredOf(placed[1])); // review fault 1: a failed take is replaced by these
+        Assert.Empty(PremadeClipMarker.CoveredOf(placed[0]));
+        Assert.Equal(2, PlaybackSteps.Plan(PremadeClipMarker.CoveredOf(placed[1])).Count);
+    }
+
+    [Fact]
+    public void A_starter_update_never_moves_a_whole_page_clip_onto_a_page_holding_part_clips()
+    {
+        Story keep = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(keep);
+        Story kept = StoryRecordings.WithClip(keep, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), cover);
+        Story extra = StoryRecordings.With(keep with { Id = StoryIds.New() }, part.Page, new PageRecording("en", 9, null));
+
+        Assert.True(StoryRecordings.Occupies(kept, StoryClipKey.OfPage(part.Page, "en"))); // the filter in StarterStories uses this
+        Story moved = StarterUpdate.WithMovedRecordings(kept, extra, [new StarterUpdate.RecordingMove(part.Page, part.Page)]);
+
+        Assert.Null(StoryRecordings.Of(moved, part.Page)); // review fault 3: the part clip stays alone
+        Assert.Equal(part, Assert.Single(StoryRecordings.Clips(moved)).Key);
+    }
+
+    [Fact]
+    public void A_starter_update_moves_a_part_clip_with_its_stored_cover_and_never_over_an_overlapping_sentence_clip()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        Story extra = StoryRecordings.WithClip(story with { Id = StoryIds.New() }, part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a"), cover);
+        var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
+        Story target = StoryRecordings.WithClip(story, sentences, new PageRecording("en", 3, "rec-en-2-1-2-0b0b0b0b.m4a"));
+        IReadOnlyList<StarterUpdate.ClipMove> moves = StarterUpdate.PieceMoves(extra, story);
+
+        Story onto = StarterUpdate.WithMovedClips(target, extra, moves);
+        Story free = StarterUpdate.WithMovedClips(story, extra, moves);
+
+        Assert.Equal(sentences, Assert.Single(StoryRecordings.Clips(onto)).Key);
+        Assert.Equal(cover, StoryRecordings.StoredCoverOf(free, part));
     }
 
     [Fact]
@@ -234,7 +403,6 @@ public sealed class RecordPartsTests
         StoryRecordings.SentenceCover? cover = RecordSplitBook.CoverOfParts(list, key);
 
         Assert.Equal(new StoryRecordings.SentenceCover(part.FirstSentence, part.LastSentence), cover);
-        Assert.Equal(cover, StoryRecordings.CoverOf(story, key)); // the overlap rule reads the same list
         Assert.True(RecordSplitBook.PartFits(list, key));
     }
 
@@ -261,7 +429,9 @@ public sealed class RecordPartsTests
         IReadOnlyList<RecordPart> list = RecordSplitBook.PartListOf(story);
         int count = list.Count(p => p.Page == page);
         StoryClipKey all = StoryClipKey.OfParts(page, 0, count - 1, "en");
-        Story recorded = StoryRecordings.WithClip(story, all, new PageRecording("en", 9, StoryRecordings.NewFileName(all)));
+        List<RecordPart> inSentences = list.Where(p => p.Page == page && p.InSentences).ToList();
+        var saved = new StoryRecordings.SentenceCover(inSentences.Min(p => p.FirstSentence), inSentences.Max(p => p.LastSentence)); // what the Record screen stores when it saves the clip
+        Story recorded = StoryRecordings.WithClip(story, all, new PageRecording("en", 9, StoryRecordings.NewFileName(all)), saved);
         RecordBook fallback = RecordSplitBook.WithTranslatedText(RecordSplitBook.Of(story), new TranslatedStory(story.Pages, story.Text, RecordSplitBook.SentencesOf(story)))!;
         Assert.All(fallback.Sentences, s => Assert.Null(s.Parts)); // sentence cards only
 
@@ -287,5 +457,101 @@ public sealed class RecordPartsTests
 
         Assert.Empty(StoryRecordings.MergeableClips(phone, withBeyond, _ => true));
         Assert.Equal(part, Assert.Single(StoryRecordings.MergeableClips(phone, withFitting, _ => true)));
+    }
+
+    private static Story WithPieces(Story story, params (StoryClipKey Key, PageRecording Recording)[] clips) =>
+        story with { UseRecordings = true, PieceRecordings = clips.ToDictionary(c => c.Key, c => c.Recording) };
+
+    [Fact]
+    public void Review1_a_move_is_judged_by_the_clips_cover_and_by_the_moves_before_it_so_no_file_is_copied_for_a_clip_that_is_then_skipped()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
+        Story keep = story with { Id = StoryIds.New() };
+        Story bothInExtra = WithPieces(story with { Id = StoryIds.New() }, (part, new PageRecording("en", 3, null).WithCover(cover)), (sentences, new PageRecording("en", 3, null)));
+        Story sentenceInKeep = StoryRecordings.WithClip(keep, sentences, new PageRecording("en", 3, "rec-en-2-1-2-0b0b0b0b.m4a"));
+        Story partInExtra = WithPieces(story with { Id = StoryIds.New() }, (part, new PageRecording("en", 3, null).WithCover(cover)));
+
+        Assert.Empty(StarterUpdate.FreePieceMoves(partInExtra, sentenceInKeep, sentenceInKeep)); // the part clip overlaps a sentence clip the kept copy holds: no file copied
+        Assert.Single(StarterUpdate.FreePieceMoves(bothInExtra, keep, keep)); // the source holds both over the same sentences: one file copied, not two
+        Assert.Single(StarterUpdate.FreePieceMoves(partInExtra, keep, keep));
+    }
+
+    [Fact]
+    public void Review2_a_part_in_no_sentence_never_takes_the_cover_from_the_run_it_belongs_to()
+    {
+        var none = new RecordPart(0, 0, RecordSplit.Storyteller, "x", -1, -1, 0, 1);
+        var inTwoToThree = new RecordPart(0, 1, RecordSplit.Storyteller, "y", 2, 3, 2, 3);
+        StoryClipKey key = StoryClipKey.OfParts(0, 0, 1, "en");
+
+        Assert.Equal(new StoryRecordings.SentenceCover(2, 3), RecordSplit.PartPiece(key, RecordSplit.Storyteller, "x y", [none, inTwoToThree]).Cover);
+        Assert.Null(RecordSplit.PartPiece(key, RecordSplit.Storyteller, "x", [none]).Cover);
+    }
+
+    [Fact]
+    public void Review3_clips_of_one_kind_that_overlap_are_both_kept_on_load_and_only_the_first_plays()
+    {
+        Story story = Freddy();
+        int page = MummyDinner(story).Part.Page;
+        var first = new StoryClipKey(page, 0, 1, "en");
+        var second = new StoryClipKey(page, 1, 2, "en");
+        var partA = StoryClipKey.OfParts(page, 0, 1, "en");
+        var partB = StoryClipKey.OfParts(page, 1, 2, "en");
+        var cover = new StoryRecordings.SentenceCover(0, 1);
+        Story both = WithPieces(story, (first, new("en", 3, "a.m4a")), (second, new("en", 3, "b.m4a")), (partA, new PageRecording("en", 3, "c.m4a").WithCover(cover)), (partB, new PageRecording("en", 3, "d.m4a").WithCover(new StoryRecordings.SentenceCover(1, 2))));
+
+        Story loaded = StoryJson.Deserialize(StoryJson.Serialize(both));
+
+        Assert.Equal(4, StoryRecordings.Clips(loaded).Count()); // no clip, and so no audio file, is dropped for an overlap
+        Assert.Equal(first, Assert.Single(StoryRecordings.PlayingSentenceClips(loaded, "en")));
+        Assert.Empty(StoryRecordings.PlayingParts(loaded, "en")); // the sentence clip that plays holds the part clips' sentences
+        Story partsOnly = WithPieces(story, (partA, new PageRecording("en", 3, "c.m4a")), (partB, new PageRecording("en", 3, "d.m4a")));
+        Assert.Equal(partA, Assert.Single(StoryRecordings.PlayingParts(StoryJson.Deserialize(StoryJson.Serialize(partsOnly)), "en")));
+    }
+
+    [Fact]
+    public void Review4_backup_clips_that_overlap_each_other_are_all_merged_and_none_replaces_another()
+    {
+        Story phone = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(phone);
+        var sentences = new StoryClipKey(part.Page, cover.First, cover.Last, "en");
+        Story backed = WithPieces(phone, (part, new PageRecording("en", 3, "rec-en-2-p2-2-0a0a0a0a.m4a").WithCover(cover)), (sentences, new PageRecording("en", 3, "rec-en-2-1-2-0b0b0b0b.m4a")));
+
+        IReadOnlyList<StoryClipKey> keys = StoryRecordings.MergeableClips(phone, backed, _ => true);
+        Story merged = StoryRecordings.WithMergedClips(phone, backed, keys);
+
+        Assert.Equal(2, keys.Count);
+        Assert.Equal(2, StoryRecordings.Clips(merged).Count()); // the file StageAndPlace placed for each is still named
+        Assert.Equal(sentences, Assert.Single(StoryRecordings.PlayingSentenceClips(merged, "en")));
+        Assert.Empty(StoryRecordings.PlayingParts(merged, "en"));
+    }
+
+    [Fact]
+    public void Review5_a_moved_part_clip_whose_page_splits_into_other_sentences_keeps_no_stale_cover_but_is_kept()
+    {
+        Story story = Freddy();
+        (StoryClipKey part, StoryRecordings.SentenceCover cover) = MummyDinner(story);
+        Story extra = WithPieces(story with { Id = StoryIds.New() }, (part, new PageRecording("en", 3, null).WithCover(cover)));
+        Story keep = story with { Id = StoryIds.New() };
+
+        Assert.False(Assert.Single(StarterUpdate.PieceMoves(extra, keep)).DropCover); // the same split: the cover moves with the clip
+        Story dropped = StarterUpdate.WithMovedClips(keep, extra, [new StarterUpdate.ClipMove(part, part, null, DropCover: true)]);
+        Story refreshed = StarterUpdate.Refresh(extra, keep, [], [new StarterUpdate.ClipMove(part, part, null, DropCover: true)]);
+
+        Assert.Null(StoryRecordings.ClipOf(dropped, part)!.Cover);
+        Assert.Null(StoryRecordings.ClipOf(refreshed, part)!.Cover);
+        Assert.Equal(part, Assert.Single(StoryRecordings.Clips(dropped)).Key);
+    }
+
+    [Fact]
+    public void Review7_whole_page_moves_are_judged_against_the_story_as_built_so_one_page_takes_one_clip()
+    {
+        Story keep = Freddy();
+        Story extra = StoryRecordings.With(StoryRecordings.With(keep with { Id = StoryIds.New() }, 0, new PageRecording("en", 4, null)), 1, new PageRecording("en", 5, null));
+
+        Story moved = StarterUpdate.WithMovedRecordings(keep, extra, [new StarterUpdate.RecordingMove(0, 0), new StarterUpdate.RecordingMove(1, 0)]);
+
+        Assert.Equal(4, Assert.Single(moved.Recordings!).Value.Seconds); // the first move wins; the second is not added over it
     }
 }
