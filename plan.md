@@ -39,6 +39,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 402 | Dino: App Store header and search-results pictures (items 1-3 built and submitted to Apple; item 4, placing them once approved, open) | in progress (items 1-3 built) | #1214 | | [402-dino-app-store-creative-assets.md](docs/plan/slices/402-dino-app-store-creative-assets.md) |
 | 403 | Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen | planned (scope approved 2026-11-17) | | | [403-dino-foldable-layouts.md](docs/plan/slices/403-dino-foldable-layouts.md) |
 | 404 | Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set | planned (scope approved 2026-11-17) | | | [404-dino-store-pictures-foldables-and-retake.md](docs/plan/slices/404-dino-store-pictures-foldables-and-retake.md) |
+| 405 | Dino: the back cover writes every name in the reading language (writers, reteller, illustrator; spellings from the store cards) | planned (user report 2026-11-17) | | | [405-dino-back-cover-names-per-language.md](docs/plan/slices/405-dino-back-cover-names-per-language.md) |
 
 ### Shared
 
