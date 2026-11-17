@@ -1,9 +1,9 @@
 # Slice 395 — Dino: recording a character shows and replaces only that character's words, not the narration around them
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day. Not built yet.*
+*In progress (wave 2026-11-17), draft PR.* *Scoped 2026-11-15 from the user's report; scope and Decisions 1-6 approved by the user the same day.*
 
-**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file.
+**Touches:** `src/Dino/DinoReader.Core/RecordSplit.cs`, `RecordSplitBook.cs`, `RecordSplitWalk.cs`, `StoryClipKey.cs`, `StoryRecordings.cs`, `TranslatedStory.cs` (only if item 5 needs it), `src/Dino/DinoReader.App/ReadingSession.cs`, `RecordPage.cs`, `RecordIntroPage.cs`, `tests/Dino/DinoReader.Tests`, a Maestro record flow under `.maestro/dino/`, this slice file. Widened at claim (2026-11-17 premise check): `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `RecordBooks.cs`, `GalleryPage.xaml.cs`, `OnboardingListenPage.cs`, `OnboardingVoicePage.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `StoryBackupReader.cs`, `StoryBackupState.cs`, `StoryPackageWriter.cs`, `StoryPackageReader.cs`, `FileStoryLibrary.cs`, `Story.cs`, `src/Dino/DinoReader.App/Testing/DinoTestCommands.Record.cs`, `src/Dino/DinoReader.Core/StarterUpdate.cs`, `src/Dino/DinoReader.App/StarterStories.cs` (review finding 8: the starter-update move of part clips). Platforms: shared Core and MAUI code, so Android, iOS and the Windows head run it; the device check is the Android emulator (shared UI).
 
 ## Why
 
@@ -50,3 +50,24 @@ The same holds for every character in every book.
 
 - Changing how a quote's speaker is guessed (`SpeakerAttributor`); this slice only uses it at a finer grain.
 - Re-recording or moving the parent's existing takes for them.
+
+## From review
+
+- Skipped #1 (`reviews/pr-1233-high.md`): "Recording one part deletes the whole older sentence clip (and its .m4a) covering it." - Decision 5: a parent who wants the cleaner split records the line again, and the re-recording replaces the older clip; one overlap rule (`StoryRecordings`, `OverlapRule`) now serves save, backup/package merge and the starter-update move.
+- Skipped #5 (`reviews/pr-1233-high.md`): "Part clips are written only to the new PartRecordings field; an older app that rewrites story.json, or a backup restored by one, drops them silently." - only an app downgrade or an older app restoring a newer backup can lose them; the store never downgrades.
+- Skipped #7 (`reviews/pr-1233-high.md`): "Every read start re-segments the whole book and re-runs speaker attribution; TakeOf rescans the span list per part clip." - low severity, not a correctness issue.
+- Skipped #1 (`reviews/pr-1233-check1-medium.md`): "ReplacesBeyond returns true whenever old clip and new key differ in kind, without comparing covered sentences." - low: the warning is only too cautious, nothing is lost that it does not name.
+- Skipped #2 (`reviews/pr-1233-check1-medium.md`): "Public ClipOf and IsRecorded each build a fresh Lazy, so each call on a page with a part clip re-segments the whole story." - low: a cost on long books, not a wrong result.
+- Skipped #3 (`reviews/pr-1233-check1-medium.md`): "Part clips live in a separate PartRecordings list, so an older build ignores them and drops them on its next save" - same as high #5: only an app downgrade drops them.
+- Skipped #5 (`reviews/pr-1233-check1-medium.md`): "WithPartTakes (TakeOf) runs before the cancel and pending-read checks and does file I/O plus ReportRecordingUnplayable." - low: at worst one extra unplayable report for a superseded read.
+- Skipped #6 (`reviews/pr-1233-starter-high.md`): "Part clips are written only to the new PartRecordings field, which an older app ignores on read." - same as high #5 above: only an app downgrade drops them.
+- #2 (`reviews/pr-1233-starter-medium.md`): "A part clip with no stored cover overlaps no sentence clip, so a legacy part clip and a new sentence clip over the same words both stay." - both clips still stay (no clip is dropped because of an overlap), but since medium2 #3 the cover-less part clip is not played where a sentence clip already reads its words (judged at play time from where its parts sit now; `StoryRecordings.PlayingParts`), so the words are not heard twice.
+- Skipped #4 (`reviews/pr-1233-starter-medium.md`): "A segment inside a take that carries AnimalClipMarker is dropped and does not mark the take used; a later segment becomes the take, or take and sound both vanish." - not a bug: the later non-animal segment of the range becomes the take (that is the intent, tested), and a take's range always starts at a part with words, so a real segment starts in it.
+- Skipped #5 (`reviews/pr-1233-starter-medium.md`): "ReplacesBeyond returns true for every cross-kind replacement (c.Key.IsPart != key.IsPart), so UI shows a false 'also replaces other recordings' warning." - low (the warning is only too cautious), same as check1 #1.
+- Skipped #6 (`reviews/pr-1233-starter-medium.md`): "MergeableClips checks a backup part clip with a null cover as overlapping nothing, so it merges beside the phone's sentence clip over the same words." - same by-design rule as #2: a clip with no stored cover is kept, never dropped.
+- Skipped #7 (`reviews/pr-1233-starter-medium.md`): "PartRuns splits a run when an index is skipped by a part in no sentence; card list shows two cards where one is expected." - low.
+- Skipped #8 (`reviews/pr-1233-starter-medium.md`): "Sets Parts = null on every sentence as a workaround; onboarding try can never use part recording and forks the record path." - low: the onboarding try is one sentence card by design.
+- Skipped #8 (`reviews/pr-1233-starter-high.md`): "Doc on Overlaps says a part vs sentence clip is judged by StoryRecordings.WithClip; Overlaps itself returns false for mixed kinds. Rename Overlaps or make it internal." - naming only: no call site uses raw Overlaps for a cross-kind decision any more (StoryJson no longer calls it; PlayingClips uses it for same-kind only).
+- Skipped #9 (`reviews/pr-1233-check1-medium.md`): "Translated page keeps parts only if every lettered source part finds translated text" - Decision 6: "If its parts do not line up with the English ones for a page, that page falls back to today's sentence cards".
+- Skipped #4 (`reviews/pr-1233-starter-medium2.md`): "AnimalClipFiles.EnsureAsync and voice counting run on the original segments before the take is applied; unused sound files copied, take may be counted as pack-voice usage." - low: at worst one unused sound file copied; the voice count already runs on the segments that really play.
+- Skipped #5 (`reviews/pr-1233-starter-medium2.md`): "PartRuns splits a run into two cards when a part in no sentence sits between two same-speaker quotes (same as skipped #7, with a real-data case noted)." - low: the same speaker gets two cards instead of one, nothing is lost or read twice.
