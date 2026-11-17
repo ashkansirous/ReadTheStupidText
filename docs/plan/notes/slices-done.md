@@ -276,6 +276,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 383 | Dino: a playing book keeps reading to the end with the phone locked (silent pages too), Android and iOS | built, not yet verified | #1169 | | [383-dino-reading-keeps-going-when-locked.md](../slices/383-dino-reading-keeps-going-when-locked.md) |
 | 390 | Dino iOS purchases: StoreKit 1 (obsoleted from iOS 18) to StoreKit 2, then remove the file-scoped CA1422 suppression from Slice 378 | built, not yet verified | #1189 | | [390-dino-ios-purchases-storekit-2.md](../slices/390-dino-ios-purchases-storekit-2.md) |
 | 401 | Dino iOS: declare the app's 15 languages so the App Store lists them | built, not yet verified | #1212 | | [401-dino-ios-app-languages.md](../slices/401-dino-ios-app-languages.md) |
+| 405 | Dino: the back cover writes every name in the reading language (writers, reteller, illustrator; spellings from the store cards) | built, not yet verified | #1235 | | [405-dino-back-cover-names-per-language.md](../slices/405-dino-back-cover-names-per-language.md) |
 | 396 | Dino: Restore purchases and Redeem a code leave the foot of the Store, into the Store's first line, the 402 strip and the result message | built, not yet verified | #1234 | | [396-dino-restore-and-redeem-out-of-the-store-foot.md](../slices/396-dino-restore-and-redeem-out-of-the-store-foot.md) |
 
 ## Shared

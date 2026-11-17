@@ -1,7 +1,7 @@
 # Slice 405 — Dino: the back cover writes every name in the reading language (Elham Shafiei Gol, Ashkan Sirous, Aesop, Brothers Grimm ...)
 **Product:** Dino
 
-*Built 2026-11-17, reviewed (high and medium), checked on the Android emulator, not merged; PR to follow.*
+*Built 2026-11-17, reviewed (high and medium), checked on the Android emulator, merged as PR #1235 (0ae568bc); store books uploaded (run 44187449666); the iOS simulator check and a native read of some spellings are not yet verified.*
 
 **Touches:** `src/Dino/DinoReader.Core/BackCover.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `src/Dino/DinoReader.App/BackCoverText.cs`, `tools/dino/DinoReader.BookBuilder/Books.cs`, `tools/dino/DinoReader.BookBuilder/BookCommands.cs`, `tools/dino/DinoReader.BookBuilder/BookHash.cs`, `content/dino/*/book.json`, `tests/Dino/DinoReader.Tests/BackCoverTests.cs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-writer.md`, `.claude/agents/dino-story-reviewer.md`
 
@@ -59,7 +59,7 @@ page, on the current version", item 6 covers it.
       store book right after the merge (store and app must match).
 - [x] 5. Writer and reviewer docs (`create-dino-story`, `dino-story-writer`, `dino-story-reviewer`): a new
       book writes `namesByLanguage` with the translations, and the reviewer checks the back cover's names in two languages.
-- [ ] 6. Only if the user says the whole page was English on the current version: find out why (the book's language,
+- [ ] 6. (Conditional, not open work.) Only if the user says the whole page was English on the current version: find out why (the book's language,
       translation fallback events in `dino_usage`, the app version) before changing anything.
 
 ## Verification
@@ -98,7 +98,7 @@ page, on the current version", item 6 covers it.
 
 - Farsi reteller line wraps inside the name («...توسط اشکان» / «سیروس») and the gap looks larger than the normal wrapped-line spacing. Keep a name on one line (non-breaking spaces) and check the gap. Not fixed in this slice.
 - Done 2026-11-17: merged as PR #1235 (0ae568bc, in the night's batched release, so the merge skipped `dino-store.yml`); store upload run 44187449666 (dispatched by hand) concluded `success` and uploaded all 15 packages. `/api/stories` read afterwards: starters good-enough v10, three-little-pigs v16, gingerbread-man v13, tortoise-and-hare v13 match `book.json`; the live three-little-pigs v16 package's `story.json` carries `NamesByLanguage` (fa «اشکان سیروس»).
-- Item 6 stays open, conditional on the user's answer.
+- Item 6 is conditional on a user report (the whole page English on the current version); it is not open work and stays unticked unless that report comes.
 
 #### For CLAUDE.md
 

@@ -5,6 +5,8 @@
 
 > **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
+*Park note (night 2026-11-17-2105, wave 1):* **parked: needs an interactive session.** The open build items (a comma at text-prep time for the extra-ezafe clips ganji-2, gyro-2, gyro-3; gyro-1 intermittent «است») need a design the 2026-11-16 answers leave open (whether it can be applied at text-prep time without changing how the app reads other sentences is not decided), and any fix needs a fresh listen on an Artifact listening page, which a headless wave cannot publish.
+
 *Third listen done 2026-11-16 (answers below); 3 extra-ezafe items and `gyro-1` open as build work.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
 *Park note (night 2026-11-14-0726):* parked again by housekeeping 1 for the same reason (the second listen needs an Artifact page; headless wave sessions have no Artifact tool). Moved back to `planned` by the 2026-11-14-0726 feedback loop per the user's 2026-11-01 rule; a night run can only re-park it, so it needs an interactive session.
