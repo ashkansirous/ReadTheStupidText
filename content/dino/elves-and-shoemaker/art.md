@@ -215,3 +215,17 @@ size reference (Hans, Greta, cat and one elf outfit with the elves scaled to 40%
 line-up) and wrote the size into the prompt. Cover took 1 try, p10 1, p13 2 (first: coats bigger than the elves, and the
 paste had been lost), p15 1 (plus two sends that never submitted until the page was reloaded and the text sent shorter).
 Page 13 redrawn once more (third version): no blade or tools near Hans and Greta, all windows dark, elves about cat height; Nob's orange patch was then painted onto the picture (36 px square, drawn in the image editor, nothing else changed).
+
+
+### High-res pack (Slice 350, 2026-11-16)
+
+Full-size 1792x2400 originals, untouched Gemini files recovered from the user's chats, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (all under 1.5 MB, largest page 4 at 1233781 bytes; `back-cover.jpg` re-saved through the same step, now 481545 bytes). None redrawn, no Gemini prompt sent.
+
+- Source chat id and original size in bytes: cover c09 c8549a464dd05f18 (3418178); 1 c31 1a52d662e297afa5 (4014555); 2 c19 e36cb7a6358c7e3a (3950807); 3 c30 f5077f3e67b051b1 (3968461); 4 c28 e3df5dcf7b88982d (4346395); 5 c22 132ab4df4e332644 (3646238); 6 c21 d3fa4dc981b1d702 (4075334); 7 c32 32676aac659a01b8 (3896148); 8 c24 9565bc4a5fdd21f0 (4211093); 9 c11 70cdf6f5df7ec1b4 (3232567); 10 c12 ea76897c97e112bd (3456084); 11 c10 3b0b4c9c2efa481a (3282846); 12 c20 942c7472db611b60 (3973792); 13 c02 3a94b4596b6f62da (3348665); 14 c13 dce286f286973d26 (3329398); 15 c03 6b50561b7d63fba7 (3272107).
+- App copies: unchanged (no file under `pictures/` and no `cover.jpg` change).
+
+- Page 13: the recovered original lacks Nob's orange patch, which was painted onto the accepted picture afterwards (line 217). The patch was copied from the app's `pictures/13.jpg` onto `high-res/13.jpg` (only the differing orange pixels in that spot, each scaled 2x; nothing else changed) after the full review found it missing.
+
+Full review 2026-11-17 (dino-story-reviewer): FAIL on page 13 only (the missing patch, fixed above); every other high-res file is the same picture as its app page, nothing swapped, no text, no extra limbs, back cover fits the book.
+
+Not redrawn, for the user (reviewer's 73% overlays, 2026-11-17): the cat is entirely in the bottom strip on pages 10, 12 and 14; mostly in it on pages 3 and 13; both elves and the cat on 9 and 11; the cat and Greta's feet on the cover; the cat and Hans's and Greta's feet on 15. Pages 4, 5, 7 and 8 pass (5's bottom is plain floorboards, still scene). Known and kept: page 2 has a knife-like blade at the left end of the bench; the window shape changes between pages (diamond panes on 4); on page 13 Nob is about the cat's height. Kept as they are because no page of this book was flagged in *Pages to fix*.
