@@ -248,3 +248,19 @@ The full review failed cover, 5, 7, 10 and 13 (`reviews/goldilocks-full.md`). Al
 Shipped sizes: every picture in `Store/goldilocks/` is 896x1200 (cover-thumb 288x384).
 
 Page 10, fourth redraw (2026-10-26): accepted. Fresh chat, line-up pasted only, short three-bed prompt inserted and sent with JS: exactly three beds, one girl sitting up in the little patchwork bed with a sorry face, Mama Bear's white apron with red dots, surprised bears, the floor runs to the bottom edge with no line. `pictures/10.jpg` is now this picture.
+
+### High-res pack (Slice 350, 2026-11-17)
+
+Full-size 1792x2400 originals, untouched Gemini files, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (14 pages, cover and `back-cover.jpg`; all between 0.37 and 0.98 MB, under the 1.5 MB store limit). The back cover (2289106 bytes before) went through `-HighRes` too (now 376108). No app picture and no `cover.jpg` changed; the story text is untouched.
+
+- Recovered from the user's Gemini chats (chat id, original size in bytes; each matched to its accepted app picture by a 24x32 greyscale compare, score under 2): cover c13 fbc9e5a7 (3286249); 1 c02 5664b7c5 (3333474); 2 c02 5664b7c5 (3326813); 3 c09 3c5fda77 (2763103); 4 c09 3c5fda77 (2667656); 6 c04 b29ae686 (2904948); 7 c08 945ca672 (3656413); 8 c05 e66149cc (3050739); 9 c05 e66149cc (2989589); 10 c11 867ae8d6 (3014040); 11 c10 1008db3a (3090831); 12 c06 53d425c7 (3189562).
+- Redrawn tonight on 3.1 Pro as full-size copies of the accepted app pictures (the originals were not found, no match in any chat): page 5 chat ce5050aea07dfb43 (3209301); page 13 chat 11bfcb407033c8dd (2919339); page 14 chat ba4f880e9a6a3184 (3498745, third try).
+- Copy-mode pages: 5, 13 and 14 (same composition as the accepted picture, only bigger).
+- App copies: none replaced.
+
+For the user:
+- Page 14: Baby Bear's feet and the parents' feet sit on the 73% line, exactly as in the accepted app picture (tries 1 and 2 were redone only to move them up and Gemini copied the old layout, so the accepted layout was kept).
+- Page 5: the picture has a single-pane window in the art line, but the redrawn copy shows the six-pane window of the accepted app picture; kept as accepted.
+- Recovered pages (line70 and bottom strip): the cover, 7, 8, 11 and 12 have feet, rug edge or chair feet on or slightly past the 73% line (12: rug and Baby Bear's feet slightly over); 1, 2, 3, 9 and 10 pass; the bottom is a plain-ish floor strip on 4, 6, 7, 8, 9, 10, 11 and 12, a real scene (meadow, path) on 1, 2 and 3.
+
+Full review 2026-11-17 (dino-story-reviewer): **PASS**. Notes for the user (accepted pictures, kept): feet on the 73% line on the cover and page 14 (Baby Bear slightly past); page 12 crosses by more than noted above (Baby Bear's lower body, the chair legs and Goldilocks' shoes); the page 13 copy adds spoons for Papa and Mama Bear and opens Papa's eyes; page 1's bottom 40% is a flat green lawn and 2-3 are flat-ish, page 3 has a misty white top; the cottage and windows change between pages; on page 8 Baby Bear holds his chair, not the loose leg; the approved back cover shows Goldilocks asleep outdoors with the bears, while the story ends with her home with Mum (the user turned down a similar Three Little Pigs back cover).
