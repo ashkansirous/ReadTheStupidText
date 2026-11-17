@@ -247,3 +247,15 @@ Prepared, `gingerbread-man.dino` rebuilt, contact sheet remade.
 ### Review result (2026-10-26)
 
 Full `dino-story-reviewer` review PASSED after the redraws: all 14 pictures and the cover accepted. The flags recorded in the runs above (page 7 brook-like line, page 8 Grandpa without a cap, page 9 four figures low on the page, page 11 boy seen from behind, page 14 window, the second Horse bow on 11 and 13, the Cow's horn nubs) are accepted by the reviewer.
+
+### High-res pack (Slice 350, 2026-11-17)
+
+Full-size 1792x2400 originals, untouched Gemini files, in `high-res/` as flat JPEG 85 copies made by `prepare-story-pictures.ps1 -HighRes` (the originals stay in the working folder; `back-cover.jpg` went through `-HighRes` too, now 727881 bytes). All files are under 1.5 MB (largest: page 13, 992148 bytes). No app picture and no `cover.jpg` changed.
+
+- Recovered from the user's Gemini chats (chat id, original size in bytes; matched to the app copy by a grey-mean comparison, score under 1): cover c05 29a4a5ba261aaf05 (2510039); 1 c05 (2550254); 2 c05 (2643783); 3 c04 fc769336ec01b2a3 (3231265); 4 c04 (2761298); 6 c09 3f4fb7ffcb61a9c6 (3065977); 7 c14 910baf139f88070d (3238236); 8 c24 c68591372b217c10 (3396388); 9 c10 3e411e31d9a4b51c (3194877); 10 c08 6306ddccdffdefb0 (3709028); 11 c07 8230b373a85d8509 (2914053); 12 c23 686c0564e3eacfbd (3223493).
+- Redrawn in copy mode on 3.1 Pro (the accepted pictures' originals were not found): page 5 chat 62b98d0ae9d72b7b (3124599; composition as the app picture, bottom now grass and daisies); page 13 chat 07fc0860c7daabdf (3491305); page 14 try 4, chat 2075e2d57c105441 (3027006; tries 1 and 3, chats 1d041c5ecd177db9 and 8efd23ce50791690, rejected for the Fox crossing the line; try 2 stopped by a CAPTCHA, nothing sent). Check rows are in the redraw `checks.md` files (scratch folder).
+- App copies: none replaced.
+
+For the user (pictures that cross or touch the 73% line, all as in the accepted app pictures, kept because the user accepted them): page 13 Grandpa's left shoe sole by about 4 px; page 14 the Fox's body and tail cross; page 12 hooves and boots cross the line; page 9 hooves and feet cross slightly; pages 7, 8, 10 and 11 touch it (gingerbread's feet, fox paws, bottoms at the line). Cover and pages 1-4 and 6 are clear with a plain bottom strip (sand, tint, floor, path or green); page 5 now has grass and daisies at the bottom.
+
+Full review 2026-11-17 (dino-story-reviewer): **PASS**. Notes for the user (accepted pictures, kept): the 73% line is crossed more than noted above (page 7 the boy's feet by about 3%; 10 and 11 the Fox's tail; 9 hooves and feet to about 79%; 14 the sleeping Fox and rug; 8 the Fox's paw touches); pages 1 and 2 end in plain white paper and 9-11 in a flat wash; on page 12 the willow and the buttercup rock are both across the water, unlike 9-11; the back cover crops the grown-ups and seats the Fox and the boy in the bottom strip (approved in Slice 359); page 5's high-res copy has a daisy-meadow bottom where the app copy has a flat green strip.
