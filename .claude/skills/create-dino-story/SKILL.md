@@ -1,6 +1,6 @@
 ---
 name: create-dino-story
-description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a quality check of every picture on its small copy, then build, test and upload. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
+description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a quality check of every picture on its small copy, then build, test, upload and set up its sale product in every store. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
 ---
 
 # Create or illustrate a Dino Reader story
@@ -352,6 +352,26 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
 - After merge, `dino-store.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/dino/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
+
+## 7b. Set up the book's sale product (the last step; the book is not delivered without it)
+
+The user, 2026-11-18: Love from Seagull Island went live in the store but showed "cannot be bought right now", because
+nothing creates a new paid book's in-app product. The session that makes a book does not end, or hand the book over as
+done, until the book is in the live store **and** its product exists in every store. Right after `publish-store` uploads it:
+
+- Confirm the book is live: `https://dinoreader.sirous.uk/api/stories` lists its id with `access` and `productId`. A book
+  with `access: "free"` needs no product; stop here.
+- For a paid book, run `.github/scripts/store-products.mjs --apply --store google`, read the output, then `--store apple`
+  (keys: `DINOREADER_PLAY_SERVICE_ACCOUNT_JSON` in `D:/secrets/dinoreader/secrets.env` is a path to the JSON file, whose
+  text the script needs; `ASC_API_KEY_P8_BASE64`, `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` in `D:/secrets/lets-call-mom/secrets.env`).
+  Existing products are left alone, so the run creates only the new one. Its id is `uk.sirous.dinoreader.book.<stem>` unless `book.json` names one.
+- Read it back: Play's `oneTimeProducts` list shows the product with an `ACTIVE` buy option; App Store Connect reports it created.
+- App Store: add the review screenshot and submit the product with the next app version
+  ([App Store Connect, Dino](https://appstoreconnect.apple.com/apps/6825053435)).
+- Microsoft Store: create the durable add-on with the same id, price it at USD 0.99 in all markets (in-app only), list it
+  (en-US) and submit it in [Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview),
+  as was done for the first 11 books (Slice 346). Never run `--store microsoft` as is: it also creates the subscription add-ons, whose request shapes are unverified.
+- Report each store's state for the product in the final message. A step that only the user can do gets its direct link there.
 
 ## 8. Check in the app
 
