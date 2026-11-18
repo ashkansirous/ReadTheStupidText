@@ -6,7 +6,7 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 
 import { normalizeUuid, parseTextFrames, parseIps, parseMetricKitFrames, readCrashInput, detectFormat } from "./crash-frames.mjs";
-import { assetPattern, findLocalDsym, machoUuid, formatResults, linkAddress, parseSymbolizerOutput, parseTextVmaddr, releaseTag, symbolicateFrames, symbolicateText, symbolizerArgs, appOfFrames } from "./symbolicate.mjs";
+import { newestNdkLlvmBin, assetPattern, findLocalDsym, machoUuid, formatResults, linkAddress, parseSymbolizerOutput, parseTextVmaddr, releaseTag, symbolicateFrames, symbolicateText, symbolizerArgs, appOfFrames } from "./symbolicate.mjs";
 
 const APP_UUID = "F1E2D3C4B5A6978899AABBCCDDEEFF00";
 const FW_UUID = "0123456789ABCDEF0123456789ABCDEF";
@@ -65,6 +65,21 @@ test("a MetricKit report is read frame by frame, also when the JSON is cut off",
   assert.deepEqual(read.frames.map((f) => [f.uuid, f.offset]), [[APP_UUID, 1155520], [FW_UUID, 64]]);
   const cut = metricKitReport.stack.slice(0, metricKitReport.stack.length - 40);
   assert.equal(parseMetricKitFrames(cut)[0].uuid, APP_UUID);
+});
+
+test("the newest NDK's llvm bin is the fallback for llvm-symbolizer, null when there is none", () => {
+  const sdk = mkdtempSync(join(tmpdir(), "sdk-"));
+  assert.equal(newestNdkLlvmBin(sdk, "win32"), null);
+  for (const version of ["29.0.14033849", "30.0.16248370", "9.0.1"]) mkdirSync(join(sdk, "ndk", version, "toolchains", "llvm", "prebuilt", "windows-x86_64", "bin"), { recursive: true });
+  assert.equal(newestNdkLlvmBin(sdk, "win32"), join(sdk, "ndk", "30.0.16248370", "toolchains", "llvm", "prebuilt", "windows-x86_64", "bin"));
+  assert.equal(newestNdkLlvmBin(sdk, "freebsd"), null);
+});
+
+test("a MetricKit report without binaryName names the frames of its own binaryUuid after the app", () => {
+  const nameless = { schemaVersion: 1, app: "dino", kind: "native", version: "1.131.0", binaryUuid: APP_UUID,
+    stack: tree({ binaryUUID: "F1E2D3C4-B5A6-9788-99AA-BBCCDDEEFF00", offsetIntoBinaryTextSegment: 7, subFrames: [{ binaryUUID: FW_UUID, offsetIntoBinaryTextSegment: 8 }] }) };
+  const read = readCrashInput(JSON.stringify(nameless));
+  assert.deepEqual(read.frames.map((f) => f.image), ["DinoReader", "?"]);
 });
 
 test("an App Store Connect crash-log answer is unwrapped to its log text", () => {
