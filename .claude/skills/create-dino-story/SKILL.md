@@ -28,6 +28,14 @@ context free of screenshots, pictures and 14 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
+   **Voices start right after this text review passes, not after the pictures** (the user, 2026-11-18: Love from Seagull
+   Island stopped for hours mid-morning because the voice page went out only after every picture was drawn, while the user was
+   away). In the same turn that the English goes to the user for their read, dispatch the `voice-pick` agent for every speaker
+   and the narrator, and send the user both together: "read the English, and pick the voices". The cast rarely changes with a
+   text edit, and clips of unchanged lines are reused. Once the user accepts the text, compare its speakers and tagged lines
+   (a new speaker, a chorus line such as "they said together", a renamed character) with the picks, and ask about every new
+   voice decision at once, in that same turn, never later. With the picks in, render the English audio while the pictures are
+   drawn, and each translation's audio as soon as it is written, so nothing waits on the user at the end.
 3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Two at once across the machine, on separate books or on page groups of one book** (the user's choice,
    2026-11-17, after two of four tabs got stuck on Love from Seagull Island; it was four from 2026-10-26; page groups 2026-11-01; the user may raise it again). **Each illustrator opens its own tab with `tabs_create_mcp` and uses only that `tabId`**: never a tab `tabs_context_mcp` lists or hands it (other illustrators' chats are there; 2026-11-17 one was handed two foreign tabs), and it never closes a tab or tab group it didn't open (one closed another's tab group the same day). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
    `javascript_tool` (`execCommand('insertText')`) and Send is only `await window.__sendChecked(<prompt>, <pictures>)`
