@@ -79,7 +79,8 @@ UNIT_LIMIT="$SHOT_TIME_LIMIT_SECONDS"
 device_specs() {
   echo 'iphone-6.5|iPhone 11 Pro Max;iPhone Xs Max;iPhone 14 Plus;iPhone 13 Pro Max;iPhone 12 Pro Max|1242x2688 1284x2778'
   echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2064x2752 2048x2732'
-  echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
+  # Slice 404: the Xcode 27.2 image's iOS 27.2 runtime refuses the 17 and 16 Pro Max ("Incompatible device", run 44368205082).
+  echo 'iphone-6.9|iPhone 18 Pro Max;iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
 }
 
 # The shot names one flow file takes, one per line.
