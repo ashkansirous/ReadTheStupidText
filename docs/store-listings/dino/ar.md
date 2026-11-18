@@ -1,20 +1,22 @@
-# Store listing: Arabic (`ar`), Dino Book Reader
+# Store listing: Arabic (`ar`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Modern Standard Arabic, right to left. Locales: Play `ar`; App Store `ar-SA`; Microsoft Store `ar`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): لكل شخصية صوتها، وتستطيع الجدة تسجيل صوتها لتكون الذئب
+Title (<= 30): Dino: كتب الأطفال والحكايات
+Play short description (<= 80): قصص قبل النوم وكتب مصورة للأطفال. وسجّل صوتك أنت أيضًا.
 Play search phrases used in the text: قصص قبل النوم, قصص أطفال, كتب مصورة, قراءة بصوت عالٍ
-App Store subtitle (<= 30): صوت لكل شخصية
-App Store keywords (<= 100 bytes): قصص,أطفال,قبل النوم,كتب مصورة,حكايات,قراءة,تسجيل,صغار
+App Store subtitle (<= 30): قصص قبل النوم بصوتك
+App Store keywords (<= 100 bytes): قراءة,عالٍ,مصورة,تسجيل,الجدة,ثنائي,اللغة,روضة,صوتي
 App Store promotional text (<= 170): قصص مقروءة للأطفال من 3 إلى 9 سنوات، بصوت لكل شخصية ومكان لصوتك أنت. بلا إعلانات. أربع قصص مجانية والباقي 0.99 دولار لكل قصة. 15 لغة.
-Microsoft search terms (7): قصص أطفال; قراءة بصوت عالٍ; قصص قبل النوم; كتب مصورة; حكايات; كتب للأطفال; أصوات الشخصيات
+Microsoft search terms (7): قصص قبل النوم; كتب الأطفال; قصص للأطفال; قراءة بصوت عالٍ; كتب مصورة; حكايات الأطفال; حكايات
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-في Dino Book Reader لكل شخصية صوتها الخاص. الراوي يحكي القصة، والذئب والخنازير الصغيرة يبدو كل منهم مختلفًا، ويستطيع الأب أو الأم أو الجد أو الجدة تسجيل صوته لأي شخصية: الجدة تستطيع أن تكون الذئب.
+في Dino لكل شخصية صوتها الخاص. الراوي يحكي القصة، والذئب والخنازير الصغيرة يبدو كل منهم مختلفًا، ويستطيع الأب أو الأم أو الجد أو الجدة تسجيل صوته لأي شخصية: الجدة تستطيع أن تكون الذئب.
 
 كل قصة متوفرة بـ 15 لغة، للعائلات التي تحافظ على لغة البيت إلى جانب لغة المدرسة: الفارسية والعربية والسويدية والنرويجية والدنماركية والفنلندية وغيرها. يختار شخص بالغ لغتين أو ثلاث للقصص، ويستطيع الطفل التبديل بينها أثناء القراءة، فيسمع القصة نفسها ويتعلم الكلمات باللغتين.
 
@@ -45,7 +47,7 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 
 ## Description
 
-يقرأ تطبيق Dino Book Reader قصص الكتب المصورة بصوت عالٍ للأطفال من عمر 3 إلى 9 سنوات، بصوت مختلف لكل شخصية. يروي الراوي القصة، ويتحدث الذئب والخنازير الصغيرة ورجل خبز الزنجبيل كلٌّ بصوته الخاص.
+يقرأ تطبيق Dino قصص الكتب المصورة بصوت عالٍ للأطفال من عمر 3 إلى 9 سنوات، بصوت مختلف لكل شخصية. يروي الراوي القصة، ويتحدث الذئب والخنازير الصغيرة ورجل خبز الزنجبيل كلٌّ بصوته الخاص.
 
 اختر قصصك
 يختار شخص بالغ الكتب من رف القصص: حكايات كلاسيكية معاد سردها بلطف، مع صورة في كل صفحة. أربع قصص مجانية. يأتي كل كتاب بأصواته الجاهزة الخاصة به، باللغة التي تختارها.
@@ -72,3 +74,13 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 - بعد تنزيل القصة ولغتها تُقرأ دون اتصال بالإنترنت.
 - تبقى تسجيلاتك على جهازك. انسخها احتياطيًا واستعدها من قسم الكبار.
 - عدّادات استخدام مجهولة اختيارية بلا أسماء ولا معرّفات، يمكن إيقافها من الإعدادات (خلف بوابة الكبار).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+أصبح اسم Dino الآن Dino: كتب الأطفال والحكايات.
+
+- قصة جديدة: Love from Seagull Island.
+- صور أوضح في ثماني قصص.
+- إصلاح أعطال وتحسينات صغيرة في متجر القصص.

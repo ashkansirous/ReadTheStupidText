@@ -1,20 +1,22 @@
-# Store listing: Dutch (`nl`), Dino Book Reader
+# Store listing: Dutch (`nl`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `nl-NL`; App Store `nl-NL`; Microsoft Store `nl`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"). "Je/jouw" for the grown-ups.
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): Elk personage heeft een eigen stem - en oma neemt de wolf zelf op
+Title (<= 30): Dino: Kinderboeken & Verhalen
+Play short description (<= 80): Voorgelezen slaapverhaaltjes en prentenboeken. Neem ook je eigen stem op.
 Play search phrases used in the text: slaapverhaaltjes, sprookjes voor kinderen, prentenboeken, voorlezen
-App Store subtitle (<= 30): Een stem voor elk personage
-App Store keywords (<= 100 bytes): kinderverhalen,slaapverhaaltjes,sprookjes,prentenboeken,kinderboeken,voorlezen,verhalen,opnemen
+App Store subtitle (<= 30): Slaapverhaaltjes in jouw stem
+App Store keywords (<= 100 bytes): sprookjes,prentenboek,voorlezen,luisterboek,kinderen,opnemen,oma,tweetalig,peuter,kleuter,bedtijd
 App Store promotional text (<= 170): Verhalen voorgelezen aan kinderen van 3 tot 9 jaar, met een stem voor elk personage en ruimte voor je eigen stem. Geen reclame. Vier gratis, de rest 0,99 USD. 15 talen.
-Microsoft search terms (7): kinderverhalen; voorlezen; slaapverhaaltjes; prentenboeken; sprookjes; kinderboeken; personagestemmen
+Microsoft search terms (7): slaapverhaaltjes; kinderboeken; verhalen voor kinderen; voorlezen; prentenboeken; kinderverhalen; sprookjes
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-In Dino Book Reader heeft elk personage een eigen stem. De verteller vertelt het verhaal, de wolf en de biggetjes klinken elk als zichzelf, en een ouder of grootouder kan de eigen stem opnemen voor elk personage: oma kan de wolf zijn.
+In Dino heeft elk personage een eigen stem. De verteller vertelt het verhaal, de wolf en de biggetjes klinken elk als zichzelf, en een ouder of grootouder kan de eigen stem opnemen voor elk personage: oma kan de wolf zijn.
 
 Elk verhaal is er in 15 talen, voor gezinnen die naast de schooltaal een thuistaal willen houden: Perzisch, Arabisch, Zweeds, Noors, Deens, Fins en meer. Een volwassene kiest twee of drie verhaaltalen, en het kind kan tijdens het lezen wisselen, hoort hetzelfde verhaal en leert de woorden in beide talen.
 
@@ -45,7 +47,7 @@ VEILIG EN PRIVÉ
 
 ## Description
 
-Dino Book Reader leest prentenboekverhalen voor aan kinderen van 3 tot 9 jaar, met een andere stem voor elk personage. De verteller vertelt het verhaal, en de wolf, de biggetjes en het peperkoekmannetje praten elk met hun eigen stem.
+Dino leest prentenboekverhalen voor aan kinderen van 3 tot 9 jaar, met een andere stem voor elk personage. De verteller vertelt het verhaal, en de wolf, de biggetjes en het peperkoekmannetje praten elk met hun eigen stem.
 
 KIES JE VERHALEN
 Een volwassene kiest boeken uit de verhalenplank: klassieke sprookjes, zacht hervertelt, met een plaatje op elke pagina. Vier verhalen zijn gratis. Elk boek komt met zijn eigen vooraf gemaakte stemmen, in de taal die je kiest.
@@ -72,3 +74,13 @@ GEMAAKT VOOR KINDEREN
 - Zodra een verhaal en zijn taal zijn gedownload, wordt er offline voorgelezen.
 - Je opnames blijven op je apparaat. Maak er een back-up van en herstel ze vanuit het volwassenengedeelte.
 - Optionele anonieme gebruikstellers zonder namen of identificatoren, uit te zetten in Instellingen (achter de volwassenenpoort).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+Dino heet nu Dino: Kinderboeken & Verhalen.
+
+- Nieuw verhaal: Love from Seagull Island.
+- Scherpere plaatjes in acht verhalen.
+- Crashes opgelost en kleine verbeteringen in de verhalenwinkel.
