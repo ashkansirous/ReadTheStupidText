@@ -368,8 +368,9 @@ public partial class StorePage : ContentView, ICornerTabView
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<StoreRow> _rows = [];
 	private readonly List<StoreRow> _allRows = [];
-	private StoreAgeBand _band = StoreAgeBand.All;
+	private StoreAgeBand _band = StoreAgeBand.All; // Slice 394: the REQUESTED band and author; what is shown is _state, from StoreFilter.Resolve
 	private string? _author;
+	private StoreFilterState _state = StoreFilter.Resolve([], StoreAgeBand.All, null);
 	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
 	private CancellationTokenSource? _restoreRun; // the one restore run of this visit: a new run or Disappearing cancels it, and a cancelled run never shows a result message (Slice 364 review)
@@ -389,7 +390,6 @@ public partial class StorePage : ContentView, ICornerTabView
 		StoreRoot.Children.Remove(SubscriptionCard); // Slice 384: the card is the head of the book list, so it scrolls away with the books
 		StoryList.Header = SubscriptionCard;
 		BuildChips();
-		ShowAuthor();
 		WaitOverlay overlay = DinoWait.OverPage(); // Slice 346: a purchase or a restore waits for the store; over 500 ms shows the shared wait overlay
 		Grid.SetRowSpan(overlay, 2);
 		StoreRoot.Children.Insert(StoreRoot.Children.IndexOf(RestoreResultView), overlay); // under the result message, which stays pinned above everything
@@ -593,8 +593,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		_onScreenStore = this;
 		_client.Sales.Purchases.Changed -= OnPurchasesChanged; // never twice, whatever the host raises
 		_client.Sales.Purchases.Changed += OnPurchasesChanged;
-		RefreshChips();
-		ShowAuthor();
+		RenderFilter();
 		_client.Sales.RefreshConfigOnStoreTab(); // quiet, never awaited, at most once per 10 minutes
 		if (_lifetime.IsCancellationRequested)
 		{
@@ -756,13 +755,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		_allRows.Clear();
 		_allRows.AddRange(items.Select(item => NewRow(item, onShelf)));
 		ApplyPurchaseChrome();
-		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
-		{
-			_author = null;
-		}
-
-		ApplyFilter();
-		ShowAuthor();
+		RenderFilter();
 		Show(_allRows.Count == 0 ? EmptyView : ListPanel);
 		_ = LoadCoversAsync(_allRows.ToList(), cancel);
 	}
@@ -774,13 +767,26 @@ public partial class StorePage : ContentView, ICornerTabView
 		return row;
 	}
 
+	// Slice 394: the one path that decides and draws the filter (load, Appearing, chip tap, author tap): Resolve once, then chips, author row and list all come from that one result.
+	private void RenderFilter()
+	{
+		_state = StoreFilter.Resolve(_allRows.Select(r => r.Item).ToList(), _band, _author);
+		RefreshChips();
+		ShowAuthor();
+		ApplyFilter();
+	}
+
 	// Slice 112: filtering is on the phone, over the rows already fetched (so it works on the cached list offline); rows keep their download state.
 	private void ApplyFilter()
 	{
-		_rows.Clear();
-		foreach (StoreRow row in StoreFilter.Apply(_allRows, r => r.Item, _band, _author))
+		IReadOnlyList<StoreRow> shown = StoreFilter.Apply(_allRows, r => r.Item, _state.Band, _state.Author);
+		if (!shown.SequenceEqual(_rows))
 		{
-			_rows.Add(row);
+			_rows.Clear(); // only when the resolved list changed, so coming back to the Store keeps its scroll
+			foreach (StoreRow row in shown)
+			{
+				_rows.Add(row);
+			}
 		}
 
 		// A filter that matches nothing says so, rather than leaving a blank list.
@@ -796,7 +802,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			AgeChips.Children.Add(MakeChip(band));
 		}
 
-		RefreshChips();
+		RenderFilter();
 	}
 
 	private Border MakeChip(StoreAgeBand band)
@@ -821,11 +827,18 @@ public partial class StorePage : ContentView, ICornerTabView
 		return chip;
 	}
 
+	// Slice 394: chips are never added or removed after BuildChips (no view changes parent, so no Android "child already has a parent"); an empty band's chip is only hidden.
 	private void RefreshChips()
 	{
+		bool filterable = _state.ChipsShown; // one band alone filters nothing
+		AgeChipsScroll.IsVisible = filterable; // the scroll view holds the 10 dp margin, so hiding it leaves no gap
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[AgeChips] visible={filterable} bands={_state.VisibleBands.Count} selected={(int)_state.Band}");
+#endif
 		foreach ((StoreAgeBand band, (Border chip, Label label)) in _chips)
 		{
-			bool selected = band == _band;
+			chip.IsVisible = filterable && (band == StoreAgeBand.All || _state.VisibleBands.Contains(band));
+			bool selected = band == _state.Band;
 			string text = StoreText.BandLabel(band);
 			chip.BackgroundColor = selected ? (Color)Application.Current!.Resources[BrandColorKey] : Colors.White;
 			label.Text = text;
@@ -837,30 +850,21 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private void SelectBand(StoreAgeBand band)
 	{
-		if (band == _band)
+		if (band == _band) // the requested band, not the resolved one: tapping "All ages" while a requested band is empty must still clear the request
 		{
 			return;
 		}
 
+		_author = _state.Author; // Slice 394 decision: the requested band is kept, but an author the shown list does not offer is dropped for good
 		_band = band;
-		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
-		{
-			_author = null;
-		}
-
-		ShowAuthor();
-		RefreshChips();
-		ApplyFilter();
+		RenderFilter();
 	}
 
-	// The picker offers only authors with a story in the chosen age band, so a pick never empties the list.
-	private IReadOnlyList<string> AuthorsInBand() =>
-		StoreFilter.Authors(StoreFilter.Apply(_allRows, r => r.Item, _band, null).Select(r => r.Item));
-
+	// Draws the author row from _state; the picker offers only authors with a story in the chosen age band, so a pick never empties the list.
 	private void ShowAuthor()
 	{
-		AuthorValue.Text = _author ?? AppResources.Store_Anyone;
-		AuthorRow.IsVisible = AuthorsInBand().Count > 0;
+		AuthorValue.Text = _state.Author ?? AppResources.Store_Anyone;
+		AuthorRow.IsVisible = _state.AuthorRowShown;
 	}
 
 	private async void OnAuthorTapped(object? sender, TappedEventArgs e)
@@ -868,7 +872,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		UiUsage.Tap(UiControls.Filter); // Slice 352: the author filter (which author is never counted)
 		// Each button label maps to its author (null for "Anyone"); an author named like a fixed button gets a visible number so the pick is never misread.
 		var choices = new Dictionary<string, string?> { [AppResources.Store_Anyone] = null };
-		foreach (string author in AuthorsInBand())
+		foreach (string author in _state.AuthorsInBand)
 		{
 			choices[UniqueLabel(author, choices)] = author;
 		}
@@ -885,8 +889,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 
 		_author = chosen;
-		ShowAuthor();
-		ApplyFilter();
+		RenderFilter();
 	}
 
 	private static string UniqueLabel(string author, Dictionary<string, string?> taken)
@@ -1245,8 +1248,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	{
 		row.SetState(StoreRowState.Downloading);
 		// The filters in use when Get was tapped, not when the download ends.
-		bool ageFilterSet = _band != StoreAgeBand.All;
-		bool authorFilterSet = _author is not null;
+		bool ageFilterSet = _state.Band != StoreAgeBand.All;
+		bool authorFilterSet = _state.Author is not null;
 		DownloadOutcome outcome = DownloadOutcome.Failed;
 		CancellationToken cancel = row.BeginDownload();
 		int run = row.Run;
