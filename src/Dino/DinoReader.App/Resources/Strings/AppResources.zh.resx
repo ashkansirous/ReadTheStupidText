@@ -147,7 +147,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>这里是家长角</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>只有大人会来这里。在这里你可以：</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>在商店获取图书</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>免费和付费的故事，涵盖你们家的所有语言。</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>免费和付费的故事，或用一个订阅畅读全部。</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>管理你的图书</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>调整书架顺序、移除图书，或为任何角色录下你的声音。</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>更改设置</value></data>
@@ -155,7 +155,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>带我看看</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>你的图书。点按图书上的 ••• 可录下你的声音或移除它。“重新排序”可调整书架顺序。</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>商店</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>全新的故事，有免费也有付费。每本书都有你们家所有语言的版本。以前买过？在这里恢复你的图书。</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>全新的故事，有免费也有付费，或用一个订阅畅读每本书。每本书都有你们家所有语言的版本。以前买过？在这里恢复你的图书。</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>语言、阅读速度、声音和备份，适用于整个应用。</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>看看孩子的书架</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>点按**孩子的书架**，看看孩子看到的内容。</value></data>
@@ -179,6 +179,19 @@
   <data name="Settings_About" xml:space="preserve"><value>关于与更新</value></data>
   <data name="Settings_On" xml:space="preserve"><value>开</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>关</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>图书与购买</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>订阅</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>年度 · {0} 续订</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>月度 · {0} 续订</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>免费试用至 {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>未订阅</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>付款有问题</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>用这个 Google 账号购买的图书和订阅</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>用这个 Apple ID 购买的图书和订阅</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>用这个 Microsoft 账号购买的图书和订阅</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>来自 Google Play 的礼品码或优惠码</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>来自 App Store 的礼品码或优惠码</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>来自 Microsoft Store 的礼品码或优惠码</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>设置、商店和书架</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>家长</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>添加和编辑书籍</value></data>

@@ -1,0 +1,152 @@
+# Slice 399 (a "Books and buying" group in Settings: subscription state, Restore purchases, Redeem a code): the scripted device check, with the Debug pretend store (hooks fake-purchases and fake-subscription) and the Debug
+# test store: no money, no real store account, no Worker. Written, not yet run (the device stage runs it after the two reviews).
+# The group sits between Reading and This phone. Its Subscription row follows the pretend store: "Not subscribed" first, then "Free trial until ...", "Monthly · renews on ...", "Payment problem" and, after the
+# subscription ended, "Not subscribed" again. Not subscribed, the row opens the Store tab; subscribed, it opens the store's own subscription page (the pretend store logs it). Restore purchases from here runs the Slice 396
+# restore on the Store tab (its message "Nothing bought with this ... yet."); Redeem a code opens the store's redeem screen and reads the store again.
+# Against the old behaviour (no group in Settings) every assert on the group, its rows and the hand-over logs fails.
+# Android and iOS alike (the hooks go through the shared dispatcher; the row lines name the store account, so the asserts accept Google or Apple). The gate is not tapped: the enter-grown-up hook stands in for it.
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK fake-purchases ok on paid=2 owned=0
+# expect-log: HOOK skip-first-run ok
+# expect-log: [SettingsBuying] group shown sub=NotSubscribed opensStore=True
+# expect-log: [SettingsBuying] group shown sub=Trial opensStore=False
+# expect-log: [SettingsBuying] group shown sub=Monthly opensStore=False
+# expect-log: [SettingsBuying] group shown sub=Grace opensStore=False
+# expect-log: [SettingsBuying] subscription row opens the Store tab
+# expect-log: [SettingsBuying] manage subscription opened=True
+# expect-log: [Purchases] manage subscription opened
+# expect-log: [SettingsBuying] restore requested of the Store tab
+# expect-log: [StoreRestore] message=NothingFound
+# expect-log: [Purchases] redeem opened
+# expect-log: [SettingsBuying] redeem finished and the store was read again
+appId: uk.sirous.dinoreader.dbg
+name: Settings has a Books and buying group whose Subscription row follows the store, and whose Restore purchases and Redeem a code rows run the store's own actions
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, the kept subscription and book records); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so no subscription is kept.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man,three-little-pigs"
+      price: "$0.99"
+      buy: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: settings
+- extendedWaitUntil:
+    visible:
+      id: SettingsBooksAndBuying
+    timeout: 30000
+# SB9: the group, its three rows, and the lines under them (the row buttons carry title and line as their name).
+- assertVisible:
+    id: SettingsSubscriptionRow
+- assertVisible: 'Subscription.*Not subscribed.*'
+- assertVisible: 'Restore purchases.*(Google account|Apple ID).*'
+- assertVisible: 'Redeem a code.*(Google Play|App Store).*'
+# The Subscription row follows the store: a trial, a paying subscription, a payment problem.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: trial
+- extendedWaitUntil:
+    visible: 'Subscription.*Free trial until .*'
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: active
+- extendedWaitUntil:
+    visible: 'Subscription.*Monthly . renews on .*'
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: grace
+- extendedWaitUntil:
+    visible: 'Subscription.*Payment problem.*'
+    timeout: 30000
+# Subscribed (a payment problem still is), the row opens the store's own subscription page (pretended: the log line).
+- tapOn:
+    id: SettingsSubscriptionRow
+- extendedWaitUntil:
+    visible:
+      id: SettingsSubscriptionRow
+    timeout: 10000
+# The subscription ended: back to "Not subscribed", and the row now opens the Store tab.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: expired
+- extendedWaitUntil:
+    visible: 'Subscription.*Not subscribed.*'
+    timeout: 30000
+- tapOn:
+    id: SettingsSubscriptionRow
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+# Restore purchases from Settings: the Store tab shows and runs the Slice 396 restore; the account owns nothing, so it says so.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: settings
+- extendedWaitUntil:
+    visible:
+      id: SettingsRestoreRow
+    timeout: 30000
+- tapOn:
+    id: SettingsRestoreRow
+- extendedWaitUntil:
+    visible: 'Nothing bought with this .* yet\.'
+    timeout: 30000
+# Redeem a code from Settings: the store's own redeem screen (pretended), then the list is still there.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: settings
+- extendedWaitUntil:
+    visible:
+      id: SettingsRedeemRow
+    timeout: 30000
+- tapOn:
+    id: SettingsRedeemRow
+- extendedWaitUntil:
+    visible:
+      id: SettingsRedeemRow
+    timeout: 30000
+- assertVisible:
+    id: SettingsBooksAndBuying
