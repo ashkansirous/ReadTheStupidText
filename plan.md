@@ -32,7 +32,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 395 | Dino: recording a character shows and replaces only that character's quoted words; the narration around them keeps the book's own audio | parked: review gate did not converge; next attempt needs a smaller design (see slice); draft PR #1233 | #1233 | | [395-dino-record-only-the-characters-words.md](docs/plan/slices/395-dino-record-only-the-characters-words.md) |
 | 397 | Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens) | planned (built #1239; item 7 left: FakePurchases states and a Maestro check of each card title; items 3 and 4 wait on Slice 390's iOS wrapper and a Windows eligibility answer, see the slice) | #1239 | | [397-dino-subscription-card-states.md](docs/plan/slices/397-dino-subscription-card-states.md) |
 | 398 | Dino: the parents' Books tab after a lapse (locked tiles, "why" banner, offline notice) and the child's shelf | planned (from the 2026-11-15 Subscription mock) | | | [398-dino-locked-books-banner-and-offline-notice.md](docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md) |
-| 399 | Dino: a "Books and buying" group in Settings (subscription state, Restore, Redeem) and the tour Store tip names the subscription | planned (from the 2026-11-15 Subscription mock) | | | [399-dino-settings-books-and-buying.md](docs/plan/slices/399-dino-settings-books-and-buying.md) |
 | 400 | Dino: the crashes first reported 2026-11-14/15 (stream close on Android, iOS scene-update watchdog) and the unexplained unclean exits | planned (items 1, 2, 4-6 merged #1240; item 3 left: iOS layout-pass watchdog) | #1240 | | [400-dino-crashes-2026-11-14.md](docs/plan/slices/400-dino-crashes-2026-11-14.md) |
 | 402 | Dino: App Store header and search-results pictures (items 1-3 built and submitted to Apple; item 4, placing them once approved, open) | in progress (items 1-3 built) | #1214 | | [402-dino-app-store-creative-assets.md](docs/plan/slices/402-dino-app-store-creative-assets.md) |
 | 403 | Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen | planned (scope approved 2026-11-17) | | | [403-dino-foldable-layouts.md](docs/plan/slices/403-dino-foldable-layouts.md) |
@@ -95,7 +94,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 508 checks across 183 slices (Read The Stupid Text 29, Dino Reader 307, Shared 172), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 512 checks across 184 slices (Read The Stupid Text 29, Dino Reader 311, Shared 172), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 
 **Needs you (checked 2026-11-16). Nothing else in this file waits on you.**
 

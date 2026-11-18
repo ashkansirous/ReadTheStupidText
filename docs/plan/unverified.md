@@ -77,6 +77,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 399: Dino: a "Books and buying" group in Settings ([slice](slices/399-dino-settings-books-and-buying.md))
+- **Device:** iOS and Windows (rail Settings tab): the Books and buying group and its rows were not run (no Mac; the Windows VM was skipped at 3.2 GB free memory).
+- **Device:** Restore from Settings on a store account that owns books (the emulator account owned none: `NothingFound`), and the request reaching a Store tab that was never opened or is already loaded on a real account.
+- **Device:** iOS and Windows: a subscription-only read with no listing (`BookPurchases.RefreshLastListedAsync`) cannot overwrite a stored subscription; read only on Android.
+- **You:** the 14 non-English strings of this slice have had no native read.
+
 ### Slice 394: Dino: the store age chips ([slice](slices/394-dino-store-age-filter-crash-and-bands.md))
 - **Device:** item 1, the crash fix with old-range data: tap the oldest chip on a build whose store still has a "9-12" chip, or check the crash store after the release (`Java.Lang.IllegalStateException` "already has a parent", Dino Android 1.129.2); the emulator run did not exercise that path.
 - **Device:** iOS and Windows store chip taps.

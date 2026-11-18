@@ -1,7 +1,7 @@
 # Slice 399 — Dino: a "Books and buying" group in Settings (subscription state, Restore, Redeem) and the tour Store tip names the subscription
 **Product:** Dino
 
-*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 3, frame SB9, and end question 3).* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), PR #1250, not merged; Android emulator run passed, iOS and Windows not run (see Not yet verified).* Runs beside Slice 398: new resx keys go right after the existing `Settings_` keys (398 adds after `Sub_`); `subscription.yaml` is 398's, so this slice adds its own Maestro flow.
+*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 3, frame SB9, and end question 3).* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), merged as PR #1250 (2b2865f8); Android emulator run passed, iOS and Windows not run (see Not yet verified).* Runs beside Slice 398: new resx keys go right after the existing `Settings_` keys (398 adds after `Sub_`); `subscription.yaml` is 398's, so this slice adds its own Maestro flow.
 
 **Touches:** the grown-ups Settings tab page (`src/Dino/DinoReader.App/SettingsPage.cs`, `src/Dino/DinoReader.App/SettingsRows.cs`, `src/Dino/DinoReader.Core/SettingsLayout.cs`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (one public restore entry point only), the Windows rail Settings tab under `src/Dino/DinoReader.App/Platforms/Windows/**`) and `src/Dino/DinoReader.App/GrownUpHeader.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (Slice 397 pure state), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/399-dino-settings-books-and-buying.md`
 
@@ -59,7 +59,7 @@ Emulator run (2026-11-18, build 8e99c8ce811d, Android): `subscription` PASS, `on
 - Skipped #8 (`reviews/pr-1250-high.md`): "Hand-rolled icon drawing duplicates `IconView` grid-path machinery" - `IconView.cs` is outside Touches and the drawn icons match the mock; a later refactor can merge them.
 - Skipped #10 (`reviews/pr-1250-high.md`): "`OnPurchasesChanged` rebuilds the whole Settings list on every purchase-snapshot change" - the list is rebuilt only when a purchase state changes, which is rare, and no data is lost.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18)
 
 - Restore from Settings never runs a restore of its own: `SettingsPage.cs` calls `StorePage.RequestRestore()` (one pending flag, main thread, expires after 30 s) and selects the Store tab; the Store owns the wait text and the message, and a failed load or unmet grown-up gate shows its restore notice. The "Books and buying" group always shows, whether or not books are sold. (Slice 399: docs/plan/slices/399-dino-settings-books-and-buying.md)
 
