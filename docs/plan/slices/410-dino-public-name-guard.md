@@ -80,6 +80,11 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
 - Second review #6 applied: `hasLoginCredentials` (`worker/sonos.ts`) reads only the SOAP header's `credentials` element (non-empty `loginToken`/`sessionId`); the Body and the rest of the envelope are never scanned, and a test puts both names in the Body and gets 200.
 - Skipped #7 (`reviews/s410-high.md`): "Only Markdown headings "Submission text"/"Store text" are scanned in slices; bold labels or other names ("## Listing", "## Sonos copy") pass. ... Also the check scans slice 410 itself, so a quoted example under a "Store text" heading would fail it." - not applied by the caller's triage.
 - Skipped #10 (`reviews/s410-high.md`): "Quoted glob `node --test "tools/dino/*.test.mjs"` relies on node's own glob (fine on Node 26 in this job); any later test in tools/dino needing its own deps ... would break the job." - not applied by the caller's triage; the glob works on the job's Node.
+- Skipped from the second review (`reviews/s410-medium.md`), low or speculative: #1 (hyphenated/transliterated forms),
+  #4, #5, #7 (wordmark script rerun safety), #8 (one-line constant assumption), #9 (CI step layout). #3 became the
+  store-upload work item above.
+- Check pass (`reviews/s410-check.md`): nothing applied. #1 (credential inside CDATA) and #2 (a `credentials` element
+  inside the Body) are shapes Sonos does not send; #3-#9 low. Revisit only if a later Self Test or real request shows one.
 
 ## Verification
 
