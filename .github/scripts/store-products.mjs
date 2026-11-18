@@ -6,7 +6,9 @@
  *
  * DRY RUN IS THE DEFAULT: with no flag the script prints what it would create, makes no network call and needs no credentials. A real run needs --apply.
  *
- * Usage: node store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>]
+ * Usage: node store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>] [--book <stem>] [--check-prices]
+ *   --book <stem>      only that paid book, and no subscription in any store (Slice 411: a new book never touches the subscription products)
+ *   --check-prices     read-only: reads each book's live Microsoft price from the public displaycatalog and fails on anything but USD 0.99 (certification takes hours, so run it the next day)
  *   --apply            really create the products (each store is asked first: a complete product is left alone, a half-created one (Apple: missing listing, availability or price; Google: not activated) is completed, so a rerun is safe)
  *   --store <name>     only this store; repeat the flag for several (default: all three)
  *   --content <folder> the books' content folder (default content/dino)
@@ -23,8 +25,10 @@
  *              No API: the review screenshot, and submitting the products for review together with an app version (App Store Connect).
  *   Google:    API creates the one-time product with its en-GB listing and one buy option priced from 0.99 USD in every region Play converts (monetization.convertRegionPrices),
  *              then activates the buy option. No API step is left, apart from the merchant/bank setup that must already be done.
- *   Microsoft: API creates the durable add-on shell only (Store submission API, create add-on). No API for the price: an add-on on Pricing Version 2 makes the API answer an unknown tier,
- *              so its price (0.99 USD), listing and submission are set in Partner Center by hand, and the Partner Center payout and tax profile must exist.
+ *   Microsoft: API creates the durable add-on shell, then (Slice 411, proven live 2026-11-18) its submission: price Tier1012 (0.99 USD), the en-us listing and the other fields copied from the newest published book
+ *              add-on, commit, and a poll of the commit status (a 429 waits the seconds Microsoft names, up to 10 minutes). A pending submission Partner Center edited (409 on PUT) must be deleted there and re-created.
+ *              The Partner Center payout and tax profile must exist. Subscription add-on shells are still shells only (UNVERIFIED shapes).
+ *              Microsoft keys: the Entra app's MS_STORE_TENANT_ID / _CLIENT_ID / _CLIENT_SECRET in D:/secrets/dinoreader/secrets.env map to MS_SUBMISSION_* (store-products-local.mjs does it).
  *
  * Slice 384 adds the Dino subscription (a monthly 1.99 GBP and a yearly 14.99 GBP plan, 7-day free trial) to the same run, after the books: Play one subscription with two base plans and trial offers, Apple one group with
  * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its Apple request shapes are checked against Apple's App Store Connect API docs (developer.apple.com/documentation/appstoreconnectapi, read through context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) and the first --apply answer (the create call has no availableInAllTerritories); the Play shapes are checked against the Google Play Developer API reference (developers.google.com/android-publisher/api-ref/rest/v3, read through context7 /websites/developers_google_android-publisher and the pages themselves, 2026-11-15; no --apply has run yet); the Microsoft shapes are still UNVERIFIED. The dry run lists them and what is left by hand.
@@ -34,7 +38,7 @@
  */
 
 import { createSign } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,7 +47,10 @@ import { accessOf } from './publish-store-books.mjs';
 
 export const Store = { Apple: 'apple', Google: 'google', Microsoft: 'microsoft' };
 export const ALL_STORES = [Store.Apple, Store.Google, Store.Microsoft];
-export const Outcome = { Created: 'created', Completed: 'completed', Exists: 'exists', Failed: 'failed' };
+export const Outcome = { Created: 'created', Completed: 'completed', Exists: 'exists', Failed: 'failed', RateLimited: 'rate limited, rerun later' };
+
+/** Thrown when a store keeps answering 429 past the run's wait budget; the book ends as `Outcome.RateLimited` (nonzero exit), never reported as done. */
+export class RateLimitedError extends Error {}
 
 export const PRICE_USD = '0.99';
 const PRICE_UNITS = '0';
@@ -84,6 +91,32 @@ const APPLE_TERRITORY_MAX_PAGES = 10;
 const APPLE_API_ORIGIN = 'https://api.appstoreconnect.apple.com';
 const HTTP_NOT_FOUND = 404;
 const HTTP_CONFLICT = 409;
+const MS_PRICE_ID = 'Tier1012'; // 0.99 USD on the advanced pricing model (Tier1012-Tier1424 are valid there; read from Microsoft's add-on submission docs 2026-11-18)
+const MS_LISTING_LOCALE = 'en-us';
+const MS_TEMPLATE_FIELDS = ['contentType', 'keywords', 'lifetime', 'visibility', 'privacyPolicyRequired', 'privacyPolicyUrl'];
+const MS_STATUS_COMMIT_STARTED = 'CommitStarted';
+const MS_STATUS_PUBLISHED = 'Published';
+const MS_COMMIT_RUNNING_STATUSES = [MS_STATUS_COMMIT_STARTED, 'PreProcessing'];
+/** What a Microsoft submission status means for the run (the one table every caller reads): needs work = PUT then commit; in flight = leave alone; failed or unknown = throw. */
+export const MsSubmissionKind = Object.freeze({ NeedsWork: 'needs work', InFlight: 'in flight', Failed: 'failed', Unknown: 'unknown' });
+// PreProcessing: Partner Center's status read live 2026-11-18 right after CommitStarted. No status at all (a fresh submission) needs work like PendingCommit.
+const MS_KIND_BY_STATUS = new Map([
+    ['PendingCommit', MsSubmissionKind.NeedsWork],
+    ...[MS_STATUS_COMMIT_STARTED, 'PreProcessing', 'Certification', 'InCertification', 'Release', 'Publishing', 'PendingPublication', MS_STATUS_PUBLISHED].map((status) => [status, MsSubmissionKind.InFlight]),
+    ...['CommitFailed', 'Failed', 'CertificationFailed', 'ReleaseFailed', 'Canceled'].map((status) => [status, MsSubmissionKind.Failed]),
+]);
+const MS_PUBLISH_MODE_IMMEDIATE = 'Immediate';
+const MS_ACTION_PURCHASE = 'Purchase';
+const MS_VERDICT_PENDING = 'pending';
+const MS_VERDICT_DONE = 'done';
+const CATALOG_RETRY_WAIT_MS = 3000;
+const MS_STATUS_POLL_MS = 5000;
+const MS_STATUS_POLL_MAX = 120; // 120 x 5 s = 10 minutes; a commit still running after that is reported, not failed
+const MS_RATE_LIMIT_MAX_WAIT_S = 600; // the longest single wait
+const MS_RATE_LIMIT_TOTAL_S = 1800; // Partner Center kept answering "try again in ~290 s" for about 15 minutes on 2026-11-18; a run's waits in total may reach 30 minutes
+const MS_RATE_LIMIT_DEFAULT_S = 60;
+const MS_DISPLAY_CATALOG = 'https://displaycatalog.mp.microsoft.com/v7.0/products';
+const MS_PRICE_CURRENCY = 'USD';
 
 /** Play and (as far as the docs say) the other stores accept only these characters in a product id; the strictest rule is applied to all three so one id works everywhere. */
 const STORE_SAFE_PRODUCT_ID = /^[a-z0-9][a-z0-9._]*$/;
@@ -152,13 +185,15 @@ export function isNonJsonBody(text) {
 
 /** Pure: parses the command line; an unknown flag or store is an error, so a typo never turns into a real run. */
 export function parseArgs(argv) {
-    const options = { apply: false, stores: [], contentRoot: DEFAULT_CONTENT_ROOT };
+    const options = { apply: false, stores: [], contentRoot: DEFAULT_CONTENT_ROOT, book: null, checkPrices: false };
     for (let i = 0; i < argv.length; i++) {
         const flag = argv[i];
         if (flag === '--apply') options.apply = true;
         else if (flag === '--store') options.stores.push(storeNamed(argv[++i]));
         else if (flag === '--content') options.contentRoot = requireValue(flag, argv[++i]);
-        else throw new Error(`Unknown argument "${flag}". Usage: store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>]`);
+        else if (flag === '--book') options.book = requireValue(flag, argv[++i]);
+        else if (flag === '--check-prices') options.checkPrices = true;
+        else throw new Error(`Unknown argument "${flag}". Usage: store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>] [--book <stem>] [--check-prices]`);
     }
     if (options.stores.length === 0) options.stores = [...ALL_STORES];
     return options;
@@ -172,6 +207,19 @@ function requireValue(flag, value) {
 function storeNamed(name) {
     if (!ALL_STORES.includes(name)) throw new Error(`Unknown store "${name}" (use ${ALL_STORES.join(', ')}).`);
     return name;
+}
+
+/** Pure: with `--book <stem>` only that paid book (an unknown or free stem is an error, so a typo never creates nothing quietly); without it all of `books`. */
+export function selectBooks(books, stem) {
+    if (stem === null) return books;
+    const chosen = books.filter((book) => book.stem === stem);
+    if (chosen.length === 0) throw new Error(`--book ${stem}: no paid book with that folder name in the content folder (a free book needs no product)`);
+    return chosen;
+}
+
+/** Pure: the products one store's run handles: the books, then the subscriptions only when no single book was asked for (Decision 4). */
+export function itemsForStore(store, books, options) {
+    return options.book === null ? [...books, ...subscriptionItemsFor(store)] : books;
 }
 
 /** Pure: `text` itself when it fits `max`, else cut at the last whole word that fits (a single long word is cut hard); never ends in punctuation or a space, and adds none. */
@@ -298,7 +346,7 @@ export const MANUAL_STEPS = {
         'nothing left once the merchant account and bank verification are done (Play Console > Monetise with Play > One-time products)',
     ],
     [Store.Microsoft]: [
-        'set each add-on\'s price to 0.99 USD, its listing and submit it in Partner Center (the API cannot: Pricing Version 2 gives it an unknown tier)',
+        'nothing for a book: the run sets the add-on\'s price (Tier1012 = 0.99 USD), en-us listing and commits it; certification takes hours, so read the live price the next day with --check-prices',
         'the Partner Center payout and tax profile must exist before anything can be sold',
     ],
 };
@@ -556,6 +604,251 @@ export async function createMicrosoftProduct(token, book, existing, storeAppId, 
     }
     must(response, 'create add-on');
     return Outcome.Created;
+}
+
+// ---- Microsoft book add-on: price, listing, commit (Slice 411) ----
+// Proven live on 2026-11-18: the add-on shell takes a submission whose pricing is `Tier1012` (0.99 USD), the template fields of the newest published book add-on and an en-us listing; commit, then poll the status.
+
+/** Pure: the seconds Microsoft names in a 429 answer ("try again in 292 seconds"), else a default; never above the wait cap. */
+export function microsoftRateLimitSeconds(json) {
+    const named = Number(/(\d+)\s*seconds?/i.exec(JSON.stringify(json ?? ''))?.[1]);
+    return Math.min(Number.isFinite(named) && named > 0 ? named : MS_RATE_LIMIT_DEFAULT_S, MS_RATE_LIMIT_MAX_WAIT_S);
+}
+
+/** A Microsoft request that, on a 429, waits the seconds Microsoft names and sends it again; gives up once the waits in total (`budget.waited`, shared by every request of a run) would pass 30 minutes (RateLimitedError). */
+export function retryingMicrosoft(request, { sleep = realSleep, log = () => {}, budget = { waited: 0 } } = {}) {
+    return async (token, method, url, body) => {
+        for (;;) {
+            const response = await request(token, method, url, body);
+            if (response.status !== HTTP_TOO_MANY) return response;
+            const seconds = microsoftRateLimitSeconds(response.json);
+            if (budget.waited + seconds > MS_RATE_LIMIT_TOTAL_S) throw new RateLimitedError(`Microsoft rate limit: still asked to wait ${seconds} s after ${budget.waited} s of waiting (cap ${MS_RATE_LIMIT_TOTAL_S} s); rerun later`);
+            log(`    Microsoft rate limit: waiting ${seconds} s`);
+            budget.waited += seconds;
+            await sleep(seconds * 1000);
+        }
+    };
+}
+
+/** Pure: the PUT body of a book's submission: what Partner Center made (`pending`) plus the price, the en-us listing and the template's other fields. Read-only fields are dropped. */
+export function microsoftSubmissionBody(book, pending, template) {
+    const { statusDetails, status, fileUploadUrl, ...kept } = pending; // eslint-disable-line no-unused-vars
+    const copied = Object.fromEntries(MS_TEMPLATE_FIELDS.filter((field) => template[field] !== undefined).map((field) => [field, template[field]])); // a field the template lacks keeps the value Partner Center put on the pending submission
+    return {
+        ...kept, ...copied,
+        targetPublishMode: MS_PUBLISH_MODE_IMMEDIATE,
+        pricing: { priceId: MS_PRICE_ID, marketSpecificPricings: template.pricing?.marketSpecificPricings ?? {}, sales: [] },
+        listings: { [MS_LISTING_LOCALE]: { title: book.title, description: APPLE_DESCRIPTION } },
+    };
+}
+
+/** Pure: the kind of a submission status (see `MsSubmissionKind`); a missing status needs work, a status not in the table is Unknown. */
+export function microsoftSubmissionKind(status) {
+    if (status === undefined || status === null) return MsSubmissionKind.NeedsWork;
+    return MS_KIND_BY_STATUS.get(status) ?? MsSubmissionKind.Unknown;
+}
+
+/** Pure: the Error for a Failed or Unknown submission, naming its status; null for the other kinds. */
+function microsoftSubmissionProblem(submission) {
+    const kind = microsoftSubmissionKind(submission?.status);
+    if (kind === MsSubmissionKind.Unknown) return new Error(`unknown status ${submission.status}: check Partner Center`);
+    if (kind !== MsSubmissionKind.Failed) return null;
+    return new Error(`the pending submission ${submission.id} ended ${submission.status}: delete it in Partner Center, then rerun`);
+}
+
+/**
+ * Pure: what a status read during the commit poll means: `done` (Published), `pending` (any other kind that is not an error), or an Error for a failed or unknown status
+ * (CommitFailed, CertificationFailed ...; its errors printed).
+ */
+export function microsoftCommitVerdict(statusAnswer) {
+    const status = statusAnswer?.status;
+    const kind = microsoftSubmissionKind(status);
+    if (kind === MsSubmissionKind.Unknown) throw microsoftSubmissionProblem(statusAnswer);
+    if (kind === MsSubmissionKind.Failed) {
+        const errors = (statusAnswer?.statusDetails?.errors ?? []).map((error) => error.details ?? error.code ?? JSON.stringify(error)).join('; ');
+        throw new Error(`commit failed: ${errors || 'no error given'} (status ${status})`);
+    }
+    return kind === MsSubmissionKind.InFlight && !MS_COMMIT_RUNNING_STATUSES.includes(status) ? MS_VERDICT_DONE : MS_VERDICT_PENDING; // the commit itself is over once the status is past CommitStarted and PreProcessing
+}
+
+/** Pure: the public, credential-free address of an add-on's catalog entry (price readable once it is live). */
+export function microsoftCatalogUrl(storeId) {
+    return `${MS_DISPLAY_CATALOG}/${encodeURIComponent(storeId)}?market=US&languages=en-us`;
+}
+
+/** Pure: the live purchase price in a displaycatalog answer, as `{ currency, price }`, or null when it has none (not live yet). */
+export function microsoftLivePrice(catalog) {
+    const product = catalog?.Product ?? catalog?.Products?.[0] ?? catalog; // v7.0 answers a top-level `Product` (read live 2026-11-18); the plural form is kept for older answers
+    for (const sku of product?.DisplaySkuAvailabilities ?? []) {
+        for (const availability of sku.Availabilities ?? []) {
+            const price = availability.OrderManagementData?.Price;
+            if (availability.Actions?.includes(MS_ACTION_PURCHASE) && price?.ListPrice !== undefined) return { currency: price.CurrencyCode, price: price.ListPrice };
+        }
+    }
+    return null;
+}
+
+/** Pure: why a live price is not the book price (USD 0.99), or null when it is. */
+export function microsoftPriceProblem(live) {
+    if (live === null) return 'no live price yet (not certified or not published)';
+    if (live.currency === MS_PRICE_CURRENCY && Number(live.price).toFixed(2) === PRICE_USD) return null;
+    return `live price is ${live.currency} ${live.price}, not ${MS_PRICE_CURRENCY} ${PRICE_USD}`;
+}
+
+/** Map of normalised product id -> add-on id, in the order Partner Center lists them (the order is not documented and not relied on). */
+async function microsoftAddOnMap(token, request = microsoftRequest) {
+    const ids = new Map();
+    let next = `${MS_API}/inappproducts?top=100`;
+    while (next) {
+        const page = must(await request(token, 'GET', next), 'list add-ons');
+        (page?.value ?? []).filter((addOn) => typeof addOn.productId === 'string').forEach((addOn) => ids.set(normalProductId(addOn.productId), addOn.id));
+        next = microsoftNextUrl(page?.['@nextLink']);
+    }
+    return ids;
+}
+
+/** The submission of a published book add-on whose fields every new book copies: the list's order is not documented, so any published one will do (the fields are the same for every book); the last listed is tried first, one GET each. */
+export async function microsoftTemplate(token, addOns, request, skipProductId) {
+    const bookPrefix = `${PACKAGE_NAME}.book.`;
+    const candidates = [...addOns].filter(([productId]) => productId.startsWith(bookPrefix) && productId !== normalProductId(skipProductId)).reverse();
+    for (const [, id] of candidates) {
+        const full = must(await request(token, 'GET', `${MS_API}/inappproducts/${id}`), 'read template add-on');
+        const published = full?.lastPublishedInAppProductSubmission?.id;
+        if (published) return must(await request(token, 'GET', `${MS_API}/inappproducts/${id}/submissions/${published}`), 'read template submission');
+    }
+    throw new Error('no published book add-on to copy the submission fields from');
+}
+
+async function microsoftPendingSubmission(token, id, full, request) {
+    const path = `${MS_API}/inappproducts/${id}/submissions`;
+    if (!full.pendingInAppProductSubmission) return must(await request(token, 'POST', path), 'create submission');
+    if (!full.pendingInAppProductSubmission.id) throw new Error('the add-on lists a pending submission with no id: check Partner Center');
+    return must(await request(token, 'GET', `${path}/${full.pendingInAppProductSubmission.id}`), 'read pending submission');
+}
+
+/** PUTs the submission. A 409 is read against the submission's status, mapped by the same table: in flight answers `{ inFlight }` (the status lags behind a commit); needs work means it was edited in Partner Center; failed or unknown throw. */
+async function microsoftPutSubmission(token, id, submission, body, request) {
+    const base = `${MS_API}/inappproducts/${id}/submissions/${submission.id}`;
+    const response = await request(token, 'PUT', base, body);
+    if (response.status !== HTTP_CONFLICT) return must(response, 'put submission');
+    const current = must(await request(token, 'GET', `${base}/status`), 'read status after 409');
+    const problem = microsoftSubmissionProblem({ id: submission.id, status: current?.status });
+    if (problem !== null) throw problem;
+    if (microsoftSubmissionKind(current?.status) === MsSubmissionKind.InFlight) return { inFlight: current.status };
+    throw new Error('the pending submission was edited in Partner Center (409 on PUT): delete that submission there, then rerun');
+}
+
+function stillCommittingResult(status, where) {
+    if (status === MS_STATUS_PUBLISHED) return { outcome: Outcome.Exists, message: `already ${status}; ${where}` };
+    return { outcome: Outcome.Exists, message: `still committing (${status}), check later with --check-prices or Partner Center; ${where}` };
+}
+
+async function microsoftCommitAndWait(token, id, submission, request, { sleep, log }) {
+    const base = `${MS_API}/inappproducts/${id}/submissions/${submission.id}`;
+    must(await request(token, 'POST', `${base}/commit`), 'commit submission');
+    let status = MS_STATUS_COMMIT_STARTED;
+    for (let attempt = 0; attempt < MS_STATUS_POLL_MAX; attempt++) {
+        await sleep(MS_STATUS_POLL_MS);
+        const answer = must(await request(token, 'GET', `${base}/status`), 'read commit status');
+        status = answer.status ?? status;
+        log(`    submission status: ${answer.status}`);
+        if (microsoftCommitVerdict(answer) === MS_VERDICT_DONE) return { status, stillCommitting: false };
+    }
+    return { status, stillCommitting: true };
+}
+
+/**
+ * Completes one book add-on shell (Decisions 1-2): published -> Exists; committed and in certification -> Exists; otherwise PUT price, listing and template fields, commit and poll.
+ * Returns `{ outcome, message }`; the message carries the Store id and the catalog address for the later price check.
+ */
+export async function completeMicrosoftBook(token, book, addOnId, { request, template, sleep = realSleep, log = () => {} }) {
+    const full = must(await request(token, 'GET', `${MS_API}/inappproducts/${addOnId}`), 'read add-on');
+    const where = `Store id ${addOnId}, ${microsoftCatalogUrl(addOnId)}`;
+    if (full.lastPublishedInAppProductSubmission) return { outcome: Outcome.Exists, message: where };
+    const pending = await microsoftPendingSubmission(token, addOnId, full, request);
+    if (!pending?.id) throw new Error('the pending submission has no id: check Partner Center');
+    const problem = microsoftSubmissionProblem(pending);
+    if (problem !== null) throw problem;
+    if (microsoftSubmissionKind(pending.status) === MsSubmissionKind.InFlight) return stillCommittingResult(pending.status, where);
+    const put = await microsoftPutSubmission(token, addOnId, pending, microsoftSubmissionBody(book, pending, await template()), request);
+    if (put.inFlight !== undefined) return stillCommittingResult(put.inFlight, where);
+    const { status, stillCommitting } = await microsoftCommitAndWait(token, addOnId, pending, request, { sleep, log });
+    if (stillCommitting) return { outcome: Outcome.Completed, message: `still committing (${status}) after ${(MS_STATUS_POLL_MAX * MS_STATUS_POLL_MS) / 1000} s, check later with --check-prices or Partner Center; ${where}` };
+    return { outcome: Outcome.Completed, message: `committed, now ${status}; certification takes hours, read the price later with --check-prices; ${where}` };
+}
+
+/** Pure: `fn` that runs once; every later call gets the first call's promise. A rejected run is forgotten (review #4), so one failed read does not fail every later book the same way. */
+export function memoisedOnce(fn) {
+    let promise;
+    return () => {
+        promise ??= fn().catch((error) => {
+            promise = undefined;
+            throw error;
+        });
+        return promise;
+    };
+}
+
+/** One book on Microsoft: the shell (as before), then its submission. A shell made in this run reports Created, a finished one Exists, a pending one Completed. */
+export async function createMicrosoftBook(token, book, session, options = {}) {
+    const { sleep = realSleep, log = console.log } = options;
+    session.rateBudget ??= { waited: 0 }; // one 30-minute budget of 429 waits for the whole run
+    const request = options.request ?? retryingMicrosoft(microsoftRequest, { log, budget: session.rateBudget });
+    session.addOns ??= await microsoftAddOnMap(token, request);
+    const shell = await createMicrosoftProduct(token, book, new Set(session.addOns.keys()), session.storeAppId, { request, list: async (t) => new Set((await microsoftAddOnMap(t, request)).keys()) });
+    if (shell === Outcome.Created) session.addOns = await microsoftAddOnMap(token, request);
+    const addOnId = session.addOns.get(normalProductId(book.productId));
+    if (addOnId === undefined) throw new Error('the add-on was created but is not in the add-on list yet; rerun');
+    session.template ??= memoisedOnce(() => microsoftTemplate(token, session.addOns, request, book.productId)); // read once per run; the template is a published add-on, never the book in hand
+    const done = await completeMicrosoftBook(token, book, addOnId, { request, template: session.template, sleep, log });
+    return { outcome: shell === Outcome.Created ? Outcome.Created : done.outcome, message: done.message };
+}
+
+/**
+ * Reads each book's live Microsoft price from the public catalog and returns `{ book, storeId, problem, unreadable }` per book (problem null = USD 0.99; `unreadable` is set, and `problem` stays null,
+ * when the catalog could not be read, so a transient error is never counted as a wrong price). `fetchCatalog(storeId)` and `sleep` are injected for tests.
+ */
+export async function checkMicrosoftPrices(books, addOns, fetchCatalog = fetchCatalogJson, sleep = realSleep) {
+    const results = [];
+    for (const book of books) {
+        const id = addOns.get(normalProductId(book.productId));
+        results.push({ book, storeId: id, ...(await priceProblemOf(id, fetchCatalog, sleep)) });
+    }
+    return results;
+}
+
+/** True for a catalog failure worth one more try: HTTP 429 or a 5xx (`error.status` is set by `fetchCatalogJson`). */
+function isTransientCatalogError(error) {
+    return error?.status === HTTP_TOO_MANY || error?.status >= HTTP_SERVER_ERROR;
+}
+
+/** One catalog read, repeated once after a short wait when the first failed with a 429 or 5xx. */
+async function readCatalogWithRetry(storeId, fetchCatalog, sleep) {
+    try {
+        return await fetchCatalog(storeId);
+    } catch (error) {
+        if (!isTransientCatalogError(error)) throw error;
+        await sleep(CATALOG_RETRY_WAIT_MS);
+        return fetchCatalog(storeId);
+    }
+}
+
+/** One book's `{ problem, unreadable }`: a wrong or missing price is a problem; a catalog that could not be read (after the retry) is `unreadable`, never "no live price yet" and never a wrong price. */
+async function priceProblemOf(storeId, fetchCatalog, sleep) {
+    if (storeId === undefined) return { problem: 'no add-on in Partner Center', unreadable: null };
+    try {
+        return { problem: microsoftPriceProblem(microsoftLivePrice(await readCatalogWithRetry(storeId, fetchCatalog, sleep))), unreadable: null };
+    } catch (error) {
+        return { problem: null, unreadable: `could not read the catalog: ${error.message}` };
+    }
+}
+
+/** The catalog answer, or null when the catalog has no such product yet (404); any other failure throws (with `status`) so it is not mistaken for "not live". */
+async function fetchCatalogJson(storeId) {
+    const response = await fetch(microsoftCatalogUrl(storeId), { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    if (response.status === HTTP_NOT_FOUND) return null;
+    if (!response.ok) throw Object.assign(new Error(`displaycatalog answered HTTP ${response.status}`), { status: response.status });
+    return jsonOrNull(await response.text());
 }
 
 // ---- Subscription (Slice 384) ----
@@ -1091,6 +1384,7 @@ async function createOne(store, session, book) {
     if (store === Store.Google && book.kind === 'subscription') return createPlaySubscription(session.token, book);
     if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId);
     if (store === Store.Google) return createPlayProduct(session.token, book);
+    if (book.kind !== 'subscription') return createMicrosoftBook(session.token, book, session);
     session.existing ??= await microsoftExistingIds(session.token);
     return createMicrosoftProduct(session.token, book, session.existing, session.storeAppId);
 }
@@ -1099,44 +1393,80 @@ async function createOne(store, session, book) {
 export async function applyStore(store, books, open = openStore, create = createOne) {
     const session = await open(store);
     const results = [];
+    let rateLimited = null; // once the 429 budget is spent every later book of the store would only be refused again, so it ends the same way without a call
     for (const book of books) {
         if (book.problem !== null) {
             results.push({ book, outcome: Outcome.Failed, message: book.problem });
             continue;
         }
+        if (rateLimited !== null) {
+            results.push({ book, outcome: Outcome.RateLimited, message: rateLimited });
+            continue;
+        }
         try {
-            results.push({ book, outcome: await create(store, session, book), message: '' });
+            results.push({ book, ...resultOf(await create(store, session, book)) });
         } catch (error) {
-            results.push({ book, outcome: Outcome.Failed, message: error.message });
+            if (error instanceof RateLimitedError) rateLimited = error.message;
+            results.push({ book, outcome: error instanceof RateLimitedError ? Outcome.RateLimited : Outcome.Failed, message: error.message });
         }
     }
     results.notes = session?.notes ?? []; // things a run left undone without failing (skipped territories ...), printed in the end report
     return results;
 }
 
-function printResults(store, results) {
+/** Pure: a create step answers an outcome string, or `{ outcome, message }` when it has something to print (the Microsoft Store id). */
+export function resultOf(answer) {
+    return typeof answer === 'string' ? { outcome: answer, message: '' } : { outcome: answer.outcome, message: answer.message ?? '' };
+}
+
+function printResults(store, results, withSubscription) {
     console.log(`${STORE_TITLES[store]}:`);
     for (const { book, outcome, message } of results) console.log(`  ${outcome}: ${book.productId}${message ? ` (${message})` : ''}`);
     (results.notes ?? []).forEach((note) => console.log(`  NOT DONE: ${note}`));
     MANUAL_STEPS[store].forEach((step) => console.log(`  by hand: ${step}`));
-    SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
+    if (withSubscription) SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
+}
+
+function priceLabel(problem, unreadable) {
+    if (unreadable !== null) return 'COULD NOT READ';
+    return problem === null ? 'ok' : 'PROBLEM';
+}
+
+/** `--check-prices`: read-only. Lists the add-ons, reads each book's public catalog price and prints one line per book; sets the exit code on any price that is not USD 0.99. */
+async function runPriceCheck(books) {
+    const addOns = await microsoftAddOnMap(await microsoftToken(), retryingMicrosoft(microsoftRequest, { log: console.log }));
+    const results = await checkMicrosoftPrices(books, addOns);
+    for (const { book, storeId, problem, unreadable } of results) console.log(`  ${priceLabel(problem, unreadable)}: ${book.productId} (${storeId ?? 'no add-on'})${problem === null && unreadable === null ? ` USD ${PRICE_USD}` : `: ${problem ?? unreadable}`}`);
+    if (results.some((result) => result.problem !== null || result.unreadable !== null)) process.exitCode = 1; // an unreadable catalog is not a wrong price, but the check did not pass either
+}
+
+/** True when this module is the script node was started with; real paths are compared so a drive-letter case, slashes or a junction do not make `main` silently skip. */
+export function isEntryScript(moduleUrl, argvPath = process.argv[1]) {
+    if (!argvPath) return false;
+    try {
+        return realpathSync.native(argvPath) === realpathSync.native(fileURLToPath(moduleUrl));
+    } catch {
+        // no-fallback: a path that cannot be resolved is simply not this module
+        return false;
+    }
 }
 
 async function main() {
     const options = parseArgs(process.argv.slice(2));
-    const books = paidBooksFrom(readContentEntries(options.contentRoot));
+    const books = selectBooks(paidBooksFrom(readContentEntries(options.contentRoot)), options.book);
+    if (options.checkPrices) return runPriceCheck(books);
     if (!options.apply) {
         console.log(`DRY RUN (nothing is created; add --apply to create): ${books.length} paid book(s)`);
-        options.stores.forEach((store) => console.log([...planLines(store, books), ...subscriptionPlanLines(store)].join('\n')));
+        options.stores.forEach((store) => console.log([...planLines(store, books), ...(options.book === null ? subscriptionPlanLines(store) : [])].join('\n')));
         if (books.some((book) => book.problem !== null)) process.exitCode = 1; // review #9: a scripted pre-check must not pass what --apply would refuse
         return;
     }
     let failed = false;
     for (const store of options.stores) {
         try {
-            const results = await applyStore(store, [...books, ...subscriptionItemsFor(store)]); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop
-            failed ||= results.some((result) => result.outcome === Outcome.Failed);
-            printResults(store, results);
+            const results = await applyStore(store, itemsForStore(store, books, options)); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop (Slice 411: none with --book)
+            failed ||= results.some((result) => result.outcome === Outcome.Failed || result.outcome === Outcome.RateLimited);
+            printResults(store, results, options.book === null);
         } catch (error) {
             failed = true;
             console.log(`${STORE_TITLES[store]}: FAILED before any product: ${error.message}`);
@@ -1145,7 +1475,7 @@ async function main() {
     if (failed) process.exitCode = 1;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isEntryScript(import.meta.url)) {
     main().catch((error) => {
         console.error(error.message);
         process.exitCode = 1;

@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 411: one command sets up a new book's sale product ([slice](slices/411-dino-book-product-every-store.md))
+- **Device:** once Microsoft certifies add-on `9N6J9F50FM6G`, `node .github/scripts/store-products-local.mjs --check-prices` reads USD 0.99 for every book, Love from Seagull Island included (the first add-on priced through the API with `Tier1012`).
+
 ### Slice 404: Dino: a full-shelf test hook, then every live store picture retaken ([slice](slices/404-dino-store-pictures-foldables-and-retake.md))
 - **Device:** the iPhone Duo set, until Xcode has a Duo simulator and Slice 403 has shipped.
 - **Device:** the `full-shelf` hook on the iOS simulator (`ios-sim-store-shots.sh` package copy into the container's Library, flows `store-shot-ios-1..5`) and on the tablet flow (`store-shot-tablet`): not run on a device.

@@ -361,16 +361,19 @@ done, until the book is in the live store **and** its product exists in every st
 
 - Confirm the book is live: `https://dinoreader.sirous.uk/api/stories` lists its id with `access` and `productId`. A book
   with `access: "free"` needs no product; stop here.
-- For a paid book, run `.github/scripts/store-products.mjs --apply --store google`, read the output, then `--store apple`
-  (keys: `DINOREADER_PLAY_SERVICE_ACCOUNT_JSON` in `D:/secrets/dinoreader/secrets.env` is a path to the JSON file, whose
-  text the script needs; `ASC_API_KEY_P8_BASE64`, `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` in `D:/secrets/lets-call-mom/secrets.env`).
-  Existing products are left alone, so the run creates only the new one. Its id is `uk.sirous.dinoreader.book.<stem>` unless `book.json` names one.
-- Read it back: Play's `oneTimeProducts` list shows the product with an `ACTIVE` buy option; App Store Connect reports it created.
+- For a paid book, run one command: `node .github/scripts/store-products-local.mjs --apply --book <stem>` (Slice 411). It loads the
+  keys from `D:/secrets` itself without printing them, and creates the book's product in Play (one-time product, activated),
+  App Store Connect (non-consumable, listing, price) and Partner Center (add-on with price `Tier1012` = USD 0.99, en-us listing,
+  committed). `--book` never touches the subscription products. Existing products are left alone, a half-made one is completed.
+  Its id is `uk.sirous.dinoreader.book.<stem>` unless `book.json` names one. A Microsoft `409` on the PUT means someone edited the
+  pending submission in Partner Center: delete it there, rerun.
+- Read it back: the run prints each store's outcome and, for Microsoft, the add-on's Store id and its displaycatalog address;
+  Play's `oneTimeProducts` list shows the product with an `ACTIVE` buy option.
 - App Store: add the review screenshot and submit the product with the next app version
-  ([App Store Connect, Dino](https://appstoreconnect.apple.com/apps/6825053435)).
-- Microsoft Store: create the durable add-on with the same id, price it at USD 0.99 in all markets (in-app only), list it
-  (en-US) and submit it in [Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview),
-  as was done for the first 11 books (Slice 346). Never run `--store microsoft` as is: it also creates the subscription add-ons, whose request shapes are unverified.
+  ([App Store Connect, Dino](https://appstoreconnect.apple.com/apps/6825053435)); the only step left by hand.
+- Microsoft certification takes hours: the next day run `node .github/scripts/store-products-local.mjs --check-prices`, which reads
+  every book's live price from the public catalog and fails on anything but USD 0.99
+  ([Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview) if it reports a problem).
 - Report each store's state for the product in the final message. A step that only the user can do gets its direct link there.
 
 ## 8. Check in the app
