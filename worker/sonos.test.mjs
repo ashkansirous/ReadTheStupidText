@@ -91,8 +91,55 @@ test("root lists the languages that have tracks, in their own names", async () =
   assert.match(text, /<id>lang:en<\/id>/);
   assert.match(text, /<title>English<\/title>/);
   assert.match(text, /<title>فارسی<\/title>/);
-  assert.match(text, /<canPlay>false<\/canPlay>/);
+  assert.match(text, /<canPlay>false<\/canPlay><canEnumerate>true<\/canEnumerate>/);
   assert.doesNotMatch(text, /No Track Book/);
+});
+
+test("every track is playable and skippable, after duration and cover as the WSDL orders them", async () => {
+  const { text } = await call("getMetadata", "<id>lang:en</id><index>0</index><count>50</count>");
+  const tracks = text.match(/<trackMetadata>.*?<\/trackMetadata>/g);
+  assert.equal(tracks.length, 2);
+  for (const meta of tracks) assert.match(meta, /<album>Dino Book Reader<\/album><duration>\d+<\/duration>(<albumArtURI>[^<]*<\/albumArtURI>)?<canPlay>true<\/canPlay><canSkip>true<\/canSkip><\/trackMetadata>/);
+});
+
+function withCredentials(inner) {
+  const xml = envelope("getLastUpdate").replace(/<credentials[^>]*>.*?<\/credentials>/, `<credentials xmlns="${NS}">${inner}</credentials>`);
+  return handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: xml }), env(), "", serveObject);
+}
+
+test("a credentials header with a loginToken or sessionId is a Client.LoginUnauthorized fault, HTTP 500", async () => {
+  for (const inner of ["<loginToken><token>t</token><key>k</key><householdId>h</householdId></loginToken>", "<sessionId>abc</sessionId>"]) {
+    const response = await withCredentials(inner);
+    const text = await response.text();
+    assert.equal(response.status, 500);
+    assert.match(text, /<soap:Body><soap:Fault><faultcode>Client\.LoginUnauthorized<\/faultcode><faultstring>[^<]+<\/faultstring><\/soap:Fault><\/soap:Body>/);
+  }
+});
+
+test("an empty credential placeholder, or the name inside a comment or CDATA, is not a credential", async () => {
+  for (const inner of ["<deviceId>XX</deviceId><sessionId/><loginToken/>", "<sessionId></sessionId>", "<!-- <sessionId>abc</sessionId> --><deviceId>XX</deviceId>", "<![CDATA[<loginToken><token>t</token></loginToken>]]>"]) {
+    assert.equal((await withCredentials(inner)).status, 200, inner);
+  }
+});
+
+test("the text sessionId or loginToken in the Body is not a credential", async () => {
+  const xml = envelope("getLastUpdate").replace(/<\/((?:[\w.-]+:)?Body)>/, "<sessionId>abc</sessionId><loginToken><token>t</token></loginToken></$1>");
+  assert.match(xml, /<sessionId>abc<\/sessionId>/);
+  const response = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: xml }), env(), "", serveObject);
+  assert.equal(response.status, 200);
+});
+
+test("a realistic anonymous Sonos header is answered normally", async () => {
+  const inner = "<deviceId>RINCON_000E58AAAAAA01400</deviceId><deviceProvider>Sonos</deviceProvider><zonePlayerId>RINCON_000E58AAAAAA01400</zonePlayerId><context>Sonos S2</context><timeZone>+01:00</timeZone>";
+  const response = await withCredentials(inner);
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /<getLastUpdateResult>/);
+});
+
+test("a credentials header with only a device id, or none, is answered as before", async () => {
+  assert.equal((await withCredentials("<deviceId>XX</deviceId><deviceProvider>Sonos</deviceProvider>")).status, 200);
+  const bare = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><ns:getLastUpdate xmlns:ns="${NS}"/></s:Body></s:Envelope>`;
+  assert.equal((await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: bare }), env(), "", serveObject)).status, 200);
 });
 
 test("a language lists its books as tracks, title in that language, only books with a track", async () => {
@@ -134,7 +181,7 @@ test("getMediaURI answers the track's https listen URL, getMediaMetadata its fie
 test("getExtendedMetadata answers a track or a language folder", async () => {
   const track = await call("getExtendedMetadata", `<id>track:en:${ID_C}</id>`);
   assert.match(track.text, /<getExtendedMetadataResult><mediaMetadata>/);
-  assert.match(track.text, /<artist>Dino Reader<\/artist>/);
+  assert.match(track.text, /<artist>Dino Book Reader<\/artist>/);
   const folder = await call("getExtendedMetadata", "<id>lang:fa</id>");
   assert.match(folder.text, /<getExtendedMetadataResult><mediaCollection>/);
 });

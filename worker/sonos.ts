@@ -19,8 +19,13 @@ const SAFE_PART = /^[A-Za-z0-9_-]{1,64}$/;
 const TRACK_MIME = "audio/mp4";
 const ITEM_TRACK = "track";
 const ITEM_CONTAINER = "container";
-const ARTIST_FALLBACK = "Dino Reader";
-const ALBUM_NAME = "Dino Reader";
+const ARTIST_FALLBACK = "Dino Book Reader";
+const ALBUM_NAME = "Dino Book Reader";
+// Slice 410: an anonymous service never issues these, so a credentials header that carries one is invalid (Sonos Self Test checks it).
+// Only an element with content counts: an empty `<sessionId/>` placeholder, or the name in a comment or CDATA, does not.
+const LOGIN_CREDENTIAL = /<(?:[\w.-]+:)?(?:loginToken|sessionId)\b[^>]*(?<!\/)>\s*(?:[^<\s]|<(?!\/))/;
+const XML_COMMENT_OR_CDATA = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g;
+const CREDENTIALS_ELEMENT = /<((?:[\w.-]+:)?)credentials\b[^>]*(?<!\/)>([\s\S]*?)<\/\1credentials\s*>/;
 const MAX_TITLE = 64;
 const MAX_ART_URI = 128;
 const DEFAULT_PAGE = 100;
@@ -161,8 +166,10 @@ function trackFields(track: Track): string {
   const meta = [
     tag("artist", clip(track.author ?? ARTIST_FALLBACK, MAX_TITLE)),
     tag("album", ALBUM_NAME),
-    track.coverUrl === null ? "" : tag("albumArtURI", track.coverUrl),
     tag("duration", track.seconds),
+    track.coverUrl === null ? "" : tag("albumArtURI", track.coverUrl),
+    tag("canPlay", true),
+    tag("canSkip", true),
   ].join("");
   return [tag("id", trackId(track)), tag("itemType", ITEM_TRACK), tag("title", clip(track.title, MAX_TITLE)), tag("mimeType", TRACK_MIME), `<trackMetadata>${meta}</trackMetadata>`].join("");
 }
@@ -172,7 +179,7 @@ function trackItem(track: Track): string {
 }
 
 function languageItem(code: string): string {
-  const fields = [tag("id", `${LANGUAGE_PREFIX}${code}`), tag("itemType", ITEM_CONTAINER), tag("title", clip(languageName(code), MAX_TITLE)), tag("canPlay", false)].join("");
+  const fields = [tag("id", `${LANGUAGE_PREFIX}${code}`), tag("itemType", ITEM_CONTAINER), tag("title", clip(languageName(code), MAX_TITLE)), tag("canPlay", false), tag("canEnumerate", true)].join("");
   return `<${MEDIA_COLLECTION}>${fields}</${MEDIA_COLLECTION}>`;
 }
 
@@ -248,9 +255,16 @@ export function isSonosPath(pathname: string): boolean {
   return pathname === SONOS_PATH;
 }
 
+/** True when the SOAP header's `credentials` element holds a loginToken or sessionId; the Body and the rest of the envelope are never read. */
+export function hasLoginCredentials(xml: string): boolean {
+  const credentials = CREDENTIALS_ELEMENT.exec(xml.replace(XML_COMMENT_OR_CDATA, ""));
+  return credentials !== null && LOGIN_CREDENTIAL.test(credentials[2] ?? "");
+}
+
 async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined): Promise<Response> {
   const text = await readBoundedText(request);
   if (text === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.TooLarge);
+  if (hasLoginCredentials(text)) throw new SoapFault(FaultCode.LoginUnauthorized, FaultMessage.LoginUnauthorized);
   const parsed = parseSonosRequest(text);
   if (parsed === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.NotSoap);
   return answer(await loadTracks(request, env, pathPrefix, serve), parsed, usage, request);

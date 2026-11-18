@@ -1,0 +1,50 @@
+name: public-name
+
+# Slice 410: the Dino app's public name is ApplicationTitle ("Dino Book Reader"); the code name "Dino Reader" must not reach a file a
+# person reads. Node only, no install. site-checks ignores content/dino/** (a book-only change starts no other check), so this
+# workflow has its own path filter that lists everything tools/dino/check-public-name.mjs scans, books included.
+
+on:
+  pull_request:
+    branches: [main]
+    paths: &scanned
+      - 'PRIVACY.md'
+      - 'site/**'
+      - 'alexa/skill-package/**'
+      - 'content/dino/*/book.json'
+      - 'worker/*.ts'
+      - 'docs/plan/slices/**'
+      - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
+      - 'tools/dino/*.mjs'
+      - '.github/workflows/public-name.yml'
+  push:
+    branches: [main]
+    paths: *scanned
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-name-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  public-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+
+      - name: Check the Dino public name
+        run: node tools/dino/check-public-name.mjs
+
+      - name: Test the check
+        run: node --test "tools/dino/*.test.mjs"

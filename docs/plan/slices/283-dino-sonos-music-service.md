@@ -60,7 +60,7 @@ User, 2026-11-06: Dino books on Sonos too, no login, no parent recordings. Facts
 wrangler files. Ids: `root`, `lang:<code>`, `track:<code>:<storyId>`. The catalogue is the `/api/stories` list read through
 `handleStories`, so only a book whose language has `listenUrl` appears. Root lists languages in their own names; a language
 lists its books (title in that language from `titles`, cover as `albumArtURI` when the absolute URL fits 128 characters,
-artist = `author` else "Dino Reader", `duration` = `listenSeconds`, `audio/mp4`); a `recursive` root returns the flat track list.
+artist = `author` else "Dino Book Reader", `duration` = `listenSeconds`, `audio/mp4`); a `recursive` root returns the flat track list.
 Paging: `index` default 0, `count` default 100, capped at 500. `getLastUpdate`: `catalog` = track count and an FNV-1a hash of
 the sorted lines of every shown field (see *Changed while building*), `favorites` "0", `pollInterval` 600. `getMediaURI` returns the https
 `listenUrl`. Failures: HTTP 500 and a Fault only; unknown id `Client.ItemNotFound`, no bucket `Server.ServiceUnavailable`,
@@ -94,7 +94,7 @@ Unknown: whether the partner account costs anything; whether Self Test skips aut
 **Progress 2026-11-17/18 (user + Claude in the user's Chrome):** partner account made by the user, integration type
 **Content Partner** only (Control Partner is for apps that drive speakers; none planned). The user accepted the Sonos
 Content Integration Agreement. Sandbox integration created (portal applicationId `a6BPs000000qWNBMA2`) and saved:
-name Dino Reader, availability Global (switch to a region list without mainland China before production, see
+name Dino Book Reader (corrected by hand 2026-11-18, Slice 410), availability Global (switch to a region list without mainland China before production, see
 `project-dino-no-china-mainland`), home page `https://dinoreader.sirous.uk`; Integration ID `uk.sirous.dinoreader`
 (fixed once submitted), label "Version 1.0", SMAPI endpoint `https://dinoreader.sirous.uk/sonos` (SOAP 1.1),
 Anonymous, page size 100, poll 600 s; brand assets as SVG (service logo 400, full logo, support banner, badge);
@@ -132,14 +132,14 @@ Self Test skips its Authentication tests for anonymous (found out at the first S
 
 ## Submission text (for the Sonos developer portal; the user pastes it)
 
-- **Service name:** Dino Reader
+- **Service name:** Dino Book Reader
 - **Short description (service-description):** Gentle picture-book stories for children aged 3 to 9, read aloud with a voice for every character.
-- **Promo (service-promo):** Free bedtime stories from Dino Reader, in English and more languages. No account needed.
-- **Longer description:** Dino Reader is a free children's reading app. This service plays its free story-store books as listening tracks: pick a language, pick a book, press play. Books are read by a narrator and character voices. No sign-up, no account, no advertising, no tracking; the service keeps no information about households, speakers or listeners. (Slice 289: each play adds one anonymous count to the project's own usage counts: book, language, length, day and country; nothing about the home, speaker or account. If the portal asks what is reported, say that.)
+- **Promo (service-promo):** Free bedtime stories from Dino Book Reader, in English and more languages. No account needed.
+- **Longer description:** Dino Book Reader is a free children's reading app. This service plays its free story-store books as listening tracks: pick a language, pick a book, press play. Books are read by a narrator and character voices. No sign-up, no account, no advertising, no tracking; the service keeps no information about households, speakers or listeners. (Slice 289: each play adds one anonymous count to the project's own usage counts: book, language, length, day and country; nothing about the home, speaker or account. If the portal asks what is reported, say that.)
 - **Authentication method:** Anonymous (no account linking, no sign-up page needed; no personalisation, favourites or playlists).
 - **SMAPI endpoint:** `https://dinoreader.sirous.uk/sonos` (SOAP 1.1, HTTPS only, POST). Polling interval: 10 minutes (`getLastUpdate` answers `pollInterval` 600).
 - **Implemented calls:** getMetadata, getExtendedMetadata, getMediaMetadata, getMediaURI, getLastUpdate. Media: `audio/mp4` (AAC in .m4a) served over HTTPS with Range and HEAD support.
-- **Privacy policy:** https://dinoreader.sirous.uk/privacy (section "Dino Reader on Sonos (optional)").
+- **Privacy policy:** https://dinoreader.sirous.uk/privacy (section "Dino Book Reader on Sonos (optional)").
 - **Territory / availability:** worldwide (the user confirms).
 - **Brand Assets (ready, 2026-11-07):** upload from `docs/design/dino-reader/sonos/`: service logo `service-logo-400.png` (other sizes, or `service-logo-400.svg`, if the portal asks), full logo `full-logo.svg` (129 x 20, white on transparent), badge `badge-40.svg`, support banner `support-banner.png` (800 x 200; `support-banner.svg` too). See *Design* below.
 - **Needed from the user:** company details, the Sonos ID for the sandbox, the localization file or the two strings above.
