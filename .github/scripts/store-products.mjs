@@ -80,8 +80,9 @@ const REQUEST_TIMEOUT_MS = 30000;
 const APPLE_PRICE_POINT_LIMIT = 200;
 const APPLE_PRICE_POINT_MAX_PAGES = 20;
 const APPLE_TERRITORY_LIMIT = 200;
-/** Apple's page maximum; Dino has at most about 15 locales, so the group's en-US listing is never off the page. */
-const APPLE_GROUP_LISTING_LIMIT = 200;
+/** One page of the group's listings. Dino has at most about 15 locales, so en-US is never off the page; 50 stays under
+ * every App Store Connect page maximum, since this endpoint's own maximum is not documented. */
+const APPLE_GROUP_LISTING_LIMIT = 50;
 const APPLE_LIST_MAX_PAGES = 50;
 const APPLE_RETRY_MAX = 5;
 const APPLE_PROGRESS_EVERY = 20;

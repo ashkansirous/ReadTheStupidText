@@ -183,6 +183,34 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
 - Android emulator: the launcher label reads "Dino"; the back dialog and version card show the new name.
 - Windows (VM, only if the manifest change needs it): Start menu and title bar show "Dino: Kids Books & Stories".
 
+## Review (part A, PR #1278)
+
+*From review:* files `reviews/s412a-high.md`, `reviews/s412a-medium.md`, `reviews/s412a-check.md`, `reviews/s412a-check2.md`, `reviews/s412a-check3.md`
+read in full; every finding without a line below was applied (check2 #4: the listing page size went from 200 to 50).
+
+- Skipped #3 (`reviews/s412a-high.md`): "the guard skips it and nothing fails when the skip should go" — part B fixes the good-enough credits and removes the skip in the same change.
+- Skipped #4 (`reviews/s412a-high.md`): "until Part B nothing ties publicName to csproj ApplicationTitle" — part B adds that check; the json is committed.
+- Skipped #6 (`reviews/s412a-high.md`): "SUBSCRIPTION_TITLE (store-products.mjs:865) feeds both Play and Apple bodies" — the Build split limits store-products to `--store apple --store microsoft` until Play production is live.
+- Skipped #7 (`reviews/s412a-high.md`): "alexa/skill-package/skill.json:7 and docs/store-listings/dino/appstore.md:8, low" — the Alexa name is in this slice's Decisions (user, 2026-11-18: "dino bedtime stories"), and the 100-character keyword field was counted by the reviewer.
+- Skipped #3 (`reviews/s412a-medium.md`): "PENDING_PART_B_BOOKS skips good-enough entirely" — part B removes it.
+- Skipped #4 (`reviews/s412a-medium.md`): "exempts any future two-letter .md" — low; Slice 413 scans the language files.
+- Skipped #5 (`reviews/s412a-medium.md`): "ApplicationTitle still old name (Part B)" — part B.
+- Skipped #6 (`reviews/s412a-medium.md`): "shortened SUBSCRIPTION_TITLE/DESCRIPTION also feed Play" — as high #6.
+- Skipped #2 (`reviews/s412a-check.md`): "PATCH uses the plain client, no retry on 429/5xx" — a throttled rename only warns and a rerun retries.
+- Skipped #4 (`reviews/s412a-check.md`): "group matched only by exact referenceName and unpaginated" — pre-existing lookup, unchanged here.
+- Skipped #7 (`reviews/s412a-check.md`): "fallback duplicated (also line 1325)" — nit.
+- Skipped #1 (`reviews/s412a-check2.md`): "a failed read of the group's listing list" — pre-existing; a rerun recovers.
+- Skipped #2 (`reviews/s412a-check2.md`): "a 200 non-JSON PATCH response counts as renamed" — cosmetic; a rerun retries.
+- Skipped #3 (`reviews/s412a-check2.md`): "retryingAsc has no patch; works today" — the plain client is passed on purpose.
+- Skipped #5 (`reviews/s412a-check2.md`): "two POST paths for the missing listing" — nit.
+- Skipped #6 (`reviews/s412a-check2.md`): "live subscriptions' own listings keep the old title" — item 6's store-listing push sets them.
+- Skipped #7 (`reviews/s412a-check2.md`): "new tests pass via the 404 on the missing POST" — low; the warning and en-US paths are asserted before that point.
+- Skipped #8 (`reviews/s412a-check2.md`): "a rejected rename warns on every run" — cosmetic.
+- Skipped #1 (`reviews/s412a-check3.md`): "Only matters past 50 locales" — Dino has about 15.
+- Skipped #2 (`reviews/s412a-check3.md`): "rename PATCH is not retried" — a failed rename only warns; a rerun retries.
+- Skipped #3 (`reviews/s412a-check3.md`): "appleRenameGroupListing branches have no direct unit test" — low; the throw, rejection and missing en-US paths are tested through ensureAppleGroup.
+- Skipped #4 (`reviews/s412a-check3.md`): "duplicated POST path, log fallback, constant comment wording" — style.
+
 ## Out of scope
 
 - The other 13 languages: Slice 413. Keyword tuning after 4–6 weeks: Slice 414.
