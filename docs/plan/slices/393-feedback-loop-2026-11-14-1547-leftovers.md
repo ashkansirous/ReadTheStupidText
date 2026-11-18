@@ -140,6 +140,18 @@ PR #1248 (items 12-15, 23), four findings files, each read to its last finding:
 
 `run-all-waves.test.mjs` "batch release: a stop file still releases on the way out" timed out twice under load (`spawnSync pwsh ETIMEDOUT`, 240 s) and passes alone. Likely a timing race (the stopper writes the stop file 4 s in); not read in the test code by this pass. Open for a later ClaudeSkills pass.
 
+## Follow-ups from the check pass after the CI fix (`reviews/pr-1248-check3-medium.md`, all low)
+
+The CI fix (2026-11-18): `test-store-screenshots.ps1` assigned `$failed = @()`, overwriting the script's check counter, so the test exited 1 under both PowerShell 5.1 and pwsh 7; the local variable is now `$reported`.
+
+- #1 `tools/emulator/store-screenshots.ps1:77`: an adb call that exits non-zero does not throw, so the "stop before the flow on a demo-mode failure" check never fires; read `$LASTEXITCODE` per call. Highest of these.
+- #2 `store-screenshots.ps1:163`: run-flows may snapshot-restore or cold-boot and drop demo mode (the first-shot check in item 14 catches it).
+- #3 `.github/scripts/ios-sim-store-shots.sh:420`: the driver warm-up has no time-left guard against `SCRIPT_BUDGET_SECONDS`.
+- #4 `.github/scripts/ios-sim-boot.sh:69`: the 20 s settle applies to every caller; `BOOT_RESERVE_SECONDS` not raised.
+- #5 `.github/scripts/ios-sim-driver-ready.sh:28`: `kill_tree` on timeout may leave the XCTest runner wedged between attempts.
+- #6 `tools/emulator/reset-dino-language.ps1:41`: clearing logcat before each try with a 3 s window can miss a late "ok".
+- #7 `reset-dino-language.ps1:38`: no check that the app process started; the failure message always blames a Release build.
+
 #### For CLAUDE.md
 
 - `tools/emulator/store-screenshots.ps1`: status-bar demo mode cannot be read back (`sysui_demo_allowed` is persistent), so the script prints `demo requested`, never `on`; the proof is the first screenshot's status bar (10:00, full battery and signal, no notification icons). (Slice 393: docs/plan/slices/393-feedback-loop-2026-11-14-1547-leftovers.md)

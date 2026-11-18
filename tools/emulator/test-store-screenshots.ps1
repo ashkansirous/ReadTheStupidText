@@ -48,11 +48,11 @@ Invoke-StatusBarDemo $exit { param($a) $sent.Add(($a -join ' ')) }
 Assert-Equal 'every exit command is sent' 2 $sent.Count
 Assert-Equal 'no failure when every call goes through' 0 @(Invoke-StatusBarDemo $exit { param($a) }).Count
 $threw = $false
-$failed = @()
-try { $failed = @(Invoke-StatusBarDemo $exit { param($a) throw 'adb is gone' }) } catch { $threw = $true }
+$reported = @()   # not $failed: that name is the script-scope check counter
+try { $reported = @(Invoke-StatusBarDemo $exit { param($a) throw 'adb is gone' }) } catch { $threw = $true }
 Assert-Equal 'a failing adb call does not throw' $false $threw
-Assert-Equal 'every failing call is reported' 2 $failed.Count
-Assert-Equal 'the failure names the command and the cause' $true ($failed[0] -like "*command exit*adb is gone*")
+Assert-Equal 'every failing call is reported' 2 $reported.Count
+Assert-Equal 'the failure names the command and the cause' $true ($reported[0] -like "*command exit*adb is gone*")
 $firstOnly = @(Invoke-StatusBarDemo $exit { param($a) if ($a -contains 'broadcast') { throw 'no broadcast' } })
 Assert-Equal 'one failing call among several is reported alone' 1 $firstOnly.Count
 
