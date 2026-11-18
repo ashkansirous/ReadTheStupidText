@@ -14,6 +14,11 @@ public sealed record DownloadTag(string PackId, long Offset);
 public static class PackDownloadLog
 {
     public const string Prefix = "PACKDL";
+    public const string CloseOffThreadEvent = "close-off-thread";
+    public const string CloseFailedEvent = "close-failed";
+    public const string BodyPart = "body";
+    public const string ResponsePart = "response";
+    public const string RequestPart = "request";
     public const string StartEvent = "start";
     public const string RangeEvent = "range";
     public const string StallEvent = "stall";
@@ -54,6 +59,12 @@ public static class PackDownloadLog
     {
         public void Dispose() => ScopedSink.Value = previous;
     }
+
+    /// <summary>Slice 400: a body or response not read to its end was closed on the thread pool, not the caller's (UI) thread.</summary>
+    public static void CloseOffThread(string what) => Write($"{CloseOffThreadEvent} what={what}");
+
+    /// <summary>Slice 400: closing a body, response or request threw (only the exception type is logged, never its text).</summary>
+    public static void CloseFailed(string what, Exception ex) => Write($"{CloseFailedEvent} what={what} type={ex.GetType().Name}");
 
     public static void Start(string packId, long offset) => Write($"{StartEvent} pack={packId} offset={offset}");
 

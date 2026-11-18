@@ -1,0 +1,52 @@
+# Slice 400: Cancel while a first book downloads from the REAL store (no test-store hook: that one never reaches the network code) must not close the half-read response on the UI thread. On
+# Android that close drains the socket and threw NetworkOnMainThreadException (crash reports 3b623c4d and 69f96ea0, 1.123.1). The Debug line below is written when the unfinished body or
+# response is closed on the thread pool, on every route a Cancel can take: a cancel inside a read (the stall-abandon path, logs what=response), between reads (the Dispose path, what=response)
+# or while the request is still waiting for headers (what=request). Against the old code the line is absent (and a device on a strict build crashes). Needs the emulator's network.
+# expect-log: PACKDL close-off-thread
+appId: uk.sirous.dinoreader.dbg
+name: Cancelling a real first-book download closes it off the UI thread
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+# Continue is disabled below two ticks (FirstBooks.CanContinue) and only the Hot book (card 0) is ticked at the start (log: ticked=1), so tick one more or the tap does nothing.
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: WaitCancel
+    timeout: 10000
+- tapOn:
+    id: WaitCancel
+    waitToSettleTimeoutMs: 300
+# Back on the picker: the cancel finished without the app dying.
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 15000
