@@ -9,7 +9,7 @@
  * Keys read (names only; values stay in memory):
  *   Play:      DINOREADER_PLAY_SERVICE_ACCOUNT_JSON in dinoreader/secrets.env is a path to the JSON file (relative to that folder); the script gets the file's text.
  *   Apple:     ASC_API_KEY_P8_BASE64, ASC_API_KEY_ID, ASC_API_ISSUER_ID in lets-call-mom/secrets.env.
- *   Microsoft: MS_STORE_TENANT_ID, MS_STORE_CLIENT_ID, MS_STORE_CLIENT_SECRET in dinoreader/secrets.env, passed as MS_SUBMISSION_*; MS_STORE_APP_ID is Dino Book Reader's Store id.
+ *   Microsoft: MS_STORE_TENANT_ID, MS_STORE_CLIENT_ID, MS_STORE_CLIENT_SECRET in dinoreader/secrets.env, passed as MS_SUBMISSION_*; MS_STORE_APP_ID is Dino's Microsoft Store id.
  * SECRETS_ROOT (optional) replaces D:/secrets, for tests.
  */
 

@@ -77,7 +77,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 
 - English first (en-GB and en-US models), playing the English track. Other book languages that Alexa has a locale for
   (de, fr, es, ja, pt, ...) are a follow-up line, not this slice.
-- Voice flow: "Alexa, open Dino Book Reader" lists a few books; "read <book>" plays it; built-in pause, resume, next
+- Voice flow: "Alexa, open Dino Bedtime Stories" lists a few books; "read <book>" plays it; built-in pause, resume, next
   (next book), previous, start over, stop. The book list and titles come from `/api/stories`, so new store books appear
   with no skill change.
 - **No server state.** Resume uses the token and offset Alexa sends with each request. Nothing about the household is

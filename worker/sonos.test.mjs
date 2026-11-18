@@ -99,7 +99,7 @@ test("every track is playable and skippable, after duration and cover as the WSD
   const { text } = await call("getMetadata", "<id>lang:en</id><index>0</index><count>50</count>");
   const tracks = text.match(/<trackMetadata>.*?<\/trackMetadata>/g);
   assert.equal(tracks.length, 2);
-  for (const meta of tracks) assert.match(meta, /<album>Dino Book Reader<\/album><duration>\d+<\/duration>(<albumArtURI>[^<]*<\/albumArtURI>)?<canPlay>true<\/canPlay><canSkip>true<\/canSkip><\/trackMetadata>/);
+  for (const meta of tracks) assert.match(meta, /<album>Dino: Kids Books &amp; Stories<\/album><duration>\d+<\/duration>(<albumArtURI>[^<]*<\/albumArtURI>)?<canPlay>true<\/canPlay><canSkip>true<\/canSkip><\/trackMetadata>/);
 });
 
 function withCredentials(inner) {
@@ -166,7 +166,7 @@ test("getMediaURI answers the track's https listen URL, getMediaMetadata its fie
 test("getExtendedMetadata answers a track or a language folder", async () => {
   const track = await call("getExtendedMetadata", `<id>track:en:${ID_C}</id>`);
   assert.match(track.text, /<getExtendedMetadataResult><mediaMetadata>/);
-  assert.match(track.text, /<artist>Dino Book Reader<\/artist>/);
+  assert.match(track.text, /<artist>Dino: Kids Books &amp; Stories<\/artist>/);
   const folder = await call("getExtendedMetadata", "<id>lang:fa</id>");
   assert.match(folder.text, /<getExtendedMetadataResult><mediaCollection>/);
 });

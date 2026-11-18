@@ -113,6 +113,22 @@ Made at the desk (user, 2026-11-18, this pickup):
 - iOS name and subtitle change only with a new version submission; App Store version 1.81.1 is not submitted yet
   (`appstore.md`), so the new name can ride on the next submission.
 
+## Build split (desk, 2026-11-18, user: "implement the slices for android, windows and ios")
+
+Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 not on production), so the slice ships in two parts:
+
+- **Part A, `feat/412a-rename-text`, merges when green:** items 1, 3, 5, 6 (App Store and Microsoft only, no Play push), 8, 9, 10.
+  None of its files is in `release-dino.yml`'s push `paths` (checked 2026-11-18; `content/dino/**` starts only `dino-store.yml`,
+  which never talks to Play). The guard's public name moves to `tools/dino/public-name.json` (`{"publicName": ..., "iconLabel": "Dino"}`)
+  instead of a csproj property, because a csproj edit starts `release-dino.yml` and so a Play upload; part B adds the csproj
+  property and the guard then also checks that it equals the json.
+- **Part B, `feat/412b-app-name`, built and reviewed, merged only after Play production shows `completed`:** items 2 and 4
+  (csproj `DinoPublicName` + `ApplicationTitle` "Dino", Windows manifest `DisplayName`, the 15 resx files), and the guard check
+  that the csproj property equals `tools/dino/public-name.json`. The Windows `DisplayName` also needs item 7 (the name reserved
+  in Partner Center) before it can be submitted.
+- Until Play production is live, run `store-products` (and `store-products-local`) only with `--store apple --store microsoft`: do not run its Play steps, because `SUBSCRIPTION_TITLE` feeds both stores.
+- Slice 413 (13 languages) needs this slice's English listing and the Play hold, Slice 414 runs 4–6 weeks after go-live: neither is built now.
+
 ## Work items
 
 1. [ ] **Popularity table (first step, milestone 1).** Apple Search Ads popularity (or a free checker such as
@@ -121,20 +137,26 @@ Made at the desk (user, 2026-11-18, this pickup):
    a tool first (`web-research`, then the signed-in Chrome only if the user says so in that turn); Chrome hung on
    Google Trends and appdrift.co on 2026-11-18. **If "bedtime stories" is far ahead of "kids books" in GB, raise it with
    the user before item 6 ships** (the phone doc's acceptance line). Swap the weakest keyword-field words if the scores say so.
+   *Tried 2026-11-18 (`web-research`): no GB or US score reachable without signing in.* Apple's popularity score needs an
+   Apple Ads account, and appalize.com, appdrift.co, peekaso.app and AppTweak give numbers only through live JavaScript forms.
+   The one stray figure (peekaso.app "bedtime stories" 76/100, storefront and date not stated) has nothing to compare against.
+   So nothing shows "bedtime stories" far ahead of "kids books", and the approved name and keyword field ship unchanged. The
+   table can be filled from the user's signed-in Chrome or Apple Ads account if they ask; Slice 414 re-tunes keywords from
+   App Store Connect impressions anyway.
 2. [ ] **App name.** One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
    name. Confirm with context7 / `library-docs` how MAUI maps `ApplicationTitle` to the Android label, iOS
    `CFBundleDisplayName` and the Windows manifest before editing, so the Windows head doesn't fall back to "Dino".
-3. [ ] **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
+3. [x] *Built (Part A, 2026-11-18): `tools/dino/public-name.json`, old names "Dino Reader" and "Dino Book Reader", English `docs/store-listings/dino/*.md` scanned (language files wait for Slice 413), tests, `public-name.yml` paths, CLAUDE.md rule lines. good-enough's book is skipped by a temporary `PENDING_PART_B_BOOKS` entry; Part B removes it.* **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
    "Dino Book Reader" joins "Dino Reader" as an old name that must not appear in public files; scan the store-listing
    files too. Tests in `tools/dino/public-name.test.mjs`. Update the rule line in `src/Dino/DinoReader.App/CLAUDE.md`.
 4. [ ] **In-app strings.** `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
    name (in-app text uses the English brand name in every language, as today).
-5. [ ] **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
+5. [x] *Built (Part A, 2026-11-18): fixtures, constants, subscription title "Every book" and description (Apple's 30/45 limits), group display name, `SKILL.md`. `APPLE_GROUP_NAME` keeps its value: it is the live group's internal lookup name, never shown, and changing it would create a second group. Microsoft keyword limit left at 30: Microsoft's docs could not be found to confirm 40.* **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
    `APPLE_GROUP_NAME`, `SUBSCRIPTION_TITLE`, the subscription group localization, Play book descriptions) and their
    tests, the subscription listing files, `.claude/skills/store-listing/SKILL.md:66`, the Microsoft keyword limit.
-6. [ ] **English listing on every store (milestone 2).** `appstore.md` (name, subtitle, keywords, description opening),
+6. [ ] *Repo text half built (Part A, 2026-11-18): `appstore.md`, `play.md`, `microsoft.md` and the subscription files; nothing pushed.* **English listing on every store (milestone 2).** `appstore.md` (name, subtitle, keywords, description opening),
    `play.md` (title, short description, full description opening with the search phrases, "15 languages"),
    `microsoft.md` (title, 7 keywords). Push through the `store-listing` agent in apply mode and read back equal. Play:
    check the Publishing overview for unrelated pending changes before committing the edit (one pending draft per app).
@@ -143,12 +165,12 @@ Made at the desk (user, 2026-11-18, this pickup):
    for 9N9VHRLCZXN5: https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview). If the name is
    taken, stop and ask. Then the manifest change ships in the next Windows submission; the old name can be deleted once
    the new one is published.
-8. [ ] **Sonos.** `worker/sonos.ts` `ALBUM_NAME`/`ARTIST_FALLBACK` and its test, Slice 283's *Submission text*, the
+8. [x] *Built (Part A, 2026-11-18): `sonos.ts`, tests, Slice 283 submission text, wordmarks regenerated from `public-name.json`. Portal service name and its length limit remain the user's step.* **Sonos.** `worker/sonos.ts` `ALBUM_NAME`/`ARTIST_FALLBACK` and its test, Slice 283's *Submission text*, the
    logo and banner wordmarks (`make-wordmarks.mjs`). Portal service name (user step, Sonos portal, as in Slice 283):
    the full name, or "Dino Kids Stories" if the portal refuses its length; write the limit found into this file.
-9. [ ] **Alexa.** `skill.json` name (en-GB, en-US) "Dino Bedtime Stories", both `interactionModels` `invocationName`
+9. [x] *Built (Part A, 2026-11-18): skill.json, both interaction models, welcome line, Slice 282 flow line; "dino bedtime stories" follows the Decisions' invocation rules (context7 holds no invocation-name rules).* **Alexa.** `skill.json` name (en-GB, en-US) "Dino Bedtime Stories", both `interactionModels` `invocationName`
    "dino bedtime stories", `worker/alexa.ts:72` welcome line, tests, Slice 282's flow lines ("Alexa, open Dino Bedtime Stories").
-10. [ ] **Website, privacy, docs, credits.** `site/dino/*` (all 15 language blocks), `PRIVACY.md` and
+10. [x] *Built (Part A, 2026-11-18): site (incl. 15 language blocks), PRIVACY.md, README, STORE.md, credits of the two store books (Store books are not stamped; `dino-store.yml` uploads them). NOT done: good-enough's credits, because it is a starter: its version bump and rebuilt `good-enough.dino` live under `src/Dino/DinoReader.App` (release path); moved to Part B.* **Website, privacy, docs, credits.** `site/dino/*` (all 15 language blocks), `PRIVACY.md` and
     `site/dino/privacy.html`, `README.md`, `STORE.md` (name lines; keep engineering prose about the code name), the
     credits in `content/dino/*/book.json` (book version bumps and store upload per the Dino store rules, since the
     credits are book content).

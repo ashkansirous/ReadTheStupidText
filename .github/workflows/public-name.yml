@@ -1,6 +1,6 @@
 name: public-name
 
-# Slice 410: the Dino app's public name is ApplicationTitle ("Dino Book Reader"); the code name "Dino Reader" must not reach a file a
+# Slices 410 and 412: the Dino app's public name is `publicName` in tools/dino/public-name.json ("Dino: Kids Books & Stories"); the old names "Dino Reader" and "Dino Book Reader" must not reach a file a
 # person reads. Node only, no install. site-checks ignores content/dino/** (a book-only change starts no other check), so this
 # workflow has its own path filter that lists everything tools/dino/check-public-name.mjs scans, books included.
 
@@ -16,6 +16,8 @@ on:
       - 'docs/plan/slices/**'
       - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
       - 'tools/dino/*.mjs'
+      - 'tools/dino/public-name.json'
+      - 'docs/store-listings/dino/*.md'
       - '.github/workflows/public-name.yml'
   push:
     branches: [main]
@@ -28,6 +30,8 @@ on:
       - 'docs/plan/slices/**'
       - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
       - 'tools/dino/*.mjs'
+      - 'tools/dino/public-name.json'
+      - 'docs/store-listings/dino/*.md'
       - '.github/workflows/public-name.yml'
   workflow_dispatch:
 

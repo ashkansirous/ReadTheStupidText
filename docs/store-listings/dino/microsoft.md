@@ -1,4 +1,14 @@
-# Microsoft Store listing: Dino Book Reader (Store ID 9N9VHRLCZXN5)
+# Microsoft Store listing: Dino: Kids Books & Stories (Store ID 9N9VHRLCZXN5)
+
+**Slice 412 (2026-11-18): new product name and search terms, text only, NOT pushed.** The old name is in git history. The name "Dino: Kids Books & Stories" must be reserved in Partner Center first (user step, Slice 412 item 7), and it ships with the next Windows submission together with the manifest `DisplayName` (Slice 412 Part B).
+
+## Product name and search terms (en-gb / en-us)
+
+Product name (<= 200): Dino: Kids Books & Stories
+
+Search terms (7, each <= 30 chars): bedtime stories; kids books; stories for kids; read aloud; picture books; children's stories; storybook
+
+The English description's opening names the same phrases ("bedtime stories for kids", "picture books read aloud", "children's stories") and says "Dino" for the app, never the old name.
 
 **Pushed 2026-11-13 (Slice 346 Part D): English in submission 82 (published), German (Partner Center locale `de`) in submission 1152921505702395457 (listing only, committed).** New file: the English and German texts were read from the live public pages (`apps.microsoft.com/detail/9N9VHRLCZXN5?hl=en-gb` and `?hl=de-de`, last update 2026-11-12). Only the purchase lines below differ from live; everything else stays as live. Push with the next Partner Center submission once the paid-books switch is on (Partner Center changes only with a submission; never one that discards a pending draft). The price field stays "Free" (the app is free to download; each paid story is an add-on product made by `store-products.mjs`).
 

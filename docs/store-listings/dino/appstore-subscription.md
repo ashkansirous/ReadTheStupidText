@@ -1,4 +1,4 @@
-# App Store listing: Dino Book Reader - subscription version (en-US changes only)
+# App Store listing: Dino: Kids Books & Stories - subscription version (en-US changes only)
 
 **Draft 2026-11-15 (Slice 384 work item H). NOT pushed. Push only when Slice 384 is live on the App Store (the subscription group and both products approved and the app version that carries the subscription released); until then `appstore.md` is the live text.** Written from `play-subscription.md`. Plans from Slice 384 Decisions 2 and 5: $ prices are the store's own (UK 1.99 GBP a month, 14.99 GBP a year, set in App Store Connect), 7-day free trial once per Apple ID, single books still sold and kept, free and bought books never affected.
 Apple requires, for an auto-renewing subscription: the price, the length, the trial and the renewal terms next to the buy button (the app's subscription card shows them), and a working link to the **Terms of Use (EULA)** and the **privacy policy** in the App Store description (or the EULA field) and in the app. The links are below; set them with the API (`appInfoLocalizations.privacyPolicyUrl`, and the description lines here), never by hand.
@@ -25,5 +25,5 @@ Privacy Policy: https://dinoreader.sirous.uk/privacy
 
 ## In-app purchase metadata (made by `store-products.mjs`, not by this file)
 
-- One subscription group "Dino Book Reader subscription" with `uk.sirous.dinoreader.sub.yearly` (level 1, ONE_YEAR) and `uk.sirous.dinoreader.sub.monthly` (level 2, ONE_MONTH), each with a ONE_WEEK free introductory offer; localisation name "Every book", description "Opens every book in Dino Book Reader while you subscribe." (`store-products.mjs`, dry run first; its Apple request shapes are unverified until a real run).
+- One subscription group (its internal reference name, set when it was made, stays as it is and is never shown; its display name is "Dino: Kids Books & Stories") with `uk.sirous.dinoreader.sub.yearly` (level 1, ONE_YEAR) and `uk.sirous.dinoreader.sub.monthly` (level 2, ONE_MONTH), each with a ONE_WEEK free introductory offer; localisation name "Every book", description "Opens every book while you subscribe." (`store-products.mjs`, dry run first; its Apple request shapes are unverified until a real run).
 - The review screenshot of each subscription and the submission with an app version are the user's steps (no API).

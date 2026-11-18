@@ -166,7 +166,7 @@ function fakeAsc(routes) {
         const value = typeof routes[key] === 'function' ? routes[key](path, body) : routes[key];
         return value ?? { status: 404, ok: false, json: null };
     };
-    return { calls, get: answer('GET'), post: answer('POST') };
+    return { calls, get: answer('GET'), post: answer('POST'), patch: answer('PATCH') };
 }
 
 const okJson = (json) => ({ status: 200, ok: true, json });
@@ -211,7 +211,7 @@ test('Slice 411: a 429 waits the seconds Microsoft names and retries; waits past
 test('Slice 411: the submission body sets Tier1012, the en-us listing with the fixed description, the template fields and drops the read-only ones', () => {
     const body = microsoftSubmissionBody(SEAGULL, { id: 'sub1', status: 'PendingCommit', statusDetails: { errors: [] }, fileUploadUrl: 'x', pricing: { priceId: 'Base' } }, TEMPLATE_SUBMISSION);
     assert.deepEqual(body.pricing, { priceId: 'Tier1012', marketSpecificPricings: { LB: 'NotAvailable', EH: 'NotAvailable' }, sales: [] });
-    assert.deepEqual(body.listings, { 'en-us': { title: 'Love from Seagull Island', description: 'A picture-book story in Dino Book Reader.' } });
+    assert.deepEqual(body.listings, { 'en-us': { title: 'Love from Seagull Island', description: 'A picture-book story in Dino.' } });
     assert.deepEqual([body.contentType, body.lifetime, body.visibility, body.privacyPolicyRequired, body.privacyPolicyUrl], ['BookDownload', 'Forever', 'Private', true, 'https://dinoreader.sirous.uk/privacy']);
     assert.deepEqual([body.id, body.targetPublishMode, 'status' in body, 'statusDetails' in body, 'fileUploadUrl' in body], ['sub1', 'Immediate', false, false, false]);
 });
@@ -1108,9 +1108,53 @@ test('Slice 384 review #6: the group display name is posted only when its list w
         await assert.rejects(createAppleSubscription(asc, monthly, '1', {}), new RegExp(`could not read it \\(HTTP ${status}\\)`));
         assert.equal(asc.calls.filter((c) => c.startsWith('POST')).length, 0);
     }
-    const present = fakeAsc({ ...group, 'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l' }] }), 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }) });
+    const present = fakeAsc({ ...group, 'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l', attributes: { locale: 'en-US', name: 'Dino: Kids Books & Stories' } }] }), 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }) });
     await assert.rejects(createAppleSubscription(present, monthly, '1', {}));
     assert.equal(present.calls.includes('POST /v1/subscriptionGroupLocalizations'), false, 'a listed localization is never posted again');
+    assert.equal(present.calls.some((c) => c.startsWith('PATCH')), false, 'a listing with the wanted name is not patched');
+});
+
+test('Slice 412 review #5: a live group whose listing has the old name is renamed with a PATCH, never a second group or listing', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const patched = [];
+    const asc = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }),
+        'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l1', attributes: { locale: 'en-US', name: 'Dino Book Reader' } }] }),
+        'PATCH /v1/subscriptionGroupLocalizations/l1': (path, body) => { patched.push(body); return okJson({ data: {} }); },
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
+    });
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}));
+    assert.equal(patched.length, 1);
+    assert.deepEqual(patched[0], { data: { type: 'subscriptionGroupLocalizations', id: 'l1', attributes: { name: 'Dino: Kids Books & Stories' } } });
+    assert.equal(asc.calls.includes('POST /v1/subscriptionGroups'), false);
+    assert.equal(asc.calls.includes('POST /v1/subscriptionGroupLocalizations'), false);
+});
+
+test('Slice 412 review #1: a live group with no en-US listing gets one created, and the other locale is left alone', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const asc = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }),
+        'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l9', attributes: { locale: 'de-DE', name: 'Dino' } }] }),
+        'POST /v1/subscriptionGroupLocalizations': okJson({ data: {} }),
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
+    });
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}));
+    assert.equal(asc.calls.includes('POST /v1/subscriptionGroupLocalizations'), true);
+    assert.equal(asc.calls.some((c) => c.startsWith('PATCH')), false);
+});
+
+test('Slice 412 review #2: a rejected group rename logs a warning and the run goes on', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const lines = [];
+    const asc = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }),
+        'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l1', attributes: { locale: 'en-US', name: 'Dino Book Reader' } }] }),
+        'PATCH /v1/subscriptionGroupLocalizations/l1': { status: 409, ok: false, json: null },
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
+    });
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', { log: (line) => lines.push(line) }));
+    assert.ok(asc.calls.includes('GET /v1/subscriptionGroups/g1/subscriptions'), 'the run went past the rename');
+    assert.ok(lines.some((line) => line.includes('WARNING') && line.includes('409')));
 });
 
 test('Slice 384 review #1/#4/#7: prices and trials are read over every page, so a rerun posts nothing again; a list past the safety cap is an error', async () => {
