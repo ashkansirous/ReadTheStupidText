@@ -77,7 +77,7 @@ internal static class ShelfReorderTiles
 	/// <summary>A tile: the cover (as on the shelf), its title under it, and, with reduced motion, a dashed outline in place of the wiggle.</summary>
 	public static Grid Build(StoryTile tile, ShelfOrderGrid grid, double titleHeight, double titleSpacing, bool outline)
 	{
-		var cover = new StoryCover { BindingContext = tile, InputTransparent = true, AutomationId = "ReorderCover" };
+		var cover = new StoryCover { BindingContext = tile, InputTransparent = true, AutomationId = "ReorderCover", Opacity = tile.TileOpacity }; // Slice 398: a locked book keeps its 55% here, so it does not look like a normal draggable book
 		var title = new Label
 		{
 			Text = tile.Title, FontFamily = tile.TitleFont, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, LineHeight = 1.25, MaxLines = 2,

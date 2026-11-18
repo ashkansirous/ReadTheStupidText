@@ -461,6 +461,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bok på din hylla är låst och dold för ditt barn. Prenumerera igen, eller köp den du vill behålla.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} böcker på din hylla är låsta och dolda för ditt barn. Prenumerera igen, eller köp dem du vill behålla.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} böcker är låsta. Ditt barn ser dem inte. Prenumerera igen, eller köp de du vill behålla.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bok är låst. Ditt barn ser den inte. Prenumerera igen, eller köp den du vill behålla.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnemang i butiken</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Köp · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan inte kontrollera ditt abonnemang</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Inget internet. Abonnemangets böcker förblir öppna till {0}, 3 dagar efter det sista datumet butiken gav. Anslut för att hålla dem öppna.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>

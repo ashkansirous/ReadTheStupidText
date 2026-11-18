@@ -462,6 +462,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Tu suscripción terminó</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 libro de tu estante está bloqueado y oculto para tu hijo. Suscríbete de nuevo o compra el que quieras conservar.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} libros de tu estante están bloqueados y ocultos para tu hijo. Suscríbete de nuevo o compra los que quieras conservar.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Tu suscripción terminó</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} libros están bloqueados. Tu hijo no los ve. Suscríbete de nuevo o compra los que quieras conservar.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 libro está bloqueado. Tu hijo no lo ve. Suscríbete de nuevo o compra el que quieras conservar.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Ver planes en la tienda</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Comprar · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>No se puede comprobar tu suscripción</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Sin conexión. Los libros de la suscripción siguen abiertos hasta el {0}, 3 días después de la última fecha que dio la tienda. Conéctate para mantenerlos abiertos.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Libros que se recuperan de la tienda</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Los libros gratuitos vuelven solos. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Los libros gratuitos que siguen en la tienda vuelven solos. Un libro que la tienda ya no ofrece no vuelve, pero sus grabaciones se quedan en el archivo de la copia. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>

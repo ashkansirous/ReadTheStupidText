@@ -23,9 +23,21 @@
 # expect-log: HOOK fake-subscription ok active
 # expect-log: [Purchases] subscription state=Active grants=True
 # expect-log: [Subscription] shelf total=4 shown=4 lapsed=0 grownUp=False
+# Slice 398 (mock SB6 to SB8): the Books tab's "why" banner and the locked tile's two pills while the book is locked, the child's shelf with neither, and the calm offline notice (hook fake-offline) that is never a lock. Against the old
+# behaviour (a plain greyed tile with a caption, no banner, no offline notice) the banner, the lock badge, the price pill and the notice all fail. Written, not yet run.
+# expect-log: [Subscription] shelf columns=3 grownUp=True
+# expect-log: [Subscription] banners locked=1 offline=none
+# expect-log: HOOK fake-offline ok on
+# expect-log: [Subscription] banners locked=0 offline=shown
+# expect-log: HOOK fake-offline ok off
 appId: uk.sirous.dinoreader.dbg
 name: A subscription opens every paid book; when it ends a subscription book greys out for parents and leaves the child's shelf, and renewing brings it back
 onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-offline
+        mode: "off"
   - launchApp:
       stopApp: false
       arguments:
@@ -181,10 +193,37 @@ onFlowComplete:
 - assertVisible:
     id: LapsedBuy
 - assertVisible:
-    id: LapsedNote
-- assertVisible:
     id: StoryTile
-# The child's shelf leaves the locked book out (three books are left: two free and the bought one); its files stay on the device.
+# Slice 398 (mock SB6): the "why" banner at the top of the Books tab with its two links, the locked tile's two pills (Buy carries the store's price) and no drawn "Locked" caption.
+- scrollUntilVisible:
+    element:
+      id: LockedBanner
+    direction: UP
+    timeout: 20000
+- assertVisible: "Your subscription ended"
+- assertVisible: '1 book is locked\. Your child doesn.t see it\..*'
+- assertVisible: "See plans in the Store"
+- assertVisible: "Restore purchases"
+- assertVisible:
+    id: LapsedLockBadge
+- assertVisible: "Subscribe again"
+- assertVisible: 'Buy · .*0\.99'
+# The cover's name for a screen reader says it is locked (no caption is drawn); the grown-ups' phone grid has the mock's 3 columns (the expect-log line above).
+- assertVisible: '.*Locked: the subscription ended.*'
+# "See plans in the Store" opens the Store tab (Slice 397's card for a lapsed subscription), then back to the Books tab.
+- tapOn: "See plans in the Store"
+- extendedWaitUntil:
+    visible:
+      id: StoreSubscriptionCard
+    timeout: 30000
+- tapOn:
+    id: CornerTabBooks
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LockedBanner
+    timeout: 20000
+# The child's shelf leaves the locked book out (three books are left: two free and the bought one); its files stay on the device. Slice 398 (mock SB8): no banner, no lock, no offer there.
 - tapOn:
     id: GalleryDone
     waitToSettleTimeoutMs: 300
@@ -194,6 +233,12 @@ onFlowComplete:
     timeout: 10000
 - assertNotVisible:
     id: LapsedSubscribe
+- assertNotVisible:
+    id: LapsedBuy
+- assertNotVisible:
+    id: LockedBanner
+- assertNotVisible:
+    id: LapsedLockBadge
 - assertVisible:
     id: StoryTile
 # Slice 397 (mock SB5): the Store's card says it ended, counts the locked book and offers the plans again with no trial.
@@ -257,6 +302,39 @@ onFlowComplete:
     notVisible:
       id: LapsedSubscribe
     timeout: 30000
+- assertNotVisible:
+    id: LockedBanner
+- assertNotVisible:
+    id: OfflineBanner
+# Slice 398 (mock SB7): offline, past the last end date the store gave and inside the 3 days: a calm banner, never a lock. The books stay normal (nothing greyed, no "why" banner).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-offline
+      mode: "on"
+      ended-hours: "5"
+- extendedWaitUntil:
+    visible:
+      id: OfflineBanner
+    timeout: 20000
+- assertVisible: "Can.t check your subscription"
+- assertVisible: 'No internet\. Subscription books stay open until .*, 3 days after the last date the store gave\..*'
+- assertNotVisible:
+    id: LapsedSubscribe
+- assertNotVisible:
+    id: LockedBanner
+- assertVisible:
+    id: StoryTile
+# Back online the notice goes at once (the store's answer decides).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-offline
+      mode: "off"
+- extendedWaitUntil:
+    notVisible:
+      id: OfflineBanner
+    timeout: 20000
 - tapOn:
     id: GalleryDone
     waitToSettleTimeoutMs: 300

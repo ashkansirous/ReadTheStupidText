@@ -462,6 +462,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 книга на вашей полке закрыта и скрыта от ребёнка. Оформите подписку снова или купите книгу, которую хотите оставить.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>Книг на вашей полке закрыто и скрыто от ребёнка: {0}. Оформите подписку снова или купите те, которые хотите оставить.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>Закрыто книг: {0}. Ребёнок их не видит. Оформите подписку снова или купите те, которые хотите сохранить.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 книга закрыта. Ребёнок её не видит. Оформите подписку снова или купите ту, которую хотите сохранить.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Смотреть тарифы в магазине</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Купить · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Не удаётся проверить подписку</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Нет интернета. Книги по подписке остаются открытыми до {0}, через 3 дня после последней даты, которую назвал магазин. Подключитесь к сети, чтобы они оставались открытыми.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Бесплатные книги, которые ещё есть в магазине, возвращаются сами. Книга, которую магазин больше не предлагает, не вернётся, но её записи останутся в файле копии. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>

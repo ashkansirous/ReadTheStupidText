@@ -461,6 +461,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Abonnementet ditt er avsluttet</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bok i hyllen din er låst og skjult for barnet ditt. Abonner på nytt, eller kjøp den du vil beholde.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} bøker i hyllen din er låst og skjult for barnet ditt. Abonner på nytt, eller kjøp de du vil beholde.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Abonnementet ditt er avsluttet</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} bøker er låst. Barnet ditt ser dem ikke. Abonner på nytt, eller kjøp de du vil beholde.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bok er låst. Barnet ditt ser den ikke. Abonner på nytt, eller kjøp den du vil beholde.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnementer i butikken</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Kjøp · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan ikke sjekke abonnementet ditt</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Ingen internett. Abonnementsbøkene forblir åpne til {0}, 3 dager etter den siste datoen butikken ga. Koble til for å holde dem åpne.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøker kommer tilbake av seg selv. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøker som fortsatt er i butikken, kommer tilbake av seg selv. En bok butikken ikke lenger har, kommer ikke tilbake, men opptakene blir i sikkerhetskopifilen. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>

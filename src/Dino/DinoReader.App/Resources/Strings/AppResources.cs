@@ -499,6 +499,14 @@ public static class AppResources
 	public static string Sub_EndedTitle => Get();
 	public static string Sub_EndedBody_One => Get();
 	public static string Sub_EndedBody_Other => Get();
+	// Slice 398: the Books tab's "why" banner, the locked tile's price pill and the offline notice.
+	public static string Sub_BannerTitle => Get();
+	public static string Sub_BannerBody_Other => Get();
+	public static string Sub_BannerBody_One => Get();
+	public static string Sub_BannerPlans => Get();
+	public static string Sub_BuyPrice => Get();
+	public static string Sub_OfflineTitle => Get();
+	public static string Sub_OfflineBody => Get();
 	public static string Backup_Missing => Get();
 	public static string Backup_MissingNote => Get();
 	public static string Backup_MissingNoteStore => Get();

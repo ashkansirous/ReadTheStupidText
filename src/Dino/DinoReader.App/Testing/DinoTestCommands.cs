@@ -148,6 +148,12 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == FakeOfflineName)
+		{
+			FakeOffline(command);
+			return StartedOutcome;
+		}
+
 		if (command.Name == RecordStateName)
 		{
 			_ = RecordStateAsync(command.Get(IdKey, string.Empty), command.Get(ClipsKey, string.Empty));
