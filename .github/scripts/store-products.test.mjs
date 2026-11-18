@@ -10,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     ALL_STORES, MANUAL_STEPS, Outcome, Store, activateBody, addOnProductIds, appleAvailabilityBody, appleLocalizationBody, applePriceScheduleBody, appleProductBody, applyStore,
     findApplePricePoint, googleAssertion, createAppleProduct, createPlayProduct, PlayStage, playProductStage, parseServiceAccount, applePricePointId, applePagePath, microsoftNextUrl, microsoftAddOnBody, paidBooksFrom, parseArgs, planLines, playHasUsPrice, playProductBody, playUsdPrice, productIdProblem, readContentEntries,
-    appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull, isNonJsonBody,
+    appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull, isNonJsonBody, readReviewScreenshot, appleScreenshotNeed, requireReviewScreenshot,
 } from './store-products.mjs';
 
 import {
@@ -166,7 +166,7 @@ function fakeAsc(routes) {
         const value = typeof routes[key] === 'function' ? routes[key](path, body) : routes[key];
         return value ?? { status: 404, ok: false, json: null };
     };
-    return { calls, get: answer('GET'), post: answer('POST'), patch: answer('PATCH') };
+    return { calls, get: answer('GET'), post: answer('POST'), patch: answer('PATCH'), delete: answer('DELETE') };
 }
 
 const okJson = (json) => ({ status: 200, ok: true, json });
@@ -575,6 +575,12 @@ test('Slice 411: loadStoreEnv reads a secrets folder from SECRETS_ROOT and the P
     }
 });
 
+/** Routes of a product (id 77) whose screenshot is COMPLETE and which is already in review (Slice 416): the earlier steps' tests need nothing more. */
+const SCREENSHOT_DONE = {
+    'GET /v2/inAppPurchases/77/appStoreReviewScreenshot': { status: 200, ok: true, json: { data: { id: 'sc', attributes: { assetDeliveryState: { state: 'COMPLETE' } } } } },
+    'GET /v2/inAppPurchases/77': { status: 200, ok: true, json: { data: { attributes: { state: 'WAITING_FOR_REVIEW' } } } },
+};
+
 test('Slice 346 review #2: an Apple product that exists but has no price or listing is completed, a whole one is left alone', async () => {
     const half = fakeAsc({
         'GET /v1/apps/1/inAppPurchasesV2': okJson({ data: [{ id: '77' }] }),
@@ -583,6 +589,7 @@ test('Slice 346 review #2: an Apple product that exists but has no price or list
         'GET /v2/inAppPurchases/77/iapPriceSchedule': { status: 404, ok: false, json: null },
         'GET /v2/inAppPurchases/77/pricePoints': okJson({ data: [{ id: 'p99', attributes: { customerPrice: '0.99' } }] }),
         'POST /v1/inAppPurchasePriceSchedules': okJson({ data: {} }),
+        ...SCREENSHOT_DONE,
     });
     assert.equal(await createAppleProduct(half, BOOK, '1'), Outcome.Completed);
     assert.deepEqual(half.calls.filter((c) => c.startsWith('POST')), ['POST /v1/inAppPurchasePriceSchedules']);
@@ -591,9 +598,176 @@ test('Slice 346 review #2: an Apple product that exists but has no price or list
         'GET /v2/inAppPurchases/77/inAppPurchaseLocalizations': okJson({ data: [{ id: 'l' }] }),
         'GET /v2/inAppPurchases/77/inAppPurchaseAvailability': okJson({ data: { id: 'a' } }),
         'GET /v2/inAppPurchases/77/iapPriceSchedule': okJson({ data: { id: 's' } }),
+        ...SCREENSHOT_DONE,
     });
     assert.equal(await createAppleProduct(whole, BOOK, '1'), Outcome.Exists);
     assert.equal(whole.calls.filter((c) => c.startsWith('POST')).length, 0);
+});
+
+// ---- Slice 416: review screenshot and the product's own submission ----
+
+const IMAGE = Buffer.from('png-bytes');
+const OP = { method: 'PUT', url: 'https://up.example/1', offset: 0, length: IMAGE.length, requestHeaders: [{ name: 'Content-Type', value: 'image/png' }] };
+
+function completeProduct(extra) {
+    return {
+        'GET /v1/apps/1/inAppPurchasesV2?filter[productId]': okJson({ data: [{ id: '77' }] }),
+        'GET /v2/inAppPurchases/77/inAppPurchaseLocalizations': okJson({ data: [{ id: 'l' }] }),
+        'GET /v2/inAppPurchases/77/inAppPurchaseAvailability': okJson({ data: { id: 'a' } }),
+        'GET /v2/inAppPurchases/77/iapPriceSchedule': okJson({ data: { id: 's' } }),
+        ...extra,
+    };
+}
+
+test('Slice 416: a missing review screenshot is reserved, uploaded and committed with the md5; the image is read only then', async () => {
+    const puts = [];
+    let reads = 0;
+    const asc = fakeAsc(completeProduct({
+        'GET /v2/inAppPurchases/77/appStoreReviewScreenshot': { status: 404, ok: false, json: null },
+        'POST /v1/inAppPurchaseAppStoreReviewScreenshots': (path, body) => ({ status: 201, ok: true, json: { data: { id: 'sc9', attributes: { uploadOperations: [OP] } }, sent: body } }),
+        'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9': (path, body) => okJson({ data: { attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } }, sent: body }),
+        'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'WAITING_FOR_REVIEW' } } }),
+    }));
+    const io = { readImage: () => { reads++; return IMAGE; }, put: async (operation, bytes) => { puts.push([operation.url, bytes.toString()]); } };
+    assert.equal(await createAppleProduct(asc, BOOK, '1', io), Outcome.Completed);
+    assert.deepEqual(puts, [['https://up.example/1', 'png-bytes']]);
+    assert.equal(reads, 1);
+    assert.deepEqual(asc.calls.filter((c) => c.startsWith('POST') || c.startsWith('PATCH')), ['POST /v1/inAppPurchaseAppStoreReviewScreenshots', 'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9']);
+});
+
+test('Slice 416: a COMPLETE (or processing) screenshot is left alone and the image file is never read', async () => {
+    const asc = fakeAsc(completeProduct(SCREENSHOT_DONE));
+    const io = { readImage: () => assert.fail('must not read'), put: () => assert.fail('must not upload') };
+    assert.equal(await createAppleProduct(asc, BOOK, '1', io), Outcome.Exists);
+    assert.equal(appleScreenshotNeed({ attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } }).action, 'none');
+    assert.equal(appleScreenshotNeed({ id: 'x', attributes: { assetDeliveryState: { state: 'AWAITING_UPLOAD' }, uploadOperations: [{ url: 'u' }] } }).action, 'upload');
+    assert.equal(appleScreenshotNeed({ id: 'x', attributes: { assetDeliveryState: { state: 'AWAITING_UPLOAD' } } }).action, 'replace'); // check pass #4: nothing to PUT, so re-reserve
+});
+
+test('Slice 416: a failed upload is reported with the reason, and a missing image file fails the step with a clear message', async () => {
+    const failing = fakeAsc(completeProduct({
+        'POST /v1/inAppPurchaseAppStoreReviewScreenshots': okJson({ data: { id: 'sc9', attributes: { uploadOperations: [OP] } } }),
+        'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9': okJson({ data: { attributes: { assetDeliveryState: { state: 'FAILED', errors: [{ description: 'bad image' }] } } } }),
+    }));
+    await assert.rejects(createAppleProduct(failing, BOOK, '1', { readImage: () => IMAGE, put: async () => {} }), /review screenshot upload failed: bad image/);
+    assert.throws(() => readReviewScreenshot(join(tmpdir(), 'no-such-dir-416', 'x.png')), /does not exist; capture the in-app Store screen/);
+    const put = fakeAsc(completeProduct({ 'POST /v1/inAppPurchaseAppStoreReviewScreenshots': okJson({ data: { id: 'sc9', attributes: { uploadOperations: [OP] } } }) }));
+    await assert.rejects(createAppleProduct(put, BOOK, '1', { readImage: () => IMAGE, put: async () => { throw new Error('upload the review screenshot: HTTP 403'); } }), /HTTP 403/);
+});
+
+test('Slice 416: a READY_TO_SUBMIT product is submitted when the app has an approved purchase; a refusal carries Apple\'s message; none approved means no submission', async () => {
+    const ready = { 'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'READY_TO_SUBMIT' } } }) };
+    const ok = fakeAsc(completeProduct({ ...SCREENSHOT_DONE, ...ready, 'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [{ id: 'old' }] }), 'POST /v1/inAppPurchaseSubmissions': { status: 201, ok: true, json: {} } }));
+    assert.equal(await createAppleProduct(ok, BOOK, '1', {}), Outcome.Completed);
+    assert.ok(ok.calls.includes('POST /v1/inAppPurchaseSubmissions'));
+    const refusal = { status: 409, ok: false, json: { errors: [{ detail: 'The product is missing a screenshot.' }] } };
+    const refused = fakeAsc(completeProduct({ ...SCREENSHOT_DONE, ...ready, 'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [{ id: 'old' }] }), 'POST /v1/inAppPurchaseSubmissions': refusal }));
+    await assert.rejects(createAppleProduct(refused, BOOK, '1', {}), /submit the product for review: The product is missing a screenshot\./);
+    const none = fakeAsc(completeProduct({ ...SCREENSHOT_DONE, ...ready, 'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [] }) }));
+    assert.equal(await createAppleProduct(none, BOOK, '1', {}), Outcome.Exists);
+    assert.equal(none.calls.some((c) => c.startsWith('POST')), false);
+});
+
+test('Slice 416 review #2: a FAILED screenshot is deleted and re-uploaded; an unknown state is left alone', async () => {
+    const failed = { 'GET /v2/inAppPurchases/77/appStoreReviewScreenshot': okJson({ data: { id: 'bad', attributes: { assetDeliveryState: { state: 'FAILED', errors: [{ code: 'IMAGE_INCORRECT_SIZE' }] } } } }) };
+    const asc = fakeAsc(completeProduct({
+        ...failed,
+        'DELETE /v1/inAppPurchaseAppStoreReviewScreenshots/bad': { status: 204, ok: true, json: null },
+        'POST /v1/inAppPurchaseAppStoreReviewScreenshots': okJson({ data: { id: 'sc9', attributes: { uploadOperations: [OP] } } }),
+        'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9': okJson({ data: { attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } } }),
+        'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'WAITING_FOR_REVIEW' } } }),
+    }));
+    assert.equal(await createAppleProduct(asc, BOOK, '1', { readImage: () => IMAGE, put: async () => {} }), Outcome.Completed);
+    assert.deepEqual(asc.calls.filter((c) => /^(DELETE|POST|PATCH)/.test(c)), ['DELETE /v1/inAppPurchaseAppStoreReviewScreenshots/bad', 'POST /v1/inAppPurchaseAppStoreReviewScreenshots', 'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9']);
+    const refused = fakeAsc(completeProduct({ ...failed, 'DELETE /v1/inAppPurchaseAppStoreReviewScreenshots/bad': { status: 403, ok: false, json: { errors: [{ detail: 'no' }] } } }));
+    await assert.rejects(createAppleProduct(refused, BOOK, '1', { readImage: () => IMAGE }), /delete the failed review screenshot \(IMAGE_INCORRECT_SIZE\): no/);
+    assert.equal(appleScreenshotNeed({ id: 'x', attributes: { assetDeliveryState: { state: 'SOMETHING_NEW' }, uploadOperations: [{ url: 'u' }] } }).action, 'none'); // check2 #1: unknown states are left alone
+    assert.equal(appleScreenshotNeed({ id: 'x', attributes: {} }).action, 'none'); // check2 #2: never delete a screenshot whose state is not reported
+    const failedNeed = appleScreenshotNeed({ id: 'f', attributes: { assetDeliveryState: { state: 'FAILED', errors: [{ code: 'E' }] } } });
+    assert.deepEqual([failedNeed.screenshot.id, failedNeed.message], ['f', 'E']); // check2 #3
+    assert.equal(appleScreenshotNeed(null).action, 'reserve');
+});
+
+test('Slice 416 review #1: a failed approved-purchase lookup is not remembered, the next book asks again', async () => {
+    const ready = { 'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'READY_TO_SUBMIT' } } }) };
+    const answers = [{ status: 500, ok: false, json: { errors: [{ detail: 'busy' }] } }, okJson({ data: [{ id: 'old' }] })];
+    const asc = fakeAsc(completeProduct({ ...SCREENSHOT_DONE, ...ready, 'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': () => answers.shift(), 'POST /v1/inAppPurchaseSubmissions': { status: 201, ok: true, json: {} } }));
+    await assert.rejects(createAppleProduct(asc, BOOK, '1', {}), /look up approved products/);
+    assert.equal(await createAppleProduct(asc, BOOK, '1', {}), Outcome.Completed);
+});
+
+test('Slice 416 review #4: a screenshot a former run uploaded and Apple still processes is waited for, though this run uploaded nothing', async () => {
+    const states = ['MISSING_METADATA', 'READY_TO_SUBMIT'];
+    const waits = [];
+    const asc = fakeAsc(completeProduct({
+        ...SCREENSHOT_DONE,
+        'GET /v2/inAppPurchases/77': () => okJson({ data: { attributes: { state: states.shift() ?? 'READY_TO_SUBMIT' } } }),
+        'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [{ id: 'old' }] }),
+        'POST /v1/inAppPurchaseSubmissions': { status: 201, ok: true, json: {} },
+    }));
+    await createAppleProduct(asc, BOOK, '1', { notes: [], sleep: async (ms) => { waits.push(ms); } });
+    assert.ok(asc.calls.includes('POST /v1/inAppPurchaseSubmissions'));
+    assert.deepEqual(waits, [5000]);
+});
+
+test('Slice 416 review #7: the Apple store fails before any call when a book needs the review screenshot and the PNG is missing', () => {
+    const book = { ...BOOK, problem: null };
+    const missing = join(tmpdir(), 'no-such-dir-s416', 'shot.png');
+    assert.throws(() => requireReviewScreenshot([book], () => readReviewScreenshot(missing)), /does not exist/);
+    assert.doesNotThrow(() => requireReviewScreenshot([{ ...book, kind: 'subscription' }], () => assert.fail('subscriptions need no screenshot')));
+});
+
+test('Slice 416 review #3: after an upload the state is re-read until READY_TO_SUBMIT, then submitted; if it never gets there a NOT DONE note says the next run submits', async () => {
+    const states = ['MISSING_METADATA', 'MISSING_METADATA', 'READY_TO_SUBMIT'];
+    const waits = [];
+    const slow = fakeAsc(completeProduct({
+        'GET /v2/inAppPurchases/77/appStoreReviewScreenshot': { status: 404, ok: false, json: null },
+        'POST /v1/inAppPurchaseAppStoreReviewScreenshots': okJson({ data: { id: 'sc9', attributes: { uploadOperations: [OP] } } }),
+        'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9': okJson({ data: { attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } } }),
+        'GET /v2/inAppPurchases/77': () => okJson({ data: { attributes: { state: states.shift() ?? 'READY_TO_SUBMIT' } } }),
+        'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [{ id: 'old' }] }),
+        'POST /v1/inAppPurchaseSubmissions': { status: 201, ok: true, json: {} },
+    }));
+    const io = { readImage: () => IMAGE, put: async () => {}, notes: [], sleep: async (ms) => { waits.push(ms); } };
+    await createAppleProduct(slow, BOOK, '1', io);
+    assert.ok(slow.calls.includes('POST /v1/inAppPurchaseSubmissions'));
+    assert.deepEqual(waits, [5000, 5000]);
+    assert.deepEqual(io.notes, []);
+    const stuck = fakeAsc(completeProduct({
+        'GET /v2/inAppPurchases/77/appStoreReviewScreenshot': { status: 404, ok: false, json: null },
+        'POST /v1/inAppPurchaseAppStoreReviewScreenshots': okJson({ data: { id: 'sc9', attributes: { uploadOperations: [OP] } } }),
+        'PATCH /v1/inAppPurchaseAppStoreReviewScreenshots/sc9': okJson({ data: { attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } } }),
+        'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'MISSING_METADATA' } } }),
+    }));
+    const stuckIo = { readImage: () => IMAGE, put: async () => {}, notes: [], sleep: async () => {} };
+    await createAppleProduct(stuck, BOOK, '1', stuckIo);
+    assert.equal(stuck.calls.filter((c) => c === 'GET /v2/inAppPurchases/77').length, 6);
+    assert.match(stuckIo.notes[0], /uk\.sirous\.dinoreader\.book\.goldilocks: not submitted.*MISSING_METADATA.*next run submits it/);
+});
+
+test('Slice 416 review #4 and #5: every skipped submit says why, an in-review product says nothing, the approved-purchase lookup runs once per client', async () => {
+    const ready = { 'GET /v2/inAppPurchases/77': okJson({ data: { attributes: { state: 'READY_TO_SUBMIT' } } }) };
+    const asc = fakeAsc(completeProduct({ ...SCREENSHOT_DONE, ...ready, 'GET /v1/apps/1/inAppPurchasesV2?filter[state]=APPROVED': okJson({ data: [] }) }));
+    const notes = [];
+    await createAppleProduct(asc, BOOK, '1', { notes });
+    await createAppleProduct(asc, BOOK, '1', { notes });
+    assert.equal(notes.length, 2);
+    assert.match(notes[0], /no approved in-app purchase yet/);
+    assert.equal(asc.calls.filter((c) => c.includes('filter[state]=APPROVED')).length, 1);
+    const inReview = fakeAsc(completeProduct(SCREENSHOT_DONE));
+    const quietNotes = [];
+    await createAppleProduct(inReview, BOOK, '1', { notes: quietNotes });
+    assert.deepEqual(quietNotes, []);
+});
+
+test('Slice 416 review #6: the Apple dry-run plan lists the screenshot and submission steps per book', () => {
+    const lines = planLines(Store.Apple, paidBooksFrom(entries));
+    assert.ok(lines.some((line) => line.includes('would add the review screenshot')));
+    assert.ok(lines.some((line) => line.includes('would submit it for review')));
+});
+
+test('Slice 416: the manual steps no longer claim there is no API', () => {
+    assert.doesNotMatch(MANUAL_STEPS[Store.Apple].join(' '), /no API/);
 });
 
 test('Slice 346 review #2: a Play product that is created but not active is activated; an active one is left alone; a missing one is created', async () => {

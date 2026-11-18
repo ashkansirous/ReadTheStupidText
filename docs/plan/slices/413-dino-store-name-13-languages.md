@@ -39,6 +39,9 @@ word-for-word translation, while keeping "Dino" as the brand and the own-voice i
    on the missing What's New, now in a "What's new 1.133.1" section of each file). Open finding from that run: the
    in-app purchase `uk.sirous.dinoreader.book.love_from_seagull_island` is MISSING_METADATA in App Store Connect, so it
    did not go with the version; the book cannot be bought on its own on iOS until its metadata is filled.
+   *Fixed 2026-11-18:* only the review screenshot was missing; it was uploaded through the API and the product
+   (id 6836361223) submitted on its own (`inAppPurchaseSubmissions`, 201), now WAITING_FOR_REVIEW. The tooling gap is
+   Slice 416 (docs/plan/slices/416-dino-apple-book-review-screenshot.md).
 3. [x] One "Not yet verified" block for the native reads (`docs/plan/unverified.md`, Slice 413).
 
 ## Out of scope

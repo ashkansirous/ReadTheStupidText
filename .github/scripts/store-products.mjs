@@ -22,7 +22,9 @@
  *
  * Coverage (what an API can do, and what is left for the user, printed at the end of every run):
  *   Apple:     API creates the non-consumable product, its en-US name and description, the territory availability and the 0.99 USD price (other territories follow Apple's equalisation).
- *              No API: the review screenshot, and submitting the products for review together with an app version (App Store Connect).
+ *              Then (Slice 416, shapes read through context7 /websites/developer_apple_appstoreconnectapi 2026-11-18, proven live the same day) the shared review screenshot tools/dino/iap-review-screenshot.png
+ *              (reserve, PUT each upload operation, PATCH uploaded + md5), and, once the product is READY_TO_SUBMIT and the app already has an APPROVED in-app purchase, its own submission
+ *              (POST /v1/inAppPurchaseSubmissions). The app's very first in-app purchase still has to go with an app version.
  *   Google:    API creates the one-time product with its en-GB listing and one buy option priced from 0.99 USD in every region Play converts (monetization.convertRegionPrices),
  *              then activates the buy option. No API step is left, apart from the merchant/bank setup that must already be done.
  *   Microsoft: API creates the durable add-on shell, then (Slice 411, proven live 2026-11-18) its submission: price Tier1012 (0.99 USD), the en-us listing and the other fields copied from the newest published book
@@ -37,7 +39,7 @@
  * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
  */
 
-import { createSign } from 'node:crypto';
+import { createHash, createSign } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -93,6 +95,16 @@ const HTTP_SERVER_ERROR = 500;
 const APPLE_TERRITORY_MAX_PAGES = 10;
 const APPLE_API_ORIGIN = 'https://api.appstoreconnect.apple.com';
 const HTTP_NOT_FOUND = 404;
+/** The one shared App Store review screenshot of every book product (Slice 416): a capture of the in-app Store screen. */
+export const REVIEW_SCREENSHOT_PATH = fileURLToPath(new URL('../../tools/dino/iap-review-screenshot.png', import.meta.url));
+const REVIEW_SCREENSHOT_NAME = 'iap-review-screenshot.png';
+const AssetState = { Complete: 'COMPLETE', UploadComplete: 'UPLOAD_COMPLETE', AwaitingUpload: 'AWAITING_UPLOAD', Failed: 'FAILED' };
+const IAP_STATE_READY = 'READY_TO_SUBMIT';
+const IAP_STATE_MISSING = 'MISSING_METADATA';
+const IAP_SUBMITTED_STATES = new Set(['WAITING_FOR_REVIEW', 'IN_REVIEW', 'APPROVED']);
+const SUBMIT_POLL_TRIES = 6; // Apple processes the screenshot upload asynchronously, so the state is re-read a few times after it
+const SUBMIT_POLL_MS = 5000;
+const IAP_STATE_APPROVED = 'APPROVED';
 const HTTP_CONFLICT = 409;
 const MS_PRICE_ID = 'Tier1012'; // 0.99 USD on the advanced pricing model (Tier1012-Tier1424 are valid there; read from Microsoft's add-on submission docs 2026-11-18)
 const MS_LISTING_LOCALE = 'en-us';
@@ -335,15 +347,21 @@ export function planLines(store, books) {
     const lines = [`${STORE_TITLES[store]}: ${books.length} product(s) at ${PRICE_USD} USD`];
     for (const book of books) {
         lines.push(book.problem === null ? `  would create ${book.productId} ("${book.title}")` : `  CANNOT create ${book.productId}: ${book.problem}`);
+        if (book.problem === null && store === Store.Apple) lines.push(...APPLE_EXTRA_PLAN_LINES);
     }
     return [...lines, ...MANUAL_STEPS[store].map((step) => `  by hand: ${step}`)];
 }
+
+const APPLE_EXTRA_PLAN_LINES = [
+    '    would add the review screenshot (tools/dino/iap-review-screenshot.png) unless it has one',
+    '    would submit it for review once READY_TO_SUBMIT (and the app has an approved in-app purchase)',
+];
 
 const STORE_TITLES = { [Store.Apple]: 'App Store Connect', [Store.Google]: 'Play Console', [Store.Microsoft]: 'Partner Center' };
 
 export const MANUAL_STEPS = {
     [Store.Apple]: [
-        'add the review screenshot to each product (no API), then submit the products for review with an app version (https://appstoreconnect.apple.com/apps/6825053435)',
+        'nothing for a book once the app has an approved in-app purchase: the run adds the review screenshot and submits the product itself (the app\'s first purchase goes to review with an app version: https://appstoreconnect.apple.com/apps/6825053435)',
     ],
     [Store.Google]: [
         'nothing left once the merchant account and bank verification are done (Play Console > Monetise with Play > One-time products)',
@@ -432,7 +450,7 @@ async function appleStepDone(asc, path, what) {
  * Creates one Apple product, or completes a half-created one: the product, its en-US listing, its availability and its price are each checked on an existing product and only the missing ones are
  * done, so a run that failed half way is finished by the next run. UNVERIFIED: the three read routes follow Apple's endpoint list (read 2026-11-13); the answer shapes are guarded, not assumed.
  */
-export async function createAppleProduct(asc, book, appId) {
+export async function createAppleProduct(asc, book, appId, io = {}) {
     const found = must(await asc.get(`/v1/apps/${appId}/inAppPurchasesV2?filter[productId]=${encodeURIComponent(book.productId)}`), 'look up product');
     const existingId = (found.data ?? [])[0]?.id;
     const iapId = existingId ?? must(await asc.post('/v2/inAppPurchases', appleProductBody(book, appId)), 'create product').data.id;
@@ -451,8 +469,132 @@ export async function createAppleProduct(asc, book, appId) {
         must(await asc.post('/v1/inAppPurchasePriceSchedules', applePriceScheduleBody(iapId, await applePricePointId(asc, iapId))), 'set the price');
         did = true;
     }
+    const uploaded = await appleEnsureScreenshot(asc, iapId, fresh, io);
+    const submitIo = { label: book.productId, notes: io.notes ?? [], sleep: io.sleep ?? realSleep, tries: SUBMIT_POLL_TRIES }; // also a screenshot a former run uploaded may still be processing
+    did = uploaded || did;
+    did = (await appleSubmitWhenReady(asc, iapId, appId, submitIo)) || did;
     if (fresh) return Outcome.Created;
     return did ? Outcome.Completed : Outcome.Exists;
+}
+
+/** Pure: the reserve body of the review screenshot (POST /v1/inAppPurchaseAppStoreReviewScreenshots). */
+export function appleScreenshotReserveBody(iapId, fileSize) {
+    return {
+        data: {
+            type: 'inAppPurchaseAppStoreReviewScreenshots',
+            attributes: { fileName: REVIEW_SCREENSHOT_NAME, fileSize },
+            relationships: { inAppPurchaseV2: { data: { type: 'inAppPurchases', id: iapId } } },
+        },
+    };
+}
+
+/** Pure: the commit body (PATCH): `uploaded` plus the MD5 of the whole file. */
+export function appleScreenshotCommitBody(screenshotId, bytes) {
+    return {
+        data: {
+            type: 'inAppPurchaseAppStoreReviewScreenshots',
+            id: screenshotId,
+            attributes: { uploaded: true, sourceFileChecksum: createHash('md5').update(bytes).digest('hex') },
+        },
+    };
+}
+
+/** The image the review screenshot is made of; a missing file is a clear message for this step, never a crash for the other books. */
+export function readReviewScreenshot(path = REVIEW_SCREENSHOT_PATH) {
+    if (!existsSync(path)) throw new Error(`review screenshot: ${path} does not exist; capture the in-app Store screen there first (Slice 416)`);
+    return readFileSync(path);
+}
+
+/** PUTs one upload operation Apple handed out: its method, headers and the byte range it names. */
+export async function putUploadOperation(operation, bytes) {
+    const headers = Object.fromEntries((operation.requestHeaders ?? []).map((header) => [header.name, header.value]));
+    const response = await fetch(operation.url, { method: operation.method, headers, body: bytes.subarray(operation.offset, operation.offset + operation.length), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    if (!response.ok) throw new Error(`upload the review screenshot: HTTP ${response.status}`);
+}
+
+/** Pure: what the product's current screenshot needs. Only known states are acted on: none -> reserve; FAILED -> replace;
+ * AWAITING_UPLOAD -> upload when Apple gave upload operations, else replace. Delivered, processing and any state this
+ * script doesn't know are left alone, so a good screenshot is never deleted or re-sent. */
+export function appleScreenshotNeed(screenshot) {
+    if (screenshot === null || screenshot === undefined) return { action: 'reserve' };
+    const state = screenshot.attributes?.assetDeliveryState?.state;
+    if (state === AssetState.Failed) return { action: 'replace', screenshot, message: appleScreenshotErrors(screenshot) };
+    if (state !== AssetState.AwaitingUpload) return { action: 'none' };
+    if (screenshot.attributes?.uploadOperations?.length > 0) return { action: 'upload', screenshot };
+    return { action: 'replace', screenshot, message: 'reservation with no upload operations' };
+}
+
+function appleScreenshotErrors(screenshot) {
+    const errors = screenshot.attributes?.assetDeliveryState?.errors ?? [];
+    return errors.map((error) => error.description ?? error.code).join('; ') || 'no detail';
+}
+
+async function appleReadScreenshot(asc, iapId, fresh) {
+    if (fresh) return null;
+    const response = await asc.get(`/v2/inAppPurchases/${iapId}/appStoreReviewScreenshot`);
+    if (response.status === HTTP_NOT_FOUND) return null;
+    return must(response, 'check the review screenshot').data ?? null;
+}
+
+async function appleUploadScreenshot(asc, reservation, bytes, put) {
+    for (const operation of reservation.attributes.uploadOperations ?? []) await put(operation, bytes);
+    const committed = must(await asc.patch(`/v1/inAppPurchaseAppStoreReviewScreenshots/${reservation.id}`, appleScreenshotCommitBody(reservation.id, bytes)), 'commit the review screenshot');
+    if (committed.data?.attributes?.assetDeliveryState?.state === AssetState.Failed) throw new Error(`review screenshot upload failed: ${appleScreenshotErrors(committed.data)}`);
+}
+
+/** Adds the shared review screenshot unless the product has one (COMPLETE or still processing); true when it uploaded one. The image file is read only when an upload is needed. */
+export async function appleEnsureScreenshot(asc, iapId, fresh, { readImage = readReviewScreenshot, put = putUploadOperation } = {}) {
+    const need = appleScreenshotNeed(await appleReadScreenshot(asc, iapId, fresh));
+    if (need.action === 'none') return false;
+    const bytes = readImage();
+    if (need.action === 'replace') must(await asc.delete(`/v1/inAppPurchaseAppStoreReviewScreenshots/${need.screenshot.id}`), `delete the failed review screenshot (${need.message})`);
+    const reservation = need.action === 'upload' ? need.screenshot : must(await asc.post('/v1/inAppPurchaseAppStoreReviewScreenshots', appleScreenshotReserveBody(iapId, bytes.length)), 'reserve the review screenshot').data;
+    await appleUploadScreenshot(asc, reservation, bytes, put);
+    return true;
+}
+
+const approvedPurchaseAnswers = new WeakMap(); // one lookup per client, i.e. per run: the answer is the same for every book
+
+/** Whether the app already has an approved in-app purchase: Apple only lets a product go to review alone after the app's first one went with an app version. A failed lookup is not remembered, so the next book asks again. */
+function appleHasApprovedPurchase(asc, appId) {
+    if (!approvedPurchaseAnswers.has(asc)) {
+        const lookup = asc.get(`/v1/apps/${appId}/inAppPurchasesV2?filter[state]=${IAP_STATE_APPROVED}&limit=1`).then((response) => (must(response, 'look up approved products').data ?? []).length > 0);
+        approvedPurchaseAnswers.set(asc, lookup);
+        lookup.catch(() => approvedPurchaseAnswers.delete(asc));
+    }
+    return approvedPurchaseAnswers.get(asc);
+}
+
+/** Reads the product state, up to `tries` times while it is still MISSING_METADATA (the screenshot is being processed), waiting between reads. */
+async function appleReadStateSettled(asc, iapId, { tries, sleep }) {
+    let state;
+    for (let attempt = 1; attempt <= tries; attempt++) {
+        state = must(await asc.get(`/v2/inAppPurchases/${iapId}`), 'read the product state').data?.attributes?.state;
+        if (state !== IAP_STATE_MISSING || attempt === tries) break;
+        await sleep(SUBMIT_POLL_MS);
+    }
+    return state;
+}
+
+/** Submits a READY_TO_SUBMIT product for review on its own; a refusal throws with Apple's message (that book fails, the others go on). True when it submitted; every skip but an already-submitted product leaves a NOT DONE note saying why. */
+export async function appleSubmitWhenReady(asc, iapId, appId, { label = iapId, notes = [], sleep = realSleep, tries = 1 } = {}) {
+    const state = await appleReadStateSettled(asc, iapId, { tries, sleep });
+    if (IAP_SUBMITTED_STATES.has(state)) return false;
+    if (state !== IAP_STATE_READY) {
+        notes.push(`${label}: not submitted, its state is ${state ?? 'unknown'} not ${IAP_STATE_READY}; the next run submits it`);
+        return false;
+    }
+    if (!(await appleHasApprovedPurchase(asc, appId))) {
+        notes.push(`${label}: not submitted, the app has no approved in-app purchase yet; the first one goes to review with an app version (App Store Connect), then the next run submits this one`);
+        return false;
+    }
+    must(await asc.post('/v1/inAppPurchaseSubmissions', appleSubmissionBody(iapId)), 'submit the product for review');
+    return true;
+}
+
+/** Pure: the body of POST /v1/inAppPurchaseSubmissions. */
+export function appleSubmissionBody(iapId) {
+    return { data: { type: 'inAppPurchaseSubmissions', relationships: { inAppPurchaseV2: { data: { type: 'inAppPurchases', id: iapId } } } } };
 }
 
 // ---- Google ----
@@ -1397,8 +1539,16 @@ export function microsoftSubscriptionBody(item, storeAppId) {
 
 // ---- running ----
 
-async function openStore(store) {
-    if (store === Store.Apple) return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [] };
+/** Fails the Apple store before anything is created when a book needs the review screenshot and its PNG is missing (the message names the file). */
+export function requireReviewScreenshot(books, read = readReviewScreenshot) {
+    if (books.some((book) => book.problem === null && book.kind !== 'subscription')) read();
+}
+
+async function openStore(store, books = []) {
+    if (store === Store.Apple) {
+        requireReviewScreenshot(books);
+        return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [] };
+    }
     if (store === Store.Google) return { token: await googleToken() };
     return { token: await microsoftToken(), existing: undefined, storeAppId: requireEnv('MS_STORE_APP_ID') };
 }
@@ -1406,7 +1556,7 @@ async function openStore(store) {
 async function createOne(store, session, book) {
     if (store === Store.Apple && book.kind === 'subscription') return createAppleSubscription(session.asc, book, session.appId, session);
     if (store === Store.Google && book.kind === 'subscription') return createPlaySubscription(session.token, book);
-    if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId);
+    if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId, { notes: session.notes, sleep: session.sleep });
     if (store === Store.Google) return createPlayProduct(session.token, book);
     if (book.kind !== 'subscription') return createMicrosoftBook(session.token, book, session);
     session.existing ??= await microsoftExistingIds(session.token);
@@ -1415,7 +1565,7 @@ async function createOne(store, session, book) {
 
 /** Creates the products of one store; a book that fails does not stop the others. Returns `{ book, outcome, message }` per book. */
 export async function applyStore(store, books, open = openStore, create = createOne) {
-    const session = await open(store);
+    const session = await open(store, books);
     const results = [];
     let rateLimited = null; // once the 429 budget is spent every later book of the store would only be refused again, so it ends the same way without a call
     for (const book of books) {
