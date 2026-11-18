@@ -119,6 +119,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Lyt</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Hvilke sprog læser din familie på?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} er altid slået til. Tilføj andre sprog, dit barn hører.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} er altid slået til.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Hvorfor mere end ét?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Mange børn hører ét sprog derhjemme og et andet i skolen eller hos bedsteforældrene. Hver bog bliver læst op på hvert sprog, du vælger, og dit barn kan skifte på enhver side. Vælg op til tre.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App-sprog · altid slået til</value></data>
@@ -241,6 +242,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langsommere er lettere for de små - skift med venstre og højre piletast</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Læs igen</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Slut</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et klik væk.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hvad er {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Historiens sprog</value></data>

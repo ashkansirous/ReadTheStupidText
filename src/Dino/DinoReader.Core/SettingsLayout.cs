@@ -27,6 +27,14 @@ public static class SettingsLayout
     /// <summary>The store's cards: two columns when the content column is at least 800 dp wide, else one.</summary>
     public static int StoreColumns(double contentWidth) => contentWidth >= StoreTwoColumnMinWidth ? TwoStoreColumns : OneStoreColumn;
 
+    /// <summary>The Settings groups' columns (Slice 403, DI3): two on the Duo's and the Fold8's inner screen, one on the Ultra's, one everywhere else (frame W1).</summary>
+    public static int SettingsColumns(double windowWidth, FoldScreen screen) =>
+        FoldLayout.SettingsColumns(FoldLayout.EffectiveScreen(screen, windowWidth)) ?? OneStoreColumn;
+
+    /// <summary>The inner store's books: one column on a foldable's inner screen (DI2: two leave the titles too narrow); else <see cref="StoreColumns(double)"/>. A window under 600 wide gets the outer result.</summary>
+    public static int StoreColumns(double contentWidth, double windowWidth, FoldScreen screen) =>
+        FoldLayout.EffectiveScreen(screen, windowWidth).IsInner ? FoldLayout.InnerStoreBookColumns : StoreColumns(contentWidth);
+
     /// <summary>The width of the column right of the rail (the whole window under a tab bar).</summary>
     public static double ContentWidth(double windowWidth, double railWidth) => Math.Max(0, windowWidth - railWidth);
 

@@ -119,6 +119,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Luisteren</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>In welke talen leest je gezin?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} staat altijd aan. Voeg andere talen toe die je kind hoort.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} staat altijd aan.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Waarom meer dan één?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Veel kinderen horen thuis de ene taal en op school of bij opa en oma een andere. Elk boek wordt voorgelezen in elke taal die je kiest, en je kind kan op elke pagina wisselen. Kies er maximaal drie.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App-taal · altijd aan</value></data>
@@ -241,6 +242,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langzamer is makkelijker voor de kleintjes - wijzig met de pijltjes links en rechts</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Opnieuw lezen</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Einde</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één klik weg.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hoeveel is {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Taal van het verhaal</value></data>

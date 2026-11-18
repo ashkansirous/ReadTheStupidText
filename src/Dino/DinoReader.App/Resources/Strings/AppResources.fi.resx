@@ -119,6 +119,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Kuuntele</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Millä kielillä perheesi lukee?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} on aina käytössä. Lisää muut kielet, joita lapsesi kuulee.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} on aina käytössä.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Miksi useampi kuin yksi?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Monet lapset kuulevat kotona yhtä kieltä ja koulussa tai isovanhempien luona toista. Jokainen kirja luetaan jokaisella valitsemallasi kielellä, ja lapsesi voi vaihtaa kieltä millä tahansa sivulla. Valitse enintään kolme.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Sovelluksen kieli · aina käytössä</value></data>
@@ -241,6 +242,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Hitaampi on pienille helpompaa - vaihda vasemmalla ja oikealla nuolinäppäimellä</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Lue uudelleen</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Loppu</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napsautuksen päässä.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Paljonko on {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Tarinan kieli</value></data>

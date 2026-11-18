@@ -120,6 +120,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Zuhören</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>In welchen Sprachen liest deine Familie?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} ist immer dabei. Füge weitere Sprachen hinzu, die dein Kind hört.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} ist immer dabei.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Warum mehr als eine?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Viele Kinder hören zu Hause eine Sprache und in der Schule oder bei den Großeltern eine andere. Jedes Buch wird in jeder gewählten Sprache vorgelesen, und dein Kind kann auf jeder Seite wechseln. Wähle bis zu drei.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App-Sprache · immer an</value></data>
@@ -242,6 +243,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langsamer ist leichter für die Kleinen - mit den Pfeiltasten links und rechts ändern</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Noch einmal lesen</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Ende</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Klick entfernt.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Was ist {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Sprache der Geschichte</value></data>

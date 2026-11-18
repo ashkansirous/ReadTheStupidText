@@ -118,6 +118,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>الاستماع</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>بأي لغات تقرأ عائلتك؟</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} مفعّلة دائمًا. أضف أي لغات أخرى يسمعها طفلك.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} مفعّلة دائمًا.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>لماذا أكثر من لغة؟</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>يسمع كثير من الأطفال لغة في البيت ولغة أخرى في المدرسة أو عند الأجداد. يُقرأ كل كتاب بكل لغة تختارها، ويستطيع طفلك التبديل في أي صفحة. اختر حتى ثلاث لغات.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>لغة التطبيق · مفعّلة دائمًا</value></data>
@@ -240,6 +241,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>الأبطأ أسهل على الصغار - استخدم السهمين الأيسر والأيمن للتغيير</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>اقرأ مرة أخرى</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>النهاية</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد نقرة واحدة.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>كم يساوي {0} زائد {1}؟</value></data>
   <data name="Story_Language" xml:space="preserve"><value>لغة القصة</value></data>
