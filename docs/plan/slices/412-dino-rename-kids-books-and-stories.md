@@ -121,7 +121,7 @@ Made at the desk (user, 2026-11-18, this pickup):
    a tool first (`web-research`, then the signed-in Chrome only if the user says so in that turn); Chrome hung on
    Google Trends and appdrift.co on 2026-11-18. **If "bedtime stories" is far ahead of "kids books" in GB, raise it with
    the user before item 6 ships** (the phone doc's acceptance line). Swap the weakest keyword-field words if the scores say so.
-2. [ ] **App name.** One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
+2. [x] **App name.** (Built: `DinoPublicName` added, `ApplicationTitle` = "Dino"; Android build label "Dino", Windows AppxManifest DisplayName is the full name; Windows manifest is a literal, MAUI does not overwrite it; iOS takes `ApplicationTitle` as CFBundleDisplayName, read from the iOS SDK targets, not built here.) One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
    name. Confirm with context7 / `library-docs` how MAUI maps `ApplicationTitle` to the Android label, iOS
@@ -129,7 +129,7 @@ Made at the desk (user, 2026-11-18, this pickup):
 3. [ ] **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
    "Dino Book Reader" joins "Dino Reader" as an old name that must not appear in public files; scan the store-listing
    files too. Tests in `tools/dino/public-name.test.mjs`. Update the rule line in `src/Dino/DinoReader.App/CLAUDE.md`.
-4. [ ] **In-app strings.** `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
+4. [x] **In-app strings.** (Built: all 15 `AppResources*.resx`, 62 occurrences of "Dino Book Reader" replaced; none left.) `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
    name (in-app text uses the English brand name in every language, as today).
 5. [ ] **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
    `APPLE_GROUP_NAME`, `SUBSCRIPTION_TITLE`, the subscription group localization, Play book descriptions) and their
@@ -159,6 +159,11 @@ Made at the desk (user, 2026-11-18, this pickup):
 - Store listings read back equal on Play, App Store (after the version submission) and Microsoft Store.
 - Android emulator: the launcher label reads "Dino"; the back dialog and version card show the new name.
 - Windows (VM, only if the manifest change needs it): Start menu and title bar show "Dino: Kids Books & Stories".
+
+## Not yet verified
+
+- Android launcher label and iOS home-screen label read "Dino" on a device (both read from SDK targets only).
+- Arabic and Farsi in-app name renders in the right order next to RTL text.
 
 ## Out of scope
 

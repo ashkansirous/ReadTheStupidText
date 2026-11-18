@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Salvar</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Concluído</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Continuar</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Fechar o Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Fechar o Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Ficar</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Fechar</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Excluir</value></data>
@@ -94,8 +94,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Já estavam aqui, ignoradas</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Não foi possível ler</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Ver minhas histórias</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Esta cópia é de uma versão mais nova do Dino Book Reader. Atualize o app e tente de novo.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Esse arquivo não é uma cópia do Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Esta cópia é de uma versão mais nova do Dino: Kids Books &amp; Stories. Atualize o app e tente de novo.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Esse arquivo não é uma cópia do Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>A cópia não funcionou. Tente de novo.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Grandes demais para restaurar</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Não foi possível adicionar {0} à cópia.</value></data>
@@ -268,7 +268,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Ler com a minha voz</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} de {1} páginas gravadas. As outras páginas usam as vozes do Dino.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>O microfone está desligado</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Permita o microfone para o Dino Book Reader nas definições do dispositivo e tente novamente.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Permita o microfone para o Dino: Kids Books &amp; Stories nas definições do dispositivo e tente novamente.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>A gravação não funcionou. Tente novamente.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

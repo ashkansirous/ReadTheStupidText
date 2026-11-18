@@ -110,7 +110,7 @@ public static partial class StoryBackupReader
     private static async Task<StoryBackupManifest> ReadManifestAsync(ZipArchive zip)
     {
         ZipArchiveEntry entry = zip.GetEntry(StoryBackupManifest.ManifestFileName)
-            ?? throw new StoryBackupException("The file is not a Dino Book Reader backup.");
+            ?? throw new StoryBackupException("The file is not a Dino: Kids Books & Stories backup.");
         if (entry.Length > MaxManifestBytes)
         {
             throw new StoryBackupException("The backup manifest is too large.");

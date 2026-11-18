@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完了</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>続ける</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader を閉じますか？</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino: Kids Books &amp; Stories を閉じますか？</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>とどまる</value></data>
   <data name="Common_Close" xml:space="preserve"><value>閉じる</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>削除</value></data>
@@ -94,8 +94,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>すでにあるのでスキップ</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>読み込めませんでした</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>私の物語を見る</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino Book Reader のものです。アプリを更新してからもう一度お試しください。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino Book Reader のバックアップではありません。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino: Kids Books &amp; Stories のものです。アプリを更新してからもう一度お試しください。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino: Kids Books &amp; Stories のバックアップではありません。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>バックアップに失敗しました。もう一度お試しください。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>大きすぎて復元できませんでした</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} 件をバックアップに追加できませんでした。</value></data>
@@ -268,7 +268,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>自分の声で読む</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{1}ページ中{0}ページを録音済み。ほかのページはディノの声を使います。</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>マイクがオフです</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino Book Reader にマイクを許可してから、もう一度お試しください。</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino: Kids Books &amp; Stories にマイクを許可してから、もう一度お試しください。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>録音できませんでした。もう一度お試しください。</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
