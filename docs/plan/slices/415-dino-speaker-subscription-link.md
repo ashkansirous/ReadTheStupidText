@@ -35,12 +35,15 @@ User, 2026-11-18 (this session, Decision 175):
 3. **Linking goes through the Dino app**, no email or password: the speaker side shows a link or short code, the Dino
    app on the phone (which holds the store subscription) confirms it.
 4. **At most one Sonos account per subscription** (user: "they should not be able to get more than 1 sonos account
-   connected to the app"). Linking a second Sonos household replaces or is refused (see open point O1).
+   connected to the app").
+5. **A second Sonos home replaces the first link** (user, 2026-11-18, answering O1: "replace"). Linking a new household
+   with the same subscription removes the old household's link; the old home falls back to free books and the locked
+   message.
+6. **Alexa has the same limit: one Amazon account per subscription** (user, 2026-11-18, answering O2: "yes"), and by
+   the same rule a new Alexa link replaces the old one.
 
-Not decided by the user (open points, answered before the claim, not defaulted):
-- **O1.** A second Sonos household: refuse with a message, or replace the first link? The user said "not more than
-  1"; which of the two is theirs to pick.
-- **O2.** Does the one-link limit also apply to Alexa (one Amazon account per subscription)? The user named Sonos only.
+User, 2026-11-18: "you can start doing the research now. dont do the implementation yet". Item A runs; B-G wait for the
+user's go after the research is read.
 
 ## Facts to establish first (research items, written here before any design)
 
@@ -54,9 +57,49 @@ Not decided by the user (open points, answered before the claim, not defaulted):
   our endpoint. Its answer may change the authentication choice; this slice's server work waits on it only if Sonos
   says the sandbox needs AppLink to add at all.
 
+## Research results (item A, 2026-11-18)
+
+Read by a web-research agent; the decisive lines re-read from the live pages by the main session (curl, 2026-11-18).
+
+**Sonos.**
+- Anonymous is a supported choice with limits: "You can decide not to use any authentication, also known as anonymous
+  access." It "limits the features available for your service"; the docs' own example is "anonymous access to offer
+  a limited free trial" (https://docs.sonos.com/docs/add-authentication.md).
+- With authentication, linking happens when the service is added: "When users add your service to their household,
+  they enable Sonos to access their account. Sonos can send the user to your mobile app or to a webpage" (same page).
+  No page read says one service can serve some households anonymously and link others, so **decision 2 (unlinked homes
+  hear the free books) is not shown to be possible on Sonos**; read as written, an AppLink service makes every home link
+  when adding it. Not stated anywhere read: mixing anonymous and linked content in one service, replacing a household's
+  link.
+- AppLink calls: `getAppLink` (request: householdId, hardware, osVersion, sonosAppName, callbackPath; result has a
+  required `authorizeAccount`), `getDeviceAuthToken` (request: householdId, linkCode, linkDeviceId; returns `authToken`,
+  "The authorization token for the household") (https://docs.sonos.com/docs/getapplink.md,
+  https://docs.sonos.com/docs/getdeviceauthtoken.md).
+- Faults for an unlinked or expired link: `NOT_LINKED_RETRY`, `AuthTokenExpired`, `LoginUnauthorized`
+  (https://docs.sonos.com/docs/error-handling.md); no documented "play a message instead" for a locked track.
+
+**Alexa.**
+- "Child-directed skills – Account linking isn't supported for skills directed toward children."
+  (https://developer.amazon.com/en-US/docs/alexa/account-linking/add-account-linking.html). Our skill is
+  child-directed (`alexa/skill-package/skill.json`: `isChildDirected: true`), so **linking from the Dino app (decision 3)
+  is not allowed on Alexa** while it stays a kid skill.
+- The same page: "Non-child-directed skills that add account linking don't appear in the" parent dashboard.
+- The only paid route Amazon documents for kid skills is its own In-Skill Purchasing: "At this time, ISP in kid skills is
+  available only in the US", and Amazon "can't offer ISPs for a price higher than $9.99 USD"
+  (https://developer.amazon.com/en-US/docs/alexa/in-skill-purchase/isp-kid-skills.html). That is a separate Amazon
+  subscription, not the Dino app's.
+
+**Questions these raise for the user (asked 2026-11-18, not defaulted):**
+- **Q-A (Sonos):** decision 2 may not be possible. Choose: link required for every home (free books too, through the Dino
+  app); or two Sonos services (an anonymous free one, a linked one for subscribers); or ask Sonos in case 09396143
+  whether one service can mix the two, and decide after their answer.
+- **Q-B (Alexa):** keep the kid skill with free books and locked paid ones (no subscription on Alexa); or make the skill
+  not child-directed so it may link (it leaves the kids' category and the parent dashboard); or Amazon's own kid-skill
+  purchase (US only, at most $9.99, sold by Amazon, separate from the Dino subscription).
+
 ## Work
 
-- [ ] **A. Research** the two facts above; write the answers and source lines into this file; ask O1, O2 and any
+- [ ] **A. Research** the two facts above; write the answers and source lines into this file; ask any
       result that changes a decision as one question set.
 - [ ] **B. Server link store** (`worker/speaker-link.ts`, D1 table in STATS): a link row holds the speaker kind
       (sonos | alexa), the speaker-side id (Sonos household id / Alexa user id, hashed), the store proof's key
@@ -84,6 +127,6 @@ Not decided by the user (open points, answered before the claim, not defaulted):
 - Worker tests: link start/confirm/remove; one Sonos link per proof key; paid track with no link, a lapsed
   subscription and a single-book proof all give the locked message; an active subscription plays.
 - Sonos sandbox: an unlinked household plays a free book and hears the locked message on a paid one; after linking
-  from the Dino app on Android and on iOS, a paid book plays; a second household gets the O1 behaviour.
+  from the Dino app on Android and on iOS, a paid book plays; a second household replaces the first link (the first falls back to the locked message).
 - Alexa (if linking is allowed): the same three checks on an Echo or the Alexa simulator.
 - Android and iOS: the Link a speaker page on the emulator and the S21, and on an iOS simulator.
