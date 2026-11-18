@@ -105,7 +105,12 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
 - **Q-B Alexa: "Amazon's own purchase".** Alexa sells its own subscription through Alexa In-Skill Purchasing for kid
   skills; the skill stays child-directed and has no account linking. This replaces decisions 3 and 6 on Alexa (no Dino
   app link, so no Alexa link limit). Amazon's limits, from the page above: kid-skill ISP is "available only in the US",
-  at most $9.99, purchases need a parent's approval. Outside the US the skill keeps free books and the locked message.
+  at most $9.99, purchases need a parent's approval.
+- **Alexa outside the US (user, 2026-11-18): "we build for the fucking us and test on the fucking uk".** Amazon's
+  page only describes the US; it does not say other countries are refused. Build the purchase for the US, then test it
+  on the UK skill. Nothing is decided for the UK until that test shows what Amazon does there. (An earlier version of
+  this answer said "Outside the US the skill keeps free books and the locked message"; that was the session's own
+  inference, never the user's decision, and is withdrawn.)
   The Alexa price and plan are not yet chosen by the user (asked when item D starts).
 
 ## Work
@@ -122,10 +127,11 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
       checks the household's link and runs the stored proof through the existing subscription gate (cached as `gate.ts`
       does); no active subscription: the locked spoken message. Single-book purchase proofs are ignored (decision 1).
       Settle with the user before building: what a family without the Dino app sees when adding the service.
-- [ ] **D. Alexa (US only)**: an Alexa In-Skill Purchasing subscription product for the kid skill (price and period
+- [ ] **D. Alexa (built for the US, tested on the UK)**: an Alexa In-Skill Purchasing subscription product for the kid skill (price and period
       chosen by the user, at most $9.99); `worker/alexa.ts` asks Amazon whether the customer is entitled and plays paid
       books only then, else the locked message; the purchase offer follows Amazon's kid-skill rules (parent approval).
-      Outside the US: free books and the locked message. Skill manifest (`allowsPurchases`) and testing instructions
+      The product is also offered in the en-GB locale, and the UK test (below) shows whether Amazon sells it there;
+      the result is written here and taken to the user. Skill manifest (`allowsPurchases`) and testing instructions
       updated to match.
 - [ ] **E. Dino app, Android and iOS (same slice, both)**: a "Link a speaker" page in the grown-up area (Settings,
       "Books and buying" group of Slice 399) that opens from the speaker's link, shows which speaker it links, and
@@ -146,5 +152,7 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
   Android and on iOS, a paid book plays; a second household replaces the first link (the first then hears the locked
   message).
 - Alexa (US): with no purchase, a paid book gives the locked message and the purchase offer; after a test purchase in
-  the Alexa developer console, it plays; outside the US, the locked message only.
+  the Alexa developer console, it plays.
+- Alexa (UK): the same steps on the en-GB skill (developer console simulator, then a UK Echo): does Amazon offer the
+  purchase, does a test purchase go through, does the paid book then play. Record exactly what Amazon shows.
 - Android and iOS: the Link a speaker page on the emulator and the S21, and on an iOS simulator.
