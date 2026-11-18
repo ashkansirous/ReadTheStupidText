@@ -116,7 +116,22 @@ authenticated service).
       `FaultCode.LoginUnauthorized` constant in `worker/sonos-soap.ts` if nothing else uses it); any request whose body
       parses is answered whatever its credentials header holds. Replace the 500 tests with: a header carrying a
       non-empty `loginToken` and `sessionId` (and deviceId, deviceProvider, zonePlayerId) is answered 200 like any other.
-- [ ] After deploy: rerun SOAP Compliance, Browse and Sonos Cloud; record the results here.
+- [x] After deploy: rerun SOAP Compliance, Browse and Sonos Cloud; record the results here.
+  Third run, 2026-11-18 14:12-14:13 (PR #1271 live; a credentialed `getMetadata` answered 200 before the run):
+  - **Browse: Passed** (was failed twice).
+  - **SOAP Compliance: 47 passed, 3 failed.** The three are `TestSOAPFaultCompliance` "Expected a non-200 response for
+    invalid credentials" and the faultcode/faultstring checks that follow from it: checks for a service with sign-in,
+    failing by decision above.
+  - **Sonos Cloud: 5 passed, 7 failed.** `test_root_containers_are_enumerable` now passes. All 7 failures are Sonos's
+    cloud answering HTTP 422 `ERROR_SERVICE_NOT_CONFIGURED` "Unknown service. Service id: 463879. Account id: 0", the
+    same as the first run 50 minutes earlier: Sonos's cloud side does not know the sandbox service. Nothing in our
+    server is involved (the request never reaches it). Open: whether this clears on its own or needs the production
+    conversion or a Sonos support question; recheck at the next Self Test.
+  - MIME Type: "Not Applicable" (first run).
+  - Store: Love from Seagull Island v2 and X Marks the Treasure! v14 are live on `/api/stories` with "A Dino Book Reader
+    picture book", both ages 3-5. Live `getMetadata` returns `<album>Dino Book Reader</album>`, `canPlay`/`canSkip` true.
+  - Not yet verified: Dino Book Reader showing in the user's Sonos app (Add Services) and a play on a speaker (user's
+    device; Slice 283 *Not yet verified*).
 
 #### From review (second run fix)
 
