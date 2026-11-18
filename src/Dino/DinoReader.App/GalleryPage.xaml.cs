@@ -1172,7 +1172,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	internal bool InCorner => _mode.IsGrownUp;
 
 	// Slice 235 part B: the shelf answers the Windows window's keyboard. Esc closes the book's options sheet while it is open; on the corner it goes back to the child's shelf (Slice 325 part A); on the shelf it asks
-	// "Close Dino Book Reader?" (part C4).
+	// "Close Dino: Kids Books & Stories?" (part C4).
 	DinoScreen IDinoKeyTarget.Screen => _tour is { IsActive: true } ? DinoScreen.FirstBooks : _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : _mode.IsGrownUp ? DinoScreen.Corner : DinoScreen.Shelf;
 
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
@@ -2093,7 +2093,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		return true;
 	}
 
-	// The kids' shelf is home (Slice 174, Decision 169, mock 94): Android back asks "Close Dino Book Reader?" instead of leaving, and so does Esc at the Windows window (Slice 325 part C4). iOS has no back
+	// The kids' shelf is home (Slice 174, Decision 169, mock 94): Android back asks "Close Dino: Kids Books & Stories?" instead of leaving, and so does Esc at the Windows window (Slice 325 part C4). iOS has no back
 	// button and no Esc, so nothing changes there.
 	private bool AskToClose()
 	{

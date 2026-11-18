@@ -175,18 +175,45 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
     `site/dino/privacy.html`, `README.md`, `STORE.md` (name lines; keep engineering prose about the code name), the
     credits in `content/dino/*/book.json` (book version bumps and store upload per the Dino store rules, since the
     credits are book content).
+    *Built (Part B, 2026-11-18, `feat/412b-app-name`): good-enough credits (English + 14 languages) changed, `stamp` v12 to v13, `build` rewrote
+    `good-enough.dino`, `PENDING_PART_B_BOOKS` removed; the guard now also fails when csproj `DinoPublicName` differs from `publicName` or
+    `ApplicationTitle` from `iconLabel` (3 new tests); the "Close ...?" code comments in `CloseQuestionPage.cs` and `GalleryPage.xaml.cs` and the
+    naming note in `DinoReader.App/CLAUDE.md` updated. Identity untouched. Merges only after Play production shows `completed`.*
 
 ## Verification
 
 - `node tools/dino/check-public-name.mjs` passes and fails on a planted "Dino Book Reader".
 - Store listings read back equal on Play, App Store (after the version submission) and Microsoft Store.
-- Android emulator: the launcher label reads "Dino"; the back dialog and version card show the new name.
+- Android emulator: the launcher label reads "Dino"; the back dialog shows the new name. (The version card shows only
+  "Version" and the number, `AboutPage.cs:46`, `UpdatePage.cs:158`: it never named the app, so it has nothing to check.)
 - Windows (VM, only if the manifest change needs it): Start menu and title bar show "Dino: Kids Books & Stories".
+
+*Part B device run, 2026-11-18 (emulator-5554, debug build of `feat/412b-app-name`):* launcher label PASS
+(`aapt2 dump badging`: `application-label:'Dino'` in every locale); close dialog PASS (new Maestro flow
+`.maestro/dino/app-name-close-dialog.yaml` waits for "Close Dino: Kids Books & Stories?", taps Stay, the shelf is back).
 
 ## Not yet verified
 
-- Android launcher label and iOS home-screen label read "Dino" on a device (both read from SDK targets only).
+- iOS home-screen label reads "Dino" (read from the iOS SDK targets only; no Mac build here).
+- Android launcher label as drawn on a real launcher (the APK label was read, not the home screen).
 - Arabic and Farsi in-app name renders in the right order next to RTL text.
+- Windows Start menu and title bar show the full name (VM run not done; the built AppxManifest DisplayName was read).
+
+## Review (part B, `feat/412b-app-name`)
+
+*From review:* files `reviews/s412b-high.md`, `reviews/s412b-medium.md`, `reviews/s412b-check.md` read in full; every
+finding without a line below was applied (high #4 resolved itself: the name was reserved in Partner Center on 2026-11-18;
+high #7 and #8 became Not yet verified lines).
+
+- Skipped #5 (`reviews/s412b-medium.md`): "also feeds Android label and iOS CFBundleDisplayName" — that is the user's pick for the icon label; Android checked on the emulator, iOS is a Not yet verified line.
+- Skipped #7 (`reviews/s412b-medium.md`): "full name h" — the exception messages name the app on purpose, now with the new name.
+- Skipped #8 (`reviews/s412b-medium.md`): "VM checks match dialog and window text containing" — no VM run in this pass; a Not yet verified line covers Windows.
+- Skipped #2 (`reviews/s412b-check.md`): "only the English AppResources.resx App_Name is checked" — every language file uses the English brand name; Slice 413 can widen the guard.
+- Skipped #3 (`reviews/s412b-check.md`): "csprojProperty takes the first match" — the csproj has no conditional override of either property.
+- Skipped #4 (`reviews/s412b-check.md`): "csproj tests hard-code live name strings" — low; a rename updates them with the json.
+- Skipped #5 (`reviews/s412b-check.md`): "errors from findHits/csprojProblems are not caught" — low; a stack trace still fails the check.
+- Skipped #6 (`reviews/s412b-check.md`): "comments quote the public name and can go stale" — cosmetic.
+- Skipped #7 (`reviews/s412b-check.md`): "namespaced DisplayName is not matched" — the manifest uses no namespace prefix on DisplayName.
 
 ## Review (part A, PR #1278)
 

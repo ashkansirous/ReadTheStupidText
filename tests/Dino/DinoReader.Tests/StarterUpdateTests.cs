@@ -590,6 +590,17 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.False(StarterUpdate.IsEdited(Books.IdOf("good-enough"), stored, bundled));
     }
 
+    // Slice 412 part B: Good Enough v13 changes only the credits (the back cover, kept apart from Pages), so an unedited v12 copy hashes the same and refreshes.
+    [Fact]
+    public void IsEdited_AnUnchangedGoodEnoughV12Copy_WhoseBackCoverCreditsDiffer_IsNotEdited()
+    {
+        Story stored = Paged(GoodEnoughV8Pages) with { BackCover = new BackCover("Ashkan Sirous", false, "Ashkan Sirous", 2026, 10) };
+        Story bundled = Paged(GoodEnoughV8Pages) with { BackCover = new BackCover("Ashkan Sirous", false, "Ashkan Sirous", 2026, 11) };
+
+        Assert.Equal(StarterUpdate.PageTextHash(bundled), StarterUpdate.PageTextHash(stored));
+        Assert.False(StarterUpdate.IsEdited(Books.IdOf("good-enough"), stored, bundled));
+    }
+
     [Fact]
     public void CopyToKeep_PicksTheCopyHoldingTheBundledText()
     {

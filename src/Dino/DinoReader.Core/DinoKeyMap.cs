@@ -87,13 +87,13 @@ public enum DinoKeyAction
 	CornerStore,
 	CornerSettings,
 
-	/// <summary>Esc on the kids' shelf: "Close Dino Book Reader?", as Android's Back (Slice 325 part C).</summary>
+	/// <summary>Esc on the kids' shelf: "Close Dino: Kids Books &amp; Stories?", as Android's Back (Slice 325 part C).</summary>
 	AskToClose,
 }
 
 /// <summary>
 /// The keyboard map of Dino Reader's Windows window (mock Batch 46 frame 160): Space plays or pauses (on the back cover it reads again), Left and Right go to the previous and next page, Esc goes back or
-/// closes a sheet (on the shelf it asks "Close Dino Book Reader?", in the corner it returns to the shelf). On the gate Space held starts and ends the 3 second hold, digits type the sum, Backspace erases and Enter checks. Space and the arrows do nothing while a text field
+/// closes a sheet (on the shelf it asks "Close Dino: Kids Books &amp; Stories?", in the corner it returns to the shelf). On the gate Space held starts and ends the 3 second hold, digits type the sum, Backspace erases and Enter checks. Space and the arrows do nothing while a text field
 /// has focus. Keys never mirror, in any language: Left is always previous (Slice 96).
 /// </summary>
 public static class DinoKeyMap

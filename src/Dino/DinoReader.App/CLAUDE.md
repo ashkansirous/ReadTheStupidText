@@ -7,8 +7,7 @@ are in `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.gith
 decisions behind these rules: `docs/plan/notes/dino-app-claude-md-history.md` (the verbatim old text).
 
 > **Naming:** the user-facing product display name is **"Dino: Kids Books & Stories"** (manifest, store listing,
-> UI strings, site, Sonos); the label under the launcher icon is **"Dino"** (Slice 412). The app's own name and the "Dino" launcher label arrive with
-> Slice 412 part B, held until Dino's first Play production release, so until then the csproj still says "Dino Book Reader". Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
+> UI strings, site, Sonos); the label under the launcher icon is **"Dino"** (Slice 412). The csproj carries both (`DinoPublicName`, `ApplicationTitle`; the guard checks they equal the json). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
 > projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
 > The public name lives in `tools/dino/public-name.json` (`publicName`, and `iconLabel` for the launcher), never typed from memory, a slice or a mock;
 > `node tools/dino/check-public-name.mjs` (CI: `public-name.yml`) fails on the old names "Dino Reader" and "Dino Book Reader" in the privacy policy, site,
