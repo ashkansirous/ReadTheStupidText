@@ -1,9 +1,9 @@
 # Slice 394 — Dino: the store's "9–12" chip crashes on Android, every book sits in two age bands, empty filters still show
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day. Not built yet.*
+*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day.* *In progress (wave 2026-11-18), draft PR.* Premise check 2026-11-18: `PlacePurchaseArea` and the purchase card are gone from `StorePage.xaml*` (Slice 396 removed them), so item 2 has nothing left to fix and the crash cause (item 1) is unproven again; current lines: `BuildChips` StorePage.xaml.cs:791, `RefreshChips` :824, `ShowAuthor` :860, `StoreFilter.InBand` StoreFilter.cs:32. The new book in draft PR #1244 (Love from Seagull Island) is not on main; its band is set when that PR lands (follow-up).
 
-**Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`PlacePurchaseArea`, `BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `content/dino/*/book.json` (`ageMin`/`ageMax`), the store's `meta.json` per book (rebuild and re-upload), `tests/Dino/DinoReader.Tests` (StoreFilter tests), a Maestro store flow under `.maestro/dino/`, this slice file.
+**Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `src/Dino/DinoReader.Core/StoreCatalog.cs` (`AgeRangeOf`), `src/Dino/DinoReader.Core/StoreText.cs` (`BandLabel`), `tools/dino/DinoReader.BookBuilder/StoreBuilder.cs` (`StarterEntries` ages), `tools/dino/DinoReader.BookBuilder/BookCommands.cs`, `content/dino/*/book.json` (`ageMin`/`ageMax`), the store's `meta.json` per book (rebuild and re-upload), `tests/Dino/DinoReader.Tests` (StoreFilter tests), a Maestro store flow under `.maestro/dino/`, this slice file.
 
 ## Why
 
