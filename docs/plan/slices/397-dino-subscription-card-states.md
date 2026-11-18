@@ -1,7 +1,7 @@
 # Slice 397 — Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens)
 **Product:** Dino
 
-*Built 2026-11-18 (night 2026-11-17-2105 wave 2), PR #1239.*
+*Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 built, items 3, 4, 7 open.*
 
 *Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, sections 1 and 3, frames SB1-SB5 and SB10). Slice 384 was built without a mock; this slice builds what the mock adds or changes. Not built yet.*
 

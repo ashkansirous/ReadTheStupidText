@@ -1,7 +1,7 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 **Product:** Shared
 
-*Built 2026-11-18 (night 2026-11-17-2105 wave 2), PR #1241, not merged: all items done; item 8 resolved (not parked) against the iOS 1.131.0 crash of 2026-11-15 (id `658ad15c-0a14-4b6e-b686-6307df1fe863`, handed to Slice 400 item 3), the first new iOS crash from a build after #1122. Device checks are in Not yet verified.*
+*Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1241 (a749edda): all items done; item 8 resolved (not parked) against the iOS 1.131.0 crash of 2026-11-15 (id `658ad15c-0a14-4b6e-b686-6307df1fe863`, handed to Slice 400 item 3), the first new iOS crash from a build after #1122. Device checks are in Not yet verified.*
 
 *Items 1, 2, 4, 6, 7 merged as PR #1122 (ca93e9fc, 2026-11-14 17:08Z); items 3 (#711) and 5 (#781) built earlier. Item 8 was resolved 2026-11-18 (see its note); device checks are in Not yet verified.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
@@ -108,7 +108,7 @@ priority", "add slices for adding anything missing from the crash report".
 
 - Parity difference for the user to decide (`reviews/s243-check.md` #4): Android has no per-process memory headroom API; `memoryHeadroom` on Android is system free RAM minus the low-memory threshold, on iOS os_proc_available_memory.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18; already in tools/CLAUDE.md by PR #1241)
 
 - `tools/CLAUDE.md`: crash symbolication on Windows uses the newest Android NDK's llvm (under `ANDROID_HOME` or `%LOCALAPPDATA%/Android/Sdk`) when LLVM is not on PATH; `winget install LLVM.LLVM` needs elevation. (Slice 243: docs/plan/slices/243-crash-report-gaps.md)
 
