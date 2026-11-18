@@ -1,7 +1,9 @@
 # Slice 397 — Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens)
 **Product:** Dino
 
-*In progress (wave 2026-11-18), draft PR: item 7 only (night 2026-11-17-2105 wave 4).* *Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 built, items 3, 4, 7 open.*
+*Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 (#1239) and 7 (#1255) built; items 3, 4 open.*
+
+*Built 2026-11-18 (night 2026-11-17-2105 wave 4), PR #1255: item 7 built and its Maestro flow run on the emulator (see Item 7 note).*
 
 *Index note (night 2026-11-17-2105, housekeeping 2):* the row is back to **planned** for item 7 (FakePurchases trial, grace and ended states; `.maestro/dino/subscription.yaml` checks each card title), which a wave can build. Items 3 and 4 stay under *Waiting on the user*: they are not wave work until Slice 390's iOS wrapper answers trial eligibility and the Windows Store API can say it.
 
@@ -45,7 +47,7 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 - [x] 5. Wide layout for tablets and phone landscape at 600 and wider (words left, 300-wide plan column right).
 - [x] 5b. Store book rows: "Ages {0}–{1} · {2} min" (Decision 6) on every platform; "Included" and "Get" on SB3-SB4 rows.
 - [x] 6. Strings above, plus `Store_LengthMinutes`, in `AppResources.resx` and every `AppResources.<lang>.resx` (15 languages; `NoHardCodedUiTextTests`).
-- [ ] 7. `FakePurchases` gains the states (trial used, trial, grace, ended); `.maestro/dino/subscription.yaml` checks each card title. *Partly: FakePurchases gained only the trial-used switch; Maestro checks the offer card, Save 37% and the other flows, not each state title.*
+- [x] 7. `FakePurchases` gains the states (trial used, trial, grace, ended); `.maestro/dino/subscription.yaml` checks each card title. *Built (wave 2026-11-18): `fake-subscription` takes `plan=yearly|monthly`; `FakePurchases.BuyAsync(withTrial)` starts no trial when the card showed none and logs `[Purchases] subscribe ... withTrial=`; the flow checks Offer, TrialUsed, Trial (monthly and yearly), Ended (and its no-trial yearly buy: Active, "Yearly plan · renews on", no trial line), Grace titles and the `withTrial` log lines. Item 7 note: fast checks DinoReader.Tests 4719 pass / 2 skipped, Shared.Tests 1736, Android build ok, lint-flows 146/0. Emulator emulator-5554, build cab14dab4f58: subscription PASS (211.7 s, 26 markers), paid-books PASS (124.7 s), 0 FATAL.*
 
 ## Verification
 
@@ -74,6 +76,8 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 - Follow-up #8 (`reviews/s397-medium.md`): "price composed in code as" - not applied; the line is hidden when the price is missing, the sentence order per language is not checked.
 - Applied (`reviews/s397-check-medium.md`) #2 "NumberRun accepts a plain space inside the number run" (a plain space now ends the run), #3 "Arabic comma U+060C not mapped" (mapped), #6 "ReadPlans clears _offerTokens/_baseTokens/_trialPlans each refresh while BuyAsync reads them unlocked" (one immutable `PlanTokens` swapped by a volatile write).
 - Follow-up (`reviews/s397-check2-medium.md`), all low, none applied: #2 "RealEnd treats an end within 24 h of CheckedAt as an estimate" (display only); #3 "no trial offer in the read means TrialUsed, also for a missing or unpublished offer"; #4 "TrialAvailable carries over a null read and an account change with no reset" (same as check #7); #5 "\"Included\" tag also on a book already bought; _included can go stale while a row downloads"; #6 "StoreText.Length ignores PageCount; Store_Length may now be unused (dead strings)"; #7 "card inputs read from separate clock and snapshot reads, not one snapshot"; #8 "SubscribeAsync reads _planShowsTrial at tap, not at render"; #9 "PriceNumber.Normalised guesses decimals from tail length"; #10 "BuyAsync re-query replaces _plans from a single-product query"; #1 "iOS/Windows ignore withTrial and never report eligibility" is already under Waiting on the user.
+- Skipped #3 (`reviews/pr-1255-high.md`): "plan= is matched case-sensitively and any other value silently selects monthly" - Debug-only hook driven by our own flows, which always pass a lowercase known plan.
+- Skipped #8 (`reviews/pr-1255-high.md`): "The two-argument BuyAsync overload duplicates the default IBookPurchases already provides" - the duplicate is harmless and this slice does not change the interface default.
 - Skipped #9 (`reviews/s397-high.md`): "Android trial eligibility is read from the cached _trialPlans set" - low; the catalogue has one trial plan.
 - Skipped #10 (`reviews/s397-high.md`): "PriceNumber hard-codes non-breaking and narrow no-break space literals as invisible characters in the source" - style only.
 - Skipped #11 (`reviews/s397-high.md`): "StoreRow.Meta now equals StoreRow.Detail (both call StoreText.Detail)" - low; the mock's row shows Ages and minutes.
@@ -83,6 +87,13 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 - Follow-up #4 (`reviews/s397-check-medium.md`): "fake has only the 2-arg BuyAsync, so withTrial is dropped" - implement the 3-arg overload in `FakePurchases` and log withTrial so Maestro catches an Ended card buying a trial; follow-up list, not applied.
 - Follow-up #5 (`reviews/s397-check-medium.md`): "default interface method silently ignores withTrial on iOS/Windows" - recorded under Waiting on the user; follow-up list, not applied.
 - Follow-up #7 (`reviews/s397-check-medium.md`): "TrialAvailable persists across null reads" - would undo high #1's keep-last-known fix; needs one design for an account change (overwrite on a successful read, expire with prices); not applied.
+- Applied (`reviews/pr-1255-high.md`) #1, #2, #5, #6, #7 (item 7 review fixes), and #4 fixed too.
+- Applied (`reviews/pr-1255-medium.md`) #1; #3 was already present in the code.
+- Skipped #2 (`reviews/pr-1255-medium.md`): "The yearly no-trial buy and trial-line assertions are order-dependent and never run" - the flow then ran on the emulator and passed (subscription PASS, 26 markers), so the order holds.
+- Follow-up #1 (`reviews/pr-1255-check-medium.md`): "Only Android, SwitchablePurchases and the fake honour withTrial" - iOS and Windows fall to the interface default and ignore it, as the interface documents; parity note, confirm in a later slice (see Waiting on the user).
+- Follow-up #2 (`reviews/pr-1255-check-medium.md`): "plan is applied to every state but ignored for state=none; a later flow step without plan: resets to monthly" - test-only, not applied.
+- Follow-up #3 (`reviews/pr-1255-check-medium.md`): "assertNotVisible 'Free trial until .*' right after the success text may run before the card re-renders" - add extendedWaitUntil on 'Yearly plan · renews on' first; not applied.
+- Skipped #4 (`reviews/pr-1255-medium.md`): "Plan periods (365, 30) and trial 7 days are magic numbers duplicated with DinoTestCommands" - Debug-only fake day counts; naming them changes no behaviour.
 - Follow-up #8 (`reviews/s397-check-medium.md`): "transparent CardPressButtons have no static Description; face hidden with IsInAccessibleTree=False; Focused state changes BorderWidth 0->2" - set a default Description in XAML and a non-layout-changing focus overlay; follow-up list, not applied.
 - Follow-up #9 (`reviews/s397-check-medium.md`): "hard-coded in 16 strings; fa uses Persian digits" - use a {0} placeholder from one constant, or omit the number; follow-up list, not applied.
 - Skipped #6 (`reviews/s397-medium.md`): "ApplyCardLook toggles StrokeThickness 0/2 for the Grace ring (layout shifts about 2 dp) and rebuilds brushes/geometry on every chrome refresh" - low, not asked for.
