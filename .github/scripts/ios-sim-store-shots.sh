@@ -287,10 +287,31 @@ maestro_test() {
   MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run"
 }
 
+# Slice 404: prints the app's test-hook log (the HOOK lines; the Debug build appends every line to Library/test-hook.log, TestHookLog.iOS.cs) and the
+# folder listing the hook reads, so a failed shot says why the hook did nothing. Never fails the script.
+print_hook_log() {
+  local udid="$1" bundle_id="$2" container
+  container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data 2>/dev/null)" || container=""
+  echo "::group::app test-hook log ($bundle_id)"
+  if [ -z "$container" ]; then
+    echo "no data container found for $bundle_id on $udid"
+  else
+    echo "container: $container"
+    if [ -f "$container/Library/test-hook.log" ]; then
+      grep -E 'HOOK|RTST-TEST' "$container/Library/test-hook.log" | tail -n 60 || true
+    else
+      echo "no Library/test-hook.log (no hook line was ever written)"
+    fi
+    ls -la "$container/Library" "$container/Library/full-shelf" 2>&1 | head -n 40 || true
+  fi
+  echo "::endgroup::"
+  return 0
+}
+
 # Runs one flow on a booted simulator under the time limit; prints Maestro's hierarchy when it fails (not after a kill: the driver is gone).
 # Returns 0 on success, else the status; LIMIT_HIT=yes when it was killed at the limit.
 run_flow() {
-  local udid="$1" flow_run="$2" test_out="$3" rc=0 killed
+  local udid="$1" flow_run="$2" test_out="$3" bundle_id="$4" rc=0 killed
   run_limited "$UNIT_LIMIT" "$udid" maestro_test "$udid" "$flow_run" "$test_out" || rc=$?
   killed="$LIMIT_HIT"
   if [ "$killed" = "yes" ]; then
@@ -300,6 +321,7 @@ run_flow() {
     run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" maestro --device "$udid" hierarchy || true
     echo "::endgroup::"
   fi
+  [ "$rc" = "0" ] || print_hook_log "$udid" "$bundle_id"
   LIMIT_HIT="$killed"
   return "$rc"
 }
@@ -357,7 +379,7 @@ run_unit_body() {
     fi
     reset_attempt "$unit" "$test_out"
     rc=0
-    run_flow "$udid" "$flow_run" "$test_out" || rc=$?
+    run_flow "$udid" "$flow_run" "$test_out" "$bundle_id" || rc=$?
     killed="$LIMIT_HIT"
     if [ "$rc" = "0" ]; then
       # Exit 0 with a PNG missing or of a wrong size is a failed attempt too (it gets the retry).

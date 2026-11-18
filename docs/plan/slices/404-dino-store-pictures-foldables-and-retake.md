@@ -90,3 +90,9 @@ Three things are wrong with the live pictures, and one is new:
 - Cause (read from the logs): some macOS runners list a one-device runtime `SimRuntime.iOS-27-2-iPhone19-4` after the general `SimRuntime.iOS-27-2`, and `newest_ios_runtime` in `.github/scripts/ios-sim-boot.sh` took the last iOS line, so it is a gamble per runner (the cancelled iPad job got `iOS-27-2` and booted). A first fix (iPhone 18 Pro Max added to the 6.9" patterns) only dodged it on one slot and was undone.
 - Fix on `fix/s404-sim69`: `newest_ios_runtime` keeps only ids that end in the version numbers. Outside this slice's Touches (`ios-sim-boot.sh`, also used by `dinoreader-ios-sim.yml`), widened 2026-11-18 for this fix. Proof run on the branch, all three devices: 44372896437.
 - Review of the first fix: pass 1 `reviews/s404sim-pass1-high.md`, pass 2 `reviews/s404sim-pass2-medium.md`, no blocker; its finding 2 (hardcoded model names) no longer applies since the model list is unchanged. The runtime fix gets its own two passes.
+
+## Item 4: full-shelf hook adds no book on the iOS simulator (2026-11-18)
+
+- Fault: runs 44368205082 and 44372896437 (4 jobs): the packages were copied, the hook URL was opened and the "Open in" prompt tapped, yet after 600 s only the four test books showed. The app's `HOOK full-shelf ...` line was not in the CI log (iOS `TestHookLog` only wrote to the console, which the script cannot reach).
+- Step 1 built, not yet run: `TestHookLog.iOS.cs` also appends every hook line to `Library/test-hook.log`; `ios-sim-store-shots.sh` `print_hook_log` prints that file and the `Library` and `Library/full-shelf` listings after every failed flow attempt. Cause: not known yet (proof runs below).
+- Proof runs: none yet (the branch has no commit to push; the builder was told not to commit).
