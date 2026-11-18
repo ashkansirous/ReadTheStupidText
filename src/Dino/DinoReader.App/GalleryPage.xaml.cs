@@ -1696,7 +1696,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ApplyShelfBanners();
 		if (LockedShelfKey(_services.GetRequiredService<BookSales>()) != _lockedShelfKey)
 		{
-			_ = RebuildLockedShelfAsync();
+			// Not while a reorder, a book sheet or another page is open over the shelf: the key still differs, so the next minute tick or the next appearing is the wanted rebuild.
+			if (ShelfFreeForSwap())
+			{
+				_ = RebuildLockedShelfAsync();
+			}
 		}
 	}
 
@@ -1732,31 +1736,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	// The banner's "See plans in the Store" is the same Store tab as Subscribe again.
 	private void OnBannerPlansClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: as OnLapsedSubscribeClicked
 
-	// The banner's "Restore purchases" runs the Store tab's own restore (Slice 396): the tab is opened, so the first line shows "Restoring…", and the restore is started the way Ctrl+R starts it. The Store page is not edited for this;
-	// the tab's first line is built a moment after it shows, so the start is tried a few times. If it never starts, the Store tab is open with its own Restore purchases link.
-	private async void OnBannerRestoreClicked(object? sender, EventArgs e)
+	// The banner's "Restore purchases" leaves one request for the Store tab and shows that tab, as Settings' Restore row does: the Store owns the wait text and the result message.
+	private void OnBannerRestoreClicked(object? sender, EventArgs e)
 	{
-		// no-tap-count: the Store page's own restore start (TryRestoreFromKeyboard) counts the Restore tap (UiControls.Restore)
+		// no-tap-count: the Store tab's own restore counts the Restore tap (UiControls.Restore)
+		StorePage.RequestRestore(); // before the tab switch, so the Store's Appearing finds the request however fast it runs
 		_mode.SelectTab(CornerTab.Store);
-		for (int attempt = 0; attempt < RestoreStartAttempts; attempt++)
-		{
-			await Task.Delay(RestoreStartGap);
-			if (StorePage.TryRestoreFromKeyboard())
-			{
-#if DEBUG
-				Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Subscription] banner restore started");
-#endif
-				return;
-			}
-		}
-
-#if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Subscription] banner restore left to the Store tab");
-#endif
 	}
-
-	private const int RestoreStartAttempts = 5;
-	private static readonly TimeSpan RestoreStartGap = TimeSpan.FromMilliseconds(250);
 
 	// The network came or went: the offline notice follows it (the store answer decides at once online).
 	private void OnNetworkChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);

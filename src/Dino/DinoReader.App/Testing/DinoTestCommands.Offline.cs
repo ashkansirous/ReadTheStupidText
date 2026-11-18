@@ -29,7 +29,10 @@ internal static partial class DinoTestCommands
 
 			if (double.TryParse(command.Get(EndedHoursKey, string.Empty), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double hours))
 			{
-				MoveSubscriptionEnd(DateTimeOffset.UtcNow.AddHours(-hours));
+				if (!MoveSubscriptionEnd(DateTimeOffset.UtcNow.AddHours(-hours)))
+				{
+					return;
+				}
 			}
 
 			NetworkProbe.SetOverride(() => true);
@@ -43,16 +46,17 @@ internal static partial class DinoTestCommands
 	}
 
 	// The store's own answer (the Worker's) is the one that can put the end date in the past: the same Merge a real answer goes through, with the record's own read number.
-	private static void MoveSubscriptionEnd(DateTimeOffset ends)
+	private static bool MoveSubscriptionEnd(DateTimeOffset ends)
 	{
 		SubscriptionStore store = IPlatformApplication.Current!.Services.GetRequiredService<StoreClient>().Sales.Purchases.Subscription;
 		if (store.Record is not { } record)
 		{
 			Log($"{FakeOfflineName} fault no subscription record to move");
-			return;
+			return false;
 		}
 
 		store.Merge(new SubscriptionAnswer.Worker(record.ReadNumber, SubscriptionAccess.WorkerStates.Active, ends));
+		return true;
 	}
 }
 #endif
