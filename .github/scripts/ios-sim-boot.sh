@@ -7,6 +7,7 @@
 #   SIM_DEVICE_TYPE  a CoreSimulator device-type id; unset = the smallest iPhone this image's runtime accepts
 #   SIM_DEVICE_PATTERNS  Slice 291: ';'-separated case-insensitive regexes of device-type NAMES, tried in order (an iPhone Pro Max or an iPad Pro 13-inch
 #                    for a store screenshot); within one pattern the newest type the runtime accepts wins. Used when SIM_DEVICE_TYPE is unset.
+#   SIM_SETTLE_SECONDS  Slice 393: seconds to wait after bootstatus before returning (default 20), so the first Maestro driver start finds a settled simulator.
 # Prints `udid=<UDID>` as its last line, and appends SIM_UDID=<UDID> to $GITHUB_ENV when that is set.
 set -euo pipefail
 
@@ -64,6 +65,11 @@ UDID="$(create_simulator "$RUNTIME")"
 xcrun simctl boot "$UDID"
 # The workflow step's own timeout-minutes bounds a hung boot.
 xcrun simctl bootstatus "$UDID" -b >&2
+# Slice 393 item 23: `bootstatus -b` returns while SpringBoard and the first-boot services still settle, and the first Maestro driver start on a fresh simulator then
+# missed its window (244: StoryTile 60 s timeout, XCUITestServerError Unreachable; 387: IOSDriverTimeoutException; 291: the Dino iPad flow). A longer first wait, not a probe.
+SETTLE_SECONDS="${SIM_SETTLE_SECONDS:-20}"
+echo "settling $SETTLE_SECONDS s after boot" >&2
+sleep "$SETTLE_SECONDS"
 
 if [ -n "${GITHUB_ENV:-}" ]; then
   echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"

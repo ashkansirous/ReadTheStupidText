@@ -147,6 +147,29 @@ public static class SettingsRows
 		return row;
 	}
 
+	private const double BuyRowHeight = 52; // mock SB9: the "Books and buying" rows are at least 52 high
+	private const double BuyLineSize = 12.5;
+
+	/// <summary>
+	/// A "Books and buying" row (Slice 399, mock SB9): a 15 px title with an optional 12.5 px muted line under it, and an icon (not a chevron) at the end. The transparent row button carries the name (title and line).
+	/// </summary>
+	internal static Grid BuyRow(string title, string? line, View endIcon, Func<Task> tapped, BusyGuard busy, string automationId)
+	{
+		Grid row = NewRowGrid(BuyRowHeight, NavRowPadding);
+		var text = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Spacing = 1, Padding = new Thickness(0, 8) };
+		text.Add(OwnScript.InOwnScript(new Label { Text = title, FontSize = NavTitleSize }));
+		if (!string.IsNullOrEmpty(line))
+		{
+			text.Add(OwnScript.InOwnScript(new Label { Text = line, FontSize = BuyLineSize, TextColor = DinoTokens.Get(DinoTokens.Muted) }));
+		}
+
+		AutomationProperties.SetIsInAccessibleTree(text, false);
+		row.Add(text, FirstColumn);
+		row.Add(endIcon, FirstColumn + 2);
+		AddRowButton(row, NameOf(title, line), tapped, busy, endInteractive: false, automationId);
+		return row;
+	}
+
 	// Slice 226: a NavRow's value (or the text inside its tag) can be changed in place; the button's name follows it as Row()'s does.
 	private static void FollowNavValue(Grid row, Button button, string title)
 	{

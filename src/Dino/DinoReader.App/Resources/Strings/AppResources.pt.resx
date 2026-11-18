@@ -147,7 +147,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Este é o espaço dos adultos</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>Só adultos vêm aqui. Aqui você pode:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>Pegar livros na loja</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Histórias grátis e pagas, em todos os idiomas da sua família.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Histórias grátis e pagas, ou todas com uma assinatura.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>Gerenciar seus livros</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>Mudar a ordem da estante, remover um livro ou gravar sua voz para qualquer personagem.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>Mudar as configurações</value></data>
@@ -155,7 +155,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>Mostre-me</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>Seus livros. Toque em ••• num livro para gravar sua voz ou removê-lo. Reordenar muda a ordem da estante.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>A loja</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Histórias novas, grátis e pagas. Cada livro vem em todos os idiomas da sua família. Já comprou antes? Restaure seus livros aqui.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Histórias novas, grátis e pagas, ou todos os livros com uma assinatura. Cada livro vem em todos os idiomas da sua família. Já comprou antes? Restaure seus livros aqui.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>Idiomas, velocidade de leitura, sons e backup, para o app todo.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>Veja a estante do seu filho</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>Toque em **Estante da criança** para ver o que seu filho vê.</value></data>
@@ -179,6 +179,19 @@
   <data name="Settings_About" xml:space="preserve"><value>Sobre e atualizações</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Ativado</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Desativado</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Livros e compras</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Assinatura</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Anual · renova em {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Mensal · renova em {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Teste grátis até {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Sem assinatura</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Problema no pagamento</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Livros e uma assinatura comprados com esta conta Google</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Livros e uma assinatura comprados com este Apple ID</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Livros e uma assinatura comprados com esta conta Microsoft</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Um código de presente ou promocional do Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Um código de presente ou promocional da App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Um código de presente ou promocional da Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Configurações, a loja e a estante</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultos</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Adicionar e editar livros</value></data>

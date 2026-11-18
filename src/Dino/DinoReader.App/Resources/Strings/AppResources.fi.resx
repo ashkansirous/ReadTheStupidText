@@ -148,7 +148,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Tämä on aikuisten nurkka</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>Tänne tulevat vain aikuiset. Täällä voit:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>Hakea kirjoja kaupasta</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Ilmaisia ja maksullisia tarinoita kaikilla perheesi kielillä.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Ilmaisia ja maksullisia tarinoita, tai kaikki yhdellä tilauksella.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>Hallita kirjojasi</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>Muuttaa hyllyn järjestystä, poistaa kirjan tai nauhoittaa oman äänesi mille tahansa hahmolle.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>Muuttaa asetuksia</value></data>
@@ -156,7 +156,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>Näytä, mitä täällä on</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>Kirjasi. Napauta kirjan kohdalla •••, niin voit nauhoittaa äänesi tai poistaa kirjan. Järjestä uudelleen muuttaa hyllyn järjestystä.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Kauppa</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Uusia tarinoita, ilmaisia ja maksullisia. Jokainen kirja on kaikilla perheesi kielillä. Ostitko aiemmin? Palauta kirjasi täältä.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Uusia tarinoita, ilmaisia ja maksullisia, tai jokainen kirja yhdellä tilauksella. Jokainen kirja on kaikilla perheesi kielillä. Ostitko aiemmin? Palauta kirjasi täältä.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>Kielet, lukunopeus, äänet ja varmuuskopio koko sovellukselle.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>Katso lapsesi hylly</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>Napauta **Lapsen hylly**, niin näet, mitä lapsesi näkee.</value></data>
@@ -180,6 +180,19 @@
   <data name="Settings_About" xml:space="preserve"><value>Tietoja ja päivitykset</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Päällä</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Pois</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Kirjat ja ostokset</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Tilaus</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Vuosittain · uusiutuu {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Kuukausittain · uusiutuu {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Ilmainen kokeilu {0} asti</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Ei tilausta</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Maksuongelma</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Lahja- tai tarjouskoodi Google Playsta</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Lahja- tai tarjouskoodi App Storesta</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Lahja- tai tarjouskoodi Microsoft Storesta</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Asetukset, kauppa ja hylly</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Aikuiset</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lisää ja muokkaa kirjoja</value></data>

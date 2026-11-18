@@ -77,6 +77,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 394: Dino: the store age chips ([slice](slices/394-dino-store-age-filter-crash-and-bands.md))
+- **Device:** item 1, the crash fix with old-range data: tap the oldest chip on a build whose store still has a "9-12" chip, or check the crash store after the release (`Java.Lang.IllegalStateException` "already has a parent", Dino Android 1.129.2); the emulator run did not exercise that path.
+- **Device:** iOS and Windows store chip taps.
+- **Device:** the live store list after the batch release publishes the re-ranged books (read `/api/stories` back; every book's `ageMin`/`ageMax`, Tortoise and the Hare included).
+- **Device:** the Love from Seagull Island book (draft PR #1244) needs its band when it lands.
+
 ### Slice 400: Dino: the crashes first reported 2026-11-14/15 ([slice](slices/400-dino-crashes-2026-11-14.md))
 - **Device:** iOS compile of the shared `StallGuardedRead.cs` change, and a Cancel during a first-book download on an iOS device or TestFlight build (same flow as `.maestro/dino/first-books-cancel-real-store.yaml`; only an Android flow exists): no Mac here.
 - **Device:** the crash store shows no new stream-close report (`NetworkOnMainThreadException` in `FixedLengthSource.close`) on the fixed version.
@@ -586,6 +592,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 393: Feedback loop 2026-11-14-1547 leftovers ([slice](slices/393-feedback-loop-2026-11-14-1547-leftovers.md))
+- **Device:** item 13: the VM run of `-Check dino-reorder` through its `# after:` chain (the VM needs 8 GB free; 3.2 GB was free).
+- **Device:** item 14: the first shot's status bar (10:00, no icons) after `install-debug.ps1 -BuildOnly` for Dino (the 2026-11-18 run stopped at a run-flows cache miss), then the retake of the RTST and Dino phone and tablet shots.
+- **Device:** item 23: a macOS run of `store-screenshots.yml` and `dinoreader-ios-sim.yml` (whether the warm-up leaves the driver warm for `maestro test`).
+- **Device:** item 15: the device-test brief change (run `reset-dino-language.ps1` before the first and after the last flow) in ClaudeSkills `agents/device-test.md`, not this repo, is still open.
 
 ### Slice 379: Everything to the latest stable, .NET 11 ([slice](slices/379-everything-to-latest-stable.md))
 - **Device:** RTST cold start on iOS under the scene lifecycle (MT7199 fix; RTST only compiled on CI, Dino's cold start is shown), on an iOS 27 and an older iOS device or simulator; the Debug test hooks firing through `SceneOpenUrl`, `SceneWillConnect` and `SceneOnActivated` in RTST; file "Open in" / share hand-off (none is declared today).

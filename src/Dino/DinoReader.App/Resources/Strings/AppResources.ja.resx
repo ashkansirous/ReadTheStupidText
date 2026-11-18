@@ -147,7 +147,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>ここはおとなのコーナーです</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>おとなだけが入る場所です。ここでできること:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>ストアで本を入手</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>無料と有料のお話が、ご家族のすべての言語で。</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>無料と有料のお話が、または定期購入ひとつですべて。</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>本を管理</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>本棚の並び順を変えたり、本を削除したり、どのキャラクターにもあなたの声を録音したり。</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>設定を変更</value></data>
@@ -155,7 +155,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>案内してもらう</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>あなたの本です。本の「•••」をタップすると、あなたの声を録音したり、本を削除したりできます。並べ替えで本棚の順番が変わります。</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>ストア</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>新しいお話が、無料も有料も。どの本もご家族のすべての言語で読めます。以前に購入しましたか？ここで本を復元できます。</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>新しいお話が、無料も有料も。定期購入ひとつで、すべての本が読めます。どの本もご家族のすべての言語で読めます。以前に購入しましたか？ここで本を復元できます。</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>言語、読む速さ、音、バックアップなど、アプリ全体の設定。</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>お子さまの本棚を見てみよう</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>**お子さまの本棚**をタップすると、お子さまに見える画面を確認できます。</value></data>
@@ -179,6 +179,19 @@
   <data name="Settings_About" xml:space="preserve"><value>アプリについて・アップデート</value></data>
   <data name="Settings_On" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>オフ</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>本と購入</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>定期購入</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>年額 · {0}に更新</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>月額 · {0}に更新</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>無料体験は{0}まで</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>定期購入なし</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>お支払いに問題があります</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>この Google アカウントで購入した本と定期購入</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>この Apple ID で購入した本と定期購入</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>この Microsoft アカウントで購入した本と定期購入</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Google Play のギフトコードまたはプロモーションコード</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>App Store のギフトコードまたはプロモーションコード</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Microsoft Store のギフトコードまたはプロモーションコード</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>設定、ストア、本だな</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>

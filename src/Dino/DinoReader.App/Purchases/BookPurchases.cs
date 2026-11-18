@@ -89,6 +89,18 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     /// <summary>Asks the store again for the products of the listing. Never throws; a failure keeps the last snapshot and reports one store fallback.</summary>
     public Task<PurchaseSnapshot> RefreshAsync(IEnumerable<StoreItem> items, CancellationToken cancel, bool interactive = false) => ReadAsync(items, restore: false, interactive, cancel);
 
+    /// <summary>Slice 399: asks the store again for the listing the Store tab last gave (none yet: only the subscription, and "listed" stays unset so the Store's first listing is still the first), for a screen with no listing of its own (Settings, after a code was redeemed). Never throws.</summary>
+    public Task<PurchaseSnapshot> RefreshLastListedAsync(CancellationToken cancel)
+    {
+        StoreItem[]? listed;
+        lock (_listedLock)
+        {
+            listed = _lastListed;
+        }
+
+        return ReadAsync(listed ?? [], restore: false, interactive: true, cancel, subscriptionOnly: listed is null);
+    }
+
     /// <summary>The Restore purchases button: as <see cref="RefreshAsync"/>, with the platform's own restore where it has one.</summary>
     public Task<PurchaseSnapshot> RestoreAsync(IEnumerable<StoreItem> items, CancellationToken cancel) => ReadAsync(items, restore: true, interactive: true, cancel);
 
@@ -180,12 +192,15 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
-    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
+    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel, bool subscriptionOnly = false)
     {
         StoreItem[] listed = [.. items];
-        lock (_listedLock)
+        if (!subscriptionOnly) // an empty listing is never remembered: the Store's first listing stays the first
         {
-            _lastListed = listed;
+            lock (_listedLock)
+            {
+                _lastListed = listed;
+            }
         }
 
         ListenForStoreUpdates();
@@ -197,7 +212,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             bool hasInternet = HasInternet(); // read once per read: the only thing that says "store not reached"
             ReportReadProblems(listed, read, hasInternet);
             bool subscriptionChanged = KeepSubscription(read, hasInternet);
-            bool snapshotChanged = Keep(read, hasInternet);
+            bool snapshotChanged = !subscriptionOnly && Keep(read, hasInternet); // nothing listed: the read says nothing about books, so Owned and Prices stand
             RecordBought(listed); // before Changed: the shelf the event rebuilds must see the book as bought, not as opened by the subscription
             if (subscriptionChanged || snapshotChanged)
             {

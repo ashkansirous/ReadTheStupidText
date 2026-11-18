@@ -186,6 +186,13 @@ jobs:
       - name: Phone duplicate function name self-test (${{ matrix.shell }})
         run: ./tools/phone/test-duplicate-functions.ps1
 
+      # Slice 393 items 14 and 15: the store-shot status bar demo mode and the Dino in-app language reset.
+      - name: Store screenshots self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-store-screenshots.ps1
+
+      - name: Dino language reset self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-reset-dino-language.ps1
+
       - name: CI-form runner self-test (${{ matrix.shell }})
         run: ./tools/test-run-selftests-ci-form.ps1
 

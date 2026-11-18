@@ -278,6 +278,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 401 | Dino iOS: declare the app's 15 languages so the App Store lists them | built, not yet verified | #1212 | | [401-dino-ios-app-languages.md](../slices/401-dino-ios-app-languages.md) |
 | 405 | Dino: the back cover writes every name in the reading language (writers, reteller, illustrator; spellings from the store cards) | built, not yet verified | #1235 | | [405-dino-back-cover-names-per-language.md](../slices/405-dino-back-cover-names-per-language.md) |
 | 396 | Dino: Restore purchases and Redeem a code leave the foot of the Store, into the Store's first line, the 402 strip and the result message | built, not yet verified | #1234 | | [396-dino-restore-and-redeem-out-of-the-store-foot.md](../slices/396-dino-restore-and-redeem-out-of-the-store-foot.md) |
+| 394 | Dino: the store's "9–12" chip crashes on Android; every book in one age band (3-5 or 6-8); a chip or author row with nothing in it is not shown | built, not yet verified | #1249 | | [394-dino-store-age-filter-crash-and-bands.md](../slices/394-dino-store-age-filter-crash-and-bands.md) |
 
 ## Shared
 

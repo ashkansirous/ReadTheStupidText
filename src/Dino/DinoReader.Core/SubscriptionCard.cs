@@ -146,6 +146,40 @@ public static class SubscriptionCard
     }
 }
 
+/// <summary>The line under the Settings "Subscription" row (Slice 399, mock SB9).</summary>
+public enum SettingsSubscriptionLine
+{
+    /// <summary>Subscribed, but the store gave no usable date or plan: the row shows its title only.</summary>
+    None,
+    Yearly,
+    Monthly,
+    Trial,
+    NotSubscribed,
+    Grace,
+}
+
+/// <summary>What the Settings "Subscription" row shows and does. <see cref="Date"/> is the renewal or trial-end day (null for the lines with none); <see cref="OpensStore"/> is true when there is nothing to manage and the row opens the Store tab.</summary>
+public sealed record SettingsSubscriptionRow(SettingsSubscriptionLine Line, DateTimeOffset? Date, bool OpensStore);
+
+/// <summary>The pure choice behind the Settings "Subscription" row (Slice 399): it follows the same state as the Store's card (<see cref="SubscriptionCard.Choose"/>), so the two never disagree.</summary>
+public static class SettingsSubscription
+{
+    public static SettingsSubscriptionRow Of(SubscriptionCardPlan plan) => plan.Kind switch
+    {
+        SubscriptionCardKind.Trial or SubscriptionCardKind.Active => new SettingsSubscriptionRow(LineOf(plan.StateLine), plan.EndsAt, OpensStore: false),
+        SubscriptionCardKind.Grace => new SettingsSubscriptionRow(SettingsSubscriptionLine.Grace, null, OpensStore: false),
+        _ => new SettingsSubscriptionRow(SettingsSubscriptionLine.NotSubscribed, null, OpensStore: true),
+    };
+
+    private static SettingsSubscriptionLine LineOf(SubscriptionStateLine line) => line switch
+    {
+        SubscriptionStateLine.Trial => SettingsSubscriptionLine.Trial,
+        SubscriptionStateLine.RenewsYearly => SettingsSubscriptionLine.Yearly,
+        SubscriptionStateLine.RenewsMonthly => SettingsSubscriptionLine.Monthly,
+        _ => SettingsSubscriptionLine.None,
+    };
+}
+
 /// <summary>Reads the number out of a store's formatted price ("£14.99", "14,99 €", "¥1,500", "1.299,00 kr").</summary>
 public static class PriceNumber
 {

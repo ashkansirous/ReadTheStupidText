@@ -240,7 +240,7 @@
         <!-- Screen 21: the list and the privacy line. -->
         <Grid x:Name="ListPanel" Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
-            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
+            <ScrollView x:Name="AgeChipsScroll" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
             </ScrollView>
             <Border Grid.Row="1" x:Name="AuthorRow" HeightRequest="44" Padding="14,0" Margin="0,0,0,10" BackgroundColor="White" StrokeThickness="0"

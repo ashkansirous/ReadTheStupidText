@@ -2,8 +2,8 @@
   "kind": "Starter",
   "id": "61bb25b8f132413c82a4208827c7563b",
   "title": "Good Enough",
-  "version": 10,
-  "ageMin": 5,
+  "version": 11,
+  "ageMin": 6,
   "ageMax": 8,
   "author": "Ashkan Sirous",
   "credits": "A Dino Reader picture book",
@@ -55,7 +55,7 @@
   "animals": {
     "Carrot": "Rabbit"
   },
-  "contentHash": "07e07cf4d1feab7b3e2aa9005789b5a02e5e9bcc6833168952763e3db9a2c763",
+  "contentHash": "fcc3c0625fddcc2457b72433e1abe55e4a9ac5c51b5a2d22d8b72f6611d961e8",
   "creditsByLanguage": {
     "ar": "كتاب مصوّر من دينو ريدر",
     "da": "En billedbog fra Dino Reader",

@@ -49,6 +49,11 @@ RESTART_TIME_LIMIT_SECONDS=300
 SIMCTL_TIME_LIMIT_SECONDS=120
 # Room for ios-sim-boot.sh before the first shot (it has no limit of its own).
 BOOT_RESERVE_SECONDS=300
+# The driver warm-up of ios-sim-driver-ready.sh (Slice 393 item 23): two attempts of DRIVER_READY_ATTEMPT_SECONDS (above the 300 s default
+# MAESTRO_DRIVER_STARTUP_TIMEOUT of that script) with a 10 s pause; it stops itself, this is the outer watchdog. No reserve is held for it: the seconds it
+# really takes are charged to the script budget by $SECONDS, so a driver that starts at once costs nothing extra.
+DRIVER_READY_ATTEMPT_SECONDS=330
+DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # The script stops starting new attempts after this (the missing shots are reported and the exit code is 1), so the hand-over step always has the
 # shots that came out. 2700 s = 45 min; the workflow's shots step is 48 minutes and its job 55 (about 6 minutes of setup before the step, run
 # 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + five shots at two attempts of 420 s (4200) + a restart 300 = 4800 s.
@@ -410,6 +415,12 @@ shoot_device() {
   if ! bundle_id="$(install_app "$udid")"; then
     problem "$label: the app could not be installed from $APP_DIR"
   else
+    # Slice 393 item 23: the first shot no longer pays for the cold driver start; a driver that never answers is a warning, the shot's own retry follows.
+    local warm_started=$SECONDS
+    if ! run_limited "$DRIVER_READY_BUDGET_SECONDS" "$udid" env DRIVER_READY_ATTEMPTS=2 DRIVER_READY_TIME_LIMIT_SECONDS="$DRIVER_READY_ATTEMPT_SECONDS" bash "$HERE/ios-sim-driver-ready.sh" "$udid"; then
+      note "- WARNING: $label: the Maestro driver did not answer before the first shot; the shots go on with their own retry"
+    fi
+    echo "driver warm-up on $label took $((SECONDS - warm_started)) s (charged to the $SCRIPT_BUDGET_SECONDS s script budget)"
     run_units "$label" "$accepted" "$udid" "$bundle_id"
   fi
   kill_driver "$udid"

@@ -45,6 +45,45 @@ function Get-StoreShotNames([string]$FlowText, [string]$App, [string]$Form) {
     return @([regex]::Matches($FlowText, $pattern) | ForEach-Object { $_.Groups[1].Value })
 }
 
+# Slice 393 item 14: the status bar of a store shot is the same in every shot (the Play phone set had a download notification, a shield icon and a clock that moved from 8:54 to 8:55). The system UI's demo mode shows a fixed clock, full battery
+# and signal and no notification icons. Pure: the adb argument lists that switch it on / off, in order (the broadcast is `am broadcast -a com.android.systemui.demo -e command <name> ...`).
+$script:DemoClock = '1000'
+function New-DemoBroadcast([string[]]$Extras) { return @('shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo') + $Extras }
+function Get-StatusBarDemoEnterCommands([string]$Clock = $script:DemoClock) {
+    return @(
+        , @('shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1')
+        , (New-DemoBroadcast @('-e', 'command', 'enter'))
+        , (New-DemoBroadcast @('-e', 'command', 'clock', '-e', 'hhmm', $Clock))
+        , (New-DemoBroadcast @('-e', 'command', 'battery', '-e', 'level', '100', '-e', 'plugged', 'false'))
+        , (New-DemoBroadcast @('-e', 'command', 'network', '-e', 'wifi', 'show', '-e', 'level', '4', '-e', 'fully', 'true'))
+        , (New-DemoBroadcast @('-e', 'command', 'network', '-e', 'mobile', 'show', '-e', 'datatype', 'none', '-e', 'level', '4', '-e', 'fully', 'true'))
+        , (New-DemoBroadcast @('-e', 'command', 'notifications', '-e', 'visible', 'false'))
+    )
+}
+function Get-StatusBarDemoExitCommands {
+    return @(
+        , (New-DemoBroadcast @('-e', 'command', 'exit'))
+        , @('shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '0')
+    )
+}
+
+# Runs the commands through the emulator's adb (the serial common.ps1 holds for the chosen instance). Never throws (each call is caught); returns the failed commands' messages (an empty list when every call went through).
+# No setting read-back proves the demo mode (sysui_demo_allowed is persistent and reads 1 whether or not the broadcasts took): the proof is the first screenshot's status bar, checked in the device run.
+function Invoke-StatusBarDemo([object[]]$Commands, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $failures = @()
+    foreach ($command in $Commands) {
+        try { $null = & $AdbCall $command } catch { $failures += "'$($command -join ' ')' failed: $($_.Exception.Message)" }
+    }
+    return @($failures)
+}
+
+# A snapshot or cold boot (run-flows.ps1 does one on a cache miss or a failed preflight) drops the demo mode, so it is applied only once the emulator is up: starts it first when it is not.
+function Confirm-EmulatorForDemo([int]$InstanceNumber) {
+    if (Test-EmulatorOnline) { return }
+    Write-Host "STORE SHOTS: $script:Serial is not up; starting it before the status bar demo mode."
+    & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $InstanceNumber | Out-Null
+}
+
 # Pure: the pixel width and height in a PNG's IHDR chunk, or $null when the file is not a PNG. Reads 24 bytes only.
 function Get-PngSize([string]$Path) {
     $head = New-Object byte[] 24
@@ -112,8 +151,21 @@ if ($DryRun) {
 $toolsDir = Get-MaestroToolsDir $repoRoot $env:MAESTRO_HOME
 $roots = @((Join-Path $toolsDir "maestro-home\i$instance"), (Join-Path $toolsDir "maestro-out\i$instance"))   # this emulator's folders only: another instance's run of the same flow must not be picked up
 Remove-OldStoreShots $names $roots
-& (Join-Path $PSScriptRoot 'run-flows.ps1') -App $App -Instance $instance -Flow $flowName -NoBuild
-$runExit = $LASTEXITCODE
+Set-EmulatorInstance $instance
+try { Confirm-EmulatorForDemo ([int]$instance) } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)" }
+$demoFailures = @(Invoke-StatusBarDemo (Get-StatusBarDemoEnterCommands))
+if ($demoFailures.Count -gt 0) {
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)
+    Write-Host "STORE SHOTS: the status bar demo mode commands failed on $script:Serial, no flow was run: $($demoFailures -join '; ')"
+    exit 1
+}
+Write-Host "STORE SHOTS: status bar demo mode requested ($script:DemoClock, full battery and signal, no notification icons) on $script:Serial; the first screenshot's status bar is the proof."
+try {
+    & (Join-Path $PSScriptRoot 'run-flows.ps1') -App $App -Instance $instance -Flow $flowName -NoBuild
+    $runExit = $LASTEXITCODE
+} finally {
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)   # a flow that failed or was stopped must not leave the emulator in demo mode
+}
 if ($runExit -ne 0) { Write-Host "STORE SHOTS: run-flows.ps1 exited $runExit; no shot was copied."; exit $(if ($runExit -eq 6) { 6 } else { 1 }) }
 $missing = @(Copy-StoreShots $names $roots $outDir)
 if ($missing.Count -gt 0) { Write-Host "STORE SHOTS: missing $($missing -join ', ') (searched $($roots -join ', '))."; exit 1 }

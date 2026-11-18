@@ -1,9 +1,9 @@
 # Slice 394 — Dino: the store's "9–12" chip crashes on Android, every book sits in two age bands, empty filters still show
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day. Not built yet.*
+*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day.* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), merged as PR #1249 (286fdd76); item 1 (the crash) and the live re-ranging are not yet verified.* Premise check 2026-11-18: `PlacePurchaseArea` and the purchase card are gone from `StorePage.xaml*` (Slice 396 removed them), so item 2 has nothing left to fix and the crash cause (item 1) is unproven again; current lines: `BuildChips` StorePage.xaml.cs:791, `RefreshChips` :824, `ShowAuthor` :860, `StoreFilter.InBand` StoreFilter.cs:32. The new book in draft PR #1244 (Love from Seagull Island) is not on main; its band is set when that PR lands (follow-up).
 
-**Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`PlacePurchaseArea`, `BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `content/dino/*/book.json` (`ageMin`/`ageMax`), the store's `meta.json` per book (rebuild and re-upload), `tests/Dino/DinoReader.Tests` (StoreFilter tests), a Maestro store flow under `.maestro/dino/`, this slice file.
+**Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `src/Dino/DinoReader.App/StorePage.xaml` (`AgeChipsScroll`), `content/dino/*/book.json` (`ageMin`/`ageMax`) and the four starters' `testbooks/*.dino`, the store's `meta.json` per book (published by dino-store.yml publish-store on the batch release, item 6), `tests/Dino/DinoReader.Tests` (StoreFilter tests), Maestro store flows `.maestro/dino/store-age-chips.yaml` and `.maestro/dino/store-age-chips-all-taps.yaml`, this slice file.
 
 ## Why
 
@@ -54,14 +54,16 @@ The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" 
 
 ## Work
 
+- Built 2026-11-18 (implement-slice): items 2-5, 7, 8 done (item 2 moot, Slice 396 removed `PlacePurchaseArea`; chips are built once and only hidden, never re-parented, so the chip rebuild cannot recreate the parent clash). Item 1 is still unproven on a device (no reproduction run; the 1.129.2 crash matches the removed `PlacePurchaseArea` move from code). Item 6: the four starters were stamped and rebuilt (versions 11, 17, 14, 14, `testbooks/*.dino`). No manual upload: store books are published by `dino-store.yml`'s publish-store job (the content hash includes the ages, live + 1), and tonight's merges carry the skip-CI marker, so the night's batch release starts it. Flows: `.maestro/dino/store-age-chips.yaml` (log `[AgeChips]`) and `.maestro/dino/store-age-chips-all-taps.yaml` (taps every chip and checks for no FATAL and no "already has a parent"; written by the device run).
+- Emulator run 2026-11-18 (build 64f501e12aa3, `reviews/s394-emu.md`): `store-age-chips` PASS (`[AgeChips] visible=True bands=2 selected=0`, then 1, 2, 0), `store-age-chips-all-taps` PASS (0 FATAL, 0 "already has a parent"), `store-tags` PASS. The live store already showed only two bands, so the old oldest-chip crash path (the "9-12" chip) was not exercised: item 1 stays open.
 - [ ] 1. Prove the crash: run the store on the Android emulator (Debug, `test-store`), tap "9–12", and read the exception from logcat (and the crash store if wrangler's login is available). Write the stack here. If it is not the `PurchaseArea` move, re-scope items 2-3 before building.
-- [ ] 2. Fix `PlacePurchaseArea` so moving `PurchaseArea` between `StoryList.Footer` and `StoreRoot` cannot fail on Android (for example: two separate purchase-area views, one in the footer and one at the bottom, each toggled with `IsVisible`, so no view changes parent). Both directions: list to empty, and empty back to list.
-- [ ] 3. Age chips from the data: build the chips from the bands that hold a book (`StoreFilter` gets a pure `BandsWithBooks(items)`), rebuild them when the list loads or refreshes, hide "All ages" (and the whole chip row) when fewer than two bands have books, and fall back to "All ages" when the selected band is gone.
-- [ ] 4. Author row: show it only when the current band holds two or more authors; clear a chosen author that is no longer offered (as today).
-- [ ] 5. Change `ageMin`/`ageMax` in the 15 `content/dino/*/book.json` files to the table in Decision 2 (the four starters too: their store entries come from `StoreBuilder.StarterEntries`).
-- [ ] 6. Get the new ranges into the live store: find out whether a `meta.json`-only change needs a book version bump (`tools/dino/upload-store-story.ps1` checks `story-v<version>.dino` is present), then rebuild each book's store folder (BookBuilder) and re-upload with `upload-store-story.ps1`. Read the Worker's list back and check every book's `ageMin`/`ageMax`.
-- [ ] 7. Tests (`tests/Dino/DinoReader.Tests`): `BandsWithBooks` for no books, one band, two bands, a book with no range (shows under every band, so it must not make an empty band look full); `InBand` with the new `3-5`/`6-8` ranges puts each book under exactly one band.
-- [ ] 8. A Maestro flow on the Android emulator: open the store, assert "9–12" is not shown, tap "5 & under" and "6–8" and check a book from each list (Freddy under "5 & under", Jack under "6–8" and not "5 & under"), tap "All ages" back; no crash.
+- [x] 2. Fix `PlacePurchaseArea` so moving `PurchaseArea` between `StoryList.Footer` and `StoreRoot` cannot fail on Android (for example: two separate purchase-area views, one in the footer and one at the bottom, each toggled with `IsVisible`, so no view changes parent). Both directions: list to empty, and empty back to list.
+- [x] 3. Age chips from the data: build the chips from the bands that hold a book (`StoreFilter` gets a pure `BandsWithBooks(items)`), rebuild them when the list loads or refreshes, hide "All ages" (and the whole chip row) when fewer than two bands have books, and fall back to "All ages" when the selected band is gone.
+- [x] 4. Author row: show it only when the current band holds two or more authors; clear a chosen author that is no longer offered (as today).
+- [x] 5. Change `ageMin`/`ageMax` in the 15 `content/dino/*/book.json` files to the table in Decision 2 (the four starters too: their store entries come from `StoreBuilder.StarterEntries`).
+- [x] 6. (No manual upload; the publish-store job does it on the batch release, see Work above. The live list is still to be read back.) Get the new ranges into the live store: find out whether a `meta.json`-only change needs a book version bump (`tools/dino/upload-store-story.ps1` checks `story-v<version>.dino` is present), then rebuild each book's store folder (BookBuilder) and re-upload with `upload-store-story.ps1`. Read the Worker's list back and check every book's `ageMin`/`ageMax`.
+- [x] 7. Tests (`tests/Dino/DinoReader.Tests`): `BandsWithBooks` for no books, one band, two bands, a book with no range (shows under every band, so it must not make an empty band look full); `InBand` with the new `3-5`/`6-8` ranges puts each book under exactly one band.
+- [x] 8. A Maestro flow on the Android emulator: open the store, assert "9–12" is not shown, tap "5 & under" and "6–8" and check a book from each list (Freddy under "5 & under", Jack under "6–8" and not "5 & under"), tap "All ages" back; no crash.
 
 ## Verification
 
@@ -69,8 +71,44 @@ The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" 
 - A Debug-only check that empties the list (an author and band with no book, or an empty test store) moves the purchase card without a crash (item 2).
 - The user taps the store chips on their own Android phone after the release.
 
+#### From review
+
+- Review read: `reviews/pr-1249-high.md` findings 1-5 all applied. Finding 1 (crash fix unproven, medium) is applied as a record: item 1 stays open and is listed under *Not yet verified*; the emulator run above did not reach the old crash path. Finding 2 (chip row margin gap), 3 (stale author), 4 (record and a test reading the real `book.json` ranges) and 5 (flow scrolls; the flow depends on the re-upload) are fixed.
+- `reviews/pr-1249-medium.md` findings 1-5 applied (load order of `ShowAuthor`/`ApplyFilter`, no `ApplyFilter` after Appearing changes, filter state out of `RefreshChips`, `TryGetProperty` in the range test, re-version of the other books).
+- `reviews/pr-1249-check-medium.md`: findings 2, 3 and 5 applied.
+- `reviews/pr-1249-check2-medium.md` follow-ups (no blocking findings):
+  - `StorePage.xaml.cs:770`: `RenderFilter` no longer writes the resolved author back to `_author`, so a dropped author is reapplied if it returns after a reload. Nothing crashes. (Follow-up. Coordinator read the code 2026-11-18: a chip tap drops the author for good (`StorePage.xaml.cs:858`), as the decision says; a reload or Appearing keeps the requested `_author` (`:773`), so an author whose band emptied before a reload can come back when that band returns. Making the reload path drop it too is the follow-up.)
+  - `StorePage.xaml.cs:779`: `ApplyFilter` skips `_rows.Clear()` when the list is unchanged; fine while `StoreRow` compares by reference (no fault).
+  - `.maestro/dino/store-age-chips.yaml:6`: the flow depends on the live `meta.json` ranges; a false red until the re-upload lands.
+  - `content/dino/tortoise-and-hare/book.json:5`: the live `/api/stories` meta must get the same age bump (publish-store, item 6).
+- Item 6 needs no manual `meta.json` rebuild for the version: `StoreVersioning.Decide` re-versions a book whose content hash (it includes `ageMin`/`ageMax`) differs from the live hash on the next publish-store run.
+- Re-upload of re-ranged books (`reviews/pr-1249-medium.md` #5): no version bump is needed for the store-only books. `BookHash.Of` covers `ageMin`/`ageMax`, and `publish-store-books.mjs --live-state` plus `BookBuilder build --live` re-version any book whose hash differs from the live one (`StoreVersioning.Decide`: live + 1). Only the four starter books carry a stored hash/version in `book.json`, and those were bumped.
+- Review round 2 (`reviews/pr-1249-medium.md` #1-#3): the band/author state is now one pure `StoreFilter.Resolve` (band, author, visible bands, author row); `StorePage` keeps only the requested values and draws chips, author row and list from that one result (`RenderFilter`) on load, Appearing and every tap.
+- Skipped #6 (`reviews/pr-1249-medium.md`): "Rebuilt bundles are not verifiable in review; no check that embedded ranges match book.json" - the four `testbooks/*.dino` are the BookBuilder stamp/build output that `BookBuilder check` requires and CI compares.
+- Skipped #7 (`reviews/pr-1249-medium.md`): "Asserts literal chip text and titles against live store data" - item 8 asks for a flow against the live store; its dependence on the re-upload is already recorded above.
+- Decision taken by the coordinator (review `reviews/pr-1249-check-medium.md` #1, obvious choice): an author whose band empties is dropped and does not come back; the requested band is kept and returns when its books do. `SelectBand` compares the tapped band with the requested band (#2); `ApplyFilter` rebuilds the rows only when the resolved list changed (#3); tests for both rules in `StoreFilterTests` (#5).
+- Skipped #1 (`reviews/pr-1249-check-medium.md`): "`_author = _state.Author` overwrites the requested author with the resolved one; the requested author is not kept separately" - no code change: the coordinator decision above makes dropping the author the rule.
+- Skipped #4 (`reviews/pr-1249-check-medium.md`): "src/Dino/DinoReader.Core/StoreFilter.cs:70 (Resolve), low. With fewer than two authors, Author is null although the request matched the only author, so `authorFilterSet` analytics flag reads false while the list is limited to that author" - not a bug: with Author null the list is not limited by it (`Apply` and the flag both read `_state.Author`), and keeping it would leave a hidden author filter the grown-up could not clear.
+- Test `EveryBookJsonRange_FitsExactlyOneBand` reads every `content/dino/*/book.json` and fails when a range crosses the 5/6 line (Decision 1).
+- Fixed the review's findings 2 (chip row margin gap), 3 (stale author when the author row hides) and 5 (flow scrolls to rows; the `[AgeChips]` marker prints the band count and the selected band's number, so no enum names).
+- Follow-ups from the last check pass (`reviews/pr-1249-check3-medium.md`, all low, after the device run added `store-age-chips-all-taps.yaml`): #1 `StorePage.xaml.cs:770` the reload path keeps the requested author (same as the check2 follow-up above); #2 `:868` `OnAuthorTapped` sets `_author` after its await without re-resolving; #3 `:1251` download flags read the resolved `_state` while `_band` is the requested value (likely benign); #4 `:780` the empty-result `NoMatchLabel` path is still unexercised.
+
 ## Out of scope
 
 - Changing the bands themselves (Google Play's 5 & under, 6-8, 9-12; Decision 116).
 - Writing a 9-12 book.
 - iOS and Windows were not reported crashing; the item-2 fix runs on every head, so a quick store tap on the iOS simulator is enough there.
+
+#### For CLAUDE.md (lifted 2026-11-18)
+
+For `src/Dino/DinoReader.App/CLAUDE.md`:
+
+- The store's age band, author, chip list and author row come from one pure result, `StoreFilter.Resolve` (`src/Dino/DinoReader.Core/StoreFilter.cs`); `StorePage.xaml.cs` keeps only the requested band and author and draws everything through `RenderFilter`. Never set band or author state elsewhere in the page. An author whose band empties is dropped and does not come back; the requested band is kept and returns when its books do. Age chips are built once and only hidden, never re-parented (Android "already has a parent" crash). (Slice 394: docs/plan/slices/394-dino-store-age-filter-crash-and-bands.md)
+- Every `content/dino/*/book.json` range fits one band (`3-5` or `6-8`); `EveryBookJsonRange_FitsExactlyOneBand` fails on a range that crosses 5/6. A new book gets its band when it lands. (Slice 394: docs/plan/slices/394-dino-store-age-filter-crash-and-bands.md)
+
+#### Not yet verified
+
+- Item 1, the crash fix with old-range data: tap the oldest chip on a build whose store still has a "9-12" chip, or check the crash store after the release (`Java.Lang.IllegalStateException` "already has a parent", Dino Android 1.129.2). The emulator run did not exercise that path.
+- iOS and Windows store chip taps.
+- The live store list after the batch release publishes the re-ranged books (read `/api/stories` back; every book's `ageMin`/`ageMax`, Tortoise and the Hare included).
+- The Love from Seagull Island book (draft PR #1244) needs its band when it lands.

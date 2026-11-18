@@ -147,7 +147,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>اینجا گوشهٔ بزرگ‌ترهاست</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>فقط بزرگ‌ترها به اینجا می‌آیند. اینجا می‌توانید:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>از فروشگاه کتاب بگیرید</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>داستان‌های رایگان و پولی، به همهٔ زبان‌های خانواده‌تان.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>داستان‌های رایگان و پولی، یا همهٔ آن‌ها با یک اشتراک.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>کتاب‌هایتان را مدیریت کنید</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>ترتیب قفسه را عوض کنید، کتابی را حذف کنید یا صدای خودتان را برای هر شخصیتی ضبط کنید.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>تنظیمات را عوض کنید</value></data>
@@ -155,7 +155,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>دورِ آن را نشانم بده</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>کتاب‌های شما. روی ••• کتاب بزنید تا صدای خودتان را ضبط کنید یا آن را حذف کنید. «تغییر ترتیب» ترتیب قفسه را عوض می‌کند.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>فروشگاه</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>داستان‌های تازه، رایگان و پولی. هر کتاب به همهٔ زبان‌های خانواده‌تان هست. قبلاً خریده‌اید؟ کتاب‌هایتان را از اینجا بازیابی کنید.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>داستان‌های تازه، رایگان و پولی، یا هر کتاب با یک اشتراک. هر کتاب به همهٔ زبان‌های خانواده‌تان هست. قبلاً خریده‌اید؟ کتاب‌هایتان را از اینجا بازیابی کنید.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>زبان‌ها، سرعت خواندن، صداها و پشتیبان‌گیری، برای کل برنامه.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>قفسهٔ فرزندتان را ببینید</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>روی **قفسهٔ کودک** بزنید تا ببینید فرزندتان چه می‌بیند.</value></data>
@@ -179,6 +179,19 @@
   <data name="Settings_About" xml:space="preserve"><value>دربارهٔ برنامه و به‌روزرسانی‌ها</value></data>
   <data name="Settings_On" xml:space="preserve"><value>روشن</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>خاموش</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>کتاب‌ها و خرید</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>اشتراک</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>سالانه · تمدید در {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>ماهانه · تمدید در {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>آزمایش رایگان تا {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>بدون اشتراک</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>مشکل در پرداخت</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>کتاب‌ها و اشتراکی که با این حساب Google خریداری شده است</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>کتاب‌ها و اشتراکی که با این Apple ID خریداری شده است</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>کتاب‌ها و اشتراکی که با این حساب Microsoft خریداری شده است</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>کد هدیه یا تبلیغاتی از Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>کد هدیه یا تبلیغاتی از App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>کد هدیه یا تبلیغاتی از Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>تنظیمات، فروشگاه و قفسه</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>بزرگ‌ترها</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>افزودن و ویرایش کتاب‌ها</value></data>

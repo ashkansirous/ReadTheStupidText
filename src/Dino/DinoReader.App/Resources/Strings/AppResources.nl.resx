@@ -148,7 +148,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Dit is de hoek voor volwassenen</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>Alleen volwassenen komen hier. Hier kun je:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>Boeken halen in de winkel</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis en betaalde verhalen, in alle talen van je gezin.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis en betaalde verhalen, of alle met één abonnement.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>Je boeken beheren</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>De volgorde van de plank veranderen, een boek verwijderen of je stem opnemen voor elk personage.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>De instellingen wijzigen</value></data>
@@ -156,7 +156,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>Laat maar zien</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>Je boeken. Tik op ••• bij een boek om je stem op te nemen of het te verwijderen. Met herschikken verander je de volgorde van de plank.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>De winkel</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Nieuwe verhalen, gratis en betaald. Elk boek komt in alle talen van je gezin. Eerder gekocht? Herstel je boeken hier.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Nieuwe verhalen, gratis en betaald, of elk boek met één abonnement. Elk boek komt in alle talen van je gezin. Eerder gekocht? Herstel je boeken hier.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>Talen, leessnelheid, geluiden en back-up, voor de hele app.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>Bekijk de kast van je kind</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>Tik op **Kinderkast** om te zien wat je kind ziet.</value></data>
@@ -180,6 +180,19 @@
   <data name="Settings_About" xml:space="preserve"><value>Over en updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Aan</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Uit</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Boeken en aankopen</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Abonnement</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Jaarlijks · wordt verlengd op {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Maandelijks · wordt verlengd op {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Gratis proefperiode tot {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Niet geabonneerd</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Betalingsprobleem</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Boeken en een abonnement gekocht met dit Google-account</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Boeken en een abonnement gekocht met dit Apple ID</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Boeken en een abonnement gekocht met dit Microsoft-account</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Een cadeau- of promotiecode van Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Een cadeau- of promotiecode van de App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Een cadeau- of promotiecode van de Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Instellingen, de winkel en de plank</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Volwassenen</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Boeken toevoegen en bewerken</value></data>

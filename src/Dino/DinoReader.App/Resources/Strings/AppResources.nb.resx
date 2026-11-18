@@ -148,7 +148,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Dette er Voksenhjørnet</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>Bare voksne kommer hit. Her kan du:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>Hente bøker i butikken</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis og betalte historier på alle språkene i familien din.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis og betalte historier, eller alle med ett abonnement.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>Styre bøkene dine</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>Endre rekkefølgen på hyllen, fjerne en bok eller ta opp stemmen din for en hvilken som helst figur.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>Endre innstillingene</value></data>
@@ -156,7 +156,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>Vis meg rundt</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>Bøkene dine. Trykk på ••• ved en bok for å ta opp stemmen din eller fjerne den. Med omsortering endrer du rekkefølgen på hyllen.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Butikken</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Nye historier, gratis og betalte. Hver bok finnes på alle språkene i familien din. Kjøpt før? Gjenopprett bøkene dine her.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Nye historier, gratis og betalte, eller hver bok med ett abonnement. Hver bok finnes på alle språkene i familien din. Kjøpt før? Gjenopprett bøkene dine her.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>Språk, lesehastighet, lyder og sikkerhetskopi for hele appen.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>Se hyllen til barnet ditt</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>Trykk på **Barnets hylle** for å se hva barnet ditt ser.</value></data>
@@ -180,6 +180,19 @@
   <data name="Settings_About" xml:space="preserve"><value>Om og oppdateringer</value></data>
   <data name="Settings_On" xml:space="preserve"><value>På</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Av</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Bøker og kjøp</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Abonnement</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Årlig · fornyes {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Månedlig · fornyes {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Gratis prøveperiode til {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Ikke abonnent</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Problem med betalingen</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Bøker og et abonnement kjøpt med denne Google-kontoen</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Bøker og et abonnement kjøpt med denne Apple-ID-en</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Bøker og et abonnement kjøpt med denne Microsoft-kontoen</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>En gave- eller kampanjekode fra Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>En gave- eller kampanjekode fra App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>En gave- eller kampanjekode fra Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Innstillinger, butikken og hylla</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Legg til og rediger bøker</value></data>
