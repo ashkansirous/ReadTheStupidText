@@ -319,16 +319,22 @@ function Get-CheckNeeds {
 function Get-CheckAfter {
     # Slice 269: the checks a check needs to have run before it, from a header line `# after: dino-launch, dino-open-book` in its first lines. `-Check <name>` runs them in that order
     # (after the app's first check) instead of the caller having to know the order; a name that is not a check file throws.
-    param([Parameter(Mandatory)] [string] $Path, [Parameter(Mandatory)] [string] $ChecksDir)
+    # Slice 393 item 13: the chain is followed (dino-reorder -> dino-launch -> dino-onboarding -> dino-onboarding-keys), prerequisites first, so `-Check dino-reorder` finishes the first run before dino-launch looks for the shelf.
+    param([Parameter(Mandatory)] [string] $Path, [Parameter(Mandatory)] [string] $ChecksDir, [string[]] $Visiting = @())
     $after = @()
+    $Visiting += [IO.Path]::GetFileNameWithoutExtension($Path)
     foreach ($line in (Get-Content $Path -TotalCount 12)) {
         if ($line -notmatch '^#\s*after:\s*(.+?)\s*$') { continue }
         foreach ($name in ($Matches[1] -split '\s*,\s*')) {
-            if (-not (Test-Path (Join-Path $ChecksDir "$name.ps1"))) { throw "$Path declares '# after: $name' but there is no such check file." }
-            $after += $name
+            $file = Join-Path $ChecksDir "$name.ps1"
+            if (-not (Test-Path $file)) { throw "$Path declares '# after: $name' but there is no such check file." }
+            if ($Visiting -contains $name) { throw "$Path declares '# after: $name', which is a loop in the after chain ($($Visiting -join ' -> '))." }
+            foreach ($prerequisite in @(Get-CheckAfter $file $ChecksDir $Visiting) + $name) {
+                if ($after -notcontains $prerequisite) { $after += $prerequisite }   # first occurrence wins: a diamond (c needs a and b, both need c's prerequisite) lists each check once, prerequisites first
+            }
         }
     }
-    return @($after | Select-Object -Unique)
+    return @($after)
 }
 
 function Test-GuestNetwork {

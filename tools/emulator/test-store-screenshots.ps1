@@ -33,6 +33,29 @@ foreach ($form in 'phone', 'tablet') {
     Assert-Equal "the Dino $form flow's five shots" $expected ((Get-StoreShotNames (Get-Content -Raw $flowFile) 'dino' $form) -join ',')
 }
 
+# Slice 393 item 14: status bar demo mode (fixed clock, full battery, no notification icons), on before the flow and off after it.
+$enter = @(Get-StatusBarDemoEnterCommands '1000')
+Assert-Equal 'demo mode is allowed first' 'shell settings put global sysui_demo_allowed 1' ($enter[0] -join ' ')
+Assert-Equal 'demo mode is entered second' 'shell am broadcast -a com.android.systemui.demo -e command enter' ($enter[1] -join ' ')
+Assert-Equal 'the clock is fixed' 'shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1000' ($enter[2] -join ' ')
+Assert-Equal 'notification icons are hidden' 'shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false' ($enter[-1] -join ' ')
+Assert-Equal 'seven enter commands' 7 $enter.Count
+$exit = @(Get-StatusBarDemoExitCommands)
+Assert-Equal 'demo mode is left first' 'shell am broadcast -a com.android.systemui.demo -e command exit' ($exit[0] -join ' ')
+Assert-Equal 'demo mode is disallowed again' 'shell settings put global sysui_demo_allowed 0' ($exit[1] -join ' ')
+$sent = New-Object System.Collections.Generic.List[string]
+Invoke-StatusBarDemo $exit { param($a) $sent.Add(($a -join ' ')) }
+Assert-Equal 'every exit command is sent' 2 $sent.Count
+Assert-Equal 'no failure when every call goes through' 0 @(Invoke-StatusBarDemo $exit { param($a) }).Count
+$threw = $false
+$reported = @()   # not $failed: that name is the script-scope check counter
+try { $reported = @(Invoke-StatusBarDemo $exit { param($a) throw 'adb is gone' }) } catch { $threw = $true }
+Assert-Equal 'a failing adb call does not throw' $false $threw
+Assert-Equal 'every failing call is reported' 2 $reported.Count
+Assert-Equal 'the failure names the command and the cause' $true ($reported[0] -like "*command exit*adb is gone*")
+$firstOnly = @(Invoke-StatusBarDemo $exit { param($a) if ($a -contains 'broadcast') { throw 'no broadcast' } })
+Assert-Equal 'one failing call among several is reported alone' 1 $firstOnly.Count
+
 $work = Join-Path ([IO.Path]::GetTempPath()) "store-shots-test-$PID"
 try {
     $null = New-Item -ItemType Directory -Force (Join-Path $work 'i1'), (Join-Path $work 'i2')
