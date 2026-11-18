@@ -1,7 +1,7 @@
 # Slice 397 — Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens)
 **Product:** Dino
 
-*Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 built, items 3, 4, 7 open.*
+*In progress (wave 2026-11-18), draft PR: item 7 only (night 2026-11-17-2105 wave 4).* *Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 built, items 3, 4, 7 open.*
 
 *Index note (night 2026-11-17-2105, housekeeping 2):* the row is back to **planned** for item 7 (FakePurchases trial, grace and ended states; `.maestro/dino/subscription.yaml` checks each card title), which a wave can build. Items 3 and 4 stay under *Waiting on the user*: they are not wave work until Slice 390's iOS wrapper answers trial eligibility and the Windows Store API can say it.
 
