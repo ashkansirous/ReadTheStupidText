@@ -1,9 +1,9 @@
 # Slice 398 — Dino: the parents' Books tab after a lapse (locked tiles, "why" banner, offline notice) and the child's shelf
 **Product:** Dino
 
-*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 2, frames SB6-SB8). Slice 384 built the greyed tile and the hiding; this slice adds the look the mock draws and the two banners. Not built yet.*
+*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 2, frames SB6-SB8). Slice 384 built the greyed tile and the hiding; this slice adds the look the mock draws and the two banners.* *In progress (wave 2026-11-18), draft PR.* Runs beside Slice 399 and 394: new resx keys go right after the existing `Sub_` keys (399 adds after `Settings_`); the Store's restore handler (`StorePage.xaml.cs:1091`, 394's file) is called, never edited.
 
-**Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/StoryTile.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md`
+**Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/Platforms/Windows/GalleryPage.Desktop.cs`, `src/Dino/DinoReader.App/StoryTile.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md`
 
 ## Decisions (the mock, 2026-11-15)
 
