@@ -1,7 +1,7 @@
 # Slice 393 — Feedback loop 2026-11-14-1547 leftovers
 **Product:** Shared
 
-*Partly built 2026-11-18 (night 2026-11-17-2105 wave 3, PR #1248; wave 2 was repo PR #1242 (d6bb979f) and ClaudeSkills #323 (c3cb5b07)): items 12-15 and 23 built or answered; open: items 1 (per-finding coverage) and 2 (merge-gate half), which need a design first (two to three review rounds failed), and the unproven parts under *Not yet verified* (items 13, 14, 15, 23). Item 23 widens Touches to the `.github/scripts/ios-sim-*.sh` files.* Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md); item 25 added, PR #1184). Planned 2026-11-16 ("none needs the user", 13dc9a0d). ClaudeSkills items shipped in ClaudeSkills PR #323 (merged 2026-11-18T05:27:22Z, c3cb5b07, installed).
+*Partly built 2026-11-18 (night 2026-11-17-2105 wave 3, merged as PR #1248 (ee606e4f); wave 2 was repo PR #1242 (d6bb979f) and ClaudeSkills #323 (c3cb5b07)): items 12-15 and 23 built or answered; open: items 1 (per-finding coverage) and 2 (merge-gate half), which need a design first (two to three review rounds failed), and the unproven parts under *Not yet verified* (items 13, 14, 15, 23). Item 23 widens Touches to the `.github/scripts/ios-sim-*.sh` files.* Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md); item 25 added, PR #1184). Planned 2026-11-16 ("none needs the user", 13dc9a0d). ClaudeSkills items shipped in ClaudeSkills PR #323 (merged 2026-11-18T05:27:22Z, c3cb5b07, installed).
 
 **Touches:** `D:\ClaudeSkills` `skills/feedback-loop/check-review-skips.mjs`, `skills/voice-pick/SKILL.md`, `skills/run-all-waves/`, `tools/phone/`, `tools/desktop-vm/`, `tools/emulator/`, `.maestro/dino/`, `.github/scripts/ios-sim-boot.sh`, `.github/scripts/ios-sim-driver-ready.sh`, `.github/workflows/dinoreader-ios-sim.yml`, `.github/workflows/tools-selftests.yml` (wires the two new self-tests, medium #5), `.github/scripts/ios-sim-collect.sh`, `.github/scripts/ios-sim-install-maestro.sh`, `.github/scripts/ios-sim-store-shots.sh`, slice files 243, 291, 317, 330, 346, 384, this slice file.
 
@@ -152,7 +152,7 @@ The CI fix (2026-11-18): `test-store-screenshots.ps1` assigned `$failed = @()`, 
 - #6 `tools/emulator/reset-dino-language.ps1:41`: clearing logcat before each try with a 3 s window can miss a late "ok".
 - #7 `reset-dino-language.ps1:38`: no check that the app process started; the failure message always blames a Release build.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18)
 
 - `tools/emulator/store-screenshots.ps1`: status-bar demo mode cannot be read back (`sysui_demo_allowed` is persistent), so the script prints `demo requested`, never `on`; the proof is the first screenshot's status bar (10:00, full battery and signal, no notification icons). (Slice 393: docs/plan/slices/393-feedback-loop-2026-11-14-1547-leftovers.md)
 - `.github/scripts/ios-sim-driver-ready.sh`: the warm-up never kills processes by name pattern (it can hit the flow's own driver), and the time it measures is charged to the store-shots budget. (Slice 393: docs/plan/slices/393-feedback-loop-2026-11-14-1547-leftovers.md)

@@ -1,7 +1,7 @@
 # Slice 394 — Dino: the store's "9–12" chip crashes on Android, every book sits in two age bands, empty filters still show
 **Product:** Dino
 
-*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day.* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), PR #1249, not merged; item 1 (the crash) and the live re-ranging are not yet verified.* Premise check 2026-11-18: `PlacePurchaseArea` and the purchase card are gone from `StorePage.xaml*` (Slice 396 removed them), so item 2 has nothing left to fix and the crash cause (item 1) is unproven again; current lines: `BuildChips` StorePage.xaml.cs:791, `RefreshChips` :824, `ShowAuthor` :860, `StoreFilter.InBand` StoreFilter.cs:32. The new book in draft PR #1244 (Love from Seagull Island) is not on main; its band is set when that PR lands (follow-up).
+*Scoped 2026-11-15 from the user's report; scope and Decisions 1-5 approved by the user the same day.* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), merged as PR #1249 (286fdd76); item 1 (the crash) and the live re-ranging are not yet verified.* Premise check 2026-11-18: `PlacePurchaseArea` and the purchase card are gone from `StorePage.xaml*` (Slice 396 removed them), so item 2 has nothing left to fix and the crash cause (item 1) is unproven again; current lines: `BuildChips` StorePage.xaml.cs:791, `RefreshChips` :824, `ShowAuthor` :860, `StoreFilter.InBand` StoreFilter.cs:32. The new book in draft PR #1244 (Love from Seagull Island) is not on main; its band is set when that PR lands (follow-up).
 
 **Touches:** `src/Dino/DinoReader.App/StorePage.xaml.cs` (`BuildChips`/`RefreshChips`, `ShowAuthor`), `src/Dino/DinoReader.Core/StoreFilter.cs`, `src/Dino/DinoReader.App/StorePage.xaml` (`AgeChipsScroll`), `content/dino/*/book.json` (`ageMin`/`ageMax`) and the four starters' `testbooks/*.dino`, the store's `meta.json` per book (published by dino-store.yml publish-store on the batch release, item 6), `tests/Dino/DinoReader.Tests` (StoreFilter tests), Maestro store flows `.maestro/dino/store-age-chips.yaml` and `.maestro/dino/store-age-chips-all-taps.yaml`, this slice file.
 
@@ -99,7 +99,7 @@ The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" 
 - Writing a 9-12 book.
 - iOS and Windows were not reported crashing; the item-2 fix runs on every head, so a quick store tap on the iOS simulator is enough there.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18)
 
 For `src/Dino/DinoReader.App/CLAUDE.md`:
 
