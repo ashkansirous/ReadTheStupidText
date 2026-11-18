@@ -3,6 +3,8 @@
 
 *Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 built, items 3, 4, 7 open.*
 
+*Index note (night 2026-11-17-2105, housekeeping 2):* the row is back to **planned** for item 7 (FakePurchases trial, grace and ended states; `.maestro/dino/subscription.yaml` checks each card title), which a wave can build. Items 3 and 4 stay under *Waiting on the user*: they are not wave work until Slice 390's iOS wrapper answers trial eligibility and the Windows Store API can say it.
+
 *Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, sections 1 and 3, frames SB1-SB5 and SB10). Slice 384 was built without a mock; this slice builds what the mock adds or changes. Not built yet.*
 
 **Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`ApplySubscriptionCard`), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (new, pure), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**` (`FakePurchases`), `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/397-dino-subscription-card-states.md`
