@@ -86,7 +86,7 @@ Three things are wrong with the live pictures, and one is new:
 
 ## Item 4 started 2026-11-18 (user asked why the App Store still shows Farsi shots and no Duo set)
 
-- Dispatched  on main: run 44368205082. iPhone 6.9" failed at once ("Incompatible device" for the 17 and 16 Pro Max); the iPad 13" job was cancelled at 18:30:54 UTC right after boot (cause not in the log); its restart, run 44371456491, failed the same way as the 6.9": every iPad type refused.
-- Cause (read from the logs): some macOS runners list a one-device runtime  after the general , and  in  took the last iOS line, so it is a gamble per runner (the cancelled iPad job got  and booted). A first fix (iPhone 18 Pro Max added to the 6.9" patterns) only dodged it on one slot and was undone.
-- Fix on :  keeps only ids that end in the version numbers. Outside this slice's Touches (, also used by ), widened 2026-11-18 for this fix.
-- Review of the first fix: pass 1 , pass 2 , no blocker; its finding 2 (hardcoded model names) no longer applies since the model list is unchanged.
+- Dispatched `store-screenshots.yml -f app=dino -f device=all` on main: run 44368205082. iPhone 6.9" failed at once ("Incompatible device" for the 17 and 16 Pro Max); the iPad 13" job was cancelled at 18:30:54 UTC right after boot (cause not in the log); its restart, run 44371456491, failed the same way as the 6.9": every iPad type refused.
+- Cause (read from the logs): some macOS runners list a one-device runtime `SimRuntime.iOS-27-2-iPhone19-4` after the general `SimRuntime.iOS-27-2`, and `newest_ios_runtime` in `.github/scripts/ios-sim-boot.sh` took the last iOS line, so it is a gamble per runner (the cancelled iPad job got `iOS-27-2` and booted). A first fix (iPhone 18 Pro Max added to the 6.9" patterns) only dodged it on one slot and was undone.
+- Fix on `fix/s404-sim69`: `newest_ios_runtime` keeps only ids that end in the version numbers. Outside this slice's Touches (`ios-sim-boot.sh`, also used by `dinoreader-ios-sim.yml`), widened 2026-11-18 for this fix. Proof run on the branch, all three devices: 44372896437.
+- Review of the first fix: pass 1 `reviews/s404sim-pass1-high.md`, pass 2 `reviews/s404sim-pass2-medium.md`, no blocker; its finding 2 (hardcoded model names) no longer applies since the model list is unchanged. The runtime fix gets its own two passes.
