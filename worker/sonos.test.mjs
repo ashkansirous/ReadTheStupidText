@@ -107,26 +107,11 @@ function withCredentials(inner) {
   return handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: xml }), env(), "", serveObject);
 }
 
-test("a credentials header with a loginToken or sessionId is a Client.LoginUnauthorized fault, HTTP 500", async () => {
-  for (const inner of ["<loginToken><token>t</token><key>k</key><householdId>h</householdId></loginToken>", "<sessionId>abc</sessionId>"]) {
-    const response = await withCredentials(inner);
-    const text = await response.text();
-    assert.equal(response.status, 500);
-    assert.match(text, /<soap:Body><soap:Fault><faultcode>Client\.LoginUnauthorized<\/faultcode><faultstring>[^<]+<\/faultstring><\/soap:Fault><\/soap:Body>/);
-  }
-});
-
-test("an empty credential placeholder, or the name inside a comment or CDATA, is not a credential", async () => {
-  for (const inner of ["<deviceId>XX</deviceId><sessionId/><loginToken/>", "<sessionId></sessionId>", "<!-- <sessionId>abc</sessionId> --><deviceId>XX</deviceId>", "<![CDATA[<loginToken><token>t</token></loginToken>]]>"]) {
-    assert.equal((await withCredentials(inner)).status, 200, inner);
-  }
-});
-
-test("the text sessionId or loginToken in the Body is not a credential", async () => {
-  const xml = envelope("getLastUpdate").replace(/<\/((?:[\w.-]+:)?Body)>/, "<sessionId>abc</sessionId><loginToken><token>t</token></loginToken></$1>");
-  assert.match(xml, /<sessionId>abc<\/sessionId>/);
-  const response = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: xml }), env(), "", serveObject);
+test("a credentials header carrying a loginToken, sessionId, device and zone player is answered 200 like any other (Sonos Self Test sends them)", async () => {
+  const inner = "<loginToken><token>t</token><key>k</key><householdId>h</householdId></loginToken><sessionId>abc</sessionId><deviceId>XX</deviceId><deviceProvider>Sonos</deviceProvider><zonePlayerId>RINCON_000E58AAAAAA01400</zonePlayerId>";
+  const response = await withCredentials(inner);
   assert.equal(response.status, 200);
+  assert.match(await response.text(), /<getLastUpdateResult>/);
 });
 
 test("a realistic anonymous Sonos header is answered normally", async () => {
