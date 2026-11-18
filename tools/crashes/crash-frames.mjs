@@ -129,10 +129,22 @@ export function parseMetricKitFrames(stack) {
   return frames;
 }
 
+/**
+ * Our MetricKit reports carry no `binaryName`, so every frame is "?" and the symbolicator would skip them all (found on the 2026-11-15 Dino 1.131.0 watchdog report).
+ * Frames whose UUID is the report's own `binaryUuid` are the app image: name them after the app so they are looked up.
+ */
+export function nameAppFrames(frames, report) {
+  const appUuid = normalizeUuid(report.binaryUuid);
+  const appImage = report.app === "dino" ? "DinoReader" : report.app === "rtst" ? "ReadTheStupidText" : null;
+  if (!appUuid || !appImage) return frames;
+  return frames.map((frame) => (frame.image === "?" && frame.uuid === appUuid ? { ...frame, image: appImage } : frame));
+}
+
 /** Frames, app version and app name of one of our R2 reports (kind `native`); other kinds have no addresses. */
 export function parseReport(text) {
   const report = JSON.parse(text);
-  return { frames: parseMetricKitFrames(String(report.stack ?? "")), version: report.version ? { version: report.version, build: report.build ?? null } : null, app: report.app ?? null, binaryUuid: report.binaryUuid ?? null };
+  const frames = nameAppFrames(parseMetricKitFrames(String(report.stack ?? "")), report);
+  return { frames, version: report.version ? { version: report.version, build: report.build ?? null } : null, app: report.app ?? null, binaryUuid: report.binaryUuid ?? null };
 }
 
 /** Everything the symbolicator needs from `text` of any supported input: { frames, version, app }. */

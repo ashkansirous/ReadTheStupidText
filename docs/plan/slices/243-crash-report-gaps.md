@@ -1,7 +1,9 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 **Product:** Shared
 
-*Items 1, 2, 4, 6, 7 merged as PR #1122 (ca93e9fc, 2026-11-14 17:08Z); items 3 (#711) and 5 (#781) built earlier. Parked: item 8 waits for the next real iOS crash from a build that carries a dSYM; device checks are in Not yet verified.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
+*Built 2026-11-18 (night 2026-11-17-2105 wave 2), PR #1241, not merged: all items done; item 8 resolved (not parked) against the iOS 1.131.0 crash of 2026-11-15 (id `658ad15c-0a14-4b6e-b686-6307df1fe863`, handed to Slice 400 item 3), the first new iOS crash from a build after #1122. Device checks are in Not yet verified.*
+
+*Items 1, 2, 4, 6, 7 merged as PR #1122 (ca93e9fc, 2026-11-14 17:08Z); items 3 (#711) and 5 (#781) built earlier. Item 8 was resolved 2026-11-18 (see its note); device checks are in Not yet verified.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
 
@@ -63,8 +65,16 @@ priority", "add slices for adding anything missing from the crash report".
   takes the running binary's UUID. A report with no version is dropped by the Worker as before.
 - [x] 7. **Android parity:** Android reports already carry managed exception names; add the same lines and fields
   (items 5-6) and keep the native `.so` symbols for sherpa/onnxruntime crashes (release asset, as item 1).
-- [ ] 8. Close Slice 227 item 9 here: once items 1-2 work, symbolicate the next new crash; builds before this slice
+- [x] 8. Close Slice 227 item 9 here: once items 1-2 work, symbolicate the next new crash; builds before this slice
   have no dSYM, so their crashes are explained by Slice 244 instead.
+  Run 2026-11-17, crash store id 658ad15c-0a14-4b6e-b686-6307df1fe863 (Dino iOS 1.131.0, MetricKit 0x8BADF00D scene-update watchdog): the pull and the dSYM
+  download (`dino-v1.131.0`, UUID 574133A0...) work. `winget install LLVM.LLVM` hung (needs elevation), so llvm came from Android NDK 30.0.16248370
+  (`sdkmanager --install`, user folder, needs JAVA_HOME): `symbolicate.mjs` now falls back to the newest NDK under the Android SDK (test added). **Resolved
+  2026-11-18**: 10 app frames resolve to Xamarin/MAUI code (`-[Microsoft_Maui_Platform_ContentView layoutSubviews]` -> `UIView.set_Bounds` ->
+  `xamarin_dyn_objc_msgSendSuper`, under `UIApplicationMain` / `Program.cs:11`); none is a Dino page or view-model method, so the watchdog likely hit a MAUI layout
+  pass on the main thread (likely, not proven). Full output: `D:/ReadTheStupidText-worktrees/reviews/s243-658ad15c.txt`. Three tools/crashes bugs found and fixed: (a) our MetricKit reports carry no `binaryName`, so
+  every frame was "?" and symbolicate said "No frames of our images" (`crash-frames.mjs` now names frames of the report's own `binaryUuid` after the app; test added);
+  (b) on Windows the dSYM unzip failed (relative `--cache` applied twice, and Git Bash's GNU tar read `D:` as a host): `symbolicate.mjs` resolves the path and uses System32 `tar.exe` (plain `tar` with a notice when that file is missing); (c) llvm tools were missing on PATH (see the NDK fallback above; looked up once per run). Known limit: a MetricKit report carries only the app's own `binaryUuid`, so its SherpaOnnxC frames stay "?" and are not symbolicated; Apple .crash/.ips logs list every image and work.
 
 ## Verification
 
@@ -83,10 +93,24 @@ priority", "add slices for adding anything missing from the crash report".
 - Third round #6 (`reviews/s243-check.md`): reversed after review check 2 #5 (production-only analytics): the Worker drops a report with no version again (400), nothing counted as `unknown`.
 - Third round #7 (`reviews/s243-check.md`): `collect-symbols.mjs` refuses an empty, missing or flag-like value instead of shifting the following flags.
 - Skipped #8 (`reviews/s243-check.md`): "AppTrace.cs:77, low: foreground flag only set by Activated/Resumed/Stopped; null on background cold start, Deactivated ignored." - a background cold start reports no foreground state; unknown is correct.
+- Skipped #3 (`reviews/s243w2-high.md`): "androidSdkRoot has only a Windows default (%LOCALAPPDATA%); NDK_LLVM_HOST lists darwin and linux, but with ANDROID_HOME unset they get null and no fallback." - darwin/linux have xcrun and system llvm, so they do not hit the failure path.
+- Skipped #6 (`reviews/s243w2-high.md`): "nameAppFrames hardcodes "dino"/"rtst" and "DinoReader"/"ReadTheStupidText", duplicating `OUR_IMAGE` and `appOfFrames` in symbolicate.mjs (no magic strings rule)." - style only, not a failure.
+- Skipped #7 (`reviews/s243w2-high.md`): "New tests cover only newestNdkLlvmBin and the Dino case of nameAppFrames." - low test gap; the NDK selection already has a test.
+
+- Item 8 round, high pass: findings 1, 2, 4 and 5 were applied (7 of 7 read); the three left out are the lines above.
+- Skipped #1 (`reviews/s243w2-medium.md`): "NDK fallback only on ENOENT; broken PATH llvm never falls back; ENOENT message always says "not on PATH"." - low: a present-but-broken llvm is not a case seen.
+- Skipped #2 (`reviews/s243w2-medium.md`): "newestNdkLlvmBin does not check entries are directories; localeCompare ordering mishandles pre-release names" - low: NDK folder names are numeric releases.
+- Skipped #3 (`reviews/s243w2-medium.md`): "nameAppFrames handles only dino/rtst; other app values silently yield no symbolicated frames." - low: only two apps exist.
+- Skipped #4 (`reviews/s243w2-medium.md`): "zipTool falls back to bare tar (GNU tar in Git Bash cannot read zip, D: treated as host); opaque error." - low: the fallback prints the `--dsym-dir` hint.
+- Skipped #5 (`reviews/s243w2-medium.md`): "module-level ndkFallback cache; runLlvm ENOENT-to-NDK wiring untested." - low test gap.
 
 ## Waiting on the user
 
 - Parity difference for the user to decide (`reviews/s243-check.md` #4): Android has no per-process memory headroom API; `memoryHeadroom` on Android is system free RAM minus the low-memory threshold, on iOS os_proc_available_memory.
+
+#### For CLAUDE.md
+
+- `tools/CLAUDE.md`: crash symbolication on Windows uses the newest Android NDK's llvm (under `ANDROID_HOME` or `%LOCALAPPDATA%/Android/Sdk`) when LLVM is not on PATH; `winget install LLVM.LLVM` needs elevation. (Slice 243: docs/plan/slices/243-crash-report-gaps.md)
 
 #### Not yet verified
 

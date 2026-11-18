@@ -10,13 +10,14 @@
 //
 // Needs: node 22+, `gh` logged in, and llvm-symbolizer + llvm-objdump (LLVM: `winget install LLVM.LLVM`; this tool installs nothing). --dsym-dir uses already unpacked
 // `<Image>.dSYM` folders (or zips) in that folder instead of the release.
+// Limit: a MetricKit report carries only the app's own binaryUuid, so its SherpaOnnxC frames stay unnamed ("?") and are not symbolicated (an Apple .crash/.ips log lists every image and works).
 // link-time address = runtime address - image load address + the image's __TEXT vmaddr (read with llvm-objdump --macho --private-headers); a MetricKit or .ips frame
 // already carries the offset from the start of __TEXT, so it is vmaddr + offset.
 
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
@@ -24,7 +25,7 @@ import { readCrashInput } from "./crash-frames.mjs";
 
 const run = promisify(execFile);
 const OUR_IMAGE = /^(DinoReader|ReadTheStupidText|SherpaOnnxC)/i;
-const LLVM_HINT = "llvm-symbolizer and llvm-objdump are needed: install LLVM with `winget install LLVM.LLVM` (and open a new terminal), then run this again.";
+const LLVM_HINT = "llvm-symbolizer and llvm-objdump are needed: install LLVM with `winget install LLVM.LLVM` (and open a new terminal), or one Android NDK with `sdkmanager --install \"ndk;<version>\"` (needs JAVA_HOME; no elevation), then run this again.";
 
 /** True for an image of ours (the app or the sherpa framework); system libraries are never looked up. */
 export function isOurImage(name) {
@@ -146,9 +147,21 @@ function folderHasUuid(folder, uuid) {
   return dwarf !== null && machoUuid(readFileSync(dwarf)) === uuid;
 }
 
+/** On Windows the System32 bsdtar; when that file is missing, plain `tar` with a notice (it may be GNU tar, which cannot read zip files). */
+function zipTool() {
+  if (process.platform !== "win32") return "tar";
+  const system32Tar = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
+  if (existsSync(system32Tar)) return system32Tar;
+  console.error(`[symbolicate] ${system32Tar} is missing, trying plain tar (if it cannot read zip files, unpack the dSYM zip by hand and pass --dsym-dir)`);
+  return "tar";
+}
+
 async function unpackZip(zip, folder) {
   mkdirSync(folder, { recursive: true });
-  await run("tar", ["-xf", zip], { cwd: folder }); // bsdtar (Windows 10+) reads zip files
+  // resolve: a relative --cache would otherwise be applied twice (the cwd is the folder). On Windows the System32 bsdtar is named, because the GNU tar of Git Bash reads
+  // "D:\..." as a remote host and cannot open zip files.
+  const tar = zipTool();
+  await run(tar, ["-xf", resolve(zip)], { cwd: folder }); // bsdtar (Windows 10+) reads zip files
   return readdirSync(folder).find((name) => name.endsWith(".dSYM"));
 }
 
@@ -182,9 +195,52 @@ async function downloadDsym(args, tag, uuid, cache) {
   return unpacked() ? join(folder, unpacked()) : null;
 }
 
+const NDK_LLVM_HOST = { win32: "windows-x86_64", darwin: "darwin-x86_64", linux: "linux-x86_64" };
+
+/**
+ * The `bin` folder of the newest Android NDK under `sdkRoot/ndk` (it ships llvm-symbolizer and llvm-objdump, and installs into the user's folder with no elevation), or null.
+ * Newest = highest version by numeric parts.
+ */
+export function newestNdkLlvmBin(sdkRoot, platform = process.platform) {
+  const host = NDK_LLVM_HOST[platform];
+  const ndkDir = sdkRoot ? join(sdkRoot, "ndk") : null;
+  if (!host || !ndkDir || !existsSync(ndkDir)) return null;
+  const byVersion = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+  const bins = readdirSync(ndkDir).sort(byVersion).reverse().map((name) => join(ndkDir, name, "toolchains", "llvm", "prebuilt", host, "bin"));
+  return bins.find((bin) => existsSync(bin)) ?? null;
+}
+
+/** The SDK root from ANDROID_HOME / ANDROID_SDK_ROOT, else the Windows default under %LOCALAPPDATA%. */
+function androidSdkRoot() {
+  return process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT ?? (process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, "Android", "Sdk") : null);
+}
+
+let ndkFallback; // undefined until the first llvm call needs it; then the bin folder or null
+
+/** The NDK llvm folder, looked up once per run, with one log line when found. */
+function ndkFallbackBin() {
+  if (ndkFallback === undefined) {
+    ndkFallback = newestNdkLlvmBin(androidSdkRoot());
+    if (ndkFallback) console.error(`[symbolicate] llvm tools not on PATH, using the Android NDK copy in ${ndkFallback}`);
+  }
+  return ndkFallback;
+}
+
+/** `tool` itself when it is on PATH, else the same tool from the newest NDK (Debug line says which one ran). */
+async function runLlvm(tool, args) {
+  const options = { maxBuffer: 64 * 1024 * 1024 };
+  try {
+    return await run(tool, args, options);
+  } catch (error) {
+    const bin = error.code === "ENOENT" ? ndkFallbackBin() : null;
+    if (!bin) throw error;
+    return run(join(bin, tool), args, options);
+  }
+}
+
 async function llvm(tool, args) {
   try {
-    return (await run(tool, args, { maxBuffer: 64 * 1024 * 1024 })).stdout;
+    return (await runLlvm(tool, args)).stdout;
   } catch (error) {
     if (error.code === "ENOENT") throw new Error(`${tool} was not found. ${LLVM_HINT}`);
     throw new Error(`${tool} failed (${error.code ?? "no exit code"}): ${String(error.stderr ?? error.message).trim().slice(0, 500)}`); // a tool error is never "address not in the dSYM"
