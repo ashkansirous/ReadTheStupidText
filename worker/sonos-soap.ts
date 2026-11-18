@@ -26,11 +26,13 @@ export const FaultMessage = {
   Unsupported: "Unsupported call",
   Unavailable: "Service unavailable",
   NoCatalogue: "The catalogue is not available",
+  LoginUnauthorized: "This service has no sign-in",
 } as const;
 
 /** The faultcode values the service raises (https://docs.sonos.com/docs/error-handling). */
 export const FaultCode = {
   ItemNotFound: "Client.ItemNotFound",
+  LoginUnauthorized: "Client.LoginUnauthorized",
   Unavailable: "Server.ServiceUnavailable",
   Unknown: "Server.ServiceUnknownError",
 } as const;

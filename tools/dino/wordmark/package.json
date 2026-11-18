@@ -1,0 +1,10 @@
+{
+  "name": "dino-wordmark",
+  "private": true,
+  "type": "module",
+  "description": "Generates the Dino Book Reader wordmark outlines (Slice 410).",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "fontkit": "2.0.4"
+  }
+}

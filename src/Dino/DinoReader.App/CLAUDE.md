@@ -9,6 +9,10 @@ decisions behind these rules: `docs/plan/notes/dino-app-claude-md-history.md` (t
 > **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
 > app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
 > projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
+> The public name comes from `ApplicationTitle` in `DinoReader.App.csproj`, never typed from memory, a slice or a mock;
+> `node tools/dino/check-public-name.mjs` (CI: site-checks) fails on the code name "Dino Reader" in the privacy policy, site,
+> Alexa skill, Worker strings, every `content/dino/*/book.json` and slice *Submission text* sections (any case or line break), and
+> fails when the Sonos album name or PRIVACY.md lack the real name. (Slice 410)
 
 Dino Reader also has a
 **Windows head** (Slice 67, MSIX, no tray or hotkey): Mobile.Shared's Windows target references

@@ -130,10 +130,10 @@ A count is a name plus a few values from fixed lists:
 Every count also carries the app version, the platform and the UTC date (no time of day).
 Counts never contain the text you read, file names, scanned images, names, or any install,
 device, account or advertising identifier, so they cannot be put together into a history of
-one person. (Dino Reader's counts also carry a random session number: it is made new every time the
+one person. (Dino Book Reader's counts also carry a random session number: it is made new every time the
 app starts and never reused for a later start. It lives in memory, and is also written only inside counts
 still waiting in the app's local send queue, and is gone once those counts are sent. It cannot tell two sessions of one person
-apart. Read The Stupid Text sends none. Dino Reader also counts when a book was listened to for 30 seconds or more, and
+apart. Read The Stupid Text sends none. Dino Book Reader also counts when a book was listened to for 30 seconds or more, and
 how many seconds of audio were played in a reading, as one whole number when it is paused or stopped: no time of day, no title.) Only a share of launches may count at all, as set by the project.
 
 Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form
@@ -173,7 +173,7 @@ bugs, kept only as long as that needs, and not shared with anyone else or used f
 development builds, emulators and the test devices store review tools use send no reports; builds installed through
 TestFlight do. The project can switch crash reports off for everyone from the server.
 
-**Reports you send yourself.** Dino Reader, this project's children's reading app, has a **Report a problem** button
+**Reports you send yourself.** Dino Book Reader, this project's children's reading app, has a **Report a problem** button
 in its grown-ups' corner (Android and iPhone). Read The Stupid Text has no such button. Nothing is sent until a grown-up
 presses **Send** on that page, whatever the usage switch says. The report holds the same things as a crash report
 without an error: the app and its version, the platform, the store or TestFlight, the app's recent technical log
@@ -184,14 +184,14 @@ you, your phone or your install). It goes to the same server, is stored the same
 find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
 advertising or tracking.
 
-**Dino Reader on Sonos (optional).** Dino Reader's free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos's own privacy policy.
+**Dino Book Reader on Sonos (optional).** Dino Book Reader's free story-store books can also be played through the Dino Book Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos's own privacy policy.
 
-**Dino Reader on Alexa (optional).** Dino Reader's free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
+**Dino Book Reader on Alexa (optional).** Dino Book Reader's free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
 
 ## Server request log
 
 This project's own servers (`readthestupidtext.sirous.uk` for Read The Stupid Text and
-`dinoreader.sirous.uk` for Dino Reader, which work the same way) run on Cloudflare Workers,
+`dinoreader.sirous.uk` for Dino Book Reader, which work the same way) run on Cloudflare Workers,
 and Cloudflare, which acts as the project's
 processor, keeps a short technical log of each request to it for the project, whatever the
 request is for. A log entry holds the address that was asked for (including anything after
@@ -201,7 +201,7 @@ The log also holds the server's own short error and status messages.
 Entries are deleted automatically after at most seven days (three on Cloudflare's free plan).
 The project uses it only to find and fix problems with the server and does not combine it
 with the usage counts or crash reports; it is not shared and never used for
-advertising or tracking. Dino Reader's server also serves a public page of usage totals
+advertising or tracking. Dino Book Reader's server also serves a public page of usage totals
 (`dinoreader.sirous.uk/stats`), which shows only totals.
 
 ## Permissions
