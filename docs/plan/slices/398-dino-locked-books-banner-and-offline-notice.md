@@ -1,7 +1,7 @@
 # Slice 398 — Dino: the parents' Books tab after a lapse (locked tiles, "why" banner, offline notice) and the child's shelf
 **Product:** Dino
 
-*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 2, frames SB6-SB8). Slice 384 built the greyed tile and the hiding; this slice adds the look the mock draws and the two banners.* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), PR #1247, not merged; passed on the Android emulator, not yet verified on iOS or Windows.* Runs beside Slice 399 and 394: new resx keys go right after the existing `Sub_` keys (399 adds after `Settings_`); the Store's restore handler (`StorePage.xaml.cs:1091`, 394's file) is called, never edited.
+*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 2, frames SB6-SB8). Slice 384 built the greyed tile and the hiding; this slice adds the look the mock draws and the two banners.* *Built 2026-11-18 (night 2026-11-17-2105, wave 3), merged as PR #1247 (45ae0304); passed on the Android emulator, not yet verified on iOS or Windows.* Runs beside Slice 399 and 394: new resx keys go right after the existing `Sub_` keys (399 adds after `Settings_`); the Store's restore handler (`StorePage.xaml.cs:1091`, 394's file) is called, never edited.
 
 **Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/Platforms/Windows/GalleryPage.Desktop.cs`, `src/Dino/DinoReader.App/StoryTile.cs`, `src/Dino/DinoReader.App/ShelfReorderTiles.cs` (locked opacity on the reorder cover, review high #9), `src/Dino/DinoReader.App/IconView.cs` (`IconKind.CloudOff` for the offline banner, review high #1; widened by the coordinator: no other wave slice edits these two), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md`
 
@@ -53,7 +53,7 @@
 - Follow-up (no code change) #3 (`reviews/pr-1247-check2-medium.md`): "Locked-cover veil is a flat colour fill, not the mock's grayscale; check against the mock." - `GalleryPage.xaml:54`; same as the greyscale follow-up above.
 - Applied #1 and #3 (`reviews/pr-1247-check-medium.md`): `CheckLockedShelf` without a `ShelfFreeForSwap()` guard, and `FakeOffline` logging "ok on" after a faulted move.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18)
 
 - Dino locked books (`src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `StoryTile.cs`): the banner's "Restore purchases" calls `StorePage.RequestRestore()` and selects the Store tab; never poll `TryRestoreFromKeyboard` from the Gallery. The offline notice comes only from `SubscriptionAccess.OfflineNotice`; `NetworkAccess.Unknown` and a captive portal count as online on purpose. (Slice 398: docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md)
 
