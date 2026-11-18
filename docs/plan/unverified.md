@@ -77,6 +77,18 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 400: Dino: the crashes first reported 2026-11-14/15 ([slice](slices/400-dino-crashes-2026-11-14.md))
+- **Device:** iOS compile of the shared `StallGuardedRead.cs` change, and a Cancel during a first-book download on an iOS device or TestFlight build (same flow as `.maestro/dino/first-books-cancel-real-store.yaml`; only an Android flow exists): no Mac here.
+- **Device:** the crash store shows no new stream-close report (`NetworkOnMainThreadException` in `FixedLengthSource.close`) on the fixed version.
+- **Device:** other direct `ReadAsStreamAsync` calls bypass the guard (`RemoteConfigClient.cs:287`, `SubscriptionEndClient:48`; small bodies, same hazard class, outside the slice's Touches): not routed through `OpenBodyAsync`.
+
+### Slice 397: Dino: the Store's subscription card in every state ([slice](slices/397-dino-subscription-card-states.md))
+- **Device:** iOS compile of the Slice 397 changes: no Mac this run.
+- **Device:** Windows head build of the Slice 397 changes (wide layout, Ctrl+R hint).
+- **Device:** layout of the card states on the emulator: no Maestro flow carries a `# layout-check` header, so only titles and log lines were checked.
+- **You:** real Play, App Store and Microsoft Store purchases: a second trial purchase on one account, the Grace and Fix payment paths.
+- **You:** the 14 non-English trial strings read by a native speaker.
+
 ### Slice 405: Dino back cover names per language ([slice](slices/405-dino-back-cover-names-per-language.md))
 - **Device:** iOS simulator back cover in Farsi and Japanese (no Mac here; `.github/workflows/dinoreader-ios-sim.yml` is workflow_dispatch only and has no back-cover flow).
 - **You:** native read of the spellings chosen without a store-card source: ar «الأخوان غريم»; Perrault, Southey and Andersen in ar, fa, ja, ru, zh; ru «Эзоп».
