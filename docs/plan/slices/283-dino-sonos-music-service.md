@@ -121,6 +121,15 @@ again." Same on the user's phone, and again after the user power-cycled the spea
 Conclusion (likely, from these sources): Sonos's cloud does not know sandbox service 463879, so its authorising step
 fails before any call to us. Next: a Sonos developer support case (the user's account; draft in the session).
 
+**Self Test fourth run (2026-11-18, 16:09-16:10):** Browse passed; SOAP Compliance 36 passed, 3 failed (the three
+invalid-credential checks); MIME Type and Item Type "Not Applicable"; Authentication produced no result row. Sonos Cloud
+0 of 12: besides the same 422 "Unknown service 463879", its direct `getMetadata('root')` calls to our endpoint got a
+10 s timeout ("Operation timed out after 10001 milliseconds with 0 bytes received") and then HTTP 500. Five live
+`getMetadata root` calls a few minutes later each answered 200 in under 1 s; SOAP Compliance in the same minute
+passed its getMetadata checks. Open (not yet explained): what made our endpoint time out and answer 500 at 16:10.
+A cold `/api/stories` catalogue read is the first suspect (`currentEntries`, 60 s cache); check Workers Logs for
+`/sonos` at 16:10 and time a cold call before Sonos review, since a real player has a timeout too.
+
 ## Not yet verified
 
 - Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
