@@ -1,0 +1,114 @@
+{
+  "kind": "Store",
+  "id": "9b77e4f2c83247fcbb16eef03d94ffd3",
+  "title": "Love from Seagull Island",
+  "version": 1,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Ashkan Sirous",
+  "credits": "A Dino Reader picture book",
+  "colour": 1,
+  "added": "2026-11-17",
+  "order": 12,
+  "characters": [
+    "Pancake Polly",
+    "Seagull",
+    "Kathryn",
+    "Granny Seagull",
+    "Grampy Seagull"
+  ],
+  "cast": [
+    {
+      "name": "Seagull",
+      "voice": "duckling2",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Squawky",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Kathryn",
+      "voice": "princess",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Bold",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Pancake Polly",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Warm",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Granny Seagull",
+      "voice": "hen",
+      "gender": "Female",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Grampy Seagull",
+      "voice": "bear",
+      "gender": "Male",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Booming"
+      ]
+    }
+  ],
+  "notAnimals": [
+    "Seagull",
+    "Granny Seagull",
+    "Grampy Seagull"
+  ],
+  "creditsByLanguage": {
+    "ar": "كتاب مصوّر من دينو ريدر",
+    "da": "En billedbog fra Dino Reader",
+    "de": "Ein Dino-Reader-Bilderbuch",
+    "es": "Un libro ilustrado de Dino Reader",
+    "fa": "یک کتاب تصویری از دینو ریدر",
+    "fi": "Dino Readerin kuvakirja",
+    "fr": "Un livre illustré Dino Reader",
+    "ja": "ディノ・リーダーの絵本",
+    "nb": "En bildebok fra Dino Reader",
+    "nl": "Een prentenboek van Dino Reader",
+    "pt": "Um livro ilustrado do Dino Reader",
+    "ru": "Книжка с картинками Dino Reader",
+    "sv": "En bilderbok från Dino Reader",
+    "zh": "恐龙阅读器绘本"
+  },
+  "storyBy": "Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": { "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
+}
