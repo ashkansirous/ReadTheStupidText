@@ -5,13 +5,20 @@ import { generateKeyPairSync } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     ALL_STORES, MANUAL_STEPS, Outcome, Store, activateBody, addOnProductIds, appleAvailabilityBody, appleLocalizationBody, applePriceScheduleBody, appleProductBody, applyStore,
     findApplePricePoint, googleAssertion, createAppleProduct, createPlayProduct, PlayStage, playProductStage, parseServiceAccount, applePricePointId, applePagePath, microsoftNextUrl, microsoftAddOnBody, paidBooksFrom, parseArgs, planLines, playHasUsPrice, playProductBody, playUsdPrice, productIdProblem, readContentEntries,
     appleTerritoryIds, createMicrosoftProduct, cut, jsonOrNull, isNonJsonBody,
 } from './store-products.mjs';
+
+import {
+    checkMicrosoftPrices, completeMicrosoftBook, createMicrosoftBook, itemsForStore, microsoftCatalogUrl, microsoftCommitVerdict, microsoftLivePrice, microsoftPriceProblem, microsoftRateLimitSeconds, microsoftSubmissionBody,
+    microsoftSubmissionCommitted, microsoftSubmissionInFlight, RateLimitedError, resultOf, retryingMicrosoft, selectBooks, memoisedOnce, isEntryScript,
+} from './store-products.mjs';
+
+import { exitCodeOf, loadStoreEnv, missingKeys, parseEnvText, storeEnvFrom, isEntryScript as isLocalEntryScript } from './store-products-local.mjs';
 
 import {
     applePlanForAvailability, appleRetryDelayMs, retryingAsc, SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionAvailabilityBody, applePricePlan, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
@@ -47,8 +54,8 @@ test('Slice 346: a product id with a hyphen is flagged (Google Play rejects it),
 });
 
 test('Slice 346: the command line defaults to a dry run on all three stores; a typo never becomes a real run', () => {
-    assert.deepEqual(parseArgs([]), { apply: false, stores: ALL_STORES, contentRoot: 'content/dino' });
-    assert.deepEqual(parseArgs(['--apply', '--store', 'google', '--store', 'apple', '--content', 'x']), { apply: true, stores: ['google', 'apple'], contentRoot: 'x' });
+    assert.deepEqual(parseArgs([]), { apply: false, stores: ALL_STORES, contentRoot: 'content/dino', book: null, checkPrices: false });
+    assert.deepEqual(parseArgs(['--apply', '--store', 'google', '--store', 'apple', '--content', 'x']), { apply: true, stores: ['google', 'apple'], contentRoot: 'x', book: null, checkPrices: false });
     assert.throws(() => parseArgs(['--aply']), /Unknown argument/);
     assert.throws(() => parseArgs(['--store', 'amazon']), /Unknown store/);
     assert.throws(() => parseArgs(['--store']), /Unknown store/);
@@ -163,6 +170,321 @@ function fakeAsc(routes) {
 }
 
 const okJson = (json) => ({ status: 200, ok: true, json });
+
+// ---- Slice 411: Microsoft book add-on completion, --book, --check-prices, the local runner ----
+
+const MS = 'https://manage.devcenter.microsoft.com/v1.0/my';
+const TEMPLATE_SUBMISSION = {
+    id: 'tpl-sub', contentType: 'BookDownload', keywords: ['book'], lifetime: 'Forever', visibility: 'Private', privacyPolicyRequired: true, privacyPolicyUrl: 'https://dinoreader.sirous.uk/privacy',
+    pricing: { priceId: 'Base', isAdvancedPricingModel: true, marketSpecificPricings: { LB: 'NotAvailable', EH: 'NotAvailable' } },
+};
+const SEAGULL = { stem: 'seagull', title: 'Love from Seagull Island', productId: 'uk.sirous.dinoreader.book.seagull' };
+
+/** A fake Partner Center: `calls` records `METHOD path`; `answers` maps `METHOD path` to a response or a function (a list of responses is consumed in order). */
+function fakeMs(answers) {
+    const calls = [];
+    const request = async (token, method, url, body) => {
+        const key = `${method} ${url.replace(MS, '')}`;
+        calls.push({ key, body });
+        const answer = answers[key];
+        if (answer === undefined) assert.fail(`unexpected call ${key}`);
+        return Array.isArray(answer) ? answer.shift() : answer;
+    };
+    return { request, calls, keys: () => calls.map((call) => call.key) };
+}
+
+const pendingAddOn = (extra = {}) => okJson({ id: 'ADD1', pendingInAppProductSubmission: { id: 'sub1' }, ...extra });
+
+test('Slice 411: a 429 waits the seconds Microsoft names and retries; waits past 10 minutes in total give up', async () => {
+    assert.equal(microsoftRateLimitSeconds({ message: 'Too many requests, try again in 292 seconds' }), 292);
+    assert.equal(microsoftRateLimitSeconds(null), 60);
+    assert.equal(microsoftRateLimitSeconds({ message: 'try again in 5000 seconds' }), 600);
+    const waits = [];
+    const answers = [{ status: 429, ok: false, json: { message: 'try again in 2 seconds' } }, okJson({ done: true })];
+    const retrying = retryingMicrosoft(async () => answers.shift(), { sleep: async (ms) => waits.push(ms) });
+    assert.deepEqual((await retrying('t', 'GET', 'u')).json, { done: true });
+    assert.deepEqual(waits, [2000]);
+    const always = retryingMicrosoft(async () => ({ status: 429, ok: false, json: { message: 'try again in 300 seconds' } }), { sleep: noSleep });
+    await assert.rejects(() => always('t', 'GET', 'u'), /rate limit/);
+});
+
+test('Slice 411: the submission body sets Tier1012, the en-us listing with the fixed description, the template fields and drops the read-only ones', () => {
+    const body = microsoftSubmissionBody(SEAGULL, { id: 'sub1', status: 'PendingCommit', statusDetails: { errors: [] }, fileUploadUrl: 'x', pricing: { priceId: 'Base' } }, TEMPLATE_SUBMISSION);
+    assert.deepEqual(body.pricing, { priceId: 'Tier1012', marketSpecificPricings: { LB: 'NotAvailable', EH: 'NotAvailable' }, sales: [] });
+    assert.deepEqual(body.listings, { 'en-us': { title: 'Love from Seagull Island', description: 'A picture-book story in Dino Book Reader.' } });
+    assert.deepEqual([body.contentType, body.lifetime, body.visibility, body.privacyPolicyRequired, body.privacyPolicyUrl], ['BookDownload', 'Forever', 'Private', true, 'https://dinoreader.sirous.uk/privacy']);
+    assert.deepEqual([body.id, body.targetPublishMode, 'status' in body, 'statusDetails' in body, 'fileUploadUrl' in body], ['sub1', 'Immediate', false, false, false]);
+});
+
+test('Slice 411: the submission body keeps the pending value of a field the template lacks', () => {
+    const { keywords, ...noKeywords } = TEMPLATE_SUBMISSION; // eslint-disable-line no-unused-vars
+    const body = microsoftSubmissionBody(SEAGULL, { id: 'sub1', status: 'PendingCommit', keywords: ['pending'] }, noKeywords);
+    assert.deepEqual(body.keywords, ['pending']);
+});
+
+test('Slice 411 review #3: 429 waits share one 30-minute budget across requests; running it out is a RateLimitedError, and the book ends "rate limited, rerun later" with the rest of the store', async () => {
+    const budget = { waited: 0 };
+    const answers = () => [{ status: 429, ok: false, json: { message: 'try again in 400 seconds' } }, okJson({})];
+    for (let i = 0; i < 4; i++) {
+        const next = answers();
+        await retryingMicrosoft(async () => next.shift(), { sleep: noSleep, budget })('t', 'GET', 'u');
+    }
+    assert.equal(budget.waited, 1600);
+    const last = answers();
+    await assert.rejects(() => retryingMicrosoft(async () => last.shift(), { sleep: noSleep, budget })('t', 'GET', 'u'), RateLimitedError);
+    const calls = [];
+    const results = await applyStore(Store.Microsoft, [{ ...SEAGULL, problem: null }, { ...SEAGULL, productId: 'two', problem: null }], async () => ({}), async (store, session, book) => {
+        calls.push(book.productId);
+        throw new RateLimitedError('Microsoft rate limit: rerun later');
+    });
+    assert.deepEqual(results.map((result) => result.outcome), [Outcome.RateLimited, Outcome.RateLimited]);
+    assert.equal(calls.length, 1, 'the second book is not tried once the budget is spent');
+    assert.match(Outcome.RateLimited, /rerun later/);
+});
+
+test('Slice 411 review #4: memoisedOnce runs once and forgets a rejected run; isEntryScript compares real paths', async () => {
+    let runs = 0;
+    const once = memoisedOnce(async () => ++runs);
+    assert.deepEqual([await once(), await once()], [1, 1]);
+    let tries = 0;
+    const flaky = memoisedOnce(async () => {
+        if (++tries === 1) throw new Error('boom');
+        return tries;
+    });
+    await assert.rejects(flaky, /boom/);
+    assert.equal(await flaky(), 2);
+    const here = fileURLToPath(import.meta.url);
+    assert.equal(isEntryScript(pathToFileURL(here).href, here), true);
+    assert.equal(isLocalEntryScript(pathToFileURL(here).href, here.replace(/\\/g, '/')), true);
+    assert.equal(isEntryScript(pathToFileURL(here).href, ''), false);
+    assert.equal(isEntryScript(pathToFileURL(here).href, here + '.missing'), false);
+});
+
+test('Slice 411: commit statuses: CommitStarted and PendingCommit keep polling, a committed one is done, a failed or unknown one throws', () => {
+    assert.equal(microsoftCommitVerdict({ status: 'CommitStarted' }), 'pending');
+    assert.equal(microsoftCommitVerdict({ status: 'PendingCommit' }), 'pending');
+    assert.equal(microsoftCommitVerdict({ status: 'PendingPublication' }), 'done');
+    assert.throws(() => microsoftCommitVerdict({ status: 'CertificationFailed', statusDetails: { errors: [{ details: 'policy' }] } }), /commit failed: policy.*CertificationFailed/);
+    assert.notEqual(microsoftCommitVerdict({ status: 'PreProcessing' }), undefined); // the status Partner Center answered live after CommitStarted (2026-11-18) is a commit that went through, not an unknown one
+    assert.equal(microsoftCommitVerdict({ status: 'Mystery' }), 'pending'); // review #1: after an accepted commit an unknown status is still committing
+    assert.equal(microsoftCommitVerdict(null), 'pending');
+    assert.equal(microsoftSubmissionInFlight({ status: 'Mystery' }), true);
+    assert.equal(microsoftSubmissionInFlight({ status: 'CommitStarted' }), true);
+    assert.equal([{ status: 'PendingCommit' }, { status: 'Certification' }, { status: 'CertificationFailed' }].some(microsoftSubmissionInFlight), false);
+    assert.throws(() => microsoftCommitVerdict({ status: 'CommitFailed', statusDetails: { errors: [{ code: 'X', details: 'price tier unknown' }] } }), /commit failed: price tier unknown/);
+    assert.equal(microsoftSubmissionCommitted({ status: 'Certification' }), true);
+    assert.equal(microsoftSubmissionCommitted({ status: 'PendingCommit' }), false);
+    assert.equal(microsoftSubmissionCommitted({ status: 'CommitFailed' }), false);
+});
+
+test('Slice 411: a pending submission is PUT, committed and polled until it leaves CommitStarted', async () => {
+    const api = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({ status: 'CommitStarted' }),
+        'GET /inappproducts/ADD1/submissions/sub1/status': [okJson({ status: 'CommitStarted' }), okJson({ status: 'PendingPublication' })],
+    });
+    const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
+    assert.equal(result.outcome, Outcome.Completed);
+    assert.match(result.message, /Store id ADD1, https:\/\/displaycatalog\.mp\.microsoft\.com\/v7\.0\/products\/ADD1\?market=US/);
+    assert.equal(api.calls.find((call) => call.key.startsWith('PUT')).body.pricing.priceId, 'Tier1012');
+    assert.equal(api.keys().filter((key) => key.endsWith('/status')).length, 2);
+});
+
+test('Slice 411: a published add-on and an already committed one are left alone; no PUT, no commit', async () => {
+    const published = fakeMs({ 'GET /inappproducts/ADD1': okJson({ id: 'ADD1', lastPublishedInAppProductSubmission: { id: 'live' } }) });
+    assert.equal((await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: published.request, template: async () => assert.fail('no template') })).outcome, Outcome.Exists);
+    const certifying = fakeMs({ 'GET /inappproducts/ADD1': pendingAddOn(), 'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'Certification' }) });
+    assert.equal((await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: certifying.request, template: async () => assert.fail('no template') })).outcome, Outcome.Exists);
+});
+
+test('Slice 411: a pending submission that already failed is an error before any PUT; a commit still running after the poll window is reported, not failed', async () => {
+    const failed = fakeMs({ 'GET /inappproducts/ADD1': pendingAddOn(), 'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'CertificationFailed' }) });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: failed.request, template: async () => assert.fail('no template'), sleep: noSleep }), /sub1 ended CertificationFailed.*delete/);
+    assert.ok(!failed.keys().some((key) => key.startsWith('PUT')));
+    const slow = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub1/status': { status: 200, ok: true, json: { status: 'CommitStarted' } },
+    });
+    const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: slow.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
+    assert.equal(result.outcome, Outcome.Completed);
+    assert.match(result.message, /still committing.*600 s, check later/);
+    assert.ok(slow.keys().filter((key) => key.endsWith('/status')).length >= 120);
+});
+
+test('Slice 411: a shell with no submission gets one created; a 409 on PUT and a CommitFailed are errors, never skipped', async () => {
+    const fresh = fakeMs({
+        'GET /inappproducts/ADD1': okJson({ id: 'ADD1' }),
+        'POST /inappproducts/ADD1/submissions': okJson({ id: 'sub9', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub9': okJson({ id: 'sub9' }),
+        'POST /inappproducts/ADD1/submissions/sub9/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub9/status': okJson({ status: 'CommitFailed', statusDetails: { errors: [{ details: 'bad price' }] } }),
+    });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: fresh.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep }), /commit failed: bad price/);
+    const edited = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': { status: 409, ok: false, json: null },
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'PendingCommit' }),
+    });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: edited.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep }), /edited in Partner Center.*delete/);
+});
+
+test('Slice 411 review #1 and #9: a submission still committing (CommitStarted, an unknown status, or a 409 whose status shows the commit) is reported "still committing", never PUT or committed again, never told to delete', async () => {
+    for (const status of ['CommitStarted', 'Mystery']) {
+        const api = fakeMs({ 'GET /inappproducts/ADD1': pendingAddOn(), 'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status }) });
+        const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => assert.fail('no template'), sleep: noSleep });
+        assert.match(result.message, /still committing/);
+        assert.ok(!api.keys().some((key) => key.startsWith('PUT') || key.endsWith('/commit')));
+    }
+    const lagging = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': { status: 409, ok: false, json: null },
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'CommitStarted' }),
+    });
+    const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: lagging.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
+    assert.match(result.message, /still committing \(CommitStarted\), check later/);
+    assert.ok(!lagging.keys().some((key) => key.endsWith('/commit')));
+});
+
+test('Slice 411: a new book creates its shell, copies the newest published book add-on and reports Created; an existing pending one is Completed', async () => {
+    const list = (rows) => okJson({ value: rows });
+    const old = { id: 'OLD', productId: 'uk.sirous.dinoreader.book.goldilocks' };
+    const newest = { id: 'NEW', productId: 'uk.sirous.dinoreader.book.tortoise' };
+    const lists = [list([old, newest]), list([old, newest, { id: 'ADD1', productId: SEAGULL.productId }])];
+    const api = fakeMs({
+        'GET /inappproducts?top=100': lists,
+        'POST /inappproducts': okJson({ id: 'ADD1' }),
+        'GET /inappproducts/NEW': okJson({ id: 'NEW', lastPublishedInAppProductSubmission: { id: 'p1' } }),
+        'GET /inappproducts/NEW/submissions/p1': okJson(TEMPLATE_SUBMISSION),
+        'GET /inappproducts/ADD1': okJson({ id: 'ADD1' }),
+        'POST /inappproducts/ADD1/submissions': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'PendingPublication' }),
+    });
+    const session = { storeAppId: '9N1' };
+    const result = await createMicrosoftBook('t', SEAGULL, session, { request: api.request, sleep: noSleep, log: () => {} });
+    assert.equal(result.outcome, Outcome.Created);
+    assert.ok(!api.keys().includes('GET /inappproducts/OLD'), 'the newest published add-on is the template, the older one is not read');
+    const pending = fakeMs({
+        'GET /inappproducts?top=100': list([{ id: 'ADD1', productId: SEAGULL.productId }, newest]),
+        'GET /inappproducts/NEW': okJson({ id: 'NEW', lastPublishedInAppProductSubmission: { id: 'p1' } }),
+        'GET /inappproducts/NEW/submissions/p1': okJson(TEMPLATE_SUBMISSION),
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'Certification' }),
+    });
+    assert.equal((await createMicrosoftBook('t', SEAGULL, { storeAppId: '9N1' }, { request: pending.request, sleep: noSleep, log: () => {} })).outcome, Outcome.Completed);
+});
+
+test('Slice 411: the live price comes from the displaycatalog Purchase availability; only USD 0.99 passes', async () => {
+    const catalog = (price, currency = 'USD') => ({ Products: [{ DisplaySkuAvailabilities: [{ Availabilities: [{ Actions: ['Details'] }, { Actions: ['Purchase'], OrderManagementData: { Price: { ListPrice: price, CurrencyCode: currency } } }] }] }] });
+    assert.deepEqual(microsoftLivePrice(catalog(0.99)), { currency: 'USD', price: 0.99 });
+    assert.equal(microsoftLivePrice({ Products: [{ DisplaySkuAvailabilities: [] }] }), null);
+    assert.equal(microsoftLivePrice(null), null);
+    const live = { Product: { DisplaySkuAvailabilities: [{ Availabilities: [{ Actions: ['Details', 'Purchase'], OrderManagementData: { Price: { CurrencyCode: 'USD', ListPrice: 0.99 } } }] }] } }; // v7.0 shape, read live 2026-11-18 for 9P7HG6S98TVG
+    assert.deepEqual(microsoftLivePrice(live), { currency: 'USD', price: 0.99 });
+    assert.equal(microsoftPriceProblem(microsoftLivePrice(live)), null);
+    assert.equal(microsoftLivePrice({ Product: { DisplaySkuAvailabilities: [{ Availabilities: [{ Actions: ['Details'], OrderManagementData: { Price: { CurrencyCode: 'USD', ListPrice: 0.99 } } }] }] } }), null);
+    const unreadable = await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { throw new Error('displaycatalog answered HTTP 503'); });
+    assert.match(unreadable[0].problem, /could not read the catalog.*503/);
+    assert.equal(microsoftPriceProblem({ currency: 'USD', price: 0.99 }), null);
+    assert.match(microsoftPriceProblem({ currency: 'USD', price: 1.99 }), /not USD 0.99/);
+    assert.match(microsoftPriceProblem(null), /no live price/);
+    assert.equal(microsoftCatalogUrl('9P7HG6S98TVG'), 'https://displaycatalog.mp.microsoft.com/v7.0/products/9P7HG6S98TVG?market=US&languages=en-us');
+    const addOns = new Map([['uk.sirous.dinoreader.book.seagull', 'ADD1'], ['uk.sirous.dinoreader.book.goldilocks', 'GOLD']]);
+    const books = [SEAGULL, { stem: 'goldilocks', title: 'G', productId: 'uk.sirous.dinoreader.book.goldilocks' }, { stem: 'x', title: 'X', productId: 'uk.sirous.dinoreader.book.x' }];
+    const results = await checkMicrosoftPrices(books, addOns, async (id) => (id === 'GOLD' ? catalog(0.99) : catalog(2.99)));
+    assert.deepEqual(results.map((result) => result.problem === null), [false, true, false]);
+    assert.match(results[2].problem, /no add-on/);
+});
+
+test('Slice 411: --book keeps one paid book and drops the subscriptions in every store; an unknown or free stem is an error', () => {
+    assert.equal(parseArgs(['--book', 'seagull']).book, 'seagull');
+    assert.equal(parseArgs(['--check-prices']).checkPrices, true);
+    assert.throws(() => parseArgs(['--book']), /needs a value/);
+    const books = paidBooksFrom(entries);
+    assert.deepEqual(selectBooks(books, 'goldilocks').map((book) => book.stem), ['goldilocks']);
+    assert.equal(selectBooks(books, null).length, books.length);
+    assert.throws(() => selectBooks(books, 'lion_and_mouse'), /no paid book/);
+    for (const store of ALL_STORES) {
+        assert.deepEqual(itemsForStore(store, books, { book: 'goldilocks' }), books);
+        assert.ok(itemsForStore(store, books, { book: null }).length > books.length);
+    }
+    assert.deepEqual(resultOf('created'), { outcome: 'created', message: '' });
+    assert.deepEqual(resultOf({ outcome: 'exists', message: 'id' }), { outcome: 'exists', message: 'id' });
+});
+
+test('Slice 411: --book dry run lists that one book with no subscription; an unknown stem exits 1', () => {
+    const root = mkdtempSync(join(tmpdir(), 'book-'));
+    try {
+        mkdirSync(join(root, 'goldilocks'));
+        writeFileSync(join(root, 'goldilocks', 'book.json'), '{"title":"Goldilocks"}');
+        const env = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot };
+        const dry = spawnSync(process.execPath, [SCRIPT, '--content', root, '--book', 'goldilocks'], { env, encoding: 'utf8' });
+        assert.equal(dry.status, 0);
+        assert.doesNotMatch(dry.stdout, /subscription/i);
+        assert.match(dry.stdout, /would create uk\.sirous\.dinoreader\.book\.goldilocks/);
+        const typo = spawnSync(process.execPath, [SCRIPT, '--content', root, '--book', 'nope'], { env, encoding: 'utf8' });
+        assert.equal(typo.status, 1);
+        assert.match(typo.stderr, /no paid book/);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+test('Slice 411: the local runner reads the keys from the secrets files and maps the Microsoft names; a missing key is left out, never invented', () => {
+    assert.deepEqual(parseEnvText('# c\r\nA=1\r\nB="two words"\r\nC=\'x\'\r\nnoequals\r\n'), { A: '1', B: 'two words', C: 'x' });
+    const env = storeEnvFrom(
+        { MS_STORE_TENANT_ID: 't', MS_STORE_CLIENT_ID: 'c', MS_STORE_CLIENT_SECRET: 's', DINOREADER_PLAY_SERVICE_ACCOUNT_JSON: 'play.json' },
+        { ASC_API_KEY_P8_BASE64: 'p8', ASC_API_KEY_ID: 'kid' },
+        (path) => `{"file":"${path}"}`,
+    );
+    assert.deepEqual(env, {
+        MS_STORE_APP_ID: '9N9VHRLCZXN5', MS_SUBMISSION_TENANT_ID: 't', MS_SUBMISSION_CLIENT_ID: 'c', MS_SUBMISSION_CLIENT_SECRET: 's',
+        ASC_API_KEY_P8_BASE64: 'p8', ASC_API_KEY_ID: 'kid', DINOREADER_PLAY_SERVICE_ACCOUNT_JSON: '{"file":"play.json"}',
+    });
+    assert.deepEqual(storeEnvFrom({}, {}, () => assert.fail('no file read')), { MS_STORE_APP_ID: '9N9VHRLCZXN5' });
+});
+
+test('Slice 411 review #6 and #7: export lines and inline comments parse; a failed or signalled child is a nonzero exit; a missing secrets file or key is named', () => {
+    assert.deepEqual(parseEnvText('export A=1\nB=two # note\nC="x # not a comment" # real\nD=#hash'), { A: '1', B: 'two', C: 'x # not a comment', D: '#hash' });
+    assert.equal(exitCodeOf({ status: 0 }), 0);
+    assert.equal(exitCodeOf({ status: 3 }), 3);
+    assert.equal(exitCodeOf({ status: null, signal: 'SIGTERM' }), 1);
+    assert.equal(exitCodeOf({ status: null, error: new Error('spawn failed') }), 1);
+    assert.deepEqual(missingKeys({}, ['--check-prices']), ['MS_SUBMISSION_TENANT_ID', 'MS_SUBMISSION_CLIENT_ID', 'MS_SUBMISSION_CLIENT_SECRET']);
+    assert.equal(missingKeys({}, ['--apply']).includes('ASC_API_KEY_ID'), true);
+    const root = mkdtempSync(join(tmpdir(), 'secrets-'));
+    try {
+        assert.throws(() => loadStoreEnv(root), /secrets file .*does not exist/);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+test('Slice 411: loadStoreEnv reads a secrets folder from SECRETS_ROOT and the Play file relative to the dinoreader folder', () => {
+    const root = mkdtempSync(join(tmpdir(), 'secrets-'));
+    try {
+        mkdirSync(join(root, 'dinoreader'));
+        mkdirSync(join(root, 'lets-call-mom'));
+        writeFileSync(join(root, 'dinoreader', 'secrets.env'), 'MS_STORE_TENANT_ID=tt\nDINOREADER_PLAY_SERVICE_ACCOUNT_JSON=sa.json\n');
+        writeFileSync(join(root, 'dinoreader', 'sa.json'), '{"client_email":"x"}');
+        writeFileSync(join(root, 'lets-call-mom', 'secrets.env'), 'ASC_API_KEY_ID=kk\n');
+        const env = loadStoreEnv(root);
+        assert.deepEqual([env.MS_SUBMISSION_TENANT_ID, env.ASC_API_KEY_ID, env.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON], ['tt', 'kk', '{"client_email":"x"}']);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
 
 test('Slice 346 review #2: an Apple product that exists but has no price or listing is completed, a whole one is left alone', async () => {
     const half = fakeAsc({
