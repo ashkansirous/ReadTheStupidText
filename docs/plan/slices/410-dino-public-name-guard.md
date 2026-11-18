@@ -95,7 +95,9 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
 - Skipped #6 (`reviews/s410-check.md`): "trackMetadata field order pinned to the code's own order" - the order was checked against the WSDL by the first review pass, which says so in its report.
 - Skipped #7 (`reviews/s410-check.md`): "check runs before parseSonosRequest" - a non-SOAP body with a session id is not a real Sonos request, and either fault is a refusal.
 - Skipped #8 (`reviews/s410-check.md`): "path-filtered workflow" - public-name is not a required check, so a PR that touches no scanned path needs no report from it.
-- Skipped #9 (`reviews/s410-check.md`): "YAML anchor/alias on" - actionlint was run on the workflow and passed.
+- Check pass #9 (`reviews/s410-check.md`) applied after CI's actionlint failed on it ("paths section must be sequence
+  node but got alias node"): both `paths` lists are written out. The skip had rested on the fixer's local actionlint
+  run, which I did not check.
 
 ## Verification
 

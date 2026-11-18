@@ -7,7 +7,7 @@ name: public-name
 on:
   pull_request:
     branches: [main]
-    paths: &scanned
+    paths:
       - 'PRIVACY.md'
       - 'site/**'
       - 'alexa/skill-package/**'
@@ -19,7 +19,16 @@ on:
       - '.github/workflows/public-name.yml'
   push:
     branches: [main]
-    paths: *scanned
+    paths:
+      - 'PRIVACY.md'
+      - 'site/**'
+      - 'alexa/skill-package/**'
+      - 'content/dino/*/book.json'
+      - 'worker/*.ts'
+      - 'docs/plan/slices/**'
+      - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
+      - 'tools/dino/*.mjs'
+      - '.github/workflows/public-name.yml'
   workflow_dispatch:
 
 permissions:
