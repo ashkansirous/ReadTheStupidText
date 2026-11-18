@@ -62,10 +62,12 @@ function readEnvFile(root, relative) {
     return parseEnvText(readFileSync(path, 'utf8'));
 }
 
-/** Reads the secrets store into a child environment. Never logs a value. */
-export function loadStoreEnv(root = process.env.SECRETS_ROOT ?? DEFAULT_SECRETS_ROOT) {
+/** Reads the secrets store into a child environment. Never logs a value. `microsoftOnly` (the read-only --check-prices) reads only the Microsoft keys file: no Apple file, no Play service-account file. */
+export function loadStoreEnv(root = process.env.SECRETS_ROOT ?? DEFAULT_SECRETS_ROOT, microsoftOnly = false) {
     const dinoDir = join(root, dirname(DINO_SECRETS));
-    return storeEnvFrom(readEnvFile(root, DINO_SECRETS), readEnvFile(root, APPLE_SECRETS), (path) => readFileSync(resolve(dinoDir, path), 'utf8'));
+    const dino = readEnvFile(root, DINO_SECRETS);
+    if (microsoftOnly) return storeEnvFrom({ ...dino, [PLAY_PATH_KEY]: undefined }, {}, () => '');
+    return storeEnvFrom(dino, readEnvFile(root, APPLE_SECRETS), (path) => readFileSync(resolve(dinoDir, path), 'utf8'));
 }
 
 /** Pure: the names (never values) of the keys a run needs that the environment lacks; --apply needs all three stores, --check-prices only Microsoft. */
@@ -77,7 +79,7 @@ export function missingKeys(env, args) {
 
 function main() {
     const args = process.argv.slice(2);
-    const env = { ...process.env, ...loadStoreEnv() };
+    const env = { ...process.env, ...loadStoreEnv(undefined, args.includes('--check-prices')) };
     const missing = missingKeys(env, args);
     if (missing.length > 0) throw new Error(`these keys are missing from the secrets store: ${missing.join(', ')}`);
     const result = spawnSync(process.execPath, [SCRIPT, ...args], { env, stdio: 'inherit' });

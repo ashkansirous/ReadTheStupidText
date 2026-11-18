@@ -95,15 +95,21 @@ const MS_PRICE_ID = 'Tier1012'; // 0.99 USD on the advanced pricing model (Tier1
 const MS_LISTING_LOCALE = 'en-us';
 const MS_TEMPLATE_FIELDS = ['contentType', 'keywords', 'lifetime', 'visibility', 'privacyPolicyRequired', 'privacyPolicyUrl'];
 const MS_STATUS_COMMIT_STARTED = 'CommitStarted';
-const MS_STATUS_COMMIT_FAILED = 'CommitFailed';
-const MS_STATUS_PENDING_COMMIT = 'PendingCommit';
-// PreProcessing: Partner Center's status read live 2026-11-18 right after CommitStarted.
-const MS_COMMITTED_STATUSES = [MS_STATUS_COMMIT_STARTED, 'PreProcessing', 'Certification', 'InCertification', 'Release', 'Publishing', 'PendingPublication', 'Published'];
-const MS_FAILED_STATUSES = [MS_STATUS_COMMIT_FAILED, 'Failed', 'CertificationFailed', 'ReleaseFailed', 'Canceled'];
+const MS_STATUS_PUBLISHED = 'Published';
+const MS_COMMIT_RUNNING_STATUSES = [MS_STATUS_COMMIT_STARTED, 'PreProcessing'];
+/** What a Microsoft submission status means for the run (the one table every caller reads): needs work = PUT then commit; in flight = leave alone; failed or unknown = throw. */
+export const MsSubmissionKind = Object.freeze({ NeedsWork: 'needs work', InFlight: 'in flight', Failed: 'failed', Unknown: 'unknown' });
+// PreProcessing: Partner Center's status read live 2026-11-18 right after CommitStarted. No status at all (a fresh submission) needs work like PendingCommit.
+const MS_KIND_BY_STATUS = new Map([
+    ['PendingCommit', MsSubmissionKind.NeedsWork],
+    ...[MS_STATUS_COMMIT_STARTED, 'PreProcessing', 'Certification', 'InCertification', 'Release', 'Publishing', 'PendingPublication', MS_STATUS_PUBLISHED].map((status) => [status, MsSubmissionKind.InFlight]),
+    ...['CommitFailed', 'Failed', 'CertificationFailed', 'ReleaseFailed', 'Canceled'].map((status) => [status, MsSubmissionKind.Failed]),
+]);
 const MS_PUBLISH_MODE_IMMEDIATE = 'Immediate';
 const MS_ACTION_PURCHASE = 'Purchase';
 const MS_VERDICT_PENDING = 'pending';
 const MS_VERDICT_DONE = 'done';
+const CATALOG_RETRY_WAIT_MS = 3000;
 const MS_STATUS_POLL_MS = 5000;
 const MS_STATUS_POLL_MAX = 120; // 120 x 5 s = 10 minutes; a commit still running after that is reported, not failed
 const MS_RATE_LIMIT_MAX_WAIT_S = 600; // the longest single wait
@@ -636,35 +642,33 @@ export function microsoftSubmissionBody(book, pending, template) {
     };
 }
 
+/** Pure: the kind of a submission status (see `MsSubmissionKind`); a missing status needs work, a status not in the table is Unknown. */
+export function microsoftSubmissionKind(status) {
+    if (status === undefined || status === null) return MsSubmissionKind.NeedsWork;
+    return MS_KIND_BY_STATUS.get(status) ?? MsSubmissionKind.Unknown;
+}
+
+/** Pure: the Error for a Failed or Unknown submission, naming its status; null for the other kinds. */
+function microsoftSubmissionProblem(submission) {
+    const kind = microsoftSubmissionKind(submission?.status);
+    if (kind === MsSubmissionKind.Unknown) return new Error(`unknown status ${submission.status}: check Partner Center`);
+    if (kind !== MsSubmissionKind.Failed) return null;
+    return new Error(`the pending submission ${submission.id} ended ${submission.status}: delete it in Partner Center, then rerun`);
+}
+
 /**
- * Pure: what a submission status read means for the run: `pending` (CommitStarted or PendingCommit: keep polling), `done` (a known committed status), or an Error for a failed or unknown status
+ * Pure: what a status read during the commit poll means: `done` (Published), `pending` (any other kind that is not an error), or an Error for a failed or unknown status
  * (CommitFailed, CertificationFailed ...; its errors printed).
  */
 export function microsoftCommitVerdict(statusAnswer) {
     const status = statusAnswer?.status;
-    if (status === MS_STATUS_COMMIT_STARTED || status === MS_STATUS_PENDING_COMMIT) return MS_VERDICT_PENDING;
-    if (MS_COMMITTED_STATUSES.includes(status)) return MS_VERDICT_DONE;
-    if (!MS_FAILED_STATUSES.includes(status)) return MS_VERDICT_PENDING; // review #1: the commit was accepted (202), so a status this script does not know is still committing, never an error that makes a rerun PUT the submission again
-    const errors = (statusAnswer?.statusDetails?.errors ?? []).map((error) => error.details ?? error.code ?? JSON.stringify(error)).join('; ');
-    throw new Error(`commit failed: ${errors || 'no error given'} (status ${status})`);
-}
-
-/** Pure: true for a pending submission whose commit is under way or whose status this script does not know (not PendingCommit, not failed): a rerun must read it again later, never PUT or commit it. */
-export function microsoftSubmissionInFlight(submission) {
-    const status = submission?.status;
-    if (status === MS_STATUS_PENDING_COMMIT || MS_FAILED_STATUSES.includes(status)) return false;
-    return status === MS_STATUS_COMMIT_STARTED || !MS_COMMITTED_STATUSES.includes(status);
-}
-
-/** Pure: true for a pending submission that was already committed (in certification or later), so a rerun leaves it alone. */
-export function microsoftSubmissionCommitted(submission) {
-    return MS_COMMITTED_STATUSES.includes(submission?.status);
-}
-
-/** Pure: why a pending submission that already ended in failure must not be PUT and committed again, or null. */
-export function microsoftFailedSubmissionProblem(submission) {
-    if (!MS_FAILED_STATUSES.includes(submission?.status)) return null;
-    return `the pending submission ${submission.id} ended ${submission.status}: delete it in Partner Center, then rerun`;
+    const kind = microsoftSubmissionKind(status);
+    if (kind === MsSubmissionKind.Unknown) throw microsoftSubmissionProblem(statusAnswer);
+    if (kind === MsSubmissionKind.Failed) {
+        const errors = (statusAnswer?.statusDetails?.errors ?? []).map((error) => error.details ?? error.code ?? JSON.stringify(error)).join('; ');
+        throw new Error(`commit failed: ${errors || 'no error given'} (status ${status})`);
+    }
+    return kind === MsSubmissionKind.InFlight && !MS_COMMIT_RUNNING_STATUSES.includes(status) ? MS_VERDICT_DONE : MS_VERDICT_PENDING; // the commit itself is over once the status is past CommitStarted and PreProcessing
 }
 
 /** Pure: the public, credential-free address of an add-on's catalog entry (price readable once it is live). */
@@ -718,33 +722,39 @@ export async function microsoftTemplate(token, addOns, request, skipProductId) {
 async function microsoftPendingSubmission(token, id, full, request) {
     const path = `${MS_API}/inappproducts/${id}/submissions`;
     if (!full.pendingInAppProductSubmission) return must(await request(token, 'POST', path), 'create submission');
+    if (!full.pendingInAppProductSubmission.id) throw new Error('the add-on lists a pending submission with no id: check Partner Center');
     return must(await request(token, 'GET', `${path}/${full.pendingInAppProductSubmission.id}`), 'read pending submission');
 }
 
-/** PUTs the submission. A 409 is read against the submission's status first (review #9): one that is committing (the status lags behind the commit) answers `{ inFlight }`, only a still-PendingCommit one was edited in Partner Center. */
+/** PUTs the submission. A 409 is read against the submission's status, mapped by the same table: in flight answers `{ inFlight }` (the status lags behind a commit); needs work means it was edited in Partner Center; failed or unknown throw. */
 async function microsoftPutSubmission(token, id, submission, body, request) {
     const base = `${MS_API}/inappproducts/${id}/submissions/${submission.id}`;
     const response = await request(token, 'PUT', base, body);
     if (response.status !== HTTP_CONFLICT) return must(response, 'put submission');
     const current = must(await request(token, 'GET', `${base}/status`), 'read status after 409');
-    if (microsoftSubmissionInFlight(current) || MS_COMMITTED_STATUSES.includes(current?.status)) return { inFlight: current.status };
+    const problem = microsoftSubmissionProblem({ id: submission.id, status: current?.status });
+    if (problem !== null) throw problem;
+    if (microsoftSubmissionKind(current?.status) === MsSubmissionKind.InFlight) return { inFlight: current.status };
     throw new Error('the pending submission was edited in Partner Center (409 on PUT): delete that submission there, then rerun');
 }
 
 function stillCommittingResult(status, where) {
+    if (status === MS_STATUS_PUBLISHED) return { outcome: Outcome.Exists, message: `already ${status}; ${where}` };
     return { outcome: Outcome.Exists, message: `still committing (${status}), check later with --check-prices or Partner Center; ${where}` };
 }
 
 async function microsoftCommitAndWait(token, id, submission, request, { sleep, log }) {
     const base = `${MS_API}/inappproducts/${id}/submissions/${submission.id}`;
     must(await request(token, 'POST', `${base}/commit`), 'commit submission');
+    let status = MS_STATUS_COMMIT_STARTED;
     for (let attempt = 0; attempt < MS_STATUS_POLL_MAX; attempt++) {
         await sleep(MS_STATUS_POLL_MS);
         const answer = must(await request(token, 'GET', `${base}/status`), 'read commit status');
+        status = answer.status ?? status;
         log(`    submission status: ${answer.status}`);
-        if (microsoftCommitVerdict(answer) === MS_VERDICT_DONE) return { status: answer.status, stillCommitting: false };
+        if (microsoftCommitVerdict(answer) === MS_VERDICT_DONE) return { status, stillCommitting: false };
     }
-    return { status: MS_STATUS_COMMIT_STARTED, stillCommitting: true };
+    return { status, stillCommitting: true };
 }
 
 /**
@@ -756,15 +766,15 @@ export async function completeMicrosoftBook(token, book, addOnId, { request, tem
     const where = `Store id ${addOnId}, ${microsoftCatalogUrl(addOnId)}`;
     if (full.lastPublishedInAppProductSubmission) return { outcome: Outcome.Exists, message: where };
     const pending = await microsoftPendingSubmission(token, addOnId, full, request);
-    if (microsoftSubmissionInFlight(pending)) return stillCommittingResult(pending.status ?? 'none', where);
-    if (microsoftSubmissionCommitted(pending)) return { outcome: Outcome.Exists, message: `already ${pending.status}; ${where}` };
-    const failedProblem = microsoftFailedSubmissionProblem(pending);
-    if (failedProblem !== null) throw new Error(failedProblem);
+    if (!pending?.id) throw new Error('the pending submission has no id: check Partner Center');
+    const problem = microsoftSubmissionProblem(pending);
+    if (problem !== null) throw problem;
+    if (microsoftSubmissionKind(pending.status) === MsSubmissionKind.InFlight) return stillCommittingResult(pending.status, where);
     const put = await microsoftPutSubmission(token, addOnId, pending, microsoftSubmissionBody(book, pending, await template()), request);
     if (put.inFlight !== undefined) return stillCommittingResult(put.inFlight, where);
-    const { status, stillCommitting } = await microsoftCommitAndWait(token, addOnId, put, request, { sleep, log });
+    const { status, stillCommitting } = await microsoftCommitAndWait(token, addOnId, pending, request, { sleep, log });
     if (stillCommitting) return { outcome: Outcome.Completed, message: `still committing (${status}) after ${(MS_STATUS_POLL_MAX * MS_STATUS_POLL_MS) / 1000} s, check later with --check-prices or Partner Center; ${where}` };
-    return { outcome: Outcome.Completed, message: `committed (${status}); ${where}` };
+    return { outcome: Outcome.Completed, message: `committed, now ${status}; certification takes hours, read the price later with --check-prices; ${where}` };
 }
 
 /** Pure: `fn` that runs once; every later call gets the first call's promise. A rejected run is forgotten (review #4), so one failed read does not fail every later book the same way. */
@@ -794,31 +804,50 @@ export async function createMicrosoftBook(token, book, session, options = {}) {
     return { outcome: shell === Outcome.Created ? Outcome.Created : done.outcome, message: done.message };
 }
 
-/** Reads each book's live Microsoft price from the public catalog and returns `{ book, problem }` per book (problem null = USD 0.99). `fetchCatalog(storeId)` is injected for tests. */
-export async function checkMicrosoftPrices(books, addOns, fetchCatalog = fetchCatalogJson) {
+/**
+ * Reads each book's live Microsoft price from the public catalog and returns `{ book, storeId, problem, unreadable }` per book (problem null = USD 0.99; `unreadable` is set, and `problem` stays null,
+ * when the catalog could not be read, so a transient error is never counted as a wrong price). `fetchCatalog(storeId)` and `sleep` are injected for tests.
+ */
+export async function checkMicrosoftPrices(books, addOns, fetchCatalog = fetchCatalogJson, sleep = realSleep) {
     const results = [];
     for (const book of books) {
         const id = addOns.get(normalProductId(book.productId));
-        results.push({ book, storeId: id, problem: await priceProblemOf(id, fetchCatalog) });
+        results.push({ book, storeId: id, ...(await priceProblemOf(id, fetchCatalog, sleep)) });
     }
     return results;
 }
 
-/** One book's price problem; a catalog that could not be read (network, HTTP error) is its own problem, never "no live price yet". */
-async function priceProblemOf(storeId, fetchCatalog) {
-    if (storeId === undefined) return 'no add-on in Partner Center';
+/** True for a catalog failure worth one more try: HTTP 429 or a 5xx (`error.status` is set by `fetchCatalogJson`). */
+function isTransientCatalogError(error) {
+    return error?.status === HTTP_TOO_MANY || error?.status >= HTTP_SERVER_ERROR;
+}
+
+/** One catalog read, repeated once after a short wait when the first failed with a 429 or 5xx. */
+async function readCatalogWithRetry(storeId, fetchCatalog, sleep) {
     try {
-        return microsoftPriceProblem(microsoftLivePrice(await fetchCatalog(storeId)));
+        return await fetchCatalog(storeId);
     } catch (error) {
-        return `could not read the catalog: ${error.message}`;
+        if (!isTransientCatalogError(error)) throw error;
+        await sleep(CATALOG_RETRY_WAIT_MS);
+        return fetchCatalog(storeId);
     }
 }
 
-/** The catalog answer, or null when the catalog has no such product yet (404); any other failure throws so it is not mistaken for "not live". */
+/** One book's `{ problem, unreadable }`: a wrong or missing price is a problem; a catalog that could not be read (after the retry) is `unreadable`, never "no live price yet" and never a wrong price. */
+async function priceProblemOf(storeId, fetchCatalog, sleep) {
+    if (storeId === undefined) return { problem: 'no add-on in Partner Center', unreadable: null };
+    try {
+        return { problem: microsoftPriceProblem(microsoftLivePrice(await readCatalogWithRetry(storeId, fetchCatalog, sleep))), unreadable: null };
+    } catch (error) {
+        return { problem: null, unreadable: `could not read the catalog: ${error.message}` };
+    }
+}
+
+/** The catalog answer, or null when the catalog has no such product yet (404); any other failure throws (with `status`) so it is not mistaken for "not live". */
 async function fetchCatalogJson(storeId) {
     const response = await fetch(microsoftCatalogUrl(storeId), { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
     if (response.status === HTTP_NOT_FOUND) return null;
-    if (!response.ok) throw new Error(`displaycatalog answered HTTP ${response.status}`);
+    if (!response.ok) throw Object.assign(new Error(`displaycatalog answered HTTP ${response.status}`), { status: response.status });
     return jsonOrNull(await response.text());
 }
 
@@ -1398,12 +1427,17 @@ function printResults(store, results, withSubscription) {
     if (withSubscription) SUBSCRIPTION_MANUAL_STEPS[store].forEach((step) => console.log(`  by hand (subscription): ${step}`));
 }
 
+function priceLabel(problem, unreadable) {
+    if (unreadable !== null) return 'COULD NOT READ';
+    return problem === null ? 'ok' : 'PROBLEM';
+}
+
 /** `--check-prices`: read-only. Lists the add-ons, reads each book's public catalog price and prints one line per book; sets the exit code on any price that is not USD 0.99. */
 async function runPriceCheck(books) {
     const addOns = await microsoftAddOnMap(await microsoftToken(), retryingMicrosoft(microsoftRequest, { log: console.log }));
     const results = await checkMicrosoftPrices(books, addOns);
-    for (const { book, storeId, problem } of results) console.log(`  ${problem === null ? 'ok' : 'PROBLEM'}: ${book.productId} (${storeId ?? 'no add-on'})${problem === null ? ` USD ${PRICE_USD}` : `: ${problem}`}`);
-    if (results.some((result) => result.problem !== null)) process.exitCode = 1;
+    for (const { book, storeId, problem, unreadable } of results) console.log(`  ${priceLabel(problem, unreadable)}: ${book.productId} (${storeId ?? 'no add-on'})${problem === null && unreadable === null ? ` USD ${PRICE_USD}` : `: ${problem ?? unreadable}`}`);
+    if (results.some((result) => result.problem !== null || result.unreadable !== null)) process.exitCode = 1; // an unreadable catalog is not a wrong price, but the check did not pass either
 }
 
 /** True when this module is the script node was started with; real paths are compared so a drive-letter case, slashes or a junction do not make `main` silently skip. */

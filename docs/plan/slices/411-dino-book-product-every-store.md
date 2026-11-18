@@ -75,4 +75,7 @@ script only makes an empty add-on, and the first 11 books were priced and submit
 #### From review
 
 - Skipped #2 (`reviews/s411-medium.md`): "pricing rebuilt without isAdvancedPricingModel (spec: templates carry true; Tier1012 needs it). Copy from template." - Microsoft's docs list `isAdvancedPricingModel` as read-only, and the live PUT without it was accepted.
+- Skipped #3 (`reviews/s411-check.md`): "microsoftSubmissionBody builds pricing without isAdvancedPricingModel, which the template carries as true and Tier1012 needs." - same as medium #2: Microsoft's docs list it as read-only and the live PUT without it was accepted.
+- Skipped #5 (`reviews/s411-check.md`): "microsoftLivePrice takes the first Purchase availability with a ListPrice, no market/currency check." - the catalog is read with market=US and the price check compares the currency (USD) too, so a wrong market shows as a mismatch, never a false pass.
+- Skipped #8 (`reviews/s411-check.md`): "Status still Planned; unverified.md lists only the price check, not the untested PUT body, post-commit statuses and in-flight handling." - the status line changes in the index pass; unverified.md already holds the live price check.
 - Skipped #8 (`reviews/s411-medium.md`): "price check sequential, takes first Purchase availability with a ListPrice (false pass/mismatch possible); use Promise.all and pick by market." - style/performance only, no wrong answer in practice (the catalog is read with market=US).

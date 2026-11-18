@@ -15,7 +15,7 @@ import {
 
 import {
     checkMicrosoftPrices, completeMicrosoftBook, createMicrosoftBook, itemsForStore, microsoftCatalogUrl, microsoftCommitVerdict, microsoftLivePrice, microsoftPriceProblem, microsoftRateLimitSeconds, microsoftSubmissionBody,
-    microsoftSubmissionCommitted, microsoftSubmissionInFlight, RateLimitedError, resultOf, retryingMicrosoft, selectBooks, memoisedOnce, isEntryScript,
+    microsoftSubmissionKind, MsSubmissionKind, RateLimitedError, resultOf, retryingMicrosoft, selectBooks, memoisedOnce, isEntryScript,
 } from './store-products.mjs';
 
 import { exitCodeOf, loadStoreEnv, missingKeys, parseEnvText, storeEnvFrom, isEntryScript as isLocalEntryScript } from './store-products-local.mjs';
@@ -260,21 +260,95 @@ test('Slice 411 review #4: memoisedOnce runs once and forgets a rejected run; is
     assert.equal(isEntryScript(pathToFileURL(here).href, here + '.missing'), false);
 });
 
-test('Slice 411: commit statuses: CommitStarted and PendingCommit keep polling, a committed one is done, a failed or unknown one throws', () => {
-    assert.equal(microsoftCommitVerdict({ status: 'CommitStarted' }), 'pending');
-    assert.equal(microsoftCommitVerdict({ status: 'PendingCommit' }), 'pending');
-    assert.equal(microsoftCommitVerdict({ status: 'PendingPublication' }), 'done');
+const MS_STATUS_TABLE = [
+    ['PendingCommit', MsSubmissionKind.NeedsWork],
+    ...['CommitStarted', 'PreProcessing', 'Certification', 'InCertification', 'Release', 'Publishing', 'PendingPublication', 'Published'].map((status) => [status, MsSubmissionKind.InFlight]),
+    ...['CommitFailed', 'Failed', 'CertificationFailed', 'ReleaseFailed', 'Canceled'].map((status) => [status, MsSubmissionKind.Failed]),
+    ['Mystery', MsSubmissionKind.Unknown],
+];
+
+test('Slice 411: the status table maps every status to one kind, and every caller (pending submission, commit poll) acts on it', async () => {
+    assert.equal(microsoftSubmissionKind(undefined), MsSubmissionKind.NeedsWork);
+    for (const [status, kind] of MS_STATUS_TABLE) {
+        assert.equal(microsoftSubmissionKind(status), kind, status);
+        const api = fakeMs({
+            'GET /inappproducts/ADD1': pendingAddOn(),
+            'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status }),
+            'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+            'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+            'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'Published' }),
+        });
+        const run = () => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
+        const touched = () => api.keys().some((key) => key.startsWith('PUT') || key.endsWith('/commit'));
+        if (kind === MsSubmissionKind.NeedsWork) {
+            assert.equal((await run()).outcome, Outcome.Completed, status);
+            assert.equal(touched(), true, status);
+        } else if (kind === MsSubmissionKind.InFlight) {
+            const result = await run();
+            assert.equal(result.outcome, Outcome.Exists, status);
+            assert.match(result.message, status === 'Published' ? /already Published/ : new RegExp(`still committing \\(${status}\\), check later`));
+            assert.equal(touched(), false, status);
+        } else {
+            await assert.rejects(run, kind === MsSubmissionKind.Failed ? new RegExp(`sub1 ended ${status}.*delete it in Partner Center, then rerun`) : /unknown status Mystery: check Partner Center/);
+            assert.equal(touched(), false, status);
+        }
+    }
+});
+
+test('Slice 411: the commit poll: CommitStarted and PreProcessing keep polling, any later in-flight status or Published is done, a failed or unknown one throws', async () => {
+    for (const status of ['Certification', 'InCertification', 'Release', 'Publishing', 'PendingPublication', 'Published']) assert.equal(microsoftCommitVerdict({ status }), 'done', status);
+    for (const status of ['PendingCommit', 'CommitStarted', 'PreProcessing']) assert.equal(microsoftCommitVerdict({ status }), 'pending', status);
+    const api = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub1/status': [okJson({ status: 'CommitStarted' }), okJson({ status: 'PreProcessing' }), okJson({ status: 'Certification' })],
+    });
+    const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
+    assert.match(result.message, /committed, now Certification; certification takes hours, read the price later with --check-prices/);
+    assert.equal(api.keys().filter((key) => key.endsWith('/status')).length, 3);
     assert.throws(() => microsoftCommitVerdict({ status: 'CertificationFailed', statusDetails: { errors: [{ details: 'policy' }] } }), /commit failed: policy.*CertificationFailed/);
-    assert.notEqual(microsoftCommitVerdict({ status: 'PreProcessing' }), undefined); // the status Partner Center answered live after CommitStarted (2026-11-18) is a commit that went through, not an unknown one
-    assert.equal(microsoftCommitVerdict({ status: 'Mystery' }), 'pending'); // review #1: after an accepted commit an unknown status is still committing
-    assert.equal(microsoftCommitVerdict(null), 'pending');
-    assert.equal(microsoftSubmissionInFlight({ status: 'Mystery' }), true);
-    assert.equal(microsoftSubmissionInFlight({ status: 'CommitStarted' }), true);
-    assert.equal([{ status: 'PendingCommit' }, { status: 'Certification' }, { status: 'CertificationFailed' }].some(microsoftSubmissionInFlight), false);
     assert.throws(() => microsoftCommitVerdict({ status: 'CommitFailed', statusDetails: { errors: [{ code: 'X', details: 'price tier unknown' }] } }), /commit failed: price tier unknown/);
-    assert.equal(microsoftSubmissionCommitted({ status: 'Certification' }), true);
-    assert.equal(microsoftSubmissionCommitted({ status: 'PendingCommit' }), false);
-    assert.equal(microsoftSubmissionCommitted({ status: 'CommitFailed' }), false);
+    assert.throws(() => microsoftCommitVerdict({ status: 'Mystery' }), /unknown status Mystery: check Partner Center/);
+});
+
+test('Slice 411: a pending submission with no status is PUT and committed; an unknown status throws with no PUT', async () => {
+    const missing = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1' }),
+        'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({}),
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status: 'Published' }),
+    });
+    assert.equal((await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: missing.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep })).outcome, Outcome.Completed);
+    assert.deepEqual(missing.keys().filter((key) => key.startsWith('PUT') || key.endsWith('/commit')).length, 2);
+    const unknown = fakeMs({ 'GET /inappproducts/ADD1': pendingAddOn(), 'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'Draft' }) });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: unknown.request, template: async () => assert.fail('no template'), sleep: noSleep }), /unknown status Draft: check Partner Center/);
+    assert.ok(!unknown.keys().some((key) => key.startsWith('PUT') || key.endsWith('/commit')));
+});
+
+test('Slice 411: a 409 on PUT with a missing status or a missing submission id throws and never builds a commit URL', async () => {
+    const noStatus = fakeMs({
+        'GET /inappproducts/ADD1': pendingAddOn(),
+        'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+        'PUT /inappproducts/ADD1/submissions/sub1': { status: 409, ok: false, json: null },
+        'GET /inappproducts/ADD1/submissions/sub1/status': okJson({}),
+    });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: noStatus.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep }), /edited in Partner Center/);
+    const noId = fakeMs({ 'GET /inappproducts/ADD1': okJson({ id: 'ADD1' }), 'POST /inappproducts/ADD1/submissions': okJson({ status: 'PendingCommit' }) });
+    await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: noId.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep }), /no id/);
+    assert.ok(!noId.keys().some((key) => key.includes('undefined')));
+    for (const status of ['Mystery', 'CertificationFailed']) {
+        const bad = fakeMs({
+            'GET /inappproducts/ADD1': pendingAddOn(),
+            'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
+            'PUT /inappproducts/ADD1/submissions/sub1': { status: 409, ok: false, json: null },
+            'GET /inappproducts/ADD1/submissions/sub1/status': okJson({ status }),
+        });
+        await assert.rejects(() => completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: bad.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep }));
+        assert.ok(!bad.keys().some((key) => key.endsWith('/commit')));
+    }
 });
 
 test('Slice 411: a pending submission is PUT, committed and polled until it leaves CommitStarted', async () => {
@@ -283,7 +357,7 @@ test('Slice 411: a pending submission is PUT, committed and polled until it leav
         'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
         'PUT /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status: 'PendingCommit' }),
         'POST /inappproducts/ADD1/submissions/sub1/commit': okJson({ status: 'CommitStarted' }),
-        'GET /inappproducts/ADD1/submissions/sub1/status': [okJson({ status: 'CommitStarted' }), okJson({ status: 'PendingPublication' })],
+        'GET /inappproducts/ADD1/submissions/sub1/status': [okJson({ status: 'CommitStarted' }), okJson({ status: 'Published' })],
     });
     const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => TEMPLATE_SUBMISSION, sleep: noSleep });
     assert.equal(result.outcome, Outcome.Completed);
@@ -335,7 +409,7 @@ test('Slice 411: a shell with no submission gets one created; a 409 on PUT and a
 });
 
 test('Slice 411 review #1 and #9: a submission still committing (CommitStarted, an unknown status, or a 409 whose status shows the commit) is reported "still committing", never PUT or committed again, never told to delete', async () => {
-    for (const status of ['CommitStarted', 'Mystery']) {
+    for (const status of ['CommitStarted', 'PreProcessing']) {
         const api = fakeMs({ 'GET /inappproducts/ADD1': pendingAddOn(), 'GET /inappproducts/ADD1/submissions/sub1': okJson({ id: 'sub1', status }) });
         const result = await completeMicrosoftBook('t', SEAGULL, 'ADD1', { request: api.request, template: async () => assert.fail('no template'), sleep: noSleep });
         assert.match(result.message, /still committing/);
@@ -394,8 +468,19 @@ test('Slice 411: the live price comes from the displaycatalog Purchase availabil
     assert.deepEqual(microsoftLivePrice(live), { currency: 'USD', price: 0.99 });
     assert.equal(microsoftPriceProblem(microsoftLivePrice(live)), null);
     assert.equal(microsoftLivePrice({ Product: { DisplaySkuAvailabilities: [{ Availabilities: [{ Actions: ['Details'], OrderManagementData: { Price: { CurrencyCode: 'USD', ListPrice: 0.99 } } }] }] } }), null);
-    const unreadable = await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { throw new Error('displaycatalog answered HTTP 503'); });
-    assert.match(unreadable[0].problem, /could not read the catalog.*503/);
+    const httpError = (status) => Object.assign(new Error(`displaycatalog answered HTTP ${status}`), { status });
+    const unreadable = await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { throw httpError(503); }, noSleep);
+    assert.match(unreadable[0].unreadable, /could not read the catalog.*503/);
+    assert.equal(unreadable[0].problem, null); // a catalog that cannot be read is not a wrong price
+    let reads = 0;
+    const retried = await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { if (++reads === 1) throw httpError(429); return catalog(0.99); }, noSleep);
+    assert.deepEqual([reads, retried[0].problem, retried[0].unreadable], [2, null, null]);
+    reads = 0;
+    await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { reads++; throw httpError(503); }, noSleep);
+    assert.equal(reads, 2, 'one retry only');
+    reads = 0;
+    await checkMicrosoftPrices([SEAGULL], new Map([[SEAGULL.productId, 'ADD1']]), async () => { reads++; throw httpError(403); }, noSleep);
+    assert.equal(reads, 1, 'no retry on a 4xx');
     assert.equal(microsoftPriceProblem({ currency: 'USD', price: 0.99 }), null);
     assert.match(microsoftPriceProblem({ currency: 'USD', price: 1.99 }), /not USD 0.99/);
     assert.match(microsoftPriceProblem(null), /no live price/);
@@ -481,6 +566,10 @@ test('Slice 411: loadStoreEnv reads a secrets folder from SECRETS_ROOT and the P
         writeFileSync(join(root, 'lets-call-mom', 'secrets.env'), 'ASC_API_KEY_ID=kk\n');
         const env = loadStoreEnv(root);
         assert.deepEqual([env.MS_SUBMISSION_TENANT_ID, env.ASC_API_KEY_ID, env.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON], ['tt', 'kk', '{"client_email":"x"}']);
+        rmSync(join(root, 'lets-call-mom'), { recursive: true, force: true });
+        rmSync(join(root, 'dinoreader', 'sa.json'));
+        const microsoftOnly = loadStoreEnv(root, true); // --check-prices: neither the Apple file nor the Play file is read
+        assert.deepEqual([microsoftOnly.MS_SUBMISSION_TENANT_ID, microsoftOnly.ASC_API_KEY_ID, microsoftOnly.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON], ['tt', undefined, undefined]);
     } finally {
         rmSync(root, { recursive: true, force: true });
     }
