@@ -109,3 +109,5 @@ Smallest end-to-end first: the pure card and the Save tag on Android, then the s
 - Real Play, App Store and Microsoft Store purchases: a second trial purchase on one account, the Grace and Fix payment paths.
 - The 14 non-English trial strings read by a native speaker.
 - Known behaviour, not a defect: the Trial card never shows on real Android/iOS (the Worker answers no trial state); iOS and Windows show "Try free" (no eligibility answer, see Waiting on the user).
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: items 1, 2, 5, 5b, 6 merged #1239, item 7 merged #1255; item 3 needs Slice 390's iOS wrapper and a Mac/iPhone, item 4 needs a Windows eligibility answer the Store API cannot give (night 2026-11-17-2105)

@@ -135,3 +135,5 @@ Follow-ups from the check pass (`reviews/pr-1256-check-medium.md`, all low, for 
 #### For CLAUDE.md (lifted 2026-11-18)
 
 - Already in `src/Dino/DinoReader.App/CLAUDE.md` on this branch (line 88, the fold rule): change fold layout rules only in Core `FoldLayout` with its tests; every fold-aware rule takes a `FoldScreen`, and `FoldScreen.None` keeps the existing answers; AVD sizes are in `tools/emulator/fold-profiles.json`. (Slice 403: docs/plan/slices/403-dino-foldable-layouts.md)
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: items 1, 6, 11, 12 merged #1256; items 2-5, 7-10, 13 need a fold-capable Android emulator (about 3-4 GB free RAM) and the Xcode iPhone Duo simulator, which does not exist yet; item 4 also needs Slice 395's part cards (395 parked) (night 2026-11-17-2105)

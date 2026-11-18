@@ -413,3 +413,5 @@ E1 built 2026-11-13 (branch fix/s346-mslog): gate logs one line per fresh store 
 - Apple App Store Server API production answered 401 with the new key (sandbox accepted it); recheck once an in-app product is approved.
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user (Submit for Review on the Dino App Store version with the 11 products; Google bank test deposit); Part E built (E1 #1046, E2-E5 #1120), device checks in unverified.md`. *Update 2026-11-15:* the Submit for Review part is done (Claude, through the API, with Dino 1.131.1; see the Apple line under *Waiting on the user*); the Google bank test deposit is the only part left, and the user said not to remind them.
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: only the user's Google payments bank test deposit is left, no build work for a wave (night 2026-11-17-2105; earlier park note in the slice file)

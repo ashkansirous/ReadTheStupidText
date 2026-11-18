@@ -616,6 +616,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ## Shared
 
 ### Slice 393: Feedback loop 2026-11-14-1547 leftovers ([slice](slices/393-feedback-loop-2026-11-14-1547-leftovers.md))
+- **Device:** `tools/phone/test-phone-lib.ps1` and a real-phone preflight after #1242's lease changes (a foreign lease gives `PREFLIGHT WARN` exit 3, `Invoke-LeaseFileOnly`, owner compare `-ceq`): never run, the lease was held by another session (feedback loop 2026-11-17-2105).
 - **Device:** item 13: the VM run of `-Check dino-reorder` through its `# after:` chain (the VM needs 8 GB free; 3.2 GB was free).
 - **Device:** item 14: the first shot's status bar (10:00, no icons) after `install-debug.ps1 -BuildOnly` for Dino (the 2026-11-18 run stopped at a run-flows cache miss), then the retake of the RTST and Dino phone and tablet shots.
 - **Device:** item 23: a macOS run of `store-screenshots.yml` and `dinoreader-ios-sim.yml` (whether the warm-up leaves the driver warm for `maestro test`).

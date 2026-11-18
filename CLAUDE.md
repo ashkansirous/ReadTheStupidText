@@ -110,6 +110,8 @@ DinoReader.Core → Application, Domain
 
 ## Build & run
 
+**.NET 11 SDK on this PC:** none is installed system-wide (only SDK 10); `global.json` pins 11.0.100, so a plain `dotnet` fails. The one copy is `D:\ReadTheStupidText-worktrees\s379b\tmp\dotnet` (checked 2026-11-18: `dotnet --list-sdks` prints 11.0.100): set `DOTNET_ROOT` to it with backslashes and put it first on `PATH`; never remove the `s379b` worktree while it holds the only SDK, and never install another copy into a slice worktree. (Night 2026-11-17-2105 feedback loop; a stable install is Slice 406 item 1.)
+
 Build and run commands: RTST tray in `src/Rtst/ReadTheStupidText.App/CLAUDE.md`, RTST Android/iOS in `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md`, Dino Reader in `src/Dino/DinoReader.App/CLAUDE.md`. The solution is `ReadTheStupidText.slnx`.
 
 **Landing site, usage counts, story store, remote config.** The Cloudflare Worker `readthestupidtext` (`wrangler.jsonc`, `worker/`, `site/`) and its rules live in `worker/CLAUDE.md`; read it before touching the Worker, `site/`, usage counts or the Dino story store.

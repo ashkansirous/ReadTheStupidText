@@ -161,7 +161,10 @@ The CI fix (2026-11-18): `test-store-screenshots.ps1` assigned `$failed = @()`, 
 
 #### Not yet verified
 
+- `tools/phone/test-phone-lib.ps1` and a real-phone preflight after #1242's lease changes (foreign lease `PREFLIGHT WARN` exit 3, `Invoke-LeaseFileOnly`, `-ceq` owner compare): never run, the lease was held by another session (builder and fixer reported NOT RUN; added by the 2026-11-17-2105 feedback loop).
 - Item 13: the VM run of `-Check dino-reorder` through its `# after:` chain (the VM needs 8 GB free; 3.2 GB was free).
 - Item 14: the first shot's status bar (10:00, no icons) after `install-debug.ps1 -BuildOnly` for Dino (the 2026-11-18 run stopped at a run-flows cache miss), then the retake of the RTST and Dino phone and tablet shots.
 - Item 23: a macOS run of `store-screenshots.yml` and `dinoreader-ios-sim.yml` (whether the warm-up leaves the driver warm for `maestro test`).
 - Item 15: the device-test brief change (run `reset-dino-language.ps1` before the first and after the last flow) in ClaudeSkills `agents/device-test.md`, which is not this repo, is still open.
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: #1242, #1248 + ClaudeSkills #323 merged; items 1, 2 need a written design first (two to three review rounds failed); the unproven parts of 13, 14, 23, 15 need the Windows VM, a device screenshot run or a macOS run (night 2026-11-17-2105)
