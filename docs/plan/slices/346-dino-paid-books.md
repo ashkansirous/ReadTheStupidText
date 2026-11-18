@@ -1,6 +1,8 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 **Product:** Dino
 
+*Parked 2026-11-18 (night 2026-11-17-2105 wave 4): only the user's Google payments bank test deposit is left (line 186); no build work for a wave.*
+
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: Part D, store setup and keys, and switching on wait for the user (A-C merged #1016 behind the off switch). A night wave that hits the same blocker parks it again with that reason.*
 
 *Parts A, B and C merged as PR #1016 (e0e73ca3) behind the off switch; Part D, store setup and keys, and switching on wait for the user.*
