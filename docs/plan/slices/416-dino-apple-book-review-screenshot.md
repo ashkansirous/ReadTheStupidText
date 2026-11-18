@@ -50,23 +50,23 @@ and submitted the product alone with `POST /v1/inAppPurchaseSubmissions` (201; n
 
 #### From review
 
-- Skipped #1 (`reviews/s416-high.md`): "tools/dino/iap-review-screenshot.png ... is not in the change and does not exist in the worktree" - the PNG is work item 3, an emulator capture done next.
-- Skipped #7 (`reviews/s416-high.md`): "putUploadOperation ... has no test and no retry" - the PUT stays injected; no retry added.
+- Skipped #1 (`reviews/s416-high.md`): ".github/scripts/store-products.mjs:93, high. The code reads tools/dino/iap-review-screenshot.png, but the file is" - not a code fix: work item 3 captured the PNG on the emulator and it is committed in this PR.
+- Skipped #7 (`reviews/s416-high.md`): ".github/scripts/store-products.mjs:499 (putUploadOperation), low. It has no test and no retry." - the PUT stays injected in tests, and a rerun redoes a failed upload.
 - Skipped #2 (`reviews/s416-medium.md`): "putUploadOperation does one un-retried fetch to Apple's upload URL" - one PUT per screenshot, and a rerun redoes it (the reservation stays AWAITING_UPLOAD and is filled again).
 - Skipped #5 (`reviews/s416-medium.md`): "outcome does not separate a skipped submission from done" - the reason is printed in the run's NOT DONE notes.
 - Skipped #8 (`reviews/s416-medium.md`): "the new delete client method has no case in retryingAsc" - retryingAsc covers the GETs that loop; these writes run once per book.
 - Review #9 check (2026-11-18): one read-only `GET /v1/apps/6825053435/inAppPurchasesV2?filter[state]=APPROVED&limit=1` with the Lets-Call-Mom ASC key answered 200 with one APPROVED purchase, so the filter is accepted; no write call was made, and the screenshot route is still proven only by the earlier live run.
 - Check pass (`reviews/s416-check.md`): #3 resolved by committing `tools/dino/iap-review-screenshot.png` in this PR; #4 fixed (a screenshot with no upload operations is replaced, not committed empty; tests updated).
-- Skipped #1 (`reviews/s416-check.md`): "new Apple product GETs ... still use the bare asc client, not retryingAsc" - one 429 fails only that book, and the run is rerun-safe; the older Apple steps use the same bare client.
+- Skipped #1 (`reviews/s416-check.md`): ".github/scripts/store-products.mjs:450, medium: fix #1 partial. The failed lookup is no" - one 429 fails only that book, and the run is rerun-safe; the older Apple steps use the same bare client.
 - Skipped #2 (`reviews/s416-check.md`): "the submit poll (6 tries, 5 s) run for every product every run" - at most ~25 s per book that never settles, on a hand-run script with a few new books a month.
 - Skipped #5 (`reviews/s416-check.md`): "replace path does DELETE then reserve with no unwinding" - the next run sees no screenshot and reserves one, as the finding says.
 - Skipped #6 (`reviews/s416-check.md`): "a skipped submission still ends as Exists" - the same as medium #5, the reason is in the NOT DONE notes.
 - Skipped #7 (`reviews/s416-check.md`): "filter[state]=APPROVED is stated as proven live but only fake-tested" - the live read-only GET above answered 200 with an APPROVED purchase.
 - Skipped #8 (`reviews/s416-check.md`): "readReviewScreenshot can still throw after the product is created" - openStore checks the file first, and a rerun completes the product.
-- Skipped #9 (`reviews/s416-check.md`): "constants ... sit among unrelated HTTP constants" - cleanup only.
+- Skipped #9 (`reviews/s416-check.md`): ".github/scripts/store-products.mjs:99, low: constants IAP_STATE_APPROVED and AssetState sit among unrelated HTTP" - cleanup only.
 - Check pass 2 (`reviews/s416-check2.md`): #1, #2, #3 and #4 fixed. `appleScreenshotNeed` acts only on known states
   (no screenshot: reserve; FAILED: replace; AWAITING_UPLOAD: upload, or replace when Apple gave no upload operations)
   and leaves delivered, processing and unknown states alone, so a good screenshot is never deleted or re-sent.
 - Skipped #1 (`reviews/s416-check3.md`): "AWAITING_UPLOAD with no uploadOperations is replaced" - at worst one wasted re-upload, and an empty commit would fail.
-- Skipped #2 (`reviews/s416-check3.md`): "a missing or unknown state returns 'none', so it stays MISSING_METADATA silently" - the submit step's NOT DONE note names a product that is not READY_TO_SUBMIT.
-- Skipped #3 (`reviews/s416-check3.md`): "'upload' on an old reservation fails if the PNG size changed" - the run reports it as FAILED and the next run replaces it, as the finding says.
+- Skipped #2 (`reviews/s416-check3.md`): "store-products.mjs:522, low: a missing or unknown assetDeliveryState returns 'none', so" - the submit step's NOT DONE note names a product that is not READY_TO_SUBMIT.
+- Skipped #3 (`reviews/s416-check3.md`): "store-products.mjs:524, low: 'upload' re-uses an old reservation with checksum and" - the run reports it as FAILED and the next run replaces it, as the finding says.
