@@ -1,0 +1,18 @@
+{
+  "_note": "Slice 403 item 12: foldable AVD profiles at the sizes the mocks draw (dp; px = dp x dpi / 160). Definitions only: no AVD is created from this file yet (new-avd.ps1 does not read it). The iPhone Duo is iOS and has no AVD; its sizes (433 x 613 pt outer, 867 x 613 pt inner) are for the iOS simulator.",
+  "dpi": 420,
+  "profiles": [
+    {
+      "name": "RTST_Fold8",
+      "device": "Galaxy Z Fold8",
+      "outer": { "widthDp": 411, "heightDp": 658, "widthPx": 1079, "heightPx": 1727 },
+      "inner": { "widthDp": 857, "heightDp": 643, "widthPx": 2250, "heightPx": 1688 }
+    },
+    {
+      "name": "RTST_Fold8Ultra",
+      "device": "Galaxy Z Fold8 Ultra",
+      "outer": { "widthDp": 411, "heightDp": 960, "widthPx": 1079, "heightPx": 2520 },
+      "inner": { "widthDp": 800, "heightDp": 800, "widthPx": 2100, "heightPx": 2100 }
+    }
+  ]
+}

@@ -118,6 +118,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>聆听</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>你们家用哪些语言阅读？</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0}始终开启。再添加孩子会听到的其他语言。</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0}始终开启。</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>为什么要选不止一种？</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>很多孩子在家听一种语言，在学校或和祖辈在一起时听另一种。每本书都会用你选的每种语言朗读，孩子可以在任何一页切换。最多选三种。</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>应用语言 · 始终开启</value></data>
@@ -240,6 +241,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>慢一点对小朋友更容易 - 用左右方向键调整</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>再读一遍</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>完</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需点击一下。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} 加 {1} 等于多少？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>故事语言</value></data>

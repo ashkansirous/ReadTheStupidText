@@ -118,6 +118,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Écoute</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Dans quelles langues lit votre famille ?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} est toujours activée. Ajoutez les autres langues que votre enfant entend.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} est toujours activée.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Pourquoi plus d’une ?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Beaucoup d’enfants entendent une langue à la maison et une autre à l’école ou chez leurs grands-parents. Chaque livre est lu dans chaque langue choisie, et votre enfant peut changer à chaque page. Choisissez-en jusqu’à trois.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Langue de l’appli · toujours activée</value></data>
@@ -240,6 +241,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Échap</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Plus lent, c'est plus facile pour les petits - changez avec les flèches gauche et droite</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Relire</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Fin</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Réservé aux adultes. L’étagère de votre enfant est à un clic.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Combien font {0} plus {1} ?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Langue de l’histoire</value></data>

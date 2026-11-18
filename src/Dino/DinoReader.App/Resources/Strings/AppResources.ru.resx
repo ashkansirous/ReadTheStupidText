@@ -118,6 +118,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Слушаем</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>На каких языках читает ваша семья?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} включён всегда. Добавьте другие языки, которые слышит ваш ребёнок.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} включён всегда.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Зачем больше одного?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Многие дети слышат один язык дома, а другой — в школе или у бабушки с дедушкой. Каждая книга читается на каждом выбранном языке, и ребёнок может переключаться на любой странице. Выберите до трёх.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Язык приложения · всегда включён</value></data>
@@ -240,6 +241,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Медленнее проще для малышей - меняйте стрелками влево и вправо</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Конец</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>

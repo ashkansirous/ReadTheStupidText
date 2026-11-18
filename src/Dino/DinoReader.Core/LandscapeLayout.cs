@@ -86,6 +86,18 @@ public static class LandscapeLayout
         return new ShelfShape(false, 0, columns);
     }
 
+    /// <summary>The shelf on a foldable's screen (Slice 403): the mock's column count (outer 3, Ultra 2; inner 4, Ultra 3) in a grid; any other device keeps <see cref="ShelfLayout(double, double)"/>.</summary>
+    public static ShelfShape ShelfLayout(double width, double height, FoldScreen screen)
+    {
+        ShelfShape shape = ShelfLayout(width, height);
+        if (shape.Sideways || FoldLayout.ShelfColumns(FoldLayout.EffectiveScreen(screen, width)) is not int columns)
+        {
+            return shape;
+        }
+
+        return shape with { Columns = columns };
+    }
+
     /// <summary>Mock Batch 45 frame 133: columns = clamp(floor((width - 80) / 170), 3, 6), so an iPad Air (804) gets 4 and a small 600 dp tablet 3.</summary>
     public static int TabletPortraitShelfColumns(double width) =>
         (int)Math.Clamp(Math.Floor(Math.Max(0, width - 2 * TabletPortraitShelfSidePadding) / TabletPortraitShelfColumnWidth), MinTabletPortraitShelfColumns, MaxShelfColumns);

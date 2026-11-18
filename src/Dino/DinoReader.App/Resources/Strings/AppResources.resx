@@ -120,6 +120,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Listen</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Which languages does your family read in?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} is always on. Add any others your child hears.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} is always on.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Why more than one?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Many children hear one language at home and another at school or with grandparents. Every book is read in each language you pick, and your child can switch on any page. Pick up to three.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App language · always on</value></data>
@@ -243,6 +244,7 @@
   <!-- Slice 235 part C: the reading speed card's hint on a desktop window (arrow keys change the slider). -->
   <data name="Speed_SubWindows" xml:space="preserve"><value>Slower is easier for little ones - left and right arrows to change</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Read again</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>The end</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one click away.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>What is {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Story language</value></data>

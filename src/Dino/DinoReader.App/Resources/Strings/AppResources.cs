@@ -264,6 +264,7 @@ public static class AppResources
 	public static string Onboarding_Step_Listen => Get();
 	public static string Onboarding_LanguagesTitle => Get();
 	public static string Onboarding_LanguagesBody => Get();
+	public static string Onboarding_LanguagesBodyShort => Get();
 	public static string Onboarding_WhyMoreTitle => Get();
 	public static string Onboarding_WhyMoreBody => Get();
 	public static string StoryLanguages_AppLanguageAlwaysOn => Get();
@@ -386,6 +387,7 @@ public static class AppResources
 	public static string Key_Esc => Get();
 	public static string Speed_SubWindows => Get();
 	public static string Reading_ReadAgain => Get();
+	public static string Reading_TheEnd => Get();
 	public static string Gate_SumQuestion => Get();
 	public static string Story_Language => Get();
 	public static string Story_LanguageDetected => Get();

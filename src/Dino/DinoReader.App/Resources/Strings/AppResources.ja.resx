@@ -118,6 +118,7 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>きく</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>ご家族はどの言語で読みますか？</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0}は常にオンです。お子さまが耳にする言語があれば、ほかにも追加してください。</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0}は常にオンです。</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>なぜ複数選ぶの？</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>家では1つの言語、学校や祖父母のところでは別の言語、というお子さまはたくさんいます。どの本も、選んだすべての言語で読み上げられ、お子さまはどのページでも切り替えられます。最大3つまで選べます。</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>アプリの言語 · 常にオン</value></data>
@@ -240,6 +241,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすい - 左右の矢印キーで変更</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>もう一度読む</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>おしまい</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンクリックで戻れます。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} たす {1} は？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
