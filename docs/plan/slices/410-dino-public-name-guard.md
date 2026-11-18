@@ -66,9 +66,9 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
 
 - [x] `mediaCollection` for each language: `<canEnumerate>true</canEnumerate>` (keep `canPlay` false), in the WSDL's element order.
 - [x] `trackMetadata` for each track: `<canPlay>true</canPlay>` and `<canSkip>true</canSkip>`, in the WSDL's element order.
-- [x] A request whose `credentials` header holds a `loginToken` or `sessionId` gets HTTP 500 with a SOAP 1.1 Fault
-  `Client.LoginUnauthorized` (faultcode and faultstring present); a header with only `deviceId`/`deviceProvider`, or none,
-  is still answered as now.
+- [x] ~~A request whose `credentials` header holds a `loginToken` or `sessionId` gets HTTP 500 with a SOAP 1.1 Fault
+  `Client.LoginUnauthorized`~~ **Reverted** (see *Self Test second run* below): Sonos's own tester sends those values on
+  normal browse requests, so the server ignores the credentials header entirely.
 - [x] Tests for all three (worker/sonos.test.mjs).
 - [ ] After merge and deploy, rerun Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal.
 
@@ -102,6 +102,33 @@ that book to 3-5 (the "up to 5" band, as every other 3+ book in `content/dino/`)
 - Check pass #9 (`reviews/s410-check.md`) applied after CI's actionlint failed on it ("paths section must be sequence
   node but got alias node"): both `paths` lists are written out. The skip had rested on the fixer's local actionlint
   run, which I did not check.
+
+## Self Test second run (2026-11-18, 13:57, after the merge and deploy)
+
+SOAP Compliance: 22 passed, 20 failed; every failure is `assert 500 == 200`. Browse: all six tests fail with "The request
+for metadata failed with error: HTTP 500". Sonos's own tester sends a non-empty `loginToken`/`sessionId` with its normal
+browse requests, so the `Client.LoginUnauthorized` rule (item 3 of the first-run fixes) refuses them. The three fault-format
+checks it was added for now pass, but the cost is every browse call. Decision: an anonymous service ignores the
+credentials header entirely, as it did before this slice; the "invalid credentials" checks stay failing (they test an
+authenticated service).
+
+- [x] Remove the `Client.LoginUnauthorized` path (`hasLoginCredentials` and its call in `worker/sonos.ts`, the
+      `FaultCode.LoginUnauthorized` constant in `worker/sonos-soap.ts` if nothing else uses it); any request whose body
+      parses is answered whatever its credentials header holds. Replace the 500 tests with: a header carrying a
+      non-empty `loginToken` and `sessionId` (and deviceId, deviceProvider, zonePlayerId) is answered 200 like any other.
+- [ ] After deploy: rerun SOAP Compliance, Browse and Sonos Cloud; record the results here.
+
+#### From review (second run fix)
+
+- Applied #1 (`reviews/s410b-high.md`) and #1 (`reviews/s410b-medium.md`): the first-run item now reads as reverted.
+- Skipped #2 (`reviews/s410b-high.md`): "The one regression test sends the credentials header only on getLastUpdate" - the credentials header is no longer read on any path, so a getMetadata case would test the same nothing; the Self Test rerun checks the real browse calls.
+- Skipped #3 (`reviews/s410b-high.md`): "all on getLastUpdate. Maintenance" - overlap in tests is harmless; trimming them is not worth a re-review while Sonos browsing is broken live.
+- Skipped #4 (`reviews/s410b-high.md`): "checks are left failing by decision" - the Self Test rerun result goes in this section; a certification follow-up is decided once Sonos reviews the production submission.
+- Skipped #5 (`reviews/s410b-high.md`): "is attributed wholly to the removed rule" - the rerun after deploy shows which failures remain, which settles it better than reasoning now.
+- Skipped #2 (`reviews/s410b-medium.md`): "new test sends credentials only with getLastUpdate" - same reason as the high pass's #2.
+- Skipped #3 (`reviews/s410b-medium.md`): "does not compare the body to the anonymous response" - nothing reads the header any more, so there is no code path that could make the bodies differ.
+- Skipped #4 (`reviews/s410b-medium.md`): "post-deploy rerun of SOAP Compliance" - it is the open work item just above, done after the merge.
+- Skipped #5 (`reviews/s410b-medium.md`): "no inline comment in respond" - the slice file and this section record why; a comment would repeat it.
 
 ## Verification
 

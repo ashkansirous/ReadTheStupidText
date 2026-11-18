@@ -21,11 +21,6 @@ const ITEM_TRACK = "track";
 const ITEM_CONTAINER = "container";
 const ARTIST_FALLBACK = "Dino Book Reader";
 const ALBUM_NAME = "Dino Book Reader";
-// Slice 410: an anonymous service never issues these, so a credentials header that carries one is invalid (Sonos Self Test checks it).
-// Only an element with content counts: an empty `<sessionId/>` placeholder, or the name in a comment or CDATA, does not.
-const LOGIN_CREDENTIAL = /<(?:[\w.-]+:)?(?:loginToken|sessionId)\b[^>]*(?<!\/)>\s*(?:[^<\s]|<(?!\/))/;
-const XML_COMMENT_OR_CDATA = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g;
-const CREDENTIALS_ELEMENT = /<((?:[\w.-]+:)?)credentials\b[^>]*(?<!\/)>([\s\S]*?)<\/\1credentials\s*>/;
 const MAX_TITLE = 64;
 const MAX_ART_URI = 128;
 const DEFAULT_PAGE = 100;
@@ -255,16 +250,9 @@ export function isSonosPath(pathname: string): boolean {
   return pathname === SONOS_PATH;
 }
 
-/** True when the SOAP header's `credentials` element holds a loginToken or sessionId; the Body and the rest of the envelope are never read. */
-export function hasLoginCredentials(xml: string): boolean {
-  const credentials = CREDENTIALS_ELEMENT.exec(xml.replace(XML_COMMENT_OR_CDATA, ""));
-  return credentials !== null && LOGIN_CREDENTIAL.test(credentials[2] ?? "");
-}
-
 async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined): Promise<Response> {
   const text = await readBoundedText(request);
   if (text === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.TooLarge);
-  if (hasLoginCredentials(text)) throw new SoapFault(FaultCode.LoginUnauthorized, FaultMessage.LoginUnauthorized);
   const parsed = parseSonosRequest(text);
   if (parsed === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.NotSoap);
   return answer(await loadTracks(request, env, pathPrefix, serve), parsed, usage, request);
