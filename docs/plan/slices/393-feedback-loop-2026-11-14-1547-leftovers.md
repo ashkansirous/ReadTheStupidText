@@ -1,7 +1,7 @@
 # Slice 393 — Feedback loop 2026-11-14-1547 leftovers
 **Product:** Shared
 
-*Partly built 2026-11-18 (night 2026-11-17-2105 wave 2): repo PR #1242, ClaudeSkills #323; open: items 1 (per-finding coverage), 2 (merge-gate half), 12-15, 23.* Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md); item 25 added, PR #1184). Planned 2026-11-16 ("none needs the user", 13dc9a0d). ClaudeSkills items shipped in ClaudeSkills PR #323 (merged 2026-11-18T05:27:22Z, c3cb5b07, installed).
+*Partly built 2026-11-18 (night 2026-11-17-2105 wave 2): repo PR #1242 merged (d6bb979f), ClaudeSkills #323 merged (c3cb5b07); open: items 1 (per-finding coverage), 2 (merge-gate half), 12-15, 23.* Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md); item 25 added, PR #1184). Planned 2026-11-16 ("none needs the user", 13dc9a0d). ClaudeSkills items shipped in ClaudeSkills PR #323 (merged 2026-11-18T05:27:22Z, c3cb5b07, installed).
 
 **Touches:** `D:\ClaudeSkills` `skills/feedback-loop/check-review-skips.mjs`, `skills/voice-pick/SKILL.md`, `skills/run-all-waves/`, `tools/phone/`, `tools/desktop-vm/`, `.maestro/dino/`, slice files 243, 291, 317, 330, 346, 384, this slice file.
 
