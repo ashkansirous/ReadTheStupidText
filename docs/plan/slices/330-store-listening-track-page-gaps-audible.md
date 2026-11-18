@@ -22,6 +22,8 @@
 
 *Struck by Slice 393 item 16 (2026-11-18): the four items and the Verification line below describe the listening page, which the measurement above replaced (the user asked why they should listen again). They are struck, not ticked, because no page was built and no answer was recorded. **Caveat:** the measuring agent used ffmpeg `silencedetect` at -40 dB, which finds a silence but cannot tell a clip (a page cut short) from a fast fade-out into the gap; the gap lengths and the "speech resumes within 10 ms" reading say nothing was cut, but a clipped page start or end is not proven absent. If a user ever reports a cut page, run the listening page then.*
 
+*From review:* no findings skipped (no code changed in this slice; the check was a measurement).
+
 - [~] ~~Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.~~ (replaced by the measurement of the live tracks)
 - [~] ~~Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.~~ (not needed, see the measurement)
 - [~] ~~When the user has answered, write every answer into this file, word for word.~~ (no page, no answers)

@@ -101,13 +101,13 @@ Premise check on origin/main:
 
 - Applied #1 (new-language images come from en-us, else en, else the first en-*; English text still goes only to en-us or en), #3, #4 (old shot PNGs are deleted before the run; no time filter), #7, #8.
 - Skipped #2 (`reviews/s291-check.md`): "Pack-banner wait can pass before banner appears (8 s optional visible, then notVisible passes at once)" - the coordinator looks at every shot before any upload, so a banner in a shot is caught there; the device run decides (third round on this wait).
-- Skipped #5 (`reviews/s291-check.md`): "PNGs are copied only after the whole flow, and exit 1 on a failed flow copies none" - low.
+- Skipped #5 (`reviews/s291-check.md`): "tools/emulator/store-screenshots.ps1:100, low. PNGs are copied only after the whole flow," - low: a late flake costs one rerun of a scripted run, and the shots are re-taken anyway.
 - Skipped #6 (`reviews/s291-check.md`): "When both en-us and en exist only en-us is written; en stays stale with just a warning" - low; a warning is enough while en-us is the listing Partner Center shows.
 
 ## From review (`reviews/s291-check3.md`)
 
 - Applied #1, #2, #3 (first launch `clearState: true`, required 30 s wait for the banner, then notVisible 300000 ms).
-- Skipped #4 (`reviews/s291-check3.md`): "A failed or offline pack state also leaves the label visible, so the flow waits the full 300 s (twice) and fails with a bare timeout" - low.
+- Skipped #4 (`reviews/s291-check3.md`): ".maestro/rtst/needs-file/store-shot-phone.yaml:33, low. A failed or offline pack state also leaves" - low: it only slows the failure message of a scripted flow that fails anyway; the shot run needs the pack present.
 - Skipped #5 (`reviews/s291-check3.md`): "Remove-OldStoreShots deletes shots from the shared per-instance maestro-home/maestro-out before the run; a failed run leaves them gone" - low, unconfirmed.
 - Skipped #6 (`reviews/s291-check3.md`): "The expect-log marker is checked after a flow that may wait up to 10 min; if logcat rolled, the run fails and copies no PNG though all shots exist" - low, unconfirmed.
 - Skipped #7 (`reviews/s291-check3.md`): "The flow forces PORTRAIT on the tablet; if the tablet listing should be landscape, every Dino tablet PNG has the wrong orientation" - low, unconfirmed.
@@ -117,7 +117,7 @@ Premise check on origin/main:
 - Skipped #1 (`reviews/s291-check2.md`): "waits 120 s for PackStatusLabel to vanish" - settled by the device runs (wait now 300 s, see Changed while building).
 - Skipped #2 (`reviews/s291-check2.md`): "regex wait on the whole pasted sentence against one element" - low; the RTST phone run passed and each shot was looked at.
 - Skipped #3 (`reviews/s291-check2.md`): "SpeedPresets may sit below the fold in the Settings ScrollView" - the RTST phone run passed and shot 4 (settings) was looked at.
-- Skipped #4 (`reviews/s291-check2.md`): "a locked file throws under ErrorActionPreference Stop and aborts the run" - low.
+- Skipped #4 (`reviews/s291-check2.md`): "tools/emulator/store-screenshots.ps1:78, low: Remove-OldStoreShots recursively scans the whole Maestro home (maestro-home\i<n>);" - low: the finding itself calls the scan redundant, because Find-StoreShotFile picks the newest valid file; a locked file is rare.
 - Skipped #5 (`reviews/s291-check2.md`): "a run missing one shot still copies the others" - decided by the device run: all shots came out and the coordinator looked at each one.
 - Skipped #6 (`reviews/s291-check2.md`): "only en-us is overwritten; warnOtherEnglish only logs" - repeats check #6, skipped there.
 - Skipped #7 (`reviews/s291-check2.md`): "line-for-line copy of the phone flow; fixes must be made twice" - low; same as medium #2.
@@ -143,7 +143,11 @@ Premise check on origin/main:
 ## From review (`reviews/s291c-high-2.md`)
 
 - Applied #1 (the `[Record] open` expect-log marker removed from both Dino store-shot flows: the flow stops at the intro, so `RecordIntroStart` visible is the proof), #2 (shot 4 waits on `GalleryDone`, which only the grown-ups corner has), #3 (shot 3 waits for `ShelfAudioCancel-fa` to be gone after `set-language fa` and for `ReadingAudioStatus` to be gone on the reading page, 60 s each), #9 (the `en` reset in `onFlowComplete` waits for `StoryTile`).
-- Skipped #4, #5, #6, #7, #8 (`reviews/s291c-high-2.md`): handled by the coordinator.
+- Skipped #4 (`reviews/s291c-high-2.md`): "docs/store-listings/dino/play.md:19 (and play-subscription.md), MEDIUM." - store listing wording, not code in this pass; the coordinator handled it in the listing text.
+- Skipped #5 (`reviews/s291c-high-2.md`): "docs/store-listings/dino/play-subscription.md:23, MEDIUM. The subscription paragraph omits Slice 384 Decision 4" - store listing wording, not code in this pass; the coordinator handled it in the listing text.
+- Skipped #6 (`reviews/s291c-high-2.md`): ".claude/skills/store-listing/SKILL.md:25 (and docs/plan/notes/2026-11-14-dino-market-research.md:10), LOW. " - low: a competitor-claim wording in a skill and a note, no code effect; the coordinator handled it.
+- Skipped #7 (`reviews/s291c-high-2.md`): ".claude/skills/store-listing/SKILL.md:110, LOW. " - low: one sentence in the skill about when the record shot is taken, no code effect; the coordinator handled it.
+- Skipped #8 (`reviews/s291c-high-2.md`): "docs/plan/slices/291-store-listings-and-screenshots.md:~114, LOW. " - low: a stale line in this slice file's own review record, no code effect; the coordinator handled it.
 
 ## From review (`reviews/s291c-check2.md`)
 
@@ -162,14 +166,14 @@ Premise check on origin/main:
 - Skipped #4 (`reviews/s291c-check3.md`): "if: always() hand-over publishes a draft release with partial set" repeats medium #5 and check2 #4. The release is a draft, and the coordinator looks at every shot before item 6.
 - Skipped #5 (`reviews/s291c-check3.md`): "collect_shots also searches $PWD" repeats check2 #3: CI runners are fresh, and the size check catches a wrong picture.
 - Skipped #6 (`reviews/s291c-check3.md`): "Wait after tapping Books tab is on StoryTile" repeats medium #2 and check2 #5. The first CI run and a look at the shot decide it.
-- Skipped #7 (`reviews/s291c-check3.md`): "with no exit-status" repeats check2 #2 (low).
+- Skipped #7 (`reviews/s291c-check3.md`): ".github/scripts/ios-sim-store-shots.sh:105, low. UDID from `ios-sim-boot.sh | tail -n 1` with" - low: a boot failure still stops the run, only with a misleading install error; repeats check2 #2.
 - Skipped #8 (`reviews/s291c-check3.md`): "leaks the simulator" low. It matters only on reused runners.
 
 ## From review (`reviews/s291cap-high.md`)
 
-- Skipped #4 (`reviews/s291cap-high.md`): "Output keeps 1080x2400 (2.22:1); the slice itself says Play's 'long side at most twice the short side' is unchecked" - already an open check before the Play upload (item 6); not a caption-tool change.
+- Skipped #4 (`reviews/s291cap-high.md`): "tools/emulator/store-captions.ps1:47, low-medium. Output keeps 1080x2400 (2.22:1); the slice itself says" - already an open check before the Play upload (item 6); not a caption-tool change.
 - Skipped #5 (`reviews/s291cap-high.md`): "Forbidden-word and price rules are English-only" - other languages are a later part of item 9; their rules are added with their lines.
-- Skipped #7, rest (`reviews/s291cap-high.md`): "Self-test never covers ... long or localized text, RTL, the band staying under 20%, or the committed PNGs" - only the long-caption wrap case was added; the rest waits for the other languages.
+- Skipped #7, rest (`reviews/s291cap-high.md`): "tools/emulator/test-store-captions.ps1:36, low. Self-test never covers two-line fit, long or localized" - only the long-caption wrap case was added; the rest waits for the other languages.
 - Skipped #8 (`reviews/s291cap-high.md`): "New-CaptionSheet duplicates tools/emulator/contact-sheet.ps1" - low, not worth a refactor now.
 - Skipped #9 (`reviews/s291cap-high.md`): "nothing checks they match captions.json plus the raw shots" - low; the tool regenerates them in one command.
 
@@ -178,7 +182,7 @@ Premise check on origin/main:
 - Applied #1 (doc and comments now say: one start size, wrap before shrink, a long line can end smaller), #2 (a missing font fails the run), #3 (`-Lang` validated; old set moved to a backup, new set moved in, backup removed, restored on failure), #9 (a `store-*.png` with another name fails the run).
 - Skipped #4 (`reviews/s291cap-medium.md`): "Forbidden-word and price checks are English-only" - repeats high #5; other languages get their rules with their lines.
 - Skipped #5 (`reviews/s291cap-medium.md`): "self-test measures with a default StringFormat and width 1016, while production draws into 952 wide" - low; the real render check and the looked-at PNGs cover it.
-- Skipped #6 (`reviews/s291cap-medium.md`): "Raw shot is scaled to 85% height with green side bars; confirm the user approved this layout" - the band-over-shot layout is the one the skill's table and the coordinator looked at; framing is a user look at the contact sheet.
+- Skipped #6 (`reviews/s291cap-medium.md`): "tools/emulator/store-captions.ps1:62, low: Raw shot is scaled to 85% height with" - the band-over-shot layout is the one the skill's table and the coordinator looked at; framing is a user look at the contact sheet.
 - Skipped #7 (`reviews/s291cap-medium.md`): "Render check counts bright pixels in a box of a synthetic 300x600 image; never reads the committed PNGs" - repeats high #7.
 - Skipped #8 (`reviews/s291cap-medium.md`): "New-CaptionSheet duplicates tools/emulator/contact-sheet.ps1" - repeats high #8.
 
