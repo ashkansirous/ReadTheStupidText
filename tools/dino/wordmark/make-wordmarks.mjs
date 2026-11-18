@@ -1,6 +1,6 @@
-// Slice 410: rewrites the "Dino Book Reader" wordmark (plain outlines, Fredoka weight 600) into the Sonos brand SVGs.
+// Slices 410 and 412: rewrites the public-name wordmark (plain outlines, Fredoka weight 600) into the Sonos brand SVGs.
 // Only the text <path> and the mascot group's x shift change; colours, art paths and sizes stay. The public name is
-// read from ApplicationTitle in the Dino csproj, never typed here.
+// read from tools/dino/public-name.json, never typed here.
 // Run from this folder after `npm ci`:  node make-wordmarks.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -10,8 +10,7 @@ import { Resvg } from "@resvg/resvg-js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
-const csproj = readFileSync(resolve(root, "src/Dino/DinoReader.App/DinoReader.App.csproj"), "utf8");
-const NAME = csproj.match(/<ApplicationTitle>([^<]+)<\/ApplicationTitle>/)[1].trim();
+const NAME = JSON.parse(readFileSync(resolve(root, "tools/dino/public-name.json"), "utf8")).publicName.trim();
 const font = fontkit.openSync(resolve(root, "src/Dino/DinoReader.App/Resources/Fonts/Fredoka.ttf")).getVariation({ wght: 600 });
 const sonos = resolve(root, "docs/design/dino-reader/sonos");
 const MASCOT_SCALE = 2.33;
@@ -88,7 +87,7 @@ function fullLogo() {
   const baseline = 10 + (capHeight * size) / 2;
   const right = left + (probe.width * size) / 100;
   const width = Math.ceil((right + 1.5) * 10) / 10;
-  const sized = svg.replace('width="129" height="20" viewBox="0 0 129 20"', `width="${width}" height="20" viewBox="0 0 ${width} 20"`);
+  const sized = svg.replace(/width="[\d.]+" height="20" viewBox="0 0 [\d.]+ 20"/, `width="${width}" height="20" viewBox="0 0 ${width} 20"`);
   writeFileSync(file, replaceText(sized, outline(NAME, size, left, baseline).d));
   console.log(`full logo: font size ${size.toFixed(1)}, width ${width}`);
 }

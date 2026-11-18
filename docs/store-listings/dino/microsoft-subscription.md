@@ -1,4 +1,4 @@
-# Microsoft Store listing: Dino Book Reader - subscription version (English changes only)
+# Microsoft Store listing: Dino: Kids Books & Stories - subscription version (English changes only)
 
 **Draft 2026-11-15 (Slice 384 work item H). NOT pushed. Push only when Slice 384 is live in the Microsoft Store (the two subscription add-ons published); until then `microsoft.md` is the live text.** Written from `play-subscription.md`. Plans from Slice 384 Decisions 2 and 5: 1.99 GBP a month, 14.99 GBP a year (the Store converts other markets), 7-day free trial, single books still sold and kept, free and bought books never affected. The German text follows this one by the same edit when the user approves the English.
 

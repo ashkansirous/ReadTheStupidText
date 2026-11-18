@@ -69,7 +69,7 @@ export const BOOK_SLOT = "book";
 
 /** What the skill says (the backend speaks to the user here; there is no other UI). Titles are inserted escaped. */
 export const Speech = {
-  Welcome: "Welcome to Dino Book Reader.",
+  Welcome: "Welcome to Dino Bedtime Stories.",
   Choose: "Which book would you like?",
   CanRead: "I can read",
   NoBooks: "There are no books to read yet. Please come back soon.",

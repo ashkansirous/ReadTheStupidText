@@ -63,7 +63,12 @@ the differentiators first, in that language's own words: record, family voice, g
 bilingual, the language name itself ("Farsi stories", "arabiska sagor"), bedtime; generic words (kids,
 books) only if bytes are left. Never repeat a word already in the app name.
 
-### Dino Book Reader (ages 3-9)
+### Dino: Kids Books & Stories (ages 3-9)
+
+The public name is `publicName` in `tools/dino/public-name.json` (Slice 412); the old names "Dino Book Reader" and "Dino Reader"
+never appear in a listing. The opening words of the description are the phrases parents search for ("bedtime stories for kids",
+"picture books", "read aloud", "children's stories"), used naturally and never stuffed (Play suspends for stuffing); the
+differentiators below follow at once.
 
 The first screen of text says, in this order:
 

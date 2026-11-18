@@ -32,9 +32,9 @@ MS note.
 App Store text.
 `;
 
-const DINO_TEXT = `# Store listing: French (\`fr\`), Dino Book Reader
+const DINO_TEXT = `# Store listing: French (\`fr\`), Dino: Kids Books & Stories
 
-Title (<= 30): Dino Book Reader
+Title (<= 30): Dino: Kids Books & Stories
 Play short description (<= 80): Courte.
 Microsoft search terms (7): a b; c; d
 
@@ -62,7 +62,7 @@ test('parseRtst handles CRLF files', () => {
 
 test('parseDino swaps Google Play for Microsoft Store', () => {
   const l = parseDino(DINO_TEXT);
-  assert.equal(l.title, 'Dino Book Reader');
+  assert.equal(l.title, 'Dino: Kids Books & Stories');
   assert.equal(l.shortDescription, 'Courte.');
   assert.equal(l.description, 'Via Microsoft Store, un adulte achete. Microsoft Store.');
   assert.deepEqual(l.keywords, ['a b', 'c', 'd']);
@@ -80,7 +80,7 @@ test('validateListing reports missing fields and limits', () => {
 test('buildListings maps each language to its Partner Center code and names every problem', () => {
   const { listings, errors } = buildListings(APPS.dino, (stem) => (stem === 'zh' ? DINO_TEXT : stem === 'fr' ? '# empty' : undefined));
   assert.deepEqual(Object.keys(listings), ['zh-cn']);
-  assert.equal(listings['zh-cn'].baseListing.title, 'Dino Book Reader');
+  assert.equal(listings['zh-cn'].baseListing.title, 'Dino: Kids Books & Stories');
   assert.ok(errors.includes('ar: file not found'));
   assert.ok(errors.includes('fr: missing title'));
 });
