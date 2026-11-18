@@ -120,6 +120,11 @@ again." Same on the user's phone, and again after the user power-cycled the spea
   note says a hard reset of the players "may be required" (done, no change).
 Conclusion (likely, from these sources): Sonos's cloud does not know sandbox service 463879, so its authorising step
 fails before any call to us. Next: a Sonos developer support case (the user's account; draft in the session).
+**Support case 09396143** opened by the user 2026-11-18 16:20 in the Sonos developer portal (Content Integration →
+Technical Issue, status New), with the draft text; checked by Claude the same day. Open at:
+https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos
+Paid access on speakers (subscription only, linked from the Dino app) is planned in Slice 415
+(docs/plan/slices/415-dino-speaker-subscription-link.md).
 
 **Self Test fourth run (2026-11-18, 16:09-16:10):** Browse passed; SOAP Compliance 36 passed, 3 failed (the three
 invalid-credential checks); MIME Type and Item Type "Not Applicable"; Authentication produced no result row. Sonos Cloud
