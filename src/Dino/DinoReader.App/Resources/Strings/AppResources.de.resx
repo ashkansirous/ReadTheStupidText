@@ -149,7 +149,7 @@
   <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Das ist der Bereich für Erwachsene</value></data>
   <data name="Tour_WelcomeLine" xml:space="preserve"><value>Hier sind nur Erwachsene. Hier kannst du:</value></data>
   <data name="Tour_StoreTitle" xml:space="preserve"><value>Bücher im Laden holen</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Kostenlose und kostenpflichtige Geschichten in allen Sprachen deiner Familie.</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Kostenlose und kostenpflichtige Geschichten, oder alle mit einem Abo.</value></data>
   <data name="Tour_BooksTitle" xml:space="preserve"><value>Deine Bücher verwalten</value></data>
   <data name="Tour_BooksLine" xml:space="preserve"><value>Die Reihenfolge im Regal ändern, ein Buch entfernen oder deine Stimme für jede Figur aufnehmen.</value></data>
   <data name="Tour_SettingsTitle" xml:space="preserve"><value>Einstellungen ändern</value></data>
@@ -157,7 +157,7 @@
   <data name="Tour_ShowMeAround" xml:space="preserve"><value>Zeig mir alles</value></data>
   <data name="Tour_TipBooks" xml:space="preserve"><value>Deine Bücher. Tippe bei einem Buch auf •••, um deine Stimme aufzunehmen oder es zu entfernen. Mit dem Umsortieren änderst du die Reihenfolge im Regal.</value></data>
   <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Der Laden</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Neue Geschichten, kostenlos und kostenpflichtig. Jedes Buch gibt es in allen Sprachen deiner Familie. Schon früher gekauft? Hier stellst du deine Bücher wieder her.</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>Neue Geschichten, kostenlos und kostenpflichtig, oder jedes Buch mit einem Abo. Jedes Buch gibt es in allen Sprachen deiner Familie. Schon früher gekauft? Hier stellst du deine Bücher wieder her.</value></data>
   <data name="Tour_TipSettings" xml:space="preserve"><value>Sprachen, Lesetempo, Töne und Sicherung für die ganze App.</value></data>
   <data name="Tour_ShelfTitle" xml:space="preserve"><value>Sieh dir das Regal deines Kindes an</value></data>
   <data name="Tour_ShelfLine" xml:space="preserve"><value>Tippe auf **Kinderregal**, um zu sehen, was dein Kind sieht.</value></data>
@@ -181,6 +181,19 @@
   <data name="Settings_About" xml:space="preserve"><value>Info und Updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>An</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Aus</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Bücher und Käufe</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Abo</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Jährlich · verlängert sich am {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Monatlich · verlängert sich am {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Gratis testen bis {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Kein Abo</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Zahlungsproblem</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit diesem Google-Konto</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit dieser Apple-ID</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit diesem Microsoft-Konto</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode von Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode aus dem App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode aus dem Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Einstellungen, Laden und Regal</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Erwachsene</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Bücher hinzufügen und bearbeiten</value></data>

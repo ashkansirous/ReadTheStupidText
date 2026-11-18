@@ -619,13 +619,20 @@ public partial class StorePage : ContentView, ICornerTabView
 				_loading = false;
 			}
 
+			bool restoreAfterLoad = TakeRestoreRequest(); // Slice 399: the one place a request is consumed after a load; the wait text shows at once
 			if (_loaded && (_client.Sales.SwitchKnownOn || changedWhileHidden))
 			{
 				await ReplanRowsAsync(); // a purchase change that came while the list loaded (or while the tab was hidden) shows on the first rows too
 			}
+
+			if (restoreAfterLoad)
+			{
+				await RestoreNowAsync();
+			}
 		}
 		else
 		{
+			bool restoreAfterRefresh = TakeRestoreRequest(); // Slice 399: the already-loaded Store shows "Restoring…" before the refresh below, which can take a network round trip
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
 			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
 			await RefreshOnShelfAsync();
@@ -635,6 +642,10 @@ public partial class StorePage : ContentView, ICornerTabView
 			}
 
 			await ReplanRowsAsync();
+			if (restoreAfterRefresh)
+			{
+				await RestoreNowAsync();
+			}
 		}
 	}
 
@@ -1015,6 +1026,47 @@ public partial class StorePage : ContentView, ICornerTabView
 	}
 
 	private bool _restoring; // a restore is going: the first line already says "Restoring…", so a second tap (or Ctrl+R) is the same restore and is not started again
+
+	private static DateTime? _restoreRequestedAtUtc; // Slice 399: Settings asked for a restore at this UTC time; the Store tab consumes it once. Main thread only.
+
+	private static readonly TimeSpan RestoreRequestLifetime = TimeSpan.FromSeconds(30);
+
+	/// <summary>
+	/// Slice 399: Settings' Restore purchases row. The Store tab owns the restore (its wait text, its result message, its error): this only leaves one request carrying its UTC time, which the tab
+	/// consumes at the end of a completed load while it shows, or on an Appearing that finds the catalog loaded. A request older than 30 s is dropped silently. Main thread only.
+	/// </summary>
+	public static void RequestRestore() => _restoreRequestedAtUtc = DateTime.UtcNow;
+
+	// The one place a request is consumed. Returns true when a restore must run now (its wait text already shows). Off screen the request stays for the next Appearing (or expires);
+	// a request that cannot run (catalog not loaded, grown-up gate not met) shows the restore-failed notice; a restore already running answers it.
+	private bool TakeRestoreRequest()
+	{
+		if (_restoreRequestedAtUtc is not { } askedAt || !_onScreen)
+		{
+			return false;
+		}
+
+		_restoreRequestedAtUtc = null;
+		if (DateTime.UtcNow - askedAt > RestoreRequestLifetime)
+		{
+			return false; // expired: dropped silently
+		}
+
+		if (!_loaded || !_mode.IsGrownUp)
+		{
+			ShowRestoreMessage(AppResources.Store_OfflineTitle, RestoreMessageKind.Notice); // the notice the Restore link shows when the store could not be asked
+			return false;
+		}
+
+		if (_restoring)
+		{
+			return false; // the running restore's message is the answer
+		}
+
+		HideRestoreMessage();
+		ShowRestoring(true);
+		return true;
+	}
 
 	// Slice 396 review: one restore at a time, visible from the tap (spinner) and queued behind a buy or a redeem that holds the guard, never dropped. Only the ask-the-store part holds the guard;
 	// the book downloads that follow run outside it, so Buy, Subscribe and Redeem keep working while they arrive.
