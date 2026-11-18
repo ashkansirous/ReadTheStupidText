@@ -33,6 +33,36 @@
         <Color x:Key="MessageAction">#C9C3FF</Color>
         <x:String x:Key="RestoreGlyph">M4 12a8 8 0 1 0 2.3-5.7M4 4.5V10h5.5</x:String>
         <x:String x:Key="CheckGlyph">M4 12.5l5 5L20 6.5</x:String>
+        <!-- Slice 397 (Subscription mock SB1-SB5): the card's tile icons (layers, card) and the external-link glyph of Manage subscription and Fix payment. -->
+        <!-- Review 2: the card's transparent Buttons carry the words and the input; pressed and keyboard focus tint the face under them so a press and a focus ring show on every head. -->
+        <Style x:Key="CardPressButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="Transparent" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#33000000" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Focused">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#1F000000" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandEdge}" />
+                                <Setter Property="BorderWidth" Value="2" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        <x:String x:Key="LayersGlyph">M4 7l8-4 8 4-8 4zM4 12l8 4 8-4M4 17l8 4 8-4</x:String>
+        <x:String x:Key="PaymentGlyph">M5.5 5.5h13a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16V8a2.5 2.5 0 0 1 2.5-2.5zM3 10h18M7 15h4</x:String>
+        <x:String x:Key="ExternalGlyph">M14 4h6v6M20 4l-9 9M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V7.5A1.5 1.5 0 0 1 5.5 6H10</x:String>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
             <!-- Slice 364 (Missing States mock S1-S3): the card is 12 padding, 10 between the row and the message strip under it. -->
@@ -61,6 +91,13 @@
                                     <RoundRectangle CornerRadius="10" />
                                 </Border.StrokeShape>
                                 <Label Text="{x:Static res:AppResources.Store_Free}" FontSize="11.5" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}" VerticalOptions="Center" />
+                            </Border>
+                            <!-- Slice 397 (mock SB3, SB4): the tint Included tag of a paid book the running subscription opens. -->
+                            <Border AutomationId="StoreRowIncluded" IsVisible="{Binding IsIncluded}" HeightRequest="20" Padding="8,0" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label Text="{Binding IncludedLabel}" FontSize="11.5" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}" VerticalOptions="Center" />
                             </Border>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
@@ -240,34 +277,95 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="18" />
             </Border.StrokeShape>
-            <VerticalStackLayout Spacing="10">
-                <Label x:Name="SubscriptionTitle" Text="{x:Static res:AppResources.Sub_Title}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
-                <Label x:Name="SubscriptionLine" AutomationId="StoreSubscriptionLine" Text="{x:Static res:AppResources.Sub_Line}" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
-                <VerticalStackLayout x:Name="SubscriptionPlans" Spacing="8">
-                    <Button x:Name="SubscribeMonthlyButton" AutomationId="StoreSubscribeMonthly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                            BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnSubscribeMonthlyClicked" />
-                    <Button x:Name="SubscribeYearlyButton" AutomationId="StoreSubscribeYearly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnSubscribeYearlyClicked" />
-                    <Label x:Name="SubscriptionTerms" AutomationId="StoreSubscriptionTerms" Text="{x:Static res:AppResources.Sub_Terms}" FontSize="12" LineHeight="1.4" TextColor="{StaticResource Muted}" />
+            <!-- Slice 397 (Subscription mock SB1-SB5, SB10): header (tile, title, line), then the plans, then the terms and links. From 600 dp the page moves the plans into a 300-wide right column (SubscriptionCard.IsWide). The card's state picks the
+                 title, line, tile and which parts show (SubscriptionCard.Choose). -->
+            <Grid x:Name="SubscriptionGrid" ColumnDefinitions="*,0" RowDefinitions="Auto,Auto,Auto" RowSpacing="0" ColumnSpacing="0">
+                <VerticalStackLayout x:Name="SubscriptionHeader" Grid.Row="0" Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Border x:Name="SubscriptionTile" WidthRequest="40" HeightRequest="40" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <shapes:Path x:Name="SubscriptionTileIcon" Data="{StaticResource LayersGlyph}" Stroke="{StaticResource Brand}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                         WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Start">
+                            <Label x:Name="SubscriptionTitle" AutomationId="StoreSubscriptionTitle" Text="{x:Static res:AppResources.Sub_Title}" FontSize="17" FontAttributes="Bold" LineHeight="1.25" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
+                            <Label x:Name="SubscriptionLine" AutomationId="StoreSubscriptionLine" Text="{x:Static res:AppResources.Sub_Line}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    <!-- Manage subscription (SB3) and Fix payment (SB4): both open the store's own subscription page. -->
+                    <Grid x:Name="SubscriptionManageRow" IsVisible="False" HorizontalOptions="Start">
+                        <HorizontalStackLayout Spacing="6" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False">
+                            <shapes:Path Data="{StaticResource ExternalGlyph}" Stroke="{StaticResource RestoreLink}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+                            <Label Text="{x:Static res:AppResources.Sub_Manage}" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" VerticalOptions="Center" HeightRequest="36" VerticalTextAlignment="Center" />
+                        </HorizontalStackLayout>
+                        <Button AutomationId="StoreSubscriptionManage" Style="{StaticResource CardPressButton}" Clicked="OnSubscriptionManageTapped" SemanticProperties.Description="{x:Static res:AppResources.Sub_Manage}" />
+                    </Grid>
+                    <Grid x:Name="SubscriptionFixPayment" IsVisible="False" HorizontalOptions="Start">
+                    <Border InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" HeightRequest="44" Padding="16,0" BackgroundColor="{StaticResource Brand}" StrokeThickness="0" HorizontalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="22" />
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                            <shapes:Path Data="{StaticResource ExternalGlyph}" Stroke="White" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+                            <Label Text="{x:Static res:AppResources.Sub_FixPayment}" FontSize="15" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                    <Button AutomationId="StoreSubscriptionFixPayment" Style="{StaticResource CardPressButton}" CornerRadius="22" Clicked="OnSubscriptionManageTapped" SemanticProperties.Description="{x:Static res:AppResources.Sub_FixPayment}" />
+                    </Grid>
                 </VerticalStackLayout>
-                <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
-                    <Label x:Name="SubscriptionTermsLink" AutomationId="StoreSubscriptionTermsLink" Text="{x:Static res:AppResources.Sub_TermsLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionTermsTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="SubscriptionPrivacyLink" AutomationId="StoreSubscriptionPrivacyLink" Text="{x:Static res:AppResources.Sub_PrivacyLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionPrivacyTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="SubscriptionManageLink" AutomationId="StoreSubscriptionManage" Text="{x:Static res:AppResources.Sub_Manage}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,0,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionManageTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                </FlexLayout>
-            </VerticalStackLayout>
+
+                <!-- The plans: yearly first and primary with the Save tag, monthly second (Decisions 1 and 2). 52 high, radius 26; a plan with no store price is hidden. -->
+                <VerticalStackLayout x:Name="SubscriptionPlans" Grid.Row="1" Spacing="10">
+                    <!-- Review fix 5: each plan is a real Button (focus, Enter/Space, button role) laid transparent over the mock-styled face, which takes no input. -->
+                    <Grid x:Name="SubscribeYearlyButton">
+                    <Border x:Name="SubscribeYearlyFace" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" MinimumHeightRequest="52" Padding="18,0,10,0" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="26" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource BrandEdge}" Offset="0,3" Radius="0" Opacity="1" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Label x:Name="SubscribeYearlyLabel" TextColor="White" FontSize="15.5" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="WordWrap" Margin="0,8" />
+                            <Border x:Name="SubscribeSaveTag" AutomationId="StoreSubscribeSave" Grid.Column="1" IsVisible="False" HeightRequest="22" Padding="8,0" BackgroundColor="#FFC24D" StrokeThickness="0" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11" />
+                                </Border.StrokeShape>
+                                <Label x:Name="SubscribeSaveLabel" FontSize="11.5" FontAttributes="Bold" TextColor="#3a2a00" VerticalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Button x:Name="SubscribeYearlyPress" AutomationId="StoreSubscribeYearly" Style="{StaticResource CardPressButton}" CornerRadius="26" Clicked="OnSubscribeYearlyClicked" />
+                    </Grid>
+                    <Grid x:Name="SubscribeMonthlyButton">
+                    <Border x:Name="SubscribeMonthlyFace" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" MinimumHeightRequest="52" Padding="18,0,10,0" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="26" />
+                        </Border.StrokeShape>
+                        <Label x:Name="SubscribeMonthlyLabel" TextColor="#2f2b6b" FontSize="15.5" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="WordWrap" Margin="0,8" />
+                    </Border>
+                    <Button x:Name="SubscribeMonthlyPress" AutomationId="StoreSubscribeMonthly" Style="{StaticResource CardPressButton}" CornerRadius="26" Clicked="OnSubscribeMonthlyClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="SubscriptionTermsBlock" Grid.Row="2" Spacing="12" Margin="0,12,0,0">
+                    <Label x:Name="SubscriptionTerms" AutomationId="StoreSubscriptionTerms" Text="{x:Static res:AppResources.Sub_Terms}" FontSize="12" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                    <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+                        <Label x:Name="SubscriptionTermsLink" AutomationId="StoreSubscriptionTermsLink" Text="{x:Static res:AppResources.Sub_TermsLink}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" Margin="0,0,14,4">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSubscriptionTermsTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label x:Name="SubscriptionPrivacyLink" AutomationId="StoreSubscriptionPrivacyLink" Text="{x:Static res:AppResources.Sub_PrivacyLink}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" Margin="0,0,0,4">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSubscriptionPrivacyTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Grid>
         </Border>
 
         <!-- Slice 396 (Subscription mock RR1, RR2, RR3): the Store's first line is "Restore purchases" at the right (the corner's own title row says "Store" and "Picked and cast for Dino" above it), shown only while books are sold

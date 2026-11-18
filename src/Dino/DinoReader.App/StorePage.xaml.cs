@@ -54,7 +54,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
 	public string TitleFont => TextDirection.StartsRightToLeft(Title) ? DinoFonts.Persian : DinoFonts.Ui;
 
-	/// <summary>The detail line, "Ages 5–8 · 14 pages · 7 min": the age range leads the length (each part is left out when the server gave none).</summary>
+	/// <summary>The detail line, "Ages 5–8 · 7 min" (Slice 397, mock SB1): the age range leads the length (each part is left out when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
 
 	/// <summary>The sub-line under the title: the credit line in the app language (Slice 192: <c>creditsByLanguage</c>, else <c>credits</c>), or the language in its own name when the story has none.</summary>
@@ -63,8 +63,8 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>The tag badges above the title (Slice 260): at most two, in list order; none for an untagged book or an older Worker.</summary>
 	public IReadOnlyList<StoreTag> Badges => Item.Badges;
 
-	/// <summary>The line under the credits on a card (frame T2): the length, "12 pages · 6 min"; empty when the server gave none.</summary>
-	public string Meta => StoreText.Length(Item);
+	/// <summary>The line under the credits on a card (frame T2, Slice 397 mock): "Ages 5–8 · 6 min"; empty when the server gave neither.</summary>
+	public string Meta => StoreText.Detail(Item);
 
 	public bool HasDetail => Detail.Length > 0;
 	public bool HasMeta => Meta.Length > 0;
@@ -87,6 +87,13 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public bool IsFree => Item.Sale == BookSale.Free;
 
 	public string GetLabel => AppResources.Store_Get;
+
+	private bool _included;
+
+	/// <summary>Slice 397 (mock SB3, SB4): the tint "Included" tag after the length of a paid book the subscription opens (the brand Get stays instead of a price).</summary>
+	public bool IsIncluded => _included && _state is StoreRowState.Get or StoreRowState.Downloading or StoreRowState.Downloaded;
+
+	public string IncludedLabel => AppResources.Store_Included;
 
 	public string TryAgainLabel => AppResources.Store_TryAgain;
 
@@ -195,7 +202,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 		_cancelling = false;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(ErrorLead), nameof(HasBoughtItAlready), nameof(BoughtItAlreadyText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(ErrorLead), nameof(HasBoughtItAlready), nameof(BoughtItAlreadyText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(IsIncluded), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
 	}
 
 	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
@@ -232,13 +239,14 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public string Price => _price;
 
 	/// <summary>Shows what <see cref="BookAccess"/> decided for this row. A download that is running or has just failed is never overwritten.</summary>
-	public void Apply(StoreCardPlan plan)
+	public void Apply(StoreCardPlan plan, bool included = false)
 	{
 		if (_state == StoreRowState.Downloading || (_state == StoreRowState.Failed && plan.Action != StoreAction.OnShelf))
 		{
 			return;
 		}
 
+		_included = included;
 		_price = plan.Price ?? string.Empty;
 		SetState(plan.Action switch
 		{
@@ -296,9 +304,7 @@ public static class StoreText
 		min == max ? AppResources.Format(AppResources.Store_AgeSingle, min) : AppResources.Format(AppResources.Store_Ages, min, max);
 
 	public static string Length(StoreItem item) =>
-		item.PageCount is { } pages && item.Minutes is { } minutes
-			? AppResources.Format(AppResources.Store_Length, pages, minutes)
-			: string.Empty;
+		item.Minutes is { } minutes ? AppResources.Format(AppResources.Store_LengthMinutes, minutes) : string.Empty;
 
 	public static string BandLabel(StoreAgeBand band) => band switch
 	{
@@ -428,7 +434,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			HashSet<string> onShelf = await _client.InstalledIdsAsync();
 			foreach (StoreRow row in _allRows.ToList())
 			{
-				row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)));
+				row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)), _client.Sales.IsIncluded(row.Item));
 			}
 
 			ApplyPurchaseChrome();
@@ -457,16 +463,86 @@ public partial class StorePage : ContentView, ICornerTabView
 		string? monthly = prices.GetValueOrDefault(SubscriptionProducts.Monthly);
 		string? yearly = prices.GetValueOrDefault(SubscriptionProducts.Yearly);
 		bool active = sold && _client.Sales.SubscriptionActive;
-		SubscriptionCard.IsVisible = sold && (active || BookAccess.HasPrice(monthly) || BookAccess.HasPrice(yearly));
-		SubscriptionLine.Text = active ? AppResources.Sub_Active : AppResources.Sub_Line;
-		SubscriptionPlans.IsVisible = !active;
-		SubscribeMonthlyButton.IsVisible = BookAccess.HasPrice(monthly);
-		SubscribeYearlyButton.IsVisible = BookAccess.HasPrice(yearly);
-		SubscribeMonthlyButton.Text = BookAccess.HasPrice(monthly) ? AppResources.Format(AppResources.Sub_Monthly, monthly!) : string.Empty;
-		SubscribeYearlyButton.Text = BookAccess.HasPrice(yearly) ? AppResources.Format(AppResources.Sub_Yearly, yearly!) : string.Empty;
+		BookPurchases purchases = _client.Sales.Purchases;
+		int locked = _client.Sales.LapsedCount();
+		SubscriptionCardPlan plan = DinoReader.Core.SubscriptionCard.Choose(sold, purchases.Subscription.Record, active, purchases.Snapshot.TrialAvailable, monthly, yearly, locked, DateTimeOffset.UtcNow);
+		SubscriptionCard.IsVisible = plan.Visible;
+		ApplyCardTexts(plan, monthly, yearly);
+		ApplyCardLook(plan.Kind);
+		ApplyCardPlans(plan, monthly, yearly);
+		_cardShowsPlans = plan.ShowPlans;
+		_planShowsTrial = plan.PlansHaveTrial;
+		ApplyCardLayout();
 #if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)} kind={plan.Kind} save={plan.SaveTag?.ToString() ?? "none"} trial={plan.PlansHaveTrial} locked={plan.LockedCount} wide={_cardWide}");
 #endif
+	}
+
+	private bool _cardWide;
+	private bool _cardShowsPlans;
+	private bool _planShowsTrial = true;
+
+	private static readonly Color TileGreen = Color.FromArgb("#DFF5E3");
+	private static readonly Color TileGreenIcon = Color.FromArgb("#2E7D32");
+	private static readonly Color TileRed = Color.FromArgb("#FFF0EA");
+	private static readonly Color TileRedIcon = Color.FromArgb("#A4462A");
+	private static readonly Color GraceRing = Color.FromArgb("#F5C9B8");
+	private const double GraceRingThickness = 2;
+	private const double CardColumnGap = 20;
+	private const double CardRowGap = 12;
+
+	// Title and line by state; the line is hidden when there is nothing to say (subscribed with no usable date). Grace and ended get their own copy (SB4, SB5).
+	private void ApplyCardTexts(SubscriptionCardPlan plan, string? monthly, string? yearly)
+	{
+		string? product = _client.Sales.Purchases.Subscription.Record?.ProductId;
+		SubscriptionTitle.Text = SubscriptionCardText.Title(plan);
+		SubscriptionLine.Text = SubscriptionCardText.Line(plan, _client.Sales.Purchases.StoreName, monthly, yearly, product);
+		SubscriptionLine.IsVisible = SubscriptionLine.Text.Length > 0;
+	}
+
+	// The tile and ring: layers on the brand tint for the offer and the ended card, a green check while subscribed, a red card with a ring for a failed payment.
+	private void ApplyCardLook(SubscriptionCardKind kind)
+	{
+		bool grace = kind == SubscriptionCardKind.Grace;
+		bool subscribed = kind is SubscriptionCardKind.Trial or SubscriptionCardKind.Active;
+		SubscriptionTile.BackgroundColor = grace ? TileRed : subscribed ? TileGreen : (Color)Application.Current!.Resources["BrandTint"];
+		SubscriptionTileIcon.Stroke = new SolidColorBrush(grace ? TileRedIcon : subscribed ? TileGreenIcon : (Color)Application.Current!.Resources["Brand"]);
+		SubscriptionTileIcon.Data = (Geometry)new PathGeometryConverter().ConvertFromInvariantString((string)Resources[grace ? "PaymentGlyph" : subscribed ? "CheckGlyph" : "LayersGlyph"])!;
+		SubscriptionCard.Stroke = grace ? GraceRing : Colors.Transparent;
+		SubscriptionCard.StrokeThickness = grace ? GraceRingThickness : 0;
+	}
+
+	// The two plan buttons (yearly first, monthly second), the Save tag, the terms, and Manage or Fix payment.
+	private void ApplyCardPlans(SubscriptionCardPlan plan, string? monthly, string? yearly)
+	{
+		bool hasMonthly = BookAccess.HasPrice(monthly);
+		bool hasYearly = BookAccess.HasPrice(yearly);
+		SubscriptionPlans.IsVisible = plan.ShowPlans;
+		SubscriptionTermsBlock.IsVisible = plan.ShowTerms;
+		SubscribeMonthlyButton.IsVisible = hasMonthly;
+		SubscribeYearlyButton.IsVisible = hasYearly;
+		SubscribeMonthlyLabel.Text = hasMonthly ? SubscriptionCardText.Monthly(plan, monthly!) : string.Empty;
+		SubscribeYearlyLabel.Text = hasYearly ? SubscriptionCardText.Yearly(plan, yearly!) : string.Empty;
+		SemanticProperties.SetDescription(SubscribeMonthlyPress, SubscribeMonthlyLabel.Text);
+		SemanticProperties.SetDescription(SubscribeYearlyPress, plan.SaveTag is { } tag && hasYearly ? $"{SubscribeYearlyLabel.Text}. {SubscriptionCardText.Save(tag)}" : SubscribeYearlyLabel.Text); // the face (label and Save tag) is out of the accessibility tree: the Button says it all
+		SubscribeSaveTag.IsVisible = hasYearly && plan.SaveTag is not null;
+		SubscribeSaveLabel.Text = plan.SaveTag is { } save ? SubscriptionCardText.Save(save) : string.Empty;
+		SubscriptionTerms.Text = SubscriptionCardText.Terms(plan);
+		SubscriptionManageRow.IsVisible = plan.ShowManage && !plan.ShowFixPayment;
+		SubscriptionFixPayment.IsVisible = plan.ShowFixPayment;
+	}
+
+	// Mock SB10: from 600 dp the words stay at the left and the plans sit in a 300-wide column at the right; narrower, header, plans and terms stack. No plans (subscribed) leaves no empty column.
+	private void ApplyCardLayout()
+	{
+		bool split = _cardWide && _cardShowsPlans;
+		SubscriptionGrid.ColumnDefinitions[1].Width = split ? DinoReader.Core.SubscriptionCard.PlansColumnWidth : 0;
+		SubscriptionGrid.ColumnSpacing = split ? CardColumnGap : 0; // spacing only where a column or row shows: the hidden parts add no blank space (review fix 6)
+		SubscriptionPlans.Margin = split ? new Thickness(0) : new Thickness(0, CardRowGap, 0, 0);
+		Grid.SetColumn(SubscriptionPlans, split ? 1 : 0);
+		Grid.SetRow(SubscriptionPlans, split ? 0 : 1);
+		Grid.SetRowSpan(SubscriptionPlans, split ? 2 : 1);
+		Grid.SetRow(SubscriptionTermsBlock, split ? 1 : 2);
 	}
 
 	// no-tap-count (all five subscription presses): the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet, and a new one is outside Slice 384's files; the store sheet's outcome is the fact that matters and the store holds it
@@ -479,8 +555,9 @@ public partial class StorePage : ContentView, ICornerTabView
 	private async Task SubscribeAsync(string plan)
 	{
 		HideRestoreMessage();
+		bool withTrial = _planShowsTrial; // the buy follows what the card promised (review 4): an Ended card shows no trial, so the sheet starts none
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
-			_ => _client.Sales.Purchases.BuyAsync(plan, _allRows.Select(r => r.Item), CancellationToken.None));
+			_ => _client.Sales.Purchases.BuyAsync(plan, _allRows.Select(r => r.Item), CancellationToken.None, withTrial));
 		await ReplanRowsAsync();
 		if (_mode.IsGrownUp && outcome == BuyOutcome.Failed)
 		{
@@ -495,7 +572,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		await _external.RunAsync(() => Launcher.Default.OpenAsync(new Uri(SubscriptionLinks.Privacy)));
 
 	// Slice 384: false means the store's sheet or page failed (BookPurchases has reported it): the grown-up is told. A tap while the store's sheet is already open does nothing.
-	private async void OnSubscriptionManageTapped(object? sender, TappedEventArgs e) // no-tap-count: opens the store's own subscription page, see above
+	private async void OnSubscriptionManageTapped(object? sender, EventArgs e) // no-tap-count: opens the store's own subscription page, see above
 	{
 		if (_external.IsActive)
 		{
@@ -586,7 +663,7 @@ public partial class StorePage : ContentView, ICornerTabView
 				continue;
 			}
 
-			row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id))); // Get, On the shelf, Buy or a note, by the shelf and the store's answer (a failed download keeps Try again)
+			row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)), _client.Sales.IsIncluded(row.Item)); // Get, On the shelf, Buy or a note, by the shelf and the store's answer (a failed download keeps Try again)
 		}
 	}
 
@@ -604,6 +681,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	// rotation changes the grid's span only: the rows, the filter, the open download and the scroll position are never rebuilt.
 	public void ApplyShape(double contentWidth)
 	{
+		_cardWide = DinoReader.Core.SubscriptionCard.IsWide(contentWidth);
+		ApplyCardLayout(); // Slice 397: the subscription card's own split (SB10), independent of the book columns below
 		int columns = SettingsLayout.StoreColumns(contentWidth);
 		if (columns == _shownColumns)
 		{
@@ -691,7 +770,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	private StoreRow NewRow(StoreItem item, HashSet<string> onShelf)
 	{
 		var row = new StoreRow(item, onShelf.Contains(item.Id));
-		row.Apply(_client.Sales.PlanFor(item, onShelf.Contains(item.Id)));
+		row.Apply(_client.Sales.PlanFor(item, onShelf.Contains(item.Id)), _client.Sales.IsIncluded(item));
 		return row;
 	}
 

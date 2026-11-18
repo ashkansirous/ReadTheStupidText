@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Популярное</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Рекомендуем</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Новинка</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} мин</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Для магазина нужен интернет. Истории, которые уже на полке, читаются и без него.</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Подписаться снова</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Купить эту книгу</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Закрыто: подписка закончилась</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Скидка {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} в год</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} в месяц</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Продлевается автоматически каждый месяц или каждый год по указанной цене, пока вы не отмените подписку в аккаунте магазина. Отменить можно в любой момент.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Бесплатный пробный период до {0}. Затем {1} в год, если не отменить до этого.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Бесплатный пробный период до {0}. Затем {1} в месяц, если не отменить до этого.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Годовой план · продлится {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Месячный план · продлится {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Входит</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Платёж не прошёл</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока Google Play повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока App Store повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока Microsoft Store повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Исправить оплату</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 книга на вашей полке закрыта и скрыта от ребёнка. Оформите подписку снова или купите книгу, которую хотите оставить.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>Книг на вашей полке закрыто и скрыто от ребёнка: {0}. Оформите подписку снова или купите те, которые хотите оставить.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Бесплатные книги, которые ещё есть в магазине, возвращаются сами. Книга, которую магазин больше не предлагает, не вернётся, но её записи останутся в файле копии. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>

@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Suosittu</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Suositeltu</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Uusi</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sivua · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Ilmaiseksi ja ilman tiliä. Mitään sinusta tai lapsestasi ei lähetetä.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Olet offline-tilassa</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Kauppa tarvitsee internetin. Hyllyssä jo olevat tarinat toimivat ilman sitä.</value></data>
@@ -431,6 +431,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Tilaa uudelleen</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Osta tämä kirja</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Lukittu: tilaus päättyi</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Säästä {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} vuodessa</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} kuukaudessa</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Uusiutuu automaattisesti joka kuukausi tai joka vuosi näytettyyn hintaan, kunnes peruutat kauppasi tilillä. Peruuta milloin tahansa.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Ilmainen kokeilu {0} asti. Sen jälkeen {1} vuodessa, ellet peruuta ennen sitä.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Ilmainen kokeilu {0} asti. Sen jälkeen {1} kuukaudessa, ellet peruuta ennen sitä.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Vuositilaus · uusiutuu {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Kuukausitilaus · uusiutuu {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Sisältyy</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Maksusi ei mennyt läpi</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun Google Play yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun App Store yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun Microsoft Store yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Korjaa maksu</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Tilauksesi päättyi</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 kirja hyllylläsi on lukittu ja piilotettu lapseltasi. Tilaa uudelleen tai osta se, minkä haluat säilyttää.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} kirjaa hyllylläsi on lukittu ja piilotettu lapseltasi. Tilaa uudelleen tai osta ne, jotka haluat säilyttää.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Kaupasta noudettavat kirjat</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Ilmaiset kirjat palaavat itsestään. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Ilmaiset kirjat, jotka ovat yhä kaupassa, palaavat itsestään. Kirja, jota kauppa ei enää tarjoa, ei palaa, mutta sen äänitykset pysyvät varmuuskopiotiedostossa. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>

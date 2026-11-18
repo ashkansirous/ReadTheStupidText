@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Popular</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recomendado</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Nuevo</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} páginas · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis y sin cuenta. No se envía nada sobre ti ni sobre tu hijo.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Sin conexión</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>La tienda necesita internet. Los cuentos que ya están en la estantería se leen sin conexión.</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Suscribirse de nuevo</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Comprar este libro</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Bloqueado: la suscripción terminó</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Ahorra un {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} al año</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} al mes</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Se renueva sola cada mes o cada año al precio indicado, hasta que canceles en tu cuenta de la tienda. Cancela cuando quieras.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Prueba gratuita hasta el {0}. Después {1} al año, salvo que canceles antes.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Prueba gratuita hasta el {0}. Después {1} al mes, salvo que canceles antes.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Plan anual · se renueva el {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Plan mensual · se renueva el {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Incluido</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>No se pudo realizar tu pago</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Todos los libros siguen abiertos hasta el {0} mientras Google Play lo intenta de nuevo. Revisa tu forma de pago para conservarlos.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Todos los libros siguen abiertos hasta el {0} mientras el App Store lo intenta de nuevo. Revisa tu forma de pago para conservarlos.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Todos los libros siguen abiertos hasta el {0} mientras Microsoft Store lo intenta de nuevo. Revisa tu forma de pago para conservarlos.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Arreglar el pago</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Tu suscripción terminó</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 libro de tu estante está bloqueado y oculto para tu hijo. Suscríbete de nuevo o compra el que quieras conservar.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} libros de tu estante están bloqueados y ocultos para tu hijo. Suscríbete de nuevo o compra los que quieras conservar.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Libros que se recuperan de la tienda</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Los libros gratuitos vuelven solos. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Los libros gratuitos que siguen en la tienda vuelven solos. Un libro que la tienda ya no ofrece no vuelve, pero sus grabaciones se quedan en el archivo de la copia. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>

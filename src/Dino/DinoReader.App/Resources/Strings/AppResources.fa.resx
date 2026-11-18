@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>محبوب</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>پیشنهادی</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>تازه</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} صفحه · {1} دقیقه</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} دقیقه</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>رایگان و بدون حساب کاربری. هیچ اطلاعاتی از شما یا فرزندتان فرستاده نمی‌شود.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>آفلاین هستید</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>فروشگاه به اینترنت نیاز دارد. داستان‌هایی که از قبل روی قفسه هستند بدون اینترنت هم خوانده می‌شوند.</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>اشتراک دوباره</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>خرید این کتاب</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>قفل: اشتراک تمام شد</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>{0}٪ صرفه‌جویی</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} در سال</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} در ماه</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>هر ماه یا هر سال با همان قیمتِ نمایش‌داده‌شده خودکار تمدید می‌شود، تا وقتی که در حساب فروشگاهت لغو کنی. هر زمان می‌توانی لغو کنی.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>آزمایش رایگان تا {0}. بعد از آن {1} در سال، مگر اینکه پیش از آن لغو کنی.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>آزمایش رایگان تا {0}. بعد از آن {1} در ماه، مگر اینکه پیش از آن لغو کنی.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>طرح سالانه · تمدید در {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>طرح ماهانه · تمدید در {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>شامل اشتراک</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>پرداخت شما انجام نشد</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>همهٔ کتاب‌ها تا {0} باز می‌مانند تا Google Play دوباره تلاش کند. روش پرداختت را بررسی کن تا آن‌ها را نگه داری.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>همهٔ کتاب‌ها تا {0} باز می‌مانند تا App Store دوباره تلاش کند. روش پرداختت را بررسی کن تا آن‌ها را نگه داری.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>همهٔ کتاب‌ها تا {0} باز می‌مانند تا Microsoft Store دوباره تلاش کند. روش پرداختت را بررسی کن تا آن‌ها را نگه داری.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>اصلاح پرداخت</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>اشتراک شما تمام شد</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>۱ کتاب در قفسه‌ات قفل و از فرزندت پنهان است. دوباره مشترک شو، یا کتابی را که می‌خواهی نگه داری بخر.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} کتاب در قفسه‌ات قفل و از فرزندت پنهان است. دوباره مشترک شو، یا کتاب‌هایی را که می‌خواهی نگه داری بخر.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>کتاب‌هایی که باید از فروشگاه برگردند</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>کتاب‌های رایگان خودشان برمی‌گردند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>کتاب‌های رایگانی که هنوز در فروشگاه هستند خودشان برمی‌گردند. کتابی که فروشگاه دیگر عرضه نمی‌کند برنمی‌گردد، اما ضبط‌های آن در فایل پشتیبان می‌ماند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>

@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populær</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Anbefalet</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min.</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis og uden konto. Der sendes intet om dig eller dit barn.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Butikken kræver internet. Historier, der allerede står på hylden, kan stadig læses uden.</value></data>
@@ -431,6 +431,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Abonner igen</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Køb denne bog</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnementet er udløbet</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Spar {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} om året</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} om måneden</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Fornyes automatisk hver måned eller hvert år til den viste pris, indtil du opsiger i din butikskonto. Opsig når som helst.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis prøveperiode til {0}. Derefter {1} om året, medmindre du opsiger før.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis prøveperiode til {0}. Derefter {1} om måneden, medmindre du opsiger før.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Årligt abonnement · fornyes {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Månedligt abonnement · fornyes {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inkluderet</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Din betaling gik ikke igennem</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alle bøger forbliver åbne indtil {0}, mens Google Play prøver igen. Tjek din betalingsmetode for at beholde dem.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alle bøger forbliver åbne indtil {0}, mens App Store prøver igen. Tjek din betalingsmetode for at beholde dem.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alle bøger forbliver åbne indtil {0}, mens Microsoft Store prøver igen. Tjek din betalingsmetode for at beholde dem.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Ret betalingen</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Dit abonnement er udløbet</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bog på din hylde er låst og skjult for dit barn. Abonnér igen, eller køb den, du vil beholde.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} bøger på din hylde er låst og skjult for dit barn. Abonnér igen, eller køb dem, du vil beholde.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøger, der skal hentes tilbage fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøger kommer tilbage af sig selv. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøger, der stadig er i butikken, kommer tilbage af sig selv. En bog, som butikken ikke længere har, kommer ikke tilbage, men dens optagelser bliver i sikkerhedskopien. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>

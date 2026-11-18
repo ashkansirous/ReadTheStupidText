@@ -74,6 +74,15 @@ public sealed class SubscriptionStore
         }
     }
 
+    /// <summary>The ids of the downloaded books the subscription opened (Slice 397: the Ended card counts the locked ones from the shelf's own records, not from the store listing).</summary>
+    public IReadOnlyList<string> SubscriptionOpenedBooks()
+    {
+        lock (_gate)
+        {
+            return [.. Unlocks().Where(pair => pair.Value == BookUnlock.Subscription).Select(pair => pair.Key)];
+        }
+    }
+
     /// <summary>Writes the record for a downloaded book (<see cref="BookUnlockRecords.Merge"/>: the first record stands, a subscription one becomes bought).</summary>
     public void RecordUnlock(string bookId, BookUnlock now)
     {

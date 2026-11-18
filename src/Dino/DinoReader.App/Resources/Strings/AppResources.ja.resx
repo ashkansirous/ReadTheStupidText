@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>人気</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>おすすめ</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>新着</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0}分</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>ストアにはインターネットが必要です。本だなにあるおはなしは、つながらなくても読めます。</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>もう一度定期購入</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>この本を購入</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>ロック中：定期購入が終了しました</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>{0}%おトク</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>年額 {0}</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>月額 {0}</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>表示の料金で毎月または毎年自動的に更新されます。ストアのアカウントで解約するまで続きます。いつでも解約できます。</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>無料体験は{0}まで。その後は年額 {1}です。それまでに解約すれば請求されません。</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>無料体験は{0}まで。その後は月額 {1}です。それまでに解約すれば請求されません。</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>年額プラン · {0}に更新されます。</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>月額プラン · {0}に更新されます。</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>含まれています</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>お支払いができませんでした</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Google Playが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>App Storeが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Microsoft Storeが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>お支払いを修正</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>本棚の1冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>本棚の{0}冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>ストアにある無料の本は自動で戻ります。ストアで配信が終わった本は戻りませんが、録音はバックアップファイルに残ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>

@@ -9,10 +9,15 @@
 # expect-log: HOOK fake-purchases ok on paid=2 owned=0
 # expect-log: HOOK skip-first-run ok
 # expect-log: [Subscription] card visible=True active=False monthly=True yearly=True
+# expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=TrialUsed save=37 trial=False
+# expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=Offer save=37 trial=True
 # expect-log: [Purchases] subscription state=Trial grants=True
 # expect-log: [Subscription] card visible=True active=True
 # expect-log: HOOK fake-subscription ok expired
 # expect-log: [Purchases] subscription state=Expired grants=False
+# expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=Ended save=37 trial=False locked=1
+# expect-log: HOOK fake-subscription ok grace
+# expect-log: [Subscription] card visible=True active=True monthly=True yearly=True kind=Grace
 # expect-log: [Subscription] shelf total=4 shown=4 lapsed=1 grownUp=True
 # expect-log: [Subscription] shelf total=4 shown=3 lapsed=1 grownUp=False
 # expect-log: HOOK fake-subscription ok active
@@ -79,8 +84,32 @@ onFlowComplete:
     id: StoreSubscriptionTermsLink
 - assertVisible:
     id: StoreSubscriptionPrivacyLink
-- assertVisible:
-    id: StoreSubscriptionManage
+# Slice 397 (mock SB1): the yearly plan carries the Save tag, worked out from the two store prices (14.99 against 12 x 1.99 is 37%).
+- assertVisible: "Every book, one subscription"
+- assertVisible: "Save 37%"
+# Slice 397 (mock SB2): the store says the account used the trial: plain prices, no trial in the buttons, the tag stays.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: none
+      trial: used
+- extendedWaitUntil:
+    visible: '.*14\.99 a year'
+    timeout: 30000
+- assertNotVisible: 'Try free, then .*'
+- assertVisible: "Save 37%"
+- assertVisible: 'Renews by itself every month or every year.*'
+# Back to a new subscriber: the trial shows again.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: none
+      trial: ok
+- extendedWaitUntil:
+    visible: 'Try free, then .*14\.99 a year'
+    timeout: 30000
 # Buy one book on its own first: a bought book must never be affected by the subscription later.
 # The subscription card heads the list and pushes the second Buy pill below the fold, so scroll to it.
 - scrollUntilVisible:
@@ -114,6 +143,11 @@ onFlowComplete:
     timeout: 60000
 - assertNotVisible:
     id: StoreSubscribeMonthly
+# Slice 397 (mock SB3): the state line names the trial's end and the price after it; Manage subscription is the card's button; the paid book carries the Included tag with its Get.
+- assertVisible: 'Free trial until .*Then .*1\.99 a month.*'
+- assertVisible:
+    id: StoreSubscriptionManage
+- assertVisible: "Included"
 # The other sold book is now one to Get (the subscription opens it); downloading it records that the subscription alone opened it.
 - extendedWaitUntil:
     visible: "Get"
@@ -162,6 +196,43 @@ onFlowComplete:
     id: LapsedSubscribe
 - assertVisible:
     id: StoryTile
+# Slice 397 (mock SB5): the Store's card says it ended, counts the locked book and offers the plans again with no trial.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+- tapOn:
+    id: GalleryStore
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Your subscription ended"
+    timeout: 30000
+- assertVisible: '1 book on your shelf is locked and hidden from your child.*'
+- assertVisible: '.*14\.99 a year'
+- assertNotVisible: 'Try free, then .*'
+- assertVisible: "Save 37%"
+# Slice 397 (mock SB4): a payment problem: the books stay open until the date, Fix payment opens the store page, the books are Included again.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: grace
+      days: "3"
+- extendedWaitUntil:
+    visible: 'Your payment didn.t go through'
+    timeout: 30000
+- assertVisible: 'Every book stays open until .* while Google Play tries again.*'
+- assertVisible:
+    id: StoreSubscriptionFixPayment
+- assertVisible: "Included"
+# Back to the shelf-lapsed state for the renewal below.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: expired
+      days: "-1"
 # Renewing brings the book back at once: it is on the shelf again with no new download, and nothing is greyed.
 - launchApp:
     stopApp: false

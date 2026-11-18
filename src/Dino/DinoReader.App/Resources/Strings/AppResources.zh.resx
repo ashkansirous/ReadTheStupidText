@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>热门</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>推荐</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>新书</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} 分钟</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>商店需要联网。书架上已有的故事无需联网也能阅读。</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>重新订阅</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>购买这本书</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>已锁定：订阅已结束</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>省 {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>每年 {0}</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>每月 {0}</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>按所示价格每月或每年自动续订，直到你在商店账户中取消。随时可以取消。</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>免费试用至 {0}。之后每年 {1}，如在此之前取消则不收费。</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>免费试用至 {0}。之后每月 {1}，如在此之前取消则不收费。</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>年度方案 · {0} 续订。</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>月度方案 · {0} 续订。</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>已包含</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>你的付款未成功</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>在 Google Play 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>在 App Store 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>在 Microsoft Store 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>修复付款</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>书架上有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>书架上有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那些。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>免费的书会自动回来。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>仍在商店里的免费书会自动回来。商店已下架的书不会回来，但它的录音仍保存在备份文件里。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
