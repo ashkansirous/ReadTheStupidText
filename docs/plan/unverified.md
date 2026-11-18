@@ -77,6 +77,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 404: Dino: a full-shelf test hook, then every live store picture retaken ([slice](slices/404-dino-store-pictures-foldables-and-retake.md))
+- **Device:** the iPhone Duo set, until Xcode has a Duo simulator and Slice 403 has shipped.
+- **Device:** the `full-shelf` hook on the iOS simulator (`ios-sim-store-shots.sh` package copy into the container's Library, flows `store-shot-ios-1..5`) and on the tablet flow (`store-shot-tablet`): not run on a device.
+- **Device:** the package build in a fresh worktree or checkout (`git lfs pull` of each missing book's `high-res/` before `BookBuilder build`, in `store-screenshots.ps1` and `ios-sim-store-shots.sh`): proven only by the `test-store-screenshots.ps1` self-test and the macOS job run; the emulator run needed the pull done by hand.
+
 ### Slice 403: Dino: foldable layouts ([slice](slices/403-dino-foldable-layouts.md))
 - **Device:** the iPhone Duo on a simulator or device (no Duo in Xcode yet; Apple has published no pixel sizes, points or safe areas, 2026-11-16). The Fold8 and Ultra on a real device.
 - **You:** the 14 non-English translations of `Reading_TheEnd` and `Onboarding_LanguagesBodyShort` are machine-written, not checked by a native reader.

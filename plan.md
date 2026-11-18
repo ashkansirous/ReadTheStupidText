@@ -34,7 +34,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 400 | Dino: the crashes first reported 2026-11-14/15 (stream close on Android, iOS scene-update watchdog) and the unexplained unclean exits | planned (items 1, 2, 4-6 merged #1240; item 3 left: iOS layout-pass watchdog) | #1240 | | [400-dino-crashes-2026-11-14.md](docs/plan/slices/400-dino-crashes-2026-11-14.md) |
 | 402 | Dino: App Store header and search-results pictures (items 1-3 built and submitted to Apple; item 4, placing them once approved, open) | in progress (items 1-3 built) | #1214 | | [402-dino-app-store-creative-assets.md](docs/plan/slices/402-dino-app-store-creative-assets.md) |
 | 403 | Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen | planned (items 1, 6, 11, 12 merged #1256; left: items 2-5, 7-10, 13: platform fold adapters, foldable emulator, Duo simulator) | #1256 | | [403-dino-foldable-layouts.md](docs/plan/slices/403-dino-foldable-layouts.md) |
-| 404 | Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set | planned (scope approved 2026-11-17) | | | [404-dino-store-pictures-foldables-and-retake.md](docs/plan/slices/404-dino-store-pictures-foldables-and-retake.md) |
+| 404 | Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set | planned (items 1-2 merged #1254; left: items 3-7, the store retakes and the Duo set) | #1254 | | [404-dino-store-pictures-foldables-and-retake.md](docs/plan/slices/404-dino-store-pictures-foldables-and-retake.md) |
 
 ### Shared
 
@@ -93,7 +93,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 519 checks across 186 slices (Read The Stupid Text 29, Dino Reader 318, Shared 172), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 522 checks across 187 slices (Read The Stupid Text 29, Dino Reader 321, Shared 172), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 
 **Needs you (checked 2026-11-16). Nothing else in this file waits on you.**
 
