@@ -51,6 +51,13 @@ differently), so one cast serves every language. `occurrence` (1-based, in dump 
 piece, matches several without an `occurrence`, or sets a field of one piece twice fails the run before any request. `direction` applies in every language. The delivery sent to Gemini is `<style>; <direction>`
 (`speech_metadata.style`). A speaker with no entry fails the run before any request. `check(sentences, language)` must run before any delivery (the language is a lower-case code such as `fa`). Format and rules: `audio_cast.py`. Fixture dumps for the Pigs binding test: `tools/dino/premade-audio/testdata/` (regenerate with `dump-sentences three-little-pigs --lang en|fa --out ...`).
 
+### `as`: a line spoken in another character's voice
+
+A line entry takes `"as": "<character name>"` (a name in `characters`): that piece is delivered with that character's voice, style and direction instead of its own speaker's. For a line the dump
+tags as narration though characters say it, e.g. a chorus "they said together": `{"speaker": null, "source": "We all miss you, ...", "as": "Granny Seagull", "direction": "..."}` (Love from Seagull Island, page 15).
+A `direction` on the same entry still wins over the character's own. An `as` that names no character, or sits on an entry whose speaker is not null, fails when the cast is loaded: `as` is for narration pieces only. It applies in every language.
+`testdata/farsi-delivery-styles.json` pins the styles recorded before the accent moved (A8); entries for books added after A8 are copies of the current cast, so they guard only against later drift.
+
 ### `say`: a Gemini-only pronunciation fix per line (A6)
 
 A line entry takes `say` next to (or instead of) `direction`: the text Gemini reads for that line in place of the book text, e.g. one word with a vowel mark.

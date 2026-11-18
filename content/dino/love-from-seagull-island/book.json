@@ -22,9 +22,9 @@
       "name": "Seagull",
       "voice": "duckling2",
       "gender": "Female",
-      "age": "Adult",
+      "age": "Child",
       "qualities": [
-        "Squawky",
+        "Bright",
         "Bouncy"
       ]
     },

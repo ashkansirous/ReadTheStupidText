@@ -76,6 +76,16 @@
    "Duck": "a young, squeaky, excitable voice, a silly storybook duck for young children, standard Tehrani accent"
   }
  },
+ "love-from-seagull-island": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Seagull": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+   "Granny Seagull": "a warm, gentle, older grandmother's voice, loving and soft for young children, standard Tehrani accent",
+   "Grampy Seagull": "a warm, gentle, older grandfather's voice, kind and a little booming for young children, standard Tehrani accent",
+   "Kathryn": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children, standard Tehrani accent",
+   "Pancake Polly": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children, standard Tehrani accent"
+  }
+ },
  "red-riding-hood": {
   "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
   "characters": {

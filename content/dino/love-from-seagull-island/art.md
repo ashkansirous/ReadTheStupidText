@@ -112,6 +112,16 @@ with Nana: Grandma and Grandpa have no lines of their own.)
 No two characters share a roster id. `dump-voices`'s mechanical suggestion was ignored: it has no idea who these characters are. As in book
 1, Spanish, Portuguese and Farsi have one woman's voice, so every woman shares it there (flavours differ). Not listened to yet (no audio exists).
 
+## Voice picks: Decisions (user, 2026-11-18)
+
+page: https://claude.ai/artifact/Fs6q2qRYH4MXRFJdJXpxFX (listening page, Gemini TTS candidates; answered 2026-11-18)
+
+Picks: Seagull = Cleo (young girl), Granny Seagull = Gacrux, Grampy Seagull = Sadaltager, narrator = Hali (as book 1), Kathryn = Kore and
+Pancake Polly = Sulafat (as book 1). Page 15's chorus "We all miss you, and we love you more than the whole wide world!" ("they said
+together", all four grandparents) is tagged narration in the dump, so `audio-cast.json` reads it with a `lines` entry `as` Granny Seagull
+(Gacrux), the voice that says the same words on page 4. Picked for a later book, never speaking alone here, so not in `audio-cast.json`:
+Grandma = Vindemiatrix, Grandpa = Orus.
+
 ## Names in the translations
 
 **Translated 2026-11-17 from the approved English** (95 pieces, all 14 languages; the 16 new or reworded pieces translated, the rest
