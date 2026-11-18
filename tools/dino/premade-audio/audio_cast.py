@@ -8,6 +8,7 @@
   "lines": [                                                    // optional, one entry per line
     {"speaker": "<speaker as in the dump, null for the narrator>", "source": "<the line's English source text>",
      "occurrence": 2,                                           // 1-based; only when that speaker says that source more than once in the book
+     "as": "<character name>",                                  // optional, only when speaker is null: speak the narration piece in that character's voice, style and direction (a chorus the dump tags as narration)
      "direction": "<direction, applies in every language>",
      "say": "<text Gemini reads instead>", "lang": "fa"}       // say is language-specific, so it needs lang
   ]
@@ -37,7 +38,7 @@ ACCENT_JOINER = ", "
 # Per-language accent line (Slice 246 A8), appended to the style when the delivery is built. Farsi's text is what every cast's style used to end with, so
 # its delivery (and every Farsi clip cache key) is unchanged. A language without an entry gets no accent line.
 ACCENTS = {"fa": "standard Tehrani accent"}
-LINE_TEXT_FIELDS = ("direction", "say")  # optional, at least one
+LINE_TEXT_FIELDS = ("direction", "say")  # each optional; an entry needs at least one of these or an `as`
 LANGUAGE_CODE = re.compile(r"^[a-z]{2,3}$")  # the dump's language, as BookBuilder writes it (fa, nb, en); "FA" or "fa-IR" would silently skip a say
 
 
@@ -99,7 +100,7 @@ class AudioCast:
 
     def check_line_entry(self, position, entry):
         problem = (f"{self.path}: lines[{position}] must be an object with a non-empty source, a speaker (null for the narrator), an optional occurrence (1 or more), "
-                   "a non-empty direction and/or say, and a lang when it has a say")
+                   "at least one of a non-empty direction, say or as, and a lang when it has a say")
         if not isinstance(entry, dict) or not isinstance(entry.get("source"), str) or not entry["source"] or "speaker" not in entry:
             raise CastError(problem)
         if entry["speaker"] is not None and (not isinstance(entry["speaker"], str) or not entry["speaker"]):
@@ -107,8 +108,12 @@ class AudioCast:
         occurrence = entry.get("occurrence")
         if "occurrence" in entry and (not isinstance(occurrence, int) or isinstance(occurrence, bool) or occurrence < 1):
             raise CastError(problem)
+        if "as" in entry and (not isinstance(entry["as"], str) or entry["as"] not in self.characters):
+            raise CastError(f"{self.path}: lines[{position}] `as` must name one of the cast's characters")
+        if "as" in entry and entry["speaker"] is not None:
+            raise CastError(f"{self.path}: lines[{position}] `as` applies only to narration pieces (speaker null); a spoken line already has its own character")
         texts = [normalize_say(entry[f]) if f == "say" and isinstance(entry[f], str) else entry.get(f) for f in LINE_TEXT_FIELDS if f in entry]
-        if not texts or any(not isinstance(t, str) or not t.strip() for t in texts):
+        if (not texts and "as" not in entry) or any(not isinstance(t, str) or not t.strip() for t in texts):
             raise CastError(problem)
         if "say" in entry and (not isinstance(entry.get("lang"), str) or not LANGUAGE_CODE.match(entry["lang"])):
             raise CastError(problem + " (lang is a lower-case code such as fa)")
@@ -134,6 +139,7 @@ class AudioCast:
         entry = self.narrator if sentence["narrator"] or not sentence.get("speaker") else self.characters.get(sentence["speaker"])
         if entry is None:
             raise CastError(f"{self.path}: no character entry for speaker {sentence['speaker']!r} (sentence {sentence['index']})")
+        entry = self.characters[self.bound_slot(sentence)["as"]] if "as" in self.bound_slot(sentence) else entry  # a line spoken as another character (a chorus the dump tags as narration)
         direction = self.direction_for(sentence) or entry.get("direction") or ""
         return Delivery(entry["voice"], self.styled(entry["style"]), direction, self.say_for(sentence))
 
@@ -152,7 +158,7 @@ class AudioCast:
         for sentence in sentences:
             self.delivery(sentence)
         for position, entry in enumerate(self.lines):
-            fields = [f for f in LINE_TEXT_FIELDS if f in entry and (f != "say" or entry["lang"] == language)]  # a say belongs to one language, a direction to all
+            fields = [f for f in LINE_TEXT_FIELDS + ("as",) if f in entry and (f != "say" or entry["lang"] == language)]  # a say belongs to one language, a direction to all
             self.bind(position, entry, self.find_piece(position, entry, sentences), fields)
 
     def find_piece(self, position, entry, sentences):

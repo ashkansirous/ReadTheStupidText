@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children"
+  },
+  "characters": {
+    "Seagull": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy little girl's voice for young children",
+      "direction": "bouncy, excitable and chatty, full of love"
+    },
+    "Granny Seagull": {
+      "voice": "Gacrux",
+      "style": "a warm, gentle, older grandmother's voice, loving and soft for young children",
+      "direction": "warm, kind and cuddly"
+    },
+    "Grampy Seagull": {
+      "voice": "Sadaltager",
+      "style": "a warm, gentle, older grandfather's voice, kind and a little booming for young children",
+      "direction": "warm, playful and loving"
+    },
+    "Kathryn": {
+      "voice": "Kore",
+      "style": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children",
+      "direction": "bold, cheerful and full of adventure"
+    },
+    "Pancake Polly": {
+      "voice": "Sulafat",
+      "style": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children",
+      "direction": "warm, jolly and bouncy"
+    }
+  },
+  "lines": [
+    {
+      "speaker": null,
+      "source": "We all miss you, and we love you more than the whole wide world!",
+      "as": "Granny Seagull",
+      "direction": "all the grandparents saying it together on the phone, warm and loving"
+    }
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "8f62546ad217d3169b76c2d061a2692ad2a38f238d1b2da366477456996e7e0c",
+      "bytes": 3139848
+    },
+    "da": {
+      "version": 1,
+      "hash": "957054704d4c8ed0a8f8cf6e95126adc40e2fc2a246663f53d5c1b905b9c228f",
+      "bytes": 2573438
+    },
+    "de": {
+      "version": 1,
+      "hash": "3a750574440294f62f374817309668b854d654d8cf8fce046f5b255531affec9",
+      "bytes": 2770257
+    },
+    "en": {
+      "version": 1,
+      "hash": "dc720b0094dbfe29c3bb36fd63bb909932c03005b831f9013e3b050919382c48",
+      "bytes": 2623703
+    },
+    "es": {
+      "version": 1,
+      "hash": "6b8bfd9765db2baec9b1e7a49702a220063c0b3bcf0246d1a812c2d0dadfd9f1",
+      "bytes": 3005088
+    },
+    "fa": {
+      "version": 1,
+      "hash": "706c73ab5e7c5d1bb4848f1039c850463c0818af8239fc802af60fb8af375954",
+      "bytes": 3036115
+    },
+    "fi": {
+      "version": 1,
+      "hash": "c4e7801696b063640eaa616ea38edb0243797f8701218fce613f8f49b609e2cc",
+      "bytes": 2935383
+    },
+    "fr": {
+      "version": 1,
+      "hash": "819bbf6e6941ab1df131ae035f27f407fc090a7d2e641e08d719933c958ab60b",
+      "bytes": 2656268
+    },
+    "ja": {
+      "version": 1,
+      "hash": "3d5b9c099124f927376bd31459d1b39d6947810a326eeb8019eb2fe99fcc1265",
+      "bytes": 3177721
+    },
+    "nb": {
+      "version": 1,
+      "hash": "33af92b070c8ca8fb0c6be5faeeb986fae7f4b681f380e8bb9ffcf442ee09aaf",
+      "bytes": 2701142
+    },
+    "nl": {
+      "version": 1,
+      "hash": "f97f57fc2fb65a1b04895b22f387d5d1ca487e476ceef2a65ab4d38622783b39",
+      "bytes": 2496892
+    },
+    "pt": {
+      "version": 1,
+      "hash": "bfaa49e94b82007e01714bda0f000d90c33efeb0c1f5b89f9e3208c4eece923e",
+      "bytes": 2957186
+    },
+    "ru": {
+      "version": 1,
+      "hash": "a87064e66c5715b89d9d9e6102e62f159e62d241a9f8348c40a63ac6d76187a9",
+      "bytes": 2942928
+    },
+    "sv": {
+      "version": 1,
+      "hash": "53e9b8494fa0da5f3e19c0e0dee7b0aa05a90d5a843256b156357b5db3dbe23c",
+      "bytes": 2795356
+    },
+    "zh": {
+      "version": 1,
+      "hash": "066921fb80bdaf358e57ea9021029eecb2c167032e49ccef7e090c9c1729b7b1",
+      "bytes": 2816334
+    }
+  }
+}
