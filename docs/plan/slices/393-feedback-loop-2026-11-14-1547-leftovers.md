@@ -1,6 +1,8 @@
 # Slice 393 — Feedback loop 2026-11-14-1547 leftovers
 **Product:** Shared
 
+*Parked 2026-11-18 (night 2026-11-17-2105 wave 4): items 1, 2 need a written design first (two to three review rounds failed); the unproven parts of 13, 14, 23, 15 need the Windows VM, a device screenshot run or a macOS run.*
+
 *Partly built 2026-11-18 (night 2026-11-17-2105 wave 3, merged as PR #1248 (ee606e4f); wave 2 was repo PR #1242 (d6bb979f) and ClaudeSkills #323 (c3cb5b07)): items 12-15 and 23 built or answered; open: items 1 (per-finding coverage) and 2 (merge-gate half), which need a design first (two to three review rounds failed), and the unproven parts under *Not yet verified* (items 13, 14, 15, 23). Item 23 widens Touches to the `.github/scripts/ios-sim-*.sh` files.* Found by the night 2026-11-14-1547 feedback loop ([note](../notes/2026-11-14-1547-feedback-loop.md); item 25 added, PR #1184). Planned 2026-11-16 ("none needs the user", 13dc9a0d). ClaudeSkills items shipped in ClaudeSkills PR #323 (merged 2026-11-18T05:27:22Z, c3cb5b07, installed).
 
 **Touches:** `D:\ClaudeSkills` `skills/feedback-loop/check-review-skips.mjs`, `skills/voice-pick/SKILL.md`, `skills/run-all-waves/`, `tools/phone/`, `tools/desktop-vm/`, `tools/emulator/`, `.maestro/dino/`, `.github/scripts/ios-sim-boot.sh`, `.github/scripts/ios-sim-driver-ready.sh`, `.github/workflows/dinoreader-ios-sim.yml`, `.github/workflows/tools-selftests.yml` (wires the two new self-tests, medium #5), `.github/scripts/ios-sim-collect.sh`, `.github/scripts/ios-sim-install-maestro.sh`, `.github/scripts/ios-sim-store-shots.sh`, slice files 243, 291, 317, 330, 346, 384, this slice file.
