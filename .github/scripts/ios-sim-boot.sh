@@ -18,9 +18,15 @@ ERR_FILE="$(mktemp)"
 # Slice 404: some runner images also list a runtime built for one device (`SimRuntime.iOS-27-2-iPhone19-4`) after the
 # general one; it refuses every other device type, so only ids that end in the version numbers count.
 newest_ios_runtime() {
-  xcrun simctl list runtimes available | grep -E '^iOS ' \
-    | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/' \
-    | grep -E '\.SimRuntime\.iOS-[0-9]+(-[0-9]+)*$' | tail -n 1
+  local ids general
+  ids="$(xcrun simctl list runtimes available | grep -E '^iOS ' \
+    | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/' || true)"
+  general="$(echo "$ids" | grep -E '\.SimRuntime\.iOS-[0-9]+(-[0-9]+)*$' | tail -n 1 || true)"
+  if [ -z "$general" ]; then
+    echo "::error::no general iOS runtime on this image; runtimes found: ${ids:-none}" >&2
+    return 1
+  fi
+  echo "$general"
 }
 
 # Plain iPhones (no Pro, Plus, Max, Air) in `simctl list devicetypes` order, which is oldest first: the oldest
