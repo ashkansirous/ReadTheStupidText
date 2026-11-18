@@ -15,8 +15,12 @@ NAME="${SIM_DEVICE_NAME:-rtst-sim}"
 ERR_FILE="$(mktemp)"
 
 # The newest available iOS runtime's identifier (the line ends `... - com.apple.CoreSimulator.SimRuntime.iOS-26-5`).
+# Slice 404: some runner images also list a runtime built for one device (`SimRuntime.iOS-27-2-iPhone19-4`) after the
+# general one; it refuses every other device type, so only ids that end in the version numbers count.
 newest_ios_runtime() {
-  xcrun simctl list runtimes available | grep -E '^iOS ' | tail -n 1 | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/'
+  xcrun simctl list runtimes available | grep -E '^iOS ' \
+    | sed -E 's/.* - (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/' \
+    | grep -E '\.SimRuntime\.iOS-[0-9]+(-[0-9]+)*$' | tail -n 1
 }
 
 # Plain iPhones (no Pro, Plus, Max, Air) in `simctl list devicetypes` order, which is oldest first: the oldest
