@@ -121,7 +121,7 @@ Premise check on origin/main corrected the slice:
 
 ## User answers before the night run (2026-11-01, evening)
 
-- "Allow the CI runs": iOS simulator runs on a CI macOS runner may be dispatched tonight for this slice (a few runs, not a loop). The iPhone 8 run still waits for the user.
+- "Allow the CI runs": iOS simulator runs on a CI macOS runner may be dispatched tonight for this slice (a few runs, not a loop). ~~The iPhone 8 run still waits for the user.~~ **Correction (feedback loop 2026-11-17-2105):** the user's part is done (iPhone 8 connected and trusted 2026-11-17, see below); nothing on this slice waits on the user. Item 1's flow run on the iPhone 8 needs a way to drive a real iPhone from this PC: `tools/` has only `tools/crashes/pull-iphone.ps1` (crash logs), no Maestro run on a real iPhone, so item 1 is Claude's tooling gap, not the user's step. The park reasons on line 22 and at the end of this file that say "waits on the user's iPhone 8 run" are out of date.
 - The S21 is always available for tests (user, same evening).
 
 ## Built night 2026-11-01, device-checked on the Android emulator 2026-11-02 (items 2-5)
@@ -235,3 +235,5 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 - iOS: the Open in prompt for dino-test:// links on the simulator is tapped (prompt text, timing, locale) - first dinoreader-ios-sim run.
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's iPhone 8 run (item 1) and a proven cause (item 6) (item 1: iOS simulator workflow merged #1136, update-gate fix #1138; the audio-backed simulator run passed on the branch (#1147; two later runs on main failed for harness reasons, no app crash); left: the iPhone 8 run, and item 6 once a cause is proven)`.
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: waits on the iPhone 8 flow run (item 1) and a proven cause (item 6); park note in the slice file

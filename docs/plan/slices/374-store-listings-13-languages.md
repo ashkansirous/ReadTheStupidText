@@ -74,3 +74,5 @@ Live read first (2026-11-14): Play Dino en-GB, de-DE; Play RTST en-US. ASC Dino 
 Not confirmed (check on the first release run, `msstore submission get` after it): Partner Center's character limits (script uses 10,000 description, 1,000 short, 200 title, 7 search terms of 30 chars, 21 words) and the language codes `zh-cn`, `nb`, `fa`, `ar`; whether `submission get` stdout is pure JSON (the step fails loudly if not). Listing text changes ship with the next app release (docs-only merges cut none); read the live listings back after that run to close the read-back item.
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: items 4 and 5 wait for a release's Microsoft Store submission to be certified and read back with the 13 languages (no wave work left) (Play and App Store pushed #1110; Microsoft Store listings built into each release's submission #1115)`.
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: item 5 waits on an RTST Microsoft Store submission read-back (item 4 ticked 2026-11-17)
