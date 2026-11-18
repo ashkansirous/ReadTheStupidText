@@ -88,6 +88,12 @@ priority", "add slices for adding anything missing from the crash report".
 
 - Parity difference for the user to decide (`reviews/s243-check.md` #4): Android has no per-process memory headroom API; `memoryHeadroom` on Android is system free RAM minus the low-memory threshold, on iOS os_proc_available_memory.
 
+**Low follow-ups (PR #1122, `reviews/s243-check4.md` and `reviews/s243-medium2.md` 3, 4, 6; recorded by Slice 393 item 3):**
+- `LaunchFacts.cs:33`: the exit of an unkept background-only launch B (A.Since <= t < C.Since) still gets A's version, build and UUID; needs an end time on the previous launch, B's facts kept, or a documented accepted limit.
+- `LaunchFacts.cs:33`: the `running?.Since is {}` requirement means a `thisLaunch` built at `CrashReporter.cs:83` (Since null) loses its facts silently on Android; untested.
+- `CrashFactsTests` (the `ForNativeExit` assertions in `tests/Shared/Shared.Tests/Crashes/CrashFactsTests.cs`): no test for a null `running.Since`, the boundary `t == previous.Since`, or `FromNative`/`NativeCrash.ExitTime`.
+- `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/AndroidCrashHooks.cs`, the method that builds the native-exit facts: positional nulls (`..., time, null, null, time`); use `ExitTime: time`.
+
 #### Not yet verified
 
 - A Release iOS build in CI attaches the dSYM zip to its GitHub Release, and `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2).

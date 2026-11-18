@@ -16,6 +16,7 @@
 7. [ ] **ClaudeSkills #189's skipped findings are recorded nowhere** (Slice 315's ClaudeSkills half; reviews under `D:/ClaudeSkills-worktrees/reviews/rtst-315-*.md`: medium 6-7, check1 6, check2 2-3, check3 1-5, check4 1-4). The one that matters: check3 #1/#3 say the `died` status branch in `run-all-waves.ps1` is dead code, while Slice 315 item 3 and its *Not yet verified* line speak of a "`died`-status trace". Copy the skip one-liners into Slice 315 and check whether the trace can ever fire. (A ClaudeSkills fix if it is dead.)
 
 *From review:* files `reviews/s317-high.md`.
+- Applied (`reviews/s317-high.md`) #1, #2, #3, #6, #7, #9 (every finding except the three skips below; line added by Slice 393 item 1's coverage rule).
 - Skipped #4 (`reviews/s317-high.md`): "Item 1 only partly fixed: only _builds is pruned (by worktree and age); _desktop-vm (29 GB) and mlkit-lazy (3.7 GB) from the same measurement are untouched, and there is no size cap." (item 1's text and its Verify name `_builds` only; `_desktop-vm` and mlkit-lazy are other tools' folders)
 - Skipped #5 (`reviews/s317-high.md`): "Item 3 (Maestro Kotlin error, undiagnosed) is answered by cutting a timeout 120 s to 60 s on the unproven theory that Slice 360 removed the waits." (item 3 stays open as partial: the 60 s is Slice 360's own decision, and the new full-Maestro-log capture diagnoses it on the next run)
 - Skipped #8 (`reviews/s317-high.md`): "Write-BuildCacheSummary recursively sums every file under _builds, and Remove-AbandonedBuilds reads every build.json, after each build's prune." (a stat walk after a prune; no measured cost)
@@ -28,12 +29,28 @@
 - Item 6 built: the Gallery shelf pass reports a cancel/timeout like any failure (no gallery token reaches it); the weekly check skips a book already given up for that store version (`BookTextCurrency.SkipGivenUp`, tested); Slice 313's skip lines rewritten to the checker's format (`check-review-skips.mjs` exits 0).
 
 *From review:* medium pass 2 (`reviews/s317-medium2.md`), 7 findings; 1, 2, 4, 5, 7 applied, 3 and 6 recorded:
+- Applied (`reviews/s317-medium2.md`) #1, #2, #4, #5, #7, as listed here.
 - #1, #2: superseded by check 2 below (the log-parsing retry was removed).
 - #4: the TTS engine is probed twice (10 s apart since check 2) and a skip needs both to say `No services found`; the run summary prints `no-voice skip: decided by two probes ...`.
 - #5: a cancel while the page has no handler (the page's teardown) is silent again (`// no-fallback:`); with the page alive a timeout still reports.
 - #7: `store-submit.yml` has a `committed` output set by its commit step only after `msstore submission publish` exits 0; `store-submit-dino-mark` runs only when it is `true`.
 - Skipped #3 (`reviews/s317-medium2.md`): "item 3 Kotlin error undiagnosed" - needs a device run (the full Maestro log now captured diagnoses it next run); listed in Not yet verified below.
 - Skipped #6 (`reviews/s317-medium2.md`): "Remove-AbandonedBuilds counts locked folders as removed" - low: a locked folder is tried again at the next prune, and the count only decides whether the size line prints.
+
+*From review:* the ClaudeSkills half (ClaudeSkills PR #218, 6457de5b; copied here by Slice 393 item 2 from the PR body and the review files in `D:/ReadTheStupidText-worktrees/reviews/`):
+- Applied (`reviews/s317cs-high.md`) #1, #2, #3, #4, #5, #8; #7 the doc line was updated to match #4.
+- Skipped #6 (`reviews/s317cs-high.md`): "The item-7 test checks source text by regex, not behaviour." (test style; the dead writer is gone, so a source-text check is the cheapest guard)
+- Applied (`reviews/s317cs-medium.md`) #1, #2, #4, #7.
+- Skipped #3 (`reviews/s317cs-medium.md`): "Estimate uses folders[-1] as worktree drive (positional contract)." (the driver sets the folder order itself)
+- Skipped #5 (`reviews/s317cs-medium.md`): "Argument '=5' (empty path) is looked up as folder '=5'." (a caller error; the driver never passes an empty path)
+- Skipped #6 (`reviews/s317cs-medium.md`): "Regex /-worktrees=5$|worktrees=5$/ redundant; arg order not pinned." (test style)
+- Skipped #8 (`reviews/s317cs-medium.md`): "Command doesn't state trailing '=<gb>' is parsed as need; repeats driver thresholds (drift)." (doc wording)
+- Skipped #1 (`reviews/s317cs-check.md`): "Warning takes last folder entry as worktree drive by position; diskEstimate only cleared on exit 0." (low, no failure path today)
+- Skipped #2 (`reviews/s317cs-check.md`): "-MinFreeGb default -1 is a sentinel; explicit negative value silently ignored." (low, a typo case)
+- Skipped #3 (`reviews/s317cs-check.md`): "New try/catch around checkFolders is dead code; nothing in it throws." (low, harmless)
+- Skipped #4 (`reviews/s317cs-check.md`): "Cleanup-then-reread runs for any nonzero disk-free code, including exit 2 usage errors." (low, a broken reader stops the wave anyway)
+
+**Low follow-ups (PR #1121, `reviews/s317-check3.md`; recorded by Slice 393 item 3):** (1) `store-submit.yml:291`: a 502 after a real commit makes the retry run on a committed draft and the job fails though the submission went through (a `submission get` state check before the retry would tell); (2) `store-submit.yml:288`: the retry fires on any non-zero exit, so a 4xx or auth failure costs 60 s and repeats the same failure (harmless).
 
 **Not yet verified:**
 - Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).

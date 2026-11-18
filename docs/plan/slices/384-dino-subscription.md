@@ -71,6 +71,14 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   only what no API can set goes to the user, one step at a time with direct links. Plan: `store-products.mjs --apply`
   for Play and App Store Connect, Partner Center by hand. **Done 2026-11-15:** Play and App Store Connect (see below).
   **Open, Claude's work:** Microsoft Partner Center subscriptions are not created.
+  **Deep links (Slice 393 item 17, ids read 2026-11-18 from the repo vars and earlier slice lines; none is a to-do for the user):**
+  App Store Connect, Dino subscriptions https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions (app 6825053435);
+  Google Play Console, Dino https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/app-dashboard;
+  Microsoft Partner Center, Dino product `9N9VHRLCZXN5` (`DINOREADER_STORE_APP_ID`) https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview
+  (the product page; the add-on subscriptions are created from its *Add-ons* area, which is where `store-products.mjs --store microsoft` would create the shells).
+  **Can `store-products.mjs --apply` do the rest?** Play and App Store Connect: already applied 2026-11-15 (above), nothing left for `--apply` there.
+  Microsoft: the script's Microsoft request shapes are still marked UNVERIFIED, and `--apply` changes live store state, so it was not run by Slice 393;
+  run it once with `--store microsoft` and read its output first, as the script's own header says.
 - Approve the listing text: void. The user ruled on 2026-11-15 that store text is written, checked and pushed without a
   review round (Slice 291, *User answers (2026-11-15, RTST App Store and review rounds)*).
 - Submitting the two App Store subscriptions with an app version: **done 2026-11-15 by Claude** through the API, on the

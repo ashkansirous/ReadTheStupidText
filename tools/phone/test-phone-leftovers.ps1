@@ -393,6 +393,69 @@ try {
     Assert-Equal 'round 3: preflight -Fix heals through the same function' $true ((Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw) -match '(?s)if \(\$Fix\).*Invoke-StayOnRestore')
     $leaseScript = Get-Content (Join-Path $PSScriptRoot 'lease.ps1') -Raw
     Assert-Equal 'item 11: lease.ps1 -Release goes through Close-PhoneLease' $true ($leaseScript -match 'Close-PhoneLease')
+    # Slice 393 item 4: no parameters is -Show (no parameter-set error); -Release with no -Owner and no $env:RTST_PHONE_OWNER says so and exits 2 before any adb call.
+    # Review 2: lease.ps1 runs as a child from a temp copy whose only change is the line that loads common.ps1: after the real common.ps1 it pins the phone (no adb), its key and the lease folder.
+    # The child's stderr is read under 'Continue', so Windows PowerShell 5.1 does not turn a stderr line into a terminating error.
+    $self = (Get-Process -Id $PID).Path
+    $stubKey = 'stub-phone-393'
+    $stubScript = Join-Path $script:LeaseDir 'lease-stubbed.ps1'
+    $stubLoad = ". '$((Join-Path $PSScriptRoot 'common.ps1'))'; function Find-Phone { 'stub-serial' }; function Get-PhoneLeaseKey { '$stubKey' }; `$script:LeaseDir = '$($script:LeaseDir)'"
+    $stubText = $leaseScript.Replace('. (Join-Path $PSScriptRoot ''common.ps1'')', $stubLoad)
+    Assert-Equal 'review 2: the stub replaced the common.ps1 load line' $true ($stubText -ne $leaseScript)
+    Set-Content -Path $stubScript -Value $stubText
+    function Invoke-StubbedLease([string[]]$LeaseArguments) {
+        $saved = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $text = (& $self -NoProfile -File $stubScript @LeaseArguments 2>&1 | ForEach-Object { "$_" }) -join "`n"; return [pscustomobject]@{ Text = $text; Exit = $LASTEXITCODE } }
+        finally { $ErrorActionPreference = $saved }
+    }
+    $savedOwner = $env:RTST_PHONE_OWNER; $env:RTST_PHONE_OWNER = ''
+    try {
+        $noRelease = Invoke-StubbedLease @('-Release')
+        Assert-Equal 'item 4: -Release with no owner exits 2 and names -Owner' $true (($noRelease.Exit -eq 2) -and ($noRelease.Text -match '-Owner'))
+        $noArgsFree = Invoke-StubbedLease @()
+        Assert-Equal 'review 2: lease.ps1 with no parameters and a free phone says it is free (exit 0)' $true (($noArgsFree.Exit -eq 0) -and ($noArgsFree.Text -match "Phone $stubKey is free"))
+        Assert-Equal 'review 2: the free phone is not "released"' $false ($noArgsFree.Text -match 'released')
+        Assert-Equal 'review 2: another session takes the phone' $true (Request-Lease $stubKey 'agent-other' 60)
+        $noArgsHeld = Invoke-StubbedLease @()
+        Assert-Equal 'review 2: lease.ps1 with no parameters names the holder (exit 0)' $true (($noArgsHeld.Exit -eq 0) -and ($noArgsHeld.Text -match 'is leased by' -and $noArgsHeld.Text -match 'agent-other'))
+        $takeForeign = Invoke-StubbedLease @('-Take', '-Owner', 'agent-me')
+        Assert-Equal 'review 3: -Take still refuses a lease held by another owner (exit 4)' $true (($takeForeign.Exit -eq 4) -and ($takeForeign.Text -match 'already leased by'))
+        Assert-Equal 'review 3: the foreign lease is unchanged' 'agent-other' (Read-Lease $stubKey).Owner
+        Assert-Equal 'review 2: release the other session lease' $true (Remove-Lease $stubKey 'agent-other')
+        # Review 5: with no phone connected, -Renew / -Release still work on this owner's lease file (no pairing ask, exit 0) and never touch another owner's.
+        $noPhoneScript = Join-Path $script:LeaseDir 'lease-nophone.ps1'
+        $noPhoneStubText = $stubText.Replace("function Find-Phone { 'stub-serial' }", 'function Find-Phone { $null }')
+        Set-Content -Path $noPhoneScript -Value $noPhoneStubText
+        $stubScript = $noPhoneScript
+        Assert-Equal 'review 5: the owner takes the lease' $true (Request-Lease $stubKey 'agent-me' 60)
+        $renewNoPhone = Invoke-StubbedLease @('-Renew', '-Owner', 'agent-me', '-Minutes', '90')
+        Assert-Equal 'review 5: -Renew with no phone renews the lease file (exit 0, no pairing ask)' $true (($renewNoPhone.Exit -eq 0) -and ($renewNoPhone.Text -match 'renewed') -and ($renewNoPhone.Text -notmatch 'pair'))
+        $releaseNoPhone = Invoke-StubbedLease @('-Release', '-Owner', 'agent-me')
+        Assert-Equal 'review 5: -Release with no phone exits 0' 0 $releaseNoPhone.Exit
+        Assert-Equal 'review 5: the lease file is gone' $null (Read-Lease $stubKey)
+        Assert-Equal 'review 5: another owner takes the phone' $true (Request-Lease $stubKey 'agent-other' 60)
+        $releaseOther = Invoke-StubbedLease @('-Release', '-Owner', 'agent-me')
+        Assert-Equal 'review 5: -Release with no phone leaves another owner''s lease alone' 'agent-other' (Read-Lease $stubKey).Owner
+        Assert-Equal 'review 5: -Release by a non-holder is not an error' 0 $releaseOther.Exit
+        Assert-Equal 'review 5: release the other session lease again' $true (Remove-Lease $stubKey 'agent-other')
+        # Second pass 1: when the lease is lost between the read and the locked Update/Remove, the no-phone path says so and exits 4 (like the with-phone path), never "renewed"/"released" with exit 0.
+        Assert-Equal 'second pass 1: the owner takes the lease again' $true (Request-Lease $stubKey 'agent-me' 60)
+        $lostScript = Join-Path $script:LeaseDir 'lease-lost.ps1'
+        Set-Content -Path $lostScript -Value $noPhoneStubText.Replace("function Find-Phone { `$null }", "function Find-Phone { `$null }; function Update-Lease { 'Other' }; function Remove-Lease { `$false }")
+        $stubScript = $lostScript
+        $renewLost = Invoke-StubbedLease @('-Renew', '-Owner', 'agent-me')
+        Assert-Equal 'second pass 1: -Renew that lost the lease exits 4 and does not say renewed' $true (($renewLost.Exit -eq 4) -and ($renewLost.Text -notmatch 'renewed for'))
+        $releaseLost = Invoke-StubbedLease @('-Release', '-Owner', 'agent-me')
+        Assert-Equal 'second pass 1: -Release that lost the lease exits 4 and does not say released by' $true (($releaseLost.Exit -eq 4) -and ($releaseLost.Text -notmatch 'released by'))
+        Assert-Equal 'second pass 1: tidy the lease' $true (Remove-Lease $stubKey 'agent-me')
+    } finally { $env:RTST_PHONE_OWNER = $savedOwner }
+    # Review 3: a live lease held by another session ends preflight with its own `PREFLIGHT WARN` line (exit 3): not GO, not NO-GO, and never added to the NO-GO reasons.
+    $preflightScript = Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw
+    Assert-Equal 'review 3: a foreign lease is a WARN check that sets the ForeignLease flag' $true ($preflightScript -match "(?s)ForeignLease = \`$true.*?Write-Check \`$name 'WARN' ""held by")
+    Assert-Equal 'review 3 / review 1: preflight decides the foreign lease (WARN, exit 3) before the NO-GO test, and GO comes last' $true ($preflightScript -match "(?s)if \(\`$script:ForeignLease\) \{.*?Write-Host 'PREFLIGHT WARN[^\r\n]*exit 3\s*\}.*?Reasons\.Count -gt 0\).*?exit 1 \}.*?Write-Host 'PREFLIGHT GO'")
+    Assert-Equal 'second pass 3: the NO-GO reasons are printed above the WARN line, not dropped' $true ($preflightScript -match "(?s)if \(\`$script:ForeignLease\) \{\s*if \(\`$script:Reasons\.Count -gt 0\) \{ Write-Host ""PREFLIGHT NO-GO[^\r\n]*\}\s*Write-Host 'PREFLIGHT WARN")
+    Assert-Equal 'second pass 2: a corrupt or unreadable lease is named as such, not as another session' $true ($preflightScript -match 'CorruptLeaseOwner -or \$held\.Owner -ceq \$script:UnreadableLeaseOwner' -and $preflightScript -match 'no other session is proven')
+    Assert-Equal 'review 2 / 8: the owner compare is case-sensitive and needs both names' $true ($preflightScript -match '\$held\.Owner -and \$me -and \$held\.Owner -ceq \$me')
     Assert-Equal 'review 2: the timed run releases a phone through Close-PhoneLease; Remove-Lease is only the emulator branch of Close-DeviceLease' $true (((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'Close-PhoneLease') -and ([regex]::Matches((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw), 'Remove-Lease')).Count -eq 1)
     $preflightText = Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw
     Assert-Equal 'review 2 / Slice 236 item 6: Save-StayOn only inside the -Fix branch of preflight' $true ($preflightText -match '(?s)if \(-not \$Fix\) \{ Write-Check ''stay awake''[^\r\n]*return \}\r?\n(?:\s*#[^\r\n]*\r?\n)?\s*\$recorded = Save-StayOnOriginal' -and ([regex]::Matches($preflightText, 'Save-StayOn')).Count -eq 1)
