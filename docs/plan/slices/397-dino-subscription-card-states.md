@@ -1,6 +1,8 @@
 # Slice 397 — Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens)
 **Product:** Dino
 
+*User, 2026-11-18: no Mac is needed; this is not a reason to park.* Item 3 is built here (the iOS StoreKit 2 eligibility call, `isEligibleForIntroOffer`, with its Android twin; widen Touches for it) and checked on the macOS CI simulator (`.github/workflows/dinoreader-ios-sim.yml`, a StoreKit config). Item 4 (Windows): the Store API gives no eligibility answer, so show "Try free" and let the Store sheet decide, as the iOS line does.
+
 *Parked 2026-11-18 (night 2026-11-17-2105 wave 4; item 7 merged #1255): item 3 needs Slice 390's iOS wrapper and a Mac/iPhone; item 4 needs a Windows eligibility answer the Store API cannot give.*
 
 *Built 2026-11-18 (night 2026-11-17-2105 wave 2), merged as PR #1239 (0638960e); items 1, 2, 5, 5b, 6 (#1239) and 7 (#1255) built; items 3, 4 open.*

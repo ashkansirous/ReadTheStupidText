@@ -1,6 +1,8 @@
 # Slice 403 — Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Galaxy Z Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen
 **Product:** Dino
 
+*User, 2026-11-18: no Mac and no Duo simulator are needed to build this; not a reason to park.* Android checks run on the local emulator with Fold-sized AVDs from `tools/emulator/fold-profiles.json` (item 13 makes `new-avd.ps1` read it), and fold posture through the emulator's foldable device definition or its fold/unfold console commands. iOS code is built with the drawn Duo sizes (as Design says) and checked on an existing simulator in `.github/workflows/dinoreader-ios-sim.yml`. Only the Duo rows of item 13 wait for Xcode's Duo device (*Not yet verified*). Low free memory means closing other emulators first, not parking.
+
 *Parked 2026-11-18 (night 2026-11-17-2105 wave 4; items 1, 6, 11, 12 merged #1256): items 2-5, 7-10, 13 need a fold-capable Android emulator (foldable AVD, about 3-4 GB free RAM) and the Xcode iPhone Duo simulator, which does not exist yet; item 4 also needs Slice 395's part cards (395 parked).*
 
 *Planned 2026-11-17 from three mocks drawn 2026-11-16: `docs/design/dino-reader/Dino Reader 2026-11-16 iPhone Duo.dc.html`, `... Galaxy Z Fold8.dc.html` and `... Galaxy Z Fold8 Ultra.dc.html`. Scope approved by the user 2026-11-17.* *Items 1, 6, 11, 12 built (PR #1256, night 2026-11-17-2105 wave 4); items 2-5, 7-10, 13 are open (they need the platform fold adapters, a fold-capable emulator and the Duo simulator).*

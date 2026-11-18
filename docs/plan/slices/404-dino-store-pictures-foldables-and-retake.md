@@ -1,6 +1,8 @@
 # Slice 404 — Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set
 **Product:** Dino
 
+*User, 2026-11-18: no Mac is needed; not a reason to park.* iOS retakes run on macOS CI (`gh workflow run store-screenshots.yml -f app=dino -f device=all`, `.github/scripts/ios-sim-store-shots.sh`); Windows retakes on the Hyper-V VM (`tools/desktop-vm`); Fold shots on the local emulator with the Fold AVDs (Slice 403). Only item 6's Duo set waits for Xcode's Duo device and its App Store display type.
+
 *Parked 2026-11-18 (night 2026-11-17-2105 wave 4; items 1-2 merged #1254): items 3-7: the Android retake waits on demo-mode proof (393 item 14) and the store-listing agent push; the iOS and Windows retakes need the macOS job and the Windows VM; the Duo set needs 403 and the Duo simulator.*
 
 *Items 1-2 merged as PR #1254 (298b7e37; night 2026-11-17-2105 wave 4); items 3-7 open.* *Planned 2026-11-17; the four decisions below were agreed with the user the same day.*

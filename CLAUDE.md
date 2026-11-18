@@ -110,7 +110,7 @@ DinoReader.Core → Application, Domain
 
 ## Build & run
 
-**.NET 11 SDK on this PC:** none is installed system-wide (only SDK 10); `global.json` pins 11.0.100, so a plain `dotnet` fails. The one copy is `D:\ReadTheStupidText-worktrees\s379b\tmp\dotnet` (checked 2026-11-18: `dotnet --list-sdks` prints 11.0.100): set `DOTNET_ROOT` to it with backslashes and put it first on `PATH`; never remove the `s379b` worktree while it holds the only SDK, and never install another copy into a slice worktree. (Night 2026-11-17-2105 feedback loop; a stable install is Slice 406 item 1.)
+**.NET 11 SDK on this PC:** installed system-wide since 2026-11-18 (winget `Microsoft.DotNet.SDK.11`, 11.0.100 in `C:\Program Files\dotnet`, with the android, ios, maccatalyst, maui-android, maui-ios and maui-windows workloads), so a plain `dotnet` resolves `global.json`'s 11.0.100. Never set `DOTNET_ROOT` to a worktree copy or install another copy into a slice worktree. (Slice 406 item 1.)
 
 Build and run commands: RTST tray in `src/Rtst/ReadTheStupidText.App/CLAUDE.md`, RTST Android/iOS in `src/Rtst/ReadTheStupidText.Mobile/CLAUDE.md`, Dino Reader in `src/Dino/DinoReader.App/CLAUDE.md`. The solution is `ReadTheStupidText.slnx`.
 
