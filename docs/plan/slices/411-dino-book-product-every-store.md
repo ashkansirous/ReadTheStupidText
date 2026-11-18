@@ -83,4 +83,4 @@ script only makes an empty add-on, and the first 11 books were priced and submit
   - [ ] #1: add `PreProcessingFailed`, `PublishFailed`, `CancelFailed` (and `None` as needs work) to the status table once a live answer or Microsoft's doc page confirms the names; today they fall to Unknown, which stops the book with no PUT or commit.
   - [ ] #4: refresh the Microsoft token before an hour has passed (only a multi-book run with long 429 waits can reach it).
   - [ ] #3, #5, #8: a 409 with a lagging PendingCommit status should say "still committing" rather than "delete the submission"; guard the commit POST against 409/transient errors; test both.
-  - Skipped #2, #6, #7, #9: wording and structure only (#7: a poll that runs out reports "still committing, check later" on purpose, Decision 3).
+- Skipped #2, #6, #7, #9 (`reviews/s411-check2.md`): wording and structure only (#7: a poll that runs out reports "still committing, check later" on purpose, Decision 3).
