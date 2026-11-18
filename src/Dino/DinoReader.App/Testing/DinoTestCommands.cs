@@ -116,6 +116,12 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == FullShelfName)
+		{
+			_ = FullShelfAsync();
+			return StartedOutcome;
+		}
+
 		if (command.Name == TestStoreName)
 		{
 			return SetTestStore(command.Get(ModeKey, string.Empty));

@@ -77,6 +77,44 @@ try {
     Assert-Equal 'a similarly named file is left alone' $true (Test-Path (Join-Path $work 'i1\x-store-dino-phone-3-near.png'))
 } finally { Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue }
 
+# Slice 404: the full-shelf packages (newest per book) and the adb commands that put them in the app's files folder.
+$shelf = Join-Path ([IO.Path]::GetTempPath()) "full-shelf-test-$PID"
+try {
+    foreach ($name in 'story-v2.dino', 'story-v10.dino', 'story-v9.dino', 'meta.json') { $null = New-Item -ItemType File -Force (Join-Path $shelf "aaa\$name") }
+    $null = New-Item -ItemType File -Force (Join-Path $shelf 'bbb\story-v1.dino')
+    $null = New-Item -ItemType Directory -Force (Join-Path $shelf 'empty')
+    $found = @(Get-FullShelfPackages $shelf)
+    Assert-Equal 'one package per book folder with a package' 2 $found.Count
+    Assert-Equal 'the highest version number wins (10, not 9 or 2)' 'story-v10.dino' (Split-Path $found[0].Path -Leaf)
+    Assert-Equal 'the id is the folder name' 'aaa,bbb' (($found | ForEach-Object Id) -join ',')
+    Assert-Equal 'a missing root is no package' 0 @(Get-FullShelfPackages (Join-Path $shelf 'nope')).Count
+} finally { Remove-Item $shelf -Recurse -Force -ErrorAction SilentlyContinue }
+$content = Join-Path ([IO.Path]::GetTempPath()) "missing-stems-test-$PID"
+try {
+    foreach ($b in @(@('built', 'id1', 'Store'), @('unbuilt', 'id2', 'Store'), @('starter', 'id3', 'Starter'))) {
+        $null = New-Item -ItemType Directory -Force (Join-Path $content "content\$($b[0])")
+        Set-Content (Join-Path $content "content\$($b[0])\book.json") "{ `"id`": `"$($b[1])`", `"kind`": `"$($b[2])`" }"
+    }
+    $null = New-Item -ItemType File -Force (Join-Path $content 'store\id1\story-v3.dino')
+    Assert-Equal 'only an unbuilt store book is missing a package' 'unbuilt' ((Get-MissingPackageStems (Join-Path $content 'content') (Join-Path $content 'store')) -join ',')
+} finally { Remove-Item $content -Recurse -Force -ErrorAction SilentlyContinue }
+$pulls = @(Get-LfsPullCommands @('aaa', 'bbb'))
+Assert-Equal 'one LFS pull per stem' 2 $pulls.Count
+Assert-Equal 'the pull is for exactly the stem high-res folder, with an empty exclude' 'lfs pull --include content/dino/aaa/high-res/** --exclude ' ($pulls[0] -join ' ')
+Assert-Equal 'no pull failure when git succeeds' '' (Invoke-LfsPulls @('aaa', 'bbb') { param($a) 0 })
+Assert-Equal 'a failed pull names the stem' $true ((Invoke-LfsPulls @('aaa', 'bbb') { param($a) if ($a -contains 'content/dino/bbb/high-res/**') { 1 } else { 0 } }) -like '*bbb*exited 1*')
+$push =Get-FullShelfPushCommands 'uk.example.app' @([pscustomobject]@{ Id = 'abc'; Path = 'C:\x\story-v1.dino' })
+Assert-Equal 'the app data is cleared first' 'shell pm clear uk.example.app' ($push[0] -join ' ')
+Assert-Equal 'the book is pushed to the temp folder' 'push C:\x\story-v1.dino /data/local/tmp/full-shelf/abc.dino' ($push[4] -join ' ')
+Assert-Equal 'then copied into the app files folder by run-as' 'shell run-as uk.example.app cp /data/local/tmp/full-shelf/abc.dino files/full-shelf/abc.dino' ($push[5] -join ' ')
+Assert-Equal 'the temp folder is removed last' 'shell rm -rf /data/local/tmp/full-shelf' ($push[-1] -join ' ')
+Assert-Equal 'every command goes through when adb is quiet' '' (Invoke-FullShelfPush $push { param($a) 'Success' })
+Assert-Equal 'a run-as refusal stops the push and is named' $true ((Invoke-FullShelfPush $push { param($a) if ($a -contains 'run-as') { 'run-as: package not debuggable' } else { '' } }) -like "*run-as*failed*")
+Assert-Equal 'a capital-F Failed from pm clear stops the push' $true ((Invoke-FullShelfPush $push { param($a) 'Failed' }) -like "*pm clear*failed*")
+Assert-Equal 'an installed debug app is no problem' '' (Get-AppNotInstalledProblem 'uk.example.app' { param($a) "package:uk.example.app`r`n" })
+Assert-Equal 'a missing app is named before pm clear or run-as run' $true ((Get-AppNotInstalledProblem 'uk.example.app' { param($a) '' }) -like '*not installed*')
+Assert-Equal 'a longer package name is not the app' $true ((Get-AppNotInstalledProblem 'uk.example.app' { param($a) 'package:uk.example.app.dbg' }) -like '*not installed*')
+
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-store-screenshots: all passed.'
 exit 0

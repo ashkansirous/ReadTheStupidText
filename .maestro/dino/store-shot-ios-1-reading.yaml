@@ -1,15 +1,14 @@
 # Slice 291 item 5 (iOS part): App Store shot 1 of 5 of Dino Reader, "reading": page 6 of Three Little Pigs opens with the Wolf speaking, so a character's line is lit. Held upright, English, on the four test books (no live store, nothing downloaded or read aloud).
 # Taken by .github/scripts/ios-sim-store-shots.sh (store-screenshots.yml) on an iPhone 6.9", an iPhone 6.5" and an iPad 13" simulator, one Maestro invocation per shot so a failed or hung shot is retried on its own (the script keeps shots already taken). Each of the five flows (store-shot-ios-1-reading ... store-shot-ios-5-shelf) stands alone: it starts from a relaunch, sets its own language and leaves nothing the next one needs.
 # The same five screens, in the same order, as the Play phone shots (.maestro/dino/needs-file/store-shot-phone.yaml). The script swaps the appId line for the app's bundle id and renames store-dino-ios-<n>-<screen> to store-dino-<device>-<n>-<screen>. Run by name only: store-screenshots.ps1 and a normal run-flows.ps1 run skip store-shot-* flows.
-# This is the first flow of a device: it is the only one that wipes the app (clearState), with skip-first-run, so the shelf has the four test books. The others relaunch and keep the data.
+# This is the first flow of a device: it starts the app on a fresh simulator install with skip-first-run, so the shelf has the four test books (then the full-shelf hook replaces them). The others relaunch and keep the data.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL (iOS reads launch arguments only at a process start, see ios-read-back-reread-background.yaml); each openLink is followed by the guarded "Open in" tap.
 # The simulator boots upright, so there is no setOrientation step (the Android flow's one guards a rotated emulator).
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshot 1 of 5, reading, Dino Reader, iOS
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: a fresh simulator install, the flow uses the four test books only and needs no pack or own book (the shots show a fresh shelf). The microphone permission is granted again at this launch because clearState revokes it, so no dialog covers the recording screen of shot 2.
-    clearState: true
+    # Slice 404: no clearState here. The simulator is a fresh install (ios-sim-store-shots.sh boots a new one per device) and the script has just copied the paid books' packages into the app's full-shelf folder, which a clearState would wipe. The microphone permission is granted by this launch's permissions, so no dialog covers the recording screen of shot 2.
     permissions:
       all: allow
     arguments:
@@ -22,6 +21,21 @@ name: Store screenshot 1 of 5, reading, Dino Reader, iOS
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
+# Slice 404: every book of the live store on the shelf (the four test copies are replaced by the real ones; needs the network). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; a hook that finished before (the app's data kept it) ends at once; a flow cannot read the hook's log, so the wait below is on that title and 600 s (15 books one after another, each a package plus the audio packs, on a simulator link).
+- openLink: "dino-test://full-shelf"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 3000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 600000
 # English, set explicitly (set-language rebuilds the root; voice=0 starts no voice pack). Wait for a string only the English shelf shows, not StoryTile.
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:

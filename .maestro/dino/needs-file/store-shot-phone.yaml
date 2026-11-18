@@ -1,11 +1,12 @@
 # Slice 291 items 5 and 8: the Play store screenshots of Dino Reader (phone), taken by tools/emulator/store-screenshots.ps1 -App dino -Form phone (the shot names store-dino-phone-<n>-<screen> become the PNG names).
 # Five shots, held upright, in the order of the store-listing skill's table (one difference per shot, strongest first): a character's line on the reading page, the record intro "Who will you record?",
-# the same page in Farsi (the test books carry fa.json; no voice pack is needed, set-language voice=0), the grown-ups Books tab (no price anywhere on it), the kids' shelf.
-# No live store, no Get, Buy or Redeem: the store page shows prices and no shot uses it.
+# the same page in German (the live books carry de translations; no voice pack is needed, set-language voice=0; Slice 404: never Farsi on a global or European listing; there is no fall back to another language: missing German screens fail the flow), the grown-ups Books tab (no price anywhere on it), the kids' shelf.
+# Slice 404: the full-shelf hook puts the whole live catalogue on the shelf (needs the network; no Get, Buy or Redeem, no purchase) before any shot. The store page shows prices and no shot uses it.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened
 # expect-log: HOOK enter-grown-up ok
-# expect-log: HOOK set-language ok fa
+# expect-log: HOOK full-shelf ok
+# expect-log: HOOK set-language ok de
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshots, Dino Reader, phone
 onFlowComplete:
@@ -22,8 +23,7 @@ onFlowComplete:
   - setOrientation: PORTRAIT
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the four test books, needs no pack or own book, and the shots show a fresh shelf. The microphone permission is granted again at this launch because clearState revokes it, so no dialog covers the recording screen.
-    clearState: true
+    # Slice 404: no clearState here. tools/emulator/store-screenshots.ps1 clears the app's data itself (pm clear) and then copies the paid books' packages into files/full-shelf, which a clearState at this launch would wipe again; the shots still show a fresh shelf. The microphone permission is granted again at this launch because the clear revokes it, so no dialog covers the recording screen.
     permissions:
       all: allow
     arguments:
@@ -37,6 +37,17 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
+# Slice 404: every book of the live store on the shelf (the four test copies are replaced by the real ones). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (15 books one after another, each a package plus the audio packs, on an emulator link).
+# The data survives every relaunch below (no clearState), so shots 4 and 5 and the Books tab see the same full shelf.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: full-shelf
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 600000
+- waitForAnimationToEnd:
+    timeout: 5000
 # Shot 1: page 6 of Three Little Pigs opens with the Wolf speaking, so a character line is lit.
 - launchApp:
     stopApp: false
@@ -90,21 +101,21 @@ onFlowComplete:
     visible:
       id: StoryTile
     timeout: 60000
-# Shot 3: the same page as shot 1 in Farsi. set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
+# Shot 3: the same page as shot 1 in German (Slice 404). set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
 - launchApp:
     stopApp: false
     arguments:
       cmd: set-language
-      lang: fa
+      lang: de
       voice: "0"
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 30000
-# The shelf starts the Farsi audio fetch; wait until its bar and Cancel are gone so no banner covers the shot.
+# The shelf starts the German audio fetch; wait until its bar and Cancel are gone so no banner covers the shot.
 - extendedWaitUntil:
     notVisible:
-      id: ShelfAudioCancel-fa
+      id: ShelfAudioCancel-de
     timeout: 60000
 - launchApp:
     stopApp: false

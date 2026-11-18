@@ -43,6 +43,8 @@ FLOW_ATTEMPTS=2
 # A single-file unit (the whole RTST frames flow: the 300 s pack wait plus three screens) gets 600 s, so one retry fits the budget below.
 SHOT_TIME_LIMIT_SECONDS=420
 SINGLE_UNIT_TIME_LIMIT_SECONDS=600
+# A flow that runs the full-shelf hook waits up to 600 s for the shelf (flow: 600000 ms) after the driver start (180 s) and its own steps: 900 s, so the first full fill is not killed mid-wait.
+FULL_SHELF_UNIT_TIME_LIMIT_SECONDS=900
 # Shutting down, booting and waiting for the simulator after a kill (check-pass finding 2: it had no limit).
 RESTART_TIME_LIMIT_SECONDS=300
 # A simctl call (install, terminate, shutdown, delete) that hangs is killed after this.
@@ -335,7 +337,7 @@ reset_attempt() {
 # One shot (or the single RTST unit): kept when already taken at an accepted size, else run, and once more on a fresh output folder when
 # the first attempt failed (run 43733772461: "iOS driver not ready in time" on the iPhone 6.9", twice, before any step ran).
 # Only the last attempt's shots are collected. A shot that failed twice is a problem; the caller goes on with the next one.
-run_unit() {
+run_unit_body() {
   local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit="$5" index="$6" flow_run test_out attempt=1 rc killed unit_name
   unit_name="$(basename "$unit" .yaml)"
   if unit_complete "$label" "$accepted" "$unit"; then
@@ -384,6 +386,17 @@ run_unit() {
   return 1
 }
 
+# Slice 404 (review pass: the wait in a flow that runs the full-shelf hook is 600 s, above the 420 s a shot gets): a unit that calls the hook gets the longer per-attempt limit, the rest keep theirs.
+run_unit() {
+  local base_limit="$UNIT_LIMIT" rc=0
+  if grep -qs 'dino-test://full-shelf' "$5"; then
+    UNIT_LIMIT="$FULL_SHELF_UNIT_TIME_LIMIT_SECONDS"
+  fi
+  run_unit_body "$@" || rc=$?
+  UNIT_LIMIT="$base_limit"
+  return "$rc"
+}
+
 # Every unit in order on the booted simulator; one that failed does not stop the next, a simulator that did not come back does.
 run_units() {
   local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit index=0
@@ -396,6 +409,94 @@ run_units() {
     fi
     run_unit "$label" "$accepted" "$udid" "$bundle_id" "$unit" "$index" || true
   done
+}
+
+# Slice 404: the Dino full-shelf hook imports a PAID book from a package file (the store refuses a paid download without a real receipt; nothing is faked).
+# BookBuilder writes artifacts/store/<id>/story-v<n>.dino; the packages are copied into <app data container>/Library/full-shelf/<id>.dino (the hook's
+# FullShelfPlan.PackageFolder inside FileSystem.AppDataDirectory, which is the container's Library folder on iOS). A flow that never calls the hook needs none of it.
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"
+STORE_ROOT="$REPO_ROOT/artifacts/store"
+
+flows_use_full_shelf() {
+  [ "$APP" = dino ] && grep -qs 'full-shelf' "${UNITS[@]}"
+}
+
+# The stems of the store books under content/dino that have no package under artifacts/store yet, one per line (a stem's id is the "id" line of its book.json).
+stems_without_package() {
+  local json id
+  for json in "$REPO_ROOT"/content/dino/*/book.json; do
+    [ -f "$json" ] || continue
+    grep -q '"kind": *"Store"' "$json" || continue
+    id="$(sed -n 's/^ *"id": *"\([^"]*\)".*/\1/p' "$json" | head -n 1)"
+    [ -n "$id" ] || continue
+    ls "$STORE_ROOT/$id"/story-v*.dino >/dev/null 2>&1 || basename "$(dirname "$json")"
+  done
+}
+
+# Pulls each stem's Git LFS print-size pictures (content/dino/<stem>/high-res, kept out of a normal fetch by .lfsconfig) and creates its artifacts/store/<id> folder;
+# BookBuilder build refuses a book whose high-res folder holds only pointers. Returns 1, naming the stem, when a pull fails.
+pull_book_high_res() {
+  local stem id
+  for stem in "$@"; do
+    if ! (cd "$REPO_ROOT" && git lfs pull --include "content/dino/$stem/high-res/**" --exclude "") >&2; then
+      echo "::error::git lfs pull for $stem (content/dino/$stem/high-res) failed, so its book package cannot be built"
+      return 1
+    fi
+    id="$(sed -n 's/^ *"id": *"\([^"]*\)".*/\1/p' "$REPO_ROOT/content/dino/$stem/book.json" | head -n 1)"
+    [ -z "$id" ] || mkdir -p "$STORE_ROOT/$id"
+  done
+}
+
+# Builds the missing packages with BookBuilder (dotnet is set up by store-screenshots.yml). Returns 1, naming why, when it cannot.
+build_missing_packages() {
+  local stems
+  stems="$(stems_without_package | tr '\n' ' ')"
+  [ -n "$stems" ] || return 0
+  if ! command -v dotnet >/dev/null 2>&1; then
+    echo "::error::the book packages for [$stems] are missing under artifacts/store and dotnet is not on the PATH to build them (dotnet run --project tools/dino/DinoReader.BookBuilder -- build <stem>)"
+    return 1
+  fi
+  echo "building the missing book packages: $stems"
+  pull_book_high_res $stems || return 1
+  # shellcheck disable=SC2086
+  (cd "$REPO_ROOT" && dotnet run --project tools/dino/DinoReader.BookBuilder -- build $stems) >&2
+}
+
+# Copies the newest package of every book into the app's full-shelf folder on the simulator. The data container exists after the app's first start, so a launch and a terminate come first when it does not yet.
+copy_full_shelf_packages() {
+  local udid="$1" bundle_id="$2" container folder dir id newest count=0
+  container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data 2>/dev/null)" || container=""
+  if [ -z "$container" ]; then
+    xcrun simctl launch "$udid" "$bundle_id" >/dev/null 2>&1 || true
+    sleep 3
+    xcrun simctl terminate "$udid" "$bundle_id" >/dev/null 2>&1 || true
+    container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data 2>/dev/null)" || return 1
+  fi
+  folder="$container/Library/full-shelf"
+  mkdir -p "$folder" || return 1
+  for dir in "$STORE_ROOT"/*/; do
+    id="$(basename "$dir")"
+    newest="$(ls "$dir"story-v*.dino 2>/dev/null | sed -n 's/.*story-v\([0-9][0-9]*\)\.dino$/\1 &/p' | sort -n | tail -n 1 | cut -d' ' -f2-)"
+    [ -n "$newest" ] || continue
+    cp "$newest" "$folder/$id.dino" || return 1
+    count=$((count + 1))
+  done
+  echo "copied $count book package(s) to $folder"
+  [ "$count" -gt 0 ]
+}
+
+# Puts the packages on the simulator when a flow uses the hook; a failure is a problem and no shot is taken (the hook would end `failed ... missing-package`).
+prepare_full_shelf() {
+  local label="$1" udid="$2" bundle_id="$3"
+  flows_use_full_shelf || return 0
+  if ! build_missing_packages; then
+    problem "$label: the book packages for the full-shelf hook could not be built"
+    return 1
+  fi
+  if ! copy_full_shelf_packages "$udid" "$bundle_id"; then
+    problem "$label: the book packages could not be copied into the simulator's app container"
+    return 1
+  fi
 }
 
 # One device: boot, install, run every shot, delete the simulator. Any failure is recorded and the next device still runs.
@@ -414,6 +515,8 @@ shoot_device() {
   xcrun simctl list devices booted
   if ! bundle_id="$(install_app "$udid")"; then
     problem "$label: the app could not be installed from $APP_DIR"
+  elif ! prepare_full_shelf "$label" "$udid" "$bundle_id"; then
+    echo "no shot is taken on $label without the book packages"
   else
     # Slice 393 item 23: the first shot no longer pays for the cold driver start; a driver that never answers is a warning, the shot's own retry follows.
     local warm_started=$SECONDS
