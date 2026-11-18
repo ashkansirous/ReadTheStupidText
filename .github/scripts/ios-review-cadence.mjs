@@ -38,7 +38,7 @@ const BUILD_FILTER_CHUNK = 50;
 const PLATFORM_IOS = 'IOS';
 const RELEASE_AFTER_APPROVAL = 'AFTER_APPROVAL';
 
-const Method = { Get: 'GET', Post: 'POST', Patch: 'PATCH' };
+const Method = { Get: 'GET', Post: 'POST', Patch: 'PATCH', Delete: 'DELETE' };
 const Resource = {
     Apps: 'apps',
     Builds: 'builds',
@@ -139,6 +139,7 @@ export function createAscClient({ token, fetchImpl = fetch }) {
         get: (path) => request(Method.Get, path),
         post: (path, body) => request(Method.Post, path, body),
         patch: (path, body) => request(Method.Patch, path, body),
+        delete: (path) => request(Method.Delete, path),
     };
 }
 
