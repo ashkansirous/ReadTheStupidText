@@ -79,3 +79,8 @@ script only makes an empty add-on, and the first 11 books were priced and submit
 - Skipped #5 (`reviews/s411-check.md`): "microsoftLivePrice takes the first Purchase availability with a ListPrice, no market/currency check." - the catalog is read with market=US and the price check compares the currency (USD) too, so a wrong market shows as a mismatch, never a false pass.
 - Skipped #8 (`reviews/s411-check.md`): "Status still Planned; unverified.md lists only the price check, not the untested PUT body, post-commit statuses and in-flight handling." - the status line changes in the index pass; unverified.md already holds the live price check.
 - Skipped #8 (`reviews/s411-medium.md`): "price check sequential, takes first Purchase availability with a ListPrice (false pass/mismatch possible); use Promise.all and pick by market." - style/performance only, no wrong answer in practice (the catalog is read with market=US).
+- Not fixed in this PR (`reviews/s411-check2.md`), none leads to a wrong store action; open follow-up work for this slice:
+  - [ ] #1: add `PreProcessingFailed`, `PublishFailed`, `CancelFailed` (and `None` as needs work) to the status table once a live answer or Microsoft's doc page confirms the names; today they fall to Unknown, which stops the book with no PUT or commit.
+  - [ ] #4: refresh the Microsoft token before an hour has passed (only a multi-book run with long 429 waits can reach it).
+  - [ ] #3, #5, #8: a 409 with a lagging PendingCommit status should say "still committing" rather than "delete the submission"; guard the commit POST against 409/transient errors; test both.
+  - Skipped #2, #6, #7, #9: wording and structure only (#7: a poll that runs out reports "still committing, check later" on purpose, Decision 3).
