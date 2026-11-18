@@ -91,6 +91,7 @@ The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" 
 - Skipped #4 (`reviews/pr-1249-check-medium.md`): "src/Dino/DinoReader.Core/StoreFilter.cs:70 (Resolve), low. With fewer than two authors, Author is null although the request matched the only author, so `authorFilterSet` analytics flag reads false while the list is limited to that author" - not a bug: with Author null the list is not limited by it (`Apply` and the flag both read `_state.Author`), and keeping it would leave a hidden author filter the grown-up could not clear.
 - Test `EveryBookJsonRange_FitsExactlyOneBand` reads every `content/dino/*/book.json` and fails when a range crosses the 5/6 line (Decision 1).
 - Fixed the review's findings 2 (chip row margin gap), 3 (stale author when the author row hides) and 5 (flow scrolls to rows; the `[AgeChips]` marker prints the band count and the selected band's number, so no enum names).
+- Follow-ups from the last check pass (`reviews/pr-1249-check3-medium.md`, all low, after the device run added `store-age-chips-all-taps.yaml`): #1 `StorePage.xaml.cs:770` the reload path keeps the requested author (same as the check2 follow-up above); #2 `:868` `OnAuthorTapped` sets `_author` after its await without re-resolving; #3 `:1251` download flags read the resolved `_state` while `_band` is the requested value (likely benign); #4 `:780` the empty-result `NoMatchLabel` path is still unexercised.
 
 ## Out of scope
 
