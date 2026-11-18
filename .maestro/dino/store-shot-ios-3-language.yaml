@@ -1,5 +1,5 @@
-# Slice 291 item 5 (iOS part): App Store shot 3 of 5 of Dino Reader, "language": the same page as shot 1 (page 6 of Three Little Pigs) in Farsi, on the four test books.
-# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, so it also works when shot 1 was never taken), sets its own language (Farsi) and leaves nothing the next one needs: every other flow sets English itself.
+# Slice 291 item 5 (iOS part): App Store shot 3 of 5 of Dino Reader, "language": the same page as shot 1 (page 6 of Three Little Pigs) in German (Slice 404; it was Farsi), on the full live shelf.
+# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language (German) and leaves nothing the next one needs: every other flow sets English itself.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshot 3 of 5, language, Dino Reader, iOS
@@ -15,8 +15,12 @@ name: Store screenshot 3 of 5, language, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
-# set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
-- openLink: "dino-test://set-language?lang=fa&voice=0"
+# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts the whole live store on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+# Slice 404: German, never Farsi on the global and European listings (if the German screens or books are missing the flow fails on the German wait below; there is no fall back to another language). set-language switches the screens (skip-first-run lang=de does not); voice=0 starts no voice pack.
+- openLink: "dino-test://set-language?lang=de&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
     timeout: 3000
@@ -27,23 +31,23 @@ name: Store screenshot 3 of 5, language, Dino Reader, iOS
     commands:
       - tapOn:
           text: Open
-# Wait for a string only the Farsi shelf shows (Gallery_Title "داستان‌های من", Gallery_ShelfTitleShort "داستان‌ها" or the grown-ups pill Gallery_GrownUpsPill "بزرگ‌ترها" in AppResources.fa.resx; Gallery_ForGrownUps is the gate page's text, not the shelf's), not StoryTile: the English shelf has it too.
+# Wait for a string only the German shelf shows (Gallery_Title "Meine Geschichten", Gallery_ShelfTitleShort "Geschichten" or the grown-ups pill Gallery_GrownUpsPill "Für Erwachsene" in AppResources.de.resx), not StoryTile: the English shelf has it too.
 - extendedWaitUntil:
-    visible: ".*(داستان|بزرگ).*"
+    visible: ".*(Geschichten|Erwachsene).*"
     timeout: 60000
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 30000
-# The shelf starts the Farsi audio fetch: let its bar appear (bounded, optional: a fast run may need no fetch), then wait until the bar and Cancel are gone so no banner covers the shot.
+# The shelf starts the German audio fetch: let its bar appear (bounded, optional: a fast run may need no fetch), then wait until the bar and Cancel are gone so no banner covers the shot.
 - extendedWaitUntil:
     visible:
-      id: ShelfAudioCancel-fa
+      id: ShelfAudioCancel-de
     timeout: 10000
     optional: true
 - extendedWaitUntil:
     notVisible:
-      id: ShelfAudioCancel-fa
+      id: ShelfAudioCancel-de
     timeout: 60000
 - openLink: "dino-test://open-book?id=three-little-pigs&page=6"
 - extendedWaitUntil:

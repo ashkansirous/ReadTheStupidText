@@ -64,7 +64,21 @@ internal static class TestStore
 
 	public static bool IsListing => Mode != TestStoreMode.Off;
 
-	public static bool Serves(string url) => url.StartsWith(UrlScheme, StringComparison.Ordinal);
+	/// <summary>Slice 404: the address of a package file on the device (the <c>full-shelf</c> hook's paid books, built by BookBuilder and copied onto the device); the store client reads it like a test book, never a network call.</summary>
+	public const string FileScheme = "testfile:";
+
+	public static bool Serves(string url) => url.StartsWith(UrlScheme, StringComparison.Ordinal) || url.StartsWith(FileScheme, StringComparison.Ordinal);
+
+	private static Task<Stream> OpenSourceAsync(string url)
+	{
+		if (url.StartsWith(FileScheme, StringComparison.Ordinal))
+		{
+			return Task.FromResult<Stream>(File.OpenRead(url[FileScheme.Length..]));
+		}
+
+		string assetName = url[UrlScheme.Length..];
+		return assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? Task.FromResult<Stream>(new MemoryStream(FixturePack, writable: false)) : FileSystem.OpenAppPackageFileAsync(assetName);
+	}
 
 	public static string AssetNameOf(string stem) => stem + AssetExtension;
 
@@ -172,8 +186,7 @@ internal static class TestStore
 			throw new HttpRequestException($"The test store refuses with {(int)refusal}.", null, refusal); // Slice 357: the Worker's answer for the status, with no body
 		}
 
-		string assetName = url[UrlScheme.Length..];
-		await using Stream asset = assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? new MemoryStream(FixturePack, writable: false) : await FileSystem.OpenAppPackageFileAsync(assetName);
+		await using Stream asset = await OpenSourceAsync(url);
 		using var all = new MemoryStream();
 		await asset.CopyToAsync(all, cancel);
 		Directory.CreateDirectory(Path.GetDirectoryName(toPath)!);

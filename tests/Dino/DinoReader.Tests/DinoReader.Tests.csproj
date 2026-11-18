@@ -8,6 +8,8 @@
     <TargetFramework>net11.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <IsPackable>false</IsPackable>
+    <!-- Slice 404: the Debug-only full-shelf plan (plain .NET, linked below) is tested on the real file. -->
+    <DefineConstants>$(DefineConstants);DINO_TEST_BOOKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +29,7 @@
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.cs" Link="Linked\AppResources.cs" />
     <!-- Slice 399: the Settings "Books and buying" lines, plain .NET, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\SettingsBuyingText.cs" Link="Linked\SettingsBuyingText.cs" />
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\FullShelfPlan.cs" Link="Linked\FullShelfPlan.cs" />
     <EmbeddedResource Include="..\..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.resx" Link="Linked\AppResources.resx" LogicalName="DinoReader.Resources.Strings.AppResources.resources" />
     <!-- The own-books cleanup's decision and failure handling (Slice 278 A3): plain .NET, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\OwnBooksCleanupRun.cs" Link="Linked\OwnBooksCleanupRun.cs" />

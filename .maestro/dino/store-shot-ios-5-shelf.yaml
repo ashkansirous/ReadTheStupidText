@@ -1,5 +1,5 @@
 # Slice 291 item 5 (iOS part): App Store shot 5 of 5 of Dino Reader, "shelf": the kids' shelf of illustrated books. English, on the four test books.
-# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, so it also works when shot 1 was never taken), sets its own language and leaves nothing behind.
+# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing behind.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
@@ -15,6 +15,10 @@ name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
+# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts the whole live store on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
 # English, set explicitly (a previous flow may have left Farsi; voice=0 starts no voice pack). Wait for a string only the English shelf shows, not StoryTile.
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
