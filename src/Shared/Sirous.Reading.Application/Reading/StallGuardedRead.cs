@@ -67,6 +67,7 @@ public static class StallGuardedRead
     // with a response nobody wants: dispose all three only once it has finished.
     private static void AbandonSend(CancellationTokenSource linked, Task<HttpResponseMessage> send, HttpRequestMessage request)
     {
+        PackDownloadLog.CloseOffThread(PackDownloadLog.RequestPart);
         try
         {
             linked.Cancel();
@@ -82,30 +83,88 @@ public static class StallGuardedRead
                 var (source, message) = ((CancellationTokenSource, HttpRequestMessage))state!;
                 if (t.IsCompletedSuccessfully)
                 {
-                    DisposeQuietly(t.Result);
+                    DisposeQuietly(t.Result, PackDownloadLog.ResponsePart);
                 }
                 else
                 {
                     _ = t.Exception; // observe the fault so it never goes unhandled
                 }
 
-                DisposeQuietly(message);
-                DisposeQuietly(source);
+                DisposeQuietly(message, PackDownloadLog.RequestPart);
+                DisposeQuietly(source, PackDownloadLog.RequestPart);
             },
             (linked, request),
             TaskScheduler.Default);
     }
 
-    internal static void DisposeQuietly(IDisposable? target)
+    internal static void DisposeQuietly(IDisposable? target, string what)
     {
         try
         {
             target?.Dispose();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // no-fallback: closing something stuck on a dead socket may throw; nothing to do about it
+            // no-fallback: closing something stuck on a dead socket may throw; it is logged (type only) and nothing else can be done
+            PackDownloadLog.CloseFailed(what, ex);
         }
+    }
+}
+
+/// <summary>
+/// Slice 400: the one place that knows whether a body was opened and read to its end, and so whether closing it may
+/// drain a socket. Closing an unfinished body makes Android's okhttp read the rest on the closing thread, and a caller
+/// on the UI thread then dies with NetworkOnMainThreadException: that close goes to the thread pool, as ONE task that
+/// runs every step in order (never two tasks closing the same stream). A body never opened, or read to its end (an
+/// empty destination buffer returning 0 is not the end), has nothing to drain and closes inline.
+/// </summary>
+internal sealed class BodyCloseState
+{
+    private int _opened;
+    private int _ended;
+    private int _noContent;
+    private long _expectedLength = -1;
+    private long _bytesRead;
+
+    public void MarkOpened() => Volatile.Write(ref _opened, 1);
+
+    public void MarkEnded() => Volatile.Write(ref _ended, 1);
+
+    /// <summary>The body's Content-Length when the server sent one: reading that many bytes is the end, even if no final 0 read follows.</summary>
+    public void SetExpectedLength(long? length) => Volatile.Write(ref _expectedLength, length ?? -1);
+
+    /// <summary>Records one read: a 0 into a non-empty buffer, or reaching the known length, is the end of the body.</summary>
+    public void ObserveRead(int count, int destinationLength)
+    {
+        long total = Interlocked.Add(ref _bytesRead, count);
+        long expected = Volatile.Read(ref _expectedLength);
+        if ((destinationLength > 0 && count == 0) || (expected >= 0 && total >= expected))
+        {
+            MarkEnded();
+        }
+    }
+
+    /// <summary>A response with no content (null, or a known length of 0) has nothing to drain: the one case that closes inline without having been read.</summary>
+    public void MarkNoContent() => Volatile.Write(ref _noContent, 1);
+
+    /// <summary>Content never read to its end (never opened, or opened and not ended) may still be a live socket stream, so it closes off-thread.</summary>
+    public bool NeedsOffThread => Volatile.Read(ref _noContent) == 0 && Volatile.Read(ref _ended) == 0;
+
+    /// <summary>Runs <paramref name="closeInOrder"/> inline, or as one thread-pool task when closing could drain a socket; the log line is written only when a body was opened.</summary>
+    public void Close(Action closeInOrder, string what)
+    {
+        if (!NeedsOffThread)
+        {
+            closeInOrder();
+            return;
+        }
+
+        if (Volatile.Read(ref _opened) != 0)
+        {
+            PackDownloadLog.CloseOffThread(what);
+        }
+
+        _ = Task.Run(closeInOrder);
     }
 }
 
@@ -116,35 +175,69 @@ public static class StallGuardedRead
 public sealed class GuardedResponse(HttpResponseMessage message) : IDisposable
 {
     private int _abandoned;
+    private int _closed;
+    private int _bodyOpened;
+    private Stream? _body;
 
     public HttpResponseMessage Message { get; } = message;
 
-    /// <summary>The body as a stream whose reads give up after the stall timeout. <paramref name="wrapInner"/> (a Debug test hook, Slice 241) wraps the raw body stream under the guard.</summary>
+    internal BodyCloseState CloseState { get; } = new();
+
+    /// <summary>
+    /// The body as a stream whose reads give up after the stall timeout. <paramref name="wrapInner"/> (a Debug test hook, Slice 241) wraps the raw body stream under the guard.
+    /// A response has one body: a second open is refused (the first stream would otherwise be orphaned and never closed).
+    /// </summary>
     public async Task<Stream> OpenBodyAsync(TimeSpan stallTimeout, CancellationToken cancellationToken, DownloadTag? tag = null, Func<Stream, Stream>? wrapInner = null)
     {
+        if (Interlocked.Exchange(ref _bodyOpened, 1) != 0)
+        {
+            throw new InvalidOperationException("The response body was already opened.");
+        }
+
         Stream inner = await Message.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         if (wrapInner is not null)
         {
             inner = wrapInner(inner);
         }
 
+        _body = inner;
+        // Content-Length is the encoded wire size when a Content-Encoding is present, so it cannot mark the end of the decoded body: then only a 0 read does.
+        CloseState.SetExpectedLength(Message.Content.Headers.ContentEncoding.Count == 0 ? Message.Content.Headers.ContentLength : null);
+        CloseState.MarkOpened();
         return new GuardedStream(inner, this, stallTimeout, tag);
     }
 
-    internal void Abandon()
+    // A stalled read: the stuck body and then the response are closed by one pool task, and this response's own Dispose then does nothing.
+    internal void Abandon(Stream? stuckBody)
     {
         if (Interlocked.Exchange(ref _abandoned, 1) == 0)
         {
-            _ = Task.Run(() => StallGuardedRead.DisposeQuietly(Message));
+            PackDownloadLog.CloseOffThread(PackDownloadLog.ResponsePart);
+            _ = Task.Run(() => CloseInOrder(stuckBody));
         }
     }
 
+    // Slice 400: the response owns the close of its body and itself, in that order. When the body was opened and not read to its end, closing drains the rest on the closing thread
+    // (NetworkOnMainThreadException on Android's UI thread), so both closes run as one thread-pool task; otherwise they run inline.
     public void Dispose()
     {
-        if (Volatile.Read(ref _abandoned) == 0)
+        if (Volatile.Read(ref _abandoned) != 0 || Interlocked.Exchange(ref _closed, 1) != 0)
         {
-            Message.Dispose();
+            return;
         }
+
+        if (Volatile.Read(ref _bodyOpened) == 0 && (Message.Content is null || Message.Content.Headers.ContentLength == 0))
+        {
+            CloseState.MarkNoContent();
+        }
+
+        CloseState.Close(() => CloseInOrder(_body), PackDownloadLog.ResponsePart);
+    }
+
+    private void CloseInOrder(Stream? body)
+    {
+        StallGuardedRead.DisposeQuietly(body, PackDownloadLog.BodyPart);
+        StallGuardedRead.DisposeQuietly(Message, PackDownloadLog.ResponsePart);
     }
 }
 
@@ -154,6 +247,7 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
 {
     private byte[] _buffer = [];
     private int _abandoned;
+    private readonly BodyCloseState _state = owner?.CloseState ?? OpenedState();
     private long _bytesRead = tag?.Offset ?? 0; // total position in the file, including the resume offset
 
     public override bool CanRead => true;
@@ -185,6 +279,8 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
         try
         {
             int count = await read.WaitAsync(stallTimeout, cancellationToken).ConfigureAwait(false);
+            _state.ObserveRead(count, destination.Length); // a 0 from an empty destination buffer is not the end of the body
+
             target.AsMemory(0, count).CopyTo(destination);
             _bytesRead += count;
             return count;
@@ -195,6 +291,13 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
             Abandon(linked, read);
             throw;
         }
+    }
+
+    private static BodyCloseState OpenedState()
+    {
+        var state = new BodyCloseState();
+        state.MarkOpened();
+        return state;
     }
 
     private void Abandon(CancellationTokenSource linked, Task<int> stuck)
@@ -213,17 +316,21 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
 
         if (owner is not null)
         {
-            owner.Abandon();
+            owner.Abandon(inner); // the response closes the stuck body, then itself, in one task
+            return;
         }
 
-        _ = Task.Run(() => StallGuardedRead.DisposeQuietly(inner));
+        PackDownloadLog.CloseOffThread(PackDownloadLog.BodyPart);
+        _ = Task.Run(() => StallGuardedRead.DisposeQuietly(inner, PackDownloadLog.BodyPart));
     }
 
+    // Slice 400: a stream with an owning response leaves the close to that response (one close of body then response, see GuardedResponse.Dispose); a bare wrapped stream closes itself,
+    // off-thread unless it was read to its end.
     protected override void Dispose(bool disposing)
     {
-        if (disposing && Volatile.Read(ref _abandoned) == 0)
+        if (disposing && owner is null && Volatile.Read(ref _abandoned) == 0)
         {
-            inner.Dispose();
+            _state.Close(() => StallGuardedRead.DisposeQuietly(inner, PackDownloadLog.BodyPart), PackDownloadLog.BodyPart);
         }
 
         base.Dispose(disposing);

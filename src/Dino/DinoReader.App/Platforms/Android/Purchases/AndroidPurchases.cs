@@ -17,7 +17,12 @@ public sealed class AndroidPurchases : IBookPurchases
 
     private readonly PurchasesUpdates _updates = new();
     private readonly Dictionary<string, ProductDetails> _details = [];
-    private readonly Dictionary<string, string> _offerTokens = []; // the app's plan product (monthly or yearly) to the Play offer token to buy: the trial offer when Play lists it, else the base plan
+    // Slice 397 review: one immutable map per read, swapped in whole, so a purchase that starts during a refresh reads either the old map or the new one, never a half-cleared one.
+    // OfferTokens: the app's plan product (monthly or yearly) to the Play offer token to buy (the trial offer when Play lists it, else the base plan). BaseTokens: the base plan's token, bought when the card does not promise a trial (an Ended card).
+    // TrialPlans: the plans for which Play listed the trial offer (it lists it only for an account that may still use it).
+    private sealed record PlanTokens(IReadOnlyDictionary<string, string> OfferTokens, IReadOnlyDictionary<string, string> BaseTokens, IReadOnlySet<string> TrialPlans);
+
+    private volatile PlanTokens _plans = new(new Dictionary<string, string>(), new Dictionary<string, string>(), new HashSet<string>());
     private BillingClient? _client;
 
     public string StoreName => DinoReader.Core.PurchaseProofs.AndroidStore;
@@ -32,6 +37,7 @@ public sealed class AndroidPurchases : IBookPurchases
 
         string[] bookProducts = [.. productIds.Where(id => !SubscriptionProducts.Is(id))];
         (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(client, bookProducts); // any non-OK code is a failed query; whether the store was reached is BookPurchases' call (the device's internet), never a code table
+        bool? trialAvailable = null;
         if (productIds.Any(SubscriptionProducts.Is))
         {
             (Dictionary<string, string> planPrices, _) = await QueryPricesAsync(client, [SubscriptionProducts.Subscription], BillingClient.ProductType.Subs); // a failed subscription query only means no subscription card, never a red strip for the books
@@ -39,16 +45,22 @@ public sealed class AndroidPurchases : IBookPurchases
             {
                 prices[plan] = price;
             }
+
+            trialAvailable = planPrices.Count > 0 ? _plans.TrialPlans.Count > 0 : null; // no plan listed: Play did not answer, so nothing is concluded about the trial
+            PurchaseTrace.Line($"subscription trial available={(trialAvailable?.ToString() ?? "unknown")}"); // Slice 397: which card branch the next read shows (offer with the trial, or the plain price)
         }
 
         (HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, bool ok, SubscriptionStatus? subscription, Dictionary<string, DateTimeOffset> purchasedAt) = await QueryOwnedAsync(client);
-        return new PurchaseSnapshot(prices, owned, pending, proofs, ok, pricesFailed, Subscription: subscription, PurchasedAt: purchasedAt);
+        return new PurchaseSnapshot(prices, owned, pending, proofs, ok, pricesFailed, Subscription: subscription, PurchasedAt: purchasedAt, TrialAvailable: trialAvailable);
     }
 
     // Play has no separate restore: what the account owns is read again.
     public Task<PurchaseSnapshot> RestoreAsync(IReadOnlyCollection<string> productIds, CancellationToken cancel) => RefreshAsync(productIds, interactive: true, cancel);
 
-    public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
+    public Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel) => BuyAsync(productId, withTrial: true, cancel);
+
+    // withTrial false buys the base plan even when Play lists the trial offer: the card (an Ended one) showed the plain price with no trial, so the sheet must not start one.
+    public async Task<BuyOutcome> BuyAsync(string productId, bool withTrial, CancellationToken cancel)
     {
         BillingClient? client = await ConnectAsync();
         if (client is null || Platform.CurrentActivity is not { } activity)
@@ -58,12 +70,13 @@ public sealed class AndroidPurchases : IBookPurchases
 
         bool isPlan = SubscriptionProducts.Is(productId);
         string detailsId = isPlan ? SubscriptionProducts.Subscription : productId; // both plans are base plans of Play's one subscription
-        if (!_details.ContainsKey(detailsId) || (isPlan && !_offerTokens.ContainsKey(productId)))
+        if (!_details.ContainsKey(detailsId) || (isPlan && !_plans.OfferTokens.ContainsKey(productId)))
         {
             await QueryPricesAsync(client, [detailsId], isPlan ? BillingClient.ProductType.Subs : BillingClient.ProductType.Inapp);
         }
 
-        if (!_details.TryGetValue(detailsId, out ProductDetails? details) || (isPlan && !_offerTokens.ContainsKey(productId)))
+        PlanTokens plans = _plans; // one read: a refresh that swaps the map meanwhile cannot change what this purchase sees
+        if (!_details.TryGetValue(detailsId, out ProductDetails? details) || (isPlan && !plans.OfferTokens.ContainsKey(productId)))
         {
             return BuyOutcome.Failed;
         }
@@ -72,7 +85,8 @@ public sealed class AndroidPurchases : IBookPurchases
         BillingFlowParams.ProductDetailsParams.Builder builder = BillingFlowParams.ProductDetailsParams.NewBuilder().SetProductDetails(details);
         if (isPlan)
         {
-            builder.SetOfferToken(_offerTokens[productId]); // the trial offer when Play showed it (new subscribers only), else the base plan
+            // the trial offer when asked for and Play showed it (new subscribers only), else the base plan; a missing base token falls back to the offer token
+            builder.SetOfferToken(!withTrial && plans.BaseTokens.TryGetValue(productId, out string? baseToken) ? baseToken : plans.OfferTokens[productId]);
         }
 
         BillingFlowParams.ProductDetailsParams item = builder.Build();
@@ -172,7 +186,9 @@ public sealed class AndroidPurchases : IBookPurchases
     // offer); the offer token to buy is the trial offer's when listed, else the base plan's. Product ids are the app's plan products, never Play's base plan ids.
     private void ReadPlans(ProductDetails details, Dictionary<string, string> prices)
     {
-        _offerTokens.Clear(); // a trial offer Play no longer lists (the account used it) must not be bought from an old token
+        var trialPlans = new HashSet<string>(); // built on the side and swapped in at the end: a trial offer Play no longer lists (the account used it) must not be bought from an old token, and a purchase must never see a half-built map
+        var baseTokens = new Dictionary<string, string>();
+        var offerTokens = new Dictionary<string, string>();
         foreach (ProductDetails.SubscriptionOfferDetails offer in details.GetSubscriptionOfferDetails() ?? [])
         {
             string? plan = PlanProductOf(offer.BasePlanId);
@@ -190,12 +206,23 @@ public sealed class AndroidPurchases : IBookPurchases
                     prices[plan] = price;
                 }
 
-                if (isTrial || !_offerTokens.ContainsKey(plan))
+                if (isTrial)
                 {
-                    _offerTokens[plan] = offer.OfferToken;
+                    trialPlans.Add(plan);
+                }
+                else
+                {
+                    baseTokens[plan] = offer.OfferToken;
+                }
+
+                if (isTrial || !offerTokens.ContainsKey(plan))
+                {
+                    offerTokens[plan] = offer.OfferToken;
                 }
             }
         }
+
+        _plans = new PlanTokens(offerTokens, baseTokens, trialPlans);
     }
 
     private static string? PlanProductOf(string? basePlanId) => basePlanId switch

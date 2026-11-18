@@ -57,7 +57,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Beliebt</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Empfohlen</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Neu</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} Seiten · {1} Min.</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} Min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Kostenlos und ohne Konto. Es wird nichts über dich oder dein Kind gesendet.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du bist offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Für den Laden brauchst du das Internet. Geschichten, die schon im Regal stehen, werden auch ohne Internet gelesen.</value></data>
@@ -433,6 +433,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Erneut abonnieren</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Dieses Buch kaufen</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Gesperrt: Das Abo ist abgelaufen</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>{0} % sparen</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} pro Jahr</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} pro Monat</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Verlängert sich automatisch jeden Monat oder jedes Jahr zum angezeigten Preis, bis du in deinem Store-Konto kündigst. Jederzeit kündbar.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis testen bis {0}. Danach {1} pro Jahr, außer du kündigst vorher.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis testen bis {0}. Danach {1} pro Monat, außer du kündigst vorher.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Jahresabo · verlängert sich am {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Monatsabo · verlängert sich am {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inklusive</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Deine Zahlung ist nicht durchgegangen</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während Google Play es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während der App Store es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während der Microsoft Store es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Zahlung beheben</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Dein Abo ist abgelaufen</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 Buch in deinem Regal ist gesperrt und vor deinem Kind verborgen. Abonniere erneut oder kaufe das Buch, das du behalten möchtest.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} Bücher in deinem Regal sind gesperrt und vor deinem Kind verborgen. Abonniere erneut oder kaufe die Bücher, die du behalten möchtest.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bücher, die aus dem Store zurückkommen</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Kostenlose Bücher kommen von selbst zurück. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Kostenlose Bücher, die noch im Store sind, kommen von selbst zurück. Ein Buch, das der Store nicht mehr anbietet, kommt nicht zurück, seine Aufnahmen bleiben aber in der Backup-Datei. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>

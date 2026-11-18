@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populair</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Aanbevolen</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Nieuw</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} pagina’s · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis en zonder account. Er wordt niets over jou of je kind verstuurd.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Je bent offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>De winkel heeft internet nodig. Verhalen die al op de plank staan, kun je nog steeds zonder internet lezen.</value></data>
@@ -431,6 +431,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Opnieuw abonneren</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Dit boek kopen</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Vergrendeld: het abonnement is afgelopen</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Bespaar {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} per jaar</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} per maand</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Wordt elke maand of elk jaar vanzelf verlengd tegen de getoonde prijs, tot je opzegt in je winkelaccount. Altijd opzegbaar.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis proefperiode tot {0}. Daarna {1} per jaar, tenzij je eerder opzegt.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis proefperiode tot {0}. Daarna {1} per maand, tenzij je eerder opzegt.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Jaarabonnement · wordt verlengd op {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Maandabonnement · wordt verlengd op {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inbegrepen</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Je betaling is niet gelukt</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alle boeken blijven open tot {0} terwijl Google Play het opnieuw probeert. Controleer je betaalmethode om ze te houden.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alle boeken blijven open tot {0} terwijl de App Store het opnieuw probeert. Controleer je betaalmethode om ze te houden.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alle boeken blijven open tot {0} terwijl de Microsoft Store het opnieuw probeert. Controleer je betaalmethode om ze te houden.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Betaling herstellen</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Je abonnement is afgelopen</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 boek op je plank is vergrendeld en verborgen voor je kind. Neem opnieuw een abonnement of koop het boek dat je wilt houden.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} boeken op je plank zijn vergrendeld en verborgen voor je kind. Neem opnieuw een abonnement of koop de boeken die je wilt houden.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Boeken om terug te halen uit de winkel</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis boeken komen vanzelf terug. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis boeken die nog in de winkel staan, komen vanzelf terug. Een boek dat de winkel niet meer aanbiedt, komt niet terug, maar de opnames blijven in het back-upbestand. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>

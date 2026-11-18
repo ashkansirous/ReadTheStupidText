@@ -35,6 +35,7 @@ public sealed class WindowsPurchases : IBookPurchases
         (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(context);
         (HashSet<string> owned, bool ok, SubscriptionStatus? subscription) = await QueryOwnedAsync(context);
         Dictionary<string, string> proofs = await ProofsAsync(context, owned);
+        // Slice 397: TrialAvailable stays null. StoreSubscriptionInfo.HasTrialPeriod says the SKU has a trial configured, not that this account may still use it, so Windows keeps "Try free" (Decision 4) until the Store answers eligibility.
         return new PurchaseSnapshot(prices, owned, new HashSet<string>(), proofs, ok, pricesFailed, Subscription: subscription);
     }
 

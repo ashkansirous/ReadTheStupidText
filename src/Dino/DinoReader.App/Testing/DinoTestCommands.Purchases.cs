@@ -23,6 +23,8 @@ internal static partial class DinoTestCommands
 	private const string PriceKey = "price";
 	private const string BuyKey = "buy";
 	private const string OfflineKey = "offline";
+	private const string TrialKey = "trial"; // Slice 397: trial=used makes the pretend store say the account has used the free trial (the plain-price card); fake-subscription takes it too
+	private const string UsedValue = "used";
 	private const string OnMode = "on";
 	private const string DefaultPrice = "$0.99";
 
@@ -44,7 +46,7 @@ internal static partial class DinoTestCommands
 			}
 
 			// All state is set before the first await, so the next hook (skip-first-run) always sees the sold books.
-			var fake = new FakePurchases { Price = command.Get(PriceKey, DefaultPrice), Offline = command.Flag(OfflineKey), NextBuy = BuyOutcomeOf(command.Get(BuyKey, "ok")) };
+			var fake = new FakePurchases { Price = command.Get(PriceKey, DefaultPrice), Offline = command.Flag(OfflineKey), NextBuy = BuyOutcomeOf(command.Get(BuyKey, "ok")), TrialAvailable = command.Get(TrialKey, string.Empty) != UsedValue };
 			string[] paid = command.Get(PaidKey, string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 			FakePurchases.SetPaid(paid);
 			switchable.Override = fake;
@@ -82,6 +84,11 @@ internal static partial class DinoTestCommands
 			string state = command.Get(StateKey, "none");
 			int days = int.TryParse(command.Get(DaysKey, "30"), out int parsed) ? parsed : 30;
 			fake.Subscription = FakeSubscriptionOf(state, days);
+			if (command.Get(TrialKey, string.Empty) is { Length: > 0 } trial)
+			{
+				fake.TrialAvailable = trial != UsedValue;
+			}
+
 			var sales = services.GetRequiredService<BookSales>();
 			sales.Purchases.MarkStale();
 			StoreListing listing = await services.GetRequiredService<StoreClient>().ListAsync(CancellationToken.None); // reads the fake store (the purchase read)

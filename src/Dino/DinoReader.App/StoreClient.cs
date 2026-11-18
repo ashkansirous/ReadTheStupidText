@@ -728,10 +728,10 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 		try
 		{
-			await using Stream body = await response.Message.Content.ReadAsStreamAsync(cancel);
+			await using Stream body = await response.OpenBodyAsync(StallTimeout, cancel); // through the guard, so an unread rest of the body closes off the UI thread with the response (Slice 400)
 			return HttpErrorClassifier.MessageFrom(await ReadBodyToEndAsync(body, cancel));
 		}
-		catch (Exception ex) when (ex is IOException or HttpRequestException || (ex is OperationCanceledException && !callerCancel.IsCancellationRequested))
+		catch (Exception ex) when (ex is IOException or HttpRequestException or TimeoutException || (ex is OperationCanceledException && !callerCancel.IsCancellationRequested))
 		{
 			// no-fallback: an unreadable or stalled 400 body only means there is no server sentence (the general text shows); the caller reports the failure. A cancel by the caller still escapes.
 			Debug.WriteLine($"Dino Reader could not read the store's 400 message: {ex.Message}");
