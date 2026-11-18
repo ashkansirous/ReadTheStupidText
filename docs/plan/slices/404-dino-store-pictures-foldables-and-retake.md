@@ -83,3 +83,9 @@ Three things are wrong with the live pictures, and one is new:
 - Skipped #8 (`reviews/pr-1254-high.md`): "`DINO_TEST_BOOKS` is defined for the whole test project to link one file, so any present or future linked file with `#if DINO_TEST_BOOKS` is silently compiled in" - the define only opens Debug test code that is already behind that symbol; no behaviour changes.
 
 - Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: items 1-2 merged #1254; items 3-7 need demo-mode proof (393 item 14) and the store-listing agent push, the macOS job and the Windows VM, and 403 plus the Duo simulator (night 2026-11-17-2105)
+
+## Item 4 started 2026-11-18 (user asked why the App Store still shows Farsi shots and no Duo set)
+
+- Dispatched `store-screenshots.yml -f app=dino -f device=all` on main: run 44368205082. iPhone 6.9" failed at once: the Xcode 27.2 image's iOS 27.2 runtime (`SimRuntime.iOS-27-2-iPhone19-4`) refuses the iPhone 17 and 16 Pro Max ("Incompatible device"); the image lists iPhone 18 Pro Max. The iPad 13" job was cancelled at 18:30:54 UTC right after boot, before any shot (cause not in the log); redispatched alone as run 44371456491.
+- Fix on `fix/s404-sim69`: `iPhone 18 Pro Max` first in the iphone-6.9 patterns of `.github/scripts/ios-sim-store-shots.sh` (outside this slice's Touches line only by being the same script it already widened). Proof run on the branch: 44370561111.
+- Review: pass 1 `reviews/s404sim-pass1-high.md`, pass 2 `reviews/s404sim-pass2-medium.md`; no blocker. Findings 1 and 4 (18 Pro Max exists, its size fits) are settled by the proof run. Follow-up (finding 2, not done here): replace the hardcoded model names with the runtime's supported device types or a generic `iPhone [0-9]+ Pro Max` so the next Xcode does not break the slot again. Finding 3 (6.5" types older than the refused ones) is settled by run 44368205082's 6.5" job.
