@@ -86,8 +86,19 @@ try {
     $threw = $false
     try { Get-CheckAfter "$afterWork\dino-c.ps1" $afterWork | Out-Null } catch { $threw = $true }
     Assert-Equal 'an after header naming no check file throws' $true $threw
+    Set-Content "$afterWork\dino-d.ps1" "# after: dino-b`n# body"
+    Assert-Equal 'an after chain lists every prerequisite, first one first' 'dino-a,dino-b' (@(Get-CheckAfter "$afterWork\dino-d.ps1" $afterWork) -join ',')
+    Set-Content "$afterWork\dino-g.ps1" "# after: dino-a, dino-b`n# body"   # diamond: dino-b also needs dino-a
+    Assert-Equal 'a diamond lists each prerequisite once, in first-seen order' 'dino-a,dino-b' (@(Get-CheckAfter "$afterWork\dino-g.ps1" $afterWork) -join ',')
+    Set-Content "$afterWork\dino-h.ps1" "# after: dino-b, dino-a`n# body"
+    Assert-Equal 'a diamond keeps prerequisites before their dependants' 'dino-a,dino-b' (@(Get-CheckAfter "$afterWork\dino-h.ps1" $afterWork) -join ',')
+    Set-Content "$afterWork\dino-e.ps1" "# after: dino-f`n# body"
+    Set-Content "$afterWork\dino-f.ps1" "# after: dino-e`n# body"
+    $threw = $false
+    try { Get-CheckAfter "$afterWork\dino-e.ps1" $afterWork | Out-Null } catch { $threw = $true }
+    Assert-Equal 'an after loop throws' $true $threw
 } finally { Remove-Item $afterWork -Recurse -Force -ErrorAction SilentlyContinue }
-Assert-Equal 'dino-reorder declares the launch check first' 'dino-launch' (@(Get-CheckAfter (Join-Path $checksDir 'dino-reorder.ps1') $checksDir) -join ',')
+Assert-Equal 'dino-reorder runs the whole first-run chain before it' 'dino-onboarding-keys,dino-onboarding,dino-launch' (@(Get-CheckAfter (Join-Path $checksDir 'dino-reorder.ps1') $checksDir) -join ',')
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-check-dryrun: all passed.'
