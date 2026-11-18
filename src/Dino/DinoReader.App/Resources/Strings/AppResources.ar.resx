@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>انتهى اشتراكك</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>كتاب واحد على رفّك مقفل ومخفي عن طفلك. اشترك مرة أخرى، أو اشترِ الكتاب الذي تريد الاحتفاظ به.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} كتب على رفّك مقفلة ومخفية عن طفلك. اشترك مرة أخرى، أو اشترِ الكتب التي تريد الاحتفاظ بها.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>انتهى اشتراكك</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} كتب مقفلة. طفلك لا يراها. اشترك مرة أخرى، أو اشترِ الكتب التي تريد الاحتفاظ بها.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>كتاب واحد مقفل. طفلك لا يراه. اشترك مرة أخرى، أو اشترِ الكتاب الذي تريد الاحتفاظ به.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>عرض الخطط في المتجر</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>شراء · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>تعذّر التحقق من اشتراكك</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>لا يوجد اتصال بالإنترنت. تبقى كتب الاشتراك مفتوحة حتى {0}، أي بعد 3 أيام من آخر تاريخ ذكره المتجر. اتصل بالإنترنت لتبقى مفتوحة.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>كتب تُستعاد من المتجر</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>تعود الكتب المجانية من تلقاء نفسها. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>تعود الكتب المجانية الموجودة في المتجر من تلقاء نفسها. أما الكتاب الذي لم يعد المتجر يعرضه فلا يعود، لكن تسجيلاته تبقى في ملف النسخة الاحتياطية. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>

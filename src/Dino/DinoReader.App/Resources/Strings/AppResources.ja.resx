@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>本棚の1冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>本棚の{0}冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0}冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>ストアでプランを見る</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>購入 · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>定期購入を確認できません</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>インターネットに接続されていません。定期購入の本は、ストアが最後に示した日の3日後の{0}まで開けます。接続すると開いたままになります。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>ストアにある無料の本は自動で戻ります。ストアで配信が終わった本は戻りませんが、録音はバックアップファイルに残ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>

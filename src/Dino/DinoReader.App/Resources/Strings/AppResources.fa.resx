@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>اشتراک شما تمام شد</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>۱ کتاب در قفسه‌ات قفل و از فرزندت پنهان است. دوباره مشترک شو، یا کتابی را که می‌خواهی نگه داری بخر.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} کتاب در قفسه‌ات قفل و از فرزندت پنهان است. دوباره مشترک شو، یا کتاب‌هایی را که می‌خواهی نگه داری بخر.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>اشتراک شما تمام شد</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} کتاب قفل است. فرزندت آن‌ها را نمی‌بیند. دوباره مشترک شو، یا کتاب‌هایی را که می‌خواهی نگه داری بخر.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>۱ کتاب قفل است. فرزندت آن را نمی‌بیند. دوباره مشترک شو، یا کتابی را که می‌خواهی نگه داری بخر.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>دیدن طرح‌ها در فروشگاه</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>خرید · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>اشتراکت را نمی‌شود بررسی کرد</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>اینترنت وصل نیست. کتاب‌های اشتراک تا {0} باز می‌مانند، یعنی ۳ روز بعد از آخرین تاریخی که فروشگاه داده است. وصل شو تا باز بمانند.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>کتاب‌هایی که باید از فروشگاه برگردند</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>کتاب‌های رایگان خودشان برمی‌گردند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>کتاب‌های رایگانی که هنوز در فروشگاه هستند خودشان برمی‌گردند. کتابی که فروشگاه دیگر عرضه نمی‌کند برنمی‌گردد، اما ضبط‌های آن در فایل پشتیبان می‌ماند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>

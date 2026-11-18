@@ -448,6 +448,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Je abonnement is afgelopen</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 boek op je plank is vergrendeld en verborgen voor je kind. Neem opnieuw een abonnement of koop het boek dat je wilt houden.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} boeken op je plank zijn vergrendeld en verborgen voor je kind. Neem opnieuw een abonnement of koop de boeken die je wilt houden.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Je abonnement is afgelopen</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} boeken zijn vergrendeld. Je kind ziet ze niet. Neem opnieuw een abonnement of koop de boeken die je wilt houden.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 boek is vergrendeld. Je kind ziet het niet. Neem opnieuw een abonnement of koop het boek dat je wilt houden.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Bekijk de abonnementen in de winkel</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Kopen · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Je abonnement kan niet worden gecontroleerd</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Geen internet. Abonnementsboeken blijven open tot {0}, 3 dagen na de laatste datum van de winkel. Maak verbinding om ze open te houden.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Boeken om terug te halen uit de winkel</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis boeken komen vanzelf terug. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis boeken die nog in de winkel staan, komen vanzelf terug. Een boek dat de winkel niet meer aanbiedt, komt niet terug, maar de opnames blijven in het back-upbestand. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>

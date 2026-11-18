@@ -61,6 +61,25 @@ public static class SubscriptionAccess
     public static bool Grants(SubscriptionRecord? record, DateTimeOffset now) =>
         record is not null && IsEntitled(record.State) && now <= (record.EndsAt ?? record.CheckedAt) + OfflineGrace;
 
+    /// <summary>
+    /// Slice 398 (mock SB7): the date the books lock when the calm "can't check your subscription" banner shows, else null. It shows only while the device is offline, the held answer says entitled, the end date
+    /// (or, with none given, the moment the store was read) is already past and the <see cref="OfflineGrace"/> after it still holds, so the books are open on the grace alone. Online, or before the end date, or once the grace is over, there is no notice.
+    /// </summary>
+    public static DateTimeOffset? OfflineNotice(DateTimeOffset now, SubscriptionRecord? record, bool offline)
+    {
+        if (!offline || record is null || !IsEntitled(record.State))
+        {
+            return null;
+        }
+
+        DateTimeOffset end = record.EndsAt ?? record.CheckedAt;
+        DateTimeOffset locks = end + OfflineGrace;
+        return now > end && now <= locks ? locks : null;
+    }
+
+    /// <summary>The lock date as the banner names it: the culture's own short date (day, month and year in that language's order and script), so the sentence around it reads right in every shipped language.</summary>
+    public static string FormatLockDate(DateTimeOffset lockDate, System.Globalization.CultureInfo culture) => lockDate.ToLocalTime().ToString("d", culture);
+
     /// <summary>The owned products as the books must see them: the subscription's products count only while <see cref="Grants"/> holds, whatever the last store read left (the offline rule can end access between reads).</summary>
     public static IReadOnlySet<string> OwnedWhile(IReadOnlySet<string> owned, bool grants) =>
         grants || !owned.Any(SubscriptionProducts.Is) ? owned : new HashSet<string>(owned.Where(p => !SubscriptionProducts.Is(p)));

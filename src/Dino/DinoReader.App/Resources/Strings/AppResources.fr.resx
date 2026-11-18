@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Votre abonnement est terminé</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 livre de votre étagère est verrouillé et caché à votre enfant. Abonnez-vous de nouveau, ou achetez celui que vous voulez garder.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} livres de votre étagère sont verrouillés et cachés à votre enfant. Abonnez-vous de nouveau, ou achetez ceux que vous voulez garder.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Votre abonnement est terminé</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} livres sont verrouillés. Votre enfant ne les voit pas. Abonnez-vous de nouveau, ou achetez ceux que vous voulez garder.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 livre est verrouillé. Votre enfant ne le voit pas. Abonnez-vous de nouveau, ou achetez celui que vous voulez garder.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Voir les offres dans la boutique</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Acheter · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Impossible de vérifier votre abonnement</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Pas d’internet. Les livres de l’abonnement restent ouverts jusqu’au {0}, 3 jours après la dernière date donnée par la boutique. Connectez-vous pour les garder ouverts.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Livres à récupérer depuis la boutique</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Les livres gratuits reviennent tout seuls. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Les livres gratuits encore dans la boutique reviennent tout seuls. Un livre que la boutique ne propose plus ne revient pas, mais ses enregistrements restent dans le fichier de sauvegarde. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>

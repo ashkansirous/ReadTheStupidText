@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>书架上有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>书架上有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那些。</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的书。</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>在商店查看方案</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>购买 · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>无法检查你的订阅</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>没有网络。订阅的书会保持打开到 {0}，即商店给出的最后日期后的 3 天。连接网络即可保持打开。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>免费的书会自动回来。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>仍在商店里的免费书会自动回来。商店已下架的书不会回来，但它的录音仍保存在备份文件里。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>

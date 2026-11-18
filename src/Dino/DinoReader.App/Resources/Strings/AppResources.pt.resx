@@ -449,6 +449,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Sua assinatura terminou</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 livro da sua estante está bloqueado e escondido do seu filho. Assine de novo ou compre o que você quer manter.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} livros da sua estante estão bloqueados e escondidos do seu filho. Assine de novo ou compre os que você quer manter.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Sua assinatura terminou</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} livros estão bloqueados. Seu filho não os vê. Assine de novo ou compre os que você quer manter.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 livro está bloqueado. Seu filho não o vê. Assine de novo ou compre o que você quer manter.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Ver planos na loja</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Comprar · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Não é possível verificar sua assinatura</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Sem internet. Os livros da assinatura ficam abertos até {0}, 3 dias após a última data informada pela loja. Conecte-se para mantê-los abertos.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Livros para recuperar da loja</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Os livros gratuitos voltam sozinhos. Para um livro que você comprou, toque em Restaurar compras na loja e depois restaure este backup de novo.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Os livros gratuitos que ainda estão na loja voltam sozinhos. Um livro que a loja não oferece mais não volta, mas as gravações dele ficam no arquivo de backup. Para um livro que você comprou, toque em Restaurar compras na loja e depois restaure este backup de novo.</value></data>

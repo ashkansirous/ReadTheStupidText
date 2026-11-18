@@ -452,6 +452,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Your subscription ended</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 book on your shelf is locked and hidden from your child. Subscribe again, or buy the one you want to keep.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} books on your shelf are locked and hidden from your child. Subscribe again, or buy the ones you want to keep.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Your subscription ended</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} books are locked. Your child doesn’t see them. Subscribe again, or buy the ones you want to keep.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 book is locked. Your child doesn’t see it. Subscribe again, or buy the one you want to keep.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>See plans in the Store</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Buy · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Can’t check your subscription</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>No internet. Subscription books stay open until {0}, 3 days after the last date the store gave. Connect to keep them open.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Free books come back by themselves. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Free books still in the store come back by themselves. A book the store no longer lists does not come back, but its recordings stay in the backup file. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>

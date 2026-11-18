@@ -448,6 +448,13 @@
   <data name="Sub_EndedTitle" xml:space="preserve"><value>Dit abonnement er udløbet</value></data>
   <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bog på din hylde er låst og skjult for dit barn. Abonnér igen, eller køb den, du vil beholde.</value></data>
   <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} bøger på din hylde er låst og skjult for dit barn. Abonnér igen, eller køb dem, du vil beholde.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Dit abonnement er udløbet</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} bøger er låst. Dit barn kan ikke se dem. Abonnér igen, eller køb dem, du vil beholde.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bog er låst. Dit barn kan ikke se den. Abonnér igen, eller køb den, du vil beholde.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnementer i butikken</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Køb · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan ikke tjekke dit abonnement</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Intet internet. Abonnementets bøger forbliver åbne til {0}, 3 dage efter den sidste dato fra butikken. Opret forbindelse for at holde dem åbne.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøger, der skal hentes tilbage fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøger kommer tilbage af sig selv. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøger, der stadig er i butikken, kommer tilbage af sig selv. En bog, som butikken ikke længere har, kommer ikke tilbage, men dens optagelser bliver i sikkerhedskopien. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>

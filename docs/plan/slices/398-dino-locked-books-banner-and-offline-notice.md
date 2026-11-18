@@ -3,7 +3,7 @@
 
 *Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 2, frames SB6-SB8). Slice 384 built the greyed tile and the hiding; this slice adds the look the mock draws and the two banners.* *In progress (wave 2026-11-18), draft PR.* Runs beside Slice 399 and 394: new resx keys go right after the existing `Sub_` keys (399 adds after `Settings_`); the Store's restore handler (`StorePage.xaml.cs:1091`, 394's file) is called, never edited.
 
-**Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/Platforms/Windows/GalleryPage.Desktop.cs`, `src/Dino/DinoReader.App/StoryTile.cs`, `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md`
+**Touches:** `src/Dino/DinoReader.App/GalleryPage.xaml*`, `src/Dino/DinoReader.App/Platforms/Windows/GalleryPage.Desktop.cs`, `src/Dino/DinoReader.App/StoryTile.cs`, `src/Dino/DinoReader.App/ShelfReorderTiles.cs` (locked opacity on the reorder cover, review high #9), `src/Dino/DinoReader.App/IconView.cs` (`IconKind.CloudOff` for the offline banner, review high #1; widened by the coordinator: no other wave slice edits these two), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/BookAccess.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/398-dino-locked-books-banner-and-offline-notice.md`
 
 ## Decisions (the mock, 2026-11-15)
 
@@ -30,3 +30,11 @@
 
 - Dino tests pass (offline notice rows). Android emulator: the Maestro flow in item 5. iOS simulator and Windows VM: the banner and tile look.
 - The offline 3-day rule on a real device stays in Slice 384 *Not yet verified*.
+
+#### From review
+
+- Open #4 (`reviews/pr-1247-high.md`): "Restore purchases link can silently do nothing and shows no loading state" - held on purpose: the Restore hand-off (`OnBannerRestoreClicked`, up to 5 polls of `StorePage.TryRestoreFromKeyboard`) stays as built until the StorePage restore entry point another branch adds this wave lands; then replace the polling with that entry point (a pending-restore flag consumed on Appearing and after load) and give it a loading state.
+- Follow-up from #2 (`reviews/pr-1247-high.md`): "desaturate the cover for real greyscale (per platform, or a pre-rendered grey copy)" - kept the grey veil (now at 70% and on the cover's own radius, `TileCoverRadius`): a true greyscale needs an image handler per platform (Android ColorMatrix, iOS CIColorControls, Windows) in `Platforms/*` and `StoryCover`, outside this slice's Touches. Needs its own slice.
+- Applied #9 (`reviews/pr-1247-high.md`) in part: the reorder layer's locked books draw at the 55% opacity (`ShelfReorderTiles.Build`) but without the veil or lock badge; they are still draggable there.
+- Skipped #3 (`reviews/pr-1247-medium.md`): "ApplyShelfBanners can run before ApplyShape sets _shelfGeometry. The banner may show with zero side margin on the first frame until the next layout." - ApplyShape sets the banner margin on the first layout pass before the page is drawn; no failure path shown.
+- Skipped #6 (`reviews/pr-1247-medium.md`): "NetworkProbe treats NetworkAccess.Unknown as online. On a Windows head, offline past the end date can show no notice." - Unknown counted as online is the decision taken for high #6: an unknown or captive network must not show the offline notice.

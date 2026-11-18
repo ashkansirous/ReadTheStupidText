@@ -402,6 +402,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		store.LibraryChanged += OnLibraryChanged;
 		store.Sales.Purchases.Changed -= OnPurchasesChanged; // Slice 384: a subscription that ended or came back locks or opens its books
 		store.Sales.Purchases.Changed += OnPurchasesChanged;
+		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged; // Slice 398: the offline notice follows the network
+		Connectivity.Current.ConnectivityChanged += OnNetworkChanged;
+		StartBannerTimer();
+#if DEBUG
+		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
+		NetworkProbe.OverrideChanged += OnNetworkOverrideChanged;
+#endif
 		ShelfAudioPacks shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
 		shelfAudio.Changed -= OnShelfAudioChanged;
 		shelfAudio.Changed += OnShelfAudioChanged;
@@ -525,6 +532,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_mode.PropertyChanged -= OnModeChanged;
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 		_services.GetRequiredService<StoreClient>().Sales.Purchases.Changed -= OnPurchasesChanged;
+		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged;
+		StopBannerTimer();
+#if DEBUG
+		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
+#endif
 		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
 		_services.GetRequiredService<StagedBookUpdates>().Staged -= OnBookUpdateStaged;
 	}
@@ -708,14 +720,18 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #endif
 		_items.Clear();
 		BookSales sales = _services.GetRequiredService<BookSales>();
+		_lastShelfStories = stories;
+		_lockedShelfKey = LockedShelfKey(sales);
 		IReadOnlyList<Story> shown = _mode.IsGrownUp ? stories : [.. stories.Where(story => !sales.IsLapsed(story))]; // Slice 384: a lapsed subscription's books are removed from the child's shelf, greyed on the parents'; their files stay
 #if DEBUG
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf total={stories.Count} shown={shown.Count} lapsed={stories.Count(story => sales.IsLapsed(story))} grownUp={_mode.IsGrownUp}"); // the subscription flow's expect-log markers
 #endif
-		foreach (StoryTile item in GalleryItems.Build(shown, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage), story => sales.IsLapsed(story)))
+		foreach (StoryTile item in GalleryItems.Build(shown, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage), story => sales.IsLapsed(story), story => LockedBookPrice(sales, story)))
 		{
 			_items.Add(item);
 		}
+
+		ApplyShelfBanners();
 
 #if DEBUG
 		if (_shelfTitleLanguage is not null && _shelfTitleLanguage != titleLanguage)
@@ -728,6 +744,17 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		ApplyModeChrome(_mode.IsGrownUp);
 		return true;
+	}
+
+	// Slice 398: the store's own price for a locked book's "Buy · price" pill; null for any other book or while the store has not given one (the pill then says "Buy this book").
+	private string? LockedBookPrice(BookSales sales, Story story)
+	{
+		if (!sales.IsLapsed(story) || story.SourceId is not { } sourceId || _services.GetRequiredService<StoreClient>().ListedItem(sourceId) is not { } item)
+		{
+			return null;
+		}
+
+		return BookAccess.PriceOf(item, sales.Purchases.Snapshot.Prices);
 	}
 
 	// Entering or leaving the corner swaps the whole chrome (ink header or rail with tabs, or the cream header or rail): the two places never look alike.
@@ -1053,6 +1080,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			}
 		}
 
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf columns={columns} grownUp={_mode.IsGrownUp}"); // the subscription flow pins the mock's 3 columns on a phone held upright (SB6)
+#endif
 		SetResourceIfChanged(TileWidthKey, -1.0);
 		SetResourceIfChanged(TileTitleLinesKey, 2);
 		ApplyShelfMargin(_shelfGeometry);
@@ -1062,12 +1092,18 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	// The list's own sides and top: a pure function of the chrome (CornerLayout.BooksGeometry, ShelfTitleRules.Geometry), never of the list's measured size (a layout cycle on the VM, Slice 235 part C).
 	private void ApplyShelfMargin(WindowShapeSeam.ShelfGeometry geometry)
 	{
-		var margin = new Thickness(geometry.Left, geometry.Top, geometry.Right, 0);
+		var margin = new Thickness(geometry.Left, ShelfBanners.IsVisible ? ListTopUnderBanner : geometry.Top, geometry.Right, 0);
 		if (StoryList.Margin != margin)
 		{
 			StoryList.Margin = margin;
 		}
+
+		ShelfBanners.Margin = new Thickness(geometry.Left, BannerTop, geometry.Right, BannerBottom); // Slice 398 (mock SB6: 12 above, 8 below): the banners sit on the list's own sides
 	}
+
+	private const double BannerTop = 12;
+	private const double BannerBottom = 8;
+	private const double ListTopUnderBanner = 4; // the mock's list starts 4 dp under the banner's 8: the banner carries the gap above the grid, the list's own top is not added to it
 
 	// A resource write re-measures every tile bound to it, so it is made only when the value really changes.
 	private void SetResourceIfChanged(string key, object value)
@@ -1563,6 +1599,172 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	// Slice 384: the greyed book's two actions on the parents' shelf. Subscribe again opens the Store tab where the plans are; Buy this book opens the store's own sheet for the book (the wait overlay shows past 500 ms).
 	private void OnLapsedSubscribeClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet and the tab switch is counted as the Store screen
 
+	// Slice 398 (mock SB6, SB7): the Books tab's two banners. The "why" banner shows while any book is locked (it says it once for all of them); the calm sand notice shows only while offline, past the last end date the store
+	// gave and inside the 3 days (SubscriptionAccess.OfflineNotice). Both are the parents' Books tab only; the child's shelf never sees either.
+	private void ApplyShelfBanners()
+	{
+		BookSales sales = _services.GetRequiredService<BookSales>();
+		bool books = _mode.IsGrownUp && _mode.Tab == CornerTab.Books;
+		int locked = books ? BookAccess.LockedCount(_items.OfType<StoryTile>().Select(tile => tile.IsLapsed ? ShelfAccess.LockedByLapse : ShelfAccess.Readable)) : 0;
+		DateTimeOffset? locksOn = books && sales.SwitchKnownOn ? SubscriptionAccess.OfflineNotice(DateTimeOffset.UtcNow, sales.Purchases.Subscription.Record, NetworkProbe.IsOffline()) : null;
+		LockedBanner.IsVisible = locked > 0;
+		OfflineBanner.IsVisible = locksOn is not null;
+		ShelfBanners.IsVisible = LockedBanner.IsVisible || OfflineBanner.IsVisible;
+		ApplyShelfMargin(_shelfGeometry); // the list's own top follows whether a banner stands above it
+		if (locked > 0)
+		{
+			LockedBannerTitle.Text = AppResources.Sub_BannerTitle;
+			LockedBannerBody.Text = locked == 1 ? AppResources.Sub_BannerBody_One : AppResources.Format(AppResources.Sub_BannerBody_Other, locked);
+			LockedBannerPlans.Text = AppResources.Sub_BannerPlans;
+			LockedBannerRestore.Text = AppResources.Store_RestorePurchases;
+			SemanticProperties.SetDescription(LockedBannerPlans, AppResources.Sub_BannerPlans);
+			SemanticProperties.SetDescription(LockedBannerRestore, AppResources.Store_RestorePurchases);
+		}
+
+		if (locksOn is { } lockDate)
+		{
+			OfflineBannerTitle.Text = AppResources.Sub_OfflineTitle;
+			OfflineBannerBody.Text = AppResources.Format(AppResources.Sub_OfflineBody, SubscriptionAccess.FormatLockDate(lockDate, System.Globalization.CultureInfo.CurrentUICulture));
+		}
+
+#if DEBUG
+		LogBannerState($"[Subscription] banners locked={locked} offline={(locksOn is null ? "none" : "shown")}"); // the subscription flow's expect-log markers
+#endif
+	}
+
+#if DEBUG
+	private string _lastBannerLog = string.Empty;
+
+	// Written only when the state differs from the last line, so an expect-log can never match a stale earlier line of the same text.
+	private void LogBannerState(string line)
+	{
+		if (line != _lastBannerLog)
+		{
+			_lastBannerLog = line;
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+		}
+	}
+#endif
+
+	private const double LockBadgeTopShare = 0.22; // mock SB6: the badge's top edge is 22% of the cover's height down
+
+	// The grid this is raised on holds the cover alone (the title and pills are outside it), so its height is the cover's; the badge's margin follows it and the badge sits where the mock puts it at every tile size.
+	private void OnTileCoverSizeChanged(object? sender, EventArgs e)
+	{
+		if (sender is Grid tile && tile.Children.OfType<Border>().FirstOrDefault(child => child.AutomationId == "LapsedLockBadge") is { } badge && tile.Width > 0)
+		{
+			badge.Margin = new Thickness(0, tile.Height * LockBadgeTopShare, 0, 0);
+		}
+	}
+
+	// Slice 398: the banners and the locked tiles depend on the clock (the end date, the 3 days after it) and on the store's catalog, which can land after the shelf was built, so while the page shows a
+	// minute timer (and every tab change and appearing) works them out again; only a real difference in what is locked, or in a locked book's price, rebuilds the shelf.
+	private static readonly TimeSpan BannerCheckGap = TimeSpan.FromMinutes(1);
+	private IDispatcherTimer? _bannerTimer;
+	private string _lockedShelfKey = string.Empty;
+	private IReadOnlyList<Story> _lastShelfStories = [];
+
+	private void StartBannerTimer()
+	{
+		if (_bannerTimer is null)
+		{
+			_bannerTimer = Dispatcher.CreateTimer();
+			_bannerTimer.Interval = BannerCheckGap;
+		}
+
+		_bannerTimer.Tick -= OnBannerTick;
+		_bannerTimer.Tick += OnBannerTick;
+		_bannerTimer.Start();
+	}
+
+	private void StopBannerTimer()
+	{
+		if (_bannerTimer is not null)
+		{
+			_bannerTimer.Stop();
+			_bannerTimer.Tick -= OnBannerTick; // detached, so a stopped timer does not hold the page
+		}
+	}
+
+	private void OnBannerTick(object? sender, EventArgs e) => CheckLockedShelf();
+
+	private bool _lockedRebuildRunning;
+	private bool _lockedRebuildWanted;
+
+	private void CheckLockedShelf()
+	{
+		ApplyShelfBanners();
+		if (LockedShelfKey(_services.GetRequiredService<BookSales>()) != _lockedShelfKey)
+		{
+			_ = RebuildLockedShelfAsync();
+		}
+	}
+
+	// One rebuild at a time: a check that finds one running marks one more as wanted and returns; the running one repeats once when it ends if the key still differs.
+	private async Task RebuildLockedShelfAsync()
+	{
+		if (_lockedRebuildRunning)
+		{
+			_lockedRebuildWanted = true;
+			return;
+		}
+
+		_lockedRebuildRunning = true;
+		try
+		{
+			do
+			{
+				_lockedRebuildWanted = false;
+				await RefreshShelfAsync();
+			}
+			while (_lockedRebuildWanted && LockedShelfKey(_services.GetRequiredService<BookSales>()) != _lockedShelfKey);
+		}
+		finally
+		{
+			_lockedRebuildRunning = false;
+		}
+	}
+
+	// Which books are locked and what each one's Buy pill says, as one string: equal while nothing about them changed.
+	private string LockedShelfKey(BookSales sales) =>
+		string.Join('|', _lastShelfStories.Where(story => sales.IsLapsed(story)).Select(story => $"{story.Id}={LockedBookPrice(sales, story)}"));
+
+	// The banner's "See plans in the Store" is the same Store tab as Subscribe again.
+	private void OnBannerPlansClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: as OnLapsedSubscribeClicked
+
+	// The banner's "Restore purchases" runs the Store tab's own restore (Slice 396): the tab is opened, so the first line shows "Restoring…", and the restore is started the way Ctrl+R starts it. The Store page is not edited for this;
+	// the tab's first line is built a moment after it shows, so the start is tried a few times. If it never starts, the Store tab is open with its own Restore purchases link.
+	private async void OnBannerRestoreClicked(object? sender, EventArgs e)
+	{
+		// no-tap-count: the Store page's own restore start (TryRestoreFromKeyboard) counts the Restore tap (UiControls.Restore)
+		_mode.SelectTab(CornerTab.Store);
+		for (int attempt = 0; attempt < RestoreStartAttempts; attempt++)
+		{
+			await Task.Delay(RestoreStartGap);
+			if (StorePage.TryRestoreFromKeyboard())
+			{
+#if DEBUG
+				Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Subscription] banner restore started");
+#endif
+				return;
+			}
+		}
+
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write("[Subscription] banner restore left to the Store tab");
+#endif
+	}
+
+	private const int RestoreStartAttempts = 5;
+	private static readonly TimeSpan RestoreStartGap = TimeSpan.FromMilliseconds(250);
+
+	// The network came or went: the offline notice follows it (the store answer decides at once online).
+	private void OnNetworkChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);
+
+#if DEBUG
+	private void OnNetworkOverrideChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);
+#endif
+
 	private async void OnLapsedBuyClicked(object? sender, EventArgs e)
 	{
 		// no-tap-count: as above, the store sheet's outcome is the fact that matters and the store holds it
@@ -1760,6 +1962,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		ApplyContentHeaderTexts();
 		ApplyTabShape();
+		CheckLockedShelf();
 		SyncTabViews();
 	}
 

@@ -40,6 +40,7 @@ public enum IconKind
 	TabBooks,
 	TabStore,
 	TabSettings,
+	CloudOff,
 }
 
 /// <summary>Draws one <see cref="IconKind"/> as a stroked path, so colour and size follow the design tokens.</summary>
@@ -79,7 +80,7 @@ public sealed class IconView : ContentView
 	private const string AddBookPlus = "M18 15.9v4.2M15.9 18h4.2";
 
 	// Slice 189: the grown-ups button (a book with a plus at its lower right) and the cover's "⋯" dots are drawn on the exact 24-unit grid of the mock, not stretched to their own bounds.
-	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots, IconKind.Speech, IconKind.Page, IconKind.ReadAloud, IconKind.SkipNext, IconKind.Phone, IconKind.Wifi, IconKind.SoundOff, IconKind.TabBooks, IconKind.TabStore, IconKind.TabSettings];
+	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots, IconKind.Speech, IconKind.Page, IconKind.ReadAloud, IconKind.SkipNext, IconKind.Phone, IconKind.Wifi, IconKind.SoundOff, IconKind.TabBooks, IconKind.TabStore, IconKind.TabSettings, IconKind.CloudOff];
 
 	// The Wi-Fi icon's dot: a filled circle of r 1 at (12, 19.5), unstroked, as the mock draws it.
 	private const string WifiDot = "M11 19.5a1 1 0 1 0 2 0a1 1 0 1 0-2 0z";
@@ -115,6 +116,8 @@ public sealed class IconView : ContentView
 		[IconKind.TabBooks] = "M5 4.5h4v15H5z M10.5 4.5h4v15h-4z M16 5.5l3.5-.8 3 14.3-3.5.8z",
 		[IconKind.TabStore] = "M4 9.5L5.5 4h13L20 9.5 M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0 M5.5 11.5V20h13v-8.5 M10 20v-5h4v5",
 		[IconKind.TabSettings] = "M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1",
+		// Slice 398 (mock SB7): the offline notice's crossed-out cloud.
+		[IconKind.CloudOff] = "M3 3l18 18 M8.5 6.3A6 6 0 0 1 17.6 10H18a4 4 0 0 1 2.3 7.3 M16.5 19H7a5 5 0 0 1-1.6-9.7",
 		[IconKind.Download] = "M12 4v11M7 10l5 5 5-5 M5 20h14",
 		[IconKind.Mic] = "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21",
 		[IconKind.Book] = "M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z M12 6.5v13",
