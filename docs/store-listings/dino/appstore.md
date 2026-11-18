@@ -1,19 +1,21 @@
-# App Store listing: Dino Book Reader (ASC app 6825053435, bundle uk.sirous.dinoreader)
+# App Store listing: Dino: Kids Books & Stories (ASC app 6825053435, bundle uk.sirous.dinoreader)
+
+**Slice 412 (2026-11-18): new name, subtitle, keywords and description opening below (English, text only, NOT pushed).** Name and subtitle go to App Store Connect with the next version submission (an app's name and subtitle change only with a version); the keyword field, promotional text and description can be pushed any time. The old name is in git history, the old subtitle was "A voice for every character", the old keywords `kids,bedtime,stories,picture books,children,fairy tales,storybook,tales,toddler,read aloud,record`.
 
 **Rewritten 2026-11-13 (Slice 291 work item 4) from the current app, and pushed the same day through the App Store Connect API (en-US and de-DE read back equal; the version is NOT submitted). Version 1.81.1 is `PREPARE_FOR_SUBMISSION`, not submitted.** The text pushed earlier the same day (read back from the ASC API 2026-11-13) was stale: it still sold "bring your own books" (scan, photos, PDF, typing), a cast screen, on-device voices with a voice download, on-device translation and "scans stay on your device". Slice 278 (store books only, pre-made clips, no scanning or translation) and Slice 305 (no ML Kit, no sherpa-onnx in the package) removed all of that. What the app does now: a fresh install picks a language, then at least two books from the story store; every character has a pre-made voice (downloaded audio, one pack per language); a family can record its own voice for any character (microphone only on the Record screen); three reading modes; reading speed 0.8x to 1.2x; animal sounds; backup and restore; four books free, the rest $0.99 behind the grown-ups gate; 15 books, 15 languages. German: `de.md`.
 
 ## 1. appInfoLocalization (en-US)
 
-Name (<= 30): Dino Book Reader (already set)
-Subtitle (<= 30, 27 chars): A voice for every character (already set, unchanged)
+Name (<= 30, 26 chars): Dino: Kids Books & Stories
+Subtitle (<= 30, 27 chars): Bedtime Tales in Your Voice
 
 ## 2. appStoreVersionLocalization (en-US)
 
 Promotional text (<= 170, 161 chars; editable any time):
 Stories read aloud to children aged 3 to 9, with a voice for every character and room for your own. No ads. Four stories free, the rest $0.99 each. 15 languages.
 
-Keywords (<= 100 bytes, 97 bytes, no spaces after commas):
-kids,bedtime,stories,picture books,children,fairy tales,storybook,tales,toddler,read aloud,record
+Keywords (<= 100 bytes, 100 bytes, no spaces after commas; no word repeated from the name or subtitle):
+storybook,storytime,read,aloud,audiobook,picture,narrated,toddler,preschool,children,fairy,bilingual
 
 Support URL: https://dinoreader.sirous.uk/
 Marketing URL: https://dinoreader.sirous.uk/
@@ -21,7 +23,7 @@ What's new: none for the first version.
 
 Description (<= 4,000):
 
-Dino Book Reader reads picture-book stories aloud to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
+Bedtime stories for kids, picture books read aloud: Dino reads children's stories to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
 
 PICK YOUR STORIES
 A grown-up chooses books from the story shelf: classic tales retold gently, with a picture on every page. Four stories are free. Every book comes with its own pre-made voices, in the language you pick.

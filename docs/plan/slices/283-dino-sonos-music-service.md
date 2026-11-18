@@ -120,6 +120,11 @@ again." Same on the user's phone, and again after the user power-cycled the spea
   note says a hard reset of the players "may be required" (done, no change).
 Conclusion (likely, from these sources): Sonos's cloud does not know sandbox service 463879, so its authorising step
 fails before any call to us. Next: a Sonos developer support case (the user's account; draft in the session).
+**Support case 09396143** opened by the user 2026-11-18 16:20 in the Sonos developer portal (Content Integration →
+Technical Issue, status New), with the draft text; checked by Claude the same day. Open at:
+https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos
+Paid access on speakers (subscription only, linked from the Dino app) is planned in Slice 415
+(docs/plan/slices/415-dino-speaker-subscription-link.md).
 
 **Self Test fourth run (2026-11-18, 16:09-16:10):** Browse passed; SOAP Compliance 36 passed, 3 failed (the three
 invalid-credential checks); MIME Type and Item Type "Not Applicable"; Authentication produced no result row. Sonos Cloud
@@ -159,16 +164,16 @@ Self Test skips its Authentication tests for anonymous (found out at the first S
 
 ## Submission text (for the Sonos developer portal; the user pastes it)
 
-- **Service name:** Dino Book Reader
+- **Service name:** Dino: Kids Books & Stories (Slice 412; "Dino Kids Stories" if the portal refuses its length: the portal's limit is not found yet, write it here when the user pastes the name)
 - **Short description (service-description):** Gentle picture-book stories for children aged 3 to 9, read aloud with a voice for every character.
-- **Promo (service-promo):** Free bedtime stories from Dino Book Reader, in English and more languages. No account needed.
-- **Longer description:** Dino Book Reader is a free children's reading app. This service plays its free story-store books as listening tracks: pick a language, pick a book, press play. Books are read by a narrator and character voices. No sign-up, no account, no advertising, no tracking; the service keeps no information about households, speakers or listeners. (Slice 289: each play adds one anonymous count to the project's own usage counts: book, language, length, day and country; nothing about the home, speaker or account. If the portal asks what is reported, say that.)
+- **Promo (service-promo):** Free bedtime stories from Dino: Kids Books & Stories, in English and more languages. No account needed.
+- **Longer description:** Dino: Kids Books & Stories is a children's story app with free books. This service plays its free story-store books as listening tracks: pick a language, pick a book, press play. Books are read by a narrator and character voices. No sign-up, no account, no advertising, no tracking; the service keeps no information about households, speakers or listeners. (Slice 289: each play adds one anonymous count to the project's own usage counts: book, language, length, day and country; nothing about the home, speaker or account. If the portal asks what is reported, say that.)
 - **Authentication method:** Anonymous (no account linking, no sign-up page needed; no personalisation, favourites or playlists).
 - **SMAPI endpoint:** `https://dinoreader.sirous.uk/sonos` (SOAP 1.1, HTTPS only, POST). Polling interval: 10 minutes (`getLastUpdate` answers `pollInterval` 600).
 - **Implemented calls:** getMetadata, getExtendedMetadata, getMediaMetadata, getMediaURI, getLastUpdate. Media: `audio/mp4` (AAC in .m4a) served over HTTPS with Range and HEAD support.
-- **Privacy policy:** https://dinoreader.sirous.uk/privacy (section "Dino Book Reader on Sonos (optional)").
+- **Privacy policy:** https://dinoreader.sirous.uk/privacy (section "Dino: Kids Books & Stories on Sonos (optional)").
 - **Territory / availability:** worldwide (the user confirms).
-- **Brand Assets (ready, 2026-11-07):** upload from `docs/design/dino-reader/sonos/`: service logo `service-logo-400.png` (other sizes, or `service-logo-400.svg`, if the portal asks), full logo `full-logo.svg` (129 x 20, white on transparent), badge `badge-40.svg`, support banner `support-banner.png` (800 x 200; `support-banner.svg` too). See *Design* below.
+- **Brand Assets (ready, 2026-11-07):** upload from `docs/design/dino-reader/sonos/`: service logo `service-logo-400.png` (other sizes, or `service-logo-400.svg`, if the portal asks), full logo `full-logo.svg` (180 x 20, white on transparent; regenerated with the new name 2026-11-18, Slice 412), badge `badge-40.svg`, support banner `support-banner.png` (800 x 200; `support-banner.svg` too). See *Design* below.
 - **Needed from the user:** company details, the Sonos ID for the sandbox, the localization file or the two strings above.
 
 ## Design

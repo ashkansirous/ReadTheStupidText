@@ -113,6 +113,22 @@ Made at the desk (user, 2026-11-18, this pickup):
 - iOS name and subtitle change only with a new version submission; App Store version 1.81.1 is not submitted yet
   (`appstore.md`), so the new name can ride on the next submission.
 
+## Build split (desk, 2026-11-18, user: "implement the slices for android, windows and ios")
+
+Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 not on production), so the slice ships in two parts:
+
+- **Part A, `feat/412a-rename-text`, merges when green:** items 1, 3, 5, 6 (App Store and Microsoft only, no Play push), 8, 9, 10.
+  None of its files is in `release-dino.yml`'s push `paths` (checked 2026-11-18; `content/dino/**` starts only `dino-store.yml`,
+  which never talks to Play). The guard's public name moves to `tools/dino/public-name.json` (`{"publicName": ..., "iconLabel": "Dino"}`)
+  instead of a csproj property, because a csproj edit starts `release-dino.yml` and so a Play upload; part B adds the csproj
+  property and the guard then also checks that it equals the json.
+- **Part B, `feat/412b-app-name`, built and reviewed, merged only after Play production shows `completed`:** items 2 and 4
+  (csproj `DinoPublicName` + `ApplicationTitle` "Dino", Windows manifest `DisplayName`, the 15 resx files), and the guard check
+  that the csproj property equals `tools/dino/public-name.json`. The Windows `DisplayName` also needs item 7 (the name reserved
+  in Partner Center) before it can be submitted.
+- Until Play production is live, run `store-products` (and `store-products-local`) only with `--store apple --store microsoft`: do not run its Play steps, because `SUBSCRIPTION_TITLE` feeds both stores.
+- Slice 413 (13 languages) needs this slice's English listing and the Play hold, Slice 414 runs 4–6 weeks after go-live: neither is built now.
+
 ## Work items
 
 1. [ ] **Popularity table (first step, milestone 1).** Apple Search Ads popularity (or a free checker such as
@@ -121,20 +137,27 @@ Made at the desk (user, 2026-11-18, this pickup):
    a tool first (`web-research`, then the signed-in Chrome only if the user says so in that turn); Chrome hung on
    Google Trends and appdrift.co on 2026-11-18. **If "bedtime stories" is far ahead of "kids books" in GB, raise it with
    the user before item 6 ships** (the phone doc's acceptance line). Swap the weakest keyword-field words if the scores say so.
+   *Tried 2026-11-18 (`web-research`): no GB or US score reachable without signing in.* Apple's popularity score needs an
+   Apple Ads account, and appalize.com, appdrift.co, peekaso.app and AppTweak give numbers only through live JavaScript forms.
+   The one stray figure (peekaso.app "bedtime stories" 76/100, storefront and date not stated) has nothing to compare against.
+   So nothing shows "bedtime stories" far ahead of "kids books", and the approved name and keyword field ship unchanged. The
+   table can be filled from the user's signed-in Chrome or Apple Ads account if they ask; Slice 414 re-tunes keywords from
+   App Store Connect impressions anyway.
 2. [x] **App name.** (Built: `DinoPublicName` added, `ApplicationTitle` = "Dino"; Android build label "Dino", Windows AppxManifest DisplayName is the full name; Windows manifest is a literal, MAUI does not overwrite it; iOS takes `ApplicationTitle` as CFBundleDisplayName, read from the iOS SDK targets, not built here.) One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
    name. Confirm with context7 / `library-docs` how MAUI maps `ApplicationTitle` to the Android label, iOS
    `CFBundleDisplayName` and the Windows manifest before editing, so the Windows head doesn't fall back to "Dino".
-3. [ ] **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
+3. [x] *Built (Part A, 2026-11-18): `tools/dino/public-name.json`, old names "Dino Reader" and "Dino Book Reader", English `docs/store-listings/dino/*.md` scanned (language files wait for Slice 413), tests, `public-name.yml` paths, CLAUDE.md rule lines. good-enough's book is skipped by a temporary `PENDING_PART_B_BOOKS` entry; Part B removes it.* **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
    "Dino Book Reader" joins "Dino Reader" as an old name that must not appear in public files; scan the store-listing
    files too. Tests in `tools/dino/public-name.test.mjs`. Update the rule line in `src/Dino/DinoReader.App/CLAUDE.md`.
 4. [x] **In-app strings.** (Built: all 15 `AppResources*.resx`, 62 occurrences of "Dino Book Reader" replaced; none left.) `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
    name (in-app text uses the English brand name in every language, as today).
-5. [ ] **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
+5. [x] *Built (Part A, 2026-11-18): fixtures, constants, subscription title "Every book" and description (Apple's 30/45 limits), group display name, `SKILL.md`. `APPLE_GROUP_NAME` keeps its value: it is the live group's internal lookup name, never shown, and changing it would create a second group. Microsoft keyword limit left at 30: Microsoft's docs could not be found to confirm 40.* **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
    `APPLE_GROUP_NAME`, `SUBSCRIPTION_TITLE`, the subscription group localization, Play book descriptions) and their
    tests, the subscription listing files, `.claude/skills/store-listing/SKILL.md:66`, the Microsoft keyword limit.
-6. [ ] **English listing on every store (milestone 2).** `appstore.md` (name, subtitle, keywords, description opening),
+   Note (review #5): store-products' new subscription title and description apply only when a subscription is created, so the live subscriptions' text is pushed by the `store-listing` agent with item 6.
+6. [ ] *Repo text half built (Part A, 2026-11-18): `appstore.md`, `play.md`, `microsoft.md` and the subscription files; nothing pushed.* **English listing on every store (milestone 2).** `appstore.md` (name, subtitle, keywords, description opening),
    `play.md` (title, short description, full description opening with the search phrases, "15 languages"),
    `microsoft.md` (title, 7 keywords). Push through the `store-listing` agent in apply mode and read back equal. Play:
    check the Publishing overview for unrelated pending changes before committing the edit (one pending draft per app).
@@ -143,12 +166,12 @@ Made at the desk (user, 2026-11-18, this pickup):
    for 9N9VHRLCZXN5: https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview). If the name is
    taken, stop and ask. Then the manifest change ships in the next Windows submission; the old name can be deleted once
    the new one is published.
-8. [ ] **Sonos.** `worker/sonos.ts` `ALBUM_NAME`/`ARTIST_FALLBACK` and its test, Slice 283's *Submission text*, the
+8. [x] *Built (Part A, 2026-11-18): `sonos.ts`, tests, Slice 283 submission text, wordmarks regenerated from `public-name.json`. Portal service name and its length limit remain the user's step.* **Sonos.** `worker/sonos.ts` `ALBUM_NAME`/`ARTIST_FALLBACK` and its test, Slice 283's *Submission text*, the
    logo and banner wordmarks (`make-wordmarks.mjs`). Portal service name (user step, Sonos portal, as in Slice 283):
    the full name, or "Dino Kids Stories" if the portal refuses its length; write the limit found into this file.
-9. [ ] **Alexa.** `skill.json` name (en-GB, en-US) "Dino Bedtime Stories", both `interactionModels` `invocationName`
+9. [x] *Built (Part A, 2026-11-18): skill.json, both interaction models, welcome line, Slice 282 flow line; "dino bedtime stories" follows the Decisions' invocation rules (context7 holds no invocation-name rules).* **Alexa.** `skill.json` name (en-GB, en-US) "Dino Bedtime Stories", both `interactionModels` `invocationName`
    "dino bedtime stories", `worker/alexa.ts:72` welcome line, tests, Slice 282's flow lines ("Alexa, open Dino Bedtime Stories").
-10. [ ] **Website, privacy, docs, credits.** `site/dino/*` (all 15 language blocks), `PRIVACY.md` and
+10. [x] *Built (Part A, 2026-11-18): site (incl. 15 language blocks), PRIVACY.md, README, STORE.md, credits of the two store books (Store books are not stamped; `dino-store.yml` uploads them). NOT done: good-enough's credits, because it is a starter: its version bump and rebuilt `good-enough.dino` live under `src/Dino/DinoReader.App` (release path); moved to Part B.* **Website, privacy, docs, credits.** `site/dino/*` (all 15 language blocks), `PRIVACY.md` and
     `site/dino/privacy.html`, `README.md`, `STORE.md` (name lines; keep engineering prose about the code name), the
     credits in `content/dino/*/book.json` (book version bumps and store upload per the Dino store rules, since the
     credits are book content).
@@ -164,6 +187,34 @@ Made at the desk (user, 2026-11-18, this pickup):
 
 - Android launcher label and iOS home-screen label read "Dino" on a device (both read from SDK targets only).
 - Arabic and Farsi in-app name renders in the right order next to RTL text.
+
+## Review (part A, PR #1278)
+
+*From review:* files `reviews/s412a-high.md`, `reviews/s412a-medium.md`, `reviews/s412a-check.md`, `reviews/s412a-check2.md`, `reviews/s412a-check3.md`
+read in full; every finding without a line below was applied (check2 #4: the listing page size went from 200 to 50).
+
+- Skipped #3 (`reviews/s412a-high.md`): "the guard skips it and nothing fails when the skip should go" — part B fixes the good-enough credits and removes the skip in the same change.
+- Skipped #4 (`reviews/s412a-high.md`): "until Part B nothing ties publicName to csproj ApplicationTitle" — part B adds that check; the json is committed.
+- Skipped #6 (`reviews/s412a-high.md`): "SUBSCRIPTION_TITLE (store-products.mjs:865) feeds both Play and Apple bodies" — the Build split limits store-products to `--store apple --store microsoft` until Play production is live.
+- Skipped #7 (`reviews/s412a-high.md`): "alexa/skill-package/skill.json:7 and docs/store-listings/dino/appstore.md:8, low" — the Alexa name is in this slice's Decisions (user, 2026-11-18: "dino bedtime stories"), and the 100-character keyword field was counted by the reviewer.
+- Skipped #3 (`reviews/s412a-medium.md`): "PENDING_PART_B_BOOKS skips good-enough entirely" — part B removes it.
+- Skipped #4 (`reviews/s412a-medium.md`): "exempts any future two-letter .md" — low; Slice 413 scans the language files.
+- Skipped #5 (`reviews/s412a-medium.md`): "ApplicationTitle still old name (Part B)" — part B.
+- Skipped #6 (`reviews/s412a-medium.md`): "shortened SUBSCRIPTION_TITLE/DESCRIPTION also feed Play" — as high #6.
+- Skipped #2 (`reviews/s412a-check.md`): "PATCH uses the plain client, no retry on 429/5xx" — a throttled rename only warns and a rerun retries.
+- Skipped #4 (`reviews/s412a-check.md`): "group matched only by exact referenceName and unpaginated" — pre-existing lookup, unchanged here.
+- Skipped #7 (`reviews/s412a-check.md`): "fallback duplicated (also line 1325)" — nit.
+- Skipped #1 (`reviews/s412a-check2.md`): "a failed read of the group's listing list" — pre-existing; a rerun recovers.
+- Skipped #2 (`reviews/s412a-check2.md`): "a 200 non-JSON PATCH response counts as renamed" — cosmetic; a rerun retries.
+- Skipped #3 (`reviews/s412a-check2.md`): "retryingAsc has no patch; works today" — the plain client is passed on purpose.
+- Skipped #5 (`reviews/s412a-check2.md`): "two POST paths for the missing listing" — nit.
+- Skipped #6 (`reviews/s412a-check2.md`): "live subscriptions' own listings keep the old title" — item 6's store-listing push sets them.
+- Skipped #7 (`reviews/s412a-check2.md`): "new tests pass via the 404 on the missing POST" — low; the warning and en-US paths are asserted before that point.
+- Skipped #8 (`reviews/s412a-check2.md`): "a rejected rename warns on every run" — cosmetic.
+- Skipped #1 (`reviews/s412a-check3.md`): "Only matters past 50 locales" — Dino has about 15.
+- Skipped #2 (`reviews/s412a-check3.md`): "rename PATCH is not retried" — a failed rename only warns; a rerun retries.
+- Skipped #3 (`reviews/s412a-check3.md`): "appleRenameGroupListing branches have no direct unit test" — low; the throw, rejection and missing en-US paths are tested through ensureAppleGroup.
+- Skipped #4 (`reviews/s412a-check3.md`): "duplicated POST path, log fallback, constant comment wording" — style.
 
 ## Out of scope
 

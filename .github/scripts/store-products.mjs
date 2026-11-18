@@ -17,7 +17,7 @@
  *   Apple:     ASC_API_KEY_P8_BASE64, ASC_API_KEY_ID, ASC_API_ISSUER_ID (the App Store Connect API key; D:/secrets/lets-call-mom holds the key, the same three the iOS review workflow uses)
  *   Google:    DINOREADER_PLAY_SERVICE_ACCOUNT_JSON (the service account's JSON text; it needs the Play Console permission to manage products)
  *   Microsoft: MS_SUBMISSION_TENANT_ID, MS_SUBMISSION_CLIENT_ID, MS_SUBMISSION_CLIENT_SECRET (an Entra app with the Manager role in Partner Center, NOT the Store collections app of the Worker),
- *              MS_STORE_APP_ID (Dino Book Reader's Store ID)
+ *              MS_STORE_APP_ID (Dino: Kids Books & Stories' Store ID)
  *   PLAY_REGIONS_VERSION (optional, default below) names the Play region table the prices are built against.
  *
  * Coverage (what an API can do, and what is left for the user, printed at the end of every run):
@@ -73,13 +73,16 @@ const MS_RESOURCE = 'https://manage.devcenter.microsoft.com';
 const MS_PRODUCT_TYPE = 'Durable';
 const APPLE_NAME_MAX = 30;
 const APPLE_DESCRIPTION_MAX = 45;
-const APPLE_DESCRIPTION = 'A picture-book story in Dino Book Reader.'; // fixed, so no title is ever cut mid-word into the 45 characters Apple allows (the name carries the title)
+const APPLE_DESCRIPTION = 'A picture-book story in Dino.'; // fixed, so no title is ever cut mid-word into the 45 characters Apple allows (the name carries the title)
 const PLAY_TITLE_MAX = 55;
 const PLAY_DESCRIPTION_MAX = 200;
 const REQUEST_TIMEOUT_MS = 30000;
 const APPLE_PRICE_POINT_LIMIT = 200;
 const APPLE_PRICE_POINT_MAX_PAGES = 20;
 const APPLE_TERRITORY_LIMIT = 200;
+/** One page of the group's listings. Dino has at most about 15 locales, so en-US is never off the page; 50 stays under
+ * every App Store Connect page maximum, since this endpoint's own maximum is not documented. */
+const APPLE_GROUP_LISTING_LIMIT = 50;
 const APPLE_LIST_MAX_PAGES = 50;
 const APPLE_RETRY_MAX = 5;
 const APPLE_PROGRESS_EVERY = 20;
@@ -235,7 +238,7 @@ export function appleProductBody(book, appId) {
     return {
         data: {
             type: 'inAppPurchases',
-            attributes: { name: cut(book.title, APPLE_NAME_MAX), productId: book.productId, inAppPurchaseType: 'NON_CONSUMABLE', reviewNote: `Unlocks the story "${book.title}" in Dino Book Reader. Purchases sit behind the grown-ups gate.`, familySharable: true },
+            attributes: { name: cut(book.title, APPLE_NAME_MAX), productId: book.productId, inAppPurchaseType: 'NON_CONSUMABLE', reviewNote: `Unlocks the story "${book.title}" in Dino: Kids Books & Stories. Purchases sit behind the grown-ups gate.`, familySharable: true },
             relationships: { app: { data: { type: 'apps', id: appId } } },
         },
     };
@@ -311,7 +314,7 @@ export function playProductBody(book, converted) {
     return {
         packageName: PACKAGE_NAME,
         productId: book.productId,
-        listings: [{ languageCode: PLAY_LISTING_LANGUAGE, title: cut(book.title, PLAY_TITLE_MAX), description: cut(`Read "${book.title}" in Dino Book Reader, with a voice for every character.`, PLAY_DESCRIPTION_MAX) }],
+        listings: [{ languageCode: PLAY_LISTING_LANGUAGE, title: cut(book.title, PLAY_TITLE_MAX), description: cut(`Read "${book.title}" in Dino: Kids Books & Stories, with a voice for every character.`, PLAY_DESCRIPTION_MAX) }],
         purchaseOptions: [buyOption],
     };
 }
@@ -861,9 +864,10 @@ export const TRIAL_DAYS = 7;
 export const TRIAL_OFFER_ID = 'trial';
 export const SUBSCRIPTION_CURRENCY = 'GBP';
 const APPLE_SUBSCRIPTION_TERRITORY = 'GBR';
-const APPLE_GROUP_NAME = 'Dino Book Reader subscription';
-const SUBSCRIPTION_TITLE = 'Dino Book Reader: every book';
-const SUBSCRIPTION_DESCRIPTION = 'Opens every book in Dino Book Reader while you subscribe.';
+const APPLE_GROUP_NAME = 'Dino Book Reader subscription'; // Slice 412: internal reference name of the live group, never shown; changing it would make ensureAppleGroup create a second group
+const APPLE_GROUP_DISPLAY_NAME = 'Dino: Kids Books & Stories'; // the group's en-US display name; ensureAppleGroup updates a live group whose name differs
+const SUBSCRIPTION_TITLE = 'Every book'; // Apple allows 30 characters; the store already shows the app name above it
+const SUBSCRIPTION_DESCRIPTION = 'Opens every book while you subscribe.'; // within the 45 characters Apple allows
 export const SUBSCRIPTION_PLANS = [
     { id: 'monthly', productId: `${SUBSCRIPTION_PRODUCT_ID}.monthly`, playPeriod: 'P1M', applePeriod: 'ONE_MONTH', appleLevel: 2, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '1', nanos: 990000000 }, gbpLabel: '1.99' },
     { id: 'yearly', productId: `${SUBSCRIPTION_PRODUCT_ID}.yearly`, playPeriod: 'P1Y', applePeriod: 'ONE_YEAR', appleLevel: 1, gbp: { currencyCode: SUBSCRIPTION_CURRENCY, units: '14', nanos: 990000000 }, gbpLabel: '14.99' },
@@ -1138,7 +1142,7 @@ export function appleSubscriptionGroupBody(appId) {
 
 /** Pure: the group's en-US display name (POST /v1/subscriptionGroupLocalizations). Checked against Apple's docs (subscription-group-localizations-v1, 2026-11-15). */
 export function appleGroupLocalizationBody(groupId) {
-    return { data: { type: 'subscriptionGroupLocalizations', attributes: { name: 'Dino Book Reader', locale: APPLE_LOCALE }, relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: groupId } } } } };
+    return { data: { type: 'subscriptionGroupLocalizations', attributes: { name: APPLE_GROUP_DISPLAY_NAME, locale: APPLE_LOCALE }, relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: groupId } } } } };
 }
 
 /** Pure: one auto-renewing subscription of the group (POST /v1/subscriptions; checked against Apple's docs, managing-auto-renewable-subscriptions, 2026-11-15, minus availableInAllTerritories, which the live API rejected on 2026-11-15); the yearly plan is level 1 (the best), the monthly level 2. */
@@ -1198,7 +1202,7 @@ export function appleTrialBody(subscriptionId, territoryId = APPLE_SUBSCRIPTION_
 
 /** Creates one Apple subscription (and the group once per run), or completes a half-created one: group, product, listing, price and trial are each checked and only the missing ones are done. */
 export async function createAppleSubscription(asc, item, appId, session = {}) {
-    session.groupId ??= await ensureAppleGroup(asc, appId);
+    session.groupId ??= await ensureAppleGroup(asc, appId, session.log ?? console.log);
     const found = must(await asc.get(`/v1/subscriptionGroups/${session.groupId}/subscriptions`), 'look up subscription');
     const existingId = (found.data ?? []).find((entry) => entry?.attributes?.productId === item.productId)?.id;
     const id = existingId ?? must(await asc.post('/v1/subscriptions', appleSubscriptionBody(item, session.groupId)), 'create subscription').data.id;
@@ -1347,23 +1351,43 @@ async function appleSetTerritories(asc, productId, id, plan, { priced, trialled 
 }
 
 /** The group of the app, created with its en-US display name when missing; a group the failed first run left without a display name gets it now. */
-async function ensureAppleGroup(asc, appId) {
+async function ensureAppleGroup(asc, appId, log) {
     const found = must(await asc.get(`/v1/apps/${appId}/subscriptionGroups`), 'look up subscription group');
     const existing = (found.data ?? []).find((group) => group?.attributes?.referenceName === APPLE_GROUP_NAME)?.id;
     const groupId = existing ?? must(await asc.post('/v1/subscriptionGroups', appleSubscriptionGroupBody(appId)), 'create subscription group').data.id;
-    if (existing === undefined || (await appleGroupListingMissing(asc, groupId))) {
+    const listings = existing === undefined ? [] : await appleGroupListings(asc, groupId);
+    if (listings.length === 0) {
         must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the group listing');
+    } else {
+        await appleRenameGroupListing(asc, groupId, listings, log);
     }
     return groupId;
 }
 
-/** True only when the group's localization list was read successfully and is empty; a 404 or any other failure stops the step (posting again on a guess would hit a 409). */
-async function appleGroupListingMissing(asc, groupId) {
-    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations`);
+/** Updates the en-US listing of the group when its display name differs from the wanted one (PATCH), or adds the en-US listing when the group has none (never a second group). A rejected rename (for example a group locked in review) is only logged: the name is cosmetic and the run goes on. */
+async function appleRenameGroupListing(asc, groupId, listings, log) {
+    const current = listings.find((listing) => listing?.attributes?.locale === APPLE_LOCALE);
+    if (current === undefined) {
+        must(await asc.post('/v1/subscriptionGroupLocalizations', appleGroupLocalizationBody(groupId)), 'add the en-US group listing');
+        return;
+    }
+    if (current.attributes?.name === APPLE_GROUP_DISPLAY_NAME) return;
+    const body = { data: { type: 'subscriptionGroupLocalizations', id: current.id, attributes: { name: APPLE_GROUP_DISPLAY_NAME } } };
+    try {
+        const response = await asc.patch(`/v1/subscriptionGroupLocalizations/${current.id}`, body);
+        if (!response.ok) log(`WARNING: could not rename the group listing to "${APPLE_GROUP_DISPLAY_NAME}" (HTTP ${response.status}); the old name stays and the run goes on`);
+    } catch (error) {
+        log(`WARNING: could not rename the group listing to "${APPLE_GROUP_DISPLAY_NAME}" (${error.message}); the old name stays and the run goes on`);
+    }
+}
+
+/** The group's localizations, read successfully (possibly empty); a 404 or any other failure stops the step (posting again on a guess would hit a 409). */
+async function appleGroupListings(asc, groupId) {
+    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations?limit=${APPLE_GROUP_LISTING_LIMIT}`);
     if (!response.ok) throw new Error(`check the group listing: could not read it (HTTP ${response.status}), so the group's display name was not posted; rerun when App Store Connect answers`);
     const data = response.json?.data;
     if (!Array.isArray(data)) throw new Error('check the group listing: Apple gave no list, so the group\'s display name was not posted');
-    return data.length === 0;
+    return data;
 }
 
 /** Pure: Partner Center's create-add-on body for a subscription shell. UNVERIFIED: that the submission API accepts productType Subscription; if it answers 409 or an error, create the add-on by hand. */

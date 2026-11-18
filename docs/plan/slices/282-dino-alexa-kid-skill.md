@@ -77,7 +77,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 
 - English first (en-GB and en-US models), playing the English track. Other book languages that Alexa has a locale for
   (de, fr, es, ja, pt, ...) are a follow-up line, not this slice.
-- Voice flow: "Alexa, open Dino Book Reader" lists a few books; "read <book>" plays it; built-in pause, resume, next
+- Voice flow: "Alexa, open Dino Bedtime Stories" lists a few books; "read <book>" plays it; built-in pause, resume, next
   (next book), previous, start over, stop. The book list and titles come from `/api/stories`, so new store books appear
   with no skill change.
 - **No server state.** Resume uses the token and offset Alexa sends with each request. Nothing about the household is
@@ -128,7 +128,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 *From review:* files `reviews/pr-935-high.md`, `reviews/pr-935-medium.md`, `reviews/pr-935-check1.md`, `reviews/pr-935-check2.md`, `reviews/pr-935-check3.md` read in full; findings not listed as skipped were applied (check 3 itself says "no new failure path" for its own skips).
 - Skipped #8 (`reviews/pr-935-high.md`): "Verify and reword the privacy text, or exclude /alexa from logging." (pre-existing issue, see Outstanding below)
 - Skipped #1 (`reviews/pr-935-medium.md`): "redeployed over a dashboard-set id" (the user sets the id in the configs by PR)
-- Skipped #7 (`reviews/pr-935-medium.md`): "restarts a book when the offset is at or past catalogue seconds" (by design since high #5: a finished or stale resume starts over)
+- Skipped #7 (`reviews/pr-935-medium.md`): "worker/alexa.ts:273, low: resumeOffset restarts a book when the offset is at or past catalogue seconds": the fix for high #5 made a finished or stale resume start the book over, so this restart is the intended behaviour.
 - Skipped #5 (`reviews/pr-935-check1.md`): "returns end:true with no directive" for next on the last book (a voice Next past the end speaks and ends the session; a PlaybackController button answer may not carry speech per Amazon's PlaybackController docs, and the current book keeps playing)
 - Skipped #7 (`reviews/pr-935-check1.md`): "replayed signed PlaybackStopped/Finished accepted within 150 s window" (the design keeps no server state, so no dedup store; a replay needs a captured signed request and only adds one anonymous count)
 - Skipped #8 (`reviews/pr-935-check1.md`): "ignores pathLenConstraint, keyUsage, EKU, name constraints" (the roots are pinned to Amazon Root CA 1 and Starfield Services G2, both Amazon-owned, and the leaf must name echo-api.amazon.com)
