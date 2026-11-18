@@ -97,21 +97,36 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
   not child-directed so it may link (it leaves the kids' category and the parent dashboard); or Amazon's own kid-skill
   purchase (US only, at most $9.99, sold by Amazon, separate from the Dino subscription).
 
+**Answers (user, 2026-11-18):**
+- **Q-A Sonos: "Link required for all".** Every Sonos home links through the Dino app when it adds the service, free
+  books included. This replaces decision 2 on Sonos: there is no unlinked Sonos home any more. A linked home without an
+  active subscription (lapsed, or a free-only Dino app) hears the free books and the locked message on paid ones.
+  Consequence to settle in item C: linking needs the Dino app, so a family without the app cannot add the Sonos service.
+- **Q-B Alexa: "Amazon's own purchase".** Alexa sells its own subscription through Alexa In-Skill Purchasing for kid
+  skills; the skill stays child-directed and has no account linking. This replaces decisions 3 and 6 on Alexa (no Dino
+  app link, so no Alexa link limit). Amazon's limits, from the page above: kid-skill ISP is "available only in the US",
+  at most $9.99, purchases need a parent's approval. Outside the US the skill keeps free books and the locked message.
+  The Alexa price and plan are not yet chosen by the user (asked when item D starts).
+
 ## Work
 
-- [ ] **A. Research** the two facts above; write the answers and source lines into this file; ask any
-      result that changes a decision as one question set.
-- [ ] **B. Server link store** (`worker/speaker-link.ts`, D1 table in STATS): a link row holds the speaker kind
-      (sonos | alexa), the speaker-side id (Sonos household id / Alexa user id, hashed), the store proof's key
-      (`proofKey`, never the raw token), created and last-checked times. One Sonos row per proof key (decision 4).
-      Endpoints: start a link (speaker side gets a short code), confirm a link (app sends the code plus its
+- [x] **A. Research** the two facts above; write the answers and source lines into this file; ask any
+      result that changes a decision as one question set. (Done 2026-11-18; answers above.)
+- [ ] **B. Server link store** (`worker/speaker-link.ts`, D1 table in STATS), **Sonos only**: a link row holds the
+      Sonos household id (hashed), the store proof's key (`proofKey`, never the raw token), created and last-checked
+      times. One row per proof key; a new household with the same proof key replaces the old row (decisions 4, 5).
+      Endpoints: start a link (from `getAppLink`, a short code), confirm a link (the Dino app sends the code plus its
       subscription proof), remove a link.
-- [ ] **C. Sonos**: the AppLink calls the research picks (`getAppLink`, `getDeviceAuthToken`, `refreshAuthToken`
-      as needed); every paid track checks the household's link and runs the stored proof through the existing
-      subscription gate (cached as `gate.ts` does); unlinked or lapsed: the locked spoken message (decision 2).
-      Single-book purchase proofs are ignored on Sonos (decision 1).
-- [ ] **D. Alexa**: the same check in `worker/alexa.ts` through Alexa account linking if the research allows it; the
-      locked message otherwise. Skill manifest and testing instructions updated to match.
+- [ ] **C. Sonos**: authentication changes from Anonymous to AppLink in the portal and the server (`getAppLink`,
+      `getDeviceAuthToken`, `refreshAuthToken`); `getAppLink`'s `authorizeAccount` opens the Dino app; every paid track
+      checks the household's link and runs the stored proof through the existing subscription gate (cached as `gate.ts`
+      does); no active subscription: the locked spoken message. Single-book purchase proofs are ignored (decision 1).
+      Settle with the user before building: what a family without the Dino app sees when adding the service.
+- [ ] **D. Alexa (US only)**: an Alexa In-Skill Purchasing subscription product for the kid skill (price and period
+      chosen by the user, at most $9.99); `worker/alexa.ts` asks Amazon whether the customer is entitled and plays paid
+      books only then, else the locked message; the purchase offer follows Amazon's kid-skill rules (parent approval).
+      Outside the US: free books and the locked message. Skill manifest (`allowsPurchases`) and testing instructions
+      updated to match.
 - [ ] **E. Dino app, Android and iOS (same slice, both)**: a "Link a speaker" page in the grown-up area (Settings,
       "Books and buying" group of Slice 399) that opens from the speaker's link, shows which speaker it links, and
       confirms with the subscription proof; shows the linked Sonos home and an Unlink button. Only offered while a
@@ -126,7 +141,10 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
 
 - Worker tests: link start/confirm/remove; one Sonos link per proof key; paid track with no link, a lapsed
   subscription and a single-book proof all give the locked message; an active subscription plays.
-- Sonos sandbox: an unlinked household plays a free book and hears the locked message on a paid one; after linking
-  from the Dino app on Android and on iOS, a paid book plays; a second household replaces the first link (the first falls back to the locked message).
-- Alexa (if linking is allowed): the same three checks on an Echo or the Alexa simulator.
+- Sonos sandbox: adding the service asks to link through the Dino app; a linked home without a subscription plays a
+  free book and hears the locked message on a paid one; with an active subscription, linked from the Dino app on
+  Android and on iOS, a paid book plays; a second household replaces the first link (the first then hears the locked
+  message).
+- Alexa (US): with no purchase, a paid book gives the locked message and the purchase offer; after a test purchase in
+  the Alexa developer console, it plays; outside the US, the locked message only.
 - Android and iOS: the Link a speaker page on the emulator and the S21, and on an iOS simulator.
