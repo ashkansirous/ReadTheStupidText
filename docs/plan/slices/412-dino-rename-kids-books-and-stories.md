@@ -156,6 +156,7 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
 5. [x] *Built (Part A, 2026-11-18): fixtures, constants, subscription title "Every book" and description (Apple's 30/45 limits), group display name, `SKILL.md`. `APPLE_GROUP_NAME` keeps its value: it is the live group's internal lookup name, never shown, and changing it would create a second group. Microsoft keyword limit left at 30: Microsoft's docs could not be found to confirm 40.* **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
    `APPLE_GROUP_NAME`, `SUBSCRIPTION_TITLE`, the subscription group localization, Play book descriptions) and their
    tests, the subscription listing files, `.claude/skills/store-listing/SKILL.md:66`, the Microsoft keyword limit.
+   Note (review #5): store-products' new subscription title and description apply only when a subscription is created, so the live subscriptions' text is pushed by the `store-listing` agent with item 6.
 6. [ ] *Repo text half built (Part A, 2026-11-18): `appstore.md`, `play.md`, `microsoft.md` and the subscription files; nothing pushed.* **English listing on every store (milestone 2).** `appstore.md` (name, subtitle, keywords, description opening),
    `play.md` (title, short description, full description opening with the search phrases, "15 languages"),
    `microsoft.md` (title, 7 keywords). Push through the `store-listing` agent in apply mode and read back equal. Play:

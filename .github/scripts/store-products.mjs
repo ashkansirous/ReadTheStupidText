@@ -80,6 +80,8 @@ const REQUEST_TIMEOUT_MS = 30000;
 const APPLE_PRICE_POINT_LIMIT = 200;
 const APPLE_PRICE_POINT_MAX_PAGES = 20;
 const APPLE_TERRITORY_LIMIT = 200;
+/** Apple's page maximum; Dino has at most about 15 locales, so the group's en-US listing is never off the page. */
+const APPLE_GROUP_LISTING_LIMIT = 200;
 const APPLE_LIST_MAX_PAGES = 50;
 const APPLE_RETRY_MAX = 5;
 const APPLE_PROGRESS_EVERY = 20;
@@ -1370,13 +1372,17 @@ async function appleRenameGroupListing(asc, groupId, listings, log) {
     }
     if (current.attributes?.name === APPLE_GROUP_DISPLAY_NAME) return;
     const body = { data: { type: 'subscriptionGroupLocalizations', id: current.id, attributes: { name: APPLE_GROUP_DISPLAY_NAME } } };
-    const response = await asc.patch(`/v1/subscriptionGroupLocalizations/${current.id}`, body);
-    if (!response.ok) log(`WARNING: could not rename the group listing to "${APPLE_GROUP_DISPLAY_NAME}" (HTTP ${response.status}); the old name stays and the run goes on`);
+    try {
+        const response = await asc.patch(`/v1/subscriptionGroupLocalizations/${current.id}`, body);
+        if (!response.ok) log(`WARNING: could not rename the group listing to "${APPLE_GROUP_DISPLAY_NAME}" (HTTP ${response.status}); the old name stays and the run goes on`);
+    } catch (error) {
+        log(`WARNING: could not rename the group listing to "${APPLE_GROUP_DISPLAY_NAME}" (${error.message}); the old name stays and the run goes on`);
+    }
 }
 
 /** The group's localizations, read successfully (possibly empty); a 404 or any other failure stops the step (posting again on a guess would hit a 409). */
 async function appleGroupListings(asc, groupId) {
-    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations`);
+    const response = await asc.get(`/v1/subscriptionGroups/${groupId}/subscriptionGroupLocalizations?limit=${APPLE_GROUP_LISTING_LIMIT}`);
     if (!response.ok) throw new Error(`check the group listing: could not read it (HTTP ${response.status}), so the group's display name was not posted; rerun when App Store Connect answers`);
     const data = response.json?.data;
     if (!Array.isArray(data)) throw new Error('check the group listing: Apple gave no list, so the group\'s display name was not posted');

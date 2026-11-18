@@ -1109,7 +1109,7 @@ test('Slice 384 review #6: the group display name is posted only when its list w
         assert.equal(asc.calls.filter((c) => c.startsWith('POST')).length, 0);
     }
     const present = fakeAsc({ ...group, 'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l', attributes: { locale: 'en-US', name: 'Dino: Kids Books & Stories' } }] }), 'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }) });
-    await assert.rejects(createAppleSubscription(present, monthly, '1', {}));
+    await assert.rejects(createAppleSubscription(present, monthly, '1', {}), /create subscription/);
     assert.equal(present.calls.includes('POST /v1/subscriptionGroupLocalizations'), false, 'a listed localization is never posted again');
     assert.equal(present.calls.some((c) => c.startsWith('PATCH')), false, 'a listing with the wanted name is not patched');
 });
@@ -1123,7 +1123,7 @@ test('Slice 412 review #5: a live group whose listing has the old name is rename
         'PATCH /v1/subscriptionGroupLocalizations/l1': (path, body) => { patched.push(body); return okJson({ data: {} }); },
         'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
     });
-    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}));
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}), /create subscription/);
     assert.equal(patched.length, 1);
     assert.deepEqual(patched[0], { data: { type: 'subscriptionGroupLocalizations', id: 'l1', attributes: { name: 'Dino: Kids Books & Stories' } } });
     assert.equal(asc.calls.includes('POST /v1/subscriptionGroups'), false);
@@ -1138,7 +1138,7 @@ test('Slice 412 review #1: a live group with no en-US listing gets one created, 
         'POST /v1/subscriptionGroupLocalizations': okJson({ data: {} }),
         'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
     });
-    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}));
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', {}), /create subscription/);
     assert.equal(asc.calls.includes('POST /v1/subscriptionGroupLocalizations'), true);
     assert.equal(asc.calls.some((c) => c.startsWith('PATCH')), false);
 });
@@ -1152,9 +1152,23 @@ test('Slice 412 review #2: a rejected group rename logs a warning and the run go
         'PATCH /v1/subscriptionGroupLocalizations/l1': { status: 409, ok: false, json: null },
         'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
     });
-    await assert.rejects(createAppleSubscription(asc, monthly, '1', { log: (line) => lines.push(line) }));
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', { log: (line) => lines.push(line) }), /create subscription/);
     assert.ok(asc.calls.includes('GET /v1/subscriptionGroups/g1/subscriptions'), 'the run went past the rename');
     assert.ok(lines.some((line) => line.includes('WARNING') && line.includes('409')));
+});
+
+test('Slice 412 review #1: a group rename that throws (network, timeout) logs the warning and the run goes on', async () => {
+    const [monthly] = subscriptionItemsFor(Store.Apple);
+    const lines = [];
+    const asc = fakeAsc({
+        'GET /v1/apps/1/subscriptionGroups': okJson({ data: [{ id: 'g1', attributes: { referenceName: 'Dino Book Reader subscription' } }] }),
+        'GET /v1/subscriptionGroups/g1/subscriptionGroupLocalizations': okJson({ data: [{ id: 'l1', attributes: { locale: 'en-US', name: 'Dino Book Reader' } }] }),
+        'PATCH /v1/subscriptionGroupLocalizations/l1': () => { throw new Error('fetch timed out'); },
+        'GET /v1/subscriptionGroups/g1/subscriptions': okJson({ data: [] }),
+    });
+    await assert.rejects(createAppleSubscription(asc, monthly, '1', { log: (line) => lines.push(line) }), /create subscription/);
+    assert.ok(asc.calls.includes('GET /v1/subscriptionGroups/g1/subscriptions'), 'the run went past the rename');
+    assert.ok(lines.some((line) => line.includes('WARNING') && line.includes('fetch timed out')));
 });
 
 test('Slice 384 review #1/#4/#7: prices and trials are read over every page, so a rerun posts nothing again; a list past the safety cap is an error', async () => {
