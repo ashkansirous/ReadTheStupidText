@@ -2,11 +2,11 @@
 .SYNOPSIS
   One go/no-go check before an unattended run on the real phone (Slice 206).
 .DESCRIPTION
-  Prints one line per check and ends with `PREFLIGHT GO` (exit 0) or `PREFLIGHT NO-GO: <reasons>` (exit 1). Not connected (USB or wireless adb) prints the pairing ask and exits 2.
+  Prints one line per check and ends with `PREFLIGHT GO` (exit 0), `PREFLIGHT NO-GO: <reasons>` (exit 1) or, only when another session holds a live lease, `PREFLIGHT WARN: ...` (exit 3). Not connected (USB or wireless adb) prints the pairing ask and exits 2.
   Checks: connected, charging, screen lock None or Swipe (a PIN, pattern or password is NO-GO: ask the user to set Screen lock to None or Swipe; a lock state that
   cannot be read, or reads contradictory, is NO-GO too: GO needs a positive "no secure keyguard" read made in this run), stay-awake-while-charging (the bit of the charger in use must be set in stay_on_while_plugged_in: 1 AC, 2 USB, 4 wireless; with -Fix a missing bit is fixed by setting 7, it stays on), free space on /data (warn under 2 GB, NO-GO under 0.5 GB), the .dbg dev app(s)
   installed with their versionName (with -App both a missing app is a warning, and NO-GO only when neither is installed), and the phone lease (held by
-  $env:RTST_PHONE_OWNER; free is a warning, because an unleased phone can be taken by another session mid-run: run lease.ps1 -Take). Read-only on the phone unless -Fix is given, which sets
+  $env:RTST_PHONE_OWNER; free is a warning, because an unleased phone can be taken by another session mid-run, and a lease held by another session ends with `PREFLIGHT WARN` (exit 3), neither GO nor NO-GO: do not start a run on it): run lease.ps1 -Take). Read-only on the phone unless -Fix is given, which sets
   stay_on_while_plugged_in and clears device leftovers of a dead check (dataSync timeout, compat flag, dev-app network block; Slice 225). The stay-on value it found is
   printed; the value recorded when the lease was taken (lease.ps1 -Take) is what -Release writes back. -Fix refuses while another session's lease is live. Every check runs inside a try/catch: a dropped link or a timeout is a FAIL with its
   message, so the last line is always GO or NO-GO.
@@ -25,6 +25,7 @@ $script:StayOnAll = 7  # bit mask of settings global stay_on_while_plugged_in: 1
 $script:LowSpaceKb = 2GB / 1KB
 $script:NoSpaceKb = 512MB / 1KB   # under this a pack download cannot work at all: FAIL (the runner stops on it)
 $script:Reasons = New-Object 'System.Collections.Generic.List[string]'
+$script:ForeignLease = $false
 
 function Write-Check([string]$Name, [string]$Status, [string]$Detail) {
     Write-Host ("  [{0}] {1}: {2}" -f $Status, $Name, $Detail)
@@ -121,8 +122,13 @@ function Test-Lease([string]$Phone) {
     $held = Read-Lease (Get-DeviceLeaseKey $Phone (Get-DeviceKind $Phone)) 0 $plan.LeaseKind
     $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
     if (-not $held) { Write-Check $name 'WARN' "no lease held: another session can take the $($plan.LeaseKind) mid-run (lease.ps1 -Take -Owner <name>, then set `$env:RTST_PHONE_OWNER)" }
-    elseif ($held.Owner -eq $me) { Write-Check $name 'OK' "held by this session ($(Format-LeaseHolder $held))" }
-    else { Write-Check $name 'FAIL' "held by $(Format-LeaseHolder $held), not by this session ('$me')" }
+    elseif ($held.Owner -and $me -and $held.Owner -ceq $me) { Write-Check $name 'OK' "held by this session ($(Format-LeaseHolder $held))" }
+    else {
+        $script:ForeignLease = $true
+        $broken = $held.Owner -ceq $script:CorruptLeaseOwner -or $held.Owner -ceq $script:UnreadableLeaseOwner
+        if ($broken) { Write-Check $name 'WARN' "the lease file is unreadable or corrupt, so it is held until it frees itself ($(Format-LeaseHolder $held)); no other session is proven to be using it. Do not start a run on it until the lease frees or is cleared" }
+        else { Write-Check $name 'WARN' "held by $(Format-LeaseHolder $held), not by this session ('$me'): another session's run is using it, so do not start a run on it until the lease frees" }
+    }
 }
 
 # Slice 236 item 6: the same restore rule every release path uses (written back only if the phone still holds the value the tooling set). Exit 0 restored or nothing recorded, 1 left alone or the value changed since.
@@ -148,6 +154,13 @@ Invoke-Check 'free space' { Test-FreeSpace $phone }
 Invoke-Check 'device leftovers' { Test-DeviceLeftovers $phone }
 Test-DevApps $phone
 Invoke-Check "$((Get-DeviceKindPlan (Get-DeviceKind $phone)).LeaseKind) lease" { Test-Lease $phone }
-if ($script:Reasons.Count -eq 0) { Write-Host 'PREFLIGHT GO'; exit 0 }
-Write-Host "PREFLIGHT NO-GO: $($script:Reasons -join '; ')"
-exit 1
+# Slice 393 review 3: another session's live lease is neither GO nor NO-GO: the phone is fine but not yours. The runner reads any other last line as no usable verdict and stops.
+# Review 1: decided before the NO-GO list, because the runner treats a NO-GO of non-fatal FAILs as a Go and would carry on over another session's phone.
+# Review 3 (second pass): the NO-GO reasons are still printed above the WARN line, so neither hides the other; the last line stays the WARN verdict (exit 3).
+if ($script:ForeignLease) {
+    if ($script:Reasons.Count -gt 0) { Write-Host "PREFLIGHT NO-GO: $($script:Reasons -join '; ')" }
+    Write-Host 'PREFLIGHT WARN: the phone is leased by another session (or its lease file is unreadable or corrupt); do not start a run on it'; exit 3
+}
+if ($script:Reasons.Count -gt 0) { Write-Host "PREFLIGHT NO-GO: $($script:Reasons -join '; ')"; exit 1 }
+Write-Host 'PREFLIGHT GO'
+exit 0

@@ -71,6 +71,14 @@ Books are sold one at a time today (Slice 346, live: `paidBooks.enabled` is `tru
   only what no API can set goes to the user, one step at a time with direct links. Plan: `store-products.mjs --apply`
   for Play and App Store Connect, Partner Center by hand. **Done 2026-11-15:** Play and App Store Connect (see below).
   **Open, Claude's work:** Microsoft Partner Center subscriptions are not created.
+  **Deep links (Slice 393 item 17, ids read 2026-11-18 from the repo vars and earlier slice lines; none is a to-do for the user):**
+  App Store Connect, Dino subscriptions https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions (app 6825053435);
+  Google Play Console, Dino https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/app-dashboard;
+  Microsoft Partner Center, Dino product `9N9VHRLCZXN5` (`DINOREADER_STORE_APP_ID`) https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview
+  (the product page; the add-on subscriptions are created from its *Add-ons* area, which is where `store-products.mjs --store microsoft` would create the shells).
+  **Can `store-products.mjs --apply` do the rest?** Play and App Store Connect: already applied 2026-11-15 (above), nothing left for `--apply` there.
+  Microsoft: the script's Microsoft request shapes are still marked UNVERIFIED, and `--apply` changes live store state, so it was not run by Slice 393;
+  run it once with `--store microsoft` and read its output first, as the script's own header says.
 - Approve the listing text: void. The user ruled on 2026-11-15 that store text is written, checked and pushed without a
   review round (Slice 291, *User answers (2026-11-15, RTST App Store and review rounds)*).
 - Submitting the two App Store subscriptions with an app version: **done 2026-11-15 by Claude** through the API, on the
@@ -195,21 +203,21 @@ Eleven findings files under the reviews folder (all read to the last finding); e
 
 - Skipped #9 (reviews/pr-1174-high.md): "Every PurchaseSnapshot Changed event and every grown-up mode flip now rebuilds the whole shelf" - low, performance only.
 - Skipped #2 (`reviews/pr-1174-check.md`): "iOS SubscriptionNow never returns Expired once any subscription transaction is kept, so a lapsed subscription reads as Active (past end)" - online with the Worker failing is treated as offline, Decision 6 allows 3 days.
-- Skipped #5 (`reviews/pr-1174-check.md`): "is labelled Trial only if held trial end equals Worker expiresAt within 1 s" - low.
-- Skipped #6 (`reviews/pr-1174-check.md`): "HEAD on /api/stories/subscription answers 200 whenever a source is wired, even with paidBooks.enabled off or no proof" - low.
+- Skipped #5 (`reviews/pr-1174-check.md`): "src/Dino/DinoReader.Core/SubscriptionAccess.cs:105, low." - low: it affects the Trial label and the trial-end wording, not whether the reader is entitled.
+- Skipped #6 (`reviews/pr-1174-check.md`): "worker/stories.ts:722, low. HEAD on /api/stories/subscription answers 200 whenever a source" - low: only a HEAD preflight is unreliable; the apps use GET, which answers 404/402 correctly.
 - Skipped #8 (`reviews/pr-1174-check.md`): "the app calls it after every device read that reached the store; polling can starve book downloads with 429" - the route is called once after each store read, not polled (`BookPurchases.cs:140` is the only `StartEndCheck` call, inside `ReadAsync`; `ApplyEndAsync` is serialised by `_endGate`, `BookPurchases.cs:225`).
 - Skipped #6 (`reviews/pr-1174-medium.md`): "askSubscription/askSubscriptionStatus and subscriptionOwns/subscriptionStatusOf (Apple: subscriptionProductOf/subscriptionResultOf/checkSubscription vs statusOfLast/bestStatus/checkSubscriptionStatus) duplicate URL, fetch, status mapping; can drift" - low refactor, not needed for correctness; left as is.
 - Skipped #2 (`reviews/pr-1174-check3.md`): "A Store-kind entitled read always replaces a Worker-confirmed Expired record" - Decision 6: online the app follows the store's answer at once; Play's own entitled answer is that answer, and the Worker re-checks before serving any paid file.
-- Skipped #5 (`reviews/pr-1174-check3.md`): "_subTrial is not persisted although _subEnds and _subNewest are" - low.
-- Skipped #6 (`reviews/pr-1174-check3.md`): "NoteSubscription reads Products (plain Dictionary) from the queue callback while the ProductsDelegate writes it" - low.
+- Skipped #5 (`reviews/pr-1174-check3.md`): "src/Dino/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs:202, low. _subTrial is not persisted although _subEnds and _subNewest" - low: after a relaunch only the "trial ends" wording is lost; the finding says the lock is unaffected.
+- Skipped #6 (`reviews/pr-1174-check3.md`): "src/Dino/DinoReader.App/Platforms/iOS/Purchases/IosPurchases.cs:262, low. NoteSubscription reads Products (plain Dictionary) from the queue" - low: the worst case the finding names is the trial not detected for one transaction, not a wrong lock.
 - Skipped #3 (`reviews/pr-1174-check2.md`): "Trial estimate fires for any first Purchased tx with empty _subEnds; IntroductoryPrice is set for every user, not eligibility" - the local StoreKit 1 end date is used only until the first Worker answer (Design note); StoreKit 1 exposes no trial eligibility.
-- Skipped #5 (`reviews/pr-1174-check2.md`): "Any non-200 Worker reply (404 switch off, 402, 403, 429) reported as StoreUnreachable while online; client discards status" - low.
-- Skipped #6 (`reviews/pr-1174-check2.md`): "StartEndCheck queues a Task.Run per entitled read, serialized on _endGate with 15 s timeout each; no coalescing" - low.
-- Skipped #7 (`reviews/pr-1174-check2.md`): "HEAD to subscription path returns 200 when a source is wired even when switch off or proof missing (GET gives 404/402); 429 has no Retry-After" - low.
+- Skipped #5 (`reviews/pr-1174-check2.md`): "src/Dino/DinoReader.App/Purchases/BookPurchases.cs:234, low (overlaps earlier medium #5 on StoreUnreachable). Any non-200" - low: it only adds noise to fallback analytics, and the earlier medium finding #5 on StoreUnreachable already covers the fix.
+- Skipped #6 (`reviews/pr-1174-check2.md`): "src/Dino/DinoReader.App/Purchases/BookPurchases.cs:213, low. StartEndCheck queues a Task.Run per entitled read, serialized" - low: it only delays a fresh answer when the Worker is slow, and Merge discards the stale ones.
+- Skipped #7 (`reviews/pr-1174-check2.md`): "worker/stories.ts:721, low. HEAD to subscription path returns 200 when a" - low: it only affects a HEAD probe and the missing Retry-After on 429; GET answers correctly.
 
 - Skipped #1 (`reviews/pr-1174-check6.md`): "LatestEnd makes an iOS estimated entitled read end at least now, so a lapsed sub stays granted while the Worker gives no 200" - a Worker that gives no answer is treated as no internet, and Decision 6 "With no internet it locks those books 3 days after that date"; the Worker checks the store before serving any paid file, so no new paid book can be downloaded meanwhile.
-- Skipped #4 (`reviews/pr-1174-check6.md`): "gate (subscriptionProductOf/subscriptionResultOf) and status route (statusOfLast) duplicate the Apple rules with different 400/404 handling" - low.
-- Skipped #5 (`reviews/pr-1174-check6.md`): "Trial kept only when Worker end is within 1 s of the held trial end and Worker never reports trial" - low.
+- Skipped #4 (`reviews/pr-1174-check6.md`): "worker/entitlements/apple.ts:94, low-medium: gate (subscriptionProductOf/subscriptionResultOf) and status route (statusOfLast) duplicate the" - low-medium: a drift risk between two copies of the Apple rules, not a current wrong answer.
+- Skipped #5 (`reviews/pr-1174-check6.md`): "src/Dino/DinoReader.Core/SubscriptionAccess.cs:138, low: Trial kept only when Worker end is within" - low: the finding itself says it is not a lock-out; only the Trial label is lost after the first Worker call.
 
 ## Tests and devices (2026-11-15)
 

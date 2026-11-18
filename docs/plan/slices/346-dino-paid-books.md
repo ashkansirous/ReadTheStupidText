@@ -219,7 +219,7 @@ through `library-docs` or `web-research` before building that part.
 - Applied #1, #3, #6, #7, #8 (and a follow-up: a schema 1 restore uses `LegacyBookFiles.Restore`, the files imported as on main, unless the switch is known to be on: `BookAccess.LegacyFilesMode`, unit-tested). The rule for #1 and #3: with the switch off, or its value unreadable, every path behaves exactly as origin/main. #1: the gate counts an unreadable switch as off (`GateAnswer.Off`), and a paid book's files then get origin/main's status and cache headers (`private, no-store` only after a store-confirmed proof). #3: nothing user-facing awaits the remote config any more (`BookSales.RefreshConfigInBackground`); `ListAsync` and the restore use the last known value (default off), and the first-run picker still offers only free books while the value was never known (this replaces the high round's wait in `ListAsync`). #6: a failing `ApplyToBookAsync` is reported (`FallbackArea.Library`) and the restore goes on. #7: copies of one store id write one entry with every copy's clips merged. #8: the schema 1 per-language cast assertion is back in `LanguageCastTests`.
 - Skipped #2 (`reviews/pr-1016-check1.md`): "accessOf defaults missing access to paid; worker parseAccess defaults to free; 11 books lack access, so republish flips them to paid." - intended: `book.json` defaults to paid by decision 2, so republished metas say paid explicitly; the Worker's missing = free only covers old listings.
 - Skipped #4 (`reviews/pr-1016-check1.md`): "windows-ticket hands out the service Entra token to any caller; per-IP limit on CF-Connecting-IP, shared "unknown" bucket." - already gated twice: 404 while the switch is off, rate-limited, and the token has the Store audience only; recorded for the switch-on review.
-- Skipped #5 (`reviews/pr-1016-check1.md`): "ownership cache keyed by proof only; leaked token works up to 5 min, refunds not seen, junk can evict entries." - the short cache is by design; refunds are seen within 5 minutes.
+- Skipped #5 (`reviews/pr-1016-check1.md`): "worker/entitlements/gate.ts:107, low: ownership cache keyed by proof only; leaked token" - low: the cache lives 5 minutes, so a refund is seen within 5 minutes and the exposure is that short.
 
 *From review:* check2 (`reviews/pr-1016-check2.md`)
 
@@ -266,7 +266,7 @@ through `library-docs` or `web-research` before building that part.
 *From review:* s346l high (`reviews/s346l-high.md`)
 
 - Skipped #1 (`reviews/s346l-high.md`): "Site goes live on merge while the paid switch is off." - timing, not a text fix: the main thread merges this branch only right before the switch goes on.
-- Skipped #7 (`reviews/s346l-high.md`): "Kids Category note still says 'it fits the product' while purchases and the new Redeem-code link out are unchecked against guidelines 1.3 / 5.1.4." - noted, not applied in this pass.
+- Skipped #7 (`reviews/s346l-high.md`): "docs/store-listings/dino/appstore.md:69, severity low. Kids Category note still says" - low: a store-listing note for the later App Store submission, not code; noted, not applied in this pass.
 - Skipped #9 (`reviews/s346l-high.md`): "It claims the live strings were read from the public pages on 2026-11-12 and tells the pusher to replace them verbatim; I could not confirm those live strings." - noted; re-read the live page and diff at push time.
 
 *From review:* switch-on round (`reviews/s346d-high.md` 8 findings, `reviews/s346d-medium.md` 10, `reviews/s346d-check1.md` to `-check3.md` 10 each, `reviews/s346d-check4.md` 3; all read)
@@ -277,18 +277,18 @@ through `library-docs` or `web-research` before building that part.
 - Skipped #4 (`reviews/s346d-check3.md`): "not confirmed by a real Microsoft call" - low; unknown until the Worker switch is on and a real Store token is used.
 - Skipped #5 (`reviews/s346d-check3.md`): "unknown counts as sold" - low; with an unknown config the Worker answers 402 once its switch is on.
 - Skipped #6 (`reviews/s346d-check3.md`): "a stale task from an earlier listing" - low; costs one wait at most.
-- Skipped #7 (`reviews/s346d-check3.md`): "a store sync delay after a purchase" - low; deliberate, recorded in code.
-- Skipped #8 (`reviews/s346d-check3.md`): "one bad book blocks the whole republish" - low; deliberate, it fails loudly and uploads nothing.
-- Skipped #9 (`reviews/s346d-check3.md`): "Intended by the design" - low; deliberate.
-- Skipped #10 (`reviews/s346d-check3.md`): "Deliberate (never lose a held book)" - low; deliberate, noted in code.
+- Skipped #7 (`reviews/s346d-check3.md`): "src/DinoReader.App/StoreClient.cs:296 (fork), LOW: only" - low: the finding calls it an accepted trade-off recorded in code; a store sync delay can skip an owned book for one run only.
+- Skipped #8 (`reviews/s346d-check3.md`): ".github/scripts/publish-store-books.mjs:400 (fork), LOW: refuseSharedProductIds counts" - low: one bad book blocks the republish, but it fails loudly and uploads nothing.
+- Skipped #9 (`reviews/s346d-check3.md`): "src/DinoReader.App/BackupPage.xaml.cs:182 (fork), LOW: a state-only backup" - low: a state-only backup holds no book files because books come from the store, which is free when the switch is off.
+- Skipped #10 (`reviews/s346d-check3.md`): "src/DinoReader.Core/BookAccess.cs:153 (fork), LOW: LegacyAccess counts an" - low: counting an unlisted book as free is on purpose so a restore never loses a held book; noted in code.
 - Skipped #1 (`reviews/s346d-check4.md`): "a fully offline dry run now fails" - low; `--force-paid-switch-on` runs it offline.
 - Skipped #2 (`reviews/s346d-check4.md`): "staging metas follow production's switch" - low; staging dry run only.
 - Skipped #3 (`reviews/s346d-check4.md`): "verify rewrites the ids the other way" - low; rare, the next run self-heals.
 
 *From review:* s346e high (`reviews/s346e-high.md`)
 
-- Skipped #8 (`reviews/s346e-high.md`): "RefusalReason is a new one-line expression-bodied method ... `_boughtAt` is declared mid-class" - style only; `_boughtAt` now sits with the other fields and uses a `using`.
-- Skipped #9 (`reviews/s346e-high.md`): "(checks by reviewer, no defect) Parity ... Not a finding beyond #3" - no defect, nothing to fix.
+- Skipped #8 (`reviews/s346e-high.md`): "src/Dino/DinoReader.App/StoreClient.cs:877, low (convention). RefusalReason is a new one-line" - style only; `_boughtAt` now sits with the other fields and uses a `using`.
+- Skipped #9 (`reviews/s346e-high.md`): "(checks by reviewer, no defect) Parity: Android manifest, iOS Info.plist" - no defect, nothing to fix.
 
 *From review:* s346e medium (`reviews/s346e-medium.md`)
 
@@ -401,6 +401,7 @@ Apple, 2026-11-13: all 11 in-app purchases were MISSING_METADATA (no review scre
 E1 built 2026-11-13 (branch fix/s346-mslog): gate logs one line per fresh store check; Microsoft error codes pass only as short words (id-like values logged as `redacted`); offer tokens outside `uk.sirous.dinoreader.` log as `other`. Review `reviews/s346ml-high.md`: #1-#3 fixed; #4 (no timeout on error-body read), #5 (400 still "owns nothing", outside E1), #6 (failed mints not cached), #9 (style) skipped; #8 skipped (the purchase was the developer's own). Review `reviews/s346ml-medium.md`: all 8 low or nit, skipped (#1-#3 repeat high #4-#6; #4 item lists are at most 100 by `maxPageSize`; #5 one line per fresh check is the point; #6, #7 style and test hygiene); #8 added below.
 - Not yet verified: E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
 - Not yet verified: E2-E5 on a device (merged #1120): the store row's wait and Cancel hold until the run ends, the lag retry (pauses 3, 6, 10, 15, 20, 30 s) after a real purchase, and `download_refused` / `purchase_not_valid` reach analytics.
+- Low follow-ups of Part E (PR #1120, `reviews/s346e-check5.md`, recorded by Slice 393 item 3): (1) `StorePage.xaml.cs` Cancel sets Downloaded or Get from the shelf lookup only, so an installed book with a pending update row shows Downloaded after Cancel until the replan finishes, and keeps the wrong state if `ReplanRowsAsync` throws; (2) `_usage.RecordStoreDownload` also runs for a stale run (only `ShowDownloadResultAsync` is guarded by `row.Run == run`), so a joined shared download ending Done could be counted twice (rare: the row is disabled while Downloading); (3) `upload-worker-secrets.mjs` has no test for a truncated quote on a `*_FILE` key.
 
 #### Not yet verified (more, from before Part E)
 
