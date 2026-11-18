@@ -103,6 +103,24 @@ Extended Metadata on. User's Sonos ID for the sandbox: `126815808`. Still to do:
 Settings, Send on Service Configuration, Self Test, a play on the user's Sonos. The portal signed the session out on
 2026-11-18, so the next step waits on the user signing in again.
 
+**Adding the service fails (2026-11-18, 15:54, reproduced by Claude on the S21):** the sandbox shows in the Sonos app
+(Add content service lists "Dino Book Reader" with our logo and description). "Add to Sonos" → Continue →
+"Authorising Dino Book Reader account… Adding…" → "Dino Book Reader wasn't added. Something went wrong. Please try
+again." Same on the user's phone, and again after the user power-cycled the speakers.
+- `wrangler tail` (POST, all paths) during both attempts: no request from Sonos reached the Worker; it caught a test
+  `curl` at the same time, so the tail was live.
+- S21 logcat (`com.sonos.acr2`): the add runs in a WebView from `passport-music-account-management.ws.sonos.com`
+  (only its favicon and locale file return 403); the WebView is not debuggable, so its own error is not visible. At app
+  start Sonos's account server answers 401 ("Account refresh requires a valid token").
+- Sonos ID in the app (About your system) is 126815808, the same as in the portal. System: one IKEA table lamp, S2,
+  build 86.11, Connected.
+- Self Test Sonos Cloud fails with 422 `ERROR_SERVICE_NOT_CONFIGURED` "Unknown service. Service id: 463879. Account
+  id: 0" (Slice 410).
+- Sonos docs (test-your-service, add-authentication, use-self-test) name no other setting for Anonymous; the portal
+  note says a hard reset of the players "may be required" (done, no change).
+Conclusion (likely, from these sources): Sonos's cloud does not know sandbox service 463879, so its authorising step
+fails before any call to us. Next: a Sonos developer support case (the user's account; draft in the session).
+
 ## Not yet verified
 
 - Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
