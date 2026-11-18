@@ -26,6 +26,9 @@ internal sealed class FakePurchases : IBookPurchases
 
     public bool Offline { get; set; }
 
+    /// <summary>Slice 397: whether the pretend store allows the free trial (false = the account used it: the plain-price card). The <c>trial=used</c> hook switches it off.</summary>
+    public bool TrialAvailable { get; set; } = true;
+
     public string StoreName => PurchaseProofs.AndroidStore;
 
     public static string ProductOf(string bookId) => ProductPrefix + bookId;
@@ -110,7 +113,7 @@ internal sealed class FakePurchases : IBookPurchases
             proofs[plan] = "fake-sub-token-" + plan;
         }
 
-        return new PurchaseSnapshot(prices, owned, new HashSet<string>(PendingProducts), proofs, true, Subscription: status);
+        return new PurchaseSnapshot(prices, owned, new HashSet<string>(PendingProducts), proofs, true, Subscription: status, TrialAvailable: productIds.Any(SubscriptionProducts.Is) ? TrialAvailable : null);
     }
 }
 #endif

@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populær</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Anbefalt</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis og uten konto. Ingenting om deg eller barnet ditt sendes.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er frakoblet</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Butikken trenger internett. Historier som allerede står i hylla, kan fortsatt leses uten.</value></data>
@@ -431,6 +431,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Abonner på nytt</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Kjøp denne boken</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnementet er avsluttet</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Spar {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} i året</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} i måneden</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Fornyes automatisk hver måned eller hvert år til prisen som vises, til du sier opp i butikkontoen din. Du kan si opp når som helst.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis prøveperiode til {0}. Deretter {1} i året, med mindre du sier opp før.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis prøveperiode til {0}. Deretter {1} i måneden, med mindre du sier opp før.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Årsabonnement · fornyes {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Månedsabonnement · fornyes {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inkludert</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Betalingen din gikk ikke gjennom</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alle bøkene forblir åpne til {0} mens Google Play prøver på nytt. Sjekk betalingsmåten din for å beholde dem.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alle bøkene forblir åpne til {0} mens App Store prøver på nytt. Sjekk betalingsmåten din for å beholde dem.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alle bøkene forblir åpne til {0} mens Microsoft Store prøver på nytt. Sjekk betalingsmåten din for å beholde dem.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Rett opp betalingen</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Abonnementet ditt er avsluttet</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bok i hyllen din er låst og skjult for barnet ditt. Abonner på nytt, eller kjøp den du vil beholde.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} bøker i hyllen din er låst og skjult for barnet ditt. Abonner på nytt, eller kjøp de du vil beholde.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøker kommer tilbake av seg selv. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøker som fortsatt er i butikken, kommer tilbake av seg selv. En bok butikken ikke lenger har, kommer ikke tilbake, men opptakene blir i sikkerhetskopifilen. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>

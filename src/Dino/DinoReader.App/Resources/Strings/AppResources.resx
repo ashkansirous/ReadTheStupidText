@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Popular</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recommended</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>New</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} pages · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Free, with no account. Nothing about you or your child is sent.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>You’re offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>The store needs the internet. Stories already on the shelf still read without it.</value></data>
@@ -435,6 +435,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Subscribe again</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Buy this book</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Locked: the subscription ended</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Save {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} a year</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} a month</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Renews by itself every month or every year at the price shown, until you cancel in your store account. Cancel any time.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Free trial until {0}. Then {1} a year, unless you cancel before.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Free trial until {0}. Then {1} a month, unless you cancel before.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Yearly plan · renews on {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Monthly plan · renews on {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Included</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Your payment didn’t go through</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Every book stays open until {0} while Google Play tries again. Check your payment method to keep them.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Every book stays open until {0} while the App Store tries again. Check your payment method to keep them.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Every book stays open until {0} while the Microsoft Store tries again. Check your payment method to keep them.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Fix payment</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Your subscription ended</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 book on your shelf is locked and hidden from your child. Subscribe again, or buy the one you want to keep.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} books on your shelf are locked and hidden from your child. Subscribe again, or buy the ones you want to keep.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Free books come back by themselves. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Free books still in the store come back by themselves. A book the store no longer lists does not come back, but its recordings stay in the backup file. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>

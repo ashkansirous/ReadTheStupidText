@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populaire</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recommandé</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Nouveau</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} pages · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratuit, sans compte. Rien sur vous ni sur votre enfant n'est envoyé.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Vous êtes hors ligne</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>La boutique a besoin d’internet. Les histoires déjà sur l’étagère se lisent sans connexion.</value></data>
@@ -432,6 +432,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Se réabonner</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Acheter ce livre</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Verrouillé : l’abonnement est terminé</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Économisez {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} par an</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} par mois</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Se renouvelle automatiquement chaque mois ou chaque année au prix indiqué, jusqu’à ce que vous annuliez dans votre compte de la boutique. Annulation possible à tout moment.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Essai gratuit jusqu’au {0}. Ensuite {1} par an, sauf si vous annulez avant.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Essai gratuit jusqu’au {0}. Ensuite {1} par mois, sauf si vous annulez avant.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Formule annuelle · renouvelée le {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Formule mensuelle · renouvelée le {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inclus</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Votre paiement n’a pas abouti</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Tous les livres restent ouverts jusqu’au {0} pendant que Google Play réessaie. Vérifiez votre moyen de paiement pour les garder.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Tous les livres restent ouverts jusqu’au {0} pendant que l’App Store réessaie. Vérifiez votre moyen de paiement pour les garder.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Tous les livres restent ouverts jusqu’au {0} pendant que le Microsoft Store réessaie. Vérifiez votre moyen de paiement pour les garder.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Corriger le paiement</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Votre abonnement est terminé</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 livre de votre étagère est verrouillé et caché à votre enfant. Abonnez-vous de nouveau, ou achetez celui que vous voulez garder.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} livres de votre étagère sont verrouillés et cachés à votre enfant. Abonnez-vous de nouveau, ou achetez ceux que vous voulez garder.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Livres à récupérer depuis la boutique</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Les livres gratuits reviennent tout seuls. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Les livres gratuits encore dans la boutique reviennent tout seuls. Un livre que la boutique ne propose plus ne revient pas, mais ses enregistrements restent dans le fichier de sauvegarde. Pour un livre acheté, touchez Restaurer les achats dans la boutique, puis restaurez de nouveau cette sauvegarde.</value></data>

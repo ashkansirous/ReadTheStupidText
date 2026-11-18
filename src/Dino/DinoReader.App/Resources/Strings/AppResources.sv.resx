@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populär</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Rekommenderad</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sidor · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis och utan konto. Inget om dig eller ditt barn skickas.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du är offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Butiken kräver internet. Sagor som redan finns på hyllan går att läsa utan.</value></data>
@@ -431,6 +431,23 @@
   <data name="Sub_Again" xml:space="preserve"><value>Prenumerera igen</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Köp den här boken</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnemanget har tagit slut</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Spara {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} per år</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} per månad</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Förnyas automatiskt varje månad eller varje år till priset som visas, tills du säger upp i ditt butikskonto. Du kan säga upp när som helst.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis provperiod till {0}. Därefter {1} per år, om du inte säger upp innan.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis provperiod till {0}. Därefter {1} per månad, om du inte säger upp innan.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Årsabonnemang · förnyas {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Månadsabonnemang · förnyas {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Ingår</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Din betalning gick inte igenom</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan Google Play försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan App Store försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan Microsoft Store försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Rätta till betalningen</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bok på din hylla är låst och dold för ditt barn. Prenumerera igen, eller köp den du vill behålla.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} böcker på din hylla är låsta och dolda för ditt barn. Prenumerera igen, eller köp dem du vill behålla.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
