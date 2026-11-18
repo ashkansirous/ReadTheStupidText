@@ -72,6 +72,10 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
 - [x] Tests for all three (worker/sonos.test.mjs).
 - [ ] After merge and deploy, rerun Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal.
 
+*Main was red when this PR ran (2026-11-18):* `StoreFilterTests.EveryBookJsonRange_FitsExactlyOneBand` (Slice 394) and
+Love from Seagull Island (PR merged the same day, ages 3-6) landed in parallel, so main's Dino tests fail. This PR sets
+that book to 3-5 (the "up to 5" band, as every other 3+ book in `content/dino/`); it ships with the same store upload.
+
 #### From review
 
 - Review fixes (`reviews/s410-high.md`): `site/privacy.html` now says "Dino Book Reader" and all of `site/` is scanned; the credits in `content/dino/{good-enough,love-from-seagull-island,x-marks-the-treasure}/book.json` (English and the 14 translations) say "Dino Book Reader" and `content/dino/*/book.json` is scanned (good-enough is a starter: stamped to v12 and its bundled `.dino` rebuilt; the two store books are stamped by `publish-store`, so they need a store upload after merge; no page text changed, so no `EarlierPageTextHashes`); the check reads `ApplicationTitle` and asserts the Sonos album constants and PRIVACY.md carry it; matching is case-insensitive across spaces and line breaks; the scanner handles regex and nested template literals and covers every `worker/*.ts`; empty `<sessionId/>`, comments and CDATA are not credentials; the two wordmark SVGs no longer carry the old C2PA metadata.
