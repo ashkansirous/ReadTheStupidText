@@ -36,6 +36,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 403 | Dino: foldable layouts (iPhone Duo, Galaxy Z Fold8, Fold8 Ultra): phone layouts on the outer screen, rails and an open book on the inner screen | planned | #1256 | | [403-dino-foldable-layouts.md](docs/plan/slices/403-dino-foldable-layouts.md) |
 | 404 | Dino: a full-shelf test hook, then every live store picture retaken (Google Play, App Store, Microsoft Store) and the App Store iPhone Duo set | planned | #1254 | | [404-dino-store-pictures-foldables-and-retake.md](docs/plan/slices/404-dino-store-pictures-foldables-and-retake.md) |
 | 407 | Dino: the premade-audio Farsi delivery fixture matches Good Enough's cast again (suite red on main) | planned | | | [407-premade-audio-good-enough-fixture.md](docs/plan/slices/407-premade-audio-good-enough-fixture.md) |
+| 408 | Dino Worker: print-the-damn-book's own $0.99 print products per paid book, a print-access check and the print app's Windows ticket | planned | | | [408-print-app-purchases.md](docs/plan/slices/408-print-app-purchases.md) |
 
 ### Shared
 
