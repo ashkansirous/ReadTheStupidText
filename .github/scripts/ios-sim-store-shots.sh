@@ -448,7 +448,7 @@ stems_without_package() {
   local json id
   for json in "$REPO_ROOT"/content/dino/*/book.json; do
     [ -f "$json" ] || continue
-    grep -q '"kind": *"Store"' "$json" || continue
+    grep -qE '"kind": *"(Store|Starter)"' "$json" || continue # Starters too: Good Enough and Tortoise and the Hare are paid in the live list (run 44411861765: missing-package)
     id="$(sed -n 's/^ *"id": *"\([^"]*\)".*/\1/p' "$json" | head -n 1)"
     [ -n "$id" ] || continue
     ls "$STORE_ROOT/$id"/story-v*.dino >/dev/null 2>&1 || basename "$(dirname "$json")"
