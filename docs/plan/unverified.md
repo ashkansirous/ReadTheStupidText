@@ -77,6 +77,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 398: Dino: the parents' Books tab after a lapse ([slice](slices/398-dino-locked-books-banner-and-offline-notice.md))
+- **Device:** iOS simulator and Windows: the banner, the locked tile look and the offline notice (no Mac; the VM run was skipped at 3.2 GB free memory).
+- **Device:** the 3-day offline rule on a real device.
+- **Device:** true greyscale on the locked cover: the build is a grey veil (follow-up, needs per-platform image handling).
+- **Device:** the reorder layer still lets locked books be dragged (drawn at 55% without veil or badge).
+- **You:** the 14 non-English strings of this slice have had no native read.
+
 ### Slice 399: Dino: a "Books and buying" group in Settings ([slice](slices/399-dino-settings-books-and-buying.md))
 - **Device:** iOS and Windows (rail Settings tab): the Books and buying group and its rows were not run (no Mac; the Windows VM was skipped at 3.2 GB free memory).
 - **Device:** Restore from Settings on a store account that owns books (the emulator account owned none: `NothingFound`), and the request reaching a Store tab that was never opened or is already loaded on a real account.
