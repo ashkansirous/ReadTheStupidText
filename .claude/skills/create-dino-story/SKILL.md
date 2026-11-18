@@ -79,7 +79,7 @@ or app files (its titles are `content/dino/<stem>/titles.json`, no row in `Shipp
 PR check, only the store upload. No book is bundled in the app any more (Slices 261, 265), so every book change, audio clips included, runs only the store upload. Deleting a store book's folder delists it on the next merge (packages stay).
 **A book reaches the store only with complete audio (Slice 277):** `dotnet run --project tools/dino/DinoReader.BookBuilder -- check-audio <stem>` must print no gap (after `git lfs pull --include "content/dino/<stem>/audio/*/manifest.json" --exclude ""`):
 a pack in every one of the 15 languages, a clip for every sentence the app reads, no clip for text that changed, no missing or empty clip file. The app has no device-voice fallback, so after any text
-change regenerate the clips with `tools/dino/premade-audio` before the PR. `publish-store` and `tools/dino/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
+change regenerate the clips with `tools/dino/premade-audio` before the PR (a whole book renders three languages at a time, each with its own `--out`: the premade-audio README, *Batch mode*). `publish-store` and `tools/dino/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
