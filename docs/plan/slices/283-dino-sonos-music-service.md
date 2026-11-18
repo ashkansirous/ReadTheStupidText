@@ -91,6 +91,18 @@ Sonos Company partner account and service submission (text above); company detai
 strings; then the sandbox integration at `https://dinoreader.sirous.uk/sonos`, Self Test, and a play on their own Sonos.
 Unknown: whether the partner account costs anything; whether Self Test skips authentication tests for an anonymous service.
 
+**Progress 2026-11-17/18 (user + Claude in the user's Chrome):** partner account made by the user, integration type
+**Content Partner** only (Control Partner is for apps that drive speakers; none planned). The user accepted the Sonos
+Content Integration Agreement. Sandbox integration created (portal applicationId `a6BPs000000qWNBMA2`) and saved:
+name Dino Reader, availability Global (switch to a region list without mainland China before production, see
+`project-dino-no-china-mainland`), home page `https://dinoreader.sirous.uk`; Integration ID `uk.sirous.dinoreader`
+(fixed once submitted), label "Version 1.0", SMAPI endpoint `https://dinoreader.sirous.uk/sonos` (SOAP 1.1),
+Anonymous, page size 100, poll 600 s; brand assets as SVG (service logo 400, full logo, support banner, badge);
+en-US summary, description and promo from *Submission text* (description says each play adds one anonymous count);
+Extended Metadata on. User's Sonos ID for the sandbox: `126815808`. Still to do: add that ID under Service Deployment
+Settings, Send on Service Configuration, Self Test, a play on the user's Sonos. The portal signed the session out on
+2026-11-18, so the next step waits on the user signing in again.
+
 ## Not yet verified
 
 - Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
