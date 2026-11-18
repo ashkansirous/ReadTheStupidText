@@ -78,13 +78,24 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
 - STORE.md is not scanned: its six "Dino Reader" lines are engineering prose (tags, crash endpoints), not store-listing text, and the listing blocks hold none.
 - Second review (`reviews/s410-medium.md`) #2 applied: the check moved out of site-checks (which ignores `content/dino/**`) into its own node-only workflow `.github/workflows/public-name.yml`, with a `paths` filter listing every scanned path (books' `book.json` included) on PRs and pushes to main; actionlint clean.
 - Second review #6 applied: `hasLoginCredentials` (`worker/sonos.ts`) reads only the SOAP header's `credentials` element (non-empty `loginToken`/`sessionId`); the Body and the rest of the envelope are never scanned, and a test puts both names in the Body and gets 200.
-- Skipped #7 (`reviews/s410-high.md`): "Only Markdown headings "Submission text"/"Store text" are scanned in slices; bold labels or other names ("## Listing", "## Sonos copy") pass. ... Also the check scans slice 410 itself, so a quoted example under a "Store text" heading would fail it." - not applied by the caller's triage.
-- Skipped #10 (`reviews/s410-high.md`): "Quoted glob `node --test "tools/dino/*.test.mjs"` relies on node's own glob (fine on Node 26 in this job); any later test in tools/dino needing its own deps ... would break the job." - not applied by the caller's triage; the glob works on the job's Node.
-- Skipped from the second review (`reviews/s410-medium.md`), low or speculative: #1 (hyphenated/transliterated forms),
-  #4, #5, #7 (wordmark script rerun safety), #8 (one-line constant assumption), #9 (CI step layout). #3 became the
-  store-upload work item above.
-- Check pass (`reviews/s410-check.md`): nothing applied. #1 (credential inside CDATA) and #2 (a `credentials` element
-  inside the Body) are shapes Sonos does not send; #3-#9 low. Revisit only if a later Self Test or real request shows one.
+- Second review #3 (`reviews/s410-medium.md`) became the store-upload work item above.
+- Skipped #7 (`reviews/s410-high.md`): "tools/dino/check-public-name.mjs:11, low. Only Markdown headings" - the slices that hold copy for people use those two headings; widening it would flag the internal code name across every plan file.
+- Skipped #10 (`reviews/s410-high.md`): ".github/workflows/site-checks.yml:54, low. Quoted glob" - the step moved to public-name.yml, where node's own glob works on the job's Node and the tests need no packages.
+- Skipped #1 (`reviews/s410-medium.md`): "CODE_NAME misses hyphenated, suffixed and transliterated forms" - no such form exists in the repo today, and the translations keep the Latin name as the app's resx strings do.
+- Skipped #4 (`reviews/s410-medium.md`): "slice 410 itself is scanned" - same reason as the high pass's #7 above: widening the headings flags the code name in every plan file.
+- Skipped #5 (`reviews/s410-medium.md`): "tokenizer decides regex vs division from the previous token only" - no file the check scans has a regex that desyncs it; a desync would show as a false failure, never a silent pass of user text.
+- Skipped #7 (`reviews/s410-medium.md`): "replaceText not rerun-safe" - the wordmark script is run by hand once per rename and its output was checked by eye at small size.
+- Skipped #8 (`reviews/s410-medium.md`): "a reformat gives a false" - a reformat would fail loudly in CI, which is the safe direction; no reformat is planned.
+- Skipped #9 (`reviews/s410-medium.md`): "the check is chained with && in one step" - the step was moved out of site-checks into its own workflow in this PR.
+- Skipped #1 (`reviews/s410-check.md`): "credential written as CDATA content is stripped, guard misses it" - Sonos sends tokens as plain text; an anonymous service issues none, so a CDATA token never arrives.
+- Skipped #2 (`reviews/s410-check.md`): "CREDENTIALS_ELEMENT matches first" - no SMAPI request puts a credentials element in the Body; the next Self Test run checks the real shapes.
+- Skipped #3 (`reviews/s410-check.md`): "over-matches names like" - Sonos uses only the two exact element names; a lookalike name is not a real request.
+- Skipped #4 (`reviews/s410-check.md`): "possible quadratic CPU on an unauthenticated endpoint" - the body is capped at 16 KiB before this runs, so the worst case stays small.
+- Skipped #5 (`reviews/s410-check.md`): "silently no-ops if envelope shape changes" - the envelope fixture lives in the same test file and changes only with the test; a silent no-op would fail the 500 assertions.
+- Skipped #6 (`reviews/s410-check.md`): "trackMetadata field order pinned to the code's own order" - the order was checked against the WSDL by the first review pass, which says so in its report.
+- Skipped #7 (`reviews/s410-check.md`): "check runs before parseSonosRequest" - a non-SOAP body with a session id is not a real Sonos request, and either fault is a refusal.
+- Skipped #8 (`reviews/s410-check.md`): "path-filtered workflow" - public-name is not a required check, so a PR that touches no scanned path needs no report from it.
+- Skipped #9 (`reviews/s410-check.md`): "YAML anchor/alias on" - actionlint was run on the workflow and passed.
 
 ## Verification
 

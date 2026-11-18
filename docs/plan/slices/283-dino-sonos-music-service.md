@@ -79,11 +79,11 @@ skipped, not fatal. Nothing is logged (`worker/CLAUDE.md:24`). Tests: worker sui
 `check-site-eol` flags CRLF only from local autocrlf (the index is LF).
 
 *From review* (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
-- `s283-high.md`: applied 1 (streaming byte cap), 2 (Body action only), 3 (illegal XML characters), 4 (token hashes shown fields), 7 (constants/helpers).
-  9: no change, `/sonos` on the Dino host is not rewritten (`downloads.ts:315-323` `canonicalPath`). Skipped, low: 5 (slice before rendering), 6 (duplicate helpers), 8 (blanket catch maps to ServiceUnavailable).
-- `s283-medium.md`: 1 no change needed, already cached by `currentEntries`, test added; 4 applied (Body action only). Skipped, low: 2 (comment before action element), 3 (CDATA/char refs in `<id>`), 5 (unsupported actions fault), 6 (count clamped to 500), 7 (primary-language title fallback), 8 (canonical host: the endpoint is registered on the canonical host).
-- `s283-check1.md`: 1 applied (Body action only), 6 applied (malformed entry skipped). Skipped: 5 (log on the blanket catch; `worker/CLAUDE.md:24` forbids logging); 2, 3, 4 low (comment/CDATA before the action, `\b` match on `id-x`, empty author).
-- `s283-check2.md`: all five low, skipped (repeats of the above, track-id getMetadata gives ItemNotFound, unauthenticated POST amplification bounded by the 60 s cache).
+- 2026-11-06 `s283-high.md`: applied 1 (streaming byte cap), 2 (Body action only), 3 (illegal XML characters), 4 (token hashes shown fields), 7 (constants/helpers).
+  2026-11-06 9: no change, `/sonos` on the Dino host is not rewritten (`downloads.ts:315-323` `canonicalPath`). Skipped, low: 5 (slice before rendering), 6 (duplicate helpers), 8 (blanket catch maps to ServiceUnavailable).
+- 2026-11-06 `s283-medium.md`: 1 no change needed, already cached by `currentEntries`, test added; 4 applied (Body action only). Skipped, low: 2 (comment before action element), 3 (CDATA/char refs in `<id>`), 5 (unsupported actions fault), 6 (count clamped to 500), 7 (primary-language title fallback), 8 (canonical host: the endpoint is registered on the canonical host).
+- 2026-11-06 `s283-check1.md`: 1 applied (Body action only), 6 applied (malformed entry skipped). Skipped: 5 (log on the blanket catch; `worker/CLAUDE.md:24` forbids logging); 2, 3, 4 low (comment/CDATA before the action, `\b` match on `id-x`, empty author).
+- 2026-11-06 `s283-check2.md`: all five low, skipped (repeats of the above, track-id getMetadata gives ItemNotFound, unauthenticated POST amplification bounded by the 60 s cache).
 
 ## Waiting on the user (their login)
 
