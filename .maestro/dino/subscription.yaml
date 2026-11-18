@@ -1,6 +1,6 @@
 # Slice 384 (a monthly and yearly subscription for every book, next to buying single books): the scripted device check, with the Debug pretend store (hooks fake-purchases and fake-subscription) and the Debug test store: no
 # money, no real store account, no Worker. Written, not yet run (the device stage runs it after the two reviews).
-# The test store lists 4 books; fake-purchases marks two of them as sold. The flow buys one book, subscribes (the pretend sheet starts the 7-day trial), downloads the other sold book through the subscription, lapses the
+# The test store lists 4 books; fake-purchases marks two of them as sold. The flow buys one book, subscribes (the pretend sheet starts the 7-day trial; the Ended card's yearly buy starts none, withTrial=False), downloads the other sold book through the subscription, lapses the
 # subscription, checks the lapsed book is greyed on the parents' screen (Subscribe again / Buy this book) and gone from the child's shelf while the bought book and the free books never move, then renews it and checks the book is
 # back at once with no download.
 # Against the old behaviour (no subscription card, nothing ever locks) the card, the lapsed actions and the shelf markers all fail.
@@ -11,11 +11,14 @@
 # expect-log: [Subscription] card visible=True active=False monthly=True yearly=True
 # expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=TrialUsed save=37 trial=False
 # expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=Offer save=37 trial=True
+# expect-log: [Purchases] subscribe product=uk.sirous.dinoreader.sub.monthly withTrial=True
 # expect-log: [Purchases] subscription state=Trial grants=True
 # expect-log: [Subscription] card visible=True active=True
 # expect-log: HOOK fake-subscription ok expired
 # expect-log: [Purchases] subscription state=Expired grants=False
 # expect-log: [Subscription] card visible=True active=False monthly=True yearly=True kind=Ended save=37 trial=False locked=1
+# expect-log: [Purchases] subscribe product=uk.sirous.dinoreader.sub.yearly withTrial=False
+# expect-log: HOOK fake-subscription ok trial
 # expect-log: HOOK fake-subscription ok grace
 # expect-log: [Subscription] card visible=True active=True monthly=True yearly=True kind=Grace
 # expect-log: [Subscription] shelf total=4 shown=4 lapsed=1 grownUp=True
@@ -257,12 +260,39 @@ onFlowComplete:
 - assertVisible: '.*14\.99 a year'
 - assertNotVisible: 'Try free, then .*'
 - assertVisible: "Save 37%"
+# Slice 397 item 7: the Ended card promised no trial, so the buy must start none (the pretend sheet logs withTrial=False and goes straight to Active, with the yearly renewal line).
+- scrollUntilVisible:
+    element:
+      id: StoreSubscribeYearly
+    direction: UP
+    timeout: 20000
+- tapOn:
+    id: StoreSubscribeYearly
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: "You are subscribed. Every book is open."
+    timeout: 60000
+- assertVisible: 'Yearly plan . renews on .*'
+- assertNotVisible: 'Free trial until .*'
+# SB3 on the yearly plan, in the trial: the state line names the trial's end and the yearly price after it.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-subscription
+      state: trial
+      plan: yearly
+      days: "7"
+- extendedWaitUntil:
+    visible: 'Free trial until .*Then .*14\.99 a year, unless you cancel before.*'
+    timeout: 30000
+- assertVisible: "You are subscribed. Every book is open."
 # Slice 397 (mock SB4): a payment problem: the books stay open until the date, Fix payment opens the store page, the books are Included again.
 - launchApp:
     stopApp: false
     arguments:
       cmd: fake-subscription
       state: grace
+      plan: monthly
       days: "3"
 - extendedWaitUntil:
     visible: 'Your payment didn.t go through'

@@ -25,6 +25,8 @@ internal static partial class DinoTestCommands
 	private const string OfflineKey = "offline";
 	private const string TrialKey = "trial"; // Slice 397: trial=used makes the pretend store say the account has used the free trial (the plain-price card); fake-subscription takes it too
 	private const string UsedValue = "used";
+	private const string PlanKey = "plan"; // Slice 397 item 7: fake-subscription plan=yearly|monthly (default monthly) picks which plan the pretend subscription is on, so the state line names the yearly or the monthly one
+	private const string YearlyValue = "yearly";
 	private const string OnMode = "on";
 	private const string DefaultPrice = "$0.99";
 
@@ -66,7 +68,7 @@ internal static partial class DinoTestCommands
 	}
 
 	/// <summary>
-	/// Slice 384 (Debug only): <c>fake-subscription state=none|trial|active|grace|expired [days=&lt;n&gt;]</c> changes the pretend store's subscription (the fake store must be on: <c>fake-purchases mode=on</c>) and reads the store at once,
+	/// Slice 384 (Debug only): <c>fake-subscription state=none|trial|active|grace|expired [days=&lt;n&gt;] [plan=yearly|monthly] [trial=used]</c> changes the pretend store's subscription (the fake store must be on: <c>fake-purchases mode=on</c>) and reads the store at once,
 	/// so a flow can lapse and renew it with no money. <c>days</c> is how far from now the paid period ends (default 30, may be negative). Outcome: <c>HOOK fake-subscription ok &lt;state&gt;</c> or <c>failed ...</c>;
 	/// the purchase code logs <c>[Purchases] subscription state=... grants=...</c> after the read.
 	/// </summary>
@@ -83,7 +85,8 @@ internal static partial class DinoTestCommands
 
 			string state = command.Get(StateKey, "none");
 			int days = int.TryParse(command.Get(DaysKey, "30"), out int parsed) ? parsed : 30;
-			fake.Subscription = FakeSubscriptionOf(state, days);
+			string plan = command.Get(PlanKey, string.Empty) == YearlyValue ? SubscriptionProducts.Yearly : SubscriptionProducts.Monthly;
+			fake.Subscription = FakeSubscriptionOf(state, days, plan);
 			if (command.Get(TrialKey, string.Empty) is { Length: > 0 } trial)
 			{
 				fake.TrialAvailable = trial != UsedValue;
@@ -102,15 +105,15 @@ internal static partial class DinoTestCommands
 		}
 	}
 
-	private static SubscriptionStatus? FakeSubscriptionOf(string state, int days)
+	private static SubscriptionStatus? FakeSubscriptionOf(string state, int days, string plan)
 	{
 		DateTimeOffset ends = DateTimeOffset.UtcNow.AddDays(days);
 		return state switch
 		{
-			"trial" => new SubscriptionStatus(SubscriptionState.Trial, ends, SubscriptionProducts.Monthly),
-			"active" => new SubscriptionStatus(SubscriptionState.Active, ends, SubscriptionProducts.Monthly),
-			"grace" => new SubscriptionStatus(SubscriptionState.InGrace, ends, SubscriptionProducts.Monthly),
-			"expired" => new SubscriptionStatus(SubscriptionState.Expired, ends, SubscriptionProducts.Monthly),
+			"trial" => new SubscriptionStatus(SubscriptionState.Trial, ends, plan),
+			"active" => new SubscriptionStatus(SubscriptionState.Active, ends, plan),
+			"grace" => new SubscriptionStatus(SubscriptionState.InGrace, ends, plan),
+			"expired" => new SubscriptionStatus(SubscriptionState.Expired, ends, plan),
 			_ => null,
 		};
 	}
