@@ -130,6 +130,6 @@ Follow-ups from the check pass (`reviews/pr-1256-check-medium.md`, all low, for 
 - Follow-up 7 (`src/Dino/DinoReader.App/Resources/Strings/AppResources.cs:267`): the two new strings are unused in `src` until the pages are built.
 - Follow-up 8 (`tools/emulator/fold-profiles.json:1`): read by no script; px values are hand-copied (857 dp at 420 dpi is 2249.6, the file says 2250).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-18)
 
 - Already in `src/Dino/DinoReader.App/CLAUDE.md` on this branch (line 88, the fold rule): change fold layout rules only in Core `FoldLayout` with its tests; every fold-aware rule takes a `FoldScreen`, and `FoldScreen.None` keeps the existing answers; AVD sizes are in `tools/emulator/fold-profiles.json`. (Slice 403: docs/plan/slices/403-dino-foldable-layouts.md)

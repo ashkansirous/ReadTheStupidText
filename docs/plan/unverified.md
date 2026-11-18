@@ -77,6 +77,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 403: Dino: foldable layouts ([slice](slices/403-dino-foldable-layouts.md))
+- **Device:** the iPhone Duo on a simulator or device (no Duo in Xcode yet; Apple has published no pixel sizes, points or safe areas, 2026-11-16). The Fold8 and Ultra on a real device.
+- **You:** the 14 non-English translations of `Reading_TheEnd` and `Onboarding_LanguagesBodyShort` are machine-written, not checked by a native reader.
+
 ### Slice 398: Dino: the parents' Books tab after a lapse ([slice](slices/398-dino-locked-books-banner-and-offline-notice.md))
 - **Device:** iOS simulator and Windows: the banner, the locked tile look and the offline notice (no Mac; the VM run was skipped at 3.2 GB free memory).
 - **Device:** the 3-day offline rule on a real device.
