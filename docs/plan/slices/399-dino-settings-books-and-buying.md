@@ -1,9 +1,9 @@
 # Slice 399 — Dino: a "Books and buying" group in Settings (subscription state, Restore, Redeem) and the tour Store tip names the subscription
 **Product:** Dino
 
-*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 3, frame SB9, and end question 3). Not built yet.*
+*Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, section 3, frame SB9, and end question 3).* *In progress (wave 2026-11-18), draft PR.* Runs beside Slice 398: new resx keys go right after the existing `Settings_` keys (398 adds after `Sub_`); `subscription.yaml` is 398's, so this slice adds its own Maestro flow.
 
-**Touches:** the grown-ups Settings tab page and `src/Dino/DinoReader.App/GrownUpHeader.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (Slice 397 pure state), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/399-dino-settings-books-and-buying.md`
+**Touches:** the grown-ups Settings tab page (`src/Dino/DinoReader.App/SettingsPage.cs`, `src/Dino/DinoReader.App/SettingsRows.cs`, `src/Dino/DinoReader.Core/SettingsLayout.cs`, the Windows rail Settings tab under `src/Dino/DinoReader.App/Platforms/Windows/**`) and `src/Dino/DinoReader.App/GrownUpHeader.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (Slice 397 pure state), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**`, `.maestro/dino/`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/399-dino-settings-books-and-buying.md`
 
 ## Decisions (the mock, 2026-11-15)
 
