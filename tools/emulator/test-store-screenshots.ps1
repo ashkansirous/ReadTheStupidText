@@ -96,7 +96,7 @@ try {
         Set-Content (Join-Path $content "content\$($b[0])\book.json") "{ `"id`": `"$($b[1])`", `"kind`": `"$($b[2])`" }"
     }
     $null = New-Item -ItemType File -Force (Join-Path $content 'store\id1\story-v3.dino')
-    Assert-Equal 'only an unbuilt store book is missing a package' 'unbuilt' ((Get-MissingPackageStems (Join-Path $content 'content') (Join-Path $content 'store')) -join ',')
+    Assert-Equal 'an unbuilt store book and an unbuilt starter (paid in the live list) are missing a package, a built one is not' 'starter,unbuilt' ((Get-MissingPackageStems (Join-Path $content 'content') (Join-Path $content 'store')) -join ',')
 } finally { Remove-Item $content -Recurse -Force -ErrorAction SilentlyContinue }
 $pulls = @(Get-LfsPullCommands @('aaa', 'bbb'))
 Assert-Equal 'one LFS pull per stem' 2 $pulls.Count

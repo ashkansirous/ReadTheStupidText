@@ -102,13 +102,13 @@ function Get-FullShelfPackages([string]$StoreRoot) {
     return @($books)
 }
 
-# Pure: the stems of the store books under $ContentRoot (content/dino/<stem>/book.json with "kind": "Store") that have no story-v<n>.dino under $StoreRoot/<id> yet (the id is the book.json's own "id").
+# Pure: the stems of the store and starter books (a starter such as Good Enough is paid in the live list, run 44411861765) under $ContentRoot (content/dino/<stem>/book.json with "kind": "Store" or "Starter") that have no story-v<n>.dino under $StoreRoot/<id> yet (the id is the book.json's own "id").
 function Get-MissingPackageStems([string]$ContentRoot, [string]$StoreRoot) {
     $missing = foreach ($folder in Get-ChildItem $ContentRoot -Directory -ErrorAction SilentlyContinue) {
         $jsonPath = Join-Path $folder.FullName 'book.json'
         if (-not (Test-Path $jsonPath)) { continue }
         $book = Get-Content $jsonPath -Raw | ConvertFrom-Json
-        if ($book.kind -ne 'Store' -or -not $book.id) { continue }
+        if ($book.kind -notin 'Store', 'Starter' -or -not $book.id) { continue }
         $built = Get-ChildItem (Join-Path $StoreRoot $book.id) -Filter 'story-v*.dino' -File -ErrorAction SilentlyContinue
         if (-not $built) { $folder.Name }
     }
