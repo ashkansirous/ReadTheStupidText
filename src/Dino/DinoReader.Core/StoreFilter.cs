@@ -9,6 +9,15 @@ public enum StoreAgeBand
     From9To12,
 }
 
+/// <summary>The result of <see cref="StoreFilter.Resolve"/>: the band and author in force, the bands that have a story, whether the chips show, and the authors the picker offers.</summary>
+public sealed record StoreFilterState(
+    StoreAgeBand Band,
+    string? Author,
+    IReadOnlyList<StoreAgeBand> VisibleBands,
+    bool ChipsShown,
+    IReadOnlyList<string> AuthorsInBand,
+    bool AuthorRowShown);
+
 /// <summary>Filters the fetched store list on the phone (Slice 112): by age band and by author, so it works on the cached list offline.</summary>
 public static class StoreFilter
 {
@@ -38,6 +47,28 @@ public static class StoreFilter
 
         (int bandMin, int bandMax) = Range(band);
         return min <= bandMax && max >= bandMin;
+    }
+
+    /// <summary>The bands (never <see cref="StoreAgeBand.All"/>) that hold at least one story with an age range, in chip order. A story with no range shows under every band, so it does not count (Slice 394).</summary>
+    public static IReadOnlyList<StoreAgeBand> BandsWithBooks(IEnumerable<StoreItem> items)
+    {
+        StoreItem[] ranged = items.Where(i => i.AgeMin is not null && i.AgeMax is not null).ToArray();
+        return Enum.GetValues<StoreAgeBand>().Where(b => b != StoreAgeBand.All && ranged.Any(i => InBand(i, b))).ToList();
+    }
+
+    /// <summary>The selected band, or <see cref="StoreAgeBand.All"/> when it holds no story any more (Slice 394).</summary>
+    public static StoreAgeBand EffectiveBand(StoreAgeBand selected, IReadOnlyCollection<StoreAgeBand> bandsWithBooks) =>
+        selected == StoreAgeBand.All || bandsWithBooks.Contains(selected) ? selected : StoreAgeBand.All;
+
+    /// <summary>What the store page shows for a requested band and author (Slice 394): the one place that decides it, so chips, author row and list always agree.</summary>
+    public static StoreFilterState Resolve(IReadOnlyList<StoreItem> items, StoreAgeBand requestedBand, string? requestedAuthor)
+    {
+        IReadOnlyList<StoreAgeBand> bands = BandsWithBooks(items);
+        StoreAgeBand band = EffectiveBand(requestedBand, bands);
+        IReadOnlyList<string> authors = Authors(Apply(items, band, null));
+        bool authorRowShown = authors.Count >= 2; // one author filters nothing
+        string? author = authorRowShown ? authors.FirstOrDefault(a => SameAuthor(a, requestedAuthor)) : null;
+        return new StoreFilterState(band, author, bands, bands.Count >= 2, authors, authorRowShown);
     }
 
     /// <summary>The distinct authors in the list (letter case ignored), sorted; items without one add none.</summary>
