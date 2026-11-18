@@ -77,3 +77,13 @@ Notes: "A children's picture-book reader with no sign-in and no ads. First launc
 ## 6. Screenshots (not generated; applies to both apps)
 
 Missing for both: one 6.9"/6.7"/6.5" iPhone class and a 13" iPad (UIDeviceFamily is 1+2 in both Info.plists, hence iPad is required). Slice 291 work item 5 owns them (macOS CI simulator job `store-screenshots.yml`); pixel sizes to be confirmed from Apple's docs.
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name).
+
+Dino is now called Dino: Kids Books & Stories.
+
+- New story: Love from Seagull Island.
+- Sharper pictures in eight stories.
+- Crash fixes and small improvements in the story store.

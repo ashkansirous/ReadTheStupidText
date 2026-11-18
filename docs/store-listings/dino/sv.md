@@ -1,20 +1,22 @@
-# Store listing: Swedish (`sv`), Dino Book Reader
+# Store listing: Swedish (`sv`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `sv-SE`; App Store `sv`; Microsoft Store `sv`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): Varje figur har en egen röst - och mormor kan spela in sin som vargen
+Title (<= 30): Dino: Barnböcker & Sagor
+Play short description (<= 80): Godnattsagor och bilderböcker för barn. Spela även in din egen röst.
 Play search phrases used in the text: godnattsagor, sagor för barn, bilderböcker, högläsning
-App Store subtitle (<= 30): En röst för varje figur
-App Store keywords (<= 100 bytes): barnsagor,godnattsagor,sagor,bilderböcker,barnböcker,högläsning,berättelser,spela in
+App Store subtitle (<= 30): Godnattsagor med din röst
+App Store keywords (<= 100 bytes): berättelser,bilderbok,högläsning,ljudbok,barn,spela,in,mormor,tvåspråkig,förskola,sagobok
 App Store promotional text (<= 170): Sagor som läses högt för barn 3 till 9 år, med en röst för varje figur och plats för din egen. Inga annonser. Fyra gratis, resten 0,99 USD. 15 språk.
-Microsoft search terms (7): barnsagor; högläsning; godnattsagor; bilderböcker; sagor; barnböcker; figurröster
+Microsoft search terms (7): godnattsagor; barnböcker; sagor för barn; högläsning; bilderböcker; barnsagor; berättelser
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-I Dino Book Reader har varje figur sin egen röst. Berättaren berättar sagan, vargen och de små grisarna låter var och en som sig själv, och en förälder eller en mor- eller farförälder kan spela in sin egen röst som vilken figur som helst: mormor kan vara vargen.
+I Dino har varje figur sin egen röst. Berättaren berättar sagan, vargen och de små grisarna låter var och en som sig själv, och en förälder eller en mor- eller farförälder kan spela in sin egen röst som vilken figur som helst: mormor kan vara vargen.
 
 Varje saga finns på 15 språk, för familjer som behåller ett hemspråk vid sidan av skolspråket: persiska, arabiska, svenska, norska, danska, finska och fler. En vuxen väljer två eller tre sagospråk, och barnet kan byta mellan dem under läsningen, höra samma saga och lära sig orden på båda språken.
 
@@ -45,7 +47,7 @@ TRYGGT OCH PRIVAT
 
 ## Description
 
-Dino Book Reader läser bilderboksberättelser högt för barn från 3 till 9 år, med en olika röst för varje figur. Berättaren berättar sagan, och vargen, grisarna och pepparkaksgubben pratar var och en med sin egen röst.
+Dino läser bilderboksberättelser högt för barn från 3 till 9 år, med en olika röst för varje figur. Berättaren berättar sagan, och vargen, grisarna och pepparkaksgubben pratar var och en med sin egen röst.
 
 VÄLJ DINA SAGOR
 En vuxen väljer böcker från sagohyllan: klassiska sagor som berättas om på ett milt sätt, med en bild på varje sida. Fyra sagor är gratis. Varje bok kommer med sina egna färdiga röster, på det språk du väljer.
@@ -72,3 +74,13 @@ GJORD FÖR BARN
 - När en saga och dess språk har laddats ner läses den högt utan nätverk.
 - Dina inspelningar stannar på din enhet. Säkerhetskopiera och återställ dem från de vuxnas område.
 - Valfri anonym användningsstatistik utan namn eller identifierare, som kan stängas av i Inställningar (bakom de vuxnas spärr).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+Dino heter nu Dino: Barnböcker & Sagor.
+
+- Ny berättelse: Love from Seagull Island.
+- Skarpare bilder i åtta berättelser.
+- Fixar för krascher och små förbättringar i berättelsebutiken.

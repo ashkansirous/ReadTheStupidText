@@ -1,20 +1,22 @@
-# Store listing: Spanish (`es`), Dino Book Reader
+# Store listing: Spanish (`es`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `es-ES` and `es-419` (same text); App Store `es-ES` and `es-MX` (same text); Microsoft Store `es`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"). Neutral Spanish, "usted/su" for the grown-ups.
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): Cada personaje tiene su voz, y la abuela puede grabar la suya como el lobo
+Title (<= 30): Dino: Libros Infantiles
+Play short description (<= 80): Cuentos para dormir y libros ilustrados para niños. Graba también tu voz.
 Play search phrases used in the text: cuentos para dormir, cuentos infantiles, libros ilustrados, leer en voz alta
-App Store subtitle (<= 30): Una voz para cada personaje
-App Store keywords (<= 100 bytes): cuentos,infantiles,dormir,niños,libros ilustrados,fábulas,leer,bebé,grabar,historias
+App Store subtitle (<= 30): Cuentos para dormir con tu voz
+App Store keywords (<= 100 bytes): libro,ilustrado,leer,alta,audiolibro,bebé,grabar,abuela,bilingüe,preescolar,fábulas,historias
 App Store promotional text (<= 170): Cuentos leídos a niños de 3 a 9 años, con una voz para cada personaje y espacio para la suya. Sin anuncios. Cuatro gratis, el resto 0,99 US$. 15 idiomas.
-Microsoft search terms (7): cuentos infantiles; leer en voz alta; cuentos para dormir; libros ilustrados; cuentos de hadas; libros para niños; voces de personajes
+Microsoft search terms (7): cuentos infantiles; libros infantiles; cuentos para dormir; leer en voz alta; libros ilustrados; cuentos para niños; cuentos de hadas
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-En Dino Book Reader cada personaje tiene su propia voz. El narrador cuenta el cuento, el lobo y los cerditos suenan cada uno distinto, y un padre, una madre o los abuelos pueden grabar su voz para cualquier personaje: la abuela puede ser el lobo.
+En Dino cada personaje tiene su propia voz. El narrador cuenta el cuento, el lobo y los cerditos suenan cada uno distinto, y un padre, una madre o los abuelos pueden grabar su voz para cualquier personaje: la abuela puede ser el lobo.
 
 Cada cuento está en 15 idiomas, para las familias que mantienen una lengua de casa junto a la del colegio: persa, árabe, sueco, noruego, danés, finés y más. Un adulto elige dos o tres idiomas de cuento, y el niño puede cambiar entre ellos mientras lee, oyendo el mismo cuento y aprendiendo las palabras en los dos idiomas.
 
@@ -45,7 +47,7 @@ SEGURA Y PRIVADA
 
 ## Description
 
-Dino Book Reader lee en voz alta cuentos de libros ilustrados a niños de 3 a 9 años, con una voz diferente para cada personaje. El narrador cuenta la historia, y el lobo, los cerditos y el hombrecito de jengibre hablan cada uno con su propia voz.
+Dino lee en voz alta cuentos de libros ilustrados a niños de 3 a 9 años, con una voz diferente para cada personaje. El narrador cuenta la historia, y el lobo, los cerditos y el hombrecito de jengibre hablan cada uno con su propia voz.
 
 ELIJA LOS CUENTOS
 Un adulto elige libros de la estantería de cuentos: cuentos clásicos contados con suavidad, con una imagen en cada página. Cuatro cuentos son gratis. Cada libro trae sus propias voces ya grabadas, en el idioma que usted elija.
@@ -72,3 +74,13 @@ HECHA PARA NIÑOS
 - Una vez descargados el cuento y su idioma, se lee sin conexión.
 - Sus grabaciones se quedan en su dispositivo. Haga copias de seguridad y restáurelas desde la zona de adultos.
 - Contadores de uso anónimos opcionales, sin nombres ni identificadores, que se desactivan en Ajustes (tras el control para adultos).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft. Same text for es-ES and es-MX.
+
+Dino ahora se llama Dino: Libros Infantiles.
+
+- Nuevo cuento: Love from Seagull Island.
+- Imágenes más nítidas en ocho cuentos.
+- Corrección de cierres inesperados y pequeñas mejoras en la tienda de cuentos.

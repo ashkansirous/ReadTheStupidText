@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 413: Dino store name, subtitle and keywords in 14 languages ([slice](slices/413-dino-store-name-13-languages.md))
+- **You:** native read of the new Dino name, subtitle, keyword field, Play short description and Microsoft search terms in `docs/store-listings/dino/<lang>.md`, one language at a time: ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh (all machine drafts; Farsi has no App Store entry). The same texts are on the editable App Store version 1.133.1 (not submitted); Microsoft and Play are repo-only.
+
 ### Slice 411: one command sets up a new book's sale product ([slice](slices/411-dino-book-product-every-store.md))
 - **Device:** once Microsoft certifies add-on `9N6J9F50FM6G`, `node .github/scripts/store-products-local.mjs --check-prices` reads USD 0.99 for every book, Love from Seagull Island included (the first add-on priced through the API with `Tier1012`).
 

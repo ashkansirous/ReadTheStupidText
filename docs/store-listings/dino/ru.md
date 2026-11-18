@@ -1,20 +1,22 @@
-# Store listing: Russian (`ru`), Dino Book Reader
+# Store listing: Russian (`ru`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `ru-RU`; App Store `ru`; Microsoft Store `ru`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store"). "Вы" for the grown-ups.
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): У каждого героя свой голос - а бабушка может записать свой за волка
+Title (<= 30): Dino: Детские книги и сказки
+Play short description (<= 80): Сказки на ночь и книги с картинками для детей. Запишите и свой голос.
 Play search phrases used in the text: сказки на ночь, сказки для детей, книги с картинками, чтение вслух
-App Store subtitle (<= 30): Свой голос у каждого героя
-App Store keywords (<= 100 bytes): сказки,детям,на ночь,книги,рассказы,вслух,запись
+App Store subtitle (<= 30): Чтение на ночь вашим голосом
+App Store keywords (<= 100 bytes): аудиосказки,рассказы,вслух,запись,бабушка,картинки
 App Store promotional text (<= 170): Сказки вслух для детей от 3 до 9 лет: у каждого героя свой голос, есть место и для вашего. Без рекламы. Четыре бесплатно, остальные по 0,99 USD. 15 языков.
-Microsoft search terms (7): сказки для детей; чтение вслух; сказки на ночь; книги с картинками; детские книги; озвучка героев; сказки
+Microsoft search terms (7): сказки на ночь; детские книги; сказки для детей; чтение вслух; книги с картинками; детские рассказы; аудиосказки
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-В Dino Book Reader у каждого героя свой голос. Рассказчик ведёт сказку, волк и поросята звучат каждый по-своему, а родитель, бабушка или дедушка могут записать свой голос за любого героя: бабушка может быть волком.
+В Dino у каждого героя свой голос. Рассказчик ведёт сказку, волк и поросята звучат каждый по-своему, а родитель, бабушка или дедушка могут записать свой голос за любого героя: бабушка может быть волком.
 
 Каждая сказка есть на 15 языках, для семей, которые сохраняют родной язык рядом со школьным: фарси, арабский, шведский, норвежский, датский, финский и другие. Взрослый выбирает два или три языка сказок, а ребёнок может переключаться между ними во время чтения, слушая ту же сказку и учась словам на обоих языках.
 
@@ -45,7 +47,7 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 
 ## Description
 
-Dino Book Reader читает вслух истории из книжек с картинками детям от 3 до 9 лет, и у каждого героя свой голос. Рассказчик ведёт историю, а волк, поросята и пряничный человечек говорят каждый своим голосом.
+Dino читает вслух истории из книжек с картинками детям от 3 до 9 лет, и у каждого героя свой голос. Рассказчик ведёт историю, а волк, поросята и пряничный человечек говорят каждый своим голосом.
 
 ВЫБЕРИТЕ СКАЗКИ
 Взрослый выбирает книги на полке историй: классические сказки в мягком пересказе, на каждой странице картинка. Четыре сказки бесплатны. К каждой книге прилагаются готовые голоса на выбранном вами языке.
@@ -72,3 +74,13 @@ Dino Book Reader читает вслух истории из книжек с к�
 - Когда сказка и её язык загружены, чтение работает без интернета.
 - Ваши записи остаются на вашем устройстве. Создавайте резервные копии и восстанавливайте их в разделе для взрослых.
 - Необязательный анонимный подсчёт использования без имён и идентификаторов; его можно отключить в Настройках (за замком для взрослых).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+Dino теперь называется Dino: Детские книги и сказки.
+
+- Новая история: Love from Seagull Island.
+- Более чёткие картинки в восьми историях.
+- Исправлены сбои и сделаны небольшие улучшения в магазине историй.

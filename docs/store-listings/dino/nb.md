@@ -1,20 +1,22 @@
-# Store listing: Norwegian Bokmål (`nb`), Dino Book Reader
+# Store listing: Norwegian Bokmål (`nb`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `no-NO`; App Store `no`; Microsoft Store `nb` (Partner Center name to be confirmed at push). Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): Hver figur har sin egen stemme - og bestemor kan spille inn sin som ulven
+Title (<= 30): Dino: Barnebøker og historier
+Play short description (<= 80): Godnatthistorier og bildebøker for barn. Spill også inn din egen stemme.
 Play search phrases used in the text: godnatthistorier, eventyr for barn, bildebøker, høytlesing
-App Store subtitle (<= 30): En stemme til hver figur
-App Store keywords (<= 100 bytes): barnehistorier,godnatthistorier,eventyr,bildebøker,barnebøker,høytlesing,fortellinger,ta opp
+App Store subtitle (<= 30): Godnatthistorier i din stemme
+App Store keywords (<= 100 bytes): eventyr,bildebok,høytlesing,lydbok,barn,spille,inn,bestemor,tospråklig,barnehage,fortelling
 App Store promotional text (<= 170): Historier lest høyt for barn fra 3 til 9 år, med en stemme til hver figur og plass til din egen. Ingen reklame. Fire gratis, resten 0,99 USD. 15 språk.
-Microsoft search terms (7): barnehistorier; høytlesing; godnatthistorier; bildebøker; eventyr; barnebøker; figurstemmer
+Microsoft search terms (7): godnatthistorier; barnebøker; historier for barn; høytlesing; bildebøker; barnehistorier; eventyr
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-I Dino Book Reader har hver figur sin egen stemme. Fortelleren forteller historien, ulven og de små grisene låter hver for seg, og en forelder eller besteforelder kan spille inn sin egen stemme som en hvilken som helst figur: bestemor kan være ulven.
+I Dino har hver figur sin egen stemme. Fortelleren forteller historien, ulven og de små grisene låter hver for seg, og en forelder eller besteforelder kan spille inn sin egen stemme som en hvilken som helst figur: bestemor kan være ulven.
 
 Hver historie finnes på 15 språk, for familier som holder på et hjemmespråk ved siden av skolespråket: persisk, arabisk, svensk, norsk, dansk, finsk og flere. En voksen velger to eller tre historiespråk, og barnet kan bytte mellom dem mens det leser, høre den samme historien og lære ordene på begge språk.
 
@@ -45,7 +47,7 @@ TRYGT OG PRIVAT
 
 ## Description
 
-Dino Book Reader leser bildebokhistorier høyt for barn fra 3 til 9 år, med en ulik stemme til hver figur. Fortelleren forteller historien, og ulven, grisene og pepperkakemannen snakker hver med sin egen stemme.
+Dino leser bildebokhistorier høyt for barn fra 3 til 9 år, med en ulik stemme til hver figur. Fortelleren forteller historien, og ulven, grisene og pepperkakemannen snakker hver med sin egen stemme.
 
 VELG HISTORIENE
 En voksen velger bøker fra historiehyllen: klassiske eventyr gjenfortalt på en mild måte, med et bilde på hver side. Fire historier er gratis. Hver bok kommer med sine egne ferdiglagde stemmer, på språket du velger.
@@ -72,3 +74,13 @@ LAGET FOR BARN
 - Når en historie og språket den har er lastet ned, leses den høyt uten nett.
 - Opptakene dine blir på enheten din. Ta sikkerhetskopi og gjenopprett dem fra de voksnes område.
 - Valgfri anonym bruksstatistikk uten navn eller identifikatorer, som kan slås av i Innstillinger (bak de voksnes lås).
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+Dino heter nå Dino: Barnebøker og historier.
+
+- Ny historie: Love from Seagull Island.
+- Skarpere bilder i åtte historier.
+- Feilrettinger for krasj og små forbedringer i historiebutikken.

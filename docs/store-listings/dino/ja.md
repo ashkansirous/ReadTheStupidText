@@ -1,20 +1,22 @@
-# Store listing: Japanese (`ja`), Dino Book Reader
+# Store listing: Japanese (`ja`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Locales: Play `ja-JP`; App Store `ja`; Microsoft Store `ja`. Layout as in `fr.md` (App Store / Microsoft description = Description with "Google Play" replaced by "App Store" / "Microsoft Store").
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): 登場人物ごとに声が違う。おばあちゃんが自分の声でオオカミ役も
+Title (<= 30): Dino: 子供の絵本と読み聞かせ
+Play short description (<= 80): 寝る前の読み聞かせ絵本。あなたの声も録音できます。
 Play search phrases used in the text: 読み聞かせ, 絵本, 寝る前のお話, 子ども向け童話
-App Store subtitle (<= 30): 登場人物ごとに違う声
-App Store keywords (<= 100 bytes): 絵本,読み聞かせ,童話,子供,寝る前,昔話,おはなし,幼児,録音,知育
+App Store subtitle (<= 30): あなたの声で届ける寝る前のお話
+App Store keywords (<= 100 bytes): 子供,童話,昔話,おやすみ,録音,幼児,知育,朗読,おばあちゃん,英語
 App Store promotional text (<= 170): 3歳から9歳の子ども向けの読み聞かせ絵本。登場人物ごとに声が違い、ご家族の声も録音できます。広告なし。4話は無料、ほかは1話0.99ドル。15言語対応。
-Microsoft search terms (7): 読み聞かせ; 絵本; 寝る前のお話; 童話; 子供向け; 昔話; 登場人物の声
+Microsoft search terms (7): 読み聞かせ; 絵本; 寝る前のお話; 子供向け絵本; 童話; 昔話; 知育絵本
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-Dino Book Reader では、登場人物ごとに声が違います。ナレーターがお話を語り、オオカミも子ぶたたちもそれぞれの声で話し、お父さん、お母さん、おじいちゃん、おばあちゃんは、どの登場人物にも自分の声を録音できます。おばあちゃんがオオカミになれます。
+Dino では、登場人物ごとに声が違います。ナレーターがお話を語り、オオカミも子ぶたたちもそれぞれの声で話し、お父さん、お母さん、おじいちゃん、おばあちゃんは、どの登場人物にも自分の声を録音できます。おばあちゃんがオオカミになれます。
 
 どのお話も15言語で楽しめます。学校の言語のほかに家庭の言語を大切にしているご家族に向けて、ペルシャ語、アラビア語、スウェーデン語、ノルウェー語、デンマーク語、フィンランド語などに対応しています。おとなの方が2つか3つのお話の言語を選ぶと、お子さまは読みながら切り替えられ、同じお話を聞いて、2つの言語で言葉を覚えられます。
 
@@ -45,7 +47,7 @@ Dino Book Reader では、登場人物ごとに声が違います。ナレータ
 
 ## Description
 
-Dino Book Readerは、3歳から9歳のお子さま向けに、絵本のお話を読み聞かせるアプリです。登場人物ごとに違う声で読み上げます。語り手がお話を進め、オオカミ、子ブタたち、ジンジャーブレッドマンがそれぞれの声で話します。
+Dinoは、3歳から9歳のお子さま向けに、絵本のお話を読み聞かせるアプリです。登場人物ごとに違う声で読み上げます。語り手がお話を進め、オオカミ、子ブタたち、ジンジャーブレッドマンがそれぞれの声で話します。
 
 お話を選ぶ
 おとなの方が、おはなしの本棚から本を選びます。やさしく語り直した昔ながらの童話で、どのページにも絵があります。4つのお話は無料です。どの本にも、選んだ言語のあらかじめ用意された声がついています。
@@ -72,3 +74,13 @@ Dino Book Readerは、3歳から9歳のお子さま向けに、絵本のお話�
 - お話とその言語をダウンロードすれば、オフラインでも読み上げられます。
 - 録音は端末の中にとどまります。バックアップと復元は、おとなの方のエリアから行えます。
 - 名前や識別子を含まない、匿名の利用回数カウントは任意で、設定でオフにできます（ペアレンタルゲートの向こう）。
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name). Machine draft.
+
+Dino は「Dino: 子供の絵本と読み聞かせ」という名前になりました。
+
+- 新しいお話：Love from Seagull Island。
+- 8つのお話の絵がより鮮明になりました。
+- クラッシュの修正と、ストアの小さな改善。
