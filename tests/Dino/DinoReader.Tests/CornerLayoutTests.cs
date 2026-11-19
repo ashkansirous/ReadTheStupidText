@@ -34,13 +34,13 @@ public class CornerLayoutTests
     [InlineData(1100, 760)] // W1
     [InlineData(800, 560)]
     [InlineData(1600, 900)]
-    public void Windows_is_always_a_280_rail(double w, double h)
+    public void Windows_is_always_a_270_rail(double w, double h)
     {
         ChromeShape shape = CornerLayout.ChromeOf(w, h, windows: true);
 
         Assert.True(shape.IsRail);
         Assert.Equal(ChromeFamily.Windows, shape.Family);
-        Assert.Equal(280, shape.RailWidth);
+        Assert.Equal(270, shape.RailWidth);
     }
 
     [Theory]

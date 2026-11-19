@@ -51,7 +51,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
           text: Open
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 # Slice 404, Decision 3: the four test books stay under the eight newer imports on a 12-book shelf, so Three Little Pigs is below the fold (run 44429604107); scroll to it.
 - scrollUntilVisible:

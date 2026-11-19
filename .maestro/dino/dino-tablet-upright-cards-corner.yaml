@@ -28,10 +28,10 @@ name: Corner rail, book card and Settings list on a tablet held upright
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - assertVisible:
-    id: GalleryCornerLine
+    id: LockChip
 # A book's options: a centred card with Read now, closed by a tap outside it (the scrim at the top left of the screen).
 - tapOn:
     id: TileMore
@@ -73,4 +73,4 @@ name: Corner rail, book card and Settings list on a tablet held upright
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip

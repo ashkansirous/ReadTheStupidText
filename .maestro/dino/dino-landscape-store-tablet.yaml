@@ -29,7 +29,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GalleryStore
@@ -54,4 +54,4 @@ onFlowComplete:
       id: GalleryStoreSub
     timeout: 15000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip

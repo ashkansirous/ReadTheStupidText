@@ -22,8 +22,9 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 	/// <summary>Slice 398 (mock SB6): a locked cover is dimmed to 55% (and greyed by <see cref="ShowGreyVeil"/>); the title and the two pills under it are not.</summary>
 	public double TileOpacity => IsLapsed ? LockedCoverOpacity : 1.0;
 
-	/// <summary>Slice 398: no "⋯" menu on a locked tile.</summary>
-	public bool ShowMore => !IsLapsed;
+	/// <summary>Slice 398: no "⋯" menu on a locked tile. Slice 418 decision 10: none on a locked shelf either. The gallery's own IsVisible binding replaces the overlay's root binding to Mode.IsGrownUp,
+	/// so the lock has to be here; the tiles are built again on every lock change (OnModeChanged).</summary>
+	public bool ShowMore => TileMenuRule.ShowMore(Mode.IsGrownUp, IsLapsed);
 
 	/// <summary>Slice 398: MAUI has no greyscale filter for an image on every platform, so a locked cover gets a grey veil over it that takes the colour out as far as a veil can.</summary>
 	public bool ShowGreyVeil => IsLapsed;

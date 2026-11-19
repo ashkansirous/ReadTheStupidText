@@ -55,8 +55,8 @@ function Press-Key {
 }
 function Find-Visible { param([string] $Id) try { return Find-UiaVisibleById (Get-DinoWindow) $Id } catch { return $null } }
 function Enter-GrownUpMode {
-    if (Find-Visible 'GalleryDone') { return }
-    Invoke-Uia (Wait-Until { Find-Visible 'GalleryGrownUps' } 15 'no For grown-ups button')
+    if (Find-Visible 'LockChip') { return }   # Slice 418: the chip shows only while the shelf is unlocked
+    Invoke-Uia (Wait-Until { Find-Visible 'GalleryLock' } 15 'no lock on the shelf')
     Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' | Out-Null
     $sum = Invoke-GateHold -FindRing { Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' } -PackageName $PackageName -HoldMs $HoldMs
     # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
@@ -70,7 +70,7 @@ function Enter-GrownUpMode {
         }
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'no OK key')
     }
-    Wait-Until { Find-Visible 'GalleryDone' } 15 'grown-up mode did not open' | Out-Null
+    Wait-Until { Find-Visible 'LockChip' } 15 'the shelf did not unlock' | Out-Null
 }
 function Start-RecordingFromIntro {
     # Waits until Start recording is visible and enabled, invokes it, then waits for the app's "Start tapped" trace line; a click that never reached the app is invoked once more.
@@ -206,7 +206,7 @@ function Add-Result {
 function Reset-ToGallery {
     # A failed stage can leave the Record screen (mic live) or the intro open: Esc back out until a gallery button shows, so the next check starts from the shelf.
     for ($i = 0; $i -lt 5; $i++) {
-        try { if ((Find-Visible 'GalleryGrownUps') -or (Find-Visible 'GalleryDone')) { return } } catch { $null = $_ }
+        try { if (Find-Visible 'GalleryLock') { return } } catch { $null = $_ }   # the lock is on the one shelf, locked or not (Slice 418)
         try { Press-Key $VkEscape } catch { return }
         Start-Sleep -Milliseconds 800
     }

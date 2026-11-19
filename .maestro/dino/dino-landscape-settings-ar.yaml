@@ -47,7 +47,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings
@@ -61,7 +61,7 @@ onFlowComplete:
 - assertNotVisible:
     id: GrownUpBack
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - takeScreenshot: settings-landscape-ar
 # A row opens its page inside the content area: the back arrow shows, the rail stays.
 - tapOn:
@@ -72,7 +72,7 @@ onFlowComplete:
       id: GrownUpBack
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 # Rotate upright: the same page stays open, now above the tab bar.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
@@ -94,4 +94,4 @@ onFlowComplete:
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip

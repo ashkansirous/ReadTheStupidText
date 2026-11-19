@@ -215,15 +215,21 @@ function Find-UiaVisibleById {
     return $null
 }
 
+function Test-LockedShelfShown {
+    # Slice 418: there is one shelf. The lock (AutomationId GalleryLock) is on it always; the countdown chip (LockChip) shows only while it is unlocked. Locked means the lock without the chip.
+    param([Parameter(Mandatory)] $Root)
+    return [bool]((Find-UiaVisibleById $Root 'GalleryLock') -and -not (Find-UiaVisibleById $Root 'LockChip'))
+}
+
 function Enter-KidsShelf {
-    # Slice 325: the first run (dino-onboarding-keys, "Skip all") ends in the grown-ups' corner with the "Ready for my child" hand-over (AutomationId GalleryDone, the coral pill); a check that starts from
-    # the kids' shelf taps it first. Does nothing when the corner is not showing.
-    $find = { $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1; if ($w) { Find-UiaVisibleById $w 'GalleryDone' } }
+    # Slice 418: a check that starts from the locked shelf taps the lock when the shelf is unlocked (the chip shows): a tap on the lock locks at once. Does nothing when it is locked already.
+    $find = { $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1; if ($w) { Find-UiaVisibleById $w 'LockChip' } }
     if (-not (Get-AppWindows 'DinoReader.App')) { throw 'FAIL Enter-KidsShelf: Dino Reader has no window (not running, or closed)' }
-    $done = & $find
-    if (-not $done) { return }
-    Invoke-Uia $done
-    $null = Wait-Until { -not (& $find) } 15 'FAIL the coral hand-over button did not take the app from the grown-ups corner to the kids shelf'   # Wait-Until throws when the time runs out, so a stuck corner fails the check here
+    if (-not (& $find)) { return }
+    $lock = Find-UiaVisibleById (Get-AppWindows 'DinoReader.App' | Select-Object -First 1) 'GalleryLock'
+    if (-not $lock) { throw 'FAIL Enter-KidsShelf: the shelf is unlocked but no lock (GalleryLock) is showing' }
+    Invoke-Uia $lock
+    $null = Wait-Until { -not (& $find) } 15 'FAIL a tap on the lock did not lock the shelf'   # Wait-Until throws when the time runs out, so a stuck unlocked shelf fails the check here
 }
 
 function Get-VisibleNames {

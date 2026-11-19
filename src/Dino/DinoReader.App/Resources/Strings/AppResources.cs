@@ -46,10 +46,8 @@ public static class AppResources
 	private const string ClickSuffix = "Click";
 
 	// The strings that say "Tap" and have a "...Click" twin; <see cref="Get"/> swaps to the twin when <see cref="UseClickWording"/> is on.
-	private static readonly HashSet<string> ClickWorded =
-	[
-		nameof(Gallery_CornerLine),
-	];
+	// Slice 418: none now (the corner's note went with the corner; the mock's Windows frames keep "Tap to lock").
+	private static readonly HashSet<string> ClickWorded = [];
 
 	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
 	public static string For(string key, CultureInfo culture) => Manager.GetString(key, culture) ?? key;
@@ -271,10 +269,7 @@ public static class AppResources
 	public static string FirstBooks_GetThese => Get();
 	public static string Onboarding_ListenTitle => Get();
 	public static string Onboarding_ListenBody => Get();
-	public static string Onboarding_ListenNext => Get();
-	public static string Onboarding_TapLanguage => Get();
-	public static string Onboarding_ListenOther => Get();
-	public static string Onboarding_ListenWide => Get();
+	public static string Onboarding_SkipStep => Get();
 	public static string Onboarding_VoiceTitle => Get();
 	public static string Onboarding_VoiceBody => Get();
 	public static string Onboarding_StaysTitle_Phone => Get();
@@ -291,29 +286,8 @@ public static class AppResources
 	public static string Onboarding_ThatsYouBody => Get();
 	public static string Onboarding_YourVoiceChip => Get();
 	public static string Onboarding_PlayAgain => Get();
-	public static string Tour_WelcomeTitle => Get();
-	public static string Tour_WelcomeLine => Get();
-	public static string Tour_StoreTitle => Get();
-	public static string Tour_StoreLine => Get();
-	public static string Tour_BooksTitle => Get();
-	public static string Tour_BooksLine => Get();
-	public static string Tour_SettingsTitle => Get();
-	public static string Tour_SettingsLine => Get();
-	public static string Tour_ShowMeAround => Get();
-	public static string Tour_TipBooks => Get();
-	public static string Tour_TipStoreTitle => Get();
-	public static string Tour_TipStore => Get();
-	public static string Tour_TipSettings => Get();
-	public static string Tour_ShelfTitle => Get();
-	public static string Tour_ShelfLine => Get();
-	public static string Tour_LastStep => Get();
-	public static string Tour_ShowMe => Get();
-	public static string Tour_ChildShelfTitle => Get();
-	public static string Tour_ChildShelfLine => Get();
-	public static string Tour_ChildShelfBack => Get();
 	public static string Tour_StartReading => Get();
 	public static string Intro_Counter => Get();
-	public static string Gallery_ReadyForChild => Get();
 	public static string Gallery_GrownUpMode => Get();
 	public static string Language_Title => Get();
 	public static string Language_Subtitle => Get();
@@ -341,13 +315,6 @@ public static class AppResources
 	public static string Language_PageSub => Get();
 	public static string Gallery_GrownUpsTitle => Get();
 	public static string Gallery_GrownUpsSub => Get();
-	public static string Gallery_GrownUpsButton => Get();
-	public static string Gallery_GrownUpsPill => Get();
-	public static string Gallery_GrownUpsButtonLocked => Get();
-	public static string Gallery_CornerTitle => Get();
-	public static string Gallery_CornerLine => Get();
-	public static string Gallery_CornerLineClick => Get();
-	public static string Gallery_BackToShelf => Get();
 	public static string Gallery_Reorder => Get();
 	public static string Gallery_ReorderHint => Get();
 	public static string Cover_Waiting => Get();
@@ -365,16 +332,23 @@ public static class AppResources
 	public static string Book_RemoveConfirm => Get();
 	// Slice 325 part A: the grown-ups' corner's tabs and rail
 	public static string Corner_TabBooks => Get();
-	public static string Corner_ChildsShelf => Get();
-	public static string Gallery_CornerLineShort => Get();
 	// Slice 325 part C: the kids' shelf's short title
 	public static string Gallery_ShelfTitleShort => Get();
 	public static string Language_Footer => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();
+	public static string Gallery_CornerTitle => Get();
+	public static string Lock_Locked => Get();
+	public static string Lock_Unlocked => Get();
+	public static string Lock_LockedA11y => Get();
+	public static string Lock_UnlockedA11y => Get();
+	public static string Lock_Countdown => Get();
+	public static string Lock_GrownUpsHint => Get();
+	public static string Lock_LockedAgain => Get();
+	public static string Lock_LockedByHand => Get();
+	public static string Lock_TapToLock => Get();
 	public static string Gate_KeepHolding => Get();
 	public static string Gate_Continue => Get();
-	public static string Gate_BackToStory => Get();
 	public static string Gate_WhatIs => Get();
 	public static string Gate_Backspace => Get();
 	public static string Gate_HoldCaptionWindows => Get();

@@ -27,14 +27,14 @@ name: Shelf on a tablet held upright shows three columns and keeps its books thr
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 # Landscape: the covers must really draw right after the rotation (the grid layout keeps its kind, only the span changes).
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 # Back upright: the same shelf, still with its books and the grown-ups pill.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
@@ -43,4 +43,4 @@ name: Shelf on a tablet held upright shows three columns and keeps its books thr
 - assertVisible:
     id: StoryTile
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock

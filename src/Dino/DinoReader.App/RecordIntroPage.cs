@@ -975,7 +975,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		TraceWindows($"Record intro: pieces cut count={pieces.Count}");
 		if (pieces.Count == 0)
 		{
-			await DisplayAlertAsync(AppResources.Record_Title, AppResources.Reading_ReadFailed, AppResources.Common_Ok); // nothing to record: say so instead of a silent tap
+			await LockHolds.WhileAsync("alert", () => DisplayAlertAsync(AppResources.Record_Title, AppResources.Reading_ReadFailed, AppResources.Common_Ok)); // nothing to record: say so instead of a silent tap
 			return;
 		}
 

@@ -6,7 +6,27 @@ namespace DinoReader;
 /// <summary>The one way a view in this app gets a tap handler (moved out of the cast screen's helpers in Slice 278 part B).</summary>
 internal static class Taps
 {
-	public static void AddTap(View view, Func<Task> tapped)
+	/// <summary>An uncounted tap. Inside a grown-up place (Store, Settings, a ••• sheet, their sub-pages) it still puts the lock's time back (Slice 418 decision 13).</summary>
+	public static void AddTap(View view, Func<Task> tapped) =>
+		Attach(view, () =>
+		{
+			UiUsage.NoteGrownUp();
+			return tapped();
+		});
+
+	/// <summary>The reading-language button, its list's rows and its scrim: a tap that never puts the lock's time back (Slice 418 decision 13), counted as <paramref name="control"/> when one is given.</summary>
+	public static void AddLanguageTap(View view, Func<Task> tapped, string? control = null) =>
+		Attach(view, () =>
+		{
+			if (control is not null)
+			{
+				UiUsage.TapQuiet(control);
+			}
+
+			return tapped();
+		});
+
+	private static void Attach(View view, Func<Task> tapped)
 	{
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += async (_, _) => await RunAsync(tapped);
@@ -16,7 +36,7 @@ internal static class Taps
 	/// <summary>Slice 352: the same tap, counted as a press of <paramref name="control"/> (a <see cref="DinoReader.Core.UiControls"/> name) on the current screen, before its action runs (the count is read at tap time and never registered apart from the action).
 	/// A view that is disabled when tapped (its live <c>IsEnabled</c>) does nothing and is not counted.</summary>
 	public static void AddTap(View view, Func<Task> tapped, string control) =>
-		AddTap(view, () =>
+		Attach(view, () =>
 		{
 			if (!view.IsEnabled)
 			{

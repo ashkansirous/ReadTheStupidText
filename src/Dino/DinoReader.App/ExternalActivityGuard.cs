@@ -17,6 +17,8 @@ public sealed class ExternalActivityGuard
 	public async Task<T> RunAsync<T>(Func<Task<T>> work)
 	{
 		_depth++;
+		UiUsage.NoteGrownUp(); // the press that opened a picker or an external screen is a grown-up tap
+		using IDisposable hold = LockHolds.Begin("external"); // Slice 418 decision 16: the 30 seconds wait while the picker or the store's screen is open
 		try
 		{
 			return await work();

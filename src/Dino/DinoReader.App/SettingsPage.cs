@@ -72,7 +72,7 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage, ICornerSubPag
 	protected INavigation Nav => _hostPage?.Navigation ?? Navigation;
 
 	/// <summary>An alert on the page the user sees (the gallery).</summary>
-	protected Task AlertAsync(string title, string message, string ok) => (_hostPage ?? this).DisplayAlertAsync(title, message, ok);
+	protected Task AlertAsync(string title, string message, string ok) => LockHolds.WhileAsync("alert", () => (_hostPage ?? this).DisplayAlertAsync(title, message, ok));
 
 	View ICornerSubPage.HostIn(Page owner, Func<Task> close)
 	{
@@ -330,7 +330,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		LogBuying($"manage subscription opened={opened}");
 		if (!opened && _owner is not null)
 		{
-			await _owner.DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_ManageFailed, AppResources.Common_Ok);
+			await LockHolds.WhileAsync("alert", () => _owner.DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_ManageFailed, AppResources.Common_Ok));
 		}
 	}
 

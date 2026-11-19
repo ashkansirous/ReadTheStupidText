@@ -31,7 +31,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 # The three tabs, the one line, the books with their dots, and no way in (the shelf's pill is gone).
 - assertVisible:
@@ -41,11 +41,11 @@ onFlowComplete:
 - assertVisible:
     id: GallerySettings
 - assertVisible:
-    id: GalleryCornerLine
+    id: LockChip
 - assertVisible:
     id: TileMore
-- assertNotVisible:
-    id: GalleryGrownUps
+- assertVisible:
+    id: LockChip
 - assertVisible: "Child’s shelf"
 - takeScreenshot: shot-P2-corner
 - takeScreenshot: shot-T1-corner
@@ -58,7 +58,7 @@ onFlowComplete:
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: CornerTabBooks
 - assertNotVisible:
@@ -79,7 +79,7 @@ onFlowComplete:
       id: StoryTile
     timeout: 15000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: CornerTabBooks
 - tapOn:
@@ -93,26 +93,26 @@ onFlowComplete:
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 15000
 - assertVisible:
     id: GalleryStore
 - assertVisible:
     id: GallerySettings
 - assertVisible:
-    id: GalleryCornerLine
+    id: LockChip
 - assertVisible:
     id: StoryTile
 - takeScreenshot: shot-L1-corner
-# The coral pill leaves the corner (and so does Back on a tab): the kids' shelf, with the pill that goes the other way.
+# Slice 418: a tap on the lock locks at once (the coral pill is gone): the same shelf, locked, with no chip and no ••• on the covers.
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: StoryTile
     timeout: 15000
 - assertNotVisible:
-    id: CornerTabBooks
+    id: LockChip
 - assertNotVisible:
     id: TileMore

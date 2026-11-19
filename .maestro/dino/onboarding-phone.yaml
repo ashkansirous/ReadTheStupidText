@@ -1,9 +1,8 @@
-# Slice 362 (onboarding mock "Dino Reader 2026-11-13 Onboarding", frames N1 to N10): the whole first run on a phone held upright, one family language, from the language page to the child's shelf. Scripted only.
-# The test store lists the Hot book (The Three Little Pigs) first and ticks it for the grown-up (Decision 3), so card 1 is the second pick and the demo page is Pigs page 13 (Pop scared, Pim calm; record Pim).
-# Shots: shot-N1-language, shot-N2-languages, shot-N3-books, shot-N4a-listen, shot-N4d-listen-done, shot-N5-voice, shot-N6a-record, shot-N6b-recorded, shot-N7-thats-you, shot-N8a-welcome, shot-N8b-books, shot-N8b-store, shot-N8b-settings,
-# shot-N9-pointer, shot-N10-shelf, each beside the frame it names; the log markers below prove the order (the Windows keys and the two-pane frames are tools/desktop-vm/checks/dino-onboarding.ps1).
-# The microphone permission is granted at launch; the emulator's microphone gives silence or noise, which is enough for a file with a length.
-# Against the old first run the "Step 1 of 6" bar never shows and no [Onboarding] line is written, so this flow fails on a build from before this slice.
+# Slice 362, Slice 418 (onboarding mock "Dino Reader 2026-11-19 One Shelf with a Lock", frames NO1 to NO8): the whole first run on a phone held upright, one family language, from the language page to the locked shelf, five steps,
+# no corner tour. Scripted only. The test store lists the Hot book (The Three Little Pigs) first and ticks it for the grown-up (Decision 3), so card 1 is the second pick and the demo page is Pigs page 13 (Pop scared, Pim calm; record Pim).
+# Shots: shot-N1-language, shot-N2-languages, shot-N3-books, shot-N4a-listen, shot-N5-voice, shot-N6a-record, shot-N6b-recorded, shot-N7-thats-you, each beside the frame it names (NO1 to NO7; the contact-sheet manifest tools/emulator/screenshot-frames.json still lists the removed tour shots and the 2026-11-13 mock: a manifest update is owed); the log markers below prove the order
+# (the Windows keys and the two-pane frames are tools/desktop-vm/checks/dino-onboarding.ps1). The microphone permission is granted at launch; the emulator's microphone gives silence or noise, which is enough for a file with a length.
+# Against the old first run the "Step 1 of 5" bar never shows, so this flow fails on a build from before Slice 418; onboarding-skip.yaml is the Skip this step path.
 # layout-check
 # expect-log: HOOK test-store ok ok
 # expect-log: [Redesign] onboarding page=language shape=stack
@@ -11,15 +10,13 @@
 # expect-log: [FirstBooks] list listed=4 ticked=1 onShelf=0
 # expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=2
 # expect-log: [Onboarding] listen enter kind=Listen page=13
-# expect-log: [Onboarding] listen page-ended stage=First continue=True
+# expect-log: [Onboarding] listen page-ended continue=True
 # expect-log: [Onboarding] voice record opened lines=1
 # expect-log: [Record] finish
 # expect-log: [Onboarding] listen enter kind=HearYourself page=13
-# expect-log: [Onboarding] tour stop=Welcome
-# expect-log: [Onboarding] tour stop=Store
-# expect-log: [Onboarding] tour stop=ChildShelf
+# expect-log: [Onboarding] route voice done tried=True
 appId: uk.sirous.dinoreader.dbg
-name: First run on a phone, language to the child's shelf
+name: First run on a phone, language to the locked shelf
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
@@ -33,10 +30,10 @@ name: First run on a phone, language to the child's shelf
 - extendedWaitUntil:
     visible:
       id: FirstRunLanguage
-    timeout: 25000
-- assertVisible: "Step 1 of 6 · Language"
+    timeout: 60000
+- assertVisible: "Step 1 of 5 · Language"
 - assertVisible: "Hello! Which language should Dino use?"
-- assertVisible: "For the app’s buttons and words. You can change it later in the grown-ups’ corner."
+- assertVisible: "For the app’s buttons and words. You can change it later in Settings."
 - takeScreenshot: shot-N1-language
 - tapOn:
     text: "Continue"
@@ -51,7 +48,7 @@ name: First run on a phone, language to the child's shelf
     visible:
       id: OnboardingLanguages
     timeout: 15000
-- assertVisible: "Step 2 of 6 · Story languages"
+- assertVisible: "Step 2 of 5 · Story languages"
 - assertVisible: "Which languages does your family read in?"
 - assertVisible: "Why more than one?"
 - assertVisible: "App language · always on"
@@ -64,7 +61,7 @@ name: First run on a phone, language to the child's shelf
     visible:
       id: FirstBooksPicker
     timeout: 30000
-- assertVisible: "Step 3 of 6 · Books"
+- assertVisible: "Step 3 of 5 · Books"
 - assertVisible: "Pick 1 more"
 - assertVisible: "Get these books"
 - takeScreenshot: shot-N3-books
@@ -74,12 +71,14 @@ name: First run on a phone, language to the child's shelf
 - tapOn:
     id: FirstBooksContinue
     waitToSettleTimeoutMs: 300
-# N4a, N4d: Dino reads the demo page by itself; with one family language there is no language bar and Continue wakes when the page ends.
+# NO4: Dino reads the demo page by itself, once, in Dino's language: no language bar and no bubble, and Continue wakes when the page ends.
 - extendedWaitUntil:
     visible:
       id: OnboardingListen
     timeout: 60000
-- assertVisible: "Step 4 of 6 · Listen"
+- assertNotVisible:
+    id: OnboardingBubble
+- assertVisible: "Step 4 of 5 · Listen"
 - assertVisible: "Listen to Dino read"
 - assertVisible: "Every character has its own voice, and Dino reads with feeling."
 - takeScreenshot: shot-N4a-listen
@@ -98,22 +97,24 @@ name: First run on a phone, language to the child's shelf
     visible:
       id: OnboardingVoice
     timeout: 15000
-- assertVisible: "Step 5 of 6 · Your voice"
+- assertVisible: "Step 5 of 5 · Your voice"
 - assertVisible: "Be the voice of a character"
 - assertVisible: "Your voice stays on this phone"
 - assertVisible: "Dino will ask for the microphone."
 - assertVisible: "Record Pim’s lines"
+- assertVisible: "Skip this step"
 - takeScreenshot: shot-N5-voice
 - tapOn:
     id: OnboardingRecord
     waitToSettleTimeoutMs: 300
-# N6a: Pim's lines on that page only, no Skip and no Done.
+# NO6: Pim's lines on that page only, no Done; the same "Skip this step" link at the bottom (the per-line Skip of the ordinary record page is still absent).
 - extendedWaitUntil:
     visible:
       id: RecordButton
     timeout: 30000
 - assertVisible: "Pim’s lines"
 - assertVisible: ".*Line 1 of .*"
+- assertVisible: "Skip this step"
 - assertNotVisible:
     id: RecordSkip
 - assertNotVisible:
@@ -154,13 +155,14 @@ name: First run on a phone, language to the child's shelf
           id: RecordNext
           optional: true
           waitToSettleTimeoutMs: 600
-# N7: "That's you!", the coral chip, Play again and Continue; Continue deletes the try.
+# NO7: "That's you!", the coral chip, Play again and Start reading; Start reading deletes the try and ends setup.
 - extendedWaitUntil:
     visible:
       id: OnboardingHearYourself
     timeout: 30000
 - assertVisible: "That’s you!"
 - assertVisible: "Play again"
+- assertVisible: "Start reading"
 - takeScreenshot: shot-N7-thats-you
 - tapOn:
     id: OnboardingPlayAgain
@@ -168,69 +170,18 @@ name: First run on a phone, language to the child's shelf
 - tapOn:
     id: OnboardingContinue
     waitToSettleTimeoutMs: 500
-# N8a: the welcome card over the Books tab.
+# NO8: straight on the locked shelf, with no card and no tour: the lock, no chip, no "..." on the covers.
 - extendedWaitUntil:
     visible:
-      id: TourWelcome
+      id: StoryTile
     timeout: 30000
-- assertVisible: "This is the grown-ups’ corner"
-- assertVisible: "Get books in the Store"
-- assertVisible: "Manage your books"
-- assertVisible: "Change the settings"
-- takeScreenshot: shot-N8a-welcome
-- tapOn:
-    id: TourShowAround
-    waitToSettleTimeoutMs: 600
-# N8b: each tab lifted with its tip and "n of 3". Android Back does nothing during the tour.
-- extendedWaitUntil:
-    visible:
-      id: TourTip
-    timeout: 10000
-- assertVisible: "1 of 3"
-- takeScreenshot: shot-N8b-books
-- pressKey: back
 - assertVisible:
-    id: TourTip
-- tapOn:
-    id: TourNext
-    waitToSettleTimeoutMs: 800
-- assertVisible: "2 of 3"
-- assertVisible: "The Store"
-- takeScreenshot: shot-N8b-store
-- tapOn:
-    id: TourNext
-    waitToSettleTimeoutMs: 800
-- assertVisible: "3 of 3"
-- takeScreenshot: shot-N8b-settings
-- tapOn:
-    id: TourNext
-    waitToSettleTimeoutMs: 800
-# N9: the Child's shelf pill lifted, with its tip.
-- extendedWaitUntil:
-    visible:
-      id: TourShelfTip
-    timeout: 10000
-- assertVisible: "See your child’s shelf"
-- assertVisible: "Last step"
-- takeScreenshot: shot-N9-pointer
-- tapOn:
-    id: TourShowMe
-    waitToSettleTimeoutMs: 800
-# N10: the child's shelf under a lighter scrim, the last card.
-- extendedWaitUntil:
-    visible:
-      id: TourChildShelf
-    timeout: 15000
-- assertVisible: "This is your child’s shelf"
-- takeScreenshot: shot-N10-shelf
-- tapOn:
-    id: TourStartReading
-    waitToSettleTimeoutMs: 800
+    id: GalleryLock
 - assertNotVisible:
-    id: TourChildShelf
-- assertVisible:
-    id: StoryTile
-# Later launches open on the shelf, with no onboarding and no tour.
+    id: LockChip
+- assertNotVisible:
+    id: TileMore
+# Later launches open on the shelf, with no onboarding.
 - launchApp:
     # launchApp-restart: the saved onboarding step is read at start-up, so only a fresh start proves a later launch opens on the shelf.
     stopApp: true
@@ -238,7 +189,5 @@ name: First run on a phone, language to the child's shelf
     visible:
       id: StoryTile
     timeout: 60000
-- assertNotVisible:
-    id: TourWelcome
 - assertNotVisible:
     id: FirstRunLanguage

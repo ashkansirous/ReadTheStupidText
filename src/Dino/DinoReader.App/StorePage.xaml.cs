@@ -554,6 +554,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	// did, the store is read again and every row and the card follow it (a subscription that started opens the paid books for download at once).
 	private async Task SubscribeAsync(string plan)
 	{
+		UiUsage.NoteGrownUp(); // an uncounted press inside the Store is still a grown-up tap (Slice 418 decision 13)
 		HideRestoreMessage();
 		bool withTrial = _planShowsTrial; // the buy follows what the card promised (review 4): an Ended card shows no trial, so the sheet starts none
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
@@ -893,7 +894,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			return; // the tab is not on a window (it was torn down)
 		}
 
-		string? picked = await page.DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]);
+		string? picked = await LockHolds.WhileAsync("author sheet", () => page.DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]));
 		if (picked is null || !choices.TryGetValue(picked, out string? chosen))
 		{
 			return;
@@ -1004,7 +1005,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	}
 
 	private Task AlertAsync(string message) =>
-		Window?.Page is { } page ? page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok) : Task.CompletedTask;
+		Window?.Page is { } page ? LockHolds.WhileAsync("alert", () => page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok)) : Task.CompletedTask;
 
 	private async void OnRestorePurchasesClicked(object? sender, EventArgs e)
 	{

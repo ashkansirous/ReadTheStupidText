@@ -34,7 +34,7 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 # Slice 253 item 2: the picture the contact sheet (tools/emulator/contact-sheet.ps1) puts beside mock frame 110.
 - takeScreenshot: shot-KL1-shelf
 # Into the corner while still sideways: the rail carries the one line and the way back.
@@ -44,10 +44,10 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - assertVisible:
-    id: GalleryCornerLine
+    id: LockChip
 - assertVisible:
     id: GalleryStore
 - assertVisible:
@@ -75,11 +75,11 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
     id: BookSheetClose
     waitToSettleTimeoutMs: 300
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 - assertVisible:
-    id: GalleryCornerLine
-- assertNotVisible:
-    id: GalleryGrownUps
+    id: LockChip
+- assertVisible:
+    id: LockChip

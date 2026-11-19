@@ -76,7 +76,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 # Slice 404, Decision 3: the four test books stay under the eight newer imports on a 12-book shelf, so Three Little Pigs is below the fold (iOS run 44429604107); scroll to it.
 - scrollUntilVisible:
@@ -157,7 +157,7 @@ onFlowComplete:
       tab: books
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000

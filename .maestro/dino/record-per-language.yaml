@@ -57,7 +57,7 @@ name: Record a book in each story language and read it back in each
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     text: ".*Three Little Pigs.*"
@@ -174,7 +174,7 @@ name: Record a book in each story language and read it back in each
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 20000
 # One take in each language, both with files.
 - launchApp:
@@ -184,11 +184,11 @@ name: Record a book in each story language and read it back in each
       id: three-little-pigs
       clips: "2"
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 20000
 # Read in English: the language button is on the recorded book and the English take plays.
 - launchApp:
@@ -234,7 +234,7 @@ name: Record a book in each story language and read it back in each
 - back
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 20000
 - launchApp:
     stopApp: false

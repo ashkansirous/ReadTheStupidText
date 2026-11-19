@@ -30,7 +30,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 # Backup (146): the two cards are both on screen upright.
 - tapOn:

@@ -1,0 +1,105 @@
+# Slice 418 decision 2 (mock 2026-11-19 frames NO5, NO6, NO8): the recording step can be skipped. "Skip this step" sits under Record on the voice intro and at the bottom of the recording page, the same link; it deletes whatever was
+# recorded so far and ends setup on the locked shelf. This flow checks the link on the intro, opens the recording page, records one line and skips from there, so the try's deletion is on the path.
+# The test store ticks The Three Little Pigs for the grown-up, so card 1 is the second pick and the demo page is Pigs page 13 (record Pim). Scripted only.
+# Against a build with no Skip link the "Skip this step" id never shows, so this flow fails there.
+# layout-check
+# expect-log: HOOK test-store ok ok
+# expect-log: [Onboarding] voice record opened lines=1
+# expect-log: [Onboarding] route voice done tried=False
+appId: uk.sirous.dinoreader.dbg
+name: First run, Skip this step on the voice intro and on the recording page
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: OnboardingVoice
+    commands:
+      - tapOn:
+          id: OnboardingContinue
+          optional: true
+          waitToSettleTimeoutMs: 1500
+# NO5: the link is under Record; the subtitle ends "You can skip this."
+- extendedWaitUntil:
+    visible:
+      id: OnboardingVoice
+    timeout: 15000
+- assertVisible: ".*You can skip this."
+- assertVisible:
+    id: OnboardingSkipStep
+# NO6: open the recording page, record one line, then skip from there.
+- tapOn:
+    id: OnboardingRecord
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 30000
+- assertVisible:
+    id: OnboardingSkipStep
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 8000
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 600
+- tapOn:
+    id: OnboardingSkipStep
+    waitToSettleTimeoutMs: 800
+# NO8: straight on the locked shelf, no card, no "That's you".
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- assertNotVisible:
+    id: OnboardingHearYourself
+- assertVisible:
+    id: GalleryLock
+- assertNotVisible:
+    id: LockChip
+- assertNotVisible:
+    id: TileMore

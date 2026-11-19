@@ -45,7 +45,7 @@ name: Cancelling a stalled audio pack download ends it as cancelled and keeps no
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings

@@ -40,7 +40,7 @@ onFlowComplete:
       tab: store
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 # The Store tab, upright: the books are gone from the content area, the tab bar and the coral pill stay; no back arrow and no Done; the sub-line "Picked and cast for Dino" is under the title.
 - extendedWaitUntil:
@@ -70,7 +70,7 @@ onFlowComplete:
 - assertVisible:
     id: GalleryStoreSub
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - takeScreenshot: shot-T2-store
 # Settings: the list beside the rail; a row opens its page inside, with the back arrow and no Done.
 - tapOn:
@@ -94,7 +94,7 @@ onFlowComplete:
 - assertNotVisible:
     id: GrownUpDoneReadingSpeedPage
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: GalleryStore
 # The back arrow returns to the list; the rail stays.
@@ -105,6 +105,6 @@ onFlowComplete:
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: GalleryStore
