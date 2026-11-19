@@ -77,6 +77,12 @@ extension (traced in B3: both are called on a book's `pictures` and `translation
     breaks the decision "kept exactly as Gemini downloads it". Part D needs a save path that moves the file untouched.
     Fixed: `-Untouched` moves the download byte for byte (keeping Gemini's own file type) and only reads its size for the
     3:4 warning. Part D saves every high-res picture with `-Untouched`; the app's own pictures keep the JPEG q95 save.
+  - [ ] A7. **3.1 Pro is gone from Gemini (found 2026-11-19).** The picker now shows 4 Hydrogen (Everyday help), 4 Neon (Deeper analysis) and 4 Carbon (locked). User answer (2026-11-19): "test the neon vs hydrogen and old pro". Test (narrowed by the user the same day: "we already have the images from old pro and hydrogen. just generate 2-3 images with neon and compare"): lion-and-mouse pages 5 and 2 on 4 Neon only, one chat each, compared with A5's round-3 Pro and Hydrogen files (session f7f59fb2 scratchpad `s350-test/t3-*`), with pixel and file size and the line70 copy. Then stop for the user's pick; Part D waits on it.
+    **User's pick (2026-11-19): 4 Hydrogen** ("hydrogen is the one to choose for generating the images"), after the Neon
+    samples (lion p5 chat b8f6e2a7b402e2c8, p2 chat 07f67a02928b7465, pigs p16 chat 25db64002f4bcbef; sheet in session
+    c1bcd59c's scratchpad `model-test/`). From here on every Part D picture is drawn on 4 Hydrogen (replaces "3.1 Pro" in D1);
+    pictures already accepted on 3.1 Pro stay.
+  - [x] A7 done.
 - [ ] B. Guard rails, before the first picture is committed:
   - [x] B1. In `.gitattributes`: `content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text`. Check that `.lfsconfig` keeps these files out of normal fetches and CI checkouts, as it does for audio.
   - [x] B2. In `.github/scripts/ship-targets.mjs`, make sure a change under `content/dino/<book>/high-res/**` maps to no ship target, so it doesn't start a store upload. Add a test case if the script has tests.
