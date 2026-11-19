@@ -321,7 +321,8 @@ run_flow() {
     run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" maestro --device "$udid" hierarchy || true
     echo "::endgroup::"
   fi
-  [ "$rc" = "0" ] || print_hook_log "$udid" "$bundle_id"
+  # Time-limited like the hierarchy dump: simctl can hang on a simulator whose run loop hung (review pass 1, finding 2).
+  [ "$rc" = "0" ] || run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" print_hook_log "$udid" "$bundle_id" || true
   LIMIT_HIT="$killed"
   return "$rc"
 }
