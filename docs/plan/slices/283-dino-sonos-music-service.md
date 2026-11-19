@@ -84,8 +84,15 @@ skipped, not fatal. Nothing is logged (`worker/CLAUDE.md:24`). Tests: worker sui
 - 2026-11-06 `s283-medium.md`: 1 no change needed, already cached by `currentEntries`, test added; 4 applied (Body action only). Skipped, low: 2 (comment before action element), 3 (CDATA/char refs in `<id>`), 5 (unsupported actions fault), 6 (count clamped to 500), 7 (primary-language title fallback), 8 (canonical host: the endpoint is registered on the canonical host).
 - 2026-11-06 `s283-check1.md`: 1 applied (Body action only), 6 applied (malformed entry skipped). Skipped: 5 (log on the blanket catch; `worker/CLAUDE.md:24` forbids logging); 2, 3, 4 low (comment/CDATA before the action, `\b` match on `id-x`, empty author).
 - 2026-11-06 `s283-check2.md`: all five low, skipped (repeats of the above, track-id getMetadata gives ItemNotFound, unauthenticated POST amplification bounded by the 60 s cache).
-- 2026-11-19 `s283cold-high.md`: applied 1, 2, 3, 4, 5, 9. Skipped, low: 6 (the first call in a colo with nothing held still waits for a full build; recorded under *Built*), 7 (200 parallel R2 gets may queue at the platform limit; to be measured on a real colo, not capped now), 8 (no Cache API on workers.dev, `serveSonos` wiring untested).
-- 2026-11-19 `s283cold-medium.md`: applied 1 (Sonos has its own isolate store `sharedCache`, tested), 2 (meta reads bounded at 24, F3 reworded), 4 (own list older than 5 min is not held). Skipped, low: 3 (`held === null` before the back-off check: R2 down with nothing ever held is rare and each call must still try, else the first Sonos call would fail for 30 s after one blip), 5 (no Cache API on workers.dev: the cold-call check applies on the custom host `dinoreader.sirous.uk`), 6 (first call in a colo with nothing held still waits for a full build; recorded under *Built* and *Not yet verified*).
+- 2026-11-19 high (`reviews/s283cold-high.md`): applied 1, 2, 3, 4, 5, 9.
+- Skipped #6 (`reviews/s283cold-high.md`): the first call in a colo with nothing held still waits for a full build - low; recorded under *Built*.
+- Skipped #7 (`reviews/s283cold-high.md`): parallel R2 gets may queue at the platform limit - low; bounded at 24 by medium #2.
+- Skipped #8 (`reviews/s283cold-high.md`): no Cache API on workers.dev, `serveSonos` wiring untested - low; the cold-call check runs on the custom host.
+- 2026-11-19 medium (`reviews/s283cold-medium.md`): applied 1 (Sonos has its own isolate store `sharedCache`, tested), 2 (meta reads bounded at 24, F3 reworded), 4 (own list older than 5 min is not held).
+- Skipped #3 (`reviews/s283cold-medium.md`): no back-off when nothing is held - low; each call must still try R2, else the first Sonos call would fail for 30 s after one blip.
+- Skipped #5 (`reviews/s283cold-medium.md`): no Cache API on workers.dev - low; the cold-call check applies on the custom host `dinoreader.sirous.uk`.
+- Skipped #6 (`reviews/s283cold-medium.md`): first call in a colo with nothing held waits for a full build - low; recorded under *Built* and *Not yet verified*.
+- 2026-11-19 check (`reviews/s283cold-check1.md`): 9 low/trivial findings, none applied (doc wording, untested Cache API wiring, non-atomic compare-and-put; none changes behaviour Sonos relies on).
 
 ## Waiting on the user (their login)
 
