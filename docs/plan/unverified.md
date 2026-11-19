@@ -77,6 +77,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 419: Dino usage events to Ninjalog ([slice](slices/419-dino-usage-events-to-ninjalog.md))
+- [session] After the merge deploys: first live event appears in `index=dino_usage` in Ninjalog with named fields and the same count as `dino_usage`.
+- [session] Which document field Ninjalog uses as event time (the timestamp is the batch receive time; order within a session by `seq`/`sinceLaunch`).
+- [session] The funnel query returns rows for real first launches and the dashboard widgets show data (both parse; no rows yet).
+
 ### Slice 413: Dino store name, subtitle and keywords in 14 languages ([slice](slices/413-dino-store-name-13-languages.md))
 - [owner] **You:** native read of the new Dino name, subtitle, keyword field, Play short description and Microsoft search terms in `docs/store-listings/dino/<lang>.md`, one language at a time: ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh (all machine drafts; Farsi has no App Store entry). The same texts are on the editable App Store version 1.133.1 (not submitted); Microsoft and Play are repo-only.
 

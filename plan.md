@@ -43,7 +43,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 413 | Dino: the new store name, subtitle and keywords in the other 13 languages, in each language's own search words (after 412) | planned | | | [413-dino-store-name-13-languages.md](docs/plan/slices/413-dino-store-name-13-languages.md) |
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
 | 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | planned | | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
-| 419 | Dino: every usage event also goes to Ninjalog (EU log search), with a new-user funnel, session timelines and a "where new users stop" dashboard; no install id (Decision 140 stands) | planned | | | [419-dino-usage-events-to-ninjalog.md](docs/plan/slices/419-dino-usage-events-to-ninjalog.md) |
 
 ### Shared
 
@@ -104,7 +103,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 526 checks across 189 slices (Read The Stupid Text 29, Dino Reader 324, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 529 checks across 190 slices (Read The Stupid Text 29, Dino Reader 327, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 
 **Needs you (checked 2026-11-19). Nothing else in this file waits on you.**
 
