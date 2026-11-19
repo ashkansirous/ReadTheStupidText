@@ -391,6 +391,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
 - **You:** Sonos Self Test passes.
 - **You:** A real play on a Sonos speaker.
+- **Device:** A cold `/sonos` call from a far colo under 1.5 s (EWR first calls 1.6-2.1 s on 2026-11-19).
 
 ### Slice 281: Dino: one listening track per store book and language ([slice](slices/281-dino-listening-tracks.md))
 - **Device:** `curl -I` and a ranged `curl -r 0-1023` on a live track answer 200 and 206 with `audio/mp4`.

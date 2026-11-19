@@ -169,11 +169,18 @@ stale fallback, and `refreshEntries` swallows the error unlogged. The 10 s timeo
 integration". Self Test needs a Secret token even for Anonymous; "anonymous" typed as a dummy. Full Test Suite
 7ce77187-abd6-4395-9104-3c2236c9b126 Failed (per-test texts in its Download results). Case 09396143: still New, no reply.
 
+**Progress 2026-11-19:** fixes F1-F5 merged #1290, deployed 2026-11-19 01:23:39 UTC. Add to Sonos now works on the S21
+(~01:00 UTC): "Setup complete", browse shows 8 languages, English 6 books, after the Service Configuration was re-sent at
+00:48. Case 09396143 updated 00:52 with the test JSON attached. A Self Test rerun queued 01:32 UTC stayed "In Progress" on
+Sonos's side (our Worker answered every call, logs 01:32:08-01:33:26). Left: a real play on the speaker (Living Room was
+playing the user's music), the Self Test result, Sonos's answer on the auth tests, the production submission.
+
 ## Not yet verified
 
 - Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
 - Sonos Self Test passes.
 - A real play on a Sonos speaker.
+- A cold `/sonos` call from a far colo under 1.5 s (EWR first calls 1.6-2.1 s on 2026-11-19).
 
 #### For CLAUDE.md (lifted 2026-11-07; already in worker/CLAUDE.md from the slice PR)
 
