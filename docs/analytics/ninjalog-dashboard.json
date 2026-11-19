@@ -5,27 +5,27 @@
   "widgets": [
     {
       "id": "first-launches",
-      "title": "First launches per day, by platform",
+      "title": "First launches, by platform",
       "x": 0, "y": 0, "w": 6, "h": 4,
-      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first name=app_opened | timechart span=1d count by platform",
+      "query": "index=dino_usage installAge=first name=app_opened platform!=sonos platform!=alexa | timechart count by platform",
       "range": "7d",
       "viz": "timechart",
-      "options": {}
+      "options": { "legend": "bottom" }
     },
     {
       "id": "listening-seconds",
-      "title": "Seconds listened per day",
+      "title": "Seconds listened (app)",
       "x": 6, "y": 0, "w": 6, "h": 4,
-      "query": "index=dino_usage platform!=sonos platform!=alexa name IN (\"read_paused\",\"read_stopped\") seconds>=0 | timechart span=1d sum(seconds)",
+      "query": "index=dino_usage name IN (read_paused, read_stopped) seconds>=0 platform!=sonos platform!=alexa | timechart sum(seconds) as seconds",
       "range": "7d",
       "viz": "timechart",
-      "options": {}
+      "options": { "unit": "seconds" }
     },
     {
       "id": "funnel",
-      "title": "First-launch funnel (sessions), by platform and version",
-      "x": 0, "y": 4, "w": 12, "h": 5,
-      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first | stats count(eval(name=\"app_opened\")) as opened, count(eval(name=\"intro_ended\")) as onboarded, count(eval(name=\"book_opened\")) as book_opened, count(eval(name=\"read_started\")) as read_started, count(eval(name=\"book_listened\")) as listened_30s by session, platform, version | stats count as sessions, count(eval(onboarded>0)) as onboarded, count(eval(book_opened>0)) as book_opened, count(eval(read_started>0)) as read_started, count(eval(listened_30s>0)) as listened_30s by platform, version",
+      "title": "First-launch funnel (sessions), by platform",
+      "x": 0, "y": 4, "w": 12, "h": 4,
+      "query": "index=dino_usage installAge=first platform!=sonos platform!=alexa | stats count(eval(name=\"intro_ended\")) as onb, count(eval(name=\"book_opened\")) as bo, count(eval(name=\"read_started\")) as rs, count(eval(name=\"book_listened\")) as l30 by session, platform | eval onboarded=if(onb>0,1,0), book_opened=if(bo>0,1,0), read_started=if(rs>0,1,0), listened_30s=if(l30>0,1,0) | stats count as sessions, sum(onboarded) as onboarded, sum(book_opened) as book_opened, sum(read_started) as read_started, sum(listened_30s) as listened_30s by platform",
       "range": "7d",
       "viz": "table",
       "options": {}
@@ -33,20 +33,20 @@
     {
       "id": "where-stopped",
       "title": "Where first sessions stopped (last screen and event)",
-      "x": 0, "y": 9, "w": 8, "h": 5,
-      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first | sort session, sinceLaunch, seq | stats last(screen) as last_screen, last(name) as last_event by session | stats count by last_screen, last_event | sort -count",
+      "x": 0, "y": 8, "w": 8, "h": 5,
+      "query": "index=dino_usage installAge=first platform!=sonos platform!=alexa | eventstats max(seq) as lastseq by session | where seq == lastseq | stats count by screen, name",
       "range": "7d",
       "viz": "table",
-      "options": {}
+      "options": { "display": "table" }
     },
     {
       "id": "fallbacks",
-      "title": "Fallbacks per day",
-      "x": 8, "y": 9, "w": 4, "h": 5,
-      "query": "index=dino_usage name=fallback | timechart span=1d count",
+      "title": "Fallbacks, by reason",
+      "x": 8, "y": 8, "w": 4, "h": 5,
+      "query": "index=dino_usage name=fallback | timechart count by detail",
       "range": "7d",
       "viz": "timechart",
-      "options": {}
+      "options": { "stacking": "normal", "imputation": "zero" }
     }
   ]
 }

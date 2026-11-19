@@ -111,8 +111,19 @@ DPA page was found on ninjalog.dev (all 404).
 - [x] 8. **Dashboard** (file written; not yet uploaded) (`docs/analytics/ninjalog-dashboard.json`, format `/docs/dashboards`): "New users": first
       launches per day by platform, the funnel table, where first sessions stopped, fallbacks per day, listening
       seconds per day. Created in the project and kept in the repo.
-- [ ] 9. **Alert:** fallback rows over a threshold in an hour (threshold from the last 30 days' data), notify the
-      owner by email if Ninjalog offers it.
+- [x] 9. **Alert:** fallback rows over a threshold in an hour (threshold from the last 30 days' data), notify the
+      owner by email if Ninjalog offers it. **Done 2026-11-19:** the busiest hour in `dino_usage` over 30 days had 11
+      fallbacks (2026-11-18 14:00 UTC), so the alert "Dino fallbacks spike (over 20 in the window)" is
+      `index=dino_usage name=fallback | stats count | where count > 20` over 1 hour, group `default` (email to all
+      project members). https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/alerts
+
+**After the merge (2026-11-19, this session):** deploy of 21f4925a: Workers Builds `completed success`. Token
+checked with one test document to index `smoke` (HTTP 200, found in Search). No production count arrived in
+`dino_usage` between the deploy (21:29 UTC) and 21:45 UTC (Analytics Engine query), so the first forwarded
+event is not seen yet. Every query was run in Search and fixed where the engine refused it (rules in
+`docs/analytics/ninjalog-queries.md`: no `sort` on raw events, `count(eval())` only in the first aggregation,
+`span=` automatic, no `last()`); the dashboard was uploaded and opens at
+https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users (five widgets, "no data" until events arrive).
 
 ## Verification
 
@@ -136,6 +147,4 @@ Not user-facing (privacy page text is in `site/dino/privacy.html`).
 
 - [session] After the merge deploys: first live event appears in `index=dino_usage` in Ninjalog with named fields and the same count as `dino_usage`.
 - [session] Which document field Ninjalog uses as event time (the timestamp is the batch receive time; order within a session by `seq`/`sinceLaunch`).
-- [session] Run the queries in `docs/analytics/ninjalog-queries.md` against live data.
-- [session] Upload `docs/analytics/ninjalog-dashboard.json` and see it show the last 7 days.
-- [session] Item 9, the fallback alert, is not built; threshold needs live data.
+- [session] The funnel query returns rows for real first launches and the dashboard widgets show data (both parse; no rows yet).
