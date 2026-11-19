@@ -38,7 +38,7 @@ NOG MEER
 - Neem elk personage op, op elke pagina, in elke verhaaltaal; maak een back-up en herstel je opnames.
 
 TALEN
-Engels, Arabisch, Chinees, Deens, Nederlands, Perzisch, Fins, Frans, Duits, Japans, Noors, Portugees, Russisch, Spaans en Zweeds: de app, de verhalen en de stemmen.
+Engels, chinees, spaans, arabisch, frans, portugees, russisch, duits, japans, perzisch, nederlands, zweeds, deens, fins en noors: de app, de verhalen en de stemmen.
 
 VEILIG EN PRIVÉ
 - Geen reclame en geen account. We bewaren niets over jou of je aankoop; het bewijs van de winkel wordt gecontroleerd en vergeten.
@@ -65,7 +65,7 @@ VERHALEN EN PRIJZEN
 Vier geïllustreerde verhalen zijn gratis: De leeuw en de muis, Het peperkoekmannetje, De drie biggetjes en X markeert de schat. Elk ander verhaal op de plank kost 0,99 USD (Google Play toont de prijs in je eigen valuta). Een volwassene koopt een verhaal één keer, achter de volwassenenpoort, via Google Play, en kan eerdere aankopen op elk moment herstellen. Verhalen die je al hebt, blijven op je apparaat.
 
 VIJFTIEN TALEN
-De app, de verhalen en de stemmen zijn er in het Engels, Arabisch, Chinees, Deens, Nederlands, Perzisch, Fins, Frans, Duits, Japans, Noors, Portugees, Russisch, Spaans en Zweeds.
+De app, de verhalen en de stemmen zijn er in het Engels, chinees, spaans, arabisch, frans, portugees, russisch, duits, japans, perzisch, nederlands, zweeds, deens, fins en noors.
 
 GEMAAKT VOOR KINDEREN
 - Geen reclame.

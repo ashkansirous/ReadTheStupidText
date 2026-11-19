@@ -30,7 +30,7 @@ Description (<= 10000):
     Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the built-in story shelf is $0.99 each (the Store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, through the Microsoft Store, and can restore past purchases at any time. Stories you already have stay on your device.
 
     FIFTEEN LANGUAGES
-    English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish.
+    English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian.
 
     MADE FOR KIDS
     - No ads.
