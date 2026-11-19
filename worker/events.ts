@@ -617,13 +617,36 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
   return reply(204);
 }
 
-/** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
-export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
+/** Slice 419: a production count that was written to `dino_usage`, with its batch's context. */
+export interface WrittenCount {
+  readonly event: UsageEvent;
+  readonly context: BatchContext;
+}
+/** Slice 419: gets a production batch's written counts once it is answered (Ninjalog); never called for the beta route. */
+export type WrittenTee = (written: readonly WrittenCount[]) => void;
+
+const NO_CONTENT = 204;
+
+/** Calls the tee so that a throwing one can never change the answer (the counts are already written). */
+export function runTee(tee: WrittenTee | undefined, written: readonly WrittenCount[]): void {
+  try {
+    tee?.(written);
+  } catch {
+    // no-fallback: Ninjalog forwarding is best effort; a failing tee must never change the app's 204
+  }
+}
+
+/** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. `tee` gets the counts written to `DINO_USAGE` (never the beta route's) after a 204. */
+export async function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck, tee?: WrittenTee): Promise<Response> {
   const beta = isBetaPath(new URL(request.url).pathname);
-  return handleBatch(request, beta ? env.DINO_USAGE_BETA : env.DINO_USAGE, telemetryEnabled, (raw, context) => {
+  const written: WrittenCount[] = [];
+  const response = await handleBatch(request, beta ? env.DINO_USAGE_BETA : env.DINO_USAGE, telemetryEnabled, (raw, context) => {
     const event = parseEvent(raw);
+    if (event !== null && !beta) written.push({ event, context });
     return event === null ? null : toDataPoint(event, context);
   }, !beta);
+  if (response.status === NO_CONTENT && written.length > 0) runTee(tee, written);
+  return response;
 }
 
 // ---- Read The Stupid Text's phone counts (Slice 137, Decisions 143-145) -------------------------------------------------

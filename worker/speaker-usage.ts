@@ -5,8 +5,8 @@
 // Switched off with the apps' own switch (`telemetry.enabled`, passed in as the same check). Platform-neutral on purpose: the caller names the platform.
 // Like events.ts this file is kept free of enums and parameter properties so node's type stripping can run it in tests.
 
-import { LANGUAGE_PATTERN, MAX_SECONDS, NO_CONTEXT, NO_COUNT, NO_EXTRA_FIELDS, SHELF_SOURCE, countryOf, matches, requestCountry, toDataPoint } from "./events.ts";
-import type { TelemetryCheck, UsageEvent } from "./events.ts";
+import { LANGUAGE_PATTERN, MAX_SECONDS, NO_CONTEXT, NO_COUNT, NO_EXTRA_FIELDS, SHELF_SOURCE, countryOf, matches, requestCountry, runTee, toDataPoint } from "./events.ts";
+import type { TelemetryCheck, UsageEvent, WrittenTee } from "./events.ts";
 import { STORY_ID_PATTERN } from "./download-keys.mjs";
 
 export const SPEAKER_PLATFORM_SONOS = "sonos";
@@ -37,6 +37,8 @@ export interface SpeakerUsage {
   readonly telemetryEnabled: TelemetryCheck;
   /** Hands the counting to the runtime to finish after the answer is sent (the Worker's `ctx.waitUntil`). Without it the caller awaits the count. */
   readonly defer?: (work: Promise<unknown>) => void;
+  /** Slice 419: gets the row that was written, so Ninjalog can have it too (undefined when forwarding is off). */
+  readonly tee?: WrittenTee;
 }
 
 function wholeSecondsOrNone(seconds: number): number {
@@ -74,7 +76,9 @@ export async function recordSpeakerPlay(usage: SpeakerUsage | undefined, play: S
   const event = enabled ? speakerEvent(play, now) : null;
   if (event === null) return false;
   try {
-    usage.dataset.writeDataPoint(toDataPoint(event, { ...NO_CONTEXT, country: countryOf(requestCountry(request)) }));
+    const context = { ...NO_CONTEXT, country: countryOf(requestCountry(request)) };
+    usage.dataset.writeDataPoint(toDataPoint(event, context));
+    runTee(usage.tee, [{ event, context }]);
   } catch {
     // no-fallback: a failed count must never fail the listener's play; counts are best effort like the apps'
     return false;

@@ -147,7 +147,7 @@ stored with the counts (it can appear in the short server request log described 
 
 Counts are sent in small batches to this project's own server
 (`readthestupidtext.sirous.uk`) and stored in Cloudflare's Workers Analytics Engine
-(Cloudflare is the processor) for about three months, then deleted. As with any web request,
+(Cloudflare is the processor) for about three months, then deleted. The counts of Dino: Kids Books & Stories (never those of Read The Stupid Text), with the same fields and nothing more (no IP address, no install or device identifier), are also sent from the project's server to Ninjalog (app.ninjalog.dev, hosted in the European Union), a log search service that is a second processor for the project; it keeps them for 90 days, and the project reads them there as totals and as the timeline of one start of the app (the counts sharing a session number). As with any web request,
 the server sees your IP address while the request is handled; it is not stored with the
 counts and is not used for anything else (only the country it maps to, as described above). It can appear
 in the short server request log described below. The project can also switch counting off for everyone
@@ -237,6 +237,9 @@ language pack on every platform rather than bundled):
 - **Cloudflare** (Workers and Analytics Engine) — hosts this project's website and
   receives the anonymous usage counts described above on the phone apps; it is a
   processor for the project, and no count holds anything that identifies you.
+- **Ninjalog** (EU) — receives, from the project's server, the anonymous usage counts of
+  Dino: Kids Books & Stories (not the app itself) and keeps them for 90 days; a second
+  processor for the project.
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on every platform.
 - **Piper** (Persian voice) with **espeak-ng** data, and **MeloTTS** (Chinese
