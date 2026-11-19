@@ -1,0 +1,52 @@
+{
+  "slug": "new-users",
+  "name": "New users",
+  "defaultRange": "7d",
+  "widgets": [
+    {
+      "id": "first-launches",
+      "title": "First launches per day, by platform",
+      "x": 0, "y": 0, "w": 6, "h": 4,
+      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first name=app_opened | timechart span=1d count by platform",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {}
+    },
+    {
+      "id": "listening-seconds",
+      "title": "Seconds listened per day",
+      "x": 6, "y": 0, "w": 6, "h": 4,
+      "query": "index=dino_usage platform!=sonos platform!=alexa name IN (\"read_paused\",\"read_stopped\") seconds>=0 | timechart span=1d sum(seconds)",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {}
+    },
+    {
+      "id": "funnel",
+      "title": "First-launch funnel (sessions), by platform and version",
+      "x": 0, "y": 4, "w": 12, "h": 5,
+      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first | stats count(eval(name=\"app_opened\")) as opened, count(eval(name=\"intro_ended\")) as onboarded, count(eval(name=\"book_opened\")) as book_opened, count(eval(name=\"read_started\")) as read_started, count(eval(name=\"book_listened\")) as listened_30s by session, platform, version | stats count as sessions, count(eval(onboarded>0)) as onboarded, count(eval(book_opened>0)) as book_opened, count(eval(read_started>0)) as read_started, count(eval(listened_30s>0)) as listened_30s by platform, version",
+      "range": "7d",
+      "viz": "table",
+      "options": {}
+    },
+    {
+      "id": "where-stopped",
+      "title": "Where first sessions stopped (last screen and event)",
+      "x": 0, "y": 9, "w": 8, "h": 5,
+      "query": "index=dino_usage platform!=sonos platform!=alexa installAge=first | sort session, sinceLaunch, seq | stats last(screen) as last_screen, last(name) as last_event by session | stats count by last_screen, last_event | sort -count",
+      "range": "7d",
+      "viz": "table",
+      "options": {}
+    },
+    {
+      "id": "fallbacks",
+      "title": "Fallbacks per day",
+      "x": 8, "y": 9, "w": 4, "h": 5,
+      "query": "index=dino_usage name=fallback | timechart span=1d count",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {}
+    }
+  ]
+}
