@@ -67,9 +67,13 @@ in the separate repo ashkansirous/sirous.uk: src/data/products.ts, src/assets/pr
 
 6. [ ] Swap the site screenshots (`site/dino/*.webp` and the sirous.uk `src/assets/products/dino-reader*.webp`) for
    Slice 404's retaken English set (German shot 3) once it is in `docs/store-listings/screenshots/dino/` (review s417-high #4).
-7. [ ] The in-app iOS update button (`src/Dino/DinoReader.App/IosUpdateTarget.cs:14`) still opens the public TestFlight
+7. [x] The in-app iOS update button (`src/Dino/DinoReader.App/IosUpdateTarget.cs:14`) still opens the public TestFlight
    link, now switched off (item 4): point it at the App Store page `https://apps.apple.com/app/id6825053435` for every
    channel (review s417-high #1). App code: its own branch and the full review gate.
+   Built (2026-11-19, branch fix/s417-iosupd): `IosUpdateTarget.For` returns the App Store page and
+   `Update_OpenAppStore` for every channel; `TestFlightPage` removed; test now covers all three channels. Android has
+   no twin (its button opens Play). Left as nits (reviews s417u-high #1-6, s417u-medium #1-3): the now unused
+   `Update_OpenTestFlight` strings, stale comments in `StoreUpdater.ios.cs` and `UpdatePage.cs`, `For` ignoring its parameter.
 
 ## Not yet verified
 
