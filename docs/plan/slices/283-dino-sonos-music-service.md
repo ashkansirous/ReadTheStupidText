@@ -84,6 +84,8 @@ skipped, not fatal. Nothing is logged (`worker/CLAUDE.md:24`). Tests: worker sui
 - 2026-11-06 `s283-medium.md`: 1 no change needed, already cached by `currentEntries`, test added; 4 applied (Body action only). Skipped, low: 2 (comment before action element), 3 (CDATA/char refs in `<id>`), 5 (unsupported actions fault), 6 (count clamped to 500), 7 (primary-language title fallback), 8 (canonical host: the endpoint is registered on the canonical host).
 - 2026-11-06 `s283-check1.md`: 1 applied (Body action only), 6 applied (malformed entry skipped). Skipped: 5 (log on the blanket catch; `worker/CLAUDE.md:24` forbids logging); 2, 3, 4 low (comment/CDATA before the action, `\b` match on `id-x`, empty author).
 - 2026-11-06 `s283-check2.md`: all five low, skipped (repeats of the above, track-id getMetadata gives ItemNotFound, unauthenticated POST amplification bounded by the 60 s cache).
+- 2026-11-19 `s283cold-high.md`: applied 1, 2, 3, 4, 5, 9. Skipped, low: 6 (the first call in a colo with nothing held still waits for a full build; recorded under *Built*), 7 (200 parallel R2 gets may queue at the platform limit; to be measured on a real colo, not capped now), 8 (no Cache API on workers.dev, `serveSonos` wiring untested).
+- 2026-11-19 `s283cold-medium.md`: applied 1 (Sonos has its own isolate store `sharedCache`, tested), 2 (meta reads bounded at 24, F3 reworded), 4 (own list older than 5 min is not held). Skipped, low: 3 (`held === null` before the back-off check: R2 down with nothing ever held is rare and each call must still try, else the first Sonos call would fail for 30 s after one blip), 5 (no Cache API on workers.dev: the cold-call check applies on the custom host `dinoreader.sirous.uk`), 6 (first call in a colo with nothing held still waits for a full build; recorded under *Built* and *Not yet verified*).
 
 ## Waiting on the user (their login)
 
@@ -134,6 +136,31 @@ invalid-credential checks); MIME Type and Item Type "Not Applicable"; Authentica
 passed its getMetadata checks. Open (not yet explained): what made our endpoint time out and answer 500 at 16:10.
 A cold `/api/stories` catalogue read is the first suspect (`currentEntries`, 60 s cache); check Workers Logs for
 `/sonos` at 16:10 and time a cold call before Sonos review, since a real player has a timeout too.
+
+**Cause, likely (Workers Observability read 2026-11-19, token `CF_OBSERVABILITY_READ_TOKEN`):** Sonos's Self Test
+(UA "Sonos/1.0 (SMAPI Test Framework)", AWS Ashburn) reached colo NRT. Every cold `/sonos` call there took 3.3-4.2 s
+(16:10:01, :15, :19, :25, :30 UTC, all 200); cache hits 1-4 ms; 16:10:33.365 a cold call returned 500 after 2716 ms with
+no exception text; 16:09:14 one call was cancelled by the client after 3467 ms. The 16 fast 500s at 16:09:15-17 and
+16:10:03-06 are the invalid-credential faults (`sonos.ts:261` sends every fault as 500). From LHR a cold call is 0.55-0.7 s.
+Cold path: `sonos.ts` `loadTracks` → `handleStories` → `stories.ts` `currentEntries` → `buildEntries`: a full
+`bucket.list` then `meta.json` reads in sequential batches of 6 (`META_READ_BATCH`), cached per isolate for 60 s only, no
+stale fallback, and `refreshEntries` swallows the error unlogged. The 10 s timeout itself is not in the logs.
+
+**Fix (2026-11-19, the user: "why waiting for anyone?!"):**
+
+- [x] F1. Keep the last good catalogue and serve it when a rebuild fails or runs past about 3 s (stale-while-revalidate).
+- [x] F2. Keep the built catalogue in the Cache API (`caches.default`, about 5 min) with a `ctx.waitUntil` refresh, so a new isolate or colo does not rebuild on the request path.
+- [x] F3. `buildEntries` reads the `meta.json` files at a fixed concurrency of 24 (`META_READ_CONCURRENCY`, a sliding window), not all at once and not in sequential batches of 6; it applies to every caller (apps, Alexa, Sonos).
+- [x] F4. A failed catalogue rebuild is reported as one `console.warn` line with the error's name only (no ids or titles; the Worker has no fallback-event mechanism, and `worker/CLAUDE.md`'s Sonos paragraph now names this exception), so the next 500 shows its cause.
+- [x] F5. Tests for F1-F4 in the Worker's test suite; the stories API answer is unchanged.
+- Verify after the deploy: a cold `/sonos` call from a far colo stays under 1.5 s; the next Self Test's Sonos Cloud rows show no timeout.
+
+*Built (2026-11-19):* `worker/stories.ts` `currentEntries(bucket, runtime)`: an isolate list is fresh 60 s; with a `CatalogueRuntime` (`defer` = `ctx.waitUntil`, `shared` = `caches.default`) a list up to 5 min old (own or from the Cache API) is served at once while a rebuild runs after the answer; an older one is served when the rebuild fails or runs past 3 s (`REBUILD_BUDGET_MS`), and after a failure R2 is not tried again for 30 s (`REBUILD_BACKOFF_MS`). The Cache API copy has key `https://catalogue.internal/dino/stories-entries/v1` (`SHARED_SCHEMA_VERSION`, also in the body and checked entry by entry on read; a mismatch is ignored), is held at most 1 h, and an older build never overwrites a newer one. **Staleness bound:** isolate list fresh 60 s, up to 5 min served while refreshing, the shared copy at most 1 h; a delisted or newly paid book can show on Sonos for up to that long while the apps see it within 60 s. `buildEntries` reads `meta.json` 24 at a time (`META_READ_CONCURRENCY`; `META_READ_BATCH` removed). The Sonos path keeps its own isolate list (`sharedCache`), never the apps' `cache`, and ignores its own list once it is older than 5 min (the Cache API copy still serves up to 1 h on failure). A failed rebuild logs one line `catalogue rebuild failed: <ErrorName>` (error name only); Cache API failures log `shared read/write failed: <ErrorName>`. Only `/sonos` passes the runtime (`handleSonos` 6th argument, `index.ts` `serveSonos`); `/api/stories` for the apps and Alexa run `appEntries`, origin/main's code (60 s isolate cache, 503 on failure, no stale list, no shared copy). Tests: `worker/stories-catalogue.test.mjs`. Known gap: the first Sonos call in a colo with no shared copy and no isolate list still waits for a full build (no budget); the cold-call check below passes only after a colo is warmed once. Edited `worker/stories.ts` although the Touches line lists only the Sonos files: the brief named it.
+
+**Portal, 2026-11-19 00:48:** Sonos ID 126815808 already in Service Deployment Settings (PROD); Service Configuration
+(ID 2bdd04fd-f44d-424b-84a3-02c235c84823, Sandbox, DEVELOPMENT) sent again: "ICS has successfully received your
+integration". Self Test needs a Secret token even for Anonymous; "anonymous" typed as a dummy. Full Test Suite
+7ce77187-abd6-4395-9104-3c2236c9b126 Failed (per-test texts in its Download results). Case 09396143: still New, no reply.
 
 ## Not yet verified
 

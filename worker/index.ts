@@ -106,7 +106,9 @@ function serveSonos(request: Request, url: URL, env: Env & EventsEnv, site: Reso
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   // ctx.waitUntil is called as a method (destructuring it throws "Illegal invocation"); the play is counted after the answer is sent.
   const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
-  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
+  // Slice 283 F1/F2: the catalogue rebuild runs after the answer and its list is kept in the colo's Cache API.
+  const catalogue = { defer: usage.defer, shared: caches.default };
+  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, catalogue);
 }
 
 // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.
