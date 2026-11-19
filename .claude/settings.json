@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] || [ ! -f /opt/agent-board/scripts/usage-tick.mjs ] || node /opt/agent-board/scripts/usage-tick.mjs",
+            "timeout": 5
+          }
+        ],
+        "matcher": "startup|resume"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] || [ ! -f /opt/agent-board/scripts/usage-tick.mjs ] || node /opt/agent-board/scripts/usage-tick.mjs --force",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
