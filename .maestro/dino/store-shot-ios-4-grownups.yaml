@@ -15,7 +15,7 @@ name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
-# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts the whole live store on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
 # English, set explicitly (voice=0 starts no voice pack). Wait for a string only the English shelf shows (a previous flow may have left Farsi), not StoryTile.
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:

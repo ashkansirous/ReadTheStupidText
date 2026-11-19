@@ -15,7 +15,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
-# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts the whole live store on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000

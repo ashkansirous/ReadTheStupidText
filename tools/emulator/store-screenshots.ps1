@@ -84,8 +84,9 @@ function Confirm-EmulatorForDemo([int]$InstanceNumber) {
     & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $InstanceNumber | Out-Null
 }
 
-# Slice 404: the Dino full-shelf hook imports a PAID book from a package file, because the store refuses a paid download without a real receipt (no fake receipt, no live config). BookBuilder writes
-# artifacts/store/<id>/story-v<n>.dino (`dotnet run --project tools/dino/DinoReader.BookBuilder -- build`); this copies the newest package of every book into the app's data folder, files/full-shelf/<id>.dino
+# Slice 404: the Dino full-shelf hook imports a PAID book from a package file, because the store refuses a paid download without a real receipt (no fake receipt, no live config). Decision 5: a package is never built here;
+# .github/scripts/fetch-shelf-packages.mjs reads the one the store upload already stored (dinoreader/stories/<id>/story-v<n>.dino in the downloads bucket, through wrangler: a login on this PC or CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID) into artifacts/full-shelf/<id>/story-v<n>.dino, and this copies the newest package of every book into the app's data folder, files/full-shelf/<id>.dino
 # (the hook's FullShelfPlan.PackageFolder). The flow's first launch must not clear the app's data (it would delete them): the script clears it once, before the copy.
 $script:FullShelfDeviceTemp = '/data/local/tmp/full-shelf'
 $script:FullShelfAppFolder = 'files/full-shelf'
@@ -102,57 +103,15 @@ function Get-FullShelfPackages([string]$StoreRoot) {
     return @($books)
 }
 
-# Pure: the stems of the store and starter books (a starter such as Good Enough is paid in the live list, run 44411861765) under $ContentRoot (content/dino/<stem>/book.json with "kind": "Store" or "Starter") that have no story-v<n>.dino under $StoreRoot/<id> yet (the id is the book.json's own "id").
-function Get-MissingPackageStems([string]$ContentRoot, [string]$StoreRoot) {
-    $missing = foreach ($folder in Get-ChildItem $ContentRoot -Directory -ErrorAction SilentlyContinue) {
-        $jsonPath = Join-Path $folder.FullName 'book.json'
-        if (-not (Test-Path $jsonPath)) { continue }
-        $book = Get-Content $jsonPath -Raw | ConvertFrom-Json
-        if ($book.kind -notin 'Store', 'Starter' -or -not $book.id) { continue }
-        $built = Get-ChildItem (Join-Path $StoreRoot $book.id) -Filter 'story-v*.dino' -File -ErrorAction SilentlyContinue
-        if (-not $built) { $folder.Name }
-    }
-    return @($missing)
+# Pure: the node argument list that fetches the stored packages (the same script the iOS job runs) into $Folder.
+function Get-FetchShelfPackagesArguments([string]$RepoRoot, [string]$Folder) {
+    return @((Join-Path $RepoRoot '.github\scripts\fetch-shelf-packages.mjs'), $Folder)
 }
 
-# Pure: one git argument list per stem that pulls the book's Git LFS print-size pictures (content/dino/<stem>/high-res, kept out of a normal fetch by .lfsconfig); BookBuilder build refuses a book whose high-res folder holds only pointers (HighResPack.UnpulledProblem).
-function Get-LfsPullCommands([string[]]$Stems) {
-    foreach ($stem in $Stems) { , @('lfs', 'pull', '--include', "content/dino/$stem/high-res/**", '--exclude', '') }
-}
-
-# Runs each git LFS pull; returns the failure text naming the stem, or an empty string. $Run takes the git argument list and returns the exit code (a seam for the self-test).
-function Invoke-LfsPulls([string[]]$Stems, [scriptblock]$Run = { param($a) & git @a | Out-Host; $LASTEXITCODE }) {
-    $commands = @(Get-LfsPullCommands $Stems)
-    for ($i = 0; $i -lt $commands.Count; $i++) {
-        $code = & $Run $commands[$i]
-        if ($code -ne 0) { return "git lfs pull for $($Stems[$i]) (content/dino/$($Stems[$i])/high-res) exited $code" }
-    }
-    return ''
-}
-
-# Creates artifacts\store\<id> for each stem (the book.json's own id), so a failed build's cleanup never meets a missing folder.
-function New-StoreFolders([string]$ContentRoot, [string]$StoreRoot, [string[]]$Stems) {
-    foreach ($stem in $Stems) {
-        $book = Get-Content (Join-Path $ContentRoot "$stem\book.json") -Raw | ConvertFrom-Json
-        $null = New-Item -ItemType Directory -Force (Join-Path $StoreRoot $book.id)
-    }
-}
-
-# Builds the missing packages with BookBuilder (the same command the iOS script runs). Returns the failure text, or an empty string when every package is there afterwards.
-function Build-MissingPackages([string]$RepoRoot) {
-    $stems = @(Get-MissingPackageStems (Join-Path $RepoRoot 'content\dino') (Join-Path $RepoRoot 'artifacts\store'))
-    if ($stems.Count -eq 0) { return '' }
-    Write-Host "STORE SHOTS: building the missing book packages: $($stems -join ' ')"
-    Push-Location $RepoRoot
-    try {
-        $pullFailure = Invoke-LfsPulls $stems
-        if ($pullFailure) { return $pullFailure }
-        New-StoreFolders (Join-Path $RepoRoot 'content\dino') (Join-Path $RepoRoot 'artifacts\store') $stems
-        $buildOutput = dotnet run --project tools/dino/DinoReader.BookBuilder -- build @stems 2>&1
-        $buildExit = $LASTEXITCODE   # dotnet's own exit code, read before anything else runs (never after a pipe)
-        $buildOutput | Out-Host
-    } finally { Pop-Location }
-    if ($buildExit -ne 0) { return "BookBuilder build exited $buildExit for $($stems -join ' ')" }
+# Fetches the packages the store upload already stored (never builds one). Returns the failure text, or an empty string when the script exited 0. $Run takes the node argument list and returns the exit code (a seam for the self-test).
+function Invoke-FetchShelfPackages([string]$RepoRoot, [string]$Folder, [scriptblock]$Run = { param($a) & node @a | Out-Host; $LASTEXITCODE }) {
+    $code = & $Run (Get-FetchShelfPackagesArguments $RepoRoot $Folder)
+    if ($code -ne 0) { return "fetch-shelf-packages.mjs exited $code (it reads dinoreader/stories/<id>/story-v<n>.dino from the downloads bucket: run npm ci in the repo and be logged in to wrangler, or set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID)" }
     return ''
 }
 
@@ -258,10 +217,11 @@ Remove-OldStoreShots $names $roots
 Set-EmulatorInstance $instance
 try { Confirm-EmulatorForDemo ([int]$instance) } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)" }
 if ((Get-Content $flowFile -Raw) -match '(?m)^\s*cmd:\s*full-shelf\s*$') {
-    $buildFailure = Build-MissingPackages $repoRoot
-    if ($buildFailure) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but its book packages could not be built, no flow was run: $buildFailure"; exit 1 }
-    $packages = @(Get-FullShelfPackages (Join-Path $repoRoot 'artifacts\store'))
-    if ($packages.Count -eq 0) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but artifacts\store holds no package after the build."; exit 1 }
+    $shelfFolder = Join-Path $repoRoot 'artifacts\full-shelf'
+    $fetchFailure = Invoke-FetchShelfPackages $repoRoot $shelfFolder
+    if ($fetchFailure) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but the stored book packages could not be fetched, no flow was run: $fetchFailure"; exit 1 }
+    $packages = @(Get-FullShelfPackages $shelfFolder)
+    if ($packages.Count -eq 0) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but $shelfFolder holds no package after the fetch."; exit 1 }
     $appPackage = [regex]::Match((Get-Content $flowFile -Raw), '(?m)^appId:\s*(\S+)').Groups[1].Value
     $notInstalled = Get-AppNotInstalledProblem $appPackage
     if ($notInstalled) { Write-Host "STORE SHOTS: $notInstalled; no flow was run."; exit 1 }

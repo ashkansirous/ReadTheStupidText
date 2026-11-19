@@ -21,7 +21,7 @@ name: Store screenshot 1 of 5, reading, Dino Reader, iOS
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
-# Slice 404: every book of the live store on the shelf (the four test copies are replaced by the real ones; needs the network). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; a hook that finished before (the app's data kept it) ends at once; a flow cannot read the hook's log, so the wait below is on that title and 600 s (15 books one after another, each a package plus the audio packs, on a simulator link).
+# Slice 404: 12 books on the shelf (the four test books stay, eight more come from the live store and the packages it already stored; needs the network). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; a hook that finished before (the app's data kept it) ends at once; a flow cannot read the hook's log, so the wait below is on that title and 600 s (8 books one after another, each a package plus the audio packs, on a simulator link).
 - openLink: "dino-test://full-shelf"
 - extendedWaitUntil:
     visible: ".*Open in.*"

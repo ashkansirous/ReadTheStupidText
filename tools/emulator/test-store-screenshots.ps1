@@ -89,20 +89,11 @@ try {
     Assert-Equal 'the id is the folder name' 'aaa,bbb' (($found | ForEach-Object Id) -join ',')
     Assert-Equal 'a missing root is no package' 0 @(Get-FullShelfPackages (Join-Path $shelf 'nope')).Count
 } finally { Remove-Item $shelf -Recurse -Force -ErrorAction SilentlyContinue }
-$content = Join-Path ([IO.Path]::GetTempPath()) "missing-stems-test-$PID"
-try {
-    foreach ($b in @(@('built', 'id1', 'Store'), @('unbuilt', 'id2', 'Store'), @('starter', 'id3', 'Starter'))) {
-        $null = New-Item -ItemType Directory -Force (Join-Path $content "content\$($b[0])")
-        Set-Content (Join-Path $content "content\$($b[0])\book.json") "{ `"id`": `"$($b[1])`", `"kind`": `"$($b[2])`" }"
-    }
-    $null = New-Item -ItemType File -Force (Join-Path $content 'store\id1\story-v3.dino')
-    Assert-Equal 'an unbuilt store book and an unbuilt starter (paid in the live list) are missing a package, a built one is not' 'starter,unbuilt' ((Get-MissingPackageStems (Join-Path $content 'content') (Join-Path $content 'store')) -join ',')
-} finally { Remove-Item $content -Recurse -Force -ErrorAction SilentlyContinue }
-$pulls = @(Get-LfsPullCommands @('aaa', 'bbb'))
-Assert-Equal 'one LFS pull per stem' 2 $pulls.Count
-Assert-Equal 'the pull is for exactly the stem high-res folder, with an empty exclude' 'lfs pull --include content/dino/aaa/high-res/** --exclude ' ($pulls[0] -join ' ')
-Assert-Equal 'no pull failure when git succeeds' '' (Invoke-LfsPulls @('aaa', 'bbb') { param($a) 0 })
-Assert-Equal 'a failed pull names the stem' $true ((Invoke-LfsPulls @('aaa', 'bbb') { param($a) if ($a -contains 'content/dino/bbb/high-res/**') { 1 } else { 0 } }) -like '*bbb*exited 1*')
+$fetchArguments = @(Get-FetchShelfPackagesArguments 'C:\repo' 'C:\repo\artifacts\full-shelf')
+Assert-Equal 'the fetch runs the shared node script with the target folder, never BookBuilder' 'C:\repo\.github\scripts\fetch-shelf-packages.mjs C:\repo\artifacts\full-shelf' ($fetchArguments -join ' ')
+Assert-Equal 'no failure when the fetch script exits 0' '' (Invoke-FetchShelfPackages 'C:\repo' 'C:\x' { param($a) 0 })
+Assert-Equal 'a failed fetch names the script and its exit code' $true ((Invoke-FetchShelfPackages 'C:\repo' 'C:\x' { param($a) 1 }) -like '*fetch-shelf-packages.mjs exited 1*')
+Assert-Equal 'the store-shot script never builds a book package' 0 @(Select-String -Path (Join-Path $PSScriptRoot 'store-screenshots.ps1') -Pattern 'BookBuilder -- build|dotnet run').Count
 $push =Get-FullShelfPushCommands 'uk.example.app' @([pscustomobject]@{ Id = 'abc'; Path = 'C:\x\story-v1.dino' })
 Assert-Equal 'the app data is cleared first' 'shell pm clear uk.example.app' ($push[0] -join ' ')
 Assert-Equal 'the book is pushed to the temp folder' 'push C:\x\story-v1.dino /data/local/tmp/full-shelf/abc.dino' ($push[4] -join ' ')

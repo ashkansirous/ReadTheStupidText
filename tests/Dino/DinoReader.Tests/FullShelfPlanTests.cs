@@ -9,28 +9,47 @@ public class FullShelfPlanTests
     private static StoreItem Item(string id, string? title = null, BookSale sale = BookSale.Free) =>
         new(id, title ?? id, "en", 1, 1, null, null, null, "/api/stories/" + id, Sale: sale);
 
-    [Fact]
-    public void Every_listed_book_is_planned_once_in_id_order_whatever_its_title()
-    {
-        FullShelfPlan plan = FullShelfPlan.For([Item("c", "Alpha"), Item("a", "Zebra"), Item("A", "Ant"), Item("b", "Mouse")], []);
+    private static StoreItem[] AllChosen() => [.. FullShelfPlan.BookIds.Select(id => Item(id))];
 
-        Assert.Equal(["a", "b", "c"], plan.Download.Select(i => i.Id));
+    [Fact]
+    public void The_shelf_is_the_eight_chosen_books_each_once_in_id_order_whatever_the_listing_order_or_title()
+    {
+        string first = FullShelfPlan.BookIds.Order(StringComparer.OrdinalIgnoreCase).First(id => id != FullShelfPlan.LastBookId);
+        FullShelfPlan plan = FullShelfPlan.For([.. AllChosen().Reverse(), Item(first.ToUpperInvariant(), "Zebra")], []);
+
+        Assert.Equal(8, plan.Download.Count);
+        Assert.Equal(first, plan.Download[0].Id);
+        Assert.Equal(plan.Download.Select(i => i.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count(), plan.Download.Count);
     }
 
     [Fact]
-    public void New_books_come_first_then_the_ones_replacing_a_test_copy_then_the_pinned_last_book()
+    public void A_listed_book_outside_the_chosen_eight_is_left_off_and_a_test_book_is_never_fetched()
     {
-        FullShelfPlan plan = FullShelfPlan.For([Item(FullShelfPlan.LastBookId), Item("a-test"), Item("c-new"), Item("b-new")], ["a-test"]);
+        string test = FullShelfPlan.BookIds[0];
+        FullShelfPlan plan = FullShelfPlan.For([.. AllChosen(), Item("not-chosen")], [test]);
 
-        Assert.Equal(["b-new", "c-new", "a-test", FullShelfPlan.LastBookId], plan.Download.Select(i => i.Id));
+        Assert.DoesNotContain("not-chosen", plan.Download.Select(i => i.Id));
+        Assert.DoesNotContain(test, plan.Download.Select(i => i.Id));
+        Assert.Equal(FullShelfPlan.BookIds.Count - 1, plan.Download.Count);
     }
 
     [Fact]
-    public void The_last_book_stays_last_when_a_new_book_has_a_higher_id()
+    public void The_last_book_stays_last_whatever_the_ids()
     {
-        FullShelfPlan plan = FullShelfPlan.For([Item("zzz-new"), Item(FullShelfPlan.LastBookId)], []);
+        FullShelfPlan plan = FullShelfPlan.For(AllChosen(), []);
 
         Assert.Equal(FullShelfPlan.LastBookId, plan.Download[^1].Id);
+        Assert.Contains(FullShelfPlan.LastBookId, FullShelfPlan.BookIds);
+    }
+
+    [Fact]
+    public void The_shelf_is_twelve_books_with_the_four_test_books_and_the_ids_are_the_fetch_scripts_list()
+    {
+        string json = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "tools", "dino", "full-shelf-books.json"));
+        string[] listed = [.. System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("books").EnumerateArray().Select(book => book.GetProperty("id").GetString()!)];
+
+        Assert.Equal(12, FullShelfPlan.BookIds.Count + 4);
+        Assert.Equal(FullShelfPlan.BookIds.Order(), listed.Order());
     }
 
     [Fact]
@@ -45,29 +64,21 @@ public class FullShelfPlanTests
     }
 
     [Fact]
-    public void Only_the_test_books_are_cleared_never_a_book_about_to_be_fetched()
-    {
-        FullShelfPlan plan = FullShelfPlan.For([Item("pigs"), Item("wolf")], ["pigs", "test-only"]);
-
-        Assert.Equal(["pigs", "test-only"], plan.ClearFirst.Order());
-    }
-
-    [Fact]
     public void An_empty_list_plans_nothing_to_download()
     {
         FullShelfPlan plan = FullShelfPlan.For([], ["x"]);
 
         Assert.Empty(plan.Download);
-        Assert.Equal(["x"], plan.ClearFirst);
     }
 
     [Fact]
     public void A_paid_book_without_its_package_file_is_missing_a_free_one_never_is()
     {
-        FullShelfPlan plan = FullShelfPlan.For([Item("free"), Item("paid-a", sale: BookSale.Paid), Item("paid-b", sale: BookSale.Paid)], []);
-        var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { FullShelfPlan.PackageName("PAID-A") };
+        string[] ids = [FullShelfPlan.BookIds[0], FullShelfPlan.BookIds[1], FullShelfPlan.BookIds[2]];
+        FullShelfPlan plan = FullShelfPlan.For([Item(ids[0]), Item(ids[1], sale: BookSale.Paid), Item(ids[2], sale: BookSale.Paid)], []);
+        var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { FullShelfPlan.PackageName(ids[1].ToUpperInvariant()) };
 
-        Assert.Equal(["paid-b"], plan.MissingPackages(present));
+        Assert.Equal([ids[2]], plan.MissingPackages(present));
     }
 
     [Fact]

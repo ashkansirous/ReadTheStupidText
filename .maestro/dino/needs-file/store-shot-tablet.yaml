@@ -1,7 +1,7 @@
 # Slice 291 items 5 and 8: the Play store screenshots of Dino Reader (tablet), taken by tools/emulator/store-screenshots.ps1 -App dino -Form tablet (the shot names store-dino-tablet-<n>-<screen> become the PNG names).
 # Five shots, held upright, in the order of the store-listing skill's table (one difference per shot, strongest first): a character's line on the reading page, the record intro "Who will you record?",
 # the same page in German (the live books carry de translations; no voice pack is needed, set-language voice=0; Slice 404: never Farsi on a global or European listing; there is no fall back to another language: missing German screens fail the flow), the grown-ups Books tab (no price anywhere on it), the kids' shelf.
-# Slice 404: the full-shelf hook puts the whole live catalogue on the shelf (needs the network; no Get, Buy or Redeem, no purchase) before any shot. The store page shows prices and no shot uses it.
+# Slice 404: the full-shelf hook puts 12 books on the shelf (needs the network; no Get, Buy or Redeem, no purchase) before any shot. The store page shows prices and no shot uses it.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened
 # expect-log: HOOK enter-grown-up ok
@@ -37,7 +37,7 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
-# Slice 404: every book of the live store on the shelf (the four test copies are replaced by the real ones). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (15 books one after another, each a package plus the audio packs, on an emulator link).
+# Slice 404: 12 books on the shelf (the four test books stay, eight more come from the live store and the packages it already stored). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (8 books one after another, each a package plus the audio packs, on an emulator link).
 # The data survives every relaunch below (no clearState), so shots 4 and 5 and the Books tab see the same full shelf.
 - launchApp:
     stopApp: false

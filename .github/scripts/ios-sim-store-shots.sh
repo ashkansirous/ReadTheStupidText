@@ -435,54 +435,26 @@ run_units() {
 }
 
 # Slice 404: the Dino full-shelf hook imports a PAID book from a package file (the store refuses a paid download without a real receipt; nothing is faked).
-# BookBuilder writes artifacts/store/<id>/story-v<n>.dino; the packages are copied into <app data container>/Library/full-shelf/<id>.dino (the hook's
-# FullShelfPlan.PackageFolder inside FileSystem.AppDataDirectory, which is the container's Library folder on iOS). A flow that never calls the hook needs none of it.
+# Decision 5: a package is never built here. The paid books of the shelf (tools/dino/full-shelf-books.json) are read from the downloads bucket, where the store upload already put
+# dinoreader/stories/<id>/story-v<n>.dino, by .github/scripts/fetch-shelf-packages.mjs into artifacts/full-shelf/<id>/story-v<n>.dino (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, wrangler from `npm ci`);
+# the packages are copied into <app data container>/Library/full-shelf/<id>.dino (the hook's FullShelfPlan.PackageFolder inside FileSystem.AppDataDirectory, which is the container's Library folder on iOS).
+# A flow that never calls the hook needs none of it.
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
-STORE_ROOT="$REPO_ROOT/artifacts/store"
+SHELF_ROOT="$REPO_ROOT/artifacts/full-shelf"
 
 flows_use_full_shelf() {
   [ "$APP" = dino ] && grep -qs 'full-shelf' "${UNITS[@]}"
 }
 
-# The stems of the store books under content/dino that have no package under artifacts/store yet, one per line (a stem's id is the "id" line of its book.json).
-stems_without_package() {
-  local json id
-  for json in "$REPO_ROOT"/content/dino/*/book.json; do
-    [ -f "$json" ] || continue
-    grep -qE '"kind": *"(Store|Starter)"' "$json" || continue # Starters too: Good Enough and Tortoise and the Hare are paid in the live list (run 44411861765: missing-package)
-    id="$(sed -n 's/^ *"id": *"\([^"]*\)".*/\1/p' "$json" | head -n 1)"
-    [ -n "$id" ] || continue
-    ls "$STORE_ROOT/$id"/story-v*.dino >/dev/null 2>&1 || basename "$(dirname "$json")"
-  done
-}
-
-# Pulls each stem's Git LFS print-size pictures (content/dino/<stem>/high-res, kept out of a normal fetch by .lfsconfig) and creates its artifacts/store/<id> folder;
-# BookBuilder build refuses a book whose high-res folder holds only pointers. Returns 1, naming the stem, when a pull fails.
-pull_book_high_res() {
-  local stem id
-  for stem in "$@"; do
-    if ! (cd "$REPO_ROOT" && git lfs pull --include "content/dino/$stem/high-res/**" --exclude "") >&2; then
-      echo "::error::git lfs pull for $stem (content/dino/$stem/high-res) failed, so its book package cannot be built"
-      return 1
-    fi
-    id="$(sed -n 's/^ *"id": *"\([^"]*\)".*/\1/p' "$REPO_ROOT/content/dino/$stem/book.json" | head -n 1)"
-    [ -z "$id" ] || mkdir -p "$STORE_ROOT/$id"
-  done
-}
-
-# Builds the missing packages with BookBuilder (dotnet is set up by store-screenshots.yml). Returns 1, naming why, when it cannot.
-build_missing_packages() {
-  local stems
-  stems="$(stems_without_package | tr '\n' ' ')"
-  [ -n "$stems" ] || return 0
-  if ! command -v dotnet >/dev/null 2>&1; then
-    echo "::error::the book packages for [$stems] are missing under artifacts/store and dotnet is not on the PATH to build them (dotnet run --project tools/dino/DinoReader.BookBuilder -- build <stem>)"
+# Fetches the stored packages once per run (every device copies the same files). Returns 1, naming why, when the bucket cannot be read.
+fetch_shelf_packages() {
+  [ "${SHELF_FETCHED:-no}" = yes ] && return 0
+  if ! command -v node >/dev/null 2>&1; then
+    echo "::error::node is not on the PATH to fetch the stored book packages (node .github/scripts/fetch-shelf-packages.mjs artifacts/full-shelf)"
     return 1
   fi
-  echo "building the missing book packages: $stems"
-  pull_book_high_res $stems || return 1
-  # shellcheck disable=SC2086
-  (cd "$REPO_ROOT" && dotnet run --project tools/dino/DinoReader.BookBuilder -- build $stems) >&2
+  (cd "$REPO_ROOT" && node .github/scripts/fetch-shelf-packages.mjs "$SHELF_ROOT") >&2 || return 1
+  SHELF_FETCHED=yes
 }
 
 # Copies the newest package of every book into the app's full-shelf folder on the simulator. The data container exists after the app's first start, so a launch and a terminate come first when it does not yet.
@@ -497,7 +469,7 @@ copy_full_shelf_packages() {
   fi
   folder="$container/Library/full-shelf"
   mkdir -p "$folder" || return 1
-  for dir in "$STORE_ROOT"/*/; do
+  for dir in "$SHELF_ROOT"/*/; do
     id="$(basename "$dir")"
     newest="$(ls "$dir"story-v*.dino 2>/dev/null | sed -n 's/.*story-v\([0-9][0-9]*\)\.dino$/\1 &/p' | sort -n | tail -n 1 | cut -d' ' -f2-)"
     [ -n "$newest" ] || continue
@@ -512,8 +484,8 @@ copy_full_shelf_packages() {
 prepare_full_shelf() {
   local label="$1" udid="$2" bundle_id="$3"
   flows_use_full_shelf || return 0
-  if ! build_missing_packages; then
-    problem "$label: the book packages for the full-shelf hook could not be built"
+  if ! fetch_shelf_packages; then
+    problem "$label: the stored book packages for the full-shelf hook could not be fetched"
     return 1
   fi
   if ! copy_full_shelf_packages "$udid" "$bundle_id"; then

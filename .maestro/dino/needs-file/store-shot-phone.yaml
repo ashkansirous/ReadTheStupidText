@@ -37,7 +37,7 @@ onFlowComplete:
 - extendedWaitUntil:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
-# Slice 404: every book of the live store on the shelf (the four test copies are replaced by the real ones). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (15 books one after another, each a package plus the audio packs, on an emulator link).
+# Slice 404: 12 books on the shelf (the four test books stay, eight more come from the live store and the packages it already stored). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (8 books one after another, each a package plus the audio packs, on an emulator link).
 # The data survives every relaunch below (no clearState), so shots 4 and 5 and the Books tab see the same full shelf.
 - launchApp:
     stopApp: false
