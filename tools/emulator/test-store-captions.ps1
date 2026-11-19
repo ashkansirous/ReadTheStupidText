@@ -14,7 +14,7 @@ function Assert-Throws([string]$Name, [scriptblock]$Block) {
 
 function Get-RawHash([string]$Path) { return [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([IO.File]::ReadAllBytes($Path))) }
 
-Assert-Equal 'a plain line is fine' '' (Test-CaptionLine 'A voice for every character')
+Assert-Equal 'a plain line is fine' '' (Test-CaptionLine 'Picture books read aloud, your voice or ours')
 Assert-Equal 'empty is rejected' 'empty' (Test-CaptionLine '  ')
 Assert-Equal 'a price is rejected' 'looks like a price' (Test-CaptionLine 'Only $4.99')
 Assert-Equal 'a call to action is rejected' "contains 'download'" (Test-CaptionLine 'Download now')
@@ -25,11 +25,11 @@ Assert-Equal 'a long line is rejected' 'longer than 45 characters' (Test-Caption
 Assert-Equal 'band is 15% of 2400' 360 (Get-BandHeight 2400)
 Assert-Equal 'shot rect: 1080x2400 into the area under the band' '81 360 918 2040' ((Get-ShotRect 1080 2400 1080 2400) -join ' ')
 Assert-Equal 'shot key from a file name' '1-reading' (Get-ShotKey 'store-dino-phone-1-reading.png' 'dino' 'phone')
-Assert-Equal 'another form is no shot' $null (Get-ShotKey 'store-dino-tablet-1-shelf.png' 'dino' 'phone')
+Assert-Equal 'another form is no shot' $null (Get-ShotKey 'store-dino-tablet-1-reading.png' 'dino' 'phone')
 
 # The data file: every Dino shot of the skill's table has an English line that passes the rules.
 $captions = Get-Content (Join-Path $PSScriptRoot '..\..\docs\store-listings\screenshots\captions.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-$expected = [ordered]@{ '1-reading' = 'A voice for every character'; '2-record' = 'Record your voice as any character'; '3-language' = '15 languages'; '4-grownups' = 'Grown-ups choose the books, behind a gate'; '5-shelf' = 'Classic tales, retold gently' }
+$expected = [ordered]@{ '1-reading' = 'Picture books read aloud, your voice or ours'; '2-record' = 'Record your voice as any character'; '3-language' = '15 languages'; '4-grownups' = 'Grown-ups choose the books, behind a gate'; '5-shelf' = 'Classic tales, retold gently' }
 foreach ($k in $expected.Keys) { Assert-Equal "caption $k" $expected[$k] (Get-CaptionLine $captions 'dino' $k 'en') }
 Assert-Throws 'a missing language fails' { Get-CaptionLine $captions 'dino' '1-reading' 'de' }
 
@@ -57,7 +57,7 @@ try {
     $bmp.Save($raw, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
     $before = Get-RawHash $raw
     $out = Join-Path $work 'out\store-dino-phone-1-reading.png'
-    New-CaptionedShot $raw $out 'A voice for every character' $false
+    New-CaptionedShot $raw $out 'Picture books read aloud, your voice or ours' $false
     $img = [System.Drawing.Bitmap]::FromFile($out)
     try {
         Assert-Equal 'output has the raw pixel size' '300x600' "$($img.Width)x$($img.Height)"
