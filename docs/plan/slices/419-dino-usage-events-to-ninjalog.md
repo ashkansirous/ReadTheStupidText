@@ -53,6 +53,19 @@ DPA page was found on ninjalog.dev (all 404).
       the project settings, or ask on its Discord linked from ninjalog.dev). Record in this file: where data is
       stored, how long it is kept, whether a DPA exists, whether it may hold data from a children's app. No DPA or no
       retention statement: stop at item 2 with the flag off and add one line to *Outstanding work*.
+      **Done 2026-11-19 (owner's signed-in Chrome):** hosted in the EU (ninjalog.dev home page); retention is set per
+      project by us (Project settings → Retention: default "No time limit" and "No size limit"; per-index retention
+      possible, `/docs/indices`). Not found anywhere (ninjalog.dev, the app, its docs): terms of service, privacy
+      policy, DPA, children's data, pricing. **Result: sending stays off** (`NINJALOG_ENABLED` unset) until the owner
+      confirms a DPA or terms. The privacy page change (item 5) ships with the switch, not before, so the page never
+      names a processor that gets nothing; items 3, 6 (the run), 8 and 9 wait on the same answer.
+      Ingest facts read the same day: `POST https://app.ninjalog.dev/v1/ingest/json?index=<name>`, body
+      newline-delimited JSON (its Vector example: `framing: newline_delimited`, optional `compression: gzip`),
+      `Authorization: Bearer <token>`; a document's `#index` overrides `?index=`. Dashboards: one JSON object
+      `{slug, name, defaultRange?, widgets:[{id, title, x, y, w, h, query, range, viz, options}]}` on a 12-column
+      grid; viz `timechart` (query ends in `timechart`), `stat` (ends in `stats count`), `table` (`stats count by f`
+      or `chart ... over f`); upload on the dashboards page, `POST /api/dashboards`, or the MCP `save_dashboard`
+      tool. Not stated: which document field it takes as the event time (checked at the first live send).
 - [ ] 2. **Forwarding in the Worker** (`worker/ninjalog.ts`): a tee around the `DINO_USAGE` dataset so every
       `writeDataPoint` (app events in `events.ts`, speaker rows in `speaker-usage.ts`) also queues one named JSON
       document: every field by its name from `events.ts` (`name`, `detail`, `book`, `language`, `version`,
