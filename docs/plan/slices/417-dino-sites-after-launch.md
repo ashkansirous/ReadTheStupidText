@@ -65,8 +65,11 @@ in the separate repo ashkansirous/sirous.uk: src/data/products.ts, src/assets/pr
 5. [ ] Google group `sirous-app-testers`: no API reaches a consumer Google group; the owner closes or deletes it at
    https://groups.google.com/g/sirous-app-testers/settings (owner step, link given).
 
-6. [ ] Swap the site screenshots (`site/dino/*.webp` and the sirous.uk `src/assets/products/dino-reader*.webp`) for
+6. [x] Swap the site screenshots (`site/dino/*.webp` and the sirous.uk `src/assets/products/dino-reader*.webp`) for
    Slice 404's retaken English set (German shot 3) once it is in `docs/store-listings/screenshots/dino/` (review s417-high #4).
+   Built (2026-11-19, branch feat/s417-shots): the five `site/dino/shot-*.webp` are the retaken uncaptioned set at 720x1600
+   (`shot-rtl.webp` renamed `shot-language.webp`, now German; the required-file list in `worker/check-site-eol.mjs` and the
+   page's captions and alt text follow; the grown-ups alt names no count, since the picture shows nine of the twelve). The pictures come from Slice 404's retake on branch feat/s404-shots (run 44565564642 and emulator-5554), merged alongside. The sirous.uk twin is branch feat/dino-shots there.
 7. [x] The in-app iOS update button (`src/Dino/DinoReader.App/IosUpdateTarget.cs:14`) still opens the public TestFlight
    link, now switched off (item 4): point it at the App Store page `https://apps.apple.com/app/id6825053435` for every
    channel (review s417-high #1). App code: its own branch and the full review gate.
