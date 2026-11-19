@@ -1,7 +1,7 @@
 ### Slice 419 — Dino: every usage event also goes to Ninjalog, with a funnel and a "where new users stop" dashboard
 **Product:** Dino
 
-*Built 2026-11-19 (not merged), live checks and queries not yet run; item 9 (alert) open.*
+*Built 2026-11-19, merged as PR #1310 (21f4925a) and PR #1311 (c0263898, queries and dashboard fixed after running them); first live event not yet seen; item 9 (alert) open.*
 
 *Changed while building:* item 1's "sending stays off" result was overtaken by the owner's decision (Decisions, last line): Ninjalog has no terms or DPA, the owner said send anyway, so `NINJALOG_ENABLED` is "true" in both wrangler configs. Item 6 (backfill) dropped by the owner. Project retention set to 90 days (Project settings → Retention) on 2026-11-19 to match the privacy page; the project's storage limit reads 10 GiB (not changed). `workers-dev` shares the one Worker, so the same switch covers it.
 
@@ -119,7 +119,7 @@ DPA page was found on ninjalog.dev (all 404).
 
 **After the merge (2026-11-19, this session):** deploy of 21f4925a: Workers Builds `completed success`. Token
 checked with one test document to index `smoke` (HTTP 200, found in Search). No production count arrived in
-`dino_usage` between the deploy (21:29 UTC) and 21:45 UTC (Analytics Engine query), so the first forwarded
+`dino_usage` between the deploy (21:29 UTC) and 21:42 UTC (Analytics Engine query), so the first forwarded
 event is not seen yet. Every query was run in Search and fixed where the engine refused it (rules in
 `docs/analytics/ninjalog-queries.md`: no `sort` on raw events, `count(eval())` only in the first aggregation,
 `span=` automatic, no `last()`); the dashboard was uploaded and opens at
@@ -135,7 +135,7 @@ https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users (five wi
 - The dashboard opens in the project and shows the last 7 days.
 - No app change, so no Android or iOS build; both platforms' events are checked in the funnel query.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-19)
 
 - Every `dino_usage` write is also forwarded to Ninjalog by the Worker (`worker/ninjalog.ts`), never `dino_usage_beta`, never the IP, raw body, dropped or robot rows; fire-and-forget via `ctx.waitUntil`. Needs `NINJALOG_ENABLED` "true" (equal in both wrangler configs) and the `NINJALOG_TOKEN` secret. The app makes no request to Ninjalog. (Slice 419: docs/plan/slices/419-dino-usage-events-to-ninjalog.md)
 

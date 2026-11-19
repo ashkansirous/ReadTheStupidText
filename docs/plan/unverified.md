@@ -77,6 +77,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 419: Dino usage events to Ninjalog ([slice](slices/419-dino-usage-events-to-ninjalog.md))
+- [session] After the merge deploys: first live event appears in `index=dino_usage` in Ninjalog with named fields and the same count as `dino_usage`.
+- [session] Which document field Ninjalog uses as event time (the timestamp is the batch receive time; order within a session by `seq`/`sinceLaunch`).
+- [session] The funnel query returns rows for real first launches and the dashboard widgets show data (both parse; no rows yet).
+
 ### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
 - [session] The `store-tags` and `onboarding-landscape` flows were not run (run cap).
 - [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB.
