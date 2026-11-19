@@ -48,7 +48,7 @@ internal sealed class OnboardingResumePage : ContentPage
 
 /// <summary>
 /// The path from the books to the shelf (Slice 362): which screen follows which, each one a root of its own so Back can never return to an earlier step. Listen and voice need one of the four free books on the shelf (Decision 2);
-/// with none (a debug shelf, a failed read) they are passed over and the path goes on to the corner tour. A step that throws is reported and passed over too: onboarding never traps a person on a broken screen.
+/// with none (a debug shelf, a failed read) they are passed over and setup ends on the locked shelf (Slice 418: there is no tour any more). A step that throws is reported and passed over too: onboarding never traps a person on a broken screen.
 /// </summary>
 internal static class OnboardingRoute
 {
@@ -97,43 +97,33 @@ internal static class OnboardingRoute
 			case OnboardingStep.Voice when await DemoAsync(services) is { } found:
 				ShowVoice(services, found.Demo, found.Story);
 				return;
-			case OnboardingStep.Corner:
-				ShowCorner(services);
-				return;
 			default:
 				await MoveOnAsync(services, step); // no demo book on the shelf: this step and its pair have nothing to play
 				return;
 		}
 	}
 
-	// A step with nothing to show, or one that failed: Listen goes to the corner (the voice step needs the same page), Voice and Corner go to the corner. A corner that cannot be built goes to the plain shelf and onboarding is
-	// saved as done, so a restart never lands on a blank resume page.
-	private static async Task MoveOnAsync(IServiceProvider services, OnboardingStep from)
+	// A step with nothing to show, or one that failed: setup ends on the locked shelf and onboarding is saved as done, so a restart never lands on a blank resume page.
+	private static Task MoveOnAsync(IServiceProvider services, OnboardingStep from)
 	{
-		if (from != OnboardingStep.Corner)
-		{
-			try
-			{
-				OnboardingState.Begin(OnboardingStep.Corner);
-				await ShowCoreAsync(services, OnboardingStep.Corner);
-				return;
-			}
-			catch (Exception ex)
-			{
-				// no-fallback: the corner could not be built either; the plain shelf below is the way on and the failure is logged
-				Debug.WriteLine($"Dino Reader could not show the corner tour: {ex}");
-			}
-		}
-
-		ShowShelfInstead(services);
+		OnboardingLog($"step {from} passed over");
+		FinishOnShelf(services);
+		return Task.CompletedTask;
 	}
 
-	private static void ShowShelfInstead(IServiceProvider services)
+	/// <summary>Setup is over (Slice 418, mock NO8): onboarding is saved as finished and the locked shelf is the root, with no card.</summary>
+	private static void FinishOnShelf(IServiceProvider services)
 	{
-		OnboardingState.Clear();
-		FirstRunState.HandoverPending = false;
-		OnboardingUsage.Finished(services.GetRequiredService<UsageCounter>()); // the same finished event as the tour's end, so intro_started always has its intro_ended
+		Finish(services);
 		((DinoApp)Microsoft.Maui.Controls.Application.Current!).ReplaceRoot(services.GetRequiredService<GalleryPage>());
+	}
+
+	private static void OnboardingLog(string line)
+	{
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Onboarding] route {line}"); // the onboarding flows' expect-log markers (RTST-TEST tag)
+#endif
+		Debug.WriteLine($"Dino Reader onboarding route {line}");
 	}
 
 	private static void ShowListen(IServiceProvider services, OnboardingDemoPage demo, Story story, OnboardingListenKind kind)
@@ -173,31 +163,28 @@ internal static class OnboardingRoute
 		return ShowStepAsync(services, OnboardingStep.Voice);
 	}
 
-	/// <summary>The voice step is over (Continue on N7, or Continue without recording when the microphone is off): the try is deleted and the corner tour starts.</summary>
+	/// <summary>
+	/// The voice step is over (Start reading on NO7, Skip this step on NO5 or NO6, or Continue without recording when the microphone is off): the try is deleted and setup ends on the locked shelf (NO8). <paramref name="tried"/>
+	/// is false for a skip, so the step counts as passed over.
+	/// </summary>
 	public static async Task VoiceDoneAsync(IServiceProvider services, bool tried)
 	{
 		OnboardingUsage.StepDone(services.GetRequiredService<UsageCounter>(), OnboardingStep.Voice, tried);
-		OnboardingState.Begin(OnboardingStep.Corner); // the next step is saved before the try is deleted: a kill in between resumes on the corner, and the gallery deletes the leftover try
-		// The child leaves the voice step: exactly the clips recorded in it go now (a failure keeps the record, reports the fallback, and the gallery retries). One book's delete, well under 500 ms, so no wait overlay.
+		OnboardingState.Clear(); // saved as finished before the try is deleted: a kill in between opens the shelf, and the gallery deletes the leftover try
+		// The grown-up leaves the voice step: exactly the clips recorded in it go now (a failure keeps the record, reports the fallback, and the gallery retries). One book's delete, well under 500 ms, so no wait overlay.
 		await OnboardingTryStore.DeleteAsync(services.GetRequiredService<IStoryLibrary>());
-		await ShowStepAsync(services, OnboardingStep.Corner);
-	}
-
-	private static void ShowCorner(IServiceProvider services)
-	{
-		services.GetRequiredService<GrownUpMode>().Enter(); // the grown-up is the one setting up: the tour opens in the corner (GalleryPage starts it)
-		((DinoApp)Microsoft.Maui.Controls.Application.Current!).ReplaceRoot(services.GetRequiredService<GalleryPage>());
+		OnboardingLog($"voice done tried={tried}");
+		FinishOnShelf(services);
 	}
 
 	/// <summary>An abandoned try (the setup was left on the voice step or killed, or an earlier delete failed) is deleted at every onboarding step and every gallery appearing, unless onboarding is on the voice step. Nothing happens without a record.</summary>
 	public static Task DeleteAbandonedTryAsync(IServiceProvider services) =>
 		OnboardingTryStore.DeleteAbandonedAsync(services.GetRequiredService<IStoryLibrary>());
 
-	/// <summary>The tour is over (Start reading on the child's shelf): onboarding is finished, later launches open on the shelf.</summary>
+	/// <summary>Setup is over (Slice 418): onboarding is finished, later launches open on the shelf.</summary>
 	public static void Finish(IServiceProvider services)
 	{
 		OnboardingState.Clear();
-		FirstRunState.HandoverPending = false;
 		OnboardingUsage.Finished(services.GetRequiredService<UsageCounter>());
 	}
 

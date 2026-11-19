@@ -101,7 +101,7 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>Too large to restore</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} could not be added to the backup.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hello! Which language should Dino use?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>For the app’s buttons and words. You can change it later in the grown-ups’ corner.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>For the app’s buttons and words. You can change it later in Settings.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Choose your first books</value></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Pick at least two. You can get more from the Store any time.</value></data>
@@ -127,12 +127,9 @@
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Get these books</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Listen to Dino read</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>Every character has its own voice, and Dino reads with feeling.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>That was {0}. Now hear the same page in your other language.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Now tap {0} to hear the same page.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>The same voices, now in {0}. Your child can switch language on any page.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Every character has its own voice, and Dino reads with feeling. That was {0}; now the same voices read it in {1}. Your child can switch language on any page.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Skip this step</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Be the voice of a character</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Record {0}’s lines on this page, then hear the page with **you** as {0}.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Record {0}’s lines on this page, then hear the page with **you** as {0}. You can skip this.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Your voice stays on this phone</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Your voice stays on this tablet</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Your voice stays on this computer</value></data>
@@ -144,32 +141,11 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Continue without recording</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0}’s lines</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>That’s you!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>That’s {0} in your voice. This was just a try, so it’s deleted when setup ends. You can record any character later in the grown-ups’ corner.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>That’s {0} in your voice. This was just a try, so it’s deleted when setup ends. You can record any character later from a book’s ••• menu.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · your voice</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Play again</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>This is the grown-ups’ corner</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Only grown-ups come here. Here you can:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Get books in the Store</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Free and paid stories, or all of them with one subscription.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Manage your books</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Change the shelf order, remove a book, or record your voice for any character.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Change the settings</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Languages, reading speed, sounds and backup, for the whole app.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Show me around</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Your books. Tap ••• on a book to record your voice or remove it. Reorder changes the shelf order.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>The Store</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>New stories, free and paid, or every book with one subscription. Every book comes in all your family’s languages. Bought before? Restore your books here.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Languages, reading speed, sounds and backup, for the whole app.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>See your child’s shelf</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Tap **Child’s shelf** to see what your child sees.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Last step</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Show me</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>This is your child’s shelf</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Your child sees this each time they open Dino: just their books, with nothing to change by mistake.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>To get back to the grown-ups’ corner, tap **Grown-ups**, then press and hold for 3 seconds.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Start reading</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} of {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Ready for my child</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Grown-up mode</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Language</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino reads and translates into this</value></data>
@@ -197,20 +173,12 @@
   <data name="Language_PageSub" xml:space="preserve"><value>Settings, the store and the shelf</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Grown-ups</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Add and edit books</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For grown-ups</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Grown-ups</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Grown-ups’ corner, locked</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Grown-ups’ corner</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one tap away.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Back to my child’s shelf</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Books</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Child’s shelf</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Only grown-ups see this.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Stories</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Reorder</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Drag a book to a new place. Your child’s shelf shows the same order.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Drag a book to a new place on the shelf.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Waiting for the cover picture</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Couldn't save the new order</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Something is still using the file. Tap Done to try again, or Cancel to keep the old order.</value></data>
@@ -227,9 +195,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>A story in another language is still read in its own language, unless Translate to my language is on for that story.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Grown-ups’ corner</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Unlocked</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Locked. Tap to unlock.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Unlocked. Tap to lock.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Unlocked · {0}s</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Store and Settings are for grown-ups. Tap the lock to unlock.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Locked again: no grown-up taps for 30 seconds.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Locked.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Tap to lock. Locks itself in {0}s without a grown-up tap.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Keep holding…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Continue to the question</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Back to the story</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>What is</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Delete</value></data>
   <!-- Slice 235 part B: the Windows window (mouse and keyboard). The "...Click" strings are the "Tap" strings worded for a desktop window. -->
@@ -245,7 +222,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Slower is easier for little ones - left and right arrows to change</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Read again</value></data>
   <data name="Reading_TheEnd" xml:space="preserve"><value>The end</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one click away.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>What is {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Story language</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detected</value></data>

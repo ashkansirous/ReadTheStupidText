@@ -41,7 +41,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 60000
 # The tile titles are not text nodes on Android: a book is named only by the content description of its options button ("Options for <title>"), so the order is read from TileMore, in shelf order.
 # Before: the 2nd book is the pigs.
@@ -87,7 +87,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
     waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 10000
 - tapOn:
     id: TileMore
@@ -124,7 +124,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
     waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 10000
 - assertNotVisible:
     id: ReorderDone
@@ -164,7 +164,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
 # Done lands in the grown-ups' corner, not on the kids' shelf.
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 15000
 - assertNotVisible:
     id: ReorderDone
@@ -179,7 +179,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 60000
 - copyTextFrom:
     id: TileMore

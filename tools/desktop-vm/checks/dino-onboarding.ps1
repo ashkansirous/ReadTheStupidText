@@ -1,14 +1,13 @@
 # after: dino-onboarding-keys
 # The rest of the first run on the Windows head (Slice 362, mock 2026-11-13 frames N5 to N10, WN5): dino-onboarding-keys leaves the app on the voice step. This check finishes the path with the keyboard and lands on the kids' shelf.
 # With a microphone: R records, R stops, Right goes on (Finish on the last line) -> "That's you!" (N7): Enter is Continue, which deletes the try. Without one (the Record page opens and the microphone is refused, or the recorder fails to open):
-# the "Microphone is off" state shows and its quiet "Continue without recording" is the only way on. Then the corner tour (N8a to N10): Enter is the card's main button each time (six presses), the last one is "Start reading", and the app
-# lands on the kids' shelf (the title "My stories"); a second launch is not part of this check (the flow onboarding-phone.yaml proves later launches open on the shelf).
-# Screenshots go to <results>\onboarding-hear-yourself.png (N7), onboarding-tour-welcome.png (N8a) and onboarding-tour-shelf.png (N10). The text is ASCII on purpose (Windows PowerShell 5.1 reads a BOM-less file as ANSI).
+# the "Microphone is off" state shows and its quiet "Continue without recording" is the only way on. Slice 418: there is no corner tour any more (five steps): the app lands on the locked shelf (the title "My stories", the
+# lock without its countdown chip) right after the voice step; a second launch is not part of this check (the flow onboarding-phone.yaml proves later launches open on the shelf).
+# Screenshots go to <results>\onboarding-hear-yourself.png (N7) and onboarding-shelf.png (the locked shelf). The text is ASCII on purpose (Windows PowerShell 5.1 reads a BOM-less file as ANSI).
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 
 $VkEnter = 0x0D; $VkRight = 0x27; $VkR = 0x52
-$TourEnters = 6   # welcome, the three tabs, the Child's shelf pointer, the last card
 $script:Notes = [System.Collections.Generic.List[string]]::new()   # the harness collects only the string Invoke-Check's body returns, so notes ride on the pass message
 
 function Get-DinoWindow {
@@ -85,31 +84,18 @@ function Record-WithKeys {
     }
 }
 
-function Test-TourKeys {
-    Wait-Present 'TourWelcome' 60 'FAIL the corner tour did not start after the voice step'
-    Start-Sleep -Seconds 1   # fixed-wait: the corner finishes laying out behind the scrim
-    Save-Shot 'onboarding-tour-welcome.png'
-    for ($press = 1; $press -le $TourEnters; $press++) {
-        if ($press -eq $TourEnters) {
-            Wait-Present 'TourChildShelf' 20 'FAIL the last tour card (the child''s shelf) did not show'
-            Start-Sleep -Seconds 1
-            Save-Shot 'onboarding-tour-shelf.png'
-        }
-
-        Focus-DinoWindow
-        Press-Key $VkEnter
-        Start-Sleep -Milliseconds 1200   # fixed-wait: each stop switches its tab behind the scrim before it draws
-    }
-
-    Wait-Until { Find-UiaById (Get-DinoWindow) 'GalleryTitle' } 30 'FAIL Start reading did not land on the kids'' shelf' | Out-Null
-    if (Test-Present 'CornerTour') { throw 'FAIL the tour layer is still showing after Start reading' }
+function Test-LockedShelfAfterSetup {
+    Wait-Until { Find-UiaById (Get-DinoWindow) 'GalleryTitle' } 60 'FAIL the voice step did not land on the shelf' | Out-Null
+    Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 20 'FAIL the shelf after setup is not locked (the lock without its countdown chip)' | Out-Null
+    Start-Sleep -Seconds 1   # fixed-wait: the shelf finishes laying out before the screenshot
+    Save-Shot 'onboarding-shelf.png'
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $script:ResultPath = $ResultFile
     $pkg = Get-InstalledPackage $PackageName
     Complete-VoiceStep
-    Test-TourKeys
+    Test-LockedShelfAfterSetup
     $title = Find-UiaById (Get-DinoWindow) 'GalleryTitle'
-    "first run finished with the keyboard, the shelf shows '$($title.Current.Name)'; the voice step and the corner tour answered Enter; " + ($script:Notes -join '; ')
+    "first run finished with the keyboard, the locked shelf shows '$($title.Current.Name)'; the voice step answered Enter; " + ($script:Notes -join '; ')
 }

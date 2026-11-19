@@ -53,7 +53,7 @@ onFlowComplete:
       id: StoryTileTitle
     timeout: 15000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 - takeScreenshot: shelf-landscape-ar
 - launchApp:
     stopApp: false
@@ -61,10 +61,10 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - assertVisible:
-    id: GalleryCornerLine
+    id: LockChip
 - assertVisible:
     id: GalleryStore
 - assertVisible:
@@ -89,12 +89,12 @@ onFlowComplete:
     id: BookSheetClose
     waitToSettleTimeoutMs: 300
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - extendedWaitUntil:
     visible:
       id: StoryTileTitle
     timeout: 15000
 - assertVisible:
-    id: GalleryCornerLine
-- assertNotVisible:
-    id: GalleryGrownUps
+    id: LockChip
+- assertVisible:
+    id: LockChip

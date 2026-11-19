@@ -111,6 +111,25 @@ internal sealed class DinoKeyboard
 		return true;
 	}
 
+	// Slice 418: Ctrl+L is the lock (the rail shows "Ctrl+L" on its lock row): it opens the unlock popup while locked and locks at once while unlocked, as a tap on the lock does. Plain Ctrl, no Alt or Shift; a held key acts once;
+	// only the gallery answers, and only when nothing else is open over it.
+	private bool TryLockShortcut(object sender, KeyRoutedEventArgs e)
+	{
+		if (e.Key != VirtualKey.L || !IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || IsDown(VirtualKey.Shift) || e.KeyStatus.WasKeyDown || TextFieldHasFocus(sender))
+		{
+			return false;
+		}
+
+		if (DinoKeyTargets.TopPage(_window) is not GalleryPage gallery || !gallery.TryToggleLockFromKeyboard())
+		{
+			return false;
+		}
+
+		e.Handled = true;
+		WindowTrace.Write("Dino keyboard: Ctrl+L used (the lock)");
+		return true;
+	}
+
 	private static RecordKey? RecordKeyOf(VirtualKey key) => key switch
 	{
 		VirtualKey.R => RecordKey.Record,
@@ -123,7 +142,7 @@ internal sealed class DinoKeyboard
 
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
 	{
-		if (TryRecordKey(sender, e) || TryRestoreShortcut(sender, e))
+		if (TryRecordKey(sender, e) || TryRestoreShortcut(sender, e) || TryLockShortcut(sender, e))
 		{
 			return;
 		}

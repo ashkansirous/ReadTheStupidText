@@ -74,9 +74,9 @@
                     </Grid>
 
                     <Grid x:Name="CardBackHost" Grid.Row="2" HorizontalOptions="Center">
-                        <Button x:Name="CardBack" Text="{x:Static res:AppResources.Gallery_BackToShelf}" AutomationId="GateCardBack" HeightRequest="44" CornerRadius="22" FontSize="15" FontAttributes="Bold"
-                                Padding="44,0,22,0" BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" BorderColor="#e2dacb" BorderWidth="1.5" Clicked="OnBackClicked" />
-                        <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="18" StrokeWidth="2.6" HorizontalOptions="Start" VerticalOptions="Center" Margin="20,0,0,0" InputTransparent="True" />
+                        <!-- Slice 418 (mock L3): the popup's button says Cancel (it said Back to the shelf), 44 high, no back arrow. -->
+                        <Button x:Name="CardBack" Text="{x:Static res:AppResources.Common_Cancel}" AutomationId="GateCardBack" HeightRequest="44" CornerRadius="22" FontSize="15" FontAttributes="Bold"
+                                Padding="24,0" BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" BorderColor="#e2dacb" BorderWidth="1.5" Clicked="OnBackClicked" />
                     </Grid>
                 </Grid>
                 </ScrollView>
@@ -140,7 +140,7 @@
                 </VerticalStackLayout>
                 <Grid x:Name="KeyPad" Grid.Row="2" FlowDirection="LeftToRight" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" IsVisible="False" />
 
-                <Button x:Name="BackButton" Grid.Row="3" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"
+                <Button x:Name="BackButton" Grid.Row="3" Text="{x:Static res:AppResources.Common_Cancel}" HeightRequest="48" CornerRadius="24" FontSize="15"
                         FontAttributes="Bold" Padding="26,0" HorizontalOptions="Center"
                         BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" Clicked="OnBackClicked" />
             </Grid>

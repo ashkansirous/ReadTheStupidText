@@ -31,7 +31,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings
@@ -46,7 +46,7 @@ onFlowComplete:
 - assertVisible:
     id: GalleryStore
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertNotVisible:
     id: GrownUpBack
 - assertNotVisible: Slower is easier for little ones
@@ -64,7 +64,7 @@ onFlowComplete:
 - assertNotVisible:
     id: SettingsReadingSpeedRow
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 # Rotate upright: the same page stays open, now above the tab bar.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
@@ -87,4 +87,4 @@ onFlowComplete:
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip

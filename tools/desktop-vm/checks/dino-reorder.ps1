@@ -83,8 +83,8 @@ function Get-FirstTiles {
 }
 
 function Enter-GrownUpMode {
-    if (Find-Visible 'GalleryDone') { return }   # dino-launch ends in the grown-ups' corner
-    Invoke-Uia (Wait-Until { Find-Visible 'GalleryGrownUps' } 15 'no For grown-ups button')
+    if (Find-Visible 'LockChip') { return }   # Slice 418: the chip shows only while the shelf is unlocked
+    Invoke-Uia (Wait-Until { Find-Visible 'GalleryLock' } 15 'no lock on the shelf')
     Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' | Out-Null
     $sum = Invoke-GateHold -FindRing { Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' } -PackageName $PackageName -HoldMs $HoldMs
     # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
@@ -98,7 +98,7 @@ function Enter-GrownUpMode {
         }
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'no OK key')
     }
-    Wait-Until { Find-Visible 'GalleryDone' } 15 'grown-up mode did not open' | Out-Null
+    Wait-Until { Find-Visible 'LockChip' } 15 'the shelf did not unlock' | Out-Null
 }
 
 function Drag-Tile {

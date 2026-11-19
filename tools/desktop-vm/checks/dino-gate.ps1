@@ -71,15 +71,15 @@ function Save-Shot {
 }
 
 function Open-Gate {
-    Enter-KidsShelf   # the first run ends in the grown-ups' corner
+    Enter-KidsShelf   # a tap on the lock locks an unlocked shelf (Slice 418: the gate opens from the lock)
     $back = Find-UiaById (Get-DinoWindow) 'ReadingBack'
     if ($back) { Invoke-Uia $back }
-    Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf')
+    Invoke-Uia (Wait-VisibleId 'GalleryLock' 15 'FAIL the lock is not on the shelf')
     $ring = $null
     try { $ring = Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 5 'gate not up' } catch { $ring = $null }
     if (-not $ring) {
-        Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 5 'FAIL the "For grown-ups" button vanished before the retry')
-        Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'FAIL the gate did not open from the "For grown-ups" button' | Out-Null
+        Invoke-Uia (Wait-VisibleId 'GalleryLock' 5 'FAIL the lock vanished before the retry')
+        Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'FAIL the gate did not open from the lock' | Out-Null
     }
     Focus-DinoWindow
 }
@@ -141,23 +141,23 @@ function Test-SumStep {
     Type-Number ($Answer + 1)
     Press-Key $VkEnter
     Start-Sleep -Milliseconds 800
-    if (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone') { throw 'FAIL a wrong typed answer opened grown-up mode' }
+    if (Find-UiaVisibleById (Get-DinoWindow) 'LockChip') { throw 'FAIL a wrong typed answer unlocked the shelf' }
     $next = [int](Wait-Until { Get-GateSum } 5 'FAIL no sum after a wrong answer')
     # A click on the right answer key is the answer.
     $right = @(Get-AnswerKeys | Where-Object { $_.Current.Name -eq [string]$next })
     if ($right.Count -ne 1) { throw "FAIL the new sum's right answer $next is not on exactly one answer key" }
     Invoke-Uia $right[0]
-    Wait-VisibleId 'GalleryDone' 15 'FAIL clicking the right answer key did not open grown-up mode' | Out-Null
+    Wait-VisibleId 'LockChip' 15 'FAIL clicking the right answer key did not unlock the shelf' | Out-Null
 }
 
 function Test-EscBack {
-    # The corner is left by its coral button, then the gate is opened again and Esc must close it onto the kids' shelf.
+    # The shelf is locked by a tap on the lock, then the gate is opened again and Esc must close it onto the locked shelf.
     Enter-KidsShelf
     Open-Gate
     Press-Key $VkEscape
     # The shelf's button is already visible under the modal gate, so wait for the card to vanish first.
     Wait-Until { -not (Find-UiaVisibleById (Get-DinoWindow) $CardId) } 10 'FAIL the gate card is still showing after Esc' | Out-Null
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc on the gate did not come back to the kids'' shelf' | Out-Null
+    Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 'FAIL Esc on the gate did not come back to the locked shelf' | Out-Null
     if (Find-UiaExact (Get-DinoWindow) $HoldRingName) { throw 'FAIL the gate is still showing after Esc' }
 }
 
@@ -166,5 +166,5 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $answer = Test-HoldStep
     Test-SumStep $answer
     Test-EscBack
-    "gate card: 440 dp (470 dp short card in a window under 540 high) and centred on the hold and sum steps; Space hold fills the ring and letting go empties it; six different answer keys held the right one; a wrong typed answer rolled a new sum; a click on the right key opened the corner; Esc went back to the shelf (screenshots $ScreenshotHold, $ScreenshotSum)"
+    "gate card: 440 dp (470 dp short card in a window under 540 high) and centred on the hold and sum steps; Space hold fills the ring and letting go empties it; six different answer keys held the right one; a wrong typed answer rolled a new sum; a click on the right key unlocked the shelf; Esc went back to the locked shelf (screenshots $ScreenshotHold, $ScreenshotSum)"
 }

@@ -24,7 +24,7 @@ name: Store age chips show only bands with books and switching never crashes
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GalleryStore

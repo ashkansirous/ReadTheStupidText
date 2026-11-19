@@ -21,7 +21,7 @@ name: Settings, Reading speed row opens its page
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings

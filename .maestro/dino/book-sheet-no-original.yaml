@@ -20,7 +20,7 @@ name: Book sheet has no Show original text
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: TileMore

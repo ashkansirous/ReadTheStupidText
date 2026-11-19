@@ -1,8 +1,8 @@
-# Slice 228: the grown-ups' corner names itself (one line), has the sticky "back to the shelf" button, and a book's sheet starts with Read now, which leaves the corner and opens the reader.
+# Slice 228: the grown-ups' corner names itself (one line), has the sticky "back to the shelf" button, and a book's sheet starts with Read now, which opens the reader and leaves the shelf unlocked.
 # The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# expect-log: [GrownUps] read-now leaves the corner
+# expect-log: [GrownUps] read-now opens
 appId: uk.sirous.dinoreader.dbg
 name: Corner line, sticky way back and Read now
 ---
@@ -17,21 +17,21 @@ name: Corner line, sticky way back and Read now
       id: StoryTile
     timeout: 60000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 - assertNotVisible:
-    id: GalleryCornerLine
+    id: LockChip
 - launchApp:
     stopApp: false
     arguments:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - assertVisible:
-    id: GalleryCornerLine
-- assertNotVisible:
-    id: GalleryGrownUps
+    id: LockChip
+- assertVisible:
+    id: LockChip
 - tapOn:
     id: TileMore
     index: 0
@@ -47,15 +47,11 @@ name: Corner line, sticky way back and Read now
     visible:
       id: ReadingSurface
     timeout: 30000
-# Back from the reader lands on the kids' shelf, not the corner.
+# Back from the reader lands on the same unlocked shelf (Slice 418 decision 6: reading neither resets nor locks).
 - tapOn:
     id: ReadingBack
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: LockChip
     timeout: 10000
-- assertNotVisible:
-    id: GalleryDone
-- assertNotVisible:
-    id: GalleryCornerLine

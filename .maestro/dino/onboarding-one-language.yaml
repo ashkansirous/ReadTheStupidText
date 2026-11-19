@@ -3,8 +3,8 @@
 # Against a build with a language bar the OnboardingLanguage-en id would show, so the assertNotVisible fails there.
 # layout-check
 # expect-log: HOOK test-store ok ok
-# expect-log: [Onboarding] listen enter kind=Listen page=13 languages=en
-# expect-log: [Onboarding] listen page-ended stage=First continue=True
+# expect-log: [Onboarding] listen enter kind=Listen page=13 language=en
+# expect-log: [Onboarding] listen page-ended continue=True
 # expect-log: [Onboarding] listen replay
 appId: uk.sirous.dinoreader.dbg
 name: First run with one language, no language bar and Continue waking at the page end

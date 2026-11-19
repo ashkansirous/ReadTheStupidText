@@ -100,7 +100,7 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>Слишком большие для восстановления</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Не удалось добавить в копию: {0}.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Привет! На каком языке должен говорить Дино?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Для кнопок и слов в приложении. Язык можно сменить позже в уголке для взрослых.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Для кнопок и слов в приложении. Язык можно сменить позже в настройках.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Продолжить</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Выберите первые книги</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Выберите не меньше двух. Другие книги всегда можно взять в магазине.</value><comment>Machine draft: needs native review</comment></data>
@@ -125,12 +125,9 @@
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Получить эти книги</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Послушайте, как читает Дино</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>У каждого героя свой голос, и Дино читает с выражением.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Звучал язык: {0}. Теперь послушайте эту же страницу на другом вашем языке.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Теперь нажмите {0}, чтобы услышать ту же страницу.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Те же голоса, теперь на языке: {0}. Ребёнок может переключать язык на любой странице.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>У каждого героя свой голос, и Дино читает с выражением. Звучал язык: {0}; теперь те же голоса читают на языке: {1}. Ребёнок может переключать язык на любой странице.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Пропустить этот шаг</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Станьте голосом героя</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Запишите реплики героя {0} на этой странице, а потом послушайте страницу, где {0} говорит **вашим голосом**.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Запишите реплики героя {0} на этой странице, а потом послушайте страницу, где {0} говорит **вашим голосом**. Этот шаг можно пропустить.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Ваш голос остаётся на этом телефоне</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Ваш голос остаётся на этом планшете</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Ваш голос остаётся на этом компьютере</value></data>
@@ -142,33 +139,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Продолжить без записи</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Реплики: {0}</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Это вы!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Это {0} вашим голосом. Это была только проба, поэтому она удалится, когда настройка закончится. Любого героя можно записать позже в уголке для взрослых.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Это {0} вашим голосом. Это была только проба, поэтому она удалится, когда настройка закончится. Любого героя можно записать позже в меню ••• у книги.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · ваш голос</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Ещё раз</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Это уголок для взрослых</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Сюда заходят только взрослые. Здесь можно:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Получать книги в магазине</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Бесплатные и платные истории, или все по одной подписке.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Управлять книгами</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Менять порядок на полке, убирать книгу или записывать свой голос для любого героя.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Менять настройки</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Языки, скорость чтения, звуки и резервная копия для всего приложения.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Показать, что здесь</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Ваши книги. Нажмите ••• у книги, чтобы записать свой голос или убрать её. Кнопка порядка меняет порядок книг на полке.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Магазин</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Новые истории, бесплатные и платные, или все книги по одной подписке. Каждая книга есть на всех языках вашей семьи. Покупали раньше? Восстановите книги здесь.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Языки, скорость чтения, звуки и резервная копия для всего приложения.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Посмотрите полку ребёнка</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Нажмите **Полка ребёнка**, чтобы увидеть то, что видит ваш ребёнок.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Последний шаг</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Показать</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Это полка вашего ребёнка</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Это ребёнок видит каждый раз, когда открывает Дино: только свои книги, и ничего нельзя изменить по ошибке.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Чтобы вернуться в уголок для взрослых, нажмите **Для взрослых** и удерживайте 3 секунды.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Начать читать</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino нужны две книги, прежде чем вы начнёте. Включите Wi-Fi или мобильные данные и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} из {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Готово, отдаю ребёнку</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino читает и переводит на этот язык</value></data>
@@ -196,20 +172,12 @@
   <data name="Language_PageSub" xml:space="preserve"><value>Настройки, магазин и полка</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Для взрослых</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Для взрослых</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Уголок для взрослых, закрыт</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Книги</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Полка ребёнка</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Это видят только взрослые.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Истории</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Перетащите книгу на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Перетащите книгу на новое место на полке.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Ожидание картинки обложки</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Файл всё ещё занят. Нажмите «Готово», чтобы повторить, или «Отмена», чтобы оставить прежний порядок.</value></data>
@@ -226,9 +194,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>История на другом языке по-прежнему читается на своём языке, если для неё не включён перевод на мой язык.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Закрыто</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Открыто</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Закрыто. Нажмите, чтобы открыть.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Открыто. Нажмите, чтобы закрыть.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Открыто · {0} с</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Магазин и настройки — для взрослых. Нажмите на замок, чтобы открыть.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Снова закрыто: 30 секунд не было нажатий взрослого.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Закрыто.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Нажмите, чтобы закрыть. Закроется само через {0} с без нажатия взрослого.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Перейти к вопросу</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Назад к истории</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Сколько будет</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Стереть</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Мышью или удерживайте клавишу «Пробел».</value></data>
@@ -242,7 +219,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Медленнее проще для малышей - меняйте стрелками влево и вправо</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
   <data name="Reading_TheEnd" xml:space="preserve"><value>Конец</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · определён</value></data>

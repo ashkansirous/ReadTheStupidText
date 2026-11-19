@@ -14,10 +14,10 @@ $MinWidth = 800
 $MinHeight = 560
 $OpenWidth = 1100
 $OpenHeight = 760
-# Slice 325 part C (ShelfTitleRules.Columns on Windows): the kids' shelf sits right of a 280 dp rail with 32 + 40 dp sides and 18 dp gaps; 190 dp covers, 4 to 6 columns.
+# Slice 325 part C (ShelfTitleRules.Columns on Windows): the kids' shelf sits right of a 270 dp rail with 32 + 40 dp sides and 18 dp gaps; 190 dp covers, 4 to 6 columns.
 $ColumnWidth = 190
 $ColumnGap = 18
-$RailAndSides = 280 + 32 + 40
+$RailAndSides = 270 + 32 + 40
 $MaxColumns = 6
 $MinColumns = 4
 $MaxTabs = 25
@@ -191,12 +191,12 @@ function Test-TabAndEnter {
     Wait-Until { Find-UiaById (Get-DinoWindow) 'ReadingTransport' } 20 'FAIL the reading page did not open after Enter on a book' | Out-Null
     Focus-DinoWindow
     Press-Key $VkEscape
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc did not come back to the kids'' shelf' | Out-Null
+    Wait-VisibleId 'GalleryLock' 10 'FAIL Esc did not come back to the shelf' | Out-Null
     return $tabs
 }
 
 function Pass-Gate {
-    Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf')
+    Invoke-Uia (Wait-VisibleId 'GalleryLock' 15 'FAIL the lock is not on the shelf')   # Slice 418: the gate opens from the lock of the locked shelf
     $sum = Invoke-GateHold -FindRing { Wait-VisibleName $HoldRingName 15 'FAIL no hold ring' } -PackageName $PackageName -HoldMs $HoldMs
     # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
     $answerKey = Find-UiaExact (Get-DinoWindow) ([string]$sum) 'Button'
@@ -209,7 +209,7 @@ function Pass-Gate {
         }
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'FAIL no OK key')
     }
-    Wait-VisibleId 'GalleryDone' 15 'FAIL grown-up mode did not open after the gate' | Out-Null
+    Wait-VisibleId 'LockChip' 15 'FAIL the shelf did not unlock after the gate' | Out-Null
 }
 
 function Right-Click {
@@ -272,22 +272,22 @@ function Test-SettingsArrows {
     Press-Key $VkDown
     $second = Get-FocusedKey
     if (-not $first -or $first -eq $second) { throw "FAIL the Down arrow did not move the focus in Settings (before '$first', after '$second')" }
-    # Esc in the corner goes back to the child's shelf (decision 6), so the Body ends this tab by the coral button instead.
+    # Esc on a Settings list goes to Books and then asks to close (Slice 418), so the Body ends this tab by a tap on the lock instead.
     return "Down moved the focus from '$first' to '$second'"
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $pkg = Get-InstalledPackage $PackageName
     try {
-        Enter-KidsShelf   # the first run ends in the grown-ups' corner (Slice 325)
+        Enter-KidsShelf   # a tap on the lock locks an unlocked shelf (Slice 418)
         $columns = Test-ShelfColumns $pkg
         Test-Hover $pkg
         $tabs = Test-TabAndEnter $pkg
         Pass-Gate
         Test-RightClickAndFocusBack $pkg
         $arrows = Test-SettingsArrows
-        Invoke-Uia (Wait-VisibleId 'GalleryDone' 5 'FAIL no Done button in the grown-ups corner')
-        Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Done did not return to the kids'' shelf' | Out-Null
+        Invoke-Uia (Wait-VisibleId 'GalleryLock' 5 'FAIL no lock on the unlocked shelf')
+        Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 'FAIL a tap on the lock did not lock the shelf' | Out-Null
         "$columns; a hovered book lifted; Tab reached a book in $tabs presses and Enter opened it; right-click opened the sheet and Esc gave the book the keyboard back; $arrows; $($script:HoverProbes[-1])"
     } catch {
         $tail = (Get-TraceLines $pkg | Select-Object -Last 25) -join ' | '

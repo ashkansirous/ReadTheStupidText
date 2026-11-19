@@ -3,7 +3,8 @@ namespace DinoReader.Tests;
 // Slice 235 part B: the Windows window says "click" where a phone says "tap", from separate strings (AppResources.UseClickWording picks them), in every language.
 public partial class LocalizedUiTests
 {
-    private static readonly string[] ClickWordedKeys = ["Gallery_CornerLine"]; // Slice 362: the old intro's first card (Intro_PlacesKidsLine) went with the wizard
+    // Slice 418: the corner's one-line note (Gallery_CornerLine) went with the corner; the mock's Windows frames (WL1, WL2) keep "Tap to lock", so no string has a click twin now.
+    private static readonly string[] ClickWordedKeys = [];
 
     [Fact]
     public void Every_language_words_each_click_twin_differently_from_its_tap_string()

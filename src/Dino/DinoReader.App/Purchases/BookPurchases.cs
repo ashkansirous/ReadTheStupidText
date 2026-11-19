@@ -110,6 +110,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         BuyOutcome outcome;
         try
         {
+            using IDisposable hold = LockHolds.Begin("purchase"); // Slice 418 decision 16: the store's own buying sheet pauses the 30-second lock, on every platform (every buy goes through here)
             outcome = await platform.BuyAsync(productId, withTrial, cancel);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

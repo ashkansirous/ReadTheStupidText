@@ -42,7 +42,7 @@ name: Report a problem sends a user report to the local stub and shows its code 
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings
