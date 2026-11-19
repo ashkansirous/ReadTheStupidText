@@ -23,7 +23,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 3000
+    timeout: 10000
     optional: true
 - runFlow:
     when:
@@ -41,7 +41,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
 - openLink: "dino-test://enter-grown-up"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 3000
+    timeout: 10000
     optional: true
 - runFlow:
     when:

@@ -20,7 +20,7 @@ name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 3000
+    timeout: 10000
     optional: true
 - runFlow:
     when:
