@@ -77,6 +77,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
+- [session] The `store-tags` and `onboarding-landscape` flows were not run (run cap).
+- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB.
+- [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
+- [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
+- [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.
+
 ### Slice 413: Dino store name, subtitle and keywords in 14 languages ([slice](slices/413-dino-store-name-13-languages.md))
 - [owner] **You:** native read of the new Dino name, subtitle, keyword field, Play short description and Microsoft search terms in `docs/store-listings/dino/<lang>.md`, one language at a time: ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh (all machine drafts; Farsi has no App Store entry). The same texts are on the editable App Store version 1.133.1 (not submitted); Microsoft and Play are repo-only.
 

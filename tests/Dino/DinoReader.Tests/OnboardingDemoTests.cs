@@ -147,17 +147,16 @@ public class OnboardingDemoTests
     [Theory]
     [InlineData(false, null, false)]
     [InlineData(true, OnboardingStep.Voice, false)]
-    [InlineData(true, OnboardingStep.Corner, true)]
     [InlineData(true, OnboardingStep.Listen, true)]
     [InlineData(true, null, true)]
     public void An_abandoned_try_is_deleted_at_start_unless_onboarding_is_on_the_voice_step(bool recordExists, OnboardingStep? step, bool expected) =>
         Assert.Equal(expected, OnboardingTryRules.DeleteAtStart(recordExists, step));
 
     [Fact]
-    public void The_bar_has_six_segments_and_each_step_fills_up_to_itself()
+    public void The_bar_has_five_segments_and_each_step_fills_up_to_itself()
     {
-        Assert.Equal(6, OnboardingFlow.Count);
-        Assert.Equal([1, 2, 3, 4, 5, 6], Enum.GetValues<OnboardingStep>().Select(OnboardingFlow.FilledAt));
+        Assert.Equal(5, OnboardingFlow.Count);
+        Assert.Equal([1, 2, 3, 4, 5], Enum.GetValues<OnboardingStep>().Select(OnboardingFlow.FilledAt));
         Assert.Equal(1, OnboardingFlow.NumberOf(OnboardingStep.Language));
         Assert.Equal(5, OnboardingFlow.NumberOf(OnboardingStep.Voice));
     }
@@ -165,10 +164,9 @@ public class OnboardingDemoTests
     [Fact]
     public void Each_step_counts_under_its_own_closed_name_and_the_path_runs_in_order()
     {
-        Assert.Equal(IntroSteps.Onboarding, Enum.GetValues<OnboardingStep>().Select(OnboardingFlow.NameOf));
+        Assert.Equal(IntroSteps.Onboarding.Take(OnboardingFlow.Count), Enum.GetValues<OnboardingStep>().Select(OnboardingFlow.NameOf));
         Assert.Equal(OnboardingStep.StoryLanguages, OnboardingFlow.After(OnboardingStep.Language));
-        Assert.Equal(OnboardingStep.Corner, OnboardingFlow.After(OnboardingStep.Voice));
-        Assert.Null(OnboardingFlow.After(OnboardingStep.Corner));
+        Assert.Null(OnboardingFlow.After(OnboardingStep.Voice)); // Slice 418: setup ends after the voice step, on the locked shelf
     }
 
     [Theory]
@@ -177,71 +175,29 @@ public class OnboardingDemoTests
     [InlineData(2, null)]
     [InlineData(3, OnboardingStep.Listen)]
     [InlineData(4, OnboardingStep.Voice)]
-    [InlineData(5, OnboardingStep.Corner)]
+    [InlineData(5, null)] // the removed corner tour step: an install saved on it has nothing left to resume
     [InlineData(6, null)]
-    public void Only_the_listen_voice_and_corner_steps_are_resumed_after_a_restart(int stored, OnboardingStep? expected)
+    public void Only_the_listen_and_voice_steps_are_resumed_after_a_restart(int stored, OnboardingStep? expected)
     {
         Assert.Equal(expected, OnboardingFlow.Saved(stored));
     }
 
     [Fact]
-    public void With_two_languages_the_bubble_follows_the_first_page_and_continue_wakes_as_the_second_starts()
+    public void The_old_corner_step_value_is_the_one_after_the_last_step()
     {
-        var demo = new ListenDemo(["en", "fa"]);
-        demo.LanguageStarted("en");
-        Assert.Equal(ListenStage.First, demo.Stage);
-        Assert.False(demo.ContinueLive);
-        Assert.False(demo.BubbleShown);
-
-        demo.PageEnded();
-        Assert.True(demo.BubbleShown);
-        Assert.Equal("fa", demo.Pointed);
-        Assert.False(demo.ContinueLive);
-
-        demo.LanguageStarted("fa");
-        Assert.Equal(ListenStage.Other, demo.Stage);
-        Assert.True(demo.ContinueLive);
-        Assert.False(demo.BubbleShown);
+        Assert.Equal(OnboardingFlow.OldCornerStep, (int)OnboardingStep.Voice + 1);
+        Assert.Null(OnboardingFlow.Saved(OnboardingFlow.OldCornerStep));
     }
 
-    [Fact]
-    public void Tapping_the_second_language_early_wakes_continue_without_the_bubble()
+    [Theory]
+    [InlineData(5, true)] // killed on the removed corner tour: the next start finishes onboarding (intro_ended)
+    [InlineData(4, false)] // the voice step resumes
+    [InlineData(3, false)]
+    [InlineData(-1, false)] // not running
+    [InlineData(6, false)]
+    public void Only_the_old_corner_step_is_finished_at_the_next_start(int stored, bool expected)
     {
-        var demo = new ListenDemo(["en", "fa", "de"]);
-
-        demo.LanguageStarted("de");
-
-        Assert.True(demo.ContinueLive);
-        Assert.False(demo.BubbleShown);
-    }
-
-    [Fact]
-    public void With_one_family_language_continue_wakes_when_the_page_ends_and_there_is_no_bubble()
-    {
-        var demo = new ListenDemo(["en"]);
-        Assert.False(demo.HasOther);
-        Assert.Null(demo.Pointed);
-        Assert.False(demo.ContinueLive);
-
-        demo.PageEnded();
-
-        Assert.True(demo.ContinueLive);
-        Assert.False(demo.BubbleShown);
-    }
-
-    [Fact]
-    public void The_tour_runs_welcome_then_three_tabs_then_the_shelf_pointer_then_the_shelf_card()
-    {
-        List<TourStop> walked = [TourStop.Welcome];
-        while (CornerTourFlow.Next(walked[^1]) is { } next)
-        {
-            walked.Add(next);
-        }
-
-        Assert.Equal([TourStop.Welcome, TourStop.Books, TourStop.Store, TourStop.Settings, TourStop.ShelfPointer, TourStop.ChildShelf], walked);
-        Assert.Equal([0, 1, 2, 3, 0, 0], walked.Select(CornerTourFlow.CounterOf));
-        Assert.Equal(3, CornerTourFlow.CounterTotal);
-        Assert.Equal([false, true, true, true, false, false], walked.Select(CornerTourFlow.LiftsATab));
+        Assert.Equal(expected, OnboardingFlow.IsOldCornerStep(stored));
     }
 
     private static IEnumerable<IEnumerable<T>> Permutations<T>(IReadOnlyList<T> items)
@@ -350,7 +306,7 @@ public class OnboardingMarkupTests
     public void Every_bold_marker_in_every_language_is_closed()
     {
         string folder = Path.Combine(RepoRoot(), "src", "Dino", "DinoReader.App", "Resources", "Strings");
-        string[] boldKeys = ["Onboarding_VoiceBody", "Tour_ShelfLine", "Tour_ChildShelfBack"];
+        string[] boldKeys = ["Onboarding_VoiceBody"]; // Slice 418: the tour's bold lines went with the tour
         foreach (string file in Directory.EnumerateFiles(folder, "AppResources*.resx"))
         {
             Dictionary<string, string> values = XDocument.Load(file).Descendants("data").ToDictionary(d => (string)d.Attribute("name")!, d => d.Element("value")!.Value);

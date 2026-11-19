@@ -28,7 +28,7 @@ onFlowComplete:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GalleryStore
@@ -39,7 +39,7 @@ onFlowComplete:
       id: GalleryStoreSub
     timeout: 15000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertNotVisible:
     id: GrownUpDone
 - assertNotVisible:
@@ -55,12 +55,12 @@ onFlowComplete:
 - assertVisible:
     id: GalleryStoreSub
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 # The coral pill leaves the corner (the store has no way back of its own).
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     notVisible:
-      id: GalleryDone
+      id: LockChip
     timeout: 10000

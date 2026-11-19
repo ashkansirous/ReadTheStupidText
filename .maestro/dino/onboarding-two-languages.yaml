@@ -1,14 +1,13 @@
-# Slice 362 (onboarding mock frames N2, N4a, N4b, N4c): a family with two story languages. Step 2 ticks Swedish; the grown-up unticks The Three Little Pigs and picks The Gingerbread Man, so the demo page is Gingerbread page 3.
-# The listen step then plays the page in English, the language bar shows both languages, the bubble and the amber pulse point at Swedish once English ends (Continue still dim), and tapping Swedish plays the same page again and wakes Continue.
-# Shots: shot-N4a-two-languages, shot-N4b-bubble, shot-N4c-second-language. The flow stops at the voice step (the full path is onboarding-phone.yaml).
-# Against a build with no language bar the OnboardingLanguage-sv id never shows, so this flow fails there.
+# Slice 362, Slice 418 (onboarding mock 2026-11-19 frames NO2, NO4): a family with two story languages. Step 2 ticks Swedish; the grown-up unticks The Three Little Pigs and picks The Gingerbread Man, so the demo page is Gingerbread page 3.
+# Slice 418 decision 1: the listen step has no second-language part. The page plays once in Dino's language (English), there is no language bar and no "tap the other language" bubble, and Continue wakes when the page ends, whatever the family's languages.
+# Shots: shot-N4a-two-languages (the name the contact-sheet manifest knows; now it shows no language bar). The flow stops at the voice step (the full path is onboarding-phone.yaml).
+# Against the old build the OnboardingLanguage-sv segment and the bubble show, so this flow fails there.
 # layout-check
 # expect-log: HOOK test-store ok ok
-# expect-log: [Onboarding] listen enter kind=Listen page=3 languages=en,sv
-# expect-log: [Onboarding] listen page-ended stage=PointAtSecond continue=False
-# expect-log: [Onboarding] listen language=sv stage=Other continue=True
+# expect-log: [Onboarding] listen enter kind=Listen page=3 language=en
+# expect-log: [Onboarding] listen page-ended continue=True
 appId: uk.sirous.dinoreader.dbg
-name: First run with two story languages, the language bar and the bubble
+name: First run with two story languages, the listen step plays once with no language bar
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
@@ -62,33 +61,18 @@ name: First run with two story languages, the language bar and the bubble
 - tapOn:
     id: FirstBooksContinue
     waitToSettleTimeoutMs: 300
-# N4a: the page plays in English; the bar holds both languages and Continue is dim.
+# NO4: the page plays in English; with two story languages there is still no language bar and no bubble.
 - extendedWaitUntil:
     visible:
       id: OnboardingListen
     timeout: 60000
-- assertVisible:
-    id: OnboardingLanguage-en
-- assertVisible:
+- assertNotVisible:
     id: OnboardingLanguage-sv
-- assertVisible: "Every character has its own voice, and Dino reads with feeling."
-- takeScreenshot: shot-N4a-two-languages
-# N4b: English ended: the bubble points at Swedish.
-- extendedWaitUntil:
-    visible:
-      id: OnboardingBubble
-    timeout: 90000
-- assertVisible: "Now tap .* to hear the same page."
-- assertVisible: "That was English. Now hear the same page in your other language."
-- takeScreenshot: shot-N4b-bubble
-# N4c: Swedish plays the same page, the bubble goes, Continue wakes.
-- tapOn:
-    id: OnboardingLanguage-sv
-    waitToSettleTimeoutMs: 800
 - assertNotVisible:
     id: OnboardingBubble
-- assertVisible: "The same voices, now in .*"
-- takeScreenshot: shot-N4c-second-language
+- assertVisible: "Every character has its own voice, and Dino reads with feeling."
+- takeScreenshot: shot-N4a-two-languages
+# Continue wakes when the page ends (it is dim while it plays); tapping it until the voice step shows.
 - repeat:
     times: 45
     while:
@@ -100,3 +84,4 @@ name: First run with two story languages, the language bar and the bubble
           optional: true
           waitToSettleTimeoutMs: 1500
 - assertVisible: "Record Granny’s lines"
+- assertVisible: "Skip this step"

@@ -82,6 +82,9 @@ internal sealed class ShelfReorderView : Grid
 	/// <summary>Raised by Cancel: the page closes the mode and saves nothing.</summary>
 	public event Action? CancelRequested;
 
+	/// <summary>Raised on every drag move, drag start and key of the mode: a grown-up is at work, so the lock's 30 seconds start again (Slice 418 decision 13).</summary>
+	public event Action? Activity;
+
 	/// <summary>The book ids in the order shown now.</summary>
 	public IReadOnlyList<string> Order => _pending is { } pending
 		? [.. pending.Tiles.Select(t => t.Story.Id)] // the covers are not built yet (no width): nothing was moved, the order is the one the mode opened with, never an empty list
@@ -211,6 +214,7 @@ internal sealed class ShelfReorderView : Grid
 	/// </summary>
 	public bool HandleKey(DinoKeyAction action)
 	{
+		Activity?.Invoke();
 		if (action == DinoKeyAction.ReorderToggle)
 		{
 			ToggleKeyboardLift();
@@ -508,6 +512,7 @@ internal sealed class ShelfReorderView : Grid
 	// Slice 382, Android and iOS: the touch drag. The lifted cover itself follows the finger (scale 1.10, shadow, still wiggling); the lit spot and the sliding follow the finger's slot as with the system drag.
 	private bool PanBegin(ReorderEntry entry, double touchX, double touchY)
 	{
+		Activity?.Invoke();
 		if (_dragged is not null || _closing)
 		{
 			return false;
@@ -538,6 +543,7 @@ internal sealed class ShelfReorderView : Grid
 
 	private void PanMove(double dx, double dy)
 	{
+		Activity?.Invoke();
 		(_panDx, _panDy) = (dx, dy);
 		PanUpdate(edgeScroll: false); // only the timer scrolls at the edge, so the speed does not follow the touch event rate
 	}
@@ -594,6 +600,7 @@ internal sealed class ShelfReorderView : Grid
 
 	private void OnDragOver(object? sender, DragEventArgs e)
 	{
+		Activity?.Invoke();
 		if (_dragged is null)
 		{
 			return;

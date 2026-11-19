@@ -177,6 +177,28 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		Grid.SetRow(_header, 1);
 		Grid.SetRow(_column, 2);
 		_root.Add(_onboardingBar, 0, 0);
+		AddOnboardingSkip();
+	}
+
+	/// <summary>True when "Skip this step" ended the onboarding's recording: the voice step under this page must not show "That's you" for a clip it deleted.</summary>
+	internal bool OnboardingSkipped { get; private set; }
+
+	// Slice 418 decision 2 (mock NO6): the same "Skip this step" link as the voice intro, at the bottom of the recording page for someone who started and changed their mind. It stops a recording in progress, leaves,
+	// and ends setup: whatever was recorded so far is deleted with the try.
+	private void AddOnboardingSkip()
+	{
+		Button skip = OnboardingText.SkipStepLink(() => _ = RunHandlerAsync(SkipOnboardingAsync));
+		skip.Margin = new Thickness(20, 0, 20, 30);
+		_root.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+		_root.Add(skip, 0, 3);
+	}
+
+	private async Task SkipOnboardingAsync()
+	{
+		OnboardingSkipped = true; // set first: the voice step reads it when this page is popped
+		Log("[Record] onboarding skipped");
+		await LeaveOnceAsync(toCaller: false); // stops and keeps a recording in progress (it joins the try), then pops
+		await OnboardingRoute.VoiceDoneAsync(IPlatformApplication.Current!.Services, tried: false);
 	}
 
 	private static void Log(string line)
@@ -312,7 +334,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		_alerts++;
 		try
 		{
-			await DisplayAlertAsync(title, message, ok);
+			await LockHolds.WhileAsync("alert", () => DisplayAlertAsync(title, message, ok));
 		}
 		finally
 		{

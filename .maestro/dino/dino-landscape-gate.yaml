@@ -23,28 +23,30 @@ onFlowComplete:
     timeout: 60000
 - setOrientation: LANDSCAPE_LEFT
 - tapOn:
-    id: GalleryGrownUps
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
-# The card: the eyebrow and the title (Gate_HoldDescription, no full stop), and Back to my child's shelf at its foot.
+# The card: the eyebrow and the title (Gate_HoldDescription, no full stop), and Cancel at its foot (Slice 418: it said Back to my child's shelf).
 - extendedWaitUntil:
     visible: Press and hold for 3 seconds
     timeout: 15000
 - assertVisible: FOR GROWN-UPS
-- assertVisible: Back to my child.s shelf
-# Upright: the same hold step in the bottom sheet (its text has the full stop and Back to the story).
+- assertVisible:
+    id: GateCardBack
+- assertVisible: Cancel
+# Upright: the same hold step in the bottom sheet (its text has the full stop and Cancel).
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible: Press and hold for 3 seconds.
     timeout: 15000
 - assertVisible: For grown-ups
-- assertVisible: Back to the story
+- assertVisible: Cancel
 # Sideways again: the card, still on the hold step.
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible: Press and hold for 3 seconds
     timeout: 15000
-# Back to my child's shelf closes the gate and leaves the kids' shelf.
-- tapOn: Back to my child.s shelf
+# Cancel closes the gate and leaves the shelf locked.
+- tapOn: Cancel
 - extendedWaitUntil:
     visible:
       id: StoryTile

@@ -2,7 +2,7 @@
 
 **Product:** Dino
 
-*In progress (claimed 2026-11-19 on feat/s418-lock).*
+*Built 2026-11-19 on feat/s418-lock (claimed the same day), PR #1308, not merged; passed on the emulator, not yet checked on the Windows VM, iOS or by native readers (see Not yet verified).*
 
 Source: user, 2026-11-19 (second round of user testing): "Onboarding was bad. On the listen step, users heard the book but
 didn't notice the highlight asking them to tap the second language. Some users didn't want to record their voice and had no
@@ -14,7 +14,7 @@ buttons at the top were confusing." The user's decisions below are final ("don't
 `src/Dino/DinoReader.App/CornerTour.cs` (deleted), `src/Dino/DinoReader.App/GrownUpMode.cs`, `src/Dino/DinoReader.App/GrownUpGate.cs`,
 `src/Dino/DinoReader.App/GatePage.xaml`, `src/Dino/DinoReader.App/GatePage.xaml.cs`, `src/Dino/DinoReader.App/BookSheet.cs`,
 `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/SettingsPage.cs`, `src/Dino/DinoReader.App/App.xaml.cs`,
-`src/Dino/DinoReader.App/LockBar.cs` (new), `src/Dino/DinoReader.App/LockTimer.cs` (new),
+`src/Dino/DinoReader.App/LockBar.cs` (new), `src/Dino/DinoReader.App/LockTimer.cs` (new), `tools/desktop-vm/checks/` (the VM checks follow the lock),
 `src/Dino/DinoReader.App/OnboardingSteps.cs`, `src/Dino/DinoReader.App/OnboardingSteps.Route.cs`,
 `src/Dino/DinoReader.App/OnboardingSteps.Languages.cs`, `src/Dino/DinoReader.App/OnboardingListenPage.cs`,
 `src/Dino/DinoReader.App/OnboardingVoicePage.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`,
@@ -158,42 +158,42 @@ a grep shows no remaining use.
 
 ## Work
 
-- [ ] 1. **Lock clock (Core, pure).** `LockClock` in `DinoReader.Core`: `Locked` by default; `Unlock()`, `Lock(LockReason)`
+- [x] 1. **Lock clock (Core, pure).** `LockClock` in `DinoReader.Core`: `Locked` by default; `Unlock()`, `Lock(LockReason)`
   (`Timer` or `ByHand`), `GrownUpTap()` resets to 30 s, `Hold()`/`Release()` (counted, for the buying sheet and recording),
   `Tick(elapsed)` locks at 0 with reason `Timer`, `SecondsLeft`. Unit tests cover reset, hold, release, both reasons, and that
   ticks while held do not count.
-- [ ] 2. **One tab bar.** Phone (< 600): bottom bar Books · Store · Settings · Lock (lock last, right). From 600: the cream rail
+- [x] 2. **One tab bar.** (built, compiled on Android, Windows and iOS; not yet seen on a device) Phone (< 600): bottom bar Books · Store · Settings · Lock (lock last, right). From 600: the cream rail
   with the same items and the lock as a plain row at the rail's foot (WL1/WL2), on Android, iOS and Windows. Remove the ink
   corner header, the coral Child's shelf pill and the shelf's Grown-ups button; Store and Settings show under the shelf's
   header (icon, title, reading-language button). Lock icons per decision 7 (locked 24 ink; unlocked 30 brand purple, shackle
   lifted; rail 26), no background.
-- [ ] 3. **Locked behaviour.** Locked at start and after the background. Store and Settings at 38 % opacity; a tap shows the
+- [x] 3. **Locked behaviour.** (built; not yet seen on a device) Locked at start and after the background. Store and Settings at 38 % opacity; a tap shows the
   dark hint `Lock_GrownUpsHint` over the lock and pulses it amber 2 s (no pulse with reduce motion). Covers have no •••; a tap
   reads. Reading-language button works on the shelf and the reading page. Book options, reordering, recording, buying,
   restoring and every setting are unreachable.
-- [ ] 4. **Unlock and lock.** Lock tap while locked opens the gate (bottom sheet on phones, centred card from 600), button
+- [x] 4. **Unlock and lock.** (built; not yet seen on a device) Lock tap while locked opens the gate (bottom sheet on phones, centred card from 600), button
   Cancel. Success unlocks: covers get •••, Store and Settings open, chip `Lock_Countdown` (light purple) next to the title on
   Books, Store and Settings, counting down. Lock tap while unlocked locks at once with `Lock_LockedByHand`. Windows Ctrl+L does
   the same as a lock tap; Ctrl+1/2/3 and Ctrl+R as in **Replaces**.
-- [ ] 5. **Auto-lock.** A 1-second tick drives `LockClock`. Grown-up taps (Store, Settings, a ••• menu, anything inside them,
+- [x] 5. **Auto-lock.** (built; grown-up taps are read from `UiUsage.Tap` through `LockTapRules`; not yet seen on a device) A 1-second tick drives `LockClock`. Grown-up taps (Store, Settings, a ••• menu, anything inside them,
   sub-pages included) call `GrownUpTap()`; reading, page turns, the reading-language button and no touch do not. The store's
   own buying sheet (`BookPurchases.BuyAsync` and the subscription buy) and `RecordingAudio.IsRecording` hold the clock until
   they finish. On lock: close any open sheet and sub-page, go back to Books, show `Lock_LockedAgain` (timer) or
   `Lock_LockedByHand` (tap) as a short dark message.
-- [ ] 6. **Onboarding, five steps.** Drop the `Corner` step and `CornerTour` (and its start in GalleryPage). Listen (NO4): one
+- [x] 6. **Onboarding, five steps.** (built; `OnboardingFlow.Saved(5)` is null, so an old corner-tour step opens the shelf) Drop the `Corner` step and `CornerTour` (and its start in GalleryPage). Listen (NO4): one
   page in Dino's language, speaker chip, no language bar or bubble; Continue dim while it plays, wakes when the page ends.
   Your voice: "Skip this step" (brand text button) at the bottom of NO5 and NO6; it deletes the try
   (`OnboardingTryStore.DeleteAsync`) and finishes setup. NO7's button "Start reading" finishes setup. Setup ends on the locked
   shelf (NO8) with no card. Saved step values from an older install that point at the removed steps resume at the next
   existing step.
-- [ ] 7. **Copy.** Every key in the Copy table in the neutral resx, the 14 language files (machine-drafted) and
+- [x] 7. **Copy.** (`Gallery_CornerTitle` stays: the Windows title bar still reads it) Every key in the Copy table in the neutral resx, the 14 language files (machine-drafted) and
   `AppResources.cs`; removed keys removed once unused.
-- [ ] 8. **Test hooks and flows.** `enter-grown-up` becomes `unlock` (keep the old name as an alias so older flows still run),
+- [x] 8. **Test hooks and flows.** (lint-flows 148 flows, 0 findings; no flow run on a device) `enter-grown-up` becomes `unlock` (keep the old name as an alias so older flows still run),
   add a Debug-only `lock-seconds <n>` hook to shorten the 30 s for flows. Update every `.maestro/dino` flow that drives the
   corner, the Grown-ups button, the gate or the tour (the onboarding, store, settings, subscription, paid-books, corner and
   store-shot flows); add `lock.yaml` (L1, L2, L3 Cancel, L4 chip, L7 timer lock with `lock-seconds 3`, tap lock) and update
   the onboarding flows to five steps with a Skip path.
-- [ ] 9. **Android and iOS.** All of the above is shared MAUI code; check the iOS build compiles (`net11.0-ios`) and that the
+- [x] 9. **Android and iOS.** (`net11.0-ios` compiles on Windows; the hold is in the shared `MicRecorder` and `BookPurchases`) All of the above is shared MAUI code; check the iOS build compiles (`net11.0-ios`) and that the
   iOS buying sheet and recording hold the clock like Android's.
 
 ## Verification
@@ -203,3 +203,55 @@ a grep shows no remaining use.
   600-wide landscape.
 - Windows VM: WL1/WL2 rail, Ctrl+L, Ctrl+1/2/3.
 - iOS: compile in CI; device checks go to *Not yet verified* tagged `[cloud]`/`[owner]` as the harness allows.
+
+## Release (hot fix)
+
+User, 2026-11-19: "you can cancel the ios and android deployments that are waiting revuew and release this version after
+it is done. This is basically a hot fix that should be deployed to production asap."
+
+- [x] App Store: the review of Dino 1.133.1 (review submission `dd1d66e0`, submitted 2026-11-19 09:17Z) was cancelled
+  through the App Store Connect API on 2026-11-19; the version reads `DEVELOPER_REJECTED`. It keeps the new name, subtitle
+  and keywords (Slice 412) and takes this slice's build.
+- [x] Google Play: nothing was waiting (production 1.131.1 `completed`, no pending production release on the track).
+- [ ] After the merge: the release run's build goes to Play production (full rollout) and to App Store review (the
+  rejected version renamed to the new version, the new build attached, release after approval); Microsoft Store as the
+  release pipeline does.
+
+#### Changed while building
+
+- Files outside the **Touches** list (from `git diff origin/main`): `src/Dino/DinoReader.App/UiUsage.cs`, `StoryTile.cs`,
+  `StoryLanguageButton.cs`, `ShelfReorderView.cs`, `ExternalActivityGuard.cs`, `BackupPage.xaml.cs`,
+  `src/Dino/DinoReader.Core/TileMenuRule.cs` (new, with `TileMenuRuleTests.cs`), `tools/emulator/screenshot-frames.json` and
+  `tools/desktop-vm/checks/**` (listed there only as a folder; the changed scripts are `_lib.ps1`, `dino-desktop-polish`,
+  `dino-gate`, `dino-keyboard`, `dino-onboarding`, `dino-record`, `dino-reorder`, `dino-settings`).
+- Device fix: the ••• button showed on the locked shelf because `StoryTile.ShowMore` ignored the lock; the rule is now
+  `Core/TileMenuRule.cs`, with tests.
+- Windows rail width 280 -> 270, from mock WL1/WL2 (review pass 1).
+- The onboarding flows' `FirstRunLanguage` wait went from 25 s to 60 s: on a slow emulator the page appears 6-7 s after start.
+- `src/Dino/DinoReader.App/CLAUDE.md` was already updated on this branch; the index pass records it (no lift needed).
+
+#### Built and tested
+
+- `DinoReader.Tests` 4843 passed, 0 failed, 2 skipped; `Shared.Tests` 1736 passed; flow lint 148 flows, 0 findings; the Android,
+  Windows and iOS (compile only) heads build.
+- Emulator-5554, 2026-11-19 21:17-21:27: PASS `lock`, `onboarding-phone`, `onboarding-skip`, `corner-read-now`,
+  `settings-books-and-buying`.
+
+#### From review
+
+- Pass 1 (`reviews/s418b-high.md`): all 10 findings fixed.
+- Pass 2 (`reviews/s418b-medium.md`): findings 1 and 3-7 fixed; #2 skipped (below).
+- Skipped #2 (`reviews/s418b-medium.md`): "LockTimer is created and started only on the first CreateWindow; a later window reuses the first window's dispatcher" - Dino runs one window, so no later window exists.
+
+#### For CLAUDE.md
+
+- `src/Dino/DinoReader.App/CLAUDE.md` was already updated on this branch for the one-shelf lock; the index pass only notes it.
+  (Slice 418: docs/plan/slices/418-dino-one-shelf-with-a-lock.md)
+
+#### Not yet verified
+
+- [session] The `store-tags` and `onboarding-landscape` flows were not run (run cap).
+- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB.
+- [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
+- [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
+- [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.

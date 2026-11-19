@@ -108,7 +108,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		}
 
 		prompt ??= new DeletePrompt(GalleryText.DeleteTitle(story.Title), AppResources.Delete_Body, AppResources.Common_Delete);
-		bool confirmed = await page.DisplayAlertAsync(prompt.Title, prompt.Body, prompt.Accept, AppResources.Common_Keep);
+		bool confirmed = await LockHolds.WhileAsync("delete alert", () => page.DisplayAlertAsync(prompt.Title, prompt.Body, prompt.Accept, AppResources.Common_Keep));
 		// The alert can outlive the grown-up mode (app left and returned): a confirm then deletes nothing.
 		return confirmed && mode.IsGrownUp ? await TryDeleteAsync(page, story) : DeleteOutcome.Declined;
 	}
@@ -133,7 +133,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		{
 			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.TapFailed); // Slice 275 part 3: the delete failed; the alert below tells the person
 			Debug.WriteLine($"Dino Reader delete failed: {ex}");
-			await page.DisplayAlertAsync(AppResources.Delete_FailedTitle, AppResources.Delete_FailedBody, AppResources.Common_Ok);
+			await LockHolds.WhileAsync("alert", () => page.DisplayAlertAsync(AppResources.Delete_FailedTitle, AppResources.Delete_FailedBody, AppResources.Common_Ok));
 			return DeleteOutcome.Failed;
 		}
 	}

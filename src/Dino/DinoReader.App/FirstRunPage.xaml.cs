@@ -10,18 +10,9 @@ namespace DinoReader;
 /// <summary>What a new install still owes the grown-up (Slice 93, Decision 98).</summary>
 public static class FirstRunState
 {
-	private const string HandoverPendingKey = "dino.handover.pending";
-
 	/// <summary>A fresh install has no language yet: Dino no longer picks English by itself. Every install made
 	/// before this slice stored one at launch, so none of them sees the first run.</summary>
 	public static bool IsNeeded(ISettingsStore settings) => settings.Language is null;
-
-	/// <summary>True from "See what Dino can do" until the grown-up first hands the phone to the child ("Ready for my child").</summary>
-	public static bool HandoverPending
-	{
-		get => Preferences.Default.Get(HandoverPendingKey, false);
-		set => Preferences.Default.Set(HandoverPendingKey, value);
-	}
 }
 
 /// <summary>The coral call-to-action of the first-run screens (onboarding mock): 56 high by default (50 or 52 beside the panes, see <see cref="SetSize"/>), fully rounded, a 5 px darker edge underneath.</summary>

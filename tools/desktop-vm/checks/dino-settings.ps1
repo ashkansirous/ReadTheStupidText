@@ -39,17 +39,17 @@ function Find-GateSum {
 }
 
 function Open-GateFromShelf {
-    Enter-KidsShelf   # the first run ends in the grown-ups' corner (Slice 325)
+    Enter-KidsShelf   # a tap on the lock locks an unlocked shelf (Slice 418)
     $back = Find-UiaById (Get-DinoWindow) 'ReadingBack'
     if ($back) { Invoke-Uia $back }
-    $button = Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf'
-    Invoke-Uia $button   # InvokePattern first; the mouse click is only the fallback when the button has no pattern
+    $button = Wait-VisibleId 'GalleryLock' 15 'FAIL the lock is not on the shelf'
+    Invoke-Uia $button   # InvokePattern first; the mouse click is only the fallback when the lock has no pattern
     $gate = $null
     try { $gate = Wait-VisibleName $HoldRingName 5 'gate not up' } catch { $gate = $null }
     if (-not $gate) {
         # A run once saw only the button's tooltip after the first press: invoke once more before failing.
-        Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 5 'FAIL the "For grown-ups" button vanished before the retry')
-        Wait-VisibleName $HoldRingName 15 'FAIL the gate did not open from the "For grown-ups" button' | Out-Null
+        Invoke-Uia (Wait-VisibleId 'GalleryLock' 5 'FAIL the lock vanished before the retry')
+        Wait-VisibleName $HoldRingName 15 'FAIL the gate did not open from the lock' | Out-Null
     }
 }
 
@@ -66,7 +66,7 @@ function Pass-Gate {
         }
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'FAIL no OK key')
     }
-    Wait-VisibleId 'GalleryDone' 15 'FAIL grown-up mode did not open after the gate' | Out-Null
+    Wait-VisibleId 'LockChip' 15 'FAIL the shelf did not unlock after the gate' | Out-Null
     return $answer
 }
 
@@ -77,7 +77,7 @@ function Open-Settings {
         if (-not (Find-GroupHeading $group)) { throw "FAIL Settings group '$group' missing" }
     }
     if (Find-UiaVisibleById (Get-DinoWindow) 'GrownUpBack') { throw 'FAIL the Settings list shows a back arrow of its own' }
-    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')) { throw 'FAIL the corner''s way back is not in the rail beside the Settings list' }
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryLock')) { throw 'FAIL the lock is not in the rail beside the Settings list' }
 }
 
 function Invoke-SettingsBack {
@@ -101,35 +101,35 @@ function Test-ReadingSpeedRow {
     Wait-Until { (Get-PageTitle 'SettingsTitleReadingSpeedPage') -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
     # The page opens inside the Settings tab (the list steps aside, the rail stays), and its back arrow goes up one level to the list.
     if (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle') { throw 'FAIL the Settings list is still showing beside the Reading speed page' }
-    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')) { throw 'FAIL the corner''s way back left the rail while Reading speed was open' }
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryLock')) { throw 'FAIL the lock left the rail while Reading speed was open' }
     Invoke-SettingsBack
     Wait-VisibleId 'SettingsTitle' 10 'FAIL the back arrow on Reading speed did not return to the Settings list' | Out-Null
 }
 
 function Test-BackToShelf {
     Wait-VisibleId 'SettingsTitle' 10 'FAIL the Settings list is not showing' | Out-Null
-    # GalleryDone is the coral button in the rail (a Border with a tap), so Invoke-Uia clicks the centre of its bounds with the mouse: report the bounds on failure.
-    $done = Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone'
-    $rect = $done.Current.BoundingRectangle
-    Invoke-Uia $done
-    $shelf = $null
-    try { $shelf = Wait-VisibleId 'GalleryGrownUps' 5 'shelf not back' } catch { $shelf = $null }
-    if (-not $shelf) {
-        Invoke-Uia (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')   # one more click, as the gate step does
-        Wait-VisibleId 'GalleryGrownUps' 10 "FAIL Done did not return to the kids' shelf (Done bounds $([int]$rect.X),$([int]$rect.Y) $([int]$rect.Width) x $([int]$rect.Height))" | Out-Null
+    # GalleryLock is the lock in the rail (a tap, no pattern), so Invoke-Uia clicks the centre of its bounds with the mouse: report the bounds on failure. A tap on it while unlocked locks at once.
+    $lock = Find-UiaVisibleById (Get-DinoWindow) 'GalleryLock'
+    $rect = $lock.Current.BoundingRectangle
+    Invoke-Uia $lock
+    $locked = $null
+    try { $locked = Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 5 'shelf not locked' } catch { $locked = $null }
+    if (-not $locked) {
+        Invoke-Uia (Find-UiaVisibleById (Get-DinoWindow) 'GalleryLock')   # one more click, as the gate step does
+        Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 "FAIL the lock did not lock the shelf (lock bounds $([int]$rect.X),$([int]$rect.Y) $([int]$rect.Width) x $([int]$rect.Height))" | Out-Null
     }
-    if (Find-UiaVisibleById (Get-DinoWindow) 'GallerySettings') { throw 'FAIL the Settings tab is still visible on the kids'' shelf' }
+    if (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle') { throw 'FAIL the Settings list is still showing on the locked shelf' }
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $log = @()
     try {
-        Open-GateFromShelf;           $log += 'gate opened from the For grown-ups button'
-        $answer = Pass-Gate;          $log += "gate passed (answer $answer), grown-up mode open"
+        Open-GateFromShelf;           $log += 'gate opened from the lock'
+        $answer = Pass-Gate;          $log += "gate passed (answer $answer), shelf unlocked"
         Open-Settings;                $log += 'Settings tab -> the list, groups Reading and This computer shown, no back arrow'
         Test-ReadingSpeedRow;         $log += 'Reading speed row -> its page inside the tab -> back arrow -> the list'
         $log += $script:WidthProbe
-        Test-BackToShelf;             $log += 'coral button -> kids'' shelf'
+        Test-BackToShelf;             $log += 'lock -> locked shelf'
     } catch {
         $dump = Get-VisibleNames (Get-DinoWindow)
         throw ('[' + ($log -join ' | ') + '] ' + $_.Exception.Message + ' UI: ' + ($dump -join ' / '))

@@ -53,7 +53,7 @@ name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
           text: Open
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000

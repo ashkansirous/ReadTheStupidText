@@ -228,11 +228,11 @@ onFlowComplete:
     timeout: 20000
 # The child's shelf leaves the locked book out (three books are left: two free and the bought one); its files stay on the device. Slice 398 (mock SB8): no banner, no lock, no offer there.
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 10000
 - assertNotVisible:
     id: LapsedSubscribe
@@ -366,11 +366,11 @@ onFlowComplete:
       id: OfflineBanner
     timeout: 20000
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 10000
 - assertNotVisible:
     id: LapsedBuy

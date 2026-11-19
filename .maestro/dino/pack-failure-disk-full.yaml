@@ -46,7 +46,7 @@ name: A pack download with a full disk shows the failure and the next launch ret
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings

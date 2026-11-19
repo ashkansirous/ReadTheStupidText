@@ -1,11 +1,11 @@
 # Slice 362, Decision 4 (no mock frame; built from the shipped "Microphone is off" panel): the microphone is refused on Record. The Record page leaves, step 5 shows "Microphone is off" with Open settings and a quiet
-# Continue without recording, which is the only way past the step without a recording; it leads on to the corner tour and the try is not counted as tried.
+# Continue without recording (Slice 418 adds "Skip this step" to the intro and the record page; this panel keeps its own quiet link); it ends setup on the locked shelf and the try is not counted as tried.
 # The permission is denied at launch and the system prompt is dismissed with its deny button, so the refusal is the one a person gives.
 # Android and iOS ask in RecordPage (Permissions.Microphone); iOS prints its prompt in the TestFlight run, not here.
 # expect-log: HOOK test-store ok ok
 # expect-log: [Record] microphone refused in onboarding
 # expect-log: [Onboarding] voice microphone off
-# expect-log: [Onboarding] tour stop=Welcome
+# expect-log: [Onboarding] route voice done tried=False
 appId: uk.sirous.dinoreader.dbg
 name: First run with the microphone refused, Continue without recording
 ---
@@ -92,8 +92,12 @@ name: First run with the microphone refused, Continue without recording
 - tapOn:
     id: OnboardingContinueWithout
     waitToSettleTimeoutMs: 600
+# Setup ends straight on the locked shelf (NO8), with no card.
 - extendedWaitUntil:
     visible:
-      id: TourWelcome
+      id: StoryTile
     timeout: 30000
-- assertVisible: "This is the grown-ups’ corner"
+- assertVisible:
+    id: GalleryLock
+- assertNotVisible:
+    id: LockChip

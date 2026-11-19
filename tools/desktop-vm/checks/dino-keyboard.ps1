@@ -110,16 +110,24 @@ function Wait-VisibleId {
 }
 
 function Open-GateFromShelf {
-    Enter-KidsShelf   # the first run ends in the grown-ups' corner (Slice 325)
+    Enter-KidsShelf   # a tap on the lock locks an unlocked shelf (Slice 418: the gate opens from the lock)
     $back = Find-UiaById (Get-DinoWindow) 'ReadingBack'
     if ($back) { Invoke-Uia $back }
-    Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf')
+    Invoke-Uia (Wait-VisibleId 'GalleryLock' 15 'FAIL the lock is not on the shelf')
     $ring = $null
     try { $ring = Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 5 'gate not up' } catch { $ring = $null }
     if (-not $ring) {
-        Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 5 'FAIL the "For grown-ups" button vanished before the retry')
-        Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'FAIL the gate did not open from the "For grown-ups" button' | Out-Null
+        Invoke-Uia (Wait-VisibleId 'GalleryLock' 5 'FAIL the lock vanished before the retry')
+        Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'FAIL the gate did not open from the lock' | Out-Null
     }
+}
+
+function Ensure-Unlocked {
+    # Slice 418: reading does not lock the shelf, but the 30 seconds may have run out while a check was slow; the gate is passed again only then.
+    param($Package)
+    if (Find-UiaVisibleById (Get-DinoWindow) 'LockChip') { return }
+    Open-GateFromShelf
+    Test-GateByKeyboard $Package
 }
 
 function Test-GateByKeyboard {
@@ -145,12 +153,12 @@ function Test-GateByKeyboard {
     Type-Number ($answer + 1)
     Press-Key $VkEnter
     Start-Sleep -Milliseconds 800
-    if (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone') { throw 'FAIL a wrong typed answer opened grown-up mode' }
+    if (Find-UiaVisibleById (Get-DinoWindow) 'LockChip') { throw 'FAIL a wrong typed answer unlocked the shelf' }
     $answer = [int](Wait-Until { Find-GateSum } 5 'FAIL no sum after a wrong answer')
 
     Type-Number $answer
     Press-Key $VkEnter
-    Wait-VisibleId 'GalleryDone' 15 'FAIL typing the sum then Enter did not open grown-up mode' | Out-Null
+    Wait-VisibleId 'LockChip' 15 'FAIL typing the sum then Enter did not unlock the shelf' | Out-Null
 }
 
 function Wait-ToneAfter {
@@ -174,9 +182,9 @@ function Test-SheetEsc {
     Wait-Until { Find-UiaById (Get-DinoWindow) 'ReadingTransport' } 20 'FAIL Enter on the focused "Read now" did not open the book' | Out-Null
     Focus-DinoWindow
     Press-Key $VkEscape
-    # "Read now" leaves the grown-ups corner by design (GalleryPage.LeaveAndReadAsync), so Esc, like Back, returns to the kids' shelf; the gate is passed again for the rest of the check.
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc on the reading page did not come back to the kids'' shelf' | Out-Null
-    Test-GateByKeyboard $Package
+    # Slice 418 decision 6: "Read now" opens the book without locking (GalleryPage.LeaveAndReadAsync), so Esc returns to the same shelf; the gate is passed again only when the 30 seconds ran out meanwhile.
+    Wait-VisibleId 'GalleryLock' 10 'FAIL Esc on the reading page did not come back to the shelf' | Out-Null
+    Ensure-Unlocked $Package
     $tile = Wait-Until {
         foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
             if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
@@ -190,20 +198,23 @@ function Test-SheetEsc {
 }
 
 function Test-EscFromGrownUpPage {
-    # Slice 325 part B (decision 6): Esc anywhere in the corner, a Settings sub-page too, goes back to the child's shelf (the path of the coral button), not up one level.
-    # The corner is entered again by the gate for the next steps.
+    # Slice 418: Esc is Android's Back. On a Settings sub-page it goes up to the Settings list first, then from Settings to Books; the shelf stays unlocked all the way (an Esc is a grown-up key).
     param($Package)
-    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no Settings tab in the grown-ups corner')
+    Ensure-Unlocked $Package
+    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no Settings tab on the unlocked shelf')
     Wait-VisibleId 'SettingsTitle' 15 'FAIL the Settings list did not show' | Out-Null
     $row = Wait-Until { Find-UiaByName -Root (Get-DinoWindow) -Name 'Reading speed: ' -ControlType 'Button' } 5 'FAIL no Reading speed row in Settings'
     Invoke-Uia $row
     Wait-VisibleId 'SettingsTitleReadingSpeedPage' 10 'FAIL the Reading speed row did not open its page inside the tab' | Out-Null
     Focus-DinoWindow
     Press-Key $VkEscape
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc on a Settings sub-page did not go back to the kids'' shelf' | Out-Null
+    Wait-VisibleId 'SettingsTitle' 10 'FAIL Esc on a Settings sub-page did not go back to the Settings list' | Out-Null
     Start-Sleep -Milliseconds 300
     if (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitleReadingSpeedPage') { throw 'FAIL the Reading speed page is still showing after Esc' }
-    Test-GateByKeyboard $Package
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'LockChip')) { throw 'FAIL Esc on a Settings sub-page locked the shelf' }
+    Press-Key $VkEscape
+    Wait-VisibleId 'StoryTile' 10 'FAIL Esc on the Settings list did not go to the Books tab' | Out-Null
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'LockChip')) { throw 'FAIL Esc on the Settings list locked the shelf' }
 }
 
 function Press-Ctrl {
@@ -218,37 +229,40 @@ function Press-Ctrl {
 }
 
 function Test-CornerKeys {
-    # Slice 325 parts A and B (frame W1): in the corner Ctrl+2, Ctrl+3 and Ctrl+1 pick Store, Settings and Books, which show inside the rail's content area (the coral button stays on screen),
-    # and Esc in the corner goes back to the child's shelf, the path of the coral button. Proved by the trace line DinoKeyboard writes for a Ctrl tab key and by what each tab shows.
+    # Slice 418 (frames WL1, WL2): on the unlocked shelf Ctrl+2, Ctrl+3 and Ctrl+1 pick Store, Settings and Books, which show inside the rail's content area (the lock stays in the rail),
+    # and Esc on Books asks to close the app (there is no corner to go back from). Proved by the trace line DinoKeyboard writes for a Ctrl tab key and by what each tab shows.
     param($Package)
-    Wait-VisibleId 'GalleryDone' 5 'FAIL no way back in the grown-ups corner' | Out-Null
-    Wait-VisibleId 'CornerTabBooks' 5 'FAIL no Books tab in the grown-ups corner' | Out-Null
+    Ensure-Unlocked $Package
+    Wait-VisibleId 'CornerTabBooks' 5 'FAIL no Books tab on the shelf' | Out-Null
     foreach ($tab in @(@('CornerStore', 0x32, 'GalleryStoreSub'), @('CornerSettings', 0x33, 'SettingsTitle'), @('CornerBooks', 0x31, 'StoryTile'))) {
         Focus-DinoWindow
         $before = Count-Trace $Package ("corner tab " + $tab[0])
         Press-Ctrl ([byte]$tab[1])
         Wait-Until { (Count-Trace $Package ("corner tab " + $tab[0])) -gt $before } 10 "FAIL Ctrl+digit did not pick $($tab[0])" | Out-Null
         Wait-VisibleId $tab[2] 10 "FAIL $($tab[0]) did not show its content ($($tab[2]))" | Out-Null
-        Wait-VisibleId 'GalleryDone' 5 "FAIL the corner's way back left the rail on $($tab[0])" | Out-Null
+        Wait-VisibleId 'GalleryLock' 5 "FAIL the lock left the rail on $($tab[0])" | Out-Null
+        if (-not (Find-UiaVisibleById (Get-DinoWindow) 'LockChip')) { throw "FAIL the shelf locked while Ctrl+digit picked $($tab[0]) (a key is a grown-up tap)" }
     }
     Focus-DinoWindow
     Press-Key $VkEscape
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc in the corner did not go back to the kids'' shelf' | Out-Null
+    Wait-Until { Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?' } 10 'FAIL Esc on the Books tab did not ask to close the app' | Out-Null
+    Press-Key $VkEscape
+    Wait-Until { -not (Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?') } 10 'FAIL Esc on the close question did not keep the shelf' | Out-Null
 }
 
 function Test-EscOnShelf {
-    # Slice 325 part C4: Esc on the kids' shelf asks "Close Dino: Kids Books & Stories?"; Esc on the question is Stay and keeps the shelf.
+    # Slice 325 part C4 (Slice 418: the one shelf, locked or not): Esc on the shelf asks "Close Dino: Kids Books & Stories?"; Esc on the question is Stay and keeps the shelf.
     Focus-DinoWindow
     Press-Key $VkEscape
     Wait-Until { Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?' } 10 'FAIL Esc on the kids'' shelf did not ask to close the app' | Out-Null
     Press-Key $VkEscape
     Wait-Until { -not (Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?') } 10 'FAIL Esc on the close question did not keep the shelf' | Out-Null
-    Wait-VisibleId 'GalleryGrownUps' 5 'FAIL the kids'' shelf is gone after Stay' | Out-Null
+    Wait-VisibleId 'GalleryLock' 5 'FAIL the shelf is gone after Stay' | Out-Null
 }
 
 function Test-ReadingKeys {
     param($Package)
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL the kids'' shelf is not showing before the reading keys' | Out-Null
+    Wait-VisibleId 'GalleryLock' 10 'FAIL the shelf is not showing before the reading keys' | Out-Null
     $tile = Wait-Until {
         foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
             if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
@@ -273,7 +287,7 @@ function Test-ReadingKeys {
     Press-Key $VkSpace   # pause or stop what the first Space started
     Press-Key $VkEscape
     Wait-Until { -not (Find-UiaById (Get-DinoWindow) 'ReadingTransport') } 10 'FAIL Esc did not leave the reading page' | Out-Null
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Esc did not return to the kids'' shelf' | Out-Null
+    Wait-VisibleId 'GalleryLock' 10 'FAIL Esc did not return to the shelf' | Out-Null
     return $title
 }
 

@@ -1,5 +1,5 @@
-# Slice 189: the shelf has the book-and-plus button and no gear; grown-up mode has the gear, a "..." on every cover and the book sheet; Settings (a corner tab since Slice 325) goes back to the kids' shelf.
-# The gate (hold, then a sum) is tapped through by hand: the enter-grown-up hook stands in for a passed gate.
+# Slice 189, Slice 418: the locked shelf has the lock and no "..." on the covers; unlocked it has the "Unlocked" chip, a "..." on every cover and the book sheet; Settings is a tab, and Back on its list goes to Books.
+# The gate (hold, then a sum) is tapped through by hand (lock.yaml opens it and cancels): the enter-grown-up hook (the alias of unlock) stands in for a passed gate.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
 appId: uk.sirous.dinoreader.dbg
@@ -16,9 +16,9 @@ name: Grown-ups button, gear, book sheet and back chain
       id: StoryTile
     timeout: 60000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 - assertNotVisible:
-    id: GallerySettings
+    id: LockChip
 - assertNotVisible:
     id: TileMore
 # The hook goes to the running app (stopApp: false), so the books stay; the hook enters grown-up mode once the shelf is up.
@@ -28,14 +28,14 @@ name: Grown-ups button, gear, book sheet and back chain
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - assertVisible:
     id: GallerySettings
 - assertVisible:
     id: GalleryStore
-- assertNotVisible:
-    id: GalleryGrownUps
+- assertVisible:
+    id: LockChip
 # The sheet of a starter book: Remove, and no Edit pages row on any book (Slice 278). Keep leaves it open; a tap outside closes it.
 - tapOn:
     id: TileMore
@@ -59,7 +59,7 @@ name: Grown-ups button, gear, book sheet and back chain
     waitToSettleTimeoutMs: 300
 - assertNotVisible:
     id: BookSheetRemove
-# Slice 392 (Slice 325): Settings is a tab inside the corner, not a pushed page, so the coral way back (GalleryDone) stays on screen with the Settings list under it.
+# Slice 392 (Slice 325): Settings is a tab, not a pushed page, so the chip and the lock stay on screen with the Settings list under them.
 - tapOn:
     id: GallerySettings
     waitToSettleTimeoutMs: 300
@@ -68,12 +68,24 @@ name: Grown-ups button, gear, book sheet and back chain
       id: SettingsTitle
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
-# Android Back on the Settings list (no sub-page open) leaves the corner for the kids' shelf, with the book-and-plus button again.
+    id: LockChip
+# Android Back on the Settings list (no sub-page open) goes to the Books tab (Slice 418); the shelf stays unlocked, so the covers keep their "...".
 - back
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: StoryTile
     timeout: 10000
+- assertVisible:
+    id: TileMore
+# The lock locks at once, with no question: the chip and the "..." go.
+- tapOn:
+    id: GalleryLock
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LockToast
+    timeout: 10000
+- assertNotVisible:
+    id: LockChip
 - assertNotVisible:
     id: TileMore

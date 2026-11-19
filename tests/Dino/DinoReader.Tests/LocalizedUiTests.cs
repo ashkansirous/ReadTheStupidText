@@ -98,7 +98,7 @@ public partial class LocalizedUiTests
         foreach (string file in LanguageFiles())
         {
             Dictionary<string, string> translated = Load(file);
-            Assert.True(translated.ContainsKey("Gallery_GrownUpsButton"), $"{file}: Gallery_GrownUpsButton missing");
+            Assert.True(translated.ContainsKey("Gallery_ForGrownUps"), $"{file}: Gallery_ForGrownUps missing");
             Assert.DoesNotContain("Settings_Books", translated.Keys);
             foreach (string key in keys)
             {

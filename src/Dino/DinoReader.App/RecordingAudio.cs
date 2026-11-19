@@ -34,9 +34,10 @@ public interface IRecordingPlayer
 }
 
 /// <summary>The shared half of the recorder: the length is the wall-clock time between the platform start and stop.</summary>
-internal sealed partial class MicRecorder : IMicRecorder
+internal sealed partial class MicRecorder : IMicRecorder, IDisposable
 {
 	private readonly Stopwatch _clock = new();
+	private IDisposable? _lockHold; // Slice 418 decision 16: a recording in progress holds the shelf's 30-second lock, the same on Android, iOS and Windows (this half is shared)
 
 	public bool IsRecording { get; private set; }
 
@@ -47,9 +48,20 @@ internal sealed partial class MicRecorder : IMicRecorder
 			throw new InvalidOperationException("A recording is already running.");
 		}
 
+		ReleaseLockHold(); // a hold left by an abandoned earlier recording never stacks under this one
 		await PlatformStartAsync(path);
 		_clock.Restart();
 		IsRecording = true;
+		_lockHold = LockHolds.Begin("recording");
+	}
+
+	/// <summary>An abandoned recorder (the page closed, an error, the app tearing down) gives the shelf's clock back.</summary>
+	public void Dispose() => ReleaseLockHold();
+
+	private void ReleaseLockHold()
+	{
+		_lockHold?.Dispose();
+		_lockHold = null;
 	}
 
 	public async Task<TimeSpan> StopAsync()
@@ -61,6 +73,7 @@ internal sealed partial class MicRecorder : IMicRecorder
 
 		IsRecording = false;
 		_clock.Stop();
+		ReleaseLockHold();
 		await PlatformStopAsync();
 		return _clock.Elapsed;
 	}

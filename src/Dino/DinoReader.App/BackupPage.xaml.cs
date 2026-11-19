@@ -104,7 +104,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 
 	private Task CloseAsync() => _hostClose is { } close ? close() : Task.CompletedTask;
 
-	private Task AlertAsync(string title, string message, string ok) => (_hostPage ?? this).DisplayAlertAsync(title, message, ok);
+	private Task AlertAsync(string title, string message, string ok) => LockHolds.WhileAsync("alert", () => (_hostPage ?? this).DisplayAlertAsync(title, message, ok));
 
 	private void PlaceCards(bool sideBySide)
 	{

@@ -1,0 +1,107 @@
+# Slice 418 (mock 2026-11-19 One Shelf with a Lock, frames L1 to L4, L7): the shelf starts locked (covers with no "...", Store and Settings faded); a tap on a faded tab shows the hint and pulses the lock (L2);
+# the lock opens the unlock popup, whose button says Cancel and leaves it locked (L3); unlocked shows the "Unlocked" chip and the "..." on the covers (L4); the chip counts down and the shelf locks itself with
+# "Locked again" (L7, with lock-seconds 3 so the flow does not wait 30 s); a tap on the lock locks at once with "Locked.". The gate's 3 s hold and sum are not driven (grown-ups-button.yaml covers the chain): the unlock hook stands in for a passed gate.
+# Against the old build (a Grown-ups button, no lock) the GalleryLock id and every [Lock] line are missing, so the flow fails there.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK lock-seconds 3
+# expect-log: HOOK unlock entered
+# expect-log: [Lock] hint
+# expect-log: [Lock] locked
+# expect-log: [Lock] unlocked
+# expect-log: [Lock] message reason=Timer
+# expect-log: [Lock] message reason=ByHand
+appId: uk.sirous.dinoreader.dbg
+name: Lock, hint, unlock popup with Cancel, countdown chip, timer lock and tap lock
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# L1: locked by default. The lock is the last tab; no chip, no "..." on the covers.
+- assertVisible:
+    id: GalleryLock
+- assertNotVisible:
+    id: LockChip
+- assertNotVisible:
+    id: TileMore
+# L2: Store (and Settings) answer a tap with the dark hint, and nothing opens.
+- tapOn:
+    id: GalleryStore
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LockHint
+    timeout: 10000
+- assertVisible: "Store and Settings are for grown-ups.*"
+- assertVisible:
+    id: StoryTile
+# L3: the lock opens the popup; Cancel closes it and the shelf stays locked.
+- tapOn:
+    id: GalleryLock
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Press and hold for 3 seconds.*"
+    timeout: 15000
+- assertVisible: Cancel
+- tapOn: Cancel
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+- assertNotVisible:
+    id: LockChip
+# L7 first: a 3 s timer. lock-seconds shortens the 30 s; the unlock hook (seconds=3) starts the countdown. No grown-up tap comes, so the shelf locks itself and says why.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: lock-seconds
+      seconds: "3"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: unlock
+      seconds: "3"
+# L4: unlocked, the chip and the "..." show.
+- extendedWaitUntil:
+    visible:
+      id: LockChip
+    timeout: 30000
+- assertVisible:
+    id: TileMore
+- extendedWaitUntil:
+    visible:
+      id: LockToast
+    timeout: 20000
+- assertVisible: "Locked again: no grown-up taps for 30 seconds."
+- assertNotVisible:
+    id: LockChip
+- assertNotVisible:
+    id: TileMore
+# A tap on the lock while unlocked locks at once (no question): unlock again, then tap the lock.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: unlock
+      seconds: "600"
+- extendedWaitUntil:
+    visible:
+      id: LockChip
+    timeout: 30000
+- tapOn:
+    id: GalleryLock
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LockToast
+    timeout: 10000
+- assertVisible: "Locked."
+- assertNotVisible:
+    id: LockChip
+- assertNotVisible:
+    id: TileMore

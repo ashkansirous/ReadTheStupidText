@@ -37,11 +37,12 @@ onFlowComplete:
 - assertVisible:
     id: GalleryTitle
 - assertVisible:
-    id: GalleryGrownUps
-- assertNotVisible:
+    id: GalleryLock
+# Slice 418: the one menu (Books, Store, Settings, Lock) is always there; locked it shows no chip.
+- assertVisible:
     id: CornerTabBooks
 - assertNotVisible:
-    id: GalleryDone
+    id: LockChip
 - takeScreenshot: shot-K1-shelf
 - takeScreenshot: shot-KT1-shelf
 # Held sideways: a cream rail beside a grid of covers, the Grown-ups button in the rail.
@@ -50,14 +51,14 @@ onFlowComplete:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 - assertVisible:
     id: GalleryTitle
 - takeScreenshot: shot-KL1-shelf
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 15000
 # German with two story languages (the flag shows) at 375 dp: "Meine Geschichten" and "Geschichten" do not fit beside "Für Erwachsene", so the title hides and the Dino icon stands alone.
 # This part reads the German shelf; on a wider phone the title may stay, and shot-K1de-shelf is taken either way for the contact sheet.
@@ -73,5 +74,5 @@ onFlowComplete:
       id: StoryTile
     timeout: 60000
 - assertVisible:
-    id: GalleryGrownUps
+    id: GalleryLock
 - takeScreenshot: shot-K1de-shelf

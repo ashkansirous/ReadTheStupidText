@@ -60,7 +60,7 @@ public static class CornerLayout
     public const double PhoneLandscapeRail = 250;
     public const double TabletPortraitRail = 260;
     public const double TabletLandscapeRail = 290;
-    public const double WindowsRail = 280;
+    public const double WindowsRail = 270; // mock WL1/WL2 (One Shelf with a Lock) draws the rail 270 wide
 
     private const double CompactBelow = 380;
     private const double RegularBelow = 400;
@@ -227,7 +227,7 @@ public static class CornerLayout
         Content = content, ContentTitle = 28, ContentGap = 20, GapX = gapX, GapY = gapY, CoverRadius = 14, TileTitle = 15, TileGap = 7, DotSize = 36, DotInset = 6,
     };
 
-    // Frame W1: the 280 rail with the shortcut hints, 26 pt title.
+    // Frame W1 (WL1): the 270 rail with the shortcut hints, 26 pt title.
     private static CornerSizes WindowsSizes() => new()
     {
         RailWidth = WindowsRail, RailPadding = new Edges(28, 14, 20, 24), RailGap = 10, NameIcon = 24, NameSize = 21, NamePadding = new Edges(4, 0, 4, 6),

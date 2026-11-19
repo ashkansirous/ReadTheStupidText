@@ -24,7 +24,11 @@ namespace DinoReader.Testing;
 internal static partial class DinoTestCommands
 {
 	private const string Name = "open-book";
+	private const string UnlockName = "unlock"; // Slice 418: the lock's hook; enter-grown-up (Slice 189) stays as its alias so older flows still run
 	private const string EnterGrownUpName = "enter-grown-up";
+	private const string LockSecondsName = "lock-seconds"; // Slice 418 item 8: shortens the 30-second auto-lock for a flow (lock.yaml uses 3)
+	private const string SecondsKey = "seconds";
+	private const int FlowLockSeconds = 600; // an unlock from a flow keeps the shelf open for ten minutes unless seconds=<n> says otherwise, so a slow flow is not locked under its own taps
 	private const string ShelfReorderMoveName = "shelf-reorder-move"; // Slice 264
 	private const string ShelfOrderResetName = "shelf-order-reset"; // Slice 264
 	private const string StoriesFolderName = "stories"; // same folder as MauiProgram.StoriesFolder
@@ -190,9 +194,15 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
-		if (command.Name == EnterGrownUpName)
+		if (command.Name is UnlockName or EnterGrownUpName)
 		{
-			_ = EnterGrownUpAsync(command.Get(TabKey, TabBooks));
+			_ = EnterGrownUpAsync(command.Name, command.Get(TabKey, TabBooks), int.TryParse(command.Get(SecondsKey, string.Empty), out int seconds) ? seconds : FlowLockSeconds);
+			return TestHookDispatcher.Ok;
+		}
+
+		if (command.Name == LockSecondsName)
+		{
+			LockSeconds(command.Get(SecondsKey, string.Empty));
 			return TestHookDispatcher.Ok;
 		}
 
@@ -487,21 +497,23 @@ internal static partial class DinoTestCommands
 		}
 	}
 
-	// Slice 325 A6: tab=books|store|settings (default books) opens that tab of the corner (Slice 325 part B: the Store and Settings tabs are hosted in the corner's chrome).
-	private static async Task EnterGrownUpAsync(string tab)
+	// Slice 325 A6, Slice 418: tab=books|store|settings (default books) unlocks the shelf and opens that tab; seconds=<n> sets how long it stays open without a grown-up tap (default 600 for a flow).
+	// Logs "<name> entered" (name is unlock or its alias enter-grown-up).
+	private static async Task EnterGrownUpAsync(string name, string tab, int seconds)
 	{
 		try
 		{
 			NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
 			if (root is null)
 			{
-				Log($"{EnterGrownUpName} failed no gallery");
+				Log($"{name} failed no gallery");
 				return;
 			}
 
+			IPlatformApplication.Current!.Services.GetRequiredService<GrownUpMode>().SetTotalSeconds(seconds);
 			if (!await EnterUntilStableAsync())
 			{
-				Log($"{EnterGrownUpName} failed mode kept resetting");
+				Log($"{name} failed mode kept resetting");
 				return;
 			}
 
@@ -510,13 +522,26 @@ internal static partial class DinoTestCommands
 				await MainThread.InvokeOnMainThreadAsync(() => gallery.DebugSelectTabAsync(tab == TabStore ? CornerTab.Store : CornerTab.Settings));
 			}
 
-			Log($"{EnterGrownUpName} entered");
+			Log($"{name} entered");
 		}
 		catch (Exception ex)
 		{
 			// no-fallback: Debug test hook, logs the fault
-			Log($"{EnterGrownUpName} fault {TestHookLog.FaultSummary(ex)}");
+			Log($"{name} fault {TestHookLog.FaultSummary(ex)}");
 		}
+	}
+
+	// Slice 418 item 8: lock-seconds seconds=<n> sets the seconds a grown-up has after the last grown-up tap (30 in the app), from the next unlock or tap on; logs "lock-seconds <n>".
+	private static void LockSeconds(string text)
+	{
+		if (!int.TryParse(text, out int seconds) || seconds < 1)
+		{
+			Log($"{LockSecondsName} failed bad seconds '{text}'");
+			return;
+		}
+
+		MainThread.BeginInvokeOnMainThread(() => IPlatformApplication.Current!.Services.GetRequiredService<GrownUpMode>().SetTotalSeconds(seconds));
+		Log($"{LockSecondsName} {seconds}");
 	}
 
 	// Slice 372 item 3: open-book never read `speed=`, so the S21's "speed=2" book ran at the saved speed (1x by default) and was still playing after 521 s. A given speed is held for this app run only

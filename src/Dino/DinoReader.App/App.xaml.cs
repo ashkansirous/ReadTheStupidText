@@ -64,10 +64,11 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		// A new window (activity recreated, second desktop window) always starts in kids' mode.
+		// A new window (activity recreated, second desktop window) always starts locked.
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		var navigation = _navigation = BuildNavigation(RootPage());
 		var window = new Window(navigation);
+		StartLock(window); // Slice 418: the 30-second lock ticks for the whole life of the window
 #if WINDOWS
 		DinoWindowFrame.Attach(window); // Slice 235: size, minimum, remembered place and title bar of the desktop window
 		DinoTitleBar.Watch(window); // Slice 235 part B: the title bar follows the top-most page, a modal opening or closing included
@@ -94,6 +95,28 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		_ = CountLaunchAsync();
 		return window;
 	}
+
+	// Slice 418 item 5: one tick for the app's life. When the 30 seconds run out the shelf locks and every grown-up page over the gallery closes (a Settings sub-page, the Record intro, ...), the way leaving the app does;
+	// the gallery shows "Locked again" when it is the page in front again (GrownUpMode keeps the reason until it has).
+	private void StartLock(Window window)
+	{
+		var mode = _services.GetRequiredService<GrownUpMode>();
+		if (_lockTimer is null)
+		{
+			_lockTimer = new LockTimer(mode);
+			mode.Locked += reason => MainThread.BeginInvokeOnMainThread(() =>
+			{
+				if (_navigation is { } navigation)
+				{
+					_ = ObserveAsync(CloseGrownUpPagesAsync(navigation));
+				}
+			});
+		}
+
+		_lockTimer.Start(window.Dispatcher);
+	}
+
+	private LockTimer? _lockTimer;
 
 	// The launch count waits for the first config fetch, which says whether counting is on at all (Slice 134); the fetch is joined, not repeated.
 	// Then the queue is sent, so a session with no reading still reports (the start-up flush ran before this count existed).
@@ -280,7 +303,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	/// <summary>
 	/// Slice 376 item 2: <c>skip-first-run</c> on an install that already has a language. A persisted first-run or onboarding state left by an interrupted onboarding flow (the books pick, the story
 	/// languages step, a saved listen/voice step) would show onboarding again on the next launch, so it is cleared. The hook log says which state forced it (likely cause of the "onboarding again
-	/// after relaunch" reports of 2026-11-13; a device run proves it). The corner step is the gallery's own tour (RootPage leaves it alone), so it is never cleared here. True when nothing was pending or the
+	/// after relaunch" reports of 2026-11-13; a device run proves it). There is no tour step any more (Slice 418). True when nothing was pending or the
 	/// root was rebuilt; false when something was pending but there is no window yet (nothing is cleared, so the caller's retry sees the same state).
 	/// </summary>
 	public bool ClearPendingOnboarding()
@@ -288,7 +311,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var pending = new List<string>();
 		if (FirstBooksGate.Pending) { pending.Add("books"); }
 		if (FirstBooksGate.StoryLanguagesPending) { pending.Add("story-languages"); }
-		bool clearStep = OnboardingState.Step is { } step && step != OnboardingStep.Corner;
+		bool clearStep = OnboardingState.Step is not null;
 		if (clearStep) { pending.Add($"step-{OnboardingState.Step}"); }
 		if (pending.Count > 0 && Windows.FirstOrDefault() is null)
 		{
@@ -351,8 +374,14 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			return BooksPageAfterRestart();
 		}
 
-		// Slice 362: a kill after the books resumes the onboarding at its saved step (listen or voice); the corner tour is the gallery's own (GalleryPage starts it).
-		if (OnboardingState.Step is { } step && step != OnboardingStep.Corner)
+		// Slice 362: a kill after the books resumes the onboarding at its saved step (listen or voice). A step saved by the removed corner tour is no step any more (Slice 418): onboarding finishes normally
+		// (the saved step is cleared and intro_ended is sent, so the intro does not stay open in the counts) and the shelf opens.
+		if (OnboardingState.SavedOnOldCornerStep)
+		{
+			OnboardingRoute.Finish(_services);
+		}
+
+		if (OnboardingState.Step is { } step)
 		{
 			return new OnboardingResumePage(_services, step);
 		}
