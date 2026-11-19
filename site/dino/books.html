@@ -104,8 +104,8 @@
         <h2 id="getTitle"></h2>
         <div class="actions">
           <a class="btn" href="https://apps.microsoft.com/detail/9N9VHRLCZXN5">Windows - Microsoft Store</a>
-          <a class="btn alt" href="./#platforms">Android - Google Play</a>
-          <a class="btn alt" href="https://testflight.apple.com/join/WnF7M53D">iPhone, iPad - TestFlight</a>
+          <a class="btn alt" href="https://play.google.com/store/apps/details?id=uk.sirous.dinoreader">Android - Google Play</a>
+          <a class="btn alt" href="https://apps.apple.com/app/id6825053435">iPhone, iPad - App Store</a>
         </div>
       </section>
     </div>
@@ -206,12 +206,14 @@
   var PREFIX = location.pathname.indexOf("/dino/") === 0 ? "/dino" : "";
   var SLOW_MS = 500;
   var TIMEOUT_MS = 15000;
+  // The chooser lists the fifteen languages by total speakers, most first (Slice 417).
+  var LANGUAGE_ORDER = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "ja", "fa", "nl", "sv", "da", "fi", "nb"];
   var $ = function (id) { return document.getElementById(id); };
   var state = { code: DEFAULT_LANGUAGE, stories: [], config: readConfig(null), loaded: false, controller: null, slowTimer: null, cancelled: false };
 
   function fillLanguageChooser() {
     var select = $("lang");
-    Object.keys(LANGUAGES).forEach(function (code) {
+    LANGUAGE_ORDER.forEach(function (code) {
       var option = document.createElement("option");
       option.value = code; option.textContent = LANGUAGES[code].name; option.lang = code;
       select.appendChild(option);
