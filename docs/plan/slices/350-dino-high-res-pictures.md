@@ -133,13 +133,14 @@ extension (traced in B3: both are called on a book's `pictures` and `translation
 - Skipped #2 (`reviews/pr-1013-medium.md`): "High-res exclusion test is near-tautological" - low test-strength note; the C# fixture test is the guard.
 - Skipped #3 (`reviews/pr-1013-medium.md`): "the PictureFilesIn assertion cannot fail" - low test-strength note; the BookHash assert and the C# fixture test are the guard.
 - Skipped #6 (`reviews/pr-1013-medium.md`): "Touches lists publish-store-books.mjs" - Touches wider than the diff is harmless.
-- Skipped #7 (`reviews/pr-1013-medium.md`): "Exclude is on the dinostore group only" - the `.lfsconfig` `fetchexclude` covers `high-res`, so a dino-store checkout never fetches the files.
-check1 (`reviews/pr-1013-check1.md`): findings 1, 7 and 10 applied; the rest, one line each:
+- Skipped #7 (`reviews/pr-1013-medium.md`): ".github/scripts/ship-targets.mjs:213, low (unconfirmed). Exclude is on the dinostore group only;" - the `.lfsconfig` `fetchexclude` covers `high-res`, so a dino-store checkout never fetches the files.
+
+The check pass (`reviews/pr-1013-check1.md`) had three findings applied (the first, seventh and tenth); its other skips follow, one line each:
 - Skipped #2 (`reviews/pr-1013-check1.md`): "Regex 'content/dino/' still matches high-res-only PRs, so the audio job and LFS pull run for nothing." - low CI cost.
 - Skipped #3 (`reviews/pr-1013-check1.md`): "Guard test greps source text for join(CONTENT_ROOT; 'entry.name' on the line lets a high-res read pass" - low test-strength note.
 - Skipped #4 (`reviews/pr-1013-check1.md`): "High-res exclusion is a push path filter only, duplicated with ship-targets.mjs exclude" - low; duplication is minor.
-- Skipped #5 (`reviews/pr-1013-check1.md`): "both listings are non-recursive on pictures/, so the test cannot fail" - low test-strength note; the behaviour is non-recursive by design.
-- Skipped #6 (`reviews/pr-1013-check1.md`): "States PR #1013, "all 9 findings applied" and review file paths that the diff cannot show" - the slice file records review history by design.
+- Skipped #5 (`reviews/pr-1013-check1.md`): "tests/DinoReader.Tests/BookBuilderTests.cs:184, medium. Fixture puts files in book.Dir/high-res, a sibling of" - low test-strength note; both listings only ever read `pictures/` without recursing, so a sibling folder is the case that matters.
+- Skipped #6 (`reviews/pr-1013-check1.md`): "docs/plan/slices/350-dino-high-res-pictures.md:3, low. States PR #1013," - slice files keep each slice's review history (the docs layout in CLAUDE.md), so the record stays.
 - Skipped #8 (`reviews/pr-1013-check1.md`): ""Repeats the background about 95%" is not measurable" - a reviewer judgement by eye, the user's own wording.
 - Skipped #9 (`reviews/pr-1013-check1.md`): "a High-Res/Hi-Res folder is neither excluded nor LFS-tracked (case-sensitive)" - the folder name is fixed by the slice as `high-res`.
 
