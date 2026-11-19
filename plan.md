@@ -43,6 +43,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 413 | Dino: the new store name, subtitle and keywords in the other 13 languages, in each language's own search words (after 412) | planned | | | [413-dino-store-name-13-languages.md](docs/plan/slices/413-dino-store-name-13-languages.md) |
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
 | 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | planned | | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
+| 419 | Dino: every usage event also goes to Ninjalog (EU log search), with a new-user funnel, session timelines and a "where new users stop" dashboard; no install id (Decision 140 stands) | planned | | | [419-dino-usage-events-to-ninjalog.md](docs/plan/slices/419-dino-usage-events-to-ninjalog.md) |
 
 ### Shared
 
