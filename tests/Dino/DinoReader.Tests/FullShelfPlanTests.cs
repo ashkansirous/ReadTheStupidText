@@ -48,8 +48,26 @@ public class FullShelfPlanTests
         string json = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "tools", "dino", "full-shelf-books.json"));
         string[] listed = [.. System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("books").EnumerateArray().Select(book => book.GetProperty("id").GetString()!)];
 
-        Assert.Equal(12, FullShelfPlan.BookIds.Count + 4);
         Assert.Equal(FullShelfPlan.BookIds.Order(), listed.Order());
+        Assert.Equal(FullShelfPlan.BookIds.Count, FullShelfPlan.BookIds.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Fact]
+    public void A_chosen_book_missing_from_the_live_list_is_named_so_the_hook_fails_instead_of_filling_a_short_shelf()
+    {
+        string gone = FullShelfPlan.BookIds[3];
+        FullShelfPlan plan = FullShelfPlan.For([.. FullShelfPlan.BookIds.Where(id => id != gone).Select(id => Item(id))], []);
+
+        Assert.Equal([gone], plan.MissingBooks());
+        Assert.Empty(FullShelfPlan.For(AllChosen(), []).MissingBooks());
+    }
+
+    [Fact]
+    public void The_done_marker_text_lists_the_plan_book_ids_so_another_list_never_matches()
+    {
+        string[] ids = [.. FullShelfPlan.MarkerText.Split(',')];
+
+        Assert.Equal(FullShelfPlan.BookIds.Order(StringComparer.Ordinal), ids);
     }
 
     [Fact]

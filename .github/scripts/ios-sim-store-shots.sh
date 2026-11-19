@@ -440,7 +440,7 @@ run_units() {
 # the packages are copied into <app data container>/Library/full-shelf/<id>.dino (the hook's FullShelfPlan.PackageFolder inside FileSystem.AppDataDirectory, which is the container's Library folder on iOS).
 # A flow that never calls the hook needs none of it.
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
-SHELF_ROOT="$REPO_ROOT/artifacts/full-shelf"
+SHELF_ROOT="${SHELF_ROOT:-$REPO_ROOT/artifacts/full-shelf}" # the workflow's fetch step sets SHELF_ROOT and SHELF_FETCHED=yes (the only step with the Cloudflare secrets)
 
 flows_use_full_shelf() {
   [ "$APP" = dino ] && grep -qs 'full-shelf' "${UNITS[@]}"

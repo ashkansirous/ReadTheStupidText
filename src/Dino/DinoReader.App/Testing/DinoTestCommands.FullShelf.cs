@@ -23,7 +23,7 @@ internal static partial class DinoTestCommands
 		{
 			TestStore.Mode = TestStoreMode.Off; // the live list, not the four fixture books
 			await TestBooks.PendingAsync();
-			if (File.Exists(DoneMarkerPath()))
+			if (MarkerMatchesPlan())
 			{
 				Log($"{FullShelfName} ok already"); // a retried shot: the shelf is full, nothing is cleared or fetched again
 				return;
@@ -39,7 +39,7 @@ internal static partial class DinoTestCommands
 			}
 
 			FullShelfPlan plan = FullShelfPlan.For(listing.Items, await TestBookIdsAsync());
-			if (!PackagesPresent(plan))
+			if (!AllBooksListed(plan) || !PackagesPresent(plan))
 			{
 				return; // the shelf is left as it was: nothing is cleared before every book can land
 			}
@@ -47,7 +47,7 @@ internal static partial class DinoTestCommands
 			int landed = await PutOnShelfAsync(store, plan);
 			if (landed == plan.Download.Count)
 			{
-				File.WriteAllText(DoneMarkerPath(), FullShelfName);
+				File.WriteAllText(DoneMarkerPath(), FullShelfPlan.MarkerText);
 			}
 
 			Log(landed == plan.Download.Count ? $"{FullShelfName} ok {landed}" : $"{FullShelfName} failed {landed} of {plan.Download.Count} books landed");
@@ -82,6 +82,30 @@ internal static partial class DinoTestCommands
 		}
 
 		return missing.Count == 0;
+	}
+
+	// True when the live list holds all eight chosen books; otherwise the hook ends failed (no done marker, nothing cleared), so the shelf is never reported full with fewer than 12 books.
+	private static bool AllBooksListed(FullShelfPlan plan)
+	{
+		IReadOnlyList<string> missing = plan.MissingBooks();
+		foreach (string id in missing)
+		{
+			Log($"{FullShelfName} book {id} not-in-live-list");
+		}
+
+		if (missing.Count > 0)
+		{
+			Log($"{FullShelfName} failed {missing.Count} chosen books are not in the live list");
+		}
+
+		return missing.Count == 0;
+	}
+
+	// "ok already" only for a marker written for this plan's book ids (an older marker or another book list means the shelf is filled again).
+	private static bool MarkerMatchesPlan()
+	{
+		string path = DoneMarkerPath();
+		return File.Exists(path) && string.Equals(File.ReadAllText(path), FullShelfPlan.MarkerText, StringComparison.Ordinal);
 	}
 
 	private static string DoneMarkerPath() => Path.Combine(FileSystem.AppDataDirectory, FullShelfPlan.DoneMarker);

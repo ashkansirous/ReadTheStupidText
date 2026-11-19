@@ -62,6 +62,13 @@ internal sealed record FullShelfPlan(IReadOnlyList<StoreItem> Download)
 		return new FullShelfPlan(download);
 	}
 
+	/// <summary>What the done marker holds: the plan's book ids, so a marker written for another list of books never ends a call <c>ok already</c>.</summary>
+	public static string MarkerText => string.Join(",", BookIds.Order(StringComparer.Ordinal));
+
+	/// <summary>The ids of <see cref="BookIds"/> the plan does not hold (not in the live list); empty when all eight will land, which with the four test books is the 12 of the shelf.</summary>
+	public IReadOnlyList<string> MissingBooks() =>
+		[.. BookIds.Where(id => !Download.Any(item => string.Equals(item.Id, id, StringComparison.OrdinalIgnoreCase)))];
+
 	private static int Rank(string id) => string.Equals(id, LastBookId, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
 
 	/// <summary>The paid books of <see cref="Download"/> whose package is not among <paramref name="presentFiles"/> (file names in <see cref="PackageFolder"/>); empty when every paid book can be imported.</summary>

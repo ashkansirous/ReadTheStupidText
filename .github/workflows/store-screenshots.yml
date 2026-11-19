@@ -152,6 +152,21 @@ jobs:
         if: matrix.app == 'dino'
         run: npm ci --ignore-scripts --no-audit --no-fund
 
+      # The only step that holds the Cloudflare secrets (not the shots step, which runs Maestro and the repo's scripts; not RTST). It writes the packages to
+      # $RUNNER_TEMP/full-shelf and tells the shots step where they are (SHELF_ROOT) and that they are fetched (SHELF_FETCHED).
+      - name: Fetch the stored book packages
+        if: matrix.app == 'dino'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/fetch-shelf-packages.mjs "$RUNNER_TEMP/full-shelf"
+          {
+            echo "SHELF_ROOT=$RUNNER_TEMP/full-shelf"
+            echo "SHELF_FETCHED=yes"
+          } >> "$GITHUB_ENV"
+
       # Resume: the PNGs this run's own draft release already holds are downloaded into the output folder; only when it holds none, and resume_run
       # is a run on this same commit, that run's draft is used. This run's draft is created (and given those PNGs) so each shot can be uploaded
       # the moment it is taken; a failed create fails the step.
@@ -202,9 +217,6 @@ jobs:
       - name: Take the shots on the simulator
         id: shots
         timeout-minutes: 48
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR" "$DEVICE"
 
       # Runs even when a shot failed: the shots that did come out are kept. Each was already uploaded when taken; this uploads them all again,
