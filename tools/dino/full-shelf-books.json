@@ -1,0 +1,13 @@
+{
+  "_comment": "Slice 404, Decision 3: the eight books the full-shelf test hook adds to the four Debug test books (12 on the shelf). Same ids as FullShelfPlan.BookIds (a test keeps them equal); .github/scripts/fetch-shelf-packages.mjs fetches the stored package of each one the live store sells as paid.",
+  "books": [
+    { "id": "1ca50c6936cc44788b992726784e8132", "title": "The Lion and the Mouse" },
+    { "id": "a02c0731b7ac475a896e9184f3575e7b", "title": "X Marks the Treasure!" },
+    { "id": "67695905c10a46bd81aa498beab9609e", "title": "Goldilocks and the Three Bears" },
+    { "id": "6eff8d779a9542fcafa76ae58ba1e96b", "title": "The Little Red Hen" },
+    { "id": "e2fb7f5de4ab4c4eb8bd2bb97c91accc", "title": "Jack and the Beanstalk" },
+    { "id": "1f0f0cb207b244368b7aef26028f4ac5", "title": "Little Red Riding Hood" },
+    { "id": "34efea95400343ac998e9ed99158d370", "title": "The Elves and the Shoemaker" },
+    { "id": "32d04b935a5649088293314cc648c825", "title": "The Three Billy Goats Gruff" }
+  ]
+}

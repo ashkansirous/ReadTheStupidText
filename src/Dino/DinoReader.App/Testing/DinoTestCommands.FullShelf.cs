@@ -6,11 +6,10 @@ using Sirous.Reading.Mobile.Shared.Testing;
 namespace DinoReader.Testing;
 
 /// <summary>
-/// Slice 404: <c>full-shelf</c> puts the whole live store catalogue on the shelf, for the store pictures: a shelf or book shot never shows four lonely covers. Free books come from the live store through the
-/// store client's own download. The Worker refuses a paid book without a real receipt, so a paid book is imported from its package in <c>&lt;app data&gt;/full-shelf/&lt;id&gt;.dino</c> (built by BookBuilder and
-/// copied onto the device by the store-shot script) through the test store's <c>testfile:</c> address: it lands as any store book does, with its real cover, and no receipt is faked. The hook switches the test store
-/// off while it runs (it wants the live list) and puts the mode back at the end. It waits for the books <c>skip-first-run</c> started, checks every paid book's package is there, and only then puts the books on the shelf one at a time (new ones first, each test copy replaced by its real book with the copy
-/// put back when that fetch fails, the pinned last book at the end). It writes <see cref="FullShelfPlan.DoneMarker"/> when every book landed, and a later call ends <c>ok already</c> (a retried shot). Outcome: <c>HOOK full-shelf ok &lt;n&gt;</c> (n books fetched or already there), <c>HOOK full-shelf book &lt;id&gt; missing-package</c> then <c>failed ...</c> (nothing cleared), <c>failed ...</c>
+/// Slice 404: <c>full-shelf</c> puts 12 books on the shelf (the four test books plus the eight of <see cref="FullShelfPlan.BookIds"/>, Decision 3), for the store pictures: a shelf or book shot never shows four lonely covers. Free books come from the live store through the
+/// store client's own download. The Worker refuses a paid book without a real receipt, so a paid book is imported from its package in <c>&lt;app data&gt;/full-shelf/&lt;id&gt;.dino</c> (the package the store upload already made, fetched
+/// by <c>.github/scripts/fetch-shelf-packages.mjs</c> and copied onto the device by the store-shot script; never built, Decision 5) through the test store's <c>testfile:</c> address: it lands as any store book does, with its real cover, and no receipt is faked. The hook switches the test store
+/// off while it runs (it wants the live list) and puts the mode back at the end. It waits for the books <c>skip-first-run</c> started, checks every paid book's package is there, and only then puts the books on the shelf one at a time (the pinned last book at the end; the test books stay as they are). It writes <see cref="FullShelfPlan.DoneMarker"/> when every book landed, and a later call ends <c>ok already</c> (a retried shot). Outcome: <c>HOOK full-shelf ok &lt;n&gt;</c> (n books fetched or already there), <c>HOOK full-shelf book &lt;id&gt; missing-package</c> then <c>failed ...</c> (nothing cleared), <c>failed ...</c>
 /// (offline, empty list, or a book that did not land, with how many did) or <c>fault ...</c>. A flow calls it after <c>skip-first-run</c>.
 /// </summary>
 internal static partial class DinoTestCommands
@@ -24,7 +23,7 @@ internal static partial class DinoTestCommands
 		{
 			TestStore.Mode = TestStoreMode.Off; // the live list, not the four fixture books
 			await TestBooks.PendingAsync();
-			if (File.Exists(DoneMarkerPath()))
+			if (MarkerMatchesPlan())
 			{
 				Log($"{FullShelfName} ok already"); // a retried shot: the shelf is full, nothing is cleared or fetched again
 				return;
@@ -39,17 +38,16 @@ internal static partial class DinoTestCommands
 				return;
 			}
 
-			IReadOnlyDictionary<string, StoreItem> testItems = await TestBookItemsAsync();
-			FullShelfPlan plan = FullShelfPlan.For(listing.Items, testItems.Keys);
-			if (!PackagesPresent(plan))
+			FullShelfPlan plan = FullShelfPlan.For(listing.Items, await TestBookIdsAsync());
+			if (!AllBooksListed(plan) || !PackagesPresent(plan))
 			{
 				return; // the shelf is left as it was: nothing is cleared before every book can land
 			}
 
-			int landed = await PutOnShelfAsync(store, services.GetRequiredService<IStoryLibrary>(), plan, testItems);
+			int landed = await PutOnShelfAsync(store, plan);
 			if (landed == plan.Download.Count)
 			{
-				File.WriteAllText(DoneMarkerPath(), FullShelfName);
+				File.WriteAllText(DoneMarkerPath(), FullShelfPlan.MarkerText);
 			}
 
 			Log(landed == plan.Download.Count ? $"{FullShelfName} ok {landed}" : $"{FullShelfName} failed {landed} of {plan.Download.Count} books landed");
@@ -86,56 +84,58 @@ internal static partial class DinoTestCommands
 		return missing.Count == 0;
 	}
 
+	// True when the live list holds all eight chosen books; otherwise the hook ends failed (no done marker, nothing cleared), so the shelf is never reported full with fewer than 12 books.
+	private static bool AllBooksListed(FullShelfPlan plan)
+	{
+		IReadOnlyList<string> missing = plan.MissingBooks();
+		foreach (string id in missing)
+		{
+			Log($"{FullShelfName} book {id} not-in-live-list");
+		}
+
+		if (missing.Count > 0)
+		{
+			Log($"{FullShelfName} failed {missing.Count} chosen books are not in the live list");
+		}
+
+		return missing.Count == 0;
+	}
+
+	// "ok already" only for a marker written for this plan's book ids (an older marker or another book list means the shelf is filled again).
+	private static bool MarkerMatchesPlan()
+	{
+		string path = DoneMarkerPath();
+		return File.Exists(path) && string.Equals(File.ReadAllText(path), FullShelfPlan.MarkerText, StringComparison.Ordinal);
+	}
+
 	private static string DoneMarkerPath() => Path.Combine(FileSystem.AppDataDirectory, FullShelfPlan.DoneMarker);
 
-	// The Debug test books by their store id: what skip-first-run put on the shelf, and what a failed replacement puts back.
-	private static async Task<IReadOnlyDictionary<string, StoreItem>> TestBookItemsAsync()
+	// The Debug test books by their store id: what skip-first-run put on the shelf, which the plan leaves alone.
+	private static async Task<IReadOnlyList<string>> TestBookIdsAsync()
 	{
-		var items = new Dictionary<string, StoreItem>(StringComparer.OrdinalIgnoreCase);
+		var ids = new List<string>();
 		foreach (string stem in TestStore.AllStems)
 		{
 			if (await TestStore.FindAsync(stem) is { } item)
 			{
-				items[item.Id] = item;
+				ids.Add(item.Id);
 			}
 		}
 
-		return items;
+		return ids;
 	}
 
-	private static async Task DeleteFromShelfAsync(IStoryLibrary library, string sourceId)
-	{
-		foreach (Story story in await library.ListAsync())
-		{
-			if (string.Equals(story.SourceId, sourceId, StringComparison.OrdinalIgnoreCase))
-			{
-				await library.DeleteAsync(story.Id);
-			}
-		}
-	}
-
-	// One book at a time in plan order. A book that replaces a test copy is fetched only after the copy is deleted (the store client skips a book already on the shelf), so when the fetch fails the test copy is put back:
-	// the shelf is never emptier than it was. Returns how many books landed.
-	private static async Task<int> PutOnShelfAsync(StoreClient store, IStoryLibrary library, FullShelfPlan plan, IReadOnlyDictionary<string, StoreItem> testItems)
+	// One book at a time in plan order (the test books are not in the plan: they stay on the shelf as they are). Returns how many books landed.
+	private static async Task<int> PutOnShelfAsync(StoreClient store, FullShelfPlan plan)
 	{
 		int landed = 0;
 		foreach (StoreItem item in plan.Download)
 		{
-			bool replaces = plan.ClearFirst.Contains(item.Id);
-			if (replaces)
-			{
-				await DeleteFromShelfAsync(library, item.Id);
-			}
-
 			DownloadOutcome outcome = await store.DownloadAsync(FetchableItem(item), new Progress<double>(), CancellationToken.None);
 			Log($"{FullShelfName} book {item.Id} {outcome}");
 			if (outcome == DownloadOutcome.Done)
 			{
 				landed++;
-			}
-			else if (replaces && testItems.TryGetValue(item.Id, out StoreItem? testItem))
-			{
-				await store.DownloadAsync(testItem, new Progress<double>(), CancellationToken.None);
 			}
 		}
 
