@@ -38,7 +38,7 @@ E MAIS
 - Grave qualquer personagem, em qualquer página e em qualquer idioma da história; faça backup e restaure as gravações.
 
 IDIOMAS
-Inglês, árabe, chinês, dinamarquês, holandês, persa, finlandês, francês, alemão, japonês, norueguês, português, russo, espanhol e sueco: o app, as histórias e as vozes.
+Inglês, chinês, espanhol, árabe, francês, português, russo, alemão, japonês, persa, holandês, sueco, dinamarquês, finlandês e norueguês: o app, as histórias e as vozes.
 
 SEGURO E PRIVADO
 - Sem anúncios e sem conta para criar. Não guardamos nada sobre você nem sobre a sua compra; a prova da loja é verificada e esquecida.
@@ -65,7 +65,7 @@ HISTÓRIAS E PREÇOS
 Quatro histórias ilustradas são grátis: O Leão e o Ratinho, O Homem-Biscoito, Os Três Porquinhos e X Marca o Tesouro. Cada uma das outras histórias da estante custa US$ 0,99 (o Google Play mostra o preço na sua moeda). Um adulto compra uma história uma só vez, atrás do portão dos adultos, pelo Google Play, e pode restaurar compras anteriores a qualquer momento. As histórias que você já tem ficam no seu aparelho.
 
 QUINZE IDIOMAS
-O aplicativo, as histórias e as vozes estão em inglês, árabe, chinês, dinamarquês, holandês, persa, finlandês, francês, alemão, japonês, norueguês, português, russo, espanhol e sueco.
+O aplicativo, as histórias e as vozes estão em inglês, chinês, espanhol, árabe, francês, português, russo, alemão, japonês, persa, holandês, sueco, dinamarquês, finlandês e norueguês.
 
 FEITO PARA CRIANÇAS
 - Sem anúncios.

@@ -2,7 +2,7 @@
 
 Machine drafts (no native read yet), written 2026-11-15 from the app's own Sub_Title/Sub_Line strings (src/Dino/DinoReader.App/Resources/Strings/AppResources.*.resx). Google Play: pushed to subscription uk.sirous.dinoreader.sub (listings, regionsVersion 2026/01), read back identical. App Store Connect: NOT pushed, Apple refuses while the subscriptions are Waiting for Review (409 UNMODIFIABLE); push when they are editable. Apple limits: subscription name <= 30, description <= 45, group display name = app name. Play limits: title <= 55, description <= 80, benefits <= 40 each.
 
-Slice 412 (2026-11-18): the app name no longer sits in the subscription title (the store shows it above the title, and Apple allows 30 characters); the Play titles below are the Apple names. The live Play titles still carry the old prefix until the next push (after Play production is out). English: name/title "Every book" (it carried the app name before), description "Opens every book while you subscribe.", benefits "Every book opens" / "New books included".
+Slice 412 (2026-11-18): the app name no longer sits in the subscription title (the store shows it above the title, and Apple allows 30 characters); the Play titles below are the Apple names. Pushed to Google Play 2026-11-19: the 17 subscription listings carry these titles (no app name), read back equal; the 12 one-time book products say "in Dino: Kids Books & Stories". English: name/title "Every book" (it carried the app name before), description "Opens every book while you subscribe.", benefits "Every book opens" / "New books included".
 
 Group localization for every Apple language: name and app name "Dino: Kids Books & Stories" (26 characters).
 

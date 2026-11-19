@@ -41,7 +41,7 @@ STORIES AND PRICES
 Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Subscribe for every other story, or buy only the stories you want and keep them. The subscription is monthly or yearly, starts with a 7-day free trial for new subscribers (once per Apple ID), and renews automatically at the price shown in the app until you cancel it in your Apple ID settings at least 24 hours before the end of the period. It opens every paid story while it runs; when it ends, stories you only had through it leave the child's shelf, and subscribing again or buying one brings it straight back. Stories you buy are yours to keep, with or without a subscription. A grown-up subscribes or buys behind the grown-ups gate, and can restore purchases at any time. Stories you already have stay on your device.
 
 FIFTEEN LANGUAGES
-The app, the stories and the voices come in English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish.
+The app, the stories and the voices come in English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian.
 
 MADE FOR KIDS
 - No ads.

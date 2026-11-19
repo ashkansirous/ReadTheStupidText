@@ -38,7 +38,7 @@ OG MERE
 - Indtal enhver figur, på enhver side, på ethvert historiesprog; tag backup og gendan optagelserne.
 
 SPROG
-Engelsk, arabisk, kinesisk, dansk, hollandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk: appen, historierne og stemmerne.
+Engelsk, kinesisk, spansk, arabisk, fransk, portugisisk, russisk, tysk, japansk, persisk, hollandsk, svensk, dansk, finsk og norsk: appen, historierne og stemmerne.
 
 TRYGT OG PRIVAT
 - Ingen reklamer og ingen konto at oprette. Vi gemmer intet om dig eller dit køb; butikkens bevis tjekkes og glemmes.
@@ -65,7 +65,7 @@ HISTORIER OG PRISER
 Fire illustrerede historier er gratis: Løven og musen, Honningkagemanden, De tre små grise og X markerer skatten. Hver af de andre historier på hylden koster 0,99 USD (Google Play viser prisen i din egen valuta). En voksen køber en historie én gang, bag de voksnes lås, via Google Play, og kan gendanne tidligere køb når som helst. Historier, du allerede har, bliver på din enhed.
 
 FEMTEN SPROG
-Appen, historierne og stemmerne findes på engelsk, arabisk, kinesisk, dansk, hollandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk.
+Appen, historierne og stemmerne findes på engelsk, kinesisk, spansk, arabisk, fransk, portugisisk, russisk, tysk, japansk, persisk, hollandsk, svensk, dansk, finsk og norsk.
 
 LAVET TIL BØRN
 - Ingen reklamer.

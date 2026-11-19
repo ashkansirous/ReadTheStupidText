@@ -38,7 +38,7 @@ LISÄÄ
 - Äänitä mikä tahansa hahmo, millä tahansa sivulla, millä tahansa satukielellä; varmuuskopioi ja palauta äänitykset.
 
 KIELET
-Englanti, arabia, kiina, tanska, hollanti, persia, suomi, ranska, saksa, japani, norja, portugali, venäjä, espanja ja ruotsi: sovellus, sadut ja äänet.
+Englanti, kiina, espanja, arabia, ranska, portugali, venäjä, saksa, japani, persia, hollanti, ruotsi, tanska, suomi ja norja: sovellus, sadut ja äänet.
 
 TURVALLINEN JA YKSITYINEN
 - Ei mainoksia eikä tiliä luotavana. Emme tallenna mitään sinusta tai ostoksestasi; kaupan todiste tarkistetaan ja unohdetaan.

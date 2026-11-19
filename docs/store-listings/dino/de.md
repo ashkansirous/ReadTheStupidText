@@ -44,7 +44,7 @@ NOCH MEHR
 - Jede Figur auf jeder Seite in jeder Geschichtensprache aufnehmen; Aufnahmen sichern und wiederherstellen.
 
 SPRACHEN
-Englisch, Arabisch, Chinesisch, Dänisch, Niederländisch, Farsi, Finnisch, Französisch, Deutsch, Japanisch, Norwegisch, Portugiesisch, Russisch, Spanisch und Schwedisch: die App, die Geschichten und die Stimmen.
+Englisch, Chinesisch, Spanisch, Arabisch, Französisch, Portugiesisch, Russisch, Deutsch, Japanisch, Farsi, Niederländisch, Schwedisch, Dänisch, Finnisch und Norwegisch: die App, die Geschichten und die Stimmen.
 
 SICHER UND PRIVAT
 - Keine Werbung und kein Konto. Wir speichern nichts über Sie oder Ihren Kauf; der Nachweis des Stores wird geprüft und vergessen.
@@ -85,7 +85,7 @@ GESCHICHTEN UND PREISE
 Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte im Geschichtenregal kostet je 0,99 € bzw. der entsprechende Preis in Ihrer Landeswährung (der App Store zeigt den Preis an). Ein Erwachsener kauft eine Geschichte einmal, hinter der Erwachsenensperre, per In-App-Kauf und kann frühere Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
 
 FÜNFZEHN SPRACHEN
-Die App, die Geschichten und die Stimmen gibt es auf Arabisch, Chinesisch, Dänisch, Deutsch, Englisch, Farsi, Finnisch, Französisch, Japanisch, Niederländisch, Norwegisch, Portugiesisch, Russisch, Schwedisch und Spanisch.
+Die App, die Geschichten und die Stimmen gibt es auf Englisch, Chinesisch, Spanisch, Arabisch, Französisch, Portugiesisch, Russisch, Deutsch, Japanisch, Farsi, Niederländisch, Schwedisch, Dänisch, Finnisch und Norwegisch.
 
 FÜR KINDER GEMACHT
 - Keine Werbung.

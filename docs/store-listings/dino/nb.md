@@ -38,7 +38,7 @@ OG MER
 - Spill inn hvilken som helst figur, på hvilken som helst side, på hvilket som helst historiespråk; ta sikkerhetskopi og gjenopprett opptakene.
 
 SPRÅK
-Engelsk, arabisk, kinesisk, dansk, nederlandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk: appen, historiene og stemmene.
+Engelsk, kinesisk, spansk, arabisk, fransk, portugisisk, russisk, tysk, japansk, persisk, nederlandsk, svensk, dansk, finsk og norsk: appen, historiene og stemmene.
 
 TRYGT OG PRIVAT
 - Ingen reklame og ingen konto å opprette. Vi lagrer ingenting om deg eller kjøpet ditt; butikkens bevis sjekkes og glemmes.
@@ -65,7 +65,7 @@ HISTORIER OG PRISER
 Fire illustrerte historier er gratis: Løven og musa, Pepperkakemannen, De tre små grisene og X markerer skatten. Hver av de andre historiene på hyllen koster 0,99 USD (Google Play viser prisen i din egen valuta). En voksen kjøper en historie én gang, bak de voksnes lås, via Google Play, og kan gjenopprette tidligere kjøp når som helst. Historier du allerede har, blir på enheten din.
 
 FEMTEN SPRÅK
-Appen, historiene og stemmene finnes på engelsk, arabisk, kinesisk, dansk, nederlandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk.
+Appen, historiene og stemmene finnes på engelsk, kinesisk, spansk, arabisk, fransk, portugisisk, russisk, tysk, japansk, persisk, nederlandsk, svensk, dansk, finsk og norsk.
 
 LAGET FOR BARN
 - Ingen reklame.

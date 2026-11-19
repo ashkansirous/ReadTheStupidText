@@ -38,7 +38,7 @@ MER ATT GLÄDJAS ÅT
 - Spela in vilken figur som helst, på vilken sida som helst, på vilket sagospråk som helst; säkerhetskopiera och återställ inspelningarna.
 
 SPRÅK
-Engelska, arabiska, kinesiska, danska, nederländska, persiska, finska, franska, tyska, japanska, norska, portugisiska, ryska, spanska och svenska: appen, sagorna och rösterna.
+Engelska, kinesiska, spanska, arabiska, franska, portugisiska, ryska, tyska, japanska, persiska, nederländska, svenska, danska, finska och norska: appen, sagorna och rösterna.
 
 TRYGGT OCH PRIVAT
 - Inga annonser och inget konto att skapa. Vi sparar inget om dig eller ditt köp; butikens bevis kontrolleras och glöms.
@@ -65,7 +65,7 @@ SAGOR OCH PRISER
 Fyra illustrerade sagor är gratis: Lejonet och musen, Pepparkaksgubben, De tre små grisarna och X markerar skatten. Varje annan saga på hyllan kostar 0,99 USD (Google Play visar priset i din egen valuta). En vuxen köper en saga en gång, bakom de vuxnas spärr, via Google Play, och kan återställa tidigare köp när som helst. Sagor du redan har stannar på din enhet.
 
 FEMTON SPRÅK
-Appen, sagorna och rösterna finns på engelska, arabiska, kinesiska, danska, nederländska, persiska, finska, franska, tyska, japanska, norska, portugisiska, ryska, spanska och svenska.
+Appen, sagorna och rösterna finns på engelska, kinesiska, spanska, arabiska, franska, portugisiska, ryska, tyska, japanska, persiska, nederländska, svenska, danska, finska och norska.
 
 GJORD FÖR BARN
 - Inga annonser.

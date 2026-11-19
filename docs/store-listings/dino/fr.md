@@ -40,7 +40,7 @@ ET AUSSI
 - Enregistrez n'importe quel personnage, sur n'importe quelle page, dans n'importe quelle langue d'histoire ; sauvegardez et restaurez vos enregistrements.
 
 LANGUES
-Anglais, arabe, chinois, danois, néerlandais, persan, finnois, français, allemand, japonais, norvégien, portugais, russe, espagnol et suédois : l'application, les histoires et les voix.
+Anglais, chinois, espagnol, arabe, français, portugais, russe, allemand, japonais, persan, néerlandais, suédois, danois, finnois et norvégien : l'application, les histoires et les voix.
 
 SÛR ET PRIVÉ
 - Sans pub et sans compte à créer. Nous ne gardons rien sur vous ni sur votre achat ; la preuve du store est vérifiée puis oubliée.
@@ -67,7 +67,7 @@ HISTOIRES ET PRIX
 Quatre histoires illustrées sont gratuites : Le Lion et la Souris, Le Bonhomme de pain d'épices, Les Trois Petits Cochons et X marque le trésor. Toutes les autres histoires de l'étagère coûtent 0,99 $ chacune (Google Play affiche le prix dans votre devise). Un adulte achète une histoire une fois, derrière la barrière parentale, via Google Play, et peut restaurer ses achats à tout moment. Les histoires que vous avez déjà restent sur votre appareil.
 
 QUINZE LANGUES
-L'application, les histoires et les voix existent en anglais, arabe, chinois, danois, néerlandais, persan, finnois, français, allemand, japonais, norvégien, portugais, russe, espagnol et suédois.
+L'application, les histoires et les voix existent en anglais, chinois, espagnol, arabe, français, portugais, russe, allemand, japonais, persan, néerlandais, suédois, danois, finnois et norvégien.
 
 CONÇU POUR LES ENFANTS
 - Aucune publicité.

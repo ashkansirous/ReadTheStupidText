@@ -1,6 +1,6 @@
 # Google Play listing: Dino: Kids Books & Stories (en-GB, `uk.sirous.dinoreader`) - live payment version
 
-**Slice 412 (2026-11-18): new title, short description and full-description opening below, text only. NOT pushed: nothing goes to Google Play until Dino's first production release is out (slice file, *Hard constraint*).** Before the push, read the Publishing overview for unrelated pending changes (one pending edit per app). The old title is in git history (`git show origin/main:docs/store-listings/dino/play.md` before Slice 412), the old short description was "Every character has its own voice - and Grandma can record hers as the wolf" (the same idea is now the second sentence of the full description). The other 14 languages (`de.md` ...) follow in Slice 413.
+**Slice 412 (2026-11-18): new title, short description and full-description opening below, text only. Pushed 2026-11-19 (Play production 1.131.1 `completed`) to all 17 Play locales together with the 14 language files, read back equal; the 15 languages are listed by number of speakers (user, 2026-11-19).** The old title is in git history (`git show origin/main:docs/store-listings/dino/play.md` before Slice 412), the old short description was "Every character has its own voice - and Grandma can record hers as the wolf" (the same idea is now the second sentence of the full description). The other 14 languages (`de.md` ...) follow in Slice 413.
 
 **Draft 2026-11-14 (Slice 291 items 7 and 10), written with `.claude/skills/store-listing/SKILL.md` and the market note `docs/plan/notes/2026-11-14-dino-market-research.md`: lead with what only Dino does, never sell catalogue size. **Pushed to every live Play locale and read back equal 2026-11-15**; the previous text was the 2026-11-13 version (`git show 6b947cff:docs/store-listings/dino/play.md`).** This version describes payment as it is live now (Slice 346: four free, buy each other book once). The subscription version is `play-subscription.md`, pushed only when Slice 384 ships. Facts from the current app: pre-made voices per character (Slices 278, 305); own-voice recording per character; two or three story languages, switched while reading with the reading page's language button (`ReadingPage.xaml:25`, `ReadingPage.xaml.cs:402`); three view modes; speed 0.8x-1.2x; animal sounds; night theme; backup and restore; 15 languages (`AppResources.*.resx`, 15 translations per book). German: `de.md`.
 
@@ -36,7 +36,7 @@ MORE TO ENJOY
 - Record any character, on any page, in any story language; back up and restore your recordings.
 
 LANGUAGES
-English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish: the app, the stories and the voices.
+English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian: the app, the stories and the voices.
 
 SAFE AND PRIVATE
 - No ads, and no account to create. We store nothing about you or your purchase; the store's proof is checked and forgotten.

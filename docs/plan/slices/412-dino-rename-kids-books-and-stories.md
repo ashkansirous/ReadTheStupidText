@@ -171,6 +171,13 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    display name and both subscription localizations with 409 "Cannot edit ... when it is in ACTIVE state"; retry with
    the next version. (c) Microsoft title: a new submission after the one in certification finishes. (d) Play: after the
    production release is out.
+   *(d) done 2026-11-19 (`store-listing` agent; user: "dino reader is apparently live on google play. we can now roll
+   out the new name"; Play API: production 1.131.1 `completed`):* Play edit 12117885717090361155 committed: title, short
+   and full description on all 17 locales, read back equal in a fresh edit, no "Dino Book Reader" left; the subscription
+   `uk.sirous.dinoreader.sub` (17 listings, "Every book") and the 12 book products ("in Dino: Kids Books & Stories")
+   read back equal. Every full list of the 15 languages in `docs/store-listings/dino/` now runs by number of speakers
+   (user, 2026-11-19: "the Fifteen languages should be sorted by number of people speeking them"); App Store and
+   Microsoft carry that order with their next submission. (c) still open: Microsoft title with the next `store-submit`.
    *(a) done 2026-11-18 evening (`store-listing` agent; user: "isnt the task explained to you as change the name and
    keywords?"):* App Store version 1.133.1 (id 3afbd46d-d592-4fdb-a403-62eb93aaaff5) created from build 20261118.135720;
    en-US name, subtitle, keywords, promo and description read back equal. `appstore.md` now carries the live

@@ -34,7 +34,7 @@ MORE TO ENJOY
 - Record any character, on any page, in any story language; back up and restore your recordings.
 
 LANGUAGES
-English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish: the app, the stories and the voices.
+English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian: the app, the stories and the voices.
 
 SAFE AND PRIVATE
 - No ads, and no account to create. Purchases and subscriptions live in your Google Play account; we store nothing about you, and the store's proof is checked and forgotten.

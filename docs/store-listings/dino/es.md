@@ -38,7 +38,7 @@ Y MÁS
 - Grabe cualquier personaje, en cualquier página y en cualquier idioma del cuento; copia de seguridad y restauración de las grabaciones.
 
 IDIOMAS
-Inglés, árabe, chino, danés, neerlandés, persa, finés, francés, alemán, japonés, noruego, portugués, ruso, español y sueco: la aplicación, los cuentos y las voces.
+Inglés, chino, español, árabe, francés, portugués, ruso, alemán, japonés, persa, neerlandés, sueco, danés, finés y noruego: la aplicación, los cuentos y las voces.
 
 SEGURA Y PRIVADA
 - Sin anuncios y sin cuenta que crear. No guardamos nada sobre usted ni su compra; la prueba de la tienda se comprueba y se olvida.
@@ -65,7 +65,7 @@ CUENTOS Y PRECIOS
 Cuatro cuentos ilustrados son gratis: El león y el ratón, El hombrecito de jengibre, Los tres cerditos y la X marca el tesoro. Cada uno de los demás cuentos de la estantería cuesta 0,99 US$ (Google Play muestra el precio en su moneda). Un adulto compra un cuento una sola vez, tras el control para adultos, a través de Google Play, y puede restaurar las compras anteriores en cualquier momento. Los cuentos que ya tiene se quedan en su dispositivo.
 
 QUINCE IDIOMAS
-La aplicación, los cuentos y las voces están en inglés, árabe, chino, danés, neerlandés, persa, finlandés, francés, alemán, japonés, noruego, portugués, ruso, español y sueco.
+La aplicación, los cuentos y las voces están en inglés, chino, español, árabe, francés, portugués, ruso, alemán, japonés, persa, neerlandés, sueco, danés, finlandés y noruego.
 
 HECHA PARA NIÑOS
 - Sin anuncios.
