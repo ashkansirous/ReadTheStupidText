@@ -251,7 +251,7 @@ it is done. This is basically a hot fix that should be deployed to production as
 
 #### Not yet verified
 
-- [session] The `store-tags` and `onboarding-landscape` flows were not run (run cap).
+- Verified 2026-11-19 on emulator-5554 after the merge: `store-tags` PASS (92.8 s); `onboarding-landscape` PASS (53.7 s) once its stale "Schritt 2 von 6" text was changed to "von 5" (flow bug, not an app bug).
 - [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB.
 - [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.

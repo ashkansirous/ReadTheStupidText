@@ -56,7 +56,7 @@ onFlowComplete:
     visible:
       id: OnboardingLanguages
     timeout: 15000
-- assertVisible: "Schritt 2 von 6 · .*"
+- assertVisible: "Schritt 2 von 5 · .*"
 - assertNotVisible: "Warum mehr als eine?"
 - assertVisible: ".*Viele Kinder hören zu Hause eine Sprache.*"
 - assertVisible:
