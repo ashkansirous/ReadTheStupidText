@@ -2,7 +2,7 @@
 
 **Product:** Dino
 
-*Planned.*
+*In progress (claimed 2026-11-19 on feat/s418-lock).*
 
 Source: user, 2026-11-19 (second round of user testing): "Onboarding was bad. On the listen step, users heard the book but
 didn't notice the highlight asking them to tap the second language. Some users didn't want to record their voice and had no
