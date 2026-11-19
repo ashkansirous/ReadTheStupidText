@@ -8,8 +8,9 @@ and sirous.uk/dinoreader to have the latest updates, with proper screenshots, an
 market. no testing anymore. also, close the google group and apple group that was open for people to join in" and
 "the Fifteen languages should be sorted by number of people speeking them".
 
-**Touches:** `site/dino/**`, `site/index.html` (only the testers-group join block), `docs/plan/slices/417-dino-sites-after-launch.md`;
-in the separate repo `ashkansirous/sirous.uk`: `src/data/products.ts`, `src/pages/**`, `src/assets/**`, `public/**` (redirect only).
+**Touches:** `site/dino/**`, `site/index.html`, `worker/check-site-eol.mjs`, `src/Dino/DinoReader.App/IosUpdateTarget.cs` (item 7),
+`tests/Dino/DinoReader.Tests/IosUpdateTargetTests.cs` (item 7), `docs/plan/slices/417-dino-sites-after-launch.md`;
+in the separate repo ashkansirous/sirous.uk: src/data/products.ts, src/assets/products/dino-reader*, astro.config.mjs (redirect), README.md.
 
 ## Facts checked 2026-11-19 (desk)
 
