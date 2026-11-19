@@ -108,9 +108,9 @@ DPA page was found on ninjalog.dev (all 404).
       - churn: `compare by=` between sessions with 30 s+ listened and sessions with none (version, uiLang, screen,
         fallbacks);
       - Play testers: 1.129.x and other testing-track versions listed apart (versions read from the Play tracks).
-- [x] 8. **Dashboard** (file written; not yet uploaded) (`docs/analytics/ninjalog-dashboard.json`, format `/docs/dashboards`): "New users": first
-      launches per day by platform, the funnel table, where first sessions stopped, fallbacks per day, listening
-      seconds per day. Created in the project and kept in the repo.
+- [x] 8. **Dashboard** (uploaded 2026-11-19) (`docs/analytics/ninjalog-dashboard.json`, format `/docs/dashboards`): "New users": first
+      launches by platform, the funnel table, where first sessions stopped, fallbacks by reason, seconds listened
+      (buckets chosen by Ninjalog; `span=` is automatic only). Created in the project and kept in the repo.
 - [x] 9. **Alert:** fallback rows over a threshold in an hour (threshold from the last 30 days' data), notify the
       owner by email if Ninjalog offers it. **Done 2026-11-19:** the busiest hour in `dino_usage` over 30 days had 11
       fallbacks (2026-11-18 14:00 UTC), so the alert "Dino fallbacks spike (over 20 in the window)" is

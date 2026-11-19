@@ -18,7 +18,7 @@ Test rows are not sent (the Worker forwards only what it wrote to `dino_usage`),
 ## Session timeline
 
 ```
-index=dino_usage session=<32 hex> | stats count by seq, sinceLaunch, name, screen, detail, book, language | sort seq
+index=dino_usage session=<32 hex> | stats values(sinceLaunch) as sinceLaunch, values(name) as name, values(screen) as screen, values(detail) as detail, values(book) as book, values(language) as language by seq | sort seq
 ```
 
 ## New-user funnel (first launches)
@@ -32,7 +32,7 @@ index=dino_usage installAge=first platform!=sonos platform!=alexa
 | stats count as sessions, sum(onboarded) as onboarded, sum(book_opened) as book_opened, sum(read_started) as read_started, sum(listened_30s) as listened_30s by platform
 ```
 
-`book_listened` is sent once a reading has played 30 s. Ninjalog gets every written event unsampled (Analytics Engine's sampling is not applied there), so plain counts and sums need no `sampleInterval` weighting. The speaker platforms (`sonos`, `alexa`) are left out of the new-user queries and widgets (they have no first launch and their `seconds` is an estimate; the Slice 288 rule).
+`book_listened` is sent once a reading has played 30 s. Ninjalog gets every event the Worker wrote, without Analytics Engine's own sampling. The app's own sampling still applies: an event sent at `sampleRate` below 1 stands for `sampleInterval` (= 1 / `sampleRate`) events. While every event has `sampleRate` 1 (check with `index=dino_usage | stats count by sampleRate`), plain counts are exact; otherwise weight with `sum(sampleInterval)`. The speaker platforms (`sonos`, `alexa`) are left out of the new-user queries and widgets (they have no first launch and their `seconds` is an estimate; the Slice 288 rule).
 
 ## Where first sessions stopped
 
@@ -47,7 +47,7 @@ index=dino_usage installAge=first platform!=sonos platform!=alexa | eventstats m
 There is no id, so this is a guess, never stored: sessions with equal platform, version, country, os, form, cores and ram. Whether they were minutes apart is read from each session's timeline (`timestamp` is the batch receive time):
 
 ```
-index=dino_usage platform!=sonos platform!=alexa | stats count as events by session, platform, version, country, os, form, cores, ram | stats count as sessions, values(session) as session_ids by platform, version, country, os, form, cores, ram | where sessions > 1 | sort -sessions
+index=dino_usage platform!=sonos platform!=alexa | stats count as events by session, day, platform, version, country, os, form, cores, ram | stats count as sessions, values(session) as session_ids by day, platform, version, country, os, form, cores, ram | where sessions > 1 | sort -sessions
 ```
 
 ## Churn: listened 30 s or more versus not
