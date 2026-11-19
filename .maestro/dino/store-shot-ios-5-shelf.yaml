@@ -39,9 +39,7 @@ name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000
-- extendedWaitUntil:
-    visible: ".*Three Little Pigs.*"
-    timeout: 15000
+# No wait for Three Little Pigs: on the 12-book shelf (Slice 404, Decision 3) the test books sit below the fold (run 44429604107); Jack landing last already shows the shelf is full.
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: store-dino-ios-5-shelf

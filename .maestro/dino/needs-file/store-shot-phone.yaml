@@ -78,6 +78,11 @@ onFlowComplete:
     visible:
       id: GalleryDone
     timeout: 30000
+# Slice 404, Decision 3: the four test books stay under the eight newer imports on a 12-book shelf, so Three Little Pigs is below the fold (iOS run 44429604107); scroll to it.
+- scrollUntilVisible:
+    element:
+      text: ".*Three Little Pigs.*"
+    timeout: 30000
 - tapOn:
     text: ".*Three Little Pigs.*"
     waitToSettleTimeoutMs: 300
@@ -166,8 +171,9 @@ onFlowComplete:
     visible:
       id: StoryTile
     timeout: 60000
+# Not Three Little Pigs: on the 12-book shelf (Slice 404, Decision 3) the test books sit below the fold (iOS run 44429604107); the book the hook lands last is at the top.
 - extendedWaitUntil:
-    visible: ".*Three Little Pigs.*"
+    visible: ".*Jack and the Beanstalk.*"
     timeout: 15000
 - waitForAnimationToEnd:
     timeout: 5000
