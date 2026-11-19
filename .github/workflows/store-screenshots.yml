@@ -75,7 +75,7 @@ jobs:
       RESUME_RUN: ${{ inputs.resume_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Per-app settings
         run: |
@@ -100,7 +100,7 @@ jobs:
           echo "OUT_DIR=$RUNNER_TEMP/shots" >> "$GITHUB_ENV"
 
       - name: Set up .NET 11
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.100'
 
