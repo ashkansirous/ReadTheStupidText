@@ -24,6 +24,7 @@ name: Store screenshot 1 of 5, reading, Dino Reader, iOS
 # Slice 404: 12 books on the shelf (the four test books stay, eight more come from the live store and the packages it already stored; needs the network). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; a hook that finished before (the app's data kept it) ends at once; a flow cannot read the hook's log, so the wait below is on that title and 600 s (8 books one after another, each a package plus the audio packs, on a simulator link).
 # The full-shelf hook goes as a relaunch with launch arguments, not an openLink: iOS answers a dino-test:// link with an "Open in" prompt that came after 3 s (run 44435066569) and after 10 s (run 44449072620), so the hook never ran
 # and the prompt covered every later shot. A relaunch starts a new process, which reads its launch arguments again (TestHooks.iOS.cs), and shows no prompt. No clearState: the shelf data and the copied packages stay.
+# launchApp-restart: iOS reads launch arguments only at a process start, so the full-shelf hook needs a new process; the openLink route's "Open in" prompt came too late twice (runs 44435066569, 44449072620).
 - launchApp:
     arguments:
       cmd: full-shelf
