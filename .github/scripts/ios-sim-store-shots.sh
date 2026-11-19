@@ -412,7 +412,8 @@ run_unit_body() {
 # Slice 404 (review pass: the wait in a flow that runs the full-shelf hook is 600 s, above the 420 s a shot gets): a unit that calls the hook gets the longer per-attempt limit, the rest keep theirs.
 run_unit() {
   local base_limit="$UNIT_LIMIT" rc=0
-  if grep -qs 'dino-test://full-shelf' "$5"; then
+  # The hook goes as a link (dino-test://full-shelf) or as a relaunch's launch argument (cmd: full-shelf, shot 1 since run 44449072620).
+  if grep -qsE 'dino-test://full-shelf|cmd: full-shelf' "$5"; then
     UNIT_LIMIT="$FULL_SHELF_UNIT_TIME_LIMIT_SECONDS"
   fi
   run_unit_body "$@" || rc=$?
