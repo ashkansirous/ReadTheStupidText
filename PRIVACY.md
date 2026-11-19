@@ -1,6 +1,6 @@
 # Privacy Policy — Read The Stupid Text
 
-**Effective date:** 8 November 2026
+**Effective date:** 19 November 2026
 
 Read The Stupid Text ("the app") reads text aloud. It ships as a Windows tray
 utility, an Android app and an iPhone app. This policy explains how the app
