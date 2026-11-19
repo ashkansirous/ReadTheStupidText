@@ -240,7 +240,7 @@ it is done. This is basically a hot fix that should be deployed to production as
 #### From review
 
 - Pass 1 (`reviews/s418b-high.md`): all 10 findings fixed.
-- Pass 2: findings 1 and 3-7 fixed; #2 not applied (next line).
+- Pass 2 (`reviews/s418b-medium.md`): findings 1 and 3-7 fixed; for #2 see the next line.
 - Check pass (`reviews/s418b-check.md`): no findings.
 - Skipped #2 (`reviews/s418b-medium.md`): "LockTimer is created and started only on the first CreateWindow; a later window reuses the first window's dispatcher" - Dino runs one window, so no later window exists.
 
