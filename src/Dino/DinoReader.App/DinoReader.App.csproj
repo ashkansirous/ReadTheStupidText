@@ -21,7 +21,10 @@
 		<Nullable>enable</Nullable>
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-		<ApplicationTitle>Dino Book Reader</ApplicationTitle>
+		<!-- Slice 412: DinoPublicName is the name every person reads (stores, Windows Start menu and title bar, in-app strings, site).
+		     ApplicationTitle is only the launcher label under the Android and iOS icon. In XML the ampersand is written as an entity. -->
+		<DinoPublicName>Dino: Kids Books &amp; Stories</DinoPublicName>
+		<ApplicationTitle>Dino</ApplicationTitle>
 
 		<!-- Google Play package name — fixed once published. -->
 		<ApplicationId>uk.sirous.dinoreader</ApplicationId>

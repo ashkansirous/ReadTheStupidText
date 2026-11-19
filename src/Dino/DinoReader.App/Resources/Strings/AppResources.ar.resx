@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="Common_Done" xml:space="preserve"><value>تم</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>متابعة</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>إغلاق Dino Book Reader؟</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>إغلاق Dino: Kids Books &amp; Stories؟</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>البقاء</value></data>
   <data name="Common_Close" xml:space="preserve"><value>إغلاق</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>حذف</value></data>
@@ -94,8 +94,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>موجودة بالفعل، تم تخطيها</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>تعذّرت قراءتها</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>عرض قصصي</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>هذه النسخة من إصدار أحدث من Dino Book Reader. حدّث التطبيق ثم حاول مرة أخرى.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>هذا الملف ليس نسخة احتياطية من Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>هذه النسخة من إصدار أحدث من Dino: Kids Books &amp; Stories. حدّث التطبيق ثم حاول مرة أخرى.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>هذا الملف ليس نسخة احتياطية من Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>لم تنجح النسخة الاحتياطية. حاول مرة أخرى.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>كبيرة جدًا للاستعادة</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>تعذّرت إضافة {0} إلى النسخة الاحتياطية.</value></data>
@@ -268,7 +268,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>اقرأ بصوتي</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>تم تسجيل {0} من {1} صفحات. باقي الصفحات تستخدم أصوات دينو.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>الميكروفون مغلق</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>اسمح بالميكروفون لتطبيق Dino Book Reader في إعدادات جهازك، ثم حاول مجدداً.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>اسمح بالميكروفون لتطبيق Dino: Kids Books &amp; Stories في إعدادات جهازك، ثم حاول مجدداً.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>لم ينجح التسجيل. حاول مرة أخرى.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

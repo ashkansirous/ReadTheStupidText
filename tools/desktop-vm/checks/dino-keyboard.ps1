@@ -237,12 +237,12 @@ function Test-CornerKeys {
 }
 
 function Test-EscOnShelf {
-    # Slice 325 part C4: Esc on the kids' shelf asks "Close Dino Book Reader?"; Esc on the question is Stay and keeps the shelf.
+    # Slice 325 part C4: Esc on the kids' shelf asks "Close Dino: Kids Books & Stories?"; Esc on the question is Stay and keeps the shelf.
     Focus-DinoWindow
     Press-Key $VkEscape
-    Wait-Until { Find-UiaByName (Get-DinoWindow) 'Close Dino Book Reader?' } 10 'FAIL Esc on the kids'' shelf did not ask to close the app' | Out-Null
+    Wait-Until { Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?' } 10 'FAIL Esc on the kids'' shelf did not ask to close the app' | Out-Null
     Press-Key $VkEscape
-    Wait-Until { -not (Find-UiaByName (Get-DinoWindow) 'Close Dino Book Reader?') } 10 'FAIL Esc on the close question did not keep the shelf' | Out-Null
+    Wait-Until { -not (Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?') } 10 'FAIL Esc on the close question did not keep the shelf' | Out-Null
     Wait-VisibleId 'GalleryGrownUps' 5 'FAIL the kids'' shelf is gone after Stay' | Out-Null
 }
 

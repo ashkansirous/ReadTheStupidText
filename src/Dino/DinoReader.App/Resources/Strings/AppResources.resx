@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="App_Name" xml:space="preserve"><value>Dino Book Reader</value></data>
+  <data name="App_Name" xml:space="preserve"><value>Dino: Kids Books &amp; Stories</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -22,7 +22,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Done</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Continue</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Close Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Close Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Stay</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
@@ -95,8 +95,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Already here, skipped</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Couldn’t be read</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>See my stories</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>This backup is from a newer Dino Book Reader. Update the app, then try again.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>That file isn’t a Dino Book Reader backup.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>This backup is from a newer Dino: Kids Books &amp; Stories. Update the app, then try again.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>That file isn’t a Dino: Kids Books &amp; Stories backup.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>The backup didn’t work. Please try again.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Too large to restore</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} could not be added to the backup.</value></data>
@@ -271,7 +271,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Read with my voice</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} of {1} pages recorded. Other pages use Dino's voices.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Microphone is off</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Allow the microphone for Dino Book Reader in your device settings, then try again.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Allow the microphone for Dino: Kids Books &amp; Stories in your device settings, then try again.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>The recording didn't work. Please try again.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

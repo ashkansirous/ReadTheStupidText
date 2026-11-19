@@ -22,7 +22,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Valmis</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Jatka</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Jää</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Sulje</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Poista</value></data>
@@ -95,8 +95,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Jo täällä, ohitettu</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Ei voitu lukea</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Näytä tarinani</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Tämä varmuuskopio on uudemmasta Dino Book Reader -sovelluksesta. Päivitä sovellus ja yritä uudelleen.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Tämä tiedosto ei ole Dino Book Reader -varmuuskopio.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Tämä varmuuskopio on uudemmasta Dino: Kids Books &amp; Stories -sovelluksesta. Päivitä sovellus ja yritä uudelleen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Tämä tiedosto ei ole Dino: Kids Books &amp; Stories -varmuuskopio.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Varmuuskopiointi ei onnistunut. Yritä uudelleen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Liian suuri palautettavaksi</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Kohdetta {0} ei voitu lisätä varmuuskopioon.</value></data>
@@ -269,7 +269,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Lue minun äänelläni</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0}/{1} sivua nauhoitettu. Muut sivut käyttävät Dinon ääniä.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofoni on pois päältä</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino Book Readerille laitteen asetuksissa ja yritä uudelleen.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino: Kids Books &amp; Storiesille laitteen asetuksissa ja yritä uudelleen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Nauhoitus ei onnistunut. Yritä uudelleen.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

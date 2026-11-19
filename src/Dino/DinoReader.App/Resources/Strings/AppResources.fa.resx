@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>ذخیره</value></data>
   <data name="Common_Done" xml:space="preserve"><value>تمام</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>ادامه</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader بسته شود؟</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino: Kids Books &amp; Stories بسته شود؟</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>ماندن</value></data>
   <data name="Common_Close" xml:space="preserve"><value>بستن</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>حذف</value></data>
@@ -94,8 +94,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>از قبل بود، رد شد</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>خوانده نشد</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>دیدن داستان‌های من</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>این پشتیبان از نسخه جدیدتر Dino Book Reader است. برنامه را به‌روز کنید و دوباره امتحان کنید.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>این فایل پشتیبان Dino Book Reader نیست.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>این پشتیبان از نسخه جدیدتر Dino: Kids Books &amp; Stories است. برنامه را به‌روز کنید و دوباره امتحان کنید.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>این فایل پشتیبان Dino: Kids Books &amp; Stories نیست.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>پشتیبان‌گیری انجام نشد. دوباره امتحان کنید.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>برای بازیابی بسیار بزرگ است</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>افزودن {0} به پشتیبان ممکن نبود.</value></data>
@@ -268,7 +268,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>با صدای من بخوان</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} از {1} صفحه ضبط شده. بقیهٔ صفحه‌ها از صداهای دینو استفاده می‌کنند.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>میکروفون خاموش است</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>در تنظیمات دستگاه، میکروفون را برای Dino Book Reader فعال کنید و دوباره امتحان کنید.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>در تنظیمات دستگاه، میکروفون را برای Dino: Kids Books &amp; Stories فعال کنید و دوباره امتحان کنید.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>ضبط انجام نشد. دوباره امتحان کنید.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

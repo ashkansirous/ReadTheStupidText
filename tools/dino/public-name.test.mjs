@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { findHits, hitsIn, missingNameProblems, publicName, stringLiterals, submissionLines } from "./check-public-name.mjs";
+import { csprojProblems, findHits, iconLabel, hitsIn, missingNameProblems, publicName, stringLiterals, submissionLines, windowsNameProblems } from "./check-public-name.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const whole = (text) => [{ text, line: 1 }];
@@ -61,6 +61,22 @@ test("the real name is in the Sonos album constants and the privacy policy", () 
   assert.equal(missingNameProblems(root, "Some Other Name").length, 3);
 });
 
+test("the csproj DinoPublicName equals publicName and ApplicationTitle equals iconLabel", () => {
+  assert.deepEqual(csprojProblems(root, publicName(root), iconLabel(root)), []);
+});
+
+test("a csproj DinoPublicName that differs from publicName fails", () => {
+  const problems = csprojProblems(root, "Some Other Name", iconLabel(root));
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /DinoPublicName is "Dino: Kids Books & Stories", expected "Some Other Name"/);
+});
+
+test("a csproj ApplicationTitle that differs from iconLabel fails", () => {
+  const problems = csprojProblems(root, publicName(root), "Other");
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /ApplicationTitle is "Dino", expected "Other"/);
+});
+
 test("the English store-listing files are scanned, the language files wait for Slice 413", () => {
   const dir = mkdtempSync(join(tmpdir(), "public-name-"));
   try {
@@ -76,4 +92,53 @@ test("the English store-listing files are scanned, the language files wait for S
 
 test("the repo has no user-facing Dino Reader or Dino Book Reader", () => {
   assert.deepEqual(findHits(root), []);
+});
+
+function inTempRoot(files, body) {
+  const dir = mkdtempSync(join(tmpdir(), "public-name-"));
+  try {
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), text);
+    }
+    body(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("a missing csproj fails loudly instead of switching the check off", () => {
+  inTempRoot({}, (dir) => {
+    const problems = csprojProblems(dir, "X", "Y");
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /DinoReader\.App\.csproj: file is missing/);
+  });
+});
+
+test("a commented-out csproj property is not read", () => {
+  const csproj = "<Project><!-- <ApplicationTitle>Old</ApplicationTitle> --><PropertyGroup><ApplicationTitle>Y</ApplicationTitle><DinoPublicName>X</DinoPublicName></PropertyGroup></Project>";
+  inTempRoot({ "src/Dino/DinoReader.App/DinoReader.App.csproj": csproj }, (dir) => {
+    assert.deepEqual(csprojProblems(dir, "X", "Y"), []);
+  });
+});
+
+test("a public-name.json without iconLabel gives a clear error", () => {
+  inTempRoot({ "tools/dino/public-name.json": JSON.stringify({ publicName: "X" }) }, (dir) => {
+    assert.throws(() => iconLabel(dir), /No iconLabel in tools\/dino\/public-name\.json/);
+  });
+});
+
+test("the Windows manifest DisplayNames and the English App_Name must equal publicName", () => {
+  assert.deepEqual(windowsNameProblems(root, publicName(root)), []);
+  const manifest = '<Package><Properties><DisplayName>Old</DisplayName></Properties><uap:VisualElements DisplayName="X" /></Package>';
+  const resx = '<root><data name="App_Name" xml:space="preserve"><value>Old</value></data></root>';
+  inTempRoot({
+    "src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest": manifest,
+    "src/Dino/DinoReader.App/Resources/Strings/AppResources.resx": resx,
+  }, (dir) => {
+    const problems = windowsNameProblems(dir, "X");
+    assert.equal(problems.length, 2);
+    assert.match(problems[0], /DisplayName is "Old", expected "X"/);
+    assert.match(problems[1], /App_Name is "Old", expected "X"/);
+  });
 });

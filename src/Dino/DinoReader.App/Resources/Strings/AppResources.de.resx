@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="App_Name" xml:space="preserve"><value>Dino Book Reader</value></data>
+  <data name="App_Name" xml:space="preserve"><value>Dino: Kids Books &amp; Stories</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
@@ -23,7 +23,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Fertig</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Weiter</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader schließen?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino: Kids Books &amp; Stories schließen?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Bleiben</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
@@ -96,8 +96,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Schon da, übersprungen</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Ließ sich nicht lesen</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Meine Geschichten ansehen</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Diese Sicherung stammt von einem neueren Dino Book Reader. Aktualisiere die App und versuche es dann noch einmal.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Diese Datei ist keine Sicherung von Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Diese Sicherung stammt von einem neueren Dino: Kids Books &amp; Stories. Aktualisiere die App und versuche es dann noch einmal.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Diese Datei ist keine Sicherung von Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Die Sicherung hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Zu groß zum Wiederherstellen</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} konnte nicht zur Sicherung hinzugefügt werden.</value></data>
@@ -270,7 +270,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Mit meiner Stimme vorlesen</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} von {1} Seiten aufgenommen. Die anderen Seiten nutzen Dinos Stimmen.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Das Mikrofon ist aus</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Erlaube in den Einstellungen deines Geräts das Mikrofon für Dino Book Reader und versuche es dann noch einmal.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Erlaube in den Einstellungen deines Geräts das Mikrofon für Dino: Kids Books &amp; Stories und versuche es dann noch einmal.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Die Aufnahme hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

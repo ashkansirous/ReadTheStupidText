@@ -143,7 +143,7 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    So nothing shows "bedtime stories" far ahead of "kids books", and the approved name and keyword field ship unchanged. The
    table can be filled from the user's signed-in Chrome or Apple Ads account if they ask; Slice 414 re-tunes keywords from
    App Store Connect impressions anyway.
-2. [ ] **App name.** One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
+2. [x] **App name.** (Built: `DinoPublicName` added, `ApplicationTitle` = "Dino"; Android build label "Dino", Windows AppxManifest DisplayName is the full name; Windows manifest is a literal, MAUI does not overwrite it; iOS takes `ApplicationTitle` as CFBundleDisplayName, read from the iOS SDK targets, not built here.) One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
    name. Confirm with context7 / `library-docs` how MAUI maps `ApplicationTitle` to the Android label, iOS
@@ -151,7 +151,7 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
 3. [x] *Built (Part A, 2026-11-18): `tools/dino/public-name.json`, old names "Dino Reader" and "Dino Book Reader", English `docs/store-listings/dino/*.md` scanned (language files wait for Slice 413), tests, `public-name.yml` paths, CLAUDE.md rule lines. good-enough's book is skipped by a temporary `PENDING_PART_B_BOOKS` entry; Part B removes it.* **Name guard.** `tools/dino/check-public-name.mjs` reads the public name from the new property, not `ApplicationTitle`;
    "Dino Book Reader" joins "Dino Reader" as an old name that must not appear in public files; scan the store-listing
    files too. Tests in `tools/dino/public-name.test.mjs`. Update the rule line in `src/Dino/DinoReader.App/CLAUDE.md`.
-4. [ ] **In-app strings.** `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
+4. [x] **In-app strings.** (Built: all 15 `AppResources*.resx`, 62 occurrences of "Dino Book Reader" replaced; none left.) `App_Name` and every string that names the app, in all 15 `AppResources*.resx`, say the new
    name (in-app text uses the English brand name in every language, as today).
 5. [x] *Built (Part A, 2026-11-18): fixtures, constants, subscription title "Every book" and description (Apple's 30/45 limits), group display name, `SKILL.md`. `APPLE_GROUP_NAME` keeps its value: it is the live group's internal lookup name, never shown, and changing it would create a second group. Microsoft keyword limit left at 30: Microsoft's docs could not be found to confirm 40.* **Store tooling.** `store-listings.test.mjs` fixtures, `store-products.mjs` constants (`APPLE_DESCRIPTION`,
    `APPLE_GROUP_NAME`, `SUBSCRIPTION_TITLE`, the subscription group localization, Play book descriptions) and their
@@ -201,13 +201,45 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
     `site/dino/privacy.html`, `README.md`, `STORE.md` (name lines; keep engineering prose about the code name), the
     credits in `content/dino/*/book.json` (book version bumps and store upload per the Dino store rules, since the
     credits are book content).
+    *Built (Part B, 2026-11-18, `feat/412b-app-name`): good-enough credits (English + 14 languages) changed, `stamp` v12 to v13, `build` rewrote
+    `good-enough.dino`, `PENDING_PART_B_BOOKS` removed; the guard now also fails when csproj `DinoPublicName` differs from `publicName` or
+    `ApplicationTitle` from `iconLabel` (3 new tests); the "Close ...?" code comments in `CloseQuestionPage.cs` and `GalleryPage.xaml.cs` and the
+    naming note in `DinoReader.App/CLAUDE.md` updated. Identity untouched. Merges only after Play production shows `completed`.*
 
 ## Verification
 
 - `node tools/dino/check-public-name.mjs` passes and fails on a planted "Dino Book Reader".
 - Store listings read back equal on Play, App Store (after the version submission) and Microsoft Store.
-- Android emulator: the launcher label reads "Dino"; the back dialog and version card show the new name.
+- Android emulator: the launcher label reads "Dino"; the back dialog shows the new name. (The version card shows only
+  "Version" and the number, `AboutPage.cs:46`, `UpdatePage.cs:158`: it never named the app, so it has nothing to check.)
 - Windows (VM, only if the manifest change needs it): Start menu and title bar show "Dino: Kids Books & Stories".
+
+*Part B device run, 2026-11-18 (emulator-5554, debug build of `feat/412b-app-name`):* launcher label PASS
+(`aapt2 dump badging`: `application-label:'Dino'` in every locale); close dialog PASS (new Maestro flow
+`.maestro/dino/app-name-close-dialog.yaml` waits for "Close Dino: Kids Books & Stories?", taps Stay, the shelf is back).
+
+## Not yet verified
+
+- iOS home-screen label reads "Dino" (read from the iOS SDK targets only; no Mac build here).
+- Android launcher label as drawn on a real launcher (the APK label was read, not the home screen).
+- Arabic and Farsi in-app name renders in the right order next to RTL text.
+- Windows Start menu and title bar show the full name (VM run not done; the built AppxManifest DisplayName was read).
+
+## Review (part B, `feat/412b-app-name`)
+
+*From review:* files `reviews/s412b-high.md`, `reviews/s412b-medium.md`, `reviews/s412b-check.md` read in full; every
+finding without a line below was applied (high #4 resolved itself: the name was reserved in Partner Center on 2026-11-18;
+high #7 and #8 became Not yet verified lines).
+
+- Skipped #5 (`reviews/s412b-medium.md`): "also feeds Android label and iOS CFBundleDisplayName" — that is the user's pick for the icon label; Android checked on the emulator, iOS is a Not yet verified line.
+- Skipped #7 (`reviews/s412b-medium.md`): "full name h" — the exception messages name the app on purpose, now with the new name.
+- Skipped #8 (`reviews/s412b-medium.md`): "VM checks match dialog and window text containing" — no VM run in this pass; a Not yet verified line covers Windows.
+- Skipped #2 (`reviews/s412b-check.md`): "only the English AppResources.resx App_Name is checked" — every language file uses the English brand name; Slice 413 can widen the guard.
+- Skipped #3 (`reviews/s412b-check.md`): "csprojProperty takes the first match" — the csproj has no conditional override of either property.
+- Skipped #4 (`reviews/s412b-check.md`): "csproj tests hard-code live name strings" — low; a rename updates them with the json.
+- Skipped #5 (`reviews/s412b-check.md`): "errors from findHits/csprojProblems are not caught" — low; a stack trace still fails the check.
+- Skipped #6 (`reviews/s412b-check.md`): "comments quote the public name and can go stale" — cosmetic.
+- Skipped #7 (`reviews/s412b-check.md`): "namespaced DisplayName is not matched" — the manifest uses no namespace prefix on DisplayName.
 
 ## Review (part A, PR #1278)
 

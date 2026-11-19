@@ -16,9 +16,9 @@ const OLD_NAMES = [
 const STORE_LISTINGS_FOLDER = "docs/store-listings/dino";
 // The 14 other languages' listing files (ar.md, de.md ...) still carry the old title until Slice 413 rewrites them.
 const LANGUAGE_LISTING = /^[a-z]{2}\.md$/;
-// Slice 412 Part B removes this: good-enough is a starter whose credits change means a rebuilt `good-enough.dino` under
-// src/Dino/DinoReader.App, and that path starts release-dino.yml (a Play upload) until Dino's first production release is out.
-const PENDING_PART_B_BOOKS = new Set(["good-enough"]);
+const CSPROJ_FILE = "src/Dino/DinoReader.App/DinoReader.App.csproj";
+const MANIFEST_FILE = "src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest";
+const RESX_FILE = "src/Dino/DinoReader.App/Resources/Strings/AppResources.resx";
 const TEXT_FILES = ["PRIVACY.md"];
 const TEXT_FOLDERS = ["site", "alexa/skill-package"];
 const BOOKS_FOLDER = "content/dino";
@@ -182,7 +182,7 @@ function storeListingFiles(root) {
 function bookFiles(root) {
   const folder = join(root, BOOKS_FOLDER);
   if (!existsSync(folder)) return [];
-  return readdirSync(folder).filter((stem) => !PENDING_PART_B_BOOKS.has(stem)).map((stem) => join(folder, stem, BOOK_FILE)).filter(existsSync);
+  return readdirSync(folder).map((stem) => join(folder, stem, BOOK_FILE)).filter(existsSync);
 }
 
 function workerSources(root) {
@@ -207,6 +207,57 @@ export function missingNameProblems(root, name) {
   return problems;
 }
 
+function xmlUnescape(text) {
+  return text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+}
+
+function csprojProperty(source, property) {
+  const live = source.replace(/<!--[\s\S]*?-->/g, "");
+  const found = new RegExp(`<${property}>([^<]*)</${property}>`).exec(live);
+  return found === null ? null : xmlUnescape(found[1].trim());
+}
+
+function manifestDisplayNames(source) {
+  const live = source.replace(/<!--[\s\S]*?-->/g, "");
+  return [...live.matchAll(/<DisplayName>([^<]*)<\/DisplayName>|\sDisplayName="([^"]*)"/g)].map((m) => xmlUnescape((m[1] ?? m[2]).trim()));
+}
+
+/** Slice 412 part B: every DisplayName of the Windows manifest (package and VisualElements) and the English App_Name must equal publicName. */
+export function windowsNameProblems(root, name) {
+  const problems = [];
+  const manifest = join(root, MANIFEST_FILE);
+  if (!existsSync(manifest)) problems.push(`${MANIFEST_FILE}: file is missing`);
+  else {
+    const names = manifestDisplayNames(readFileSync(manifest, "utf8"));
+    if (names.length === 0) problems.push(`${MANIFEST_FILE}: no DisplayName found, expected "${name}"`);
+    for (const got of names.filter((n) => n !== name)) problems.push(`${MANIFEST_FILE}: DisplayName is "${got}", expected "${name}"`);
+  }
+  const resx = join(root, RESX_FILE);
+  if (!existsSync(resx)) return [...problems, `${RESX_FILE}: file is missing`];
+  const found = /<data name="App_Name"[^>]*>\s*<value>([^<]*)<\/value>/.exec(readFileSync(resx, "utf8"));
+  if (found === null || xmlUnescape(found[1].trim()) !== name) problems.push(`${RESX_FILE}: App_Name is ${found === null ? "missing" : `"${xmlUnescape(found[1].trim())}"`}, expected "${name}"`);
+  return problems;
+}
+
+/** The icon label (the name under the launcher icon) from tools/dino/public-name.json. */
+export function iconLabel(root) {
+  const data = JSON.parse(readFileSync(join(root, NAME_FILE), "utf8"));
+  if (typeof data.iconLabel !== "string" || data.iconLabel.trim() === "") throw new Error(`No iconLabel in ${NAME_FILE}`);
+  return data.iconLabel.trim();
+}
+
+/** Slice 412 part B: the csproj's DinoPublicName must equal publicName and its ApplicationTitle must equal iconLabel. */
+export function csprojProblems(root, name, label) {
+  const csproj = join(root, CSPROJ_FILE);
+  if (!existsSync(csproj)) return [`${CSPROJ_FILE}: file is missing`];
+  const source = readFileSync(csproj, "utf8");
+  const expected = [["DinoPublicName", name], ["ApplicationTitle", label]];
+  return expected.flatMap(([property, want]) => {
+    const got = csprojProperty(source, property);
+    return got === want ? [] : [`${CSPROJ_FILE}: ${property} is ${got === null ? "missing" : `"${got}"`}, expected "${want}"`];
+  });
+}
+
 export function findHits(root) {
   const read = (path) => readFileSync(path, "utf8");
   const rel = (path) => relative(root, path).split("\\").join("/");
@@ -221,9 +272,17 @@ export function findHits(root) {
 
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-  const name = publicName(root);
+  let name;
+  let label;
+  try {
+    name = publicName(root);
+    label = iconLabel(root);
+  } catch (error) {
+    console.error(`Public name check cannot run: ${error.message}`);
+    return 1;
+  }
   const hits = findHits(root);
-  const missing = missingNameProblems(root, name);
+  const missing = [...missingNameProblems(root, name), ...csprojProblems(root, name, label), ...windowsNameProblems(root, name)];
   if (hits.length === 0 && missing.length === 0) {
     console.log(`Public name check passed: "${name}" is the only name in user-facing files.`);
     return 0;

@@ -359,7 +359,7 @@ public static class StoryPackageReader
     {
         string json = await ReadTextAsync(entries, StoryPackageManifest.ManifestFileName);
         return StoryPackageManifest.PeekSchemaVersion(json) > StoryPackageManifest.CurrentSchemaVersion
-            ? throw new StoryPackageException("The package is from a newer version of Dino Book Reader.")
+            ? throw new StoryPackageException("The package is from a newer version of Dino: Kids Books & Stories.")
             : StoryPackageManifest.Parse(json);
     }
 

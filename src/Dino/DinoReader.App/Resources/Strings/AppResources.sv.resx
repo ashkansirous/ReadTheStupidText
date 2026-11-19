@@ -22,7 +22,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Spara</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Klar</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Fortsätt</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Stänga Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Stänga Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Stanna</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Stäng</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Ta bort</value></data>
@@ -95,8 +95,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Fanns redan, hoppades över</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Gick inte att läsa</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Se mina sagor</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Den här säkerhetskopian kommer från en nyare version av Dino Book Reader. Uppdatera appen och försök igen.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen är inte en säkerhetskopia från Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Den här säkerhetskopian kommer från en nyare version av Dino: Kids Books &amp; Stories. Uppdatera appen och försök igen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen är inte en säkerhetskopia från Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Säkerhetskopian fungerade inte. Försök igen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>För stor för att återställas</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunde inte läggas till i säkerhetskopian.</value></data>
@@ -269,7 +269,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Läs med min röst</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} av {1} sidor inspelade. De andra sidorna använder Dinos röster.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen är av</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino Book Reader i enhetens inställningar och försök igen.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino: Kids Books &amp; Stories i enhetens inställningar och försök igen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Inspelningen fungerade inte. Försök igen.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->

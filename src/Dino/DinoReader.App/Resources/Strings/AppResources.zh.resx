@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完成</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>继续</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>关闭 Dino Book Reader？</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>关闭 Dino: Kids Books &amp; Stories？</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>留下</value></data>
   <data name="Common_Close" xml:space="preserve"><value>关闭</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
@@ -94,8 +94,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>已存在，已跳过</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>无法读取</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>查看我的故事</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino Book Reader。请先更新应用，再重试。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino Book Reader 备份。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino: Kids Books &amp; Stories。请先更新应用，再重试。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino: Kids Books &amp; Stories 备份。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>备份没有成功，请重试。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>太大，无法恢复</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>有 {0} 个故事无法加入备份。</value></data>
@@ -268,7 +268,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>用我的声音朗读</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>已录制 {0} / {1} 页。其他页使用恐龙的声音。</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>麦克风已关闭</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino Book Reader 使用麦克风，然后重试。</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino: Kids Books &amp; Stories 使用麦克风，然后重试。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>录音失败了。请再试一次。</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
