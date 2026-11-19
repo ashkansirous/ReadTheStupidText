@@ -1052,7 +1052,37 @@ line, so the tables below give the caption to search for, not a line number. Fon
 files are inline SVG, not Phosphor. Refresh: fetch again with `DesignSync get_file` (main thread only), overwrite the copy with a
 script, regenerate the tables.
 
-## Onboarding — `Dino Reader 2026-11-13 Onboarding.dc.html`
+## One shelf with a lock — `Dino Reader 2026-11-19 One Shelf with a Lock.dc.html`
+
+- **Source:** claude.ai canvas <https://claude.ai/code/artifact/16e8b2ab-0a01-432b-973a-f35f61f629b1>, page
+  "Dino Reader 2026-11-19 One Shelf with a Lock" (`project/Dino Reader 2026-11-19 One Shelf with a Lock.dc.html`).
+- **Copied:** 2026-11-19, after the copy pass (canvas version 25 carries the final text), by the main thread.
+- **Covers:** Slice 418 (`docs/plan/slices/418-dino-one-shelf-with-a-lock.md`, its Design and Copy sections).
+- **Replaces:** the 2026-11-13 Onboarding page below (marked replaced on the canvas) and the dark corner header (ink bar with
+  the coral Child's shelf pill) on every earlier page; their content (Store states, subscription, Settings rows) still applies.
+- One long line: open in a text editor and search for `data-screen-label="L1` etc.
+
+| # | Screen (data-screen-label) | Feeds |
+|---|---|---|
+| — | 1 · The rules (what the lock allows, when it closes) | 418 decisions |
+| L1 | Locked shelf | 418 items 2-3 |
+| L2 | Locked tap on Store | 418 item 3 |
+| L3 | Unlock popup | 418 item 4 |
+| L4 | Unlocked shelf | 418 item 4 |
+| L5 | Unlocked Store | 418 item 2 |
+| L6 | Unlocked Settings | 418 item 2 |
+| L8 | Unlocked book options | 418 item 4 |
+| L7 | Auto-locked | 418 item 5 |
+| WL1 | Windows locked | 418 item 2 |
+| WL2 | Windows unlocked | 418 items 2, 4 |
+| NO1-NO3 | Language, story languages, first books | 418 item 6 |
+| NO4 | Listen | 418 item 6 |
+| NO5 | Your voice intro | 418 item 6 |
+| NO6 | Record Pim | 418 item 6 |
+| NO7 | Hear yourself | 418 item 6 |
+| NO8 | Done, on the locked shelf | 418 item 6 |
+
+## Onboarding — `Dino Reader 2026-11-13 Onboarding.dc.html` (replaced 2026-11-19 by One Shelf with a Lock)
 
 - **Source:** claude.ai canvas <https://claude.ai/code/artifact/16e8b2ab-0a01-432b-973a-f35f61f629b1>.
 - **Copied:** 2026-11-13, after the copy pass (the canvas carries the final text), by the main thread.
