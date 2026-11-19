@@ -116,7 +116,7 @@ or book shot: no empty rows, no "no stories" state, only the last row may be par
 
 | # | Screen | Caption (English) |
 |---|---|---|
-| 1 | Reading page, a character's line lit | A voice for every character |
+| 1 | Reading page, a character's line lit | Picture books read aloud, your voice or ours |
 | 2 | Record screen, "Who will you record?" | Record your voice as any character |
 | 3 | The same story page in another language | 15 languages |
 | 4 | Grown-ups page (books), no prices | Grown-ups choose the books, behind a gate |
@@ -136,7 +136,7 @@ from the VM. Same rules.
 
 - **Play:** phone set (2-8) required; tablet sets (4-8) once the tablet flow has run; feature graphic
   1024x500 stays unless the user asks for a new one.
-- **App Store:** iPhone 6.9" and iPad 13" from `store-screenshots.yml` (macOS simulator); same screens.
+- **App Store:** iPhone 6.9", iPhone 6.5" and iPad 13" from `store-screenshots.yml` (macOS simulator); same screens.
 - **Microsoft Store:** desktop shots from the Hyper-V VM (`tools/desktop-vm`).
 - **Amazon Appstore / Alexa:** not live for either app; sizes in `stores.md` for when one is added.
 

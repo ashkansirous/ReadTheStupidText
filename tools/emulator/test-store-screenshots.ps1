@@ -21,8 +21,8 @@ Assert-Throws 'tablet form on a phone AVD' { Get-StoreShotInstance 'emulator-555
 Assert-Throws 'phone form on the tablet AVD' { Get-StoreShotInstance 'emulator-5558' 'phone' }
 Assert-Throws 'a real phone serial' { Get-StoreShotInstance 'R5CT1234' 'phone' }
 
-$flow = "- takeScreenshot: store-dino-phone-1-shelf`n- tapOn: x`n- takeScreenshot: store-dino-phone-2-reading`n- takeScreenshot: store-dino-tablet-1-shelf`n"
-Assert-Equal 'shot names of the phone form, in order' 'store-dino-phone-1-shelf,store-dino-phone-2-reading' ((Get-StoreShotNames $flow 'dino' 'phone') -join ',')
+$flow = "- takeScreenshot: store-dino-phone-1-reading`n- tapOn: x`n- takeScreenshot: store-dino-phone-2-record`n- takeScreenshot: store-dino-tablet-1-reading`n"
+Assert-Equal 'shot names of the phone form, in order' 'store-dino-phone-1-reading,store-dino-phone-2-record' ((Get-StoreShotNames $flow 'dino' 'phone') -join ',')
 Assert-Equal 'no shot for another app' 0 @(Get-StoreShotNames $flow 'rtst' 'phone').Count
 
 # Slice 291 item 8: the real Dino flows take the five shots of the skill's table, in order (reading, record, language, grown-ups, shelf; no store shot).
