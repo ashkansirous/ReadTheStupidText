@@ -4,7 +4,7 @@
 // Browse tree: root -> one folder per language (own name) -> the books of that language, each one playable track.
 
 import { handleStories } from "./stories.ts";
-import type { ListItem, ObjectServer } from "./stories.ts";
+import type { CatalogueRuntime, ListItem, ObjectServer } from "./stories.ts";
 import { FaultCode, FaultMessage, SoapFault, SonosAction, escapeXml, faultResponse, parseSonosRequest, readBoundedText, resultResponse, tag } from "./sonos-soap.ts";
 import type { SonosActionName, SonosRequest } from "./sonos-soap.ts";
 import { SPEAKER_PLATFORM_SONOS, recordSpeakerPlay } from "./speaker-usage.ts";
@@ -105,10 +105,11 @@ function tracksOf(items: readonly ListItem[], origin: string): Track[] {
 
 // The catalogue is this Worker's own list, asked for through the same handler the apps use, so the rules for what is offered live in one place.
 // That handler caches the built list per bucket for 60 s and shares one rebuild between concurrent callers (stories.ts currentEntries), so a SOAP call does not re-list R2 or re-read meta.json.
-async function loadTracks(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer): Promise<Track[]> {
+// Slice 283 F1/F2: `catalogue` lets that handler serve the last good list while it rebuilds and keep the list in the colo's Cache API, so a cold isolate does not rebuild before answering Sonos.
+async function loadTracks(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, catalogue?: CatalogueRuntime): Promise<Track[]> {
   const origin = new URL(request.url).origin;
   const listRequest = new Request(`${origin}${pathPrefix}${STORIES_PATH}`, { method: "GET" });
-  const response = await handleStories(listRequest, env, pathPrefix, serve);
+  const response = await handleStories(listRequest, env, pathPrefix, serve, undefined, undefined, undefined, catalogue);
   if (!response.ok) throw new SoapFault(FaultCode.Unavailable, FaultMessage.NoCatalogue);
   const body = (await response.json()) as { stories?: ListItem[] };
   return tracksOf(Array.isArray(body.stories) ? body.stories : [], origin);
@@ -250,21 +251,21 @@ export function isSonosPath(pathname: string): boolean {
   return pathname === SONOS_PATH;
 }
 
-async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined): Promise<Response> {
+async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined, catalogue: CatalogueRuntime | undefined): Promise<Response> {
   const text = await readBoundedText(request);
   if (text === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.TooLarge);
   const parsed = parseSonosRequest(text);
   if (parsed === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.NotSoap);
-  return answer(await loadTracks(request, env, pathPrefix, serve), parsed, usage, request);
+  return answer(await loadTracks(request, env, pathPrefix, serve, catalogue), parsed, usage, request);
 }
 
 /** The Sonos SMAPI endpoint: POST only, every failure a SOAP fault with HTTP 500. `pathPrefix` is "" on the Dino host and "/dino" under workers.dev. `usage` (Slice 289) counts each getMediaURI as one play; without it nothing is counted. */
-export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage): Promise<Response> {
+export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage, catalogue?: CatalogueRuntime): Promise<Response> {
   if (request.method !== "POST") return new Response(null, { status: NOT_ALLOWED_STATUS, headers: { Allow: ALLOWED_METHODS } });
   try {
-    return await respond(request, env, pathPrefix, serve, usage);
+    return await respond(request, env, pathPrefix, serve, usage, catalogue);
   } catch (error) {
-    // no-fallback: the fault is the answer; a failure is never logged (ids and titles stay out of logs)
+    // no-fallback: the fault is the answer; a failure is never logged here (ids and titles stay out of logs; stories.ts logs only a catalogue rebuild's error name)
     return faultResponse(error instanceof SoapFault ? error : new SoapFault(FaultCode.Unavailable, FaultMessage.Unavailable));
   }
 }

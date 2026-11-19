@@ -162,7 +162,26 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    `microsoft.md` (title, 7 keywords). Push through the `store-listing` agent in apply mode and read back equal. Play:
    check the Publishing overview for unrelated pending changes before committing the edit (one pending draft per app).
    iOS name and subtitle go with the next version submission.
-7. [ ] **Microsoft Store rename.** User step: reserve "Dino: Kids Books & Stories" (Partner Center, *Manage app names*
+   *Pushed 2026-11-18 (`store-listing` agent, no Play call):* Microsoft en-us description, 8 features and the 7 search
+   terms read back equal and were committed as submission 1152921505702441682 (same packages, pricing and visibility
+   as the last published one; certification pending). Still open: (a) App Store name, subtitle, keywords and description
+   wait for the next App Store version (only 1.131.1 READY_FOR_SALE exists; none was created). Before that version, merge
+   the subscription paragraph and bullets of `appstore-subscription.md` into `appstore.md`, whose promo and description
+   still carry the old "$0.99 each" text and would regress the live text. (b) Apple refused the subscription group
+   display name and both subscription localizations with 409 "Cannot edit ... when it is in ACTIVE state"; retry with
+   the next version. (c) Microsoft title: a new submission after the one in certification finishes. (d) Play: after the
+   production release is out.
+   *(a) done 2026-11-18 evening (`store-listing` agent; user: "isnt the task explained to you as change the name and
+   keywords?"):* App Store version 1.133.1 (id 3afbd46d-d592-4fdb-a403-62eb93aaaff5) created from build 20261118.135720;
+   en-US name, subtitle, keywords, promo and description read back equal. `appstore.md` now carries the live
+   subscription wording. Submitted by `appstore-submit` after Slice 413's locales are on the same version.
+   (b) retried: still 409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE` (group and both subscriptions APPROVED/ACTIVE);
+   Apple allows no rename of an active subscription's display name here, so the old "Dino Book Reader" stays on them.
+   The Dino ASC key in `D:\secrets\dinoreader` returns 401; the shared key in `D:\secrets\lets-call-mom` works.
+7. [ ] *Name reserved 2026-11-18 (desk, in the user's Chrome, user: "use the fucking chrome I approve it"): Partner
+   Center lists "Dino: Kids Books & Stories" as "Reserved for this app" next to "Dino Book Reader" (in use) and "Dino
+   Reader". Microsoft drops a reservation unless the product is submitted with it within three months (by 2027-02-18).
+   Next: the Microsoft listing title, then the manifest `DisplayName` with part B.* **Microsoft Store rename.** User step: reserve "Dino: Kids Books & Stories" (Partner Center, *Manage app names*
    for 9N9VHRLCZXN5: https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview). If the name is
    taken, stop and ask. Then the manifest change ships in the next Windows submission; the old name can be deleted once
    the new one is published.

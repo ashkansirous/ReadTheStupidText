@@ -66,7 +66,16 @@ const AUDIO_CONTENT_TYPE = "application/zip";
 const LISTEN_CONTENT_TYPE = "audio/mp4";
 const LIST_CACHE_CONTROL = "public, max-age=60";
 const COVER_CACHE = "public, max-age=3600";
-const META_READ_BATCH = 6;
+// Slice 283 F1/F2: how long the colo's shared list is served without waiting for a rebuild, how long the Cache API keeps it (a stale copy beats none), how long a caller waits for a rebuild while an older list is held, and its cache key (never fetched).
+const SHARED_FRESH_MS = 5 * 60_000;
+const SHARED_HOLD_SECONDS = 60 * 60; // staleness bound: isolate list fresh 60 s, up to 5 min served while refreshing, the shared copy at most 1 h
+const SHARED_HOLD_MS = SHARED_HOLD_SECONDS * 1000;
+const REBUILD_BUDGET_MS = 3000;
+const META_READ_CONCURRENCY = 24; // meta.json reads in flight at once, for every caller of buildEntries
+const REBUILD_BACKOFF_MS = 30_000; // after a failed rebuild the held list is served this long before R2 is tried again
+/** Bump when a StoryEntry field is added, renamed or reshaped: an older copy in the Cache API is then never read. */
+const SHARED_SCHEMA_VERSION = 1;
+const SHARED_CATALOGUE_URL = `https://catalogue.internal/dino/stories-entries/v${SHARED_SCHEMA_VERSION}`;
 const MAX_STORIES = 200;
 const MAX_TITLE_LENGTH = 200;
 const MAX_LANGUAGE_LENGTH = 12;
@@ -468,6 +477,8 @@ interface CachedStories {
 
 /** Per-isolate listing cache, keyed by bucket object so a test's fake never sees another's. */
 const cache = new WeakMap<R2Bucket, CachedStories>();
+/** Slice 283 review 1: the Sonos path's own isolate list, never `cache`, so the apps' /api/stories answer does not depend on Sonos traffic. */
+const sharedCache = new WeakMap<R2Bucket, CachedStories>();
 
 async function listStoryKeys(bucket: R2Bucket, prefix: string = STORIES_PREFIX): Promise<string[]> {
   const keys: string[] = [];
@@ -502,16 +513,97 @@ async function entryFor(bucket: R2Bucket, id: string, folder: Folder): Promise<S
 async function buildEntries(bucket: R2Bucket): Promise<StoryEntry[]> {
   const folders = groupFolders(await listStoryKeys(bucket));
   const ids = completeIds(folders).slice(0, MAX_STORIES);
-  const entries: (StoryEntry | null)[] = [];
-  for (let start = 0; start < ids.length; start += META_READ_BATCH) {
-    const batch = ids.slice(start, start + META_READ_BATCH);
-    entries.push(...(await Promise.all(batch.map((id) => entryFor(bucket, id, folders.get(id) ?? emptyFolder())))));
-  }
+  // Slice 283 F3: meta.json reads run at a fixed concurrency (META_READ_CONCURRENCY), a sliding window: not all at once, not in sequential batches.
+  const entries = await mapWithConcurrency(ids, META_READ_CONCURRENCY, (id) => entryFor(bucket, id, folders.get(id) ?? emptyFolder()));
   return entries.filter((entry): entry is StoryEntry => entry !== null).sort(compareEntries);
+}
+
+async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const lane = async (): Promise<void> => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await work(items[index] as T);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane));
+  return results;
+}
+
+/**
+ * Slice 283 F2: what the Worker lends the listing so a new isolate or colo need not rebuild it on the request path.
+ * `defer` finishes work after the answer (the Worker's `ctx.waitUntil`); `shared` is the colo's Cache API (`caches.default`);
+ * `rebuildBudgetMs` is how long a caller waits for a rebuild while an older list is held (F1).
+ */
+export interface CatalogueRuntime {
+  readonly defer?: (work: Promise<unknown>) => void;
+  readonly shared?: SharedCatalogue;
+  readonly rebuildBudgetMs?: number;
+}
+
+/** The two Cache API calls used (`caches.default` has both). */
+export interface SharedCatalogue {
+  match(request: Request): Promise<Response | undefined>;
+  put(request: Request, response: Response): Promise<void>;
 }
 
 const pending = new WeakMap<R2Bucket, Promise<readonly StoryEntry[] | null>>();
 
+function sharedKey(): Request {
+  return new Request(SHARED_CATALOGUE_URL);
+}
+
+function errorName(error: unknown): string {
+  return error instanceof Error ? error.name : typeof error;
+}
+
+/** A shared copy is trusted only when every entry has the fields the list and the Sonos tracks read (a deploy that changes them also bumps `SHARED_SCHEMA_VERSION`). */
+function isEntryShape(value: unknown): value is StoryEntry {
+  const entry = value as Partial<StoryEntry> | null;
+  if (typeof entry !== "object" || entry === null) return false;
+  const meta = entry.meta as Partial<StoryMeta> | undefined;
+  return typeof entry.id === "string" && typeof entry.version === "number" && typeof entry.hasCover === "boolean" && typeof meta === "object" && meta !== null && typeof meta.title === "string" && typeof meta.language === "string";
+}
+
+function parseShared(body: unknown): CachedStories | null {
+  const stored = body as { v?: unknown; at?: unknown; entries?: unknown } | null;
+  if (typeof stored !== "object" || stored === null || stored.v !== SHARED_SCHEMA_VERSION || typeof stored.at !== "number" || !Array.isArray(stored.entries)) return null;
+  if (Date.now() - stored.at >= SHARED_HOLD_MS || !stored.entries.every(isEntryShape)) return null;
+  return { at: stored.at, entries: stored.entries };
+}
+
+async function fetchShared(shared: SharedCatalogue): Promise<CachedStories | null> {
+  const hit = await shared.match(sharedKey());
+  return hit === undefined ? null : parseShared(await hit.json());
+}
+
+async function readShared(runtime: CatalogueRuntime | undefined): Promise<CachedStories | null> {
+  if (runtime?.shared === undefined) return null;
+  try {
+    return await fetchShared(runtime.shared);
+  } catch (error) {
+    // no-fallback: the shared copy is an extra; the list is rebuilt from R2. Only the error's name is logged, so a broken Cache API shows.
+    console.warn(`catalogue shared read failed: ${errorName(error)}`);
+    return null;
+  }
+}
+
+// An older build (a slow rebuild that ends after a newer one) never replaces a newer copy.
+async function writeShared(runtime: CatalogueRuntime | undefined, built: CachedStories): Promise<void> {
+  if (runtime?.shared === undefined) return;
+  try {
+    const stored = await fetchShared(runtime.shared).catch(() => null); // an unreadable copy is overwritten
+    if (stored !== null && stored.at >= built.at) return;
+    const headers = { "Content-Type": "application/json", "Cache-Control": `public, s-maxage=${SHARED_HOLD_SECONDS}` };
+    await runtime.shared.put(sharedKey(), new Response(JSON.stringify({ v: SHARED_SCHEMA_VERSION, ...built }), { headers }));
+  } catch (error) {
+    // no-fallback: the shared copy is an extra; the next isolate rebuilds
+    console.warn(`catalogue shared write failed: ${errorName(error)}`);
+  }
+}
+
+// The apps' list (no runtime) is origin/main's code unchanged: a 60 s isolate cache, one shared rebuild, null (503) on failure.
 async function refreshEntries(bucket: R2Bucket): Promise<readonly StoryEntry[] | null> {
   try {
     const entries = await buildEntries(bucket);
@@ -524,8 +616,7 @@ async function refreshEntries(bucket: R2Bucket): Promise<readonly StoryEntry[] |
   }
 }
 
-/** Complete stories, cached for a minute; concurrent callers share one rebuild. Null when the bucket can't be read (never "empty"); a failed read is not cached. */
-function currentEntries(bucket: R2Bucket): Promise<readonly StoryEntry[] | null> {
+function appEntries(bucket: R2Bucket): Promise<readonly StoryEntry[] | null> {
   const cached = cache.get(bucket);
   if (cached && Date.now() - cached.at < LISTING_CACHE_MS) return Promise.resolve(cached.entries);
   const inFlight = pending.get(bucket);
@@ -533,6 +624,93 @@ function currentEntries(bucket: R2Bucket): Promise<readonly StoryEntry[] | null>
   const started = refreshEntries(bucket);
   pending.set(bucket, started);
   return started;
+}
+
+const sharedPending = new WeakMap<R2Bucket, Promise<readonly StoryEntry[] | null>>();
+const rebuildFailedAt = new WeakMap<R2Bucket, number>();
+
+// Slice 283 F4: a failed rebuild is one console line with the error's name only (no ids or titles), logged here and nowhere else.
+async function refreshShared(bucket: R2Bucket, runtime: CatalogueRuntime): Promise<readonly StoryEntry[] | null> {
+  try {
+    const built = { at: Date.now(), entries: await buildEntries(bucket) };
+    sharedCache.set(bucket, built);
+    rebuildFailedAt.delete(bucket);
+    const writing = writeShared(runtime, built);
+    if (runtime.defer !== undefined) runtime.defer(writing);
+    else await writing;
+    return built.entries;
+  } catch (error) {
+    rebuildFailedAt.set(bucket, Date.now());
+    console.warn(`catalogue rebuild failed: ${errorName(error)}`);
+    return null;
+  } finally {
+    sharedPending.delete(bucket);
+  }
+}
+
+function rebuild(bucket: R2Bucket, runtime: CatalogueRuntime): Promise<readonly StoryEntry[] | null> {
+  const inFlight = sharedPending.get(bucket);
+  if (inFlight) return inFlight;
+  const started = refreshShared(bucket, runtime);
+  sharedPending.set(bucket, started);
+  runtime.defer?.(started); // finishes after a caller already answered from the older list
+  return started;
+}
+
+/** The newer of the isolate's own list and the colo's shared one; neither is discarded for being old (F1). */
+function newest(own: CachedStories | undefined, shared: CachedStories | null): CachedStories | null {
+  if (own === undefined) return shared;
+  return shared !== null && shared.at > own.at ? shared : own;
+}
+
+function afterBudget(entries: readonly StoryEntry[], runtime: CatalogueRuntime): { promise: Promise<readonly StoryEntry[]>; cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const promise = new Promise<readonly StoryEntry[]>((resolve) => {
+    timer = setTimeout(() => resolve(entries), runtime.rebuildBudgetMs ?? REBUILD_BUDGET_MS);
+  });
+  return { promise, cancel: () => clearTimeout(timer) };
+}
+
+async function rebuildOrKeep(bucket: R2Bucket, held: CachedStories, runtime: CatalogueRuntime): Promise<readonly StoryEntry[]> {
+  const slow = afterBudget(held.entries, runtime);
+  try {
+    return (await Promise.race([rebuild(bucket, runtime), slow.promise])) ?? held.entries;
+  } finally {
+    slow.cancel();
+  }
+}
+
+function recentlyFailed(bucket: R2Bucket): boolean {
+  const failedAt = rebuildFailedAt.get(bucket);
+  return failedAt !== undefined && Date.now() - failedAt < REBUILD_BACKOFF_MS;
+}
+
+/**
+ * The Sonos list (a runtime was passed). Slice 283 F1/F2: the isolate's list is fresh for a minute. A list up to `SHARED_FRESH_MS` old
+ * (here or in the colo's Cache API) is served at once while a rebuild runs after the answer, when the caller can defer work. An older
+ * one is served when the rebuild fails or runs past `REBUILD_BUDGET_MS`; after a failure R2 is not tried again for `REBUILD_BACKOFF_MS`.
+ * Concurrent callers share one rebuild. Null only when no list was ever read and the bucket can't be read.
+ */
+async function sharedEntries(bucket: R2Bucket, runtime: CatalogueRuntime): Promise<readonly StoryEntry[] | null> {
+  const stored = sharedCache.get(bucket);
+  // Review 4: the isolate's own list is served at most SHARED_FRESH_MS old; an older one is treated as not held.
+  const own = stored !== undefined && Date.now() - stored.at < SHARED_FRESH_MS ? stored : undefined;
+  if (own && Date.now() - own.at < LISTING_CACHE_MS) return own.entries;
+  if (own && recentlyFailed(bucket)) return own.entries;
+  const held = newest(own, await readShared(runtime));
+  if (held === null) return rebuild(bucket, runtime);
+  if (recentlyFailed(bucket)) return held.entries;
+  if (runtime.defer !== undefined && Date.now() - held.at < SHARED_FRESH_MS) {
+    sharedCache.set(bucket, held);
+    void rebuild(bucket, runtime);
+    return held.entries;
+  }
+  return rebuildOrKeep(bucket, held, runtime);
+}
+
+/** Complete stories; null when the bucket can't be read (never "empty"); a failed read is not cached. Without a runtime this is the apps' list, as on main. */
+function currentEntries(bucket: R2Bucket, runtime?: CatalogueRuntime): Promise<readonly StoryEntry[] | null> {
+  return runtime === undefined ? appEntries(bucket) : sharedEntries(bucket, runtime);
 }
 
 // A cover or download is checked against the story's own folder, not the cached listing, so a story that was
@@ -732,11 +910,11 @@ async function subscriptionResponse(request: Request, source: SubscriptionSource
   return statusOnly(codes[answer.kind] ?? 404);
 }
 
-async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource, subscription?: SubscriptionSource): Promise<Response> {
+async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource, subscription?: SubscriptionSource, catalogue?: CatalogueRuntime): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname === SUBSCRIPTION_PATH) return subscriptionResponse(request, subscription);
   if (pathname === STORIES_API_PATH) {
-    const entries = await currentEntries(bucket);
+    const entries = await currentEntries(bucket, catalogue);
     return entries === null ? statusOnly(503) : listResponse(entries, pathPrefix, request.method === "HEAD");
   }
   if (pathname === WINDOWS_TICKET_PATH) return ticketResponse(request, ticket);
@@ -785,12 +963,13 @@ export async function handleStories(
   paid?: PaidGate,
   ticket?: WindowsTicketSource,
   subscription?: SubscriptionSource,
+  catalogue?: CatalogueRuntime,
 ): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
   if (!env.DOWNLOADS) return statusOnly(503);
-  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket, subscription);
+  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket, subscription, catalogue);
   if (request.method !== "HEAD" || response.status < 400) return response;
   return new Response(null, { status: response.status, headers: response.headers });
 }

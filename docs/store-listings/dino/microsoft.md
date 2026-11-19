@@ -10,6 +10,36 @@ Search terms (7, each <= 30 chars): bedtime stories; kids books; stories for kid
 
 The English description's opening names the same phrases ("bedtime stories for kids", "picture books read aloud", "children's stories") and says "Dino" for the app, never the old name.
 
+## English description and features pushed 2026-11-18 (Slice 412 item 6; en-us, title unchanged)
+
+Rewritten from the live text: the opening names the search phrases and says "Dino"; "bring your own books" and "voices are generated on your computer" are gone (the app sells store books with pre-made voices); purchase lines as in the English section below, no subscription wording (the two subscription add-ons are not in Partner Center, read 2026-11-18).
+
+Description (<= 10000):
+
+    Bedtime stories for kids, picture books read aloud: Dino reads children's stories to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
+
+    PICK YOUR STORIES
+    A grown-up chooses books from the built-in story shelf: classic tales retold gently, with a picture on every page. Four stories are free. Every book comes with its own pre-made voices, in the language you pick.
+
+    READ TOGETHER
+    - Each sentence lights up as it is read, so children can follow along.
+    - Picture pages stay as they are, with the words read over them.
+    - A night theme for bedtime stories.
+
+    STORIES AND PRICES
+    Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the built-in story shelf is $0.99 each (the Store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, through the Microsoft Store, and can restore past purchases at any time. Stories you already have stay on your device.
+
+    FIFTEEN LANGUAGES
+    English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish.
+
+    MADE FOR KIDS
+    - No ads.
+    - Stories are bought through the Microsoft Store, by a grown-up behind the grown-ups gate. There is no account to create, and we store nothing about you or your purchase; the store's proof is checked and forgotten.
+    - Settings, buying and deleting stories sit behind a grown-ups gate.
+    - Once a story and its language are downloaded, it reads offline.
+
+Features (<= 200 each): Bedtime stories for kids, read aloud with a different voice for every character | Each sentence lights up as it is read | Four free stories, the rest $0.99 each | Fifteen languages | Night theme for bedtime | No ads, no account, buy a story only if you want it | Grown-ups gate for settings | Works offline once a story is downloaded
+
 **Pushed 2026-11-13 (Slice 346 Part D): English in submission 82 (published), German (Partner Center locale `de`) in submission 1152921505702395457 (listing only, committed).** New file: the English and German texts were read from the live public pages (`apps.microsoft.com/detail/9N9VHRLCZXN5?hl=en-gb` and `?hl=de-de`, last update 2026-11-12). Only the purchase lines below differ from live; everything else stays as live. Push with the next Partner Center submission once the paid-books switch is on (Partner Center changes only with a submission; never one that discards a pending draft). The price field stays "Free" (the app is free to download; each paid story is an add-on product made by `store-products.mjs`).
 
 ## English (en-gb / en-us)

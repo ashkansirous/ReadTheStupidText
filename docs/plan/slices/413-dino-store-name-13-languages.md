@@ -31,11 +31,18 @@ word-for-word translation, while keeping "Dino" as the brand and the own-voice i
 
 ## Work items
 
-1. [ ] For each of the 13 languages: title, Play short description, App Store subtitle and keywords, Microsoft
-   search terms in `docs/store-listings/dino/<lang>.md`, checked against the limits by `store-listings.mjs`.
-2. [ ] Push through the `store-listing` agent (apply mode) to Play, App Store (14 locales; iOS fields with the next
-   version submission) and Microsoft, and read every one back equal (milestone 3 acceptance).
-3. [ ] One "Not yet verified" block for the native reads.
+1. [x] For each of the 14 languages (ar da de es fa fi fr ja nb nl pt ru sv zh; de was in the brief too): title, Play short description, App Store subtitle and keywords, Microsoft
+   search terms in `docs/store-listings/dino/<lang>.md`, checked against the limits (own script: name/subtitle 30, keywords 100 bytes, short 80, 7 terms, 21 words, no keyword word repeated from name or subtitle; `store-listings.mjs --app dino` builds 13 listings and its 27 tests pass; `check-public-name.mjs` passes). Written 2026-11-18. The description text only swaps the old name for "Dino".
+2. [ ] Push through the `store-listing` agent (apply mode). **App Store done 2026-11-18:** editable version 1.133.1 (`PREPARE_FOR_SUBMISSION`, already existed; no build attached, not submitted): name + subtitle on the editable app info (`ef709cd7-...`) and keywords + description (live text with only "Dino Book Reader" swapped for "Dino", because the live editable text already carries the subscription wording) on 15 locales (ar-SA zh-Hans da nl-NL fi fr-FR ja no pt-BR pt-PT ru es-ES es-MX sv de-DE), all read back equal. **Microsoft: repo only.** No Partner Center submission credential exists on this PC (`MS_STORE_*` is the Store collections app) and submission 1152921505702441682 is in certification; the release's `store-submit` carries the files (`store-listings.mjs`); German (not built by the script) stays by hand. **Google Play: repo only, never called** (Hard constraint, Slice 412). Open until Microsoft and Play are read back.
+   *Submitted 2026-11-18:* App Store version 1.133.1 (build 20261118.135720) went to App Store review with every
+   locale's name, subtitle, keywords and What's New (`appstore-submit` run 44413771332; the first run 44413222409 failed
+   on the missing What's New, now in a "What's new 1.133.1" section of each file). Open finding from that run: the
+   in-app purchase `uk.sirous.dinoreader.book.love_from_seagull_island` is MISSING_METADATA in App Store Connect, so it
+   did not go with the version; the book cannot be bought on its own on iOS until its metadata is filled.
+   *Fixed 2026-11-18:* only the review screenshot was missing; it was uploaded through the API and the product
+   (id 6836361223) submitted on its own (`inAppPurchaseSubmissions`, 201), now WAITING_FOR_REVIEW. The tooling gap is
+   Slice 416 (docs/plan/slices/416-dino-apple-book-review-screenshot.md).
+3. [x] One "Not yet verified" block for the native reads (`docs/plan/unverified.md`, Slice 413).
 
 ## Out of scope
 

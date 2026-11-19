@@ -165,3 +165,24 @@ Cover: two redraw tries for ONE red cross failed (try 1 still two crosses, try 2
 Session notes (2026-10-26): Gemini shows at most about two pictures per chat before the third send is silently ignored (the request returns 200 at once and nothing draws); a fresh chat fixed it every time. The page often looks frozen after Return for 20-60 s; check `StreamGenerate` in the network log (pending = drawing) before sending again. Starting a book's pictures with 'Lovely, page n is accepted' follow-ups in one chat worked for 2 pictures. Another illustrator's download was taken by mistake once at the start (restored). All saves were done through the clipboard grab, not the download folder.
 
 Redraw session (after the full-mode review): a send is really going through only when the page shows a Stop response button; when Return leaves the text in the box, click the Send message button once and check again. Keep each picture in a fresh chat.
+
+## Slice 350 high-res run (2026-11-19, Part D1)
+
+Untouched downloads (1792x2400, scratchpad, not in the repo): `C:/Users/ashka/AppData/Local/Temp/claude/717394277bc5a198/c1bcd59c-ab93-4eda-a774-ce8a5778c961/scratchpad/xm-all/` as `orig-<page>.jpg` (recovered from `Downloads`, matched to the accepted app pictures by a 24x32 signature, distance under 1), plus `cand-8.jpg` and `cand-17c.jpg` (new). `high-res/` holds the flat q85 pack from `prepare-story-pictures.ps1 -HighRes` (cover, 1-17, back-cover, contact-sheet.jpg). The reviewer pass (D2) is not yet run.
+
+| Page | Source | Notes |
+| --- | --- | --- |
+| cover, 1-7, 9-16 | recovered original from `Downloads` | not redrawn |
+| 8 | NEW, 4 Hydrogen, chat 3ae4a31bd270ddd3, try 1, 3493502 bytes | copy of the accepted 896x1200 picture (no full-size original: the Gemini-history one had the seam). Same composition, full bleed. Izzy's feet and the barrel cross the 73% line, as in the accepted picture; kept, listed for the user |
+| 17 | NEW, 4 Hydrogen, hug fix, try 3 of 3, chat 22a7fb715a8a222c, 2684224 bytes | Kathryn hugs Seagull with both arms, hat on her head, five characters. Try 1 (chat c1d47a749b181191): hug right but Kathryn runs to the bottom edge; try 2 (chat 172230cabdc1f0ee): boots about 82%, blue boots. Try 3 kept: boot soles end about 75%, just over the 73% line, boot toes slightly blue; listed for the user |
+| back-cover | existing untouched original (2747150 bytes) | passed through -HighRes (580677 bytes) |
+
+### Reviewer, full mode, 2026-11-19 (Slice 350 D2, `dino-story-reviewer`)
+
+**PASS** (with pages listed for the user). Checked: the line-up, the small copy and `line70` overlay of the cover, pages 1-17 and the back cover in `high-res/`, full-size crops only of page 8's rope end, page 10's jar labels and page 17's hug and boots. Text, cast and back-cover credits checked again: no finding.
+
+- Page 17 (new, hug fix): the hug is right (Kathryn holds Seagull with both hands against her cheek, both eyes closed and smiling, two hands, two webbed feet, hat on her head, five characters, open chest, sunset, no flames). Only fault: Kathryn's boot soles end at about 75%, 2 points over the 73% line. The boots are dark slate, not blue (the blue seen in the overlay is its tint). It can ship as the best of 3 tries under Part D1; list it for the user.
+- Page 8 (new copy): a faithful full-bleed copy of the accepted app picture (one extra coil of rope on the deck with a frayed end, harmless). Izzy's sandals and the barrel reach about 83%, the same as the accepted picture: kept and listed for the user, as the copy rule says.
+- Accepted originals that cross the 73% line (kept, not redrawn without the user's word): cover (all feet, about 75%), 1 (front boot about 77%), 2 (Kathryn's legs are cut off at about 78% by a wooden plank strip that doesn't match the stone quay), 4 (Kathryn chest-up behind the rail, coat at about 75%), 6 (Kathryn's boots about 88%), 9 (Kathryn, the wheel, Izzy and her barrel about 83%), 10 (Polly's shoes about 77%), 11 (Polly, Kathryn's boots, Billy's feet about 80%), 13 (Kathryn, Izzy, Polly about 80%), 16 (Izzy, Seagull and Billy's feet about 75-77%).
+- Known variances still there, not blocking: the crow's nest is a tub on 7 and 13, a wicker basket on 9 and an open slatted basket on 12; the ship on 14 has several masts; the cover map has two crosses; on 14 Kathryn carries no spade and Polly carries two.
+- Back cover: five characters, the same as in the book, the chest full as on page 16, no words, the middle calm (sky and sea); Kathryn's telescope is missing from her sash (minor). The app wasn't run, so the shown credits page wasn't checked in two languages; `book.json` has `storyBy` = the user, no `retold`, no "free to share", and `namesByLanguage` in all 14 languages.
