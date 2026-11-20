@@ -213,9 +213,11 @@ it is done. This is basically a hot fix that should be deployed to production as
   through the App Store Connect API on 2026-11-19; the version reads `DEVELOPER_REJECTED`. It keeps the new name, subtitle
   and keywords (Slice 412) and takes this slice's build.
 - [x] Google Play: nothing was waiting (production 1.131.1 `completed`, no pending production release on the track).
-- [ ] After the merge: the release run's build goes to Play production (full rollout) and to App Store review (the
-  rejected version renamed to the new version, the new build attached, release after approval); Microsoft Store as the
-  release pipeline does.
+- [x] After the merge: released as Dino 1.136.0 (release run 44621513290). Microsoft Store: submitted by the run
+  (`store-submit-dino` success). Google Play: production 1.136.0 `completed` (full rollout), promoted through the API on
+  2026-11-20 after the owner gave the service account production access (the first try on 2026-11-19 got 403). App Store:
+  `appstore-submit.yml` run 44703575844 submitted 1.136.0 (build 20261119.214642), state `WAITING_FOR_REVIEW`, release
+  after approval.
 
 #### Changed while building
 
