@@ -1,7 +1,7 @@
 ### Slice 421 — Dino: each app session also goes to Ninjalog as one trace, so journeys, event flow and funnels are queries
 **Product:** Dino
 
-*Built 2026-11-20 (PR #1315); item 7 (live) after merge.*
+*Built 2026-11-20, merged as PR #1315 (538e0fbf), deployed 2026-11-20 09:42 UTC; verified live 2026-11-20 (item 7).*
 
 *From review:* pass 1 high (`D:/ReadTheStupidText-worktrees/reviews/s421-high.md`): 1, 2, 5, 6, 8, 9 fixed; 3, 4, 7 left as nits; 10 checked live at item 7. Pass 2 medium (`reviews/s421-medium.md`): 1, 3, 4, 6 fixed; 2 and 5 left. Check pass (`reviews/s421-check.md`): 1 and 3 are the Known limits below; 2 added there; 4-6 nits left.
 
@@ -66,9 +66,12 @@ app change and no stored state.
   Add an "Event flow" and an "Where sessions end" table widget to `docs/analytics/ninjalog-dashboard.json`.
 - [x] 6. **Docs:** `worker/CLAUDE.md` gets one rule line: Dino counts also go to Ninjalog as spans (one trace per session,
   parent = the previous seq), link to this file.
-- [ ] 7. **Live (after merge and deploy):** the first `index=dino_spans` spans show up; one session opens as a waterfall;
+- [x] 7. **Live (after merge and deploy):** the first `index=dino_spans` spans show up; one session opens as a waterfall;
   the event-flow query returns rows; re-upload the dashboard JSON (Dashboards page file input) and check the two new
-  widgets have rows.
+  widgets have rows. Checked live 2026-11-20 in the owner's Ninjalog project: `dino_spans` holds 63 spans in 2 traces
+  (android 1.136.0 GB, the owner's own phone); one trace opens as a nested waterfall (`spantree`); the event-flow query
+  returns 43 step-to-step rows; the dashboard JSON was re-uploaded and the "New users" dashboard shows the "Event flow"
+  and "Where sessions end" widgets with rows.
 
 ## Known limits
 

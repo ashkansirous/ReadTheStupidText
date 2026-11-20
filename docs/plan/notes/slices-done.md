@@ -281,7 +281,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 394 | Dino: the store's "9–12" chip crashes on Android; every book in one age band (3-5 or 6-8); a chip or author row with nothing in it is not shown | built, not yet verified | #1249 | | [394-dino-store-age-filter-crash-and-bands.md](../slices/394-dino-store-age-filter-crash-and-bands.md) |
 | 399 | Dino: a "Books and buying" group in Settings (subscription state, Restore, Redeem) and the tour Store tip names the subscription | built, not yet verified | #1250 | | [399-dino-settings-books-and-buying.md](../slices/399-dino-settings-books-and-buying.md) |
 | 398 | Dino: the parents' Books tab after a lapse (locked tiles, "why" banner, offline notice) and the child's shelf | built, not yet verified | #1247 | | [398-dino-locked-books-banner-and-offline-notice.md](../slices/398-dino-locked-books-banner-and-offline-notice.md) |
-| 419 | Dino: every usage event also goes to Ninjalog (EU log search), with a new-user funnel, session timelines and a "where new users stop" dashboard; no install id (Decision 140 stands) | built, not yet verified | #1310, #1311 | | [419-dino-usage-events-to-ninjalog.md](../slices/419-dino-usage-events-to-ninjalog.md) |
+| 419 | Dino: every usage event also goes to Ninjalog (EU log search), with a new-user funnel, session timelines and a "where new users stop" dashboard; no install id (Decision 140 stands) | verified | #1310, #1311 | | [419-dino-usage-events-to-ninjalog.md](../slices/419-dino-usage-events-to-ninjalog.md) |
+| 421 | Dino: each app session also goes to Ninjalog as one trace, so journeys, event flow and funnels are queries | verified | #1315 | | [421-dino-usage-spans-to-ninjalog.md](../slices/421-dino-usage-spans-to-ninjalog.md) |
 
 ## Shared
 

@@ -104,7 +104,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 534 checks across 191 slices (Read The Stupid Text 29, Dino Reader 332, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 529 checks across 190 slices (Read The Stupid Text 29, Dino Reader 327, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 
 **Needs you (checked 2026-11-19). Nothing else in this file waits on you.**
 
