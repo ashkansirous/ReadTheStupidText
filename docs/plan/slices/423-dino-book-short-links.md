@@ -2,7 +2,7 @@
 
 **Product:** Dino
 
-*Built 2026-11-20, review gate passed, draft PR #1321 to merge; live check not yet run.*
+*Built 2026-11-20, merged as PR #1321 (1fb9678); verified live 2026-11-20.*
 
 *Planned 2026-11-20 with the owner, from print-the-damn-book's KDP robot planning (RefineScope answer 4, "yes";
 print-the-damn-book Slice 40: docs/plan/slices/40-kdp-series-and-cross-links.md in that repo).*
@@ -70,10 +70,11 @@ can never change, and the owner may buy a new domain for the app later. So books
 - Skipped #3 (`reviews/pr-1321-medium.md`): "bare forms fall to assets and give a 404" - bare `/book` is never printed.
 - Skipped #4 (`reviews/pr-1321-medium.md`): "Routing-order test reads worker/index.ts as text" - a runtime test needs `index.ts` refactored for node; the live curl check covers it.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-20)
 
 - (`worker/CLAUDE.md`) `/book/<id>` short links are printed in books and must never 404 or change their path; only `BOOK_LINK_TARGET` changes. (Slice 423: docs/plan/slices/423-dino-book-short-links.md)
 
 #### Not yet verified
 
-- `[session]` After release: `curl -sI https://dinoreader.sirous.uk/book/love-from-seagull-island` shows `302` and `location: https://dinoreader.sirous.uk/?book=love-from-seagull-island`.
+_(none: the live check passed 2026-11-20 after the release; `curl -sI https://dinoreader.sirous.uk/book/love-from-seagull-island`
+returned `HTTP/1.1 302 Found` and `Location: https://dinoreader.sirous.uk/?book=love-from-seagull-island`.)_
