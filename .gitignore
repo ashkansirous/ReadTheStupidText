@@ -101,3 +101,13 @@ venv/
 content/dino/**/*.small.jpg
 content/dino/**/*.line70.png
 
+# Dino LinkedIn films (Slice 426): raw captures, renders and HyperFrames caches stay local; only the project files are committed
+tools/dino/promo/linkedin/*/raw/
+tools/dino/promo/linkedin/*/renders/
+tools/dino/promo/linkedin/*/.hyperframes/
+tools/dino/promo/linkedin/*/node_modules/
+tools/dino/promo/linkedin/*/.thumbnails/
+tools/dino/promo/linkedin/*/.transcode-cache/
+tools/dino/promo/linkedin/*/.waveform-cache/
+tools/dino/promo/linkedin/*/.media/
+
