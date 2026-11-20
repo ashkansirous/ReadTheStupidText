@@ -1,7 +1,7 @@
 # Slice 426 — Dino: LinkedIn film B, "One bedtime, three languages" (what Dino is, why, what it does)
 **Product:** Dino
 
-*In progress 2026-11-20 (feat/s426). Planned 2026-11-20. First of three LinkedIn films (426 B, 427 C, 428 A), built and shipped in that order; each ships before the next is built.*
+*Built 2026-11-20, merged as PR #1326 (24d5247). Planned 2026-11-20. First of three LinkedIn films (426 B, 427 C, 428 A), built and shipped in that order; each ships before the next is built.*
 
 **Touches:** `tools/dino/promo/linkedin/README.md` (new), `tools/dino/promo/linkedin/b-bedtime/` (new), `.gitignore`, this slice file.
 
@@ -66,3 +66,7 @@ As built and accepted (2026-11-20): the record beat shows the "Your voice" setup
 
 - The language chips' CJK text uses "Noto Sans JP", which is not bundled in `assets/fonts/`: film B rendered correctly on this PC (checked frame at 21 s), but a render on a PC without that font would show empty boxes. Films C and A bundle a CJK font (with its OFL text) if they show Chinese or Japanese.
 - Review findings left as they are: the page-13 text card shows only the lines spoken in the film, and the Farsi card follows the film's layout, not `fa.json`'s quotes (accepted by the user in the preview); `record.html` keeps Studio attributes and fixed offsets (no effect on the render).
+
+## Where it is
+
+The film is on Release https://github.com/ashkansirous/ReadTheStupidText/releases/tag/promo-dino-linkedin-b; the post text is in `tools/dino/promo/linkedin/b-bedtime/POST.md`.

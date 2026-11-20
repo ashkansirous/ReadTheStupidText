@@ -283,6 +283,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 398 | Dino: the parents' Books tab after a lapse (locked tiles, "why" banner, offline notice) and the child's shelf | built, not yet verified | #1247 | | [398-dino-locked-books-banner-and-offline-notice.md](../slices/398-dino-locked-books-banner-and-offline-notice.md) |
 | 419 | Dino: every usage event also goes to Ninjalog (EU log search), with a new-user funnel, session timelines and a "where new users stop" dashboard; no install id (Decision 140 stands) | verified | #1310, #1311 | | [419-dino-usage-events-to-ninjalog.md](../slices/419-dino-usage-events-to-ninjalog.md) |
 | 421 | Dino: each app session also goes to Ninjalog as one trace, so journeys, event flow and funnels are queries | verified | #1315 | | [421-dino-usage-spans-to-ninjalog.md](../slices/421-dino-usage-spans-to-ninjalog.md) |
+| 426 | Dino: LinkedIn film B, "One bedtime, three languages" (what Dino is, why, what it does), HyperFrames, plus post text; film on Release [promo-dino-linkedin-b](https://github.com/ashkansirous/ReadTheStupidText/releases/tag/promo-dino-linkedin-b), post text in `tools/dino/promo/linkedin/b-bedtime/POST.md` | built | #1326 | | [426-dino-linkedin-film-b-bedtime.md](../slices/426-dino-linkedin-film-b-bedtime.md) |
 
 ## Shared
 

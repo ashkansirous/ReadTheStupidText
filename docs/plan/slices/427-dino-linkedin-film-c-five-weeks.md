@@ -31,3 +31,7 @@ The app's real screens change week by week in one continuous zoom: old menus, ol
 
 - `npx hyperframes check --json` is clean. Every screen shown is a real capture of a real release, with its week label taken from that release's tag date.
 - Every number in the film or post traces to git, the Releases or the user's words.
+
+## From film B (Slice 426)
+
+Reuse `tools/dino/promo/linkedin/b-bedtime/` structure; bundle a CJK font with its OFL text in `assets/fonts/` if Chinese or Japanese is shown (film B used the PC-installed "Noto Sans JP"). (Slice 426: docs/plan/slices/426-dino-linkedin-film-b-bedtime.md)
