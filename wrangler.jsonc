@@ -45,6 +45,8 @@
       "/stats", "/stats/", "/stats.html", "/api/stats",
       // Slice 355: the public books page (worker/downloads.ts).
       "/books", "/books/", "/books.html",
+      // Slice 423: printed-book short links /book/<id> forward to the Dino app page (worker/book-links.ts).
+      "/book/*",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
@@ -54,7 +56,8 @@
       "/dino/sonos",
       "/dino/alexa",
       "/dino/stats", "/dino/stats/", "/dino/stats.html", "/dino/api/stats",
-      "/dino/books", "/dino/books/", "/dino/books.html"
+      "/dino/books", "/dino/books/", "/dino/books.html",
+      "/dino/book/*"
     ]
   },
 
@@ -88,7 +91,7 @@
   // once the skill exists, never in the dashboard: each deploy overwrites a dashboard value with this one.
   // Slice 419: Ninjalog forwarding of the Dino counts (worker/ninjalog.ts). On ("true", owner 2026-11-19); nothing is sent until
   // the NINJALOG_TOKEN Worker secret is set. Both configs must match (check-configs); change it by a PR, never in the dashboard.
-  "vars": { "ALEXA_SKILL_ID": "", "ANALYTICS_ACCOUNT_ID": "985d711340bd2cf7bf5d71f04a7e84c9", "NINJALOG_ENABLED": "true" },
+  "vars": { "ALEXA_SKILL_ID": "", "ANALYTICS_ACCOUNT_ID": "985d711340bd2cf7bf5d71f04a7e84c9", "NINJALOG_ENABLED": "true", "BOOK_LINK_TARGET": "https://dinoreader.sirous.uk/" },
 
   // Slice 287: the hourly rollup of Analytics Engine into D1 for /stats (worker/stats-rollup.ts). Harmless without the
   // STATS binding: it logs and returns. The STATS binding is above, next to r2_buckets (docs/DEPLOYING.md).
