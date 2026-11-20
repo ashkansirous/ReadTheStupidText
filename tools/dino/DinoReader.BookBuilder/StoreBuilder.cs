@@ -28,7 +28,7 @@ internal static class StoreBuilder
 
     public static string StoreFolder() => OutputFolder ?? Path.Combine(StarterBuilder.RepoRoot(), "artifacts", "store");
 
-    /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
+    /// <summary>The store entries of the four starters (Decision 128), by package file name: the same ids as the starter files, so a deleted starter can be downloaded again.</summary>
     public static IReadOnlyDictionary<string, StoreEntry> StarterEntries =>
         Books.Starters.ToDictionary(b => b.FileName, b => new StoreEntry(b.Info.Title, b.Info.Id, b.Info.Colour, b.Info.Credits, b.Info.AgeMin, b.Info.AgeMax, b.Info.Author, b.Info.Added, b.Info.CreditsByLanguage, b.Info.Tags));
 
@@ -155,7 +155,7 @@ internal static class StoreBuilder
     }
 }
 
-/// <summary>The store metadata of a bundled starter that is also a store story (Decision 128).</summary>
+/// <summary>The store metadata of a starter that is also a store story (Decision 128).</summary>
 internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, string Added, IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyList<string>? Tags = null)
 {
     /// <summary>The spec the store builder writes it under: the story's own text and the starter's content version (<see cref="StarterBuilder.StarterVersions"/>).</summary>

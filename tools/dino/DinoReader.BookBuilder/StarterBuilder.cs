@@ -6,7 +6,7 @@ using DinoReader.Core;
 namespace DinoReader.BookBuilder;
 
 /// <summary>
-/// Builds the bundled starter <c>.dino</c> files (Slice 91) from their <c>content/dino/&lt;stem&gt;</c> folders (Slice 157) and the "Good Enough" pictures (Slice 94),
+/// Builds the starter <c>.dino</c> files (Slice 91) from their <c>content/dino/&lt;stem&gt;</c> folders (Slice 157) and the "Good Enough" pictures (Slice 94),
 /// casting voices the way the app does (segment, attribute, cast over the ten Supertonic styles) and merging the checked-in translations
 /// (Slice 95). <c>build</c> rewrites <c>src/Dino/DinoReader.App/Resources/Raw/testbooks/</c> (Debug-only test books since Slice 261) when a file's content changed; the tests then check those files.
 /// <c>dump-pieces</c> writes the piece texts each book needs translated.
@@ -216,7 +216,9 @@ internal static class StarterBuilder
 
         if (include?.Invoke(GoodEnoughFile) ?? true)
         {
-            built.Add((GoodEnoughFile, WithTranslations(await BuildGoodEnoughAsync(library), GoodEnoughStem)));
+            Story goodEnough = WithTranslations(await BuildGoodEnoughAsync(library), GoodEnoughStem);
+            CopyBackCoverPicture(goodEnough, GoodEnoughStem, library); // Slice 422: like every other book, so the standard pack carries the back cover the high-res pack does
+            built.Add((GoodEnoughFile, goodEnough));
         }
 
         return built;

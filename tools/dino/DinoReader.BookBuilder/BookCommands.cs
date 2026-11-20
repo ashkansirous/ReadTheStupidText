@@ -41,9 +41,21 @@ internal static class BookCommands
             foreach (var (fileName, story) in await StarterBuilder.BuildAllAsync(library, name => chosen.Any(b => b.FileName == name)))
             {
                 BookFolder book = chosen.Single(b => b.FileName == fileName);
-                StoreStorySpec starterSpec = StoreBuilder.StarterEntries[fileName].ToSpec(story, book.Info.Version) with { LiveBytes = LiveBytesOf(book, live) }; // Slice 260: a starter at the live version keeps the live size, like a store book
-                await StoreBuilder.WritePackageAsync(story, starterSpec, library, book.CoverThumbPath);
+                if (HighResProblemsOf(book) is { Count: > 0 } highResProblems)
+                {
+                    failed[book.Stem] = highResProblems; // Slice 422: a starter with a complete high-res set is never built standard only, nor with a bad picture
+                    continue;
+                }
+
+                // The committed starter is written first: the high-res pack overwrites the library's pictures with the print-size ones.
                 bool rewritten = await WriteCommittedStarterAsync(story, fileName, library, book.Info.Version);
+                StoreStorySpec starterSpec = StoreBuilder.StarterEntries[fileName].ToSpec(story, book.Info.Version) with { LiveBytes = LiveBytesOf(book, live), LiveHdBytes = LiveHdBytesOf(book, live) }; // Slice 260: a starter at the live version keeps the live size, like a store book
+                if (await TryWriteStarterPackageAsync(book, story, starterSpec, library) is { } packageProblem)
+                {
+                    failed[book.Stem] = [packageProblem]; // Slice 422 (review #1): a starter whose high-res pack disagrees with the standard one is named and skipped like a store book
+                    continue;
+                }
+
                 Console.WriteLine($"built {book.Stem} v{book.Info.Version}{(rewritten ? " (rewrote the committed starter)" : string.Empty)}");
             }
         });
@@ -68,13 +80,36 @@ internal static class BookCommands
         }
     }
 
+    // The problem text when the starter's store packages could not be written (null when they were); half-written packages are deleted so the upload never picks them up.
+    private static async Task<string?> TryWriteStarterPackageAsync(BookFolder book, Story story, StoreStorySpec spec, FileStoryLibrary library)
+    {
+        try
+        {
+            await StoreBuilder.WritePackageAsync(story, spec, library, book.CoverThumbPath, HighResPack.Find(book));
+            return null;
+        }
+        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException or InvalidDataException)
+        {
+            string folder = Path.Combine(StoreBuilder.StoreFolder(), spec.Id);
+            File.Delete(Path.Combine(folder, StoreBuilder.PackageFileName(spec.Version)));
+            File.Delete(Path.Combine(folder, HighResPack.HdPackageFileName(spec.Version)));
+            return $"{book.Stem} did not build: {e.Message}";
+        }
+    }
+
     private static long? LiveBytesOf(BookFolder book, IReadOnlyDictionary<string, LiveEntry>? live) =>
         live is not null && live.TryGetValue(book.Info.Id, out LiveEntry? entry) && entry.Version == book.Info.Version ? entry.Bytes : null;
+
+    private static IReadOnlyList<string> HighResProblemsOf(BookFolder book) =>
+        HighResPack.UnpulledProblem(book) is { } unpulled ? [unpulled] : HighResPack.GateProblems(book);
+
+    private static long? LiveHdBytesOf(BookFolder book, IReadOnlyDictionary<string, LiveEntry>? live) =>
+        live is not null && live.TryGetValue(book.Info.Id, out LiveEntry? entry) && entry.Version == book.Info.Version ? entry.HdBytes : null;
 
     /// <summary>Slice 246 B2: packs the clips folder of one store book or starter language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
     public static int BuildAudio(string stem, string language, string? clipsFolder)
     {
-        BookFolder book = Books.Folder(stem); // store books and the four bundled starters (Slice 258): both are served by the store route under their id
+        BookFolder book = Books.Folder(stem); // store books and the four starters (Slice 258): both are served by the store route under their id
         AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder ?? AudioPacks.ClipsFolderOf(book, language), StoreBuilder.StoreFolder());
         Console.WriteLine($"built {stem} audio {language} v{record.Version} ({record.Bytes} bytes)");
         return 0;
@@ -255,11 +290,12 @@ internal static class BookCommands
     private static IEnumerable<string> CheckStoreTitles() =>
         Books.StoreOnly.Select(b => TitlesProblem(b.Stem, b.Titles)).OfType<string>();
 
-    /// <summary>Slice 375 B: every store book with a complete <c>high-res/</c> set has JPEG, 3:4 pictures and builds a high-res pack that carries the same text, audio list and version as its standard pack.</summary>
+    /// <summary>Slice 375 B, Slice 422: every book with a complete <c>high-res/</c> set has JPEG, 3:4 pictures; a store book builds a high-res pack that carries the same text, audio list and version as its
+    /// standard pack (a starter's pair is proved in <see cref="CheckStartersAsync"/>).</summary>
     private static async Task<IReadOnlyList<string>> CheckHighResAsync()
     {
         var problems = new List<string>();
-        foreach (BookFolder book in Books.StoreOnly.Where(b => b.Text is not null))
+        foreach (BookFolder book in Books.All.Where(b => b.Text is not null || File.Exists(b.LinesPath)))
         {
             if (HighResPack.Find(book) is not { HasPointers: false } files)
             {
@@ -267,7 +303,7 @@ internal static class BookCommands
             }
 
             problems.AddRange(HighResPack.PictureProblems(book.Stem, files));
-            if (await PackPairProblemAsync(book) is { } problem)
+            if (book.Info.Kind == BookKind.Store && await PackPairProblemAsync(book) is { } problem)
             {
                 problems.Add(problem);
             }
@@ -355,9 +391,44 @@ internal static class BookCommands
                 }
 
                 File.Delete(built);
+                if (await StarterPackPairProblemAsync(book, story, library) is { } pairProblem)
+                {
+                    problems.Add(pairProblem);
+                }
             }
         });
         return problems;
+    }
+
+    // Slice 422: a starter with a complete, pulled high-res set builds a high-res pack beside its standard one (HighResPack.WriteAsync throws when the two disagree). Last, since it overwrites the library's pictures.
+    private static async Task<string?> StarterPackPairProblemAsync(BookFolder book, Story story, FileStoryLibrary library)
+    {
+        if (HighResPack.Find(book) is not { HasPointers: false } files)
+        {
+            return null;
+        }
+
+        string? previous = StoreBuilder.OutputFolder;
+        string folder = Path.Combine(Path.GetTempPath(), "dino-check-hd-" + Guid.NewGuid().ToString("N"));
+        StoreBuilder.OutputFolder = folder;
+        try
+        {
+            StoreStorySpec spec = StoreBuilder.StarterEntries[book.FileName].ToSpec(story, book.Info.Version);
+            await StoreBuilder.WritePackageAsync(story, spec, library, book.CoverThumbPath, files);
+            return File.Exists(Path.Combine(folder, book.Info.Id, HighResPack.HdPackageFileName(book.Info.Version))) ? null : $"{book.Stem} has a complete high-res/ folder but no high-res pack was built beside the standard one";
+        }
+        catch (Exception e) when (e is InvalidOperationException or JsonException or IOException or InvalidDataException)
+        {
+            return $"{book.Stem}: {e.Message}";
+        }
+        finally
+        {
+            StoreBuilder.OutputFolder = previous;
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
     }
 
     private static async Task<string> WriteTempPackageAsync(Story story, FileStoryLibrary library, int version)

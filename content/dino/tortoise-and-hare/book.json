@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "0fa29ae0d09643a9a16a5e586e8c7119",
   "title": "The Tortoise and the Hare",
-  "version": 14,
+  "version": 15,
   "ageMin": 3,
   "ageMax": 5,
   "author": "Aesop",
@@ -72,7 +72,7 @@
       ]
     }
   ],
-  "contentHash": "79fa550238299ba6986f61b7d770b19e3efdd45b2b5500c335e195c411140b16",
+  "contentHash": "091cc7fae05a56ce4680295eae8383eb7cb71c92a1c603f561afdad85c0e99e5",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن إيسوب · مجانية للمشاركة",
     "da": "Genfortalt efter Æsop · frit at dele",
