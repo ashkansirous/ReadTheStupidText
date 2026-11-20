@@ -148,7 +148,7 @@ internal sealed class DinoKeyboard
 		}
 
 		DinoKey key = Map(e.Key);
-		if (key == DinoKey.Other)
+		if (key == DinoKey.Other || (e.Key == VirtualKey.F10 && !IsDown(VirtualKey.Shift))) // plain F10 is the system's menu key, not ours
 		{
 			return;
 		}
@@ -208,7 +208,7 @@ internal sealed class DinoKeyboard
 	}
 
 	private bool IsOneShotKey(DinoKey key) =>
-		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape
+		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape or DinoKey.ContextMenu
 		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is GalleryPage { InCorner: true }); // the Settings tab's Right arrow opens a row once per press
 
 	private static bool HasShortcutModifier(DinoKey key) =>
@@ -266,6 +266,7 @@ internal sealed class DinoKeyboard
 		VirtualKey.Escape => DinoKey.Escape,
 		VirtualKey.Enter => DinoKey.Enter,
 		VirtualKey.Back => DinoKey.Backspace,
+		VirtualKey.Application or VirtualKey.F10 => DinoKey.ContextMenu, // the Menu key; F10 only with Shift (OnKeyDown checks it)
 		>= VirtualKey.Number0 and <= VirtualKey.Number9 => DinoKey.Digit0 + (key - VirtualKey.Number0),
 		>= VirtualKey.NumberPad0 and <= VirtualKey.NumberPad9 => DinoKey.Digit0 + (key - VirtualKey.NumberPad0),
 		_ => DinoKey.Other,

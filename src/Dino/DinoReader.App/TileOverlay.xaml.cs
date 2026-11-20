@@ -8,7 +8,7 @@ public sealed class HoldRequestedEventArgs : EventArgs
 	public bool Opened { get; set; }
 }
 
-/// <summary>The grown-up "⋯" over one gallery cover (Slice 189); the gallery opens the book's options sheet.</summary>
+/// <summary>The grown-up "⋯" over one gallery cover (Slice 189); a tap on the dot makes the gallery open the book's options sheet, a tap on the bare cover reads the book (Slice 418 decision 6).</summary>
 public partial class TileOverlay : ContentView
 {
 	public TileOverlay()
@@ -37,8 +37,11 @@ public partial class TileOverlay : ContentView
 		};
 	}
 
-	/// <summary>A tap on the dot or on the bare cover: the book's options sheet.</summary>
+	/// <summary>A tap on the dot: the book's options sheet.</summary>
 	public event EventHandler? OpenRequested;
+
+	/// <summary>A tap on the bare cover: the book is read, as on the locked shelf (Slice 418 decision 6; Slice 420).</summary>
+	public event EventHandler? ReadRequested;
 
 	/// <summary>Raised when the cover has been pressed for <see cref="HoldMilliseconds"/> without moving (Slice 264): the gallery opens its reorder mode with this book lifted.</summary>
 	public event EventHandler<HoldRequestedEventArgs>? HoldRequested;
@@ -81,7 +84,7 @@ public partial class TileOverlay : ContentView
 			return; // the release after a hold must not also open the sheet
 		}
 
-		OpenRequested?.Invoke(this, e); // no-tap-count: the gallery counts OpenRequested (OnOpenRequested)
+		ReadRequested?.Invoke(this, e); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
 	}
 
 	private async void OnPointerPressed(object? sender, PointerEventArgs e)

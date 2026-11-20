@@ -47,6 +47,11 @@ function Get-TraceLines {
     return @(Get-Content -Path $p)
 }
 
+function Count-LayoutCycles {
+    # WinUI's cycle lines reach the trace as "DBG ... [LayoutCycleTracing] ..."; "LayoutCycleTrace listener ready=..." is the app's own start-up line (LayoutCycleTrace.cs), written on every launch, and is no cycle.
+    return @(Get-TraceLines | Where-Object { $_ -match 'LayoutCycle|layout cycle' -and $_ -notmatch 'LayoutCycleTrace listener ready' }).Count
+}
+
 function Focus-DinoWindow {
     $w = Get-DinoWindow
     [NativeKeys]::SetForegroundWindow([IntPtr]$w.Current.NativeWindowHandle) | Out-Null
@@ -246,15 +251,15 @@ function Initialize-Shelf {
 }
 
 function Open-Reorder-FromSheet {
-    $tile = (Get-FirstTiles)[0]
-    if (-not $tile) { throw 'no story tile in grown-up mode' }
-    Invoke-Uia $tile
+    # Slice 418 decision 6: a tap on a cover reads the book; the book's sheet opens from its dots button (AutomationId TileMore, shown only while the shelf is unlocked).
+    $first = Find-FirstTileMore (Get-DinoWindow)
+    if (-not $first) { throw 'no dots button (TileMore) on a book: the shelf is not unlocked, or it is not showing' }
+    Invoke-Uia $first
     Invoke-Uia (Wait-Until { Find-Visible 'BookSheetReorder' } 10 'no Reorder row in the book sheet')
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $before = (Get-TraceLines).Count
-    $cycleBefore = @(Get-TraceLines | Where-Object { $_ -match 'LayoutCycle|layout cycle' }).Count
     Add-Result '0-shelf' {
         Initialize-Shelf
         Wait-Until { (Get-ShelfOrder).Count -ge 2 } 15 'SETUP FAILURE (not an app failure): need two books on the shelf (dino-launch picks them), found fewer' | Out-Null
@@ -264,6 +269,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $order0 = Get-ShelfOrder
     if ($order0.Count -lt 2) { throw "SETUP FAILURE (not an app failure): need two books on the shelf, found $($order0.Count): $($script:Results -join ' // ')" }
     Add-Result '1-sheet-reorder' {
+        $cycleBefore = Count-LayoutCycles   # counted here, after any relaunch of the app (the 2026-11-20 run counted the relaunch's own listener line as a cycle)
         Open-Reorder-FromSheet
         Wait-ReorderOpen
         # Slice 321: the layer is the mock's frame 176 (Windows): 40 dp side padding, 6 tiles across when there are 6 or more books, else all of them in the first row.
@@ -287,11 +293,12 @@ Invoke-Check -ResultFile $ResultFile -Body {
         if ($firstRow -ne $wantFirstRow) { throw "the reorder layer's first row has $firstRow tile(s), the mock (frame 176) wants $wantFirstRow ($books books, $MockColumns across); $allNumbers, hint-to-grid $gapBelowHint px" }
         Start-Sleep -Seconds 5   # fixed-wait: the brief asks for 5 s after open before reading the trace
         if (-not (Get-Process DinoReader.App -ErrorAction SilentlyContinue)) { throw 'the app died after the reorder layer opened' }
-        $cyc = @(Get-TraceLines | Where-Object { $_ -match 'LayoutCycle|layout cycle' }).Count - $cycleBefore
+        $cyc = (Count-LayoutCycles) - $cycleBefore
         if ($cyc -gt 0) { throw "$cyc layout-cycle trace lines after open" }
         "layer open, app alive 5 s, 0 layout-cycle lines, $insetNote, hint-to-grid $gapBelowHint px, first row $firstRow, tiles " + ((Get-ShelfOrder 'ReorderTileTitle') -join ' | ')
     }
-    Add-Result '5a-esc-cancels' { Press-Key $VkEscape; Wait-ReorderClosed; if (((Get-ShelfOrder) -join '|') -ne ($order0 -join '|')) { throw 'order changed' }; 'Esc closed the layer' }
+    # Esc is pressed only while the layer is open: on the shelf an Esc asks "Close Dino?" (Slice 418), and that page then covers the shelf for every later stage (the 2026-11-20 run: 2-hold-1s and 3-drag-done-enter failed behind it).
+    Add-Result '5a-esc-cancels' { if (-not (Get-Hint)) { throw 'the reorder layer is not open, so there is nothing for Esc to cancel (1-sheet-reorder did not leave it open)' }; Press-Key $VkEscape; Wait-ReorderClosed; if (((Get-ShelfOrder) -join '|') -ne ($order0 -join '|')) { throw 'order changed' }; 'Esc closed the layer' }
     Add-Result '2-hold-1s' {
         $tile = (Get-FirstTiles)[0]
         Invoke-PressAndHold $tile $CoverHoldMs

@@ -58,7 +58,9 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
     element:
       text: ".*Three Little Pigs.*"
     timeout: 30000
+# The book's own ••• button: TileMore whose label ("Options for <title>") names the book, not a position above a title.
 - tapOn:
+    id: TileMore
     text: ".*Three Little Pigs.*"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:

@@ -67,6 +67,16 @@ function Press-Key {
     Start-Sleep -Milliseconds 300
 }
 
+function Press-ShiftF10 {
+    # Shift held while F10 goes down and up: the Windows context-menu key chord (VK_SHIFT 0x10, VK_F10 0x79).
+    [NativeKeys]::keybd_event(0x10, 0, 0, [UIntPtr]::Zero)
+    try {
+        Start-Sleep -Milliseconds 80
+        Press-Key 0x79
+    } finally { [NativeKeys]::keybd_event(0x10, 0, [NativeKeys]::KeyUp, [UIntPtr]::Zero) }   # Shift is always released, or every later key in the VM is shifted
+    Start-Sleep -Milliseconds 300
+}
+
 function Wait-VisibleId {
     param([string] $Id, [int] $TimeoutSec, [string] $Failure)
     return Wait-Until { Find-UiaVisibleById (Get-DinoWindow) $Id } $TimeoutSec $Failure
@@ -221,6 +231,60 @@ function Right-Click {
     [Win32.Mouse]::mouse_event(16, 0, 0, 0, [UIntPtr]::Zero)   # MOUSEEVENTF_RIGHTUP
 }
 
+function Left-Click {
+    param([int] $X, [int] $Y)
+    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($X, $Y)
+    Start-Sleep -Milliseconds 300
+    [Win32.Mouse]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero)    # MOUSEEVENTF_LEFTDOWN
+    Start-Sleep -Milliseconds 80
+    [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)    # MOUSEEVENTF_LEFTUP
+}
+
+function Get-ShelfStateAfterBack {
+    # Names which of the three states the app is in, so a failed Back says whether it never left the book, auto-locked (Slice 418 decisions 13-14: 30 s after the last grown-up tap, reading does not reset it) or is unlocked without the chip.
+    $win = Get-DinoWindow
+    if (Find-UiaVisibleById $win 'ReadingTransport') { return 'the reading page is still open (Back was not taken)' }
+    if (Test-LockedShelfShown $win) { return 'the shelf is back but locked (the 30 s auto-lock ran out while reading)' }
+    return 'the shelf is showing without the lock chip and without the locked look'
+}
+
+function Test-UnlockedCoverReads {
+    # Slice 420 (regression for Slice 418 decision 6): on the UNLOCKED shelf a mouse click on a cover reads the book; the sheet opens only from the dots (TileMore) or the context key. 1.136.0 shipped with the
+    # click opening the sheet. A real click at the cover's left-middle, clear of the dots in its top right corner; then the reading page shows, no sheet does, and Back returns to the same unlocked shelf.
+    $tile = Find-FirstTile
+    $r = $tile.Current.BoundingRectangle
+    Left-Click ([int]($r.X + $r.Width / 3)) ([int]($r.Y + $r.Height / 2))
+    Wait-Until { Find-UiaById (Get-DinoWindow) 'ReadingTransport' } 15 'FAIL a click on a cover on the unlocked shelf did not open the reading page' | Out-Null
+    if (Find-UiaVisibleById (Get-DinoWindow) 'BookSheetClose') { throw 'FAIL a click on a cover on the unlocked shelf opened the book sheet as well as, or instead of, reading' }
+    $back = Wait-VisibleId 'ReadingBack' 5 'FAIL no Back button on the reading page'
+    Start-Sleep -Milliseconds 1500   # fixed-wait: the page is still being pushed when its Back button first shows, and a Back pressed mid-push is dropped (the 2026-11-20 run: no shelf line in the trace after the reading page opened)
+    Invoke-Uia $back
+    try { Wait-Until { Find-UiaVisibleById (Get-DinoWindow) 'LockChip' } 10 'back not on the unlocked shelf' | Out-Null } catch { throw "FAIL Back from the reading page did not return to the unlocked shelf (waited 10 s): $(Get-ShelfStateAfterBack)" }
+    return 'a click on an unlocked cover read the book (no sheet), Back returned to the unlocked shelf'
+}
+
+function Test-RailWidth {
+    # Slice 420 item 3 (mock WL1, WL2): the unlocked Windows shelf has a 270 dp rail (CornerLayout.WindowsRail; it was 280 before review pass 1 of Slice 418) with padding 28 left and 20 right, so its rows are 222 dp wide,
+    # and the books start 32 dp right of it. Measured from the UIA rectangles in dp (physical pixels / the window's DPI scale), from the window's left edge, with a few dp of slack for the window frame.
+    $win = Get-DinoWindow
+    if (-not ('Rtst.RtstDpiProbe' -as [type])) { Add-Type -Namespace Rtst -Name RtstDpiProbe -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern uint GetDpiForWindow(System.IntPtr hwnd);' }
+    $dpi = [Rtst.RtstDpiProbe]::GetDpiForWindow([System.IntPtr]$win.Current.NativeWindowHandle)
+    if ($dpi -le 0) { throw 'CHECK ERROR (not an app failure): GetDpiForWindow returned 0' }
+    $scale = [double]$dpi / 96
+    $left = $win.Current.BoundingRectangle.X
+    $slack = 8
+    $rows = foreach ($id in 'GalleryLock', 'CornerTabBooks', 'GalleryStore', 'GallerySettings') { $e = Find-UiaVisibleById $win $id; if ($e) { $e.Current.BoundingRectangle } }
+    if (-not $rows) { throw 'FAIL no rail row (lock or tab) is showing on the unlocked shelf, so the rail width cannot be read' }
+    $widest = ($rows | ForEach-Object { $_.Width / $scale } | Measure-Object -Maximum).Maximum
+    $railRight = ($rows | ForEach-Object { ($_.X + $_.Width - $left) / $scale } | Measure-Object -Maximum).Maximum
+    if ($widest -gt 222 + $slack -or $railRight -gt 250 + $slack) { throw "FAIL the rail is wider than the mock's 270 dp (WL1/WL2): widest row $([int]$widest) dp (mock 222), rail rows end at $([int]$railRight) dp from the window's left edge (mock at most 250)" }
+    $tileLeft = ((Find-FirstTile).Current.BoundingRectangle.X - $left) / $scale
+    if ($tileLeft -lt 270 + 32 - $slack) { throw "FAIL the first book starts $([int]$tileLeft) dp from the window's left edge, the mock's 270 dp rail plus 32 dp puts it at 302 or more" }
+    $measured = "rail 270 dp: widest rail row $([int]$widest) dp, rows end at $([int]$railRight) dp, first book at $([int]$tileLeft) dp"
+    Write-Host "RAILWIDTH $measured (dpi $dpi, scale $scale)"   # printed on a pass too, so a run shows the numbers
+    return $measured
+}
+
 function Test-RightClickAndFocusBack {
     param($Package)
     $tile = Find-FirstTile
@@ -241,8 +305,11 @@ function Test-RightClickAndFocusBack {
         Press-Key $VkTab
         $tabs++
     }
-    Press-Key $VkEnter
-    Wait-VisibleId 'BookSheetClose' 10 'FAIL Enter on the focused book in the grown-ups'' corner did not open its sheet' | Out-Null
+    # Slice 420: Enter on an unlocked book reads it (Slice 418 decision 6, same as a cover tap); the keyboard's way to the sheet is Shift+F10 (the context-menu key), GalleryPage.Desktop.cs OnListContextRequested.
+    $opened = Count-Trace $Package 'Dino shelf: context key opened the book sheet'
+    Press-ShiftF10
+    Wait-TraceAfter $Package 'Dino shelf: context key opened the book sheet' $opened 10 'FAIL Shift+F10 on the focused book in the unlocked shelf wrote no "context key opened the book sheet" trace line' | Out-Null
+    Wait-VisibleId 'BookSheetClose' 10 'FAIL Shift+F10 on the focused book in the unlocked shelf did not open its sheet' | Out-Null
     Focus-DinoWindow
     $back = Count-Trace $Package 'the book has the keyboard back after the sheet closed'
     Press-Key $VkEscape
@@ -254,7 +321,8 @@ function Test-RightClickAndFocusBack {
 function Get-FocusedKey {
     $f = $script:AutomationElement::FocusedElement
     if (-not $f) { return '' }
-    return "$($f.Current.ControlType.ProgrammaticName)|$($f.Current.Name)|$($f.Current.AutomationId)"
+    $r = $f.Current.BoundingRectangle
+    return "$($f.Current.ControlType.ProgrammaticName)|$($f.Current.Name)|$($f.Current.AutomationId)|at $([int]$r.X),$([int]$r.Y)"   # the place too: two rows with one name (a header button and a row) must not read as one focus
 }
 
 function Test-SettingsArrows {
@@ -278,19 +346,28 @@ function Test-SettingsArrows {
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $pkg = Get-InstalledPackage $PackageName
+    $script:StagesPassed = @()
     try {
         Enter-KidsShelf   # a tap on the lock locks an unlocked shelf (Slice 418)
         $columns = Test-ShelfColumns $pkg
+        $script:StagesPassed += "columns: $columns"
         Test-Hover $pkg
+        $script:StagesPassed += 'hover'
         $tabs = Test-TabAndEnter $pkg
+        $script:StagesPassed += "tab and Enter ($tabs presses)"
         Pass-Gate
+        $rail = Test-RailWidth
+        $script:StagesPassed += $rail
+        $cover = Test-UnlockedCoverReads
+        $script:StagesPassed += $cover
         Test-RightClickAndFocusBack $pkg
+        $script:StagesPassed += 'right-click and Shift+F10 sheet, keyboard back on the book'
         $arrows = Test-SettingsArrows
         Invoke-Uia (Wait-VisibleId 'GalleryLock' 5 'FAIL no lock on the unlocked shelf')
         Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 'FAIL a tap on the lock did not lock the shelf' | Out-Null
-        "$columns; a hovered book lifted; Tab reached a book in $tabs presses and Enter opened it; right-click opened the sheet and Esc gave the book the keyboard back; $arrows; $($script:HoverProbes[-1])"
+        "$columns; a hovered book lifted; Tab reached a book in $tabs presses and Enter read it on the locked shelf; right-click opened the sheet, then Shift+F10 opened it from the keyboard and Esc gave the book the keyboard back; $rail; $cover; $arrows; $($script:HoverProbes[-1])"
     } catch {
         $tail = (Get-TraceLines $pkg | Select-Object -Last 25) -join ' | '
-        throw "$($_.Exception.Message) -- window-trace.log tail: $tail"
+        throw "$($_.Exception.Message) -- stages passed before it: $($script:StagesPassed -join '; ') -- window-trace.log tail: $tail"   # a failure keeps each earlier stage's measured result
     }
 }

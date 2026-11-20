@@ -1230,6 +1230,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			return HandleCornerKey(action);
 		}
 
+		if (action == DinoKeyAction.OpenBookMenu)
+		{
+			return OpenFocusedBookMenu(); // Slice 420: the Menu key or Shift+F10 on a focused book (Windows only: no other head sends the action)
+		}
+
+		if (action is DinoKeyAction.FocusRowUp or DinoKeyAction.FocusRowDown)
+		{
+			return _mode.IsGrownUp && _mode.Tab == CornerTab.Settings && MoveSettingsFocus(down: action == DinoKeyAction.FocusRowDown); // Slice 420: the Settings arrows; Books keeps the native grid navigation
+		}
+
 		if (action == DinoKeyAction.SheetActivate)
 		{
 			return BookInfo.IsVisible && BookInfo.ActivateFocused();
@@ -1429,7 +1439,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	}
 #endif
 
-	private async void OnStoryTapped(object? sender, TappedEventArgs e)
+	private async void OnStoryTapped(object? sender, TappedEventArgs e) => await ReadTappedTileAsync(sender); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
+
+	// Slice 420: on the unlocked shelf the overlay's backdrop sits over the cover; a tap on it reads the book exactly like a tap on a bare cover (decision 6), and only the ••• opens the sheet.
+	private async void OnReadRequested(object? sender, EventArgs e) => await ReadTappedTileAsync(sender); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
+
+	// The one tap-to-read path of a bare cover and of the overlay's backdrop, so the hold-suppression guard cannot drift between the two.
+	private async Task ReadTappedTileAsync(object? sender)
 	{
 		if (_reorder.IsVisible || Environment.TickCount64 < _suppressTapUntil)
 		{
@@ -1443,7 +1459,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// A tap on a cover (kids' mode: read it; grown-up mode: its options sheet). The Windows keyboard (Enter or Space on a focused book) takes the same path.
+	// A tap on a cover: it reads the book, locked or unlocked (Slice 418 decision 6). The Windows keyboard (Enter or Space on a focused book) takes the same path.
 	private Task OpenTileAsync(StoryTile tile)
 	{
 		UiUsage.Tap(UiControls.Book); // Slice 352: it starts the read; the screen in the count says whether the shelf was locked
@@ -1464,7 +1480,27 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 	partial void RestoreTileFocus();
 
-	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111):
+	// Slice 420: opens the sheet of the book that has the keyboard (Windows); true when it did. Other heads have no such key, so false.
+	private bool OpenFocusedBookMenu()
+	{
+		bool opened = false;
+		OpenFocusedBookMenu(ref opened);
+		return opened;
+	}
+
+	partial void OpenFocusedBookMenu(ref bool opened);
+
+	// Slice 420: the Up and Down arrows on the Settings tab move the keyboard focus one row (Windows); true when the focus moved. Other heads have no arrow keys here, so false.
+	private bool MoveSettingsFocus(bool down)
+	{
+		bool moved = false;
+		MoveSettingsFocus(down, ref moved);
+		return moved;
+	}
+
+	partial void MoveSettingsFocus(bool down, ref bool moved);
+
+	// Grown-up mode: a book's "⋯" (never its bare cover, which reads) opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111):
 	// Read with my voice, Record, Cast, Edit pages (own books), Export (developer switch) and Remove from the shelf.
 	private async Task OpenBookSheetAsync(Story tapped)
 	{

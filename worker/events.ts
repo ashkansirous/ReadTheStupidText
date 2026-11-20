@@ -81,7 +81,7 @@ export const FALLBACK_REASONS = [
   // Slice 275
   "ocr_crop_degraded", "uia_unavailable", "store_failed", "preference_unsaved",
   // Slice 279
-  "tap_failed", "layout_failed",
+  "tap_failed", "layout_failed", "focus_move_failed", // Slice 420: the last one
   // Slice 351: the real causes behind clip_missing (no_pack and pack_failed are above), and the two ways an animal clip failed
   "file_missing", "no_clip", "animal_clip_copy_failed", "animal_clip_play_failed",
   // Slice 359: a book's drawn back cover is named but its picture file is missing

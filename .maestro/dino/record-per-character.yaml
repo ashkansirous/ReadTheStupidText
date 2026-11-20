@@ -45,7 +45,9 @@ name: Record a book a line at a time and read it back
       id: LockChip
     timeout: 30000
 # The book's sheet, then its Record row: the intro page opens, with the notes once and the two ways to record.
+# Slice 420: a tap on the cover reads the book; the sheet opens from the book's own ••• button: TileMore whose description ("Options for <title>") names the book (`above:` picked a neighbour's button, the title not being a text node on Android).
 - tapOn:
+    id: TileMore
     text: ".*Three Little Pigs.*"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
