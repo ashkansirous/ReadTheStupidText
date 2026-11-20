@@ -2,11 +2,24 @@
 
 **Product:** Dino
 
+*In progress (wave 2026-11-20), draft PR.*
+
 *Planned 2026-11-20 with the owner, from print-the-damn-book's KDP robot planning (RefineScope answer 4, "yes";
 print-the-damn-book Slice 40: docs/plan/slices/40-kdp-series-and-cross-links.md in that repo).*
 
 **Touches:** `worker/index.ts`, `worker/book-links.ts` (new), `worker/book-links.test.mjs` (new), `wrangler.jsonc`,
-`docs/plan/slices/423-dino-book-short-links.md`
+`wrangler.workers-dev.jsonc`, `worker-configuration.d.ts`, `docs/plan/slices/423-dino-book-short-links.md`
+
+Claim-time premise check (2026-11-20, decided by the coordinator; these replace the catalogue lookup in Decisions):
+- **No catalogue lookup** (no exported list exists, and an R2 read on every scan of a printed code costs for nothing).
+  The id is checked by its characters only: lowercase `a-z`, digits and `-`, 1-64 characters. A valid id forwards to
+  `<BOOK_LINK_TARGET>?book=<id>`; any other id forwards to `<BOOK_LINK_TARGET>` with no `?book=`. Never a 404.
+- `/book/*` goes into `run_worker_first` in `wrangler.jsonc`, and into `wrangler.workers-dev.jsonc` with its
+  `/dino/book/*` twin (`worker/check-configs.mjs` enforces both); `BOOK_LINK_TARGET` goes into both `vars` blocks, and
+  `worker-configuration.d.ts` is regenerated with `npm run types`.
+- The handler sits in `serveAsset` (`worker/index.ts`) after `resolveSite` and before `env.ASSETS.fetch`; a test proves
+  `canonicalRedirect` leaves `/book/...` alone on the Dino host. Checks: `npm ci && npm run typecheck` and
+  `node --test worker/*.test.mjs` (worker/CLAUDE.md, `.github/workflows/site-checks.yml`).
 
 **Migrations:** none
 
