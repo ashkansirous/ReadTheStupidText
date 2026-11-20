@@ -151,7 +151,7 @@ internal static class OnboardingUsage
 }
 
 /// <summary>
-/// The step bar every onboarding screen starts with (mock A): six segments, 5 high, the done and current ones brand blue, the later ones sand, and under them "Step {0} of {1} · {2}" in 12.5 semibold.
+/// The step bar every onboarding screen starts with (mock A): five segments, 5 high, the done and current ones brand blue, the later ones sand, and under them "Step {0} of {1} · {2}" in 12.5 semibold.
 /// Never mirrored, like the rest of the first run.
 /// </summary>
 internal sealed class OnboardingStepBar : VerticalStackLayout

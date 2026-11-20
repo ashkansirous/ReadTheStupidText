@@ -196,7 +196,7 @@ public static class IntroSteps
     public const string Record = "record";
     public const string Languages = "languages";
 
-    // Slice 362: the six steps of the new first run (OnboardingFlow) count under these closed names; the old wizard names above stay for apps released before it and for the wizard's last installs.
+    // Slice 362: the steps of the new first run (OnboardingFlow, five since Slice 418; the retired Corner name stays for apps that sent it) count under these closed names; the old wizard names above stay for apps released before it and for the wizard's last installs.
     public const string Language = "language";
     public const string StoryLanguages = "story_languages";
     public const string Books = "books";
@@ -204,7 +204,7 @@ public static class IntroSteps
     public const string Voice = "voice";
     public const string Corner = "corner";
 
-    /// <summary>The names of the first run's six steps (Slice 362), which the Worker lists next to the wizard's.</summary>
+    /// <summary>The names of the first run's steps (Slice 362; five shown since Slice 418, Corner is retired but kept), which the Worker lists next to the wizard's.</summary>
     public static readonly IReadOnlyList<string> Onboarding = [Language, StoryLanguages, Books, Listen, Voice, Corner];
 
     /// <summary>The retired add-your-own-book step (Slice 278): no longer shown, but apps released before it still send <c>add:tried</c> and <c>add:skipped</c>, so the Worker keeps the name.</summary>

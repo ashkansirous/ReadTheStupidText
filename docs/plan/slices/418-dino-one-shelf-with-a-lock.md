@@ -238,6 +238,7 @@ it is done. This is basically a hot fix that should be deployed to production as
   Windows and iOS (compile only) heads build.
 - Emulator-5554, 2026-11-19 21:17-21:27: PASS `lock`, `onboarding-phone`, `onboarding-skip`, `corner-read-now`,
   `settings-books-and-buying`.
+- Emulator-5554, 2026-11-19, build key 93be3a454038: PASS `store-tags` (92.8 s) and `onboarding-landscape` (53.7 s) once its stale "Schritt 2 von 6" text was changed to "von 5" (flow bug, not an app bug).
 
 #### From review
 
@@ -245,6 +246,10 @@ it is done. This is basically a hot fix that should be deployed to production as
 - Pass 2 (`reviews/s418b-medium.md`): findings 1 and 3-7 fixed; for #2 see the next line.
 - Check pass (`reviews/s418b-check.md`): no findings.
 - Skipped #2 (`reviews/s418b-medium.md`): "LockTimer is created and started only on the first CreateWindow; a later window reuses the first window's dispatcher" - Dino runs one window, so no later window exists.
+- Flow-fix PR #1313, pass 1 (`reviews/s418c-high.md`): all 4 findings fixed. Pass 2 (`reviews/s418c-medium.md`): 3 comment-only nits, none applied, see the next three lines.
+- Skipped #1 (`reviews/s418c-medium.md`): "reword to five since Slice 418, corner kept for old apps" - a comment in the Worker, outside this test-only PR; no behaviour depends on it.
+- Skipped #2 (`reviews/s418c-medium.md`): "IntroSteps.Onboarding still lists Corner with no retired marker on the entry" - the step stays so analytics from older app versions still parse; the comment above it already says the corner step is retired.
+- Skipped #3 (`reviews/s418c-medium.md`): "hand-written step counts in comments go stale again" - comment style only, nothing reads it.
 
 #### For CLAUDE.md
 
@@ -253,8 +258,7 @@ it is done. This is basically a hot fix that should be deployed to production as
 
 #### Not yet verified
 
-- Verified 2026-11-19 on emulator-5554 after the merge: `store-tags` PASS (92.8 s); `onboarding-landscape` PASS (53.7 s) once its stale "Schritt 2 von 6" text was changed to "von 5" (flow bug, not an app bug).
-- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB.
+- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB. `dino-onboarding-keys.ps1` was corrected to five steps ("Step N of 5") in review, so the first run of it is a fresh run.
 - [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
 - [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.

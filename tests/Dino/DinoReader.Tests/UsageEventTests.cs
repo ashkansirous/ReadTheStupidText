@@ -271,7 +271,7 @@ public class UsageEventTests
         string[] worker = Regex.Matches(list.Groups["names"].Value, "\"([a-z_]+)\"").Select(m => m.Groups[1].Value).ToArray();
 
         // Slice 261 and 278: the store and add steps are retired, but apps released before them still send "store:tried" and "add:tried", so the Worker keeps the names.
-        // Slice 362: the new first run's six steps are listed too.
+        // Slice 362: the new first run's step names (five shown since Slice 418, plus the retired corner) are listed too.
         Assert.Equal(Enumerable.Range(0, IntroSteps.Count).Select(i => IntroSteps.NameAt(i)!).Append(IntroSteps.Store).Append(IntroSteps.Add).Concat(IntroSteps.Onboarding).Order(), worker.Order());
     }
 
