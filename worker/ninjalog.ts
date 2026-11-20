@@ -4,6 +4,7 @@
 // item 1 found no DPA yet; the owner chose on 2026-11-19 to forward anyway, so both wrangler configs set the var to "true"). Fire-and-forget after the answer is sent: a Ninjalog failure never changes the app's 204
 // or the Analytics Engine write. Never carries the IP, the raw body or a row the usage rules dropped (the callers hand over only checked counts).
 import type { WrittenCount, WrittenTee } from "./events.ts";
+import { ninjalogTraces, postSpansToNinjalog } from "./ninjalog-spans.ts";
 
 export const NINJALOG_INGEST_URL = "https://app.ninjalog.dev/v1/ingest/json";
 /** The Ninjalog index the production counts go to (`dino_usage_beta` is never forwarded). */
@@ -103,6 +104,12 @@ export async function postToNinjalog(token: string, documents: readonly Record<s
   }
 }
 
+/** Slice 421: the same counts as one OTLP traces request, deferred beside the log post; nothing is sent when no count can be a span. */
+function deferSpans(token: string, sent: readonly SentCount[], receivedAt: Date, defer: (work: Promise<unknown>) => void, send: NinjalogFetch): void {
+  const traces = ninjalogTraces(sent, receivedAt);
+  if (traces !== null) defer(postSpansToNinjalog(token, traces, send));
+}
+
 /**
  * The tee for a request, or undefined when forwarding is off. `defer` is the Worker's `ctx.waitUntil` (called as a method by the caller);
  * `send` is a test seam for `fetch`.
@@ -115,6 +122,7 @@ export function ninjalogTee(env: NinjalogEnv, defer: (work: Promise<unknown>) =>
     try {
       const receivedAt = now();
       defer(postToNinjalog(token, sent.map((count) => ninjalogDocument(count, receivedAt)), send));
+      deferSpans(token, sent, receivedAt, defer, send);
     } catch {
       // no-fallback: building or deferring the post must never fail the request
     }

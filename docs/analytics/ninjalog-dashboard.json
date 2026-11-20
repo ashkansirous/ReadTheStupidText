@@ -47,6 +47,24 @@
       "range": "7d",
       "viz": "timechart",
       "options": { "stacking": "normal", "imputation": "zero" }
+    },
+    {
+      "id": "event-flow",
+      "title": "Event flow (step to step)",
+      "x": 0, "y": 13, "w": 6, "h": 5,
+      "query": "index=dino_spans | spantree | stats count by parent.name, span.name | sort -count",
+      "range": "7d",
+      "viz": "table",
+      "options": { "display": "table" }
+    },
+    {
+      "id": "where-sessions-end",
+      "title": "Where sessions end",
+      "x": 6, "y": 13, "w": 6, "h": 5,
+      "query": "index=dino_spans | spantree | where child_count=0 | stats count by span.name | sort -count",
+      "range": "7d",
+      "viz": "table",
+      "options": { "display": "table" }
     }
   ]
 }

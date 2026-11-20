@@ -53,7 +53,7 @@ test("a batch writes to Analytics Engine and posts one NDJSON request with the s
   await Promise.all(h.deferred);
   assert.equal(response.status, 204);
   assert.equal(h.points.length, 2);
-  assert.equal(h.posts.length, 1);
+  assert.equal(h.posts.length, 2);
   assert.equal(h.posts[0].url, NINJALOG_INGEST_URL);
   assert.equal(h.posts[0].init.headers.Authorization, "Bearer secret-token");
   const [first, second] = documentsOf(h.posts[0]);
@@ -121,7 +121,7 @@ test("a Ninjalog 500, a network error or a timeout leaves the 204 and the Analyt
     const results = await Promise.all(h.deferred);
     assert.equal(response.status, 204);
     assert.equal(h.points.length, 1);
-    assert.deepEqual(results, [false]);
+    assert.deepEqual(results, [false, false]);
   }
 });
 
@@ -151,7 +151,7 @@ test("a send that never resolves does not hold the answer, and its work is only 
   const h = harness(ON, () => new Promise(() => {}));
   const response = await handleEvents(post({ events: [event] }), h.env, on, h.tee);
   assert.equal(response.status, 204);
-  assert.equal(h.deferred.length, 1);
+  assert.equal(h.deferred.length, 2);
   assert.equal(h.points.length, 1);
 });
 

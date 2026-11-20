@@ -72,6 +72,34 @@ Play's open and closed testing tracks post to `dino_usage` like production (only
 index=dino_usage platform=android | stats count as events, count(eval(installAge="first")) as first_launches by version | sort version
 ```
 
+## Event flow and journeys (spans, Slice 421)
+
+Each Dino session is also one trace in index `dino_spans` (trace id = the session, span = one count, parent = the previous `seq`). Run these in Ninjalog Search once spans arrive. A lost event cuts the chain, so paths after a gap start a new branch.
+
+Event flow (step to step):
+
+```
+index=dino_spans | spantree | stats count by parent.name, span.name | sort -count
+```
+
+Where sessions end:
+
+```
+index=dino_spans | spantree | where child_count=0 | stats count by span.name | sort -count
+```
+
+Screens a session visited (the screen spans only, one row per session; this is the set of screens, not their order, because `values()` returns distinct sorted values; the order is the waterfall below or `span.path` from `spantree`):
+
+```
+index=dino_spans name=screen | stats values(span.name) by trace_id
+```
+
+One session as a waterfall (replace `<session>` with the 32-character session id):
+
+```
+trace_id=<session> | spantree | sort start_ns
+```
+
 ## Dashboard widgets
 
 The "New users" dashboard (`docs/analytics/ninjalog-dashboard.json`, https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users) uses:
@@ -82,4 +110,4 @@ index=dino_usage name IN (read_paused, read_stopped) seconds>=0 platform!=sonos 
 index=dino_usage name=fallback | timechart count by detail
 ```
 
-plus the funnel and where-stopped queries above. Seconds are whole seconds of audio heard since the previous paused/stopped row of that reading; a Sonos or Alexa `book_listened` row holds an estimated track length, so those platforms stay out.
+plus the funnel and where-stopped queries above, and the "Event flow" and "Where sessions end" tables (the span queries above). Seconds are whole seconds of audio heard since the previous paused/stopped row of that reading; a Sonos or Alexa `book_listened` row holds an estimated track length, so those platforms stay out.
