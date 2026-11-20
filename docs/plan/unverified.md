@@ -83,8 +83,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] The funnel query returns rows for real first launches and the dashboard widgets show data (both parse; no rows yet).
 
 ### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
-- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB. `dino-onboarding-keys.ps1` was corrected to five steps ("Step N of 5") in review, so the first run of it is a fresh run.
-- [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
+- [session] Windows VM: `dino-open-book`, `dino-page-turn`, `dino-desktop-polish` (with the 270-wide rail) and `dino-reorder` failed on 2026-11-20, and dino-keyboard's Ctrl+L and Ctrl+1/2/3 stages are not logged by name; fixed and rerun by Slice 420 (`slices/420-dino-windows-checks-after-one-shelf.md`).
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
 - [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.
 

@@ -4,6 +4,7 @@
 #   2 Start recording -> the Record screen: one piece, Skip / Record / key labels "Skip . S", "Record . R"
 #   3 S -> trace line "Dino keyboard: S used" (a piece skipped)
 #   4 Esc -> back out of the Record screen (before R: R may raise the microphone consent prompt, a window outside the app)
+#   (In a full run dino-onboarding has already denied the first-use microphone prompt, so stage 5 sees no prompt and expects the alert; run alone on a clean image it denies the prompt itself.)
 #   5 reopen, R last -> the trace line "Dino keyboard: R used" AND a recording state (Stop button) or the app's "Microphone is off" alert; the system consent prompt, if it shows, is denied through its UIA button first (Slice 319), the window that has focus after R is named; R again stops
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName, [Parameter(Position = 1)] [string] $AlertTextsBase64)
 . "$PSScriptRoot\_lib.ps1"

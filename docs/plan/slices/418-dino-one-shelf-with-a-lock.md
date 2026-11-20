@@ -250,6 +250,12 @@ it is done. This is basically a hot fix that should be deployed to production as
 - Skipped #1 (`reviews/s418c-medium.md`): "reword to five since Slice 418, corner kept for old apps" - a comment in the Worker, outside this test-only PR; no behaviour depends on it.
 - Skipped #2 (`reviews/s418c-medium.md`): "IntroSteps.Onboarding still lists Corner with no retired marker on the entry" - the step stays so analytics from older app versions still parse; the comment above it already says the corner step is retired.
 - Skipped #3 (`reviews/s418c-medium.md`): "hand-written step counts in comments go stale again" - comment style only, nothing reads it.
+- VM-check PR, pass 1 (`reviews/s418d-high.md`): findings 1, 2 and 5-9 fixed (1: `dino-onboarding` now denies the microphone prompt, the answer `dino-record` expects, so the deny path still runs once in a full run).
+- Skipped #3 (`reviews/s418d-high.md`): "duplicate Get-ConsentDialogOf, Find-ConsentWindow and the button walk" - dino-record is left untouched to avoid an untested change to a VM-proven check; the copies can be merged once a VM run covers both.
+- Skipped #4 (`reviews/s418d-high.md`): "the allow pattern" is an assumption - the first VM run proves the button name, and the check fails loudly naming the buttons seen if the name is wrong.
+- VM-check PR, pass 2 (`reviews/s418d-medium.md`): findings 1, 2, 4 and 5 fixed.
+- Skipped #3 (`reviews/s418d-medium.md`): "dino-record.ps1 keeps its own copy of the focused-element read" - same as pass 1's #3: dino-record stays untouched until a VM run covers both copies.
+- Skipped #6 (`reviews/s418d-medium.md`): "Not in the default check list; runs only with -Check dino-onboarding-skip" - known and listed in docs/plan/unverified.md as an unverified line.
 
 #### For CLAUDE.md
 
@@ -258,7 +264,7 @@ it is done. This is basically a hot fix that should be deployed to production as
 
 #### Not yet verified
 
-- [session] The Windows VM checks `dino-onboarding-keys`, `dino-onboarding`, `dino-launch`, `dino-gate`, `dino-keyboard`, `dino-reorder` and `dino-desktop-polish` (`tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino`) were not run: host free memory was under 8 GB. `dino-onboarding-keys.ps1` was corrected to five steps ("Step N of 5") in review, so the first run of it is a fresh run.
-- [session] A VM check for Ctrl+L and Ctrl+1/2/3, if `dino-gate` and `dino-keyboard` do not already cover them.
+- Verified 2026-11-20 on the Windows VM (build key af63ed07435f, branch fix/s418-vm): `dino-onboarding-keys`, `dino-onboarding` (microphone prompt answered No, then "Continue without recording", locked shelf), `dino-onboarding-skip` (own run), `dino-launch`, `dino-settings`, `dino-gate` (440 dp card, hold, sum, Esc back to the locked shelf), `dino-keyboard`, `dino-record`, `dino-window` all PASS.
+- [session] Windows VM: `dino-open-book`, `dino-page-turn`, `dino-desktop-polish` (with the 270-wide rail) and `dino-reorder` failed on 2026-11-20, and dino-keyboard's Ctrl+L and Ctrl+1/2/3 stages are not logged by name; fixed and rerun by Slice 420 (`docs/plan/slices/420-dino-windows-checks-after-one-shelf.md`).
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
 - [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.

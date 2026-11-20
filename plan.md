@@ -42,7 +42,8 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 412 | Dino: renamed "Dino: Kids Books & Stories" everywhere (icon label "Dino"), English listing with the words parents search for, Windows, Sonos and Alexa names; ids never change; nothing on Play until the first production release is out | planned | | | [412-dino-rename-kids-books-and-stories.md](docs/plan/slices/412-dino-rename-kids-books-and-stories.md) |
 | 413 | Dino: the new store name, subtitle and keywords in the other 13 languages, in each language's own search words (after 412) | planned | | | [413-dino-store-name-13-languages.md](docs/plan/slices/413-dino-store-name-13-languages.md) |
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
-| 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | planned | | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
+| 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | built #1308, released as 1.136.0 (Play and App Store in review 2026-11-20); Windows VM checks partly verified, rest in 420 | #1308, #1313 | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
+| 420 | Dino: the Windows VM checks Slice 418 left failing (open book, page turn, desktop polish with the 270 rail, reorder) and Ctrl+L stages logged by name | planned | | | [420-dino-windows-checks-after-one-shelf.md](docs/plan/slices/420-dino-windows-checks-after-one-shelf.md) |
 
 ### Shared
 

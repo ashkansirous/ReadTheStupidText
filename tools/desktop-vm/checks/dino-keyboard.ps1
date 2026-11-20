@@ -260,6 +260,29 @@ function Test-EscOnShelf {
     Wait-VisibleId 'GalleryLock' 5 'FAIL the shelf is gone after Stay' | Out-Null
 }
 
+function Test-CtrlL {
+    # Slice 418 (mock WL1, WL2): Ctrl+L is the lock. On the locked shelf it opens the gate (GateCard); Esc closes it onto the locked shelf; after the gate is passed it locks at once (the LockChip goes).
+    param($Package)
+    $lockTrace = 'Dino keyboard: Ctrl\+L used'
+    Enter-KidsShelf
+    Focus-DinoWindow
+    $before = Count-Trace $Package $lockTrace
+    Press-Ctrl 0x4C
+    Wait-Until { (Count-Trace $Package $lockTrace) -gt $before } 10 'FAIL Ctrl+L on the locked shelf wrote no "Ctrl+L used" trace line' | Out-Null
+    Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 10 'FAIL Ctrl+L on the locked shelf did not open the gate (no hold ring; found at every window width, unlike GateCard)' | Out-Null
+    Focus-DinoWindow
+    Press-Key $VkEscape
+    Wait-Until { -not (Find-UiaExact (Get-DinoWindow) $HoldRingName) } 10 'FAIL Esc did not close the gate Ctrl+L opened' | Out-Null
+    Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 'FAIL the shelf is not locked after Esc closed the gate Ctrl+L opened' | Out-Null
+    Test-GateByKeyboard $Package
+    Focus-DinoWindow
+    $before = Count-Trace $Package $lockTrace
+    Press-Ctrl 0x4C
+    Wait-Until { (Count-Trace $Package $lockTrace) -gt $before } 10 'FAIL Ctrl+L on the unlocked shelf wrote no "Ctrl+L used" trace line (the unlock may have expired first)' | Out-Null
+    Wait-Until { Test-LockedShelfShown (Get-DinoWindow) } 10 'FAIL Ctrl+L on the unlocked shelf did not lock it (the LockChip is still showing)' | Out-Null
+    Wait-VisibleId 'GalleryLock' 5 'FAIL the locked shelf is not showing for the reading keys' | Out-Null   # Test-ReadingKeys taps a tile on this locked shelf, the state kids read in
+}
+
 function Test-ReadingKeys {
     param($Package)
     Wait-VisibleId 'GalleryLock' 10 'FAIL the shelf is not showing before the reading keys' | Out-Null
@@ -301,6 +324,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
         Test-EscFromGrownUpPage $pkg
         Test-CornerKeys $pkg
         Test-EscOnShelf
+        Test-CtrlL $pkg
         $creamSeen = Count-Trace $pkg 'title bar tone Cream'
         $title = Test-ReadingKeys $pkg
         Wait-ToneAfter $pkg 'Cream' $creamSeen 'FAIL the title bar never went back to cream on the kids'' pages'
