@@ -64,7 +64,7 @@ public partial class FirstBooksPage
 		_header = new Grid { RowSpacing = 8, ColumnSpacing = 4, Children = { _headerBack, _headerIcon, _titleBlock } };
 		_bar = BuildBar();
 		_cardsGrid.Margin = new Thickness(0, 3, 0, 8);
-		_listShell = new OnboardingShell(_header, new ScrollView { Content = _cardsGrid }, _bar, stepBar: new OnboardingStepBar(OnboardingStep.Books)); // Slice 362: step 3 of 6
+		_listShell = new OnboardingShell(_header, new ScrollView { Content = _cardsGrid }, _bar, stepBar: new OnboardingStepBar(OnboardingStep.Books)); // Slice 362: step 3 of 5
 		return new Grid { AutomationId = "FirstBooksPicker", Children = { _listShell } };
 	}
 

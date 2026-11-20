@@ -32,7 +32,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
     # Slice 325: dino-onboarding-keys runs before this check and walks the first run with the keyboard; when it already left the app on the kids' shelf there is nothing to walk.
     $already = Find-UiaVisibleById (& $window) 'GalleryTitle'
     if ($already) { return "launched, first run already done by dino-onboarding-keys, shelf shows '$($already.Current.Name)' (pid $((Get-Process DinoReader.App).Id -join ','))" }
-    # Slice 362: the first run has six steps and its voice step needs the keyboard walk (dino-onboarding-keys, then dino-onboarding), so this check no longer walks it by mouse: when the shelf is not showing, the two earlier checks did not finish the first run.
+    # Slice 362: the first run has five steps and its voice step needs the keyboard walk (dino-onboarding-keys, then dino-onboarding), so this check no longer walks it by mouse: when the shelf is not showing, the two earlier checks did not finish the first run.
     if (Find-UiaVisibleById (& $window) 'FirstRunLanguage') { throw 'FAIL the first run is still at its language page: dino-onboarding-keys and dino-onboarding must run before this check' }
     $title = Wait-Until { Find-UiaById (& $window) 'GalleryTitle' } 30 'the shelf did not show'
     "launched, first run done, shelf shows '$($title.Current.Name)' (pid $((Get-Process DinoReader.App).Id -join ','))"
