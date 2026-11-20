@@ -45,6 +45,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | built #1308, released as 1.136.0 (Play and App Store in review 2026-11-20); Windows VM checks partly verified, rest in 420 | #1308, #1313 | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
 | 420 | Dino: the Windows VM checks Slice 418 left failing (open book, page turn, desktop polish with the 270 rail, reorder) and Ctrl+L stages logged by name | planned | | | [420-dino-windows-checks-after-one-shelf.md](docs/plan/slices/420-dino-windows-checks-after-one-shelf.md) |
 | 423 | Dino: short links `/book/<book-id>` that printed books point at (for print-the-damn-book's KDP books) | verified (live 2026-11-20) | #1321 | | [423-dino-book-short-links.md](docs/plan/slices/423-dino-book-short-links.md) |
+| 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings): reproduce, read Play, and put the exit reason, session, last page and a current log tail in every unclean-exit report | planned | | | [424-dino-android-1136-unclean-exit.md](docs/plan/slices/424-dino-android-1136-unclean-exit.md) |
 
 ### Shared
 
