@@ -61,12 +61,25 @@ function Complete-VoiceStep {
     Invoke-Uia (Wait-Until { Find-UiaById (Get-DinoWindow) 'OnboardingContinueWithout' } 20 'FAIL the microphone-off state has no Continue without recording')
 }
 
+function Deny-FirstMicPrompt {
+    # The clean image asks on the first R (a Windows prompt, reachable only as the focused element). It is DENIED here, the answer dino-record's stage 5 expects, so a full run still proves the deny path once;
+    # the app then shows its microphone-off state and setup goes on with Continue without recording. Returns $true when that state showed (setup is done), $false when no prompt came (consent already decided: recording started).
+    $script:Notes.Add((Answer-MicConsentPrompt (Get-DinoWindow).Current.ProcessId 'Deny' 20 { (Test-Present 'RecordStopButton') -or (Test-Present 'OnboardingMicOffTitle') }))
+    if (-not (Test-Present 'RecordStopButton')) { Wait-Until { (Test-Present 'OnboardingMicOffTitle') -or (Test-Present 'RecordStopButton') } 15 'FAIL R on the voice step started no recording and showed no microphone-off state' | Out-Null }
+    if (-not (Test-Present 'OnboardingMicOffTitle')) { return $false }
+    $script:Notes.Add('the microphone prompt was denied: Continue without recording')
+    Invoke-Uia (Wait-Until { Find-UiaById (Get-DinoWindow) 'OnboardingContinueWithout' } 20 'FAIL the microphone-off state has no Continue without recording')
+    return $true
+}
+
 function Record-WithKeys {
     for ($line = 1; $line -le 4 -and -not (Test-Present 'OnboardingHearYourself'); $line++) {
         Focus-DinoWindow
         Press-Key $VkR
+        if ($line -eq 1 -and (Deny-FirstMicPrompt)) { return }
         Wait-Present 'RecordStopButton' 15 "FAIL R did not start recording line $line"
         Start-Sleep -Milliseconds 1500   # fixed-wait: a second and a half of microphone gives the clip a length
+        Focus-DinoWindow   # the stopping R must reach the app, not another window that took focus meanwhile
         Press-Key $VkR
         if (Test-Present 'OnboardingMicOffTitle') { return }
         Wait-Present 'RecordChip' 20 "FAIL line $line shows no Recorded chip after R stopped it"

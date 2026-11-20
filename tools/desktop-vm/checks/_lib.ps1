@@ -232,6 +232,65 @@ function Enter-KidsShelf {
     $null = Wait-Until { -not (& $find) } 15 'FAIL a tap on the lock did not lock the shelf'   # Wait-Until throws when the time runs out, so a stuck unlocked shelf fails the check here
 }
 
+function Get-ConsentDialogAbove {
+    # The Shell_SystemDialog window above an element (RawViewWalker), or $null: the system microphone prompt is not under the UIA root, only reachable as the focused element (tools/desktop-vm/CLAUDE.md, dino-record).
+    param($Element)
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $node = $Element
+    for ($depth = 0; $node -and $depth -lt 12; $depth++) {
+        if ($node.Current.ClassName -eq 'Shell_SystemDialog') { return $node }
+        $node = $walker.GetParent($node)
+    }
+    return $null
+}
+
+function Find-ConsentButtonFocused {
+    # The focused Button of the microphone consent prompt (a Button outside the app's process under a Shell_SystemDialog), or $null while the focus is anywhere else.
+    param([Parameter(Mandatory)] [int] $AppProcessId)
+    try {
+        $focused = $script:AutomationElement::FocusedElement
+        if (-not $focused -or $focused.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) { return $null }
+        if ($focused.Current.ProcessId -eq $AppProcessId) { return $null }
+        if (Get-ConsentDialogAbove $focused) { return $focused }
+    } catch { $null = $_ }   # no-fallback: a focus read that fails this poll is "no prompt yet"; the caller polls again
+    return $null
+}
+
+function Get-ConsentDialogButtons {
+    # The dialog's buttons, walked with RawViewWalker (FindAll on the dialog returns nothing; at most 200 nodes).
+    param($Dialog)
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $buttons = @(); $queue = New-Object System.Collections.Queue; $queue.Enqueue($Dialog); $seen = 0
+    while ($queue.Count -gt 0 -and $seen -lt 200) {
+        $node = $queue.Dequeue(); $seen++
+        if ($node.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button) { $buttons += $node }
+        for ($child = $walker.GetFirstChild($node); $child; $child = $walker.GetNextSibling($child)) { $queue.Enqueue($child) }
+    }
+    return $buttons
+}
+
+function Answer-MicConsentPrompt {
+    # Answers the first-use Windows microphone prompt with its Allow ("Yes", "Allow") or Deny ("No", "Don't allow", "Deny", "Block") button (the VM runs in English). Polls up to $Seconds (short: the prompt opens right after the key press,
+    # and a run with no prompt must not wait long); returns a note naming the path taken, also when no prompt appeared (consent already decided). A prompt with no matching button throws with the buttons it saw.
+    param([Parameter(Mandatory)] [int] $AppProcessId, [Parameter(Mandatory)] [ValidateSet('Allow', 'Deny')] [string] $Choice, [int] $Seconds = 6, [scriptblock] $NoPromptNeeded)
+    # Only "No" is seen on a real run; the Allow names (Yes, Allow ...) are a guess no run has proven (a wrong guess throws naming the buttons seen).
+    $buttonPattern = if ($Choice -eq 'Allow') { '^(Yes|Allow|Allow once|Allow this time)$' } else { '^(No|Don.t allow|Deny|Block)$' }
+    $script:ConsentPrompt = $null
+    # $NoPromptNeeded (optional): a condition that shows the app got past the prompt (recording started); the wait ends at once when it is true, so a slow prompt is not missed and a run with no prompt does not wait the full time.
+    try { Wait-Until { $script:ConsentPrompt = Find-ConsentButtonFocused $AppProcessId; [bool]$script:ConsentPrompt -or ($NoPromptNeeded -and (& $NoPromptNeeded)) } $Seconds 'the microphone consent prompt' | Out-Null } catch { $null = $_ }
+    $prompt = $script:ConsentPrompt
+    if (-not $prompt) { return "no microphone consent prompt appeared in $Seconds s (consent already decided)" }
+    $dialog = Get-ConsentDialogAbove $prompt
+    $buttons = if ($dialog) { @(Get-ConsentDialogButtons $dialog) } else { @() }
+    $button = if ($prompt.Current.Name -match $buttonPattern) { $prompt } else { $buttons | Where-Object { $_.Current.Name -match $buttonPattern } | Select-Object -First 1 }
+    $names = @($buttons | ForEach-Object { $_.Current.Name } | Where-Object { $_ })
+    if (-not $button) { throw "FAIL the microphone consent prompt showed no $Choice button (Name matching $buttonPattern); focused: '$($prompt.Current.Name)'; buttons seen: $($names -join ' / ')" }
+    $clicked = $button.Current.Name
+    Invoke-Uia $button
+    Start-Sleep -Milliseconds 800   # fixed-wait: the prompt closes and focus returns to the app
+    return "microphone consent prompt answered $Choice through '$clicked' (buttons seen: $($names -join ' / '))"
+}
+
 function Get-VisibleNames {
     # "Type:Name" of the first $Max named, visible elements: the UI dump a failing check appends to its message.
     param([Parameter(Mandatory)] $Root, [int] $Max = 40)
