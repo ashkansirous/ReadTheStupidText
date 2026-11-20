@@ -1,10 +1,11 @@
-# Leaves grown-up mode and opens the first visible book on the shelf (one of the two picked in dino-launch) from the shelf into the reading page.
+# Locks the shelf if it is unlocked and opens the first visible book on it (one of the two picked in dino-launch) by a cover tap into the reading page.
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 Invoke-Check -ResultFile $ResultFile -Body {
     $window = { Get-AppWindows 'DinoReader.App' | Select-Object -First 1 }
     if (-not (& $window)) { throw 'Dino Reader is not running' }
-    Invoke-Uia (Wait-Until { Find-UiaByName -Root (& $window) -Name 'Ready for my child' } 15 'no "Ready for my child" button on the shelf')
+    # Slice 418/420: there is one shelf and no "Ready for my child" button. A cover tap reads the book on the locked shelf, so lock it (a tap on the lock when the chip shows) and tap the cover.
+    Enter-KidsShelf
     $tile = Wait-Until {
         $found = (& $window).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
         foreach ($e in $found) { if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e } }

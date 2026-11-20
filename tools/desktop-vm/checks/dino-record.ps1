@@ -216,12 +216,9 @@ function Reset-ToGallery {
 Invoke-Check -ResultFile $ResultFile -Body {
     Add-Result 'intro' {
         Enter-GrownUpMode
-        $tile = Wait-Until {
-            foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-                if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
-            }
-        } 15 'no visible story tile in the grown-ups corner'
-        Invoke-Uia $tile
+        # Slice 420: a cover tap reads the book; the sheet opens from the book's dots button (TileMore).
+        $dots = Wait-Until { Find-FirstTileMore (Get-DinoWindow) } 15 'no dots button (TileMore) on a book of the unlocked shelf'
+        Invoke-Uia $dots
         Wait-Until { Find-Visible 'BookSheetClose' } 10 'book sheet did not open' | Out-Null
         $names = (Get-VisibleNames (Get-DinoWindow) 40) -join ' / '
         $pill = Wait-Until { Find-UiaByName -Root (Get-DinoWindow) -Name 'Record your voice' } 5 "no Record pill on the book sheet. UI: $names"

@@ -8,7 +8,7 @@ param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 
 $HoldRingName = 'Press and hold for 3 seconds'   # Gate_HoldDescription on the HoldRing
 $TraceFileName = 'window-trace.log'
-$VkSpace = 0x20; $VkEnter = 0x0D; $VkEscape = 0x1B; $VkLeft = 0x25; $VkRight = 0x27; $VkDigit0 = 0x30
+$VkSpace = 0x20; $VkEnter = 0x0D; $VkEscape = 0x1B; $VkLeft = 0x25; $VkRight = 0x27; $VkDigit0 = 0x30; $VkTab = 0x09; $VkUp = 0x26; $VkDown = 0x28
 $HoldMs = 3600
 $ShortHoldMs = 1200
 $RepeatMs = 250   # a held key repeats about every 33 ms on a real keyboard; keybd_event sends one press, so repeat it by hand
@@ -63,7 +63,7 @@ function Send-KeyEvent {
     # A real keyboard sends the scan code; the arrow keys are extended keys, so they also carry KEYEVENTF_EXTENDEDKEY. Space, Enter, Esc and the digits go as before.
     param([byte] $Vk, [bool] $Up)
     $flags = if ($Up) { [DinoKeyScan]::KeyUp } else { 0 }
-    if ($Vk -eq $VkLeft -or $Vk -eq $VkRight) {
+    if ($Vk -eq $VkLeft -or $Vk -eq $VkRight -or $Vk -eq $VkUp -or $Vk -eq $VkDown) {
         $scan = [byte][DinoKeyScan]::MapVirtualKey($Vk, [DinoKeyScan]::VkToScan)
         [NativeKeys]::keybd_event($Vk, $scan, ($flags -bor [DinoKeyScan]::ExtendedKey), [UIntPtr]::Zero)
     } else {
@@ -169,12 +169,9 @@ function Wait-ToneAfter {
 
 function Test-SheetEsc {
     param($Package)
-    $tile = Wait-Until {
-        foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-            if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
-        }
-    } 15 'FAIL no visible story tile in the grown-ups corner'
-    Invoke-Uia $tile
+    # Slice 420: a cover tap reads the book; the sheet opens from the book's dots button (TileMore).
+    $dots = Wait-Until { Find-FirstTileMore (Get-DinoWindow) } 15 'FAIL no dots button (TileMore) on a book of the unlocked shelf'
+    Invoke-Uia $dots
     Wait-VisibleId 'BookSheetClose' 10 'FAIL the book options sheet did not open from a tile in the grown-ups corner' | Out-Null
     Focus-DinoWindow
     # "Read now" has the focus when the sheet opens: Enter reads the book (a focused control must be usable), Esc comes back to the corner.
@@ -185,12 +182,8 @@ function Test-SheetEsc {
     # Slice 418 decision 6: "Read now" opens the book without locking (GalleryPage.LeaveAndReadAsync), so Esc returns to the same shelf; the gate is passed again only when the 30 seconds ran out meanwhile.
     Wait-VisibleId 'GalleryLock' 10 'FAIL Esc on the reading page did not come back to the shelf' | Out-Null
     Ensure-Unlocked $Package
-    $tile = Wait-Until {
-        foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-            if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
-        }
-    } 15 'FAIL no visible story tile after coming back'
-    Invoke-Uia $tile
+    $dots = Wait-Until { Find-FirstTileMore (Get-DinoWindow) } 15 'FAIL no dots button (TileMore) on a book after coming back'
+    Invoke-Uia $dots   # a tap on the cover would read the book again (Slice 418 decision 6)
     Wait-VisibleId 'BookSheetClose' 10 'FAIL the book options sheet did not open the second time' | Out-Null
     Focus-DinoWindow
     Press-Key $VkEscape
@@ -248,6 +241,39 @@ function Test-CornerKeys {
     Wait-Until { Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?' } 10 'FAIL Esc on the Books tab did not ask to close the app' | Out-Null
     Press-Key $VkEscape
     Wait-Until { -not (Find-UiaByName (Get-DinoWindow) 'Close Dino: Kids Books & Stories?') } 10 'FAIL Esc on the close question did not keep the shelf' | Out-Null
+}
+
+function Get-FocusedKey {
+    $f = $script:AutomationElement::FocusedElement
+    if (-not $f) { return '' }
+    $r = $f.Current.BoundingRectangle
+    return "$($f.Current.ControlType.ProgrammaticName)|$($f.Current.Name)|$($f.Current.AutomationId)|at $([int]$r.X),$([int]$r.Y)"   # the place too: two rows with one name must not read as one focus
+}
+
+function Test-SettingsArrows {
+    # Slice 420 item 6: on the Settings tab the Down and Up arrows move the focus from row to row (DinoKeyMap FocusRowDown/FocusRowUp, GalleryPage.Desktop.cs MoveSettingsFocus). Ends on Books again (Ctrl+1).
+    param($Package)
+    Ensure-Unlocked $Package
+    Focus-DinoWindow
+    Press-Ctrl 0x33
+    Wait-VisibleId 'SettingsTitle' 10 'FAIL Ctrl+3 did not show the Settings list' | Out-Null
+    Focus-DinoWindow
+    $first = ''
+    foreach ($i in 1..12) {   # the first Tabs land on the rail before a Settings row
+        Press-Key $VkTab
+        $first = Get-FocusedKey
+        if ($first -match 'Button\|(Language|Story languages|Reading speed|Animal sounds)') { break }
+    }
+    if ($first -notmatch 'Button\|(Language|Story languages|Reading speed|Animal sounds)') { throw "FAIL Tab never reached a Settings row (focus '$first')" }
+    Press-Key $VkDown
+    $second = Get-FocusedKey
+    if ($second -eq $first) { throw "FAIL the Down arrow did not move the focus between Settings rows (still '$first')" }
+    Press-Key $VkUp
+    $third = Get-FocusedKey
+    if ($third -ne $first) { throw "FAIL the Up arrow did not return the focus to the first Settings row (before Down '$first', after Down '$second', after Up '$third')" }
+    Focus-DinoWindow
+    Press-Ctrl 0x31
+    Wait-VisibleId 'StoryTile' 10 'FAIL Ctrl+1 did not return to Books after the Settings arrows' | Out-Null
 }
 
 function Test-EscOnShelf {
@@ -314,21 +340,37 @@ function Test-ReadingKeys {
     return $title
 }
 
+function Invoke-Stage {
+    # Slice 420 item 5: one named stage; the result line lists every stage that ran, and a failure names the stage, so a run shows that Ctrl+L and Ctrl+1/2/3 ran (not only one PASS line).
+    param([string] $Name, [scriptblock] $Body)
+    try { & $Body } catch {
+        $message = $_.Exception.Message
+        $where = "in stage '$Name' (passed before it: $($script:StagesPassed -join '; '))"
+        if ($message -like 'CHECK ERROR*') { throw "$message [$where]" }   # a harness fault keeps its marker first, so it is never triaged as an app failure
+        throw "FAIL ${where}: $message"
+    }
+    $script:StagesPassed += $Name
+}
+
 Invoke-Check -ResultFile $ResultFile -Body {
     $pkg = Get-InstalledPackage $PackageName
+    $script:StagesPassed = @()
     try {
         $inkSeen = Count-Trace $pkg 'title bar tone Ink'
-        Test-GateByKeyboard $pkg
-        Wait-ToneAfter $pkg 'Ink' $inkSeen 'FAIL the title bar never took the ink tone in the grown-ups corner'
-        Test-SheetEsc $pkg
-        Test-EscFromGrownUpPage $pkg
-        Test-CornerKeys $pkg
-        Test-EscOnShelf
-        Test-CtrlL $pkg
+        Invoke-Stage 'gate-by-keyboard' { Test-GateByKeyboard $pkg }
+        Invoke-Stage 'ink-title-bar' { Wait-ToneAfter $pkg 'Ink' $inkSeen 'FAIL the title bar never took the ink tone in the grown-ups corner' }
+        Invoke-Stage 'sheet-esc' { Test-SheetEsc $pkg }
+        Invoke-Stage 'esc-from-grown-up-page' { Test-EscFromGrownUpPage $pkg }
+        Invoke-Stage 'Ctrl+1/2/3 tabs and Esc on Books' { Test-CornerKeys $pkg }
+        Invoke-Stage 'Settings Up/Down arrows move the focus between rows' { Test-SettingsArrows $pkg }
+        Invoke-Stage 'Esc on the shelf asks to close' { Test-EscOnShelf }
+        Invoke-Stage 'Ctrl+L lock and unlock' { Test-CtrlL $pkg }
         $creamSeen = Count-Trace $pkg 'title bar tone Cream'
-        $title = Test-ReadingKeys $pkg
-        Wait-ToneAfter $pkg 'Cream' $creamSeen 'FAIL the title bar never went back to cream on the kids'' pages'
-        "gate passed with Space held and the sum typed; Esc closed the sheet; Space, Right, Left and Esc worked on the reading page (window title '$title'; trace line after the press: gate Space $script:GateSpaceMs ms, reading page $($script:KeyTimings -join ', ')); title bar went ink in the corner and back to cream"
+        $script:ReadingTitle = $null
+        Invoke-Stage 'reading-page keys' { $script:ReadingTitle = Test-ReadingKeys $pkg }
+        $title = $script:ReadingTitle
+        Invoke-Stage 'cream title bar' { Wait-ToneAfter $pkg 'Cream' $creamSeen 'FAIL the title bar never went back to cream on the kids'' pages' }
+        "stages passed: $($script:StagesPassed -join '; '). gate passed with Space held and the sum typed; Esc closed the sheet; Space, Right, Left and Esc worked on the reading page (window title '$title'; trace line after the press: gate Space $script:GateSpaceMs ms, reading page $($script:KeyTimings -join ', ')); title bar went ink in the corner and back to cream"
     } catch {
         $tail = (Get-TraceLines $pkg | Select-Object -Last 25) -join ' | '
         throw "$($_.Exception.Message) -- window-trace.log tail: $tail"

@@ -76,7 +76,7 @@
                         </Border.StrokeShape>
                         <local:IconView Kind="Lock" Color="#FFC24D" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" VerticalOptions="Center" />
                     </Border>
-                    <local:TileOverlay IsVisible="{Binding ShowMore}" OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
+                    <local:TileOverlay IsVisible="{Binding ShowMore}" OpenRequested="OnOpenRequested" ReadRequested="OnReadRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>

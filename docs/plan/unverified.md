@@ -77,8 +77,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 420: Dino Windows checks after one shelf ([slice](slices/420-dino-windows-checks-after-one-shelf.md))
+- [session] `needs-file/store-shot-phone` and `needs-file/store-shot-tablet` Maestro flows (tap on a book's dots by title) were not run.
+- [cloud] iOS: a cover tap reads the book on the unlocked shelf.
+
 ### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
-- [session] Windows VM: `dino-open-book`, `dino-page-turn`, `dino-desktop-polish` (with the 270-wide rail) and `dino-reorder` failed on 2026-11-20, and dino-keyboard's Ctrl+L and Ctrl+1/2/3 stages are not logged by name; fixed and rerun by Slice 420 (`slices/420-dino-windows-checks-after-one-shelf.md`).
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
 - [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.
 

@@ -207,21 +207,7 @@ public partial class GalleryPage
 		}
 
 		WindowTrace.Write("Dino shelf: Enter or Space opened a book");
-		_ = ObserveAsync(OpenFromKeyboardAsync(tile));
-	}
-
-	// The same open path a tap takes; the flag tells the sheet it came from the keyboard, so closing it returns the keyboard to the book (a mouse open never does).
-	private async Task OpenFromKeyboardAsync(StoryTile tile)
-	{
-		_openingFromKeyboard = true;
-		try
-		{
-			await OpenTileAsync(tile);
-		}
-		finally
-		{
-			_openingFromKeyboard = false;
-		}
+		_ = ObserveAsync(OpenTileAsync(tile)); // the same path a tap takes: it reads the book (Slice 418 decision 6); only the context key opens the sheet and so returns the keyboard to the book
 	}
 
 	// A book takes the keyboard (Tab or an arrow): the VM check waits for this line.
@@ -236,13 +222,77 @@ public partial class GalleryPage
 	private void OnListRightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
 	{
 		bool pointerDevice = e.PointerDeviceType is Microsoft.UI.Input.PointerDeviceType.Mouse or Microsoft.UI.Input.PointerDeviceType.Pen; // a touch long-press also raises RightTapped, and the tap path already handles touch
-		if (!pointerDevice || !_mode.IsGrownUp || _busy.IsBusy || !CanActOnShelf() || BookAt(sender, e.OriginalSource) is not { } tile)
+		if (!pointerDevice || !_mode.IsGrownUp || _busy.IsBusy || !CanActOnShelf() || BookAt(sender, e.OriginalSource) is not { IsLapsed: false } tile)
 		{
-			return; // the kids' shelf has no sheet and never asks for the gate here; a second click while the first is opening does nothing
+			return; // the locked shelf has no sheet and never asks for the gate here; a lapsed (greyed) book has no dots either (decisions 8 and 10); a second click while the first is opening does nothing
 		}
 
 		WindowTrace.Write("Dino shelf: right-click opened the book sheet");
 		_ = ObserveAsync(RunGrownUpAsync(() => OpenBookSheetAsync(tile.Story))); // the same call the book's options button makes
+	}
+
+	// Slice 420: before Slice 418 Enter on a book in the corner opened its sheet, the keyboard's only way to it. Enter now reads the book (a cover tap reads, decision 6), so the keyboard gets the
+	// standard context-menu keys (Menu key, Shift+F10) for the sheet. They are mapped in DinoKeyboard.cs (DinoKey.ContextMenu), resolved by DinoKeyMap (OpenBookMenu) and arrive here through IDinoKeyTarget.Handle.
+	// A lapsed (greyed) book has no dots, so it has no sheet by key either (decisions 8 and 10).
+	partial void OpenFocusedBookMenu(ref bool opened)
+	{
+		if (!_mode.IsGrownUp || _busy.IsBusy || !CanActOnShelf() || StoryList.Handler?.PlatformView is not ListViewBase list)
+		{
+			return;
+		}
+
+		object? focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(list.XamlRoot);
+		if (focused is not SelectorItem || BookAt(list, focused) is not { IsLapsed: false } tile)
+		{
+			return; // only a book with the keyboard on it; a focused Settings row or header button keeps its own keys
+		}
+
+		opened = true;
+		WindowTrace.Write("Dino shelf: context key opened the book sheet");
+		_ = ObserveAsync(OpenSheetFromKeyboardAsync(tile));
+	}
+
+	// Slice 420: Down and Up on the Settings tab move the focus one row through the page's own key route (the VM run saw "Down not used" and the focus stayed on the first row). Handled here, so the
+	// native navigation does not move it a second time; with no row focused or no row to go to it returns false and the arrow keeps its native behaviour.
+	partial void MoveSettingsFocus(bool down, ref bool moved)
+	{
+		if (OverlayOpen || Handler?.PlatformView is not UIElement root || root.XamlRoot is not { } xamlRoot || Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(xamlRoot) is not Control focused
+			|| focused is Microsoft.UI.Xaml.Controls.Primitives.RangeBase or Microsoft.UI.Xaml.Controls.Primitives.Selector or TextBox or PasswordBox) // a slider, a list or a text field inside a Settings sub-page keeps its own arrows
+		{
+			return;
+		}
+
+		moved = TryMoveSettingsFocus(down, xamlRoot);
+		WindowTrace.Write($"Dino settings: arrow {(down ? "Down" : "Up")} moved the focus: {moved}");
+	}
+
+	// A WinUI Desktop app must pass FindNextElementOptions with a SearchRoot: the parameterless overload throws a COMException (the VM crash of Slice 420). The search stays inside the page's own content.
+	private static bool TryMoveSettingsFocus(bool down, XamlRoot xamlRoot)
+	{
+		try
+		{
+			var options = new Microsoft.UI.Xaml.Input.FindNextElementOptions { SearchRoot = xamlRoot.Content };
+			return Microsoft.UI.Xaml.Input.FocusManager.TryMoveFocus(down ? Microsoft.UI.Xaml.Input.FocusNavigationDirection.Down : Microsoft.UI.Xaml.Input.FocusNavigationDirection.Up, options);
+		}
+		catch (Exception)
+		{
+			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Input, Sirous.Reading.Application.Usage.FallbackReason.FocusMoveFailed); // Slice 420: the arrow key stays unhandled, so it keeps its native behaviour
+			return false;
+		}
+	}
+
+	// The same call the right-click and the options button make; the flag makes closing the sheet return the keyboard to the book (RememberTileFocus).
+	private async Task OpenSheetFromKeyboardAsync(StoryTile tile)
+	{
+		_openingFromKeyboard = true;
+		try
+		{
+			await RunGrownUpAsync(() => OpenBookSheetAsync(tile.Story));
+		}
+		finally
+		{
+			_openingFromKeyboard = false;
+		}
 	}
 
 	private bool CanActOnShelf() => !_reorder.IsVisible && !OverlayOpen;

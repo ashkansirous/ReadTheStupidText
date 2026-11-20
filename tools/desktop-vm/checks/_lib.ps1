@@ -215,6 +215,14 @@ function Find-UiaVisibleById {
     return $null
 }
 
+function Find-FirstTileMore {
+    # Slice 420: the dots button (AutomationId TileMore) of the first visible book, in reading order. A tap on a cover reads the book (Slice 418 decision 6); a book's sheet opens from this button, shown only while the shelf is unlocked.
+    param([Parameter(Mandatory)] $Root)
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'TileMore')
+    $dots = foreach ($e in $Root.FindAll($script:TreeScope::Descendants, $cond)) { if (-not $e.Current.BoundingRectangle.IsEmpty) { $e } }
+    return @($dots | Sort-Object { [int]($_.Current.BoundingRectangle.Y / 20) }, { $_.Current.BoundingRectangle.X })[0]
+}
+
 function Test-LockedShelfShown {
     # Slice 418: there is one shelf. The lock (AutomationId GalleryLock) is on it always; the countdown chip (LockChip) shows only while it is unlocked. Locked means the lock without the chip.
     param([Parameter(Mandatory)] $Root)
