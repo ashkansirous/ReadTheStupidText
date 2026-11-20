@@ -1,7 +1,7 @@
 # Slice 426 — Dino: LinkedIn film B, "One bedtime, three languages" (what Dino is, why, what it does)
 **Product:** Dino
 
-*Planned 2026-11-20. First of three LinkedIn films (426 B, 427 C, 428 A), built and shipped in that order; each ships before the next is built.*
+*In progress 2026-11-20 (feat/s426). Planned 2026-11-20. First of three LinkedIn films (426 B, 427 C, 428 A), built and shipped in that order; each ships before the next is built.*
 
 **Touches:** `tools/dino/promo/linkedin/README.md` (new), `tools/dino/promo/linkedin/b-bedtime/` (new), `.gitignore`, this slice file.
 
