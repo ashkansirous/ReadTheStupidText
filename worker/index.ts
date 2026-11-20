@@ -29,6 +29,7 @@ import type { PaidGate, StoreCallLimit } from "./entitlements/gate";
 import { createSubscriptionSource } from "./entitlements/subscription";
 import type { SubscriptionSource } from "./entitlements/subscription";
 import type { EntitlementEnv } from "./entitlements/types";
+import { handleBookLink, isBookLinkPath } from "./book-links";
 import { handleSonos, isSonosPath } from "./sonos";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
@@ -191,6 +192,8 @@ async function serveAsset(request: Request, env: Env & StatsEnv & NinjalogEnv, c
   const redirect = canonicalRedirect(url.hostname, url.pathname, url.search);
   if (redirect !== null) return Response.redirect(new URL(redirect, url).toString(), 302);
   const site = resolveSite(url.hostname, url.pathname);
+  // Slice 423: printed-book short links, Dino host only (the RTST host has no /book/ and falls through to the assets).
+  if (site.product === Product.DinoReader && isBookLinkPath(site.path)) return handleBookLink(site.path, env.BOOK_LINK_TARGET, url.origin);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
   if (isAlexaPath(site.path)) return serveAlexa(request, url, env, site, ctx);
