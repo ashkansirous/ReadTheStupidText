@@ -1,7 +1,7 @@
 ### Slice 419 — Dino: every usage event also goes to Ninjalog, with a funnel and a "where new users stop" dashboard
 **Product:** Dino
 
-*Built 2026-11-19, merged as PR #1310 (21f4925a) and PR #1311 (c0263898, queries and dashboard fixed after running them); first live event not yet seen; item 9 (alert) open.*
+*Built 2026-11-19, merged as PR #1310 (21f4925a) and PR #1311 (c0263898, queries and dashboard fixed after running them); verified live 2026-11-20: the first events arrived from 22:38 UTC 2026-11-19, Ninjalog uses the document timestamp (the batch receive time) as the event time (order within a session by `seq`/`sinceLaunch`), and the funnel and "where stopped" widgets show rows.*
 
 *Changed while building:* item 1's "sending stays off" result was overtaken by the owner's decision (Decisions, last line): Ninjalog has no terms or DPA, the owner said send anyway, so `NINJALOG_ENABLED` is "true" in both wrangler configs. Item 6 (backfill) dropped by the owner. Project retention set to 90 days (Project settings → Retention) on 2026-11-19 to match the privacy page; the project's storage limit reads 10 GiB (not changed). `workers-dev` shares the one Worker, so the same switch covers it.
 

@@ -77,11 +77,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
-### Slice 419: Dino usage events to Ninjalog ([slice](slices/419-dino-usage-events-to-ninjalog.md))
-- [session] After the merge deploys: first live event appears in `index=dino_usage` in Ninjalog with named fields and the same count as `dino_usage`.
-- [session] Which document field Ninjalog uses as event time (the timestamp is the batch receive time; order within a session by `seq`/`sinceLaunch`).
-- [session] The funnel query returns rows for real first launches and the dashboard widgets show data (both parse; no rows yet).
-
 ### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
 - [session] Windows VM: `dino-open-book`, `dino-page-turn`, `dino-desktop-polish` (with the 270-wide rail) and `dino-reorder` failed on 2026-11-20, and dino-keyboard's Ctrl+L and Ctrl+1/2/3 stages are not logged by name; fixed and rerun by Slice 420 (`slices/420-dino-windows-checks-after-one-shelf.md`).
 - [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
