@@ -14,7 +14,7 @@ internal sealed record HighResFiles(IReadOnlyList<string> Pages, string? Cover, 
 }
 
 /// <summary>
-/// Slice 375 B: the second package of a store book. <c>story-v&lt;n&gt;.hd.dino</c> has the same version, text and story.json as <c>story-v&lt;n&gt;.dino</c> but carries the
+/// Slice 375 B, Slice 422: the second package of a book (store book or starter). <c>story-v&lt;n&gt;.hd.dino</c> has the same version, text and story.json as <c>story-v&lt;n&gt;.dino</c> but carries the
 /// 1792x2400 pictures from <c>content/dino/&lt;stem&gt;/high-res/</c>, and exists only when that folder holds every page, the cover and the back cover the book has
 /// (a book with only a <c>high-res/back-cover.jpg</c> ships the standard pack alone). A Git LFS pointer in place of a picture (the folder was never pulled) counts as missing, so a
 /// checkout without the objects builds the standard pack and never a broken high-res one.
@@ -80,13 +80,13 @@ internal static class HighResPack
 
     /// <summary>The pointers of a book's high-res set that carry no oid line, as problems naming the book and the file.</summary>
     public static IEnumerable<string> BrokenPointerProblems(BookFolder book) =>
-        book.Info.Kind == BookKind.Store && Find(book) is { } files
+        Find(book) is { } files
             ? files.All.Where(f => IsLfsPointer(f) && TryOid(f) is null).Select(f => $"{book.Stem}/{Directory}/{Path.GetFileName(f)} is a Git LFS pointer with no oid line (damaged; restore it from git)")
             : [];
 
     /// <summary>The problem when a book's high-res set is complete in git but not pulled (a pointer where a picture must be packed); null otherwise. Publishing must fail on it, never ship standard only.</summary>
     public static string? UnpulledProblem(BookFolder book) =>
-        book.Info.Kind == BookKind.Store && Find(book) is { HasPointers: true }
+        Find(book) is { HasPointers: true }
             ? $"{book.Stem} has a complete high-res/ folder but its pictures are Git LFS pointers (run: git lfs pull --include \"content/dino/{book.Stem}/high-res/**\" --exclude \"\"); not built, so no book is published without its high-res pack"
             : null;
 
@@ -133,9 +133,14 @@ internal static class HighResPack
     /// </summary>
     public static async Task<long> WriteAsync(Story story, FileStoryLibrary library, HighResFiles files, string folder, int version)
     {
+        if (files.Pages.Count != story.Pages.Count)
+        {
+            throw new InvalidOperationException($"{story.Title}: high-res page count differs ({files.Pages.Count} high-res pictures, {story.Pages.Count} story pages)");
+        }
+
         for (int i = 0; i < files.Pages.Count; i++)
         {
-            Overwrite(library, story, StarterBuilder.PictureName(i), files.Pages[i]);
+            Overwrite(library, story, PageFileName(story, i), files.Pages[i]); // the file the story uses: page-N.jpg for a story.md book, the lines.json name (N.jpg) for Good Enough
         }
 
         if (files.Cover is not null && story.CoverFile is { } coverName)
@@ -161,7 +166,52 @@ internal static class HighResPack
             throw new InvalidOperationException($"{story.Title}: the high-res pack does not match the standard pack ({problem})");
         }
 
+        if (PictureBytesProblem(story, files, standard, path) is { } picture)
+        {
+            File.Delete(path);
+            throw new InvalidOperationException($"{story.Title}: {picture}");
+        }
+
         return new FileInfo(path).Length;
+    }
+
+    private static string PageFileName(Story story, int index) => story.Pages[index].ImageFile ?? StarterBuilder.PictureName(index);
+
+    /// <summary>Null when every page, cover and back-cover entry of the high-res pack is byte-identical to its <c>high-res/</c> file and differs from the standard pack's entry; else the first picture that is not.</summary>
+    public static string? PictureBytesProblem(Story story, HighResFiles files, string standardPath, string hdPath)
+    {
+        var expected = new List<(string Entry, string Source)>();
+        for (int i = 0; i < files.Pages.Count; i++)
+        {
+            expected.Add((PageFileName(story, i), files.Pages[i]));
+        }
+
+        if (files.Cover is not null && story.CoverFile is { } coverName)
+        {
+            expected.Add((coverName, files.Cover));
+        }
+
+        if (files.BackCover is not null && story.BackCover?.PictureFile is { } backName)
+        {
+            expected.Add((backName, files.BackCover));
+        }
+
+        using ZipArchive standard = ZipFile.OpenRead(standardPath);
+        using ZipArchive hd = ZipFile.OpenRead(hdPath);
+        foreach ((string entry, string source) in expected)
+        {
+            if (hd.GetEntry(entry) is null || !BytesOf(hd, entry).SequenceEqual(File.ReadAllBytes(source)))
+            {
+                return $"the high-res pack's {entry} is not the bytes of {Directory}/{Path.GetFileName(source)}";
+            }
+
+            if (standard.GetEntry(entry) is not null && BytesOf(standard, entry).SequenceEqual(BytesOf(hd, entry)))
+            {
+                return $"the high-res pack's {entry} has the same bytes as the standard pack's (not a print-size picture)";
+            }
+        }
+
+        return null;
     }
 
     private static void Overwrite(FileStoryLibrary library, Story story, string name, string source) =>

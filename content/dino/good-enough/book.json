@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "61bb25b8f132413c82a4208827c7563b",
   "title": "Good Enough",
-  "version": 13,
+  "version": 14,
   "ageMin": 6,
   "ageMax": 8,
   "author": "Ashkan Sirous",
@@ -55,7 +55,7 @@
   "animals": {
     "Carrot": "Rabbit"
   },
-  "contentHash": "4a3b24bff85b8db622269a053bec2831f9475484253fc165a25464782c76ee82",
+  "contentHash": "a43280f203411de5758ce976f2d764b0d216469225aaeedf6d8669d84e8d76db",
   "creditsByLanguage": {
     "ar": "كتاب مصوّر من Dino: Kids Books & Stories",
     "da": "En billedbog fra Dino: Kids Books & Stories",

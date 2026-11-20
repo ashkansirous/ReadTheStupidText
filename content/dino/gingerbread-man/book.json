@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "bee62232085d4c1ab50cdf574530f473",
   "title": "The Gingerbread Man",
-  "version": 14,
+  "version": 15,
   "ageMin": 3,
   "ageMax": 5,
   "author": "Traditional",
@@ -80,7 +80,7 @@
     "Grandpa",
     "Granny"
   ],
-  "contentHash": "032edfedecdb1962906a8d131b93e302039e3f9bd32dfeec3707a652b88a0683",
+  "contentHash": "544c776d7a9e62979c7da42483615f13205b0fb0299b51749646133af02943a9",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
