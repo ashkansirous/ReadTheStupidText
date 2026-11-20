@@ -28,3 +28,7 @@ It opens on the first idea in the real early app: the scan screen and the built-
 
 - `npx hyperframes check --json` is clean. The "before" screens are real captures of a real early build.
 - The reasons given for removing the feature trace to the slice files, the git history or the user's words.
+
+## From film B (Slice 426)
+
+Reuse `tools/dino/promo/linkedin/b-bedtime/` structure; bundle a CJK font with its OFL text in `assets/fonts/` if Chinese or Japanese is shown (film B used the PC-installed "Noto Sans JP"). (Slice 426: docs/plan/slices/426-dino-linkedin-film-b-bedtime.md)

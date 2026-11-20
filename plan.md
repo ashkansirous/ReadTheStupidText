@@ -47,7 +47,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 423 | Dino: short links `/book/<book-id>` that printed books point at (for print-the-damn-book's KDP books) | verified (live 2026-11-20) | #1321 | | [423-dino-book-short-links.md](docs/plan/slices/423-dino-book-short-links.md) |
 | 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings): reproduce, read Play, and put the exit reason, session, last page and a current log tail in every unclean-exit report | planned | | | [424-dino-android-1136-unclean-exit.md](docs/plan/slices/424-dino-android-1136-unclean-exit.md) |
 | 425 | Dino: the "story unreadable" fallback says which part of the app sent it, why, and which store book (once per book per launch) | planned | | | [425-dino-story-unreadable-says-where.md](docs/plan/slices/425-dino-story-unreadable-says-where.md) |
-| 426 | Dino: LinkedIn film B, "One bedtime, three languages" (what Dino is, why, what it does), HyperFrames, plus post text | planned | | | [426-dino-linkedin-film-b-bedtime.md](docs/plan/slices/426-dino-linkedin-film-b-bedtime.md) |
 | 427 | Dino: LinkedIn film C, "Five weeks, fast-forward" (how it was built), after 426 | planned | | | [427-dino-linkedin-film-c-five-weeks.md](docs/plan/slices/427-dino-linkedin-film-c-five-weeks.md) |
 | 428 | Dino: LinkedIn film A, "The feature I deleted", after 427 | planned | | | [428-dino-linkedin-film-a-deleted-feature.md](docs/plan/slices/428-dino-linkedin-film-a-deleted-feature.md) |
 
