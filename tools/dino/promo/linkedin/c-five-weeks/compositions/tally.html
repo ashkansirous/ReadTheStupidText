@@ -1,0 +1,25 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    .ty { position: absolute; left: 108px; width: 864px; font-family: "Fredoka", sans-serif; color: #2b2540; }
+    #ty-a { top: 400px; font-weight: 600; font-size: 80px; line-height: 1; }
+    #ty-b { top: 490px; font-weight: 600; font-size: 260px; line-height: 1; letter-spacing: -0.02em; color: #5b57e8; }
+    #ty-c { top: 790px; font-weight: 600; font-size: 72px; line-height: 1.05; }
+  </style>
+  <div id="root" data-composition-id="tally" data-width="1080" data-height="1350">
+    <div class="ty" id="ty-a">Over</div>
+    <div class="ty" id="ty-b">150</div>
+    <div class="ty" id="ty-c">releases in 5 weeks</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#ty-a", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.1);
+      tl.fromTo("#ty-b", { opacity: 0, scale: 0.8, transformOrigin: "left center" }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.6)" }, 0.25);
+      tl.fromTo("#ty-c", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.7);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 3.25);
+      window.__timelines["tally"] = tl;
+    })();
+  </script>
+</template>
