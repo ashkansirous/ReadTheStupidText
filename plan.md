@@ -44,7 +44,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
 | 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | built #1308, released as 1.136.0 (Play and App Store in review 2026-11-20); Windows VM checks partly verified, rest in 420 | #1308, #1313 | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
 | 420 | Dino: the Windows VM checks Slice 418 left failing (open book, page turn, desktop polish with the 270 rail, reorder) and Ctrl+L stages logged by name | planned | | | [420-dino-windows-checks-after-one-shelf.md](docs/plan/slices/420-dino-windows-checks-after-one-shelf.md) |
-| 423 | Dino: short links `/book/<book-id>` that printed books point at (for print-the-damn-book's KDP books) | planned | | | [423-dino-book-short-links.md](docs/plan/slices/423-dino-book-short-links.md) |
+| 423 | Dino: short links `/book/<book-id>` that printed books point at (for print-the-damn-book's KDP books) | verified (live 2026-11-20) | #1321 | | [423-dino-book-short-links.md](docs/plan/slices/423-dino-book-short-links.md) |
 
 ### Shared
 
@@ -105,7 +105,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 529 checks across 190 slices (Read The Stupid Text 29, Dino Reader 327, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 530 checks across 191 slices (Read The Stupid Text 29, Dino Reader 328, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Dino 1.136.3 waits for the 1.136.0 store reviews to finish** (user, 2026-11-20: "we should wait for the reviews to be done on google and ios, before we release a new version unless I explicitly say so"; Windows is not held: "for windows, we should always release", so the release run's Microsoft Store submission of 1.136.3 stands). 1.136.0 (Slice 418) is in Google Play and App Store review; 1.136.3 (Slice 420: a cover tap on the unlocked shelf reads again, Windows keyboard fixes) is on the Play internal track and TestFlight only. Once both reviews are done: promote 1.136.3 to Play production and submit it for App Store review. Check by hand: [Play publishing overview](https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/publishing), [App Store Connect](https://appstoreconnect.apple.com/apps/6825053435/distribution).
 
 **Needs you (checked 2026-11-19). Nothing else in this file waits on you.**
