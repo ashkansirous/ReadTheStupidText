@@ -1,7 +1,7 @@
 # Slice 427 — Dino: LinkedIn film C, "Five weeks, fast-forward" (how it was built)
 **Product:** Dino
 
-*Planned 2026-11-20. Second of three LinkedIn films (426 B, 427 C, 428 A); built after 426 ships.*
+*In progress 2026-11-20 (feat/s427). Planned 2026-11-20. Second of three LinkedIn films (426 B, 427 C, 428 A); built after 426 ships.*
 
 **Touches:** `tools/dino/promo/linkedin/c-five-weeks/` (new), this slice file.
 
