@@ -1,0 +1,38 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    .w-head { position: absolute; left: 108px; top: 135px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 96px; line-height: 1; letter-spacing: -0.01em; color: #2b2540; }
+    .w-head span { color: #5b57e8; }
+    .w-meta { position: absolute; left: 108px; top: 246px; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 32px; color: #5a5470; }
+    .w-cap { position: absolute; left: 108px; top: 300px; width: 864px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 46px; line-height: 1.12; color: #2b2540; }
+    .phone { position: absolute; top: 440px; width: 266px; height: 590px; border-radius: 34px; overflow: hidden; border: 8px solid #2b2540; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); background: #fffdf8; }
+    .phone img { display: block; width: 250px; height: 574px; object-fit: cover; object-position: top; }
+    .p-lbl { position: absolute; top: 1048px; width: 266px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 30px; color: #5a5470; }
+    #p1, #l1 { left: 108px; } #p2, #l2 { left: 407px; } #p3, #l3 { left: 706px; }
+  </style>
+  <div id="root" data-composition-id="week4" data-width="1080" data-height="1350">
+    <div class="w-head" id="w4-head">Week <span>4</span></div>
+    <div class="w-meta" id="w4-meta">16 Nov &middot; release dino-v1.131.3</div>
+    <div class="w-cap" id="w4-cap">Onboarding that shows what Dino can do</div>
+    <div class="phone" id="p1"><img src="assets/images/w4-picker.jpg" alt="Week 4 book picker, step 3 of 6" /></div>
+    <div class="phone" id="p2"><img src="assets/images/w4-tour.jpg" alt="Week 4 grown-ups corner tour" /></div>
+    <div class="phone" id="p3"><img src="assets/images/w4-shelf.jpg" alt="Week 4 shelf" /></div>
+    <div class="p-lbl" id="l1">Pick books</div>
+    <div class="p-lbl" id="l2">Quick tour</div>
+    <div class="p-lbl" id="l3">Shelf</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#w4-head", { opacity: 0, y: 40, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, 0.1);
+      tl.fromTo("#w4-meta", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.3);
+      tl.fromTo("#w4-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 0.4);
+      tl.fromTo(["#p1", "#p2", "#p3"], { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out", stagger: 0.12 }, 0.5);
+      tl.fromTo(".p-lbl", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.9);
+      tl.to(".phone", { y: -18, duration: 4.2, ease: "sine.inOut" }, 1.4);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 5.75);
+      window.__timelines["week4"] = tl;
+    })();
+  </script>
+</template>

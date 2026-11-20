@@ -1,0 +1,39 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: transparent; }
+    #rl-track { position: absolute; left: 134px; top: 1168px; width: 780px; height: 4px; border-radius: 2px; background: #d9d3c4; }
+    #rl-fill { position: absolute; left: 134px; top: 1168px; width: 780px; height: 4px; border-radius: 2px; background: #5b57e8; transform-origin: left center; transform: scaleX(0); }
+    .rl-dot { position: absolute; top: 1144px; width: 52px; height: 52px; border-radius: 26px; display: flex; align-items: center; justify-content: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 28px; background: #f3efe6; color: #5a5470; border: 3px solid #d9d3c4; }
+  </style>
+  <div id="root" data-composition-id="rail" data-width="1080" data-height="1350">
+    <div id="rl-track"></div>
+    <div id="rl-fill"></div>
+    <div class="rl-dot" id="rl-d1" style="left:108px">1</div>
+    <div class="rl-dot" id="rl-d2" style="left:303px">2</div>
+    <div class="rl-dot" id="rl-d3" style="left:498px">3</div>
+    <div class="rl-dot" id="rl-d4" style="left:693px">4</div>
+    <div class="rl-dot" id="rl-d5" style="left:888px">5</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // The rail's own clock starts at 4.5 s of the film: week n lands at these local times.
+      const lands = [0.1, 6.1, 12.1, 17.1, 23.1];
+      const ON = { background: "#5b57e8", color: "#fffdf8", borderColor: "#5b57e8" };
+      const DONE = { background: "#2b2540", color: "#fffdf8", borderColor: "#2b2540" };
+      tl.fromTo("#root", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+      lands.forEach(function (t, i) {
+        const id = "#rl-d" + (i + 1);
+        tl.to(id, Object.assign({ scale: 1.25, duration: 0.35, ease: "back.out(2)" }, ON), t);
+        if (i > 0) {
+          tl.to("#rl-d" + i, Object.assign({ scale: 1, duration: 0.3, ease: "power2.out" }, DONE), t);
+        }
+        tl.to("#rl-fill", { scaleX: i / 4, duration: 0.5, ease: "power2.inOut" }, t);
+      });
+      tl.to("#rl-d5", Object.assign({ scale: 1, duration: 0.3, ease: "power2.out" }, DONE), 29);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 32.25);
+      window.__timelines["rail"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,46 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    .in-t { position: absolute; left: 108px; width: 864px; font-family: "Fredoka", sans-serif; color: #2b2540; }
+    #in-a { top: 150px; font-weight: 600; font-size: 64px; line-height: 1.05; }
+    #in-b { top: 225px; font-weight: 600; font-size: 220px; line-height: 1; letter-spacing: -0.02em; }
+    #in-b span { color: #5b57e8; }
+    #in-c { top: 500px; font-weight: 600; font-size: 56px; line-height: 1.12; }
+    #in-d { top: 700px; font-weight: 500; font-size: 40px; line-height: 1.2; color: #5a5470; }
+    #in-d b { font-weight: 600; color: #5b57e8; }
+    .in-dot { position: absolute; top: 880px; width: 76px; height: 76px; border-radius: 38px; display: flex; align-items: center; justify-content: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 38px; background: #2b2540; color: #fffdf8; }
+    .in-date { position: absolute; top: 972px; width: 160px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 28px; color: #5a5470; }
+    #in-line { position: absolute; left: 146px; top: 916px; width: 788px; height: 4px; background: #5b57e8; border-radius: 2px; transform-origin: left center; }
+  </style>
+  <div id="root" data-composition-id="intro" data-width="1080" data-height="1350">
+    <div class="in-t" id="in-a">Dino, built in</div>
+    <div class="in-t" id="in-b"><span>5</span> weeks</div>
+    <div class="in-t" id="in-c">A new round with users almost every week</div>
+    <div class="in-t" id="in-d">Coding with <b>Claude</b>, testing with users</div>
+    <div id="in-line"></div>
+    <div class="in-dot" id="in-d1" style="left:108px">1</div>
+    <div class="in-dot" id="in-d2" style="left:305px">2</div>
+    <div class="in-dot" id="in-d3" style="left:502px">3</div>
+    <div class="in-dot" id="in-d4" style="left:699px">4</div>
+    <div class="in-dot" id="in-d5" style="left:896px">5</div>
+    <div class="in-date" style="left:66px">26 Oct</div>
+    <div class="in-date" style="left:263px">2 Nov</div>
+    <div class="in-date" style="left:460px">9 Nov</div>
+    <div class="in-date" style="left:657px">16 Nov</div>
+    <div class="in-date" style="left:854px">20 Nov</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Frame 0 already shows the headline (thumbnail); the rest builds on it.
+      tl.fromTo("#in-b", { scale: 0.94, transformOrigin: "left center" }, { scale: 1, duration: 0.7, ease: "expo.out" }, 0);
+      tl.fromTo("#in-c", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 0.5);
+      tl.fromTo("#in-d", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 1.3);
+      tl.fromTo("#in-line", { scaleX: 0 }, { scaleX: 1, duration: 1.6, ease: "power2.inOut" }, 1.9);
+      tl.fromTo([".in-dot", ".in-date"], { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out", stagger: { each: 0.06, from: "start" } }, 1.9);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 4.25);
+      window.__timelines["intro"] = tl;
+    })();
+  </script>
+</template>
