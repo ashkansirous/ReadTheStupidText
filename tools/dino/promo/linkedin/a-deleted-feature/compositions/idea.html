@@ -1,0 +1,49 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    #id-meta { position: absolute; left: 108px; top: 135px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 40px; color: #5b57e8; }
+    #id-cap { position: absolute; left: 108px; top: 200px; width: 864px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 50px; line-height: 1.12; letter-spacing: -0.005em; color: #2b2540; }
+    #id-cap b { color: #5b57e8; font-weight: 600; }
+    #id-phone { position: absolute; left: 352px; top: 410px; width: 376px; height: 800px; border-radius: 38px; overflow: hidden; border: 8px solid #2b2540; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); background: #fffdf8; }
+    .id-shot { position: absolute; left: 0; top: 0; width: 360px; height: 784px; object-fit: cover; object-position: top; }
+    .id-ring { position: absolute; border: 5px solid #5b57e8; border-radius: 18px; opacity: 0; }
+    #id-ring1 { left: 12px; top: 168px; width: 156px; height: 212px; }
+    #id-ring2 { left: 8px; top: 168px; width: 172px; height: 110px; }
+  </style>
+  <div id="root" data-composition-id="idea" data-width="1080" data-height="1350">
+    <div id="id-meta">Week 1, 26 Oct</div>
+    <div id="id-cap">My first idea: <b>scan your own paper book</b> and let the phone read it aloud.</div>
+    <div id="id-phone">
+      <img class="id-shot" id="id-s1" src="assets/images/b-shelf-add-a-book.jpg" alt="Dino v1.53.0: the grown-up shelf with an Add a story tile" />
+      <img class="id-shot" id="id-s2" src="assets/images/b-add-choice.jpg" alt="Dino v1.53.0: add the pages of your story, Scan pages first" />
+      <img class="id-shot" id="id-s3" src="assets/images/b-pages-step.jpg" alt="Dino v1.53.0: the pages step with one page" />
+      <img class="id-shot" id="id-s4" src="assets/images/b-own-book-reading-playing.jpg" alt="Dino v1.53.0: an own book on its reading screen" />
+      <div class="id-ring" id="id-ring1"></div>
+      <div class="id-ring" id="id-ring2"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#id-meta", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.1);
+      tl.fromTo("#id-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 0.25);
+      tl.fromTo("#id-phone", { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.5);
+      // One screen at a time: each replaces the one before with a short rise.
+      tl.set(["#id-s2", "#id-s3", "#id-s4"], { opacity: 0 }, 0);
+      function next(id, at) {
+        tl.fromTo(id, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, at);
+      }
+      next("#id-s2", 3.3);
+      next("#id-s3", 6.5);
+      next("#id-s4", 8.7);
+      tl.fromTo("#id-ring1", { opacity: 0, scale: 1.1 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 1.7);
+      tl.to("#id-ring1", { opacity: 0, duration: 0.2 }, 3.2);
+      tl.fromTo("#id-ring2", { opacity: 0, scale: 1.1 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 4.3);
+      tl.to("#id-ring2", { opacity: 0, duration: 0.2 }, 6.4);
+      tl.to("#id-phone", { y: -14, duration: 9.5, ease: "sine.inOut" }, 1.2);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 10.75);
+      window.__timelines["idea"] = tl;
+    })();
+  </script>
+</template>

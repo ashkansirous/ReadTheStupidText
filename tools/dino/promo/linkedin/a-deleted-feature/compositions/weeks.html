@@ -1,0 +1,71 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    .wk { position: absolute; inset: 0; opacity: 0; }
+    .w-head { position: absolute; left: 108px; top: 135px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 96px; line-height: 1; letter-spacing: -0.01em; color: #2b2540; }
+    .w-head span { color: #5b57e8; }
+    .w-meta { position: absolute; left: 108px; top: 246px; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 32px; color: #5a5470; }
+    .w-cap { position: absolute; left: 108px; top: 300px; width: 864px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 46px; line-height: 1.12; color: #2b2540; }
+    .phone { position: absolute; top: 440px; width: 266px; height: 590px; border-radius: 34px; overflow: hidden; border: 8px solid #2b2540; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); background: #fffdf8; }
+    .phone img { display: block; width: 250px; height: 574px; object-fit: cover; object-position: top; }
+    .win { position: absolute; left: 487px; top: 585px; width: 400px; height: 283px; border-radius: 10px; overflow: hidden; border: 2px solid #2b2540; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); background: #fffdf8; }
+    .win img { display: block; width: 400px; height: 283px; }
+    .pa { left: 267px; } .pb { left: 547px; } .pw { left: 193px; }
+  </style>
+  <div id="root" data-composition-id="weeks" data-width="1080" data-height="1350">
+    <div class="wk" id="wk1">
+      <div class="w-head">Week <span>1</span></div>
+      <div class="w-meta">26 Oct &middot; release v1.53.0</div>
+      <div class="w-cap">The first build: a voice for every character</div>
+      <div class="phone pa" id="k1a"><img src="assets/images/w1-shelf.jpg" alt="Week 1 shelf" /></div>
+      <div class="phone pb" id="k1b"><img src="assets/images/w1-reading.jpg" alt="Week 1 reading screen" /></div>
+    </div>
+    <div class="wk" id="wk2">
+      <div class="w-head">Week <span>2</span></div>
+      <div class="w-meta">2 Nov &middot; release dino-v1.96.1</div>
+      <div class="w-cap">Fixes from the first user test</div>
+      <div class="phone pw" id="k2a"><img src="assets/images/w2-onboarding.jpg" alt="Week 2 first-run screen" /></div>
+      <div class="win" id="k2b"><img src="assets/images/w2-shelf-vm.jpg" alt="Week 2 shelf in a Windows window" /></div>
+    </div>
+    <div class="wk" id="wk3">
+      <div class="w-head">Week <span>3</span></div>
+      <div class="w-meta">9 Nov &middot; release dino-v1.123.3</div>
+      <div class="w-cap">Redesign: kids shelf, grown-ups corner</div>
+      <div class="phone pa" id="k3a"><img src="assets/images/w3-shelf.jpg" alt="Week 3 kids shelf" /></div>
+      <div class="phone pb" id="k3b"><img src="assets/images/w3-corner-books.jpg" alt="Week 3 grown-ups corner" /></div>
+    </div>
+    <div class="wk" id="wk4">
+      <div class="w-head">Week <span>4</span></div>
+      <div class="w-meta">16 Nov &middot; release dino-v1.131.3</div>
+      <div class="w-cap">Onboarding that shows what Dino can do</div>
+      <div class="phone pa" id="k4a"><img src="assets/images/w4-picker.jpg" alt="Week 4 book picker" /></div>
+      <div class="phone pb" id="k4b"><img src="assets/images/w4-tour.jpg" alt="Week 4 quick tour" /></div>
+    </div>
+    <div class="wk" id="wk5">
+      <div class="w-head">Week <span>5</span></div>
+      <div class="w-meta">20 Nov &middot; release dino-v1.136.3</div>
+      <div class="w-cap">One shelf with a lock, five-step onboarding</div>
+      <div class="phone pa" id="k5a"><img src="assets/images/w5-picker.jpg" alt="Week 5 book picker" /></div>
+      <div class="phone pb" id="k5b"><img src="assets/images/w5-shelf.jpg" alt="Week 5 shelf with a lock" /></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // One quick beat per week, 2.4 s each: the group enters, drifts up 18 px, leaves to paper.
+      for (let i = 1; i <= 5; i++) {
+        const t = (i - 1) * 2.4;
+        const g = "#wk" + i;
+        tl.fromTo(g, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, t);
+        tl.fromTo(g + " .w-head", { y: 30, scale: 0.92 }, { y: 0, scale: 1, duration: 0.45, ease: "expo.out" }, t);
+        tl.fromTo(g + " .w-cap", { y: 20 }, { y: 0, duration: 0.45, ease: "expo.out" }, t + 0.08);
+        tl.fromTo(g + " .phone, " + g + " .win", { y: 90 }, { y: 0, duration: 0.5, ease: "expo.out", stagger: 0.08 }, t + 0.05);
+        tl.to(g + " .phone, " + g + " .win", { y: -14, duration: 1.7, ease: "sine.inOut" }, t + 0.55);
+        if (i < 5) tl.to(g, { opacity: 0, duration: 0.15, ease: "power2.in" }, t + 2.25);
+      }
+      tl.to("#wk5", { opacity: 0, duration: 0.2, ease: "power3.in" }, 11.8);
+      window.__timelines["weeks"] = tl;
+    })();
+  </script>
+</template>

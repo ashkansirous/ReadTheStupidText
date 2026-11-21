@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    /* The real "Your voice" screen (store screenshot from the scripted emulator run), placed as in film B. */
+    #rc-cam { position: absolute; inset: 0; }
+    /* clip-path hides the phone's status bar wherever the screen moves. */
+    #rc-screen { position: absolute; left: 119px; top: -78px; width: 842px; height: 1872px; clip-path: inset(92px 0 0 0); }
+    #rc-shot { position: absolute; left: 0; top: 0; width: 794px; height: 1768px; translate: 19.461px -34.661px; }
+    #rc-pick { position: absolute; left: 30px; top: 941px; width: 783px; height: 89px; border: 5px solid #5b57e8; border-radius: 16px; }
+    #rc-title {
+      position: absolute; left: 108px; width: 864px; top: 1082px;
+      font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 54px; line-height: 1.12; letter-spacing: -0.01em; color: #2b2540;
+    }
+    #rc-title2 { color: #5b57e8; }
+  </style>
+  <div id="root" data-composition-id="record" data-width="1080" data-height="1350">
+    <div id="rc-cam">
+      <div id="rc-screen">
+        <img id="rc-shot" src="assets/images/record-screen.png" alt="Dino's Your voice screen: pick the characters to record" />
+        <div id="rc-pick"></div>
+      </div>
+    </div>
+    <div id="rc-title">Grown-ups record their voice<br><span id="rc-title2">for any character</span></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // The screen rises into the frame; Pim's row is ringed, as a tap picks it.
+      tl.fromTo("#rc-screen", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out" }, 0);
+      tl.fromTo("#rc-title", { opacity: 0, y: 24, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 0.3);
+      tl.fromTo("#rc-pick", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 1.5);
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 3.35);
+      window.__timelines["record"] = tl;
+    })();
+  </script>
+</template>

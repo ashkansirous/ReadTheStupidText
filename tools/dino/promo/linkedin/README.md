@@ -6,8 +6,8 @@ three storylines and their order are in `b-bedtime/STORYLINES.md`.
 | Folder | Film | Slice |
 | --- | --- | --- |
 | `b-bedtime/` | B, "One bedtime, three languages": what Dino is, why it was built, what it does | 426 |
-| (next) | C, "Five weeks, fast-forward": how it was built | 427 |
-| (next) | A, "The feature I deleted" | 428 |
+| `c-five-weeks/` | C, "Five weeks, fast-forward": how it was built | 427 |
+| `a-deleted-feature/` | A, "The feature I deleted": the first idea (scanning your own book) and why it went | 428 |
 
 ## Working on a film
 

@@ -1,0 +1,55 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    .en-claim {
+      position: absolute; left: 108px; width: 864px;
+      font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 80px; line-height: 1.05; letter-spacing: -0.015em; color: #2b2540;
+    }
+    #en-c1 { top: 160px; }
+    #en-c2 { top: 250px; }
+    #en-claude { color: #5b57e8; }
+    #en-mark { position: absolute; left: 108px; top: 450px; display: flex; align-items: center; gap: 36px; }
+    #en-icon { width: 200px; height: 200px; border-radius: 46px; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); }
+    #en-name { font-family: "Fredoka", sans-serif; color: #2b2540; }
+    #en-name1 { font-weight: 600; font-size: 96px; line-height: 1; letter-spacing: -0.02em; }
+    #en-name2 { font-weight: 500; font-size: 40px; line-height: 1.2; color: #5a5470; margin-top: 8px; }
+    #en-stores { position: absolute; left: 108px; width: 864px; top: 760px; }
+    .en-store {
+      height: 104px; border-radius: 52px; margin-bottom: 26px; display: flex; align-items: center; justify-content: center;
+      font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 40px; border: 3px solid #5b57e8; color: #5b57e8; background: #f3efe6;
+    }
+    .en-store.first { background: #5b57e8; color: #ffffff; }
+  </style>
+  <div id="root" data-composition-id="end" data-width="1080" data-height="1350">
+    <div class="en-claim" id="en-c1">Built in 5 weeks</div>
+    <div class="en-claim" id="en-c2">with <span id="en-claude">Claude</span></div>
+    <div id="en-mark">
+      <img id="en-icon" src="assets/images/dino-icon.png" alt="Dino Reader app icon" />
+      <div id="en-name">
+        <div id="en-name1">Dino</div>
+        <div id="en-name2">Kids Books &amp; Stories</div>
+      </div>
+    </div>
+    <div id="en-stores">
+      <div class="en-store first" id="en-s1">Android · Google Play</div>
+      <div class="en-store" id="en-s2">iPhone and iPad · App Store</div>
+      <div class="en-store" id="en-s3">Windows · Microsoft Store</div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#en-c1", { opacity: 0, x: -60, filter: "blur(10px)" }, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.55, ease: "expo.out" }, 0.1);
+      tl.fromTo("#en-c2", { opacity: 0, x: -60, filter: "blur(10px)" }, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.55, ease: "expo.out" }, 0.55);
+      tl.fromTo("#en-claude", { color: "#2b2540" }, { color: "#5b57e8", duration: 0.3, ease: "power2.inOut" }, 1.1);
+      // The mark is carried in from below on a spring, then the name wipes in beside it.
+      tl.fromTo("#en-icon", { y: 500, rotation: -8, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.8, ease: "back.out(1.3)" }, 2.0);
+      tl.fromTo("#en-name", { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power3.out" }, 2.6);
+      tl.fromTo("#en-s1", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 3.6);
+      tl.fromTo("#en-s2", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 3.8);
+      tl.fromTo("#en-s3", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 4.0);
+      window.__timelines["end"] = tl;
+    })();
+  </script>
+</template>
