@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1350">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #f3efe6;
+        --ink: #2b2540;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1350px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      #bg {
+        position: absolute;
+        inset: 0;
+        background: var(--ground);
+      }
+      #rail {
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="50.1" data-width="1080" data-height="1350">
+      <div id="bg"></div>
+
+      <!-- Scenes, back to back on one lane -->
+      <div id="intro" data-composition-id="intro" data-composition-src="compositions/intro.html" data-start="0" data-duration="3.5" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="idea" data-composition-id="idea" data-composition-src="compositions/idea.html" data-start="3.5" data-duration="11" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="struck" data-composition-id="struck" data-composition-src="compositions/struck.html" data-start="14.5" data-duration="5" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="weeks" data-composition-id="weeks" data-composition-src="compositions/weeks.html" data-start="19.5" data-duration="12" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="page" data-composition-id="page" data-composition-src="compositions/page.html" data-start="31.5" data-duration="8.4" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="record" data-composition-id="record" data-composition-src="compositions/record.html" data-start="39.9" data-duration="3.6" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="end" data-composition-id="end" data-composition-src="compositions/end.html" data-start="43.5" data-duration="6.6" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+
+      <!-- The week rail rides over the five week beats (19.5-31.5 s) -->
+      <div id="rail" data-composition-id="rail" data-composition-src="compositions/rail.html" data-start="19.5" data-duration="12" data-track-index="2" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+
+      <!-- Voices: the app's own pre-made clips for Three Little Pigs page 13 (Puck = Pop, Achird = Pim), as in film B -->
+      <audio id="v-en-pop" class="clip" src="assets/audio/en-56-Puck.m4a" data-start="31.8" data-duration="3.01" data-track-index="3" data-volume="1" data-audio-group="voiceover"></audio>
+      <audio id="v-en-pim" class="clip" src="assets/audio/en-58-Achird.m4a" data-start="35.05" data-duration="1.0" data-track-index="3" data-volume="1" data-audio-group="voiceover"></audio>
+      <audio id="v-fa-pim" class="clip" src="assets/audio/fa-59-Achird.m4a" data-start="36.6" data-duration="1.37" data-track-index="3" data-volume="1" data-audio-group="voiceover"></audio>
+      <audio id="v-de-pim" class="clip" src="assets/audio/de-58-Achird.m4a" data-start="38.4" data-duration="1.06" data-track-index="3" data-volume="1" data-audio-group="voiceover"></audio>
+
+      <!-- Music bed: HeyGen catalog, "Astral Generated Music: 3602ebd4" (cheerful upbeat preschool pop, 43 s; free catalog via HyperFrames), as in films B and C.
+           0.45 where nobody speaks, 0.14 under the page voices (31.7-39.7 s), fade in 0.6 s, fade out over its last 3.5 s (the file ends at 43 s). -->
+      <audio id="music" class="clip" src="assets/bgm/cheerful-kids-11.m4a" data-start="0" data-duration="43" data-track-index="6" data-volume="1" data-fade-in="0.6" data-fade-out="3.5" data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:0.45},{&quot;t&quot;:31.2,&quot;v&quot;:0.45},{&quot;t&quot;:31.7,&quot;v&quot;:0.14},{&quot;t&quot;:39.7,&quot;v&quot;:0.14},{&quot;t&quot;:40.4,&quot;v&quot;:0.45},{&quot;t&quot;:43,&quot;v&quot;:0.45}]}]}"></audio>
+
+      <!-- Effects: a pop as the idea lands and as each week lands, a click on the ringed tile, a whoosh into the strike-out, the store pops as in films B and C -->
+      <audio id="sfx-idea" class="clip" src="assets/sfx/pop.mp3" data-start="3.6" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-ring" class="clip" src="assets/sfx/click-soft.mp3" data-start="7.9" data-duration="0.36" data-track-index="5" data-volume="0.4"></audio>
+      <audio id="sfx-strike" class="clip" src="assets/sfx/whoosh-short.mp3" data-start="16.0" data-duration="0.6" data-track-index="5" data-volume="0.3"></audio>
+      <audio id="sfx-w1" class="clip" src="assets/sfx/pop.mp3" data-start="19.6" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-w2" class="clip" src="assets/sfx/pop.mp3" data-start="22.0" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-w3" class="clip" src="assets/sfx/pop.mp3" data-start="24.4" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-w4" class="clip" src="assets/sfx/pop.mp3" data-start="26.8" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-w5" class="clip" src="assets/sfx/pop.mp3" data-start="29.2" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-store-1" class="clip" src="assets/sfx/pop.mp3" data-start="47.13" data-duration="0.39" data-track-index="4" data-volume="0.4"></audio>
+      <audio id="sfx-store-2" class="clip" src="assets/sfx/click-soft.mp3" data-start="47.33" data-duration="0.36" data-track-index="5" data-volume="0.45"></audio>
+      <audio id="sfx-store-3" class="clip" src="assets/sfx/pop.mp3" data-start="47.53" data-duration="0.4" data-track-index="4" data-volume="0.32"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
