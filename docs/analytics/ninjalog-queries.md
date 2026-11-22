@@ -102,6 +102,14 @@ trace_id=<session> | spantree | sort start_ns
 
 ## Dashboard widgets
 
+**Forced update (Slice 430):** https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/forced-update (template
+`docs/analytics/ninjalog-forced-update.template.json`, same script). The app itself decides it is below the remote
+config's `minVersion` and shows the "please update" page, counted as `screen=update`; the button press is `name=tap
+detail="update:update"`. Grouped by platform: sessions that saw the page, presses, both per version, launches by version
+per platform (old versions should shrink as the new one grows) and launches per version over the last 24 hours. Builds
+older than the screen counts (1.118.0, 1.123.3 seen) send no `screen`, so they show only as an old version in the launch
+charts. No id links a press to the next launch on the new version.
+
 **One dashboard per platform (Slice 429).** Ninjalog dashboards have no filters (the format has widgets and a time range
 only, read 2026-11-22), so the platform filter is the dashboard you open; in a platform dashboard the first-launch, funnel, launch and device
 charts are split by app version (listening seconds, where-stopped, fallbacks and the span tables are not):
