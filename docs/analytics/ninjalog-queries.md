@@ -102,7 +102,24 @@ trace_id=<session> | spantree | sort start_ns
 
 ## Dashboard widgets
 
-The "New users" dashboard (`docs/analytics/ninjalog-dashboard.json`, https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users) uses:
+**One dashboard per platform (Slice 429).** Ninjalog dashboards have no filters (the format has widgets and a time range
+only, read 2026-11-22), so the platform filter is the dashboard you open; in a platform dashboard the first-launch, funnel, launch and device
+charts are split by app version (listening seconds, where-stopped, fallbacks and the span tables are not):
+
+- All platforms (split by platform): https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users
+- Android: https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users-android
+- iOS: https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users-ios
+- Windows: https://app.ninjalog.dev/t/ashkan-sirous/dino-book-reader/-/d/new-users-windows
+
+A table row's key links to Search narrowed to it (one version, say). Edit only
+`docs/analytics/ninjalog-dashboard.template.json` (tokens `{{app}}`, `{{any}}`, `{{split}}`) and run
+`node tools/dino/ninjalog-dashboards.mjs --upload` with `NINJALOG_MCP_TOKEN` set (from
+`D:\secrets\dinoreader\secrets.env`): it rewrites `docs/analytics/ninjalog-dashboards/`, runs every widget query and
+saves nothing if one fails, then replaces the four dashboards by slug; `tools/dino/ninjalog-dashboards.test.mjs` fails when they are out of date. The device and app
+widgets count `app_opened` events (launches, not people: there is no id) by `version`, `os`, `form`, `arch`, `ram`,
+`cores`, `uiLang` and `country`.
+
+The "New users" dashboards use:
 
 ```
 index=dino_usage installAge=first name=app_opened platform!=sonos platform!=alexa | timechart count by platform
