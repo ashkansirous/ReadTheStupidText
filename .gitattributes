@@ -15,3 +15,6 @@ docs/plan/slices/177-dino-cold-start-synthesis.md -text
 docs/plan/slices/201-norwegian-pack-crash.md -text
 # Slice 365: the site files are LF in the index and in every checkout, so worker/catalogue.test.mjs and check-site-eol.mjs (which read the files on disk) pass on Windows regardless of core.autocrlf.
 site/** text=auto eol=lf
+# Slice 429: the generated Ninjalog dashboards are LF everywhere, so `ninjalog-dashboards.mjs --check` matches on Windows.
+docs/analytics/ninjalog-dashboard.template.json text eol=lf
+docs/analytics/ninjalog-dashboards/*.json text eol=lf

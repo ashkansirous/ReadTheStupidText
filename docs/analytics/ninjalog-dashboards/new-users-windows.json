@@ -1,0 +1,246 @@
+{
+  "slug": "new-users-windows",
+  "name": "New users (Windows)",
+  "defaultRange": "7d",
+  "widgets": [
+    {
+      "id": "first-launches",
+      "title": "First launches, by version",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "query": "index=dino_usage installAge=first name=app_opened platform=windows | timechart count by version",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom"
+      }
+    },
+    {
+      "id": "listening-seconds",
+      "title": "Seconds listened (app)",
+      "x": 6,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "query": "index=dino_usage name IN (read_paused, read_stopped) seconds>=0 platform=windows | timechart sum(seconds) as seconds",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "funnel",
+      "title": "First-launch funnel (sessions), by version",
+      "x": 0,
+      "y": 4,
+      "w": 12,
+      "h": 4,
+      "query": "index=dino_usage installAge=first platform=windows | stats count(eval(name=\"intro_ended\")) as onb, count(eval(name=\"book_opened\")) as bo, count(eval(name=\"read_started\")) as rs, count(eval(name=\"book_listened\")) as l30 by session, version | eval onboarded=if(onb>0,1,0), book_opened=if(bo>0,1,0), read_started=if(rs>0,1,0), listened_30s=if(l30>0,1,0) | stats count as sessions, sum(onboarded) as onboarded, sum(book_opened) as book_opened, sum(read_started) as read_started, sum(listened_30s) as listened_30s by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {}
+    },
+    {
+      "id": "where-stopped",
+      "title": "Where first sessions stopped (last screen and event)",
+      "x": 0,
+      "y": 8,
+      "w": 8,
+      "h": 5,
+      "query": "index=dino_usage installAge=first platform=windows | eventstats max(seq) as lastseq by session | where seq == lastseq | stats count by screen, name",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "fallbacks",
+      "title": "Fallbacks, by reason",
+      "x": 8,
+      "y": 8,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=fallback platform=windows | timechart count by detail",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "stacking": "normal",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "event-flow",
+      "title": "Event flow (step to step)",
+      "x": 0,
+      "y": 13,
+      "w": 6,
+      "h": 5,
+      "query": "index=dino_spans platform=windows | spantree | stats count by parent.name, span.name | sort -count",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "where-sessions-end",
+      "title": "Where sessions end",
+      "x": 6,
+      "y": 13,
+      "w": 6,
+      "h": 5,
+      "query": "index=dino_spans platform=windows | spantree | where child_count=0 | stats count by span.name | sort -count",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "launches-by-version",
+      "title": "App launches, by app version",
+      "x": 0,
+      "y": 18,
+      "w": 12,
+      "h": 4,
+      "query": "index=dino_usage name=app_opened platform=windows | timechart count by version",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "stacking": "normal",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "version-launches",
+      "title": "App launches per version",
+      "x": 0,
+      "y": 22,
+      "w": 6,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over version by platform",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "version-first-launches",
+      "title": "First launches per version",
+      "x": 6,
+      "y": 22,
+      "w": 6,
+      "h": 5,
+      "query": "index=dino_usage installAge=first name=app_opened platform=windows | chart count over version by platform",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "device-os",
+      "title": "OS version (launches), by version",
+      "x": 0,
+      "y": 27,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over os by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "device-form",
+      "title": "Phone, tablet or desktop (launches), by version",
+      "x": 4,
+      "y": 27,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over form by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "device-arch",
+      "title": "CPU architecture (launches), by version",
+      "x": 8,
+      "y": 27,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over arch by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "device-ram",
+      "title": "RAM in GB (launches), by version",
+      "x": 0,
+      "y": 32,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over ram by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "device-cores",
+      "title": "CPU cores (launches), by version",
+      "x": 4,
+      "y": 32,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over cores by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "app-language",
+      "title": "App language (launches), by version",
+      "x": 8,
+      "y": 32,
+      "w": 4,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over uiLang by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "country",
+      "title": "Country (launches), by version",
+      "x": 0,
+      "y": 37,
+      "w": 12,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform=windows | chart count over country by version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    }
+  ]
+}
