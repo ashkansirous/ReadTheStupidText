@@ -1,0 +1,112 @@
+{
+  "slug": "forced-update",
+  "name": "Forced update (min version)",
+  "widgets": [
+    {
+      "id": "update-page-sessions",
+      "title": "Saw the \"please update\" page (sessions), by platform",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "query": "index=dino_usage screen=update platform!=sonos platform!=alexa | timechart dc(session) by platform",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "update-presses",
+      "title": "Pressed the update button, by platform",
+      "x": 6,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "query": "index=dino_usage name=tap detail=\"update:update\" platform!=sonos platform!=alexa | timechart count by platform",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "update-page-versions",
+      "title": "On the update page: sessions and button presses, by platform and version",
+      "x": 0,
+      "y": 4,
+      "w": 12,
+      "h": 4,
+      "query": "index=dino_usage screen=update platform!=sonos platform!=alexa | stats dc(session) as sessions, count(eval(detail=\"update:update\")) as presses by platform, version",
+      "range": "7d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    },
+    {
+      "id": "android-versions",
+      "title": "Android launches, by version",
+      "x": 0,
+      "y": 8,
+      "w": 4,
+      "h": 4,
+      "query": "index=dino_usage name=app_opened platform=android | timechart count by version",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "stacking": "normal",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "ios-versions",
+      "title": "iOS launches, by version",
+      "x": 4,
+      "y": 8,
+      "w": 4,
+      "h": 4,
+      "query": "index=dino_usage name=app_opened platform=ios | timechart count by version",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "stacking": "normal",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "windows-versions",
+      "title": "Windows launches, by version",
+      "x": 8,
+      "y": 8,
+      "w": 4,
+      "h": 4,
+      "query": "index=dino_usage name=app_opened platform=windows | timechart count by version",
+      "range": "7d",
+      "viz": "timechart",
+      "options": {
+        "legend": "bottom",
+        "stacking": "normal",
+        "imputation": "zero"
+      }
+    },
+    {
+      "id": "versions-last-day",
+      "title": "Launches per version, last 24 hours, by platform",
+      "x": 0,
+      "y": 12,
+      "w": 12,
+      "h": 5,
+      "query": "index=dino_usage name=app_opened platform!=sonos platform!=alexa | chart count over version by platform",
+      "range": "1d",
+      "viz": "table",
+      "options": {
+        "display": "table"
+      }
+    }
+  ]
+}

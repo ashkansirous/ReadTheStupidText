@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Slice 429: Ninjalog dashboards have no filters (only a time range), so the "New users" dashboard is made once per
-// platform from one template. Run `node tools/dino/ninjalog-dashboards.mjs` after editing
-// docs/analytics/ninjalog-dashboard.template.json; `--check` fails when a generated file is out of date.
+// platform from one template; Slice 430 adds the forced-update dashboard from its own. Run
+// `node tools/dino/ninjalog-dashboards.mjs` after editing a docs/analytics/ninjalog-*.template.json (each VARIANTS entry
+// names its template); `--check` fails when a generated file is out of date.
 // `--upload` runs every widget query in Ninjalog (refusing a query that errors) and then saves each dashboard, with the
 // MCP token in the NINJALOG_MCP_TOKEN environment variable (D:\secrets\dinoreader\secrets.env).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
@@ -9,18 +10,22 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const templatePath = join(repoRoot, "docs", "analytics", "ninjalog-dashboard.template.json");
-const outDir = join(repoRoot, "docs", "analytics", "ninjalog-dashboards");
+const analyticsDir = join(repoRoot, "docs", "analytics");
+const outDir = join(analyticsDir, "ninjalog-dashboards");
 
 /** The speaker platforms have no first launch and an estimated `seconds` (Slice 288), so "all" leaves them out. */
 const APP_PLATFORMS_ONLY = "platform!=sonos platform!=alexa";
+const NEW_USERS = "ninjalog-dashboard.template.json";
+const FORCED_UPDATE = "ninjalog-forced-update.template.json";
 
-/** One dashboard per entry; `split` is the field each chart is broken down by. */
+/** One dashboard per entry, made from `template` (in docs/analytics); `split` is the field charts are broken down by. */
 export const VARIANTS = [
-  { key: "all", slug: "new-users", name: "New users (all platforms)", app: APP_PLATFORMS_ONLY, any: "", split: "platform" },
-  { key: "android", slug: "new-users-android", name: "New users (Android)", app: "platform=android", any: "platform=android", split: "version" },
-  { key: "ios", slug: "new-users-ios", name: "New users (iOS)", app: "platform=ios", any: "platform=ios", split: "version" },
-  { key: "windows", slug: "new-users-windows", name: "New users (Windows)", app: "platform=windows", any: "platform=windows", split: "version" },
+  { key: "all", template: NEW_USERS, slug: "new-users", name: "New users (all platforms)", app: APP_PLATFORMS_ONLY, any: "", split: "platform" },
+  { key: "android", template: NEW_USERS, slug: "new-users-android", name: "New users (Android)", app: "platform=android", any: "platform=android", split: "version" },
+  { key: "ios", template: NEW_USERS, slug: "new-users-ios", name: "New users (iOS)", app: "platform=ios", any: "platform=ios", split: "version" },
+  { key: "windows", template: NEW_USERS, slug: "new-users-windows", name: "New users (Windows)", app: "platform=windows", any: "platform=windows", split: "version" },
+  // Slice 430: who still runs a build below the remote config's minVersion, and whether they move to the new one.
+  { key: "forced-update", template: FORCED_UPDATE, slug: "forced-update", name: "Forced update (min version)", app: APP_PLATFORMS_ONLY, any: "", split: "platform" },
 ];
 
 /** Fills the template's {{app}}, {{any}} and {{split}} tokens; an empty {{any}} leaves no double space. */
@@ -46,8 +51,10 @@ function render(dashboard) {
 }
 
 function outputs() {
-  const templateText = readFileSync(templatePath, "utf8");
-  return VARIANTS.map((v) => ({ path: join(outDir, `${v.slug}.json`), text: render(buildDashboard(templateText, v)) }));
+  return VARIANTS.map((v) => {
+    const templateText = readFileSync(join(analyticsDir, v.template), "utf8");
+    return { path: join(outDir, `${v.slug}.json`), text: render(buildDashboard(templateText, v)) };
+  });
 }
 
 function readOrEmpty(path) {

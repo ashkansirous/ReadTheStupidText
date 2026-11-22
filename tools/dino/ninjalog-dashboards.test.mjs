@@ -33,8 +33,14 @@ test("an unknown token is refused", () => {
   assert.throws(() => buildDashboard(bad, byKey.all), /unknown/);
 });
 
-test("widgets stay on the 12-column grid without overlapping", () => {
-  const ws = JSON.parse(template).widgets;
+test("every template's widgets stay on the 12-column grid without overlapping", () => {
+  for (const file of new Set(VARIANTS.map((v) => v.template))) {
+    const ws = JSON.parse(readFileSync(new URL(`../../docs/analytics/${file}`, import.meta.url), "utf8")).widgets;
+    assertGrid(ws);
+  }
+});
+
+function assertGrid(ws) {
   for (const a of ws) {
     assert.ok(a.x + a.w <= 12, a.id);
     for (const b of ws) {
@@ -43,7 +49,7 @@ test("widgets stay on the 12-column grid without overlapping", () => {
       assert.ok(apart, `${a.id} overlaps ${b.id}`);
     }
   }
-});
+}
 
 test("an MCP reply is read as plain JSON or as a server-sent data line", () => {
   assert.deepEqual(parseRpc('{"id":1}'), { id: 1 });
@@ -55,6 +61,14 @@ test("the upload script checks every query before the first save", () => {
   const s = uploadScript([{ slug: "a", widgets: [] }]);
   assert.ok(s.indexOf("query_logs") < s.indexOf("save_dashboard"));
   assert.match(s, /nothing saved/);
+});
+
+test("the forced-update dashboard groups by platform and leaves the speakers out", () => {
+  const forced = readFileSync(new URL("../../docs/analytics/ninjalog-forced-update.template.json", import.meta.url), "utf8");
+  const d = buildDashboard(forced, byKey["forced-update"]);
+  assert.equal(d.slug, "forced-update");
+  assert.match(d.widgets.find((w) => w.id === "update-page-sessions").query, /screen=update platform!=sonos platform!=alexa .*by platform$/);
+  assert.equal(d.defaultRange, undefined, "the 24-hour table keeps its own range only without a dashboard range");
 });
 
 test("the committed dashboards match the template", () => {

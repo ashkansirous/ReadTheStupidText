@@ -20,7 +20,7 @@ on:
       - 'tools/dino/*.mjs'
       - 'tools/dino/public-name.json'
       - 'docs/store-listings/dino/*.md'
-      - 'docs/analytics/ninjalog-dashboard.template.json'
+      - 'docs/analytics/ninjalog-*.template.json'
       - 'docs/analytics/ninjalog-dashboards/**'
       - '.github/workflows/public-name.yml'
   push:
@@ -38,7 +38,7 @@ on:
       - 'tools/dino/*.mjs'
       - 'tools/dino/public-name.json'
       - 'docs/store-listings/dino/*.md'
-      - 'docs/analytics/ninjalog-dashboard.template.json'
+      - 'docs/analytics/ninjalog-*.template.json'
       - 'docs/analytics/ninjalog-dashboards/**'
       - '.github/workflows/public-name.yml'
   workflow_dispatch:
