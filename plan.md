@@ -48,6 +48,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings): reproduce, read Play, and put the exit reason, session, last page and a current log tail in every unclean-exit report | planned | | | [424-dino-android-1136-unclean-exit.md](docs/plan/slices/424-dino-android-1136-unclean-exit.md) |
 | 425 | Dino: the "story unreadable" fallback says which part of the app sent it, why, and which store book (once per book per launch) | planned | | | [425-dino-story-unreadable-says-where.md](docs/plan/slices/425-dino-story-unreadable-says-where.md) |
 | 431 | Dino: the story skill reports its steps to the agent board, with process keys | planned (owner 2026-11-22; waits for agent-progress-board Slice 55) | | | [431-dino-story-board-steps.md](docs/plan/slices/431-dino-story-board-steps.md) |
+| 432 | Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps | planned (owner 2026-11-23) | | | [432-dino-drop-pdf-word-libraries.md](docs/plan/slices/432-dino-drop-pdf-word-libraries.md) |
 
 ### Shared
 
