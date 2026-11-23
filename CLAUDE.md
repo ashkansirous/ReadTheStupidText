@@ -36,6 +36,7 @@ Dino Reader:
 - `src/Dino/DinoReader.App/Testing/CLAUDE.md` — Dino Debug test hooks (`test-store`, `import-test-book`) and Maestro log markers.
 - `src/Dino/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
 - `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus), `dino-story-illustrator` (Gemini pictures, Sonnet, up to four in parallel, JS-only input, one `gemini-lock`) and `dino-story-reviewer` (Opus, after each; its pass is required to ship); the main thread only coordinates.
+- `.claude/skills/offer-codes-fetch/SKILL.md` and `offer-codes-create` — free subscription codes: repo agent `offer-codes` (Haiku) hands out 1-3 at a time and makes new batches (iOS today); codes live only in `D:\secrets\dinoreader\offer-codes\`.
 - `.claude/skills/farsi-review-book/SKILL.md` — the Farsi pronunciation review, one book at a time (Slice 154): run it through the repo agent `farsi-review` (Sonnet); later books prefill the user's earlier answers.
 - `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text and screenshots go through the global `store-listing` agent in apply mode: written, checked against `.claude/skills/store-listing/SKILL.md`, pushed and read back, never shown to the user for a yes (user, 2026-11-15).
 
