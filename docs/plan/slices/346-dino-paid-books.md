@@ -1,6 +1,8 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 **Product:** Dino
 
+*Closed 2026-11-24 (user: "I think they are all done"): every build item is ticked and paid books are live since 2026-11-13. The one unticked line, the Google payments bank test deposit, is the user's own account step (not to be reminded) and holds no work.*
+
 *Parked 2026-11-18 (night 2026-11-17-2105 wave 4): only the user's Google payments bank test deposit is left (line 186); no build work for a wave.*
 
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: Part D, store setup and keys, and switching on wait for the user (A-C merged #1016 behind the off switch). A night wave that hits the same blocker parks it again with that reason.*
