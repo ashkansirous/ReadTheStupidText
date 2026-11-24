@@ -157,6 +157,23 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
 
    Nothing shows "bedtime stories" far ahead of "kids books", so the approved name and keyword field stay; real
    impressions decide the keyword swaps in Slice 414.
+   *Google Trends read 2026-11-24 in the user's Chrome (user: "you can also do the trends on chrome"):* web search, past
+   12 months, averages on Trends' relative 0-100 scale; two comparisons per country, "kids books" in both so they chain.
+
+   | Phrase | GB | US |
+   | --- | --- | --- |
+   | kids books | 48 | 63 |
+   | read aloud | 12 | 53 |
+   | books for kids | 26 | 38 |
+   | storybook | 10 | 23 |
+   | bedtime stories | 15 | 12 |
+   | kids stories | 14 | 17 |
+   | picture books | 9 | 15 |
+   | stories for kids | 9 | 11 |
+   | children's stories | 2 | 2 |
+
+   "kids books" is about three times "bedtime stories" in GB, so the name that leads with "Kids Books" stands and no
+   question goes to the user. Web search, not store search: Slice 414 still tunes the iOS keywords from App Store impressions.
 2. [x] **App name.** (Built: `DinoPublicName` added, `ApplicationTitle` = "Dino"; Android build label "Dino", Windows AppxManifest DisplayName is the full name; Windows manifest is a literal, MAUI does not overwrite it; iOS takes `ApplicationTitle` as CFBundleDisplayName, read from the iOS SDK targets, not built here.) One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
@@ -203,7 +220,14 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    The Dino ASC key in `D:\secrets\dinoreader` returns 401; the shared key in `D:\secrets\lets-call-mom` works.
    *(c) tried 2026-11-24 (`store-listing` agent, Partner Center submission API; `MS_STORE_*` in `D:\secrets\dinoreader\secrets.env` works for it):* last published submission 1152921505702472995 (1.136.5 packages, no other pending one) still has en-us and zh-hans title "Dino Book Reader" and no title field on the other 13 listings; thirteen descriptions still name "Dino Book Reader" or "Dino Reader". Created draft 1152921505702495765 (PendingCommit, NOT committed; deleted 2026-11-24 with a 204, no pending submission left, published one unchanged). A `PUT` with title "Dino: Kids Books & Stories" answers 200 and echoes it, but a `GET` of the draft still reads "Dino Book Reader" (same with the reserved name "Dino Reader", so the API does not persist titles); a localized title (zh-hans "Dino: ...") is refused 400, only the reserved names "Dino Reader", "Dino Book Reader", "Dino: Kids Books & Stories" pass. Title stays open: set it in Partner Center (Dino, Store listings, each language, Product name = the reserved name), then submit. The draft's `isAdvancedPricingModel` reads false after the PUT (published: true), priceId stays Free: check Pricing before committing.
    **Tooling gap (2026-11-24):** `.github/scripts/store-listings.mjs` leaves Dino's `en` and `de` listings unwritten and maps `zh`/`pt` to `zh-cn`/`pt-br` while the live submission names them `zh-hans`/`pt`, so a name change in the repo files never reaches the live Microsoft listings.
-7. [ ] *Name reserved 2026-11-18 (desk, in the user's Chrome, user: "use the fucking chrome I approve it"): Partner
+7. [x] *Submitted 2026-11-24 in the user's Chrome (user: "you do the fucking thing in chrome"):* Partner Center
+   submission 107 (id 1152921505702496599), made with Start update from the published 106: Product name set to "Dino: Kids
+   Books & Stories" on all 15 listings (en-us, ar, zh-Hans, da, nl, fi, fr, de, ja, nb, fa, pt, ru, es, sv), each saved and
+   ar, sv and en-us re-read as the new name; packages, pricing and properties unchanged; Submit for certification pressed,
+   status "In certification". Left: read the public page once certified (`https://apps.microsoft.com/detail/9N9VHRLCZXN5`).
+   Seen alongside: the submission still lists two old `DinoReader.App_1.78.1.0` msix packages ranked under the 1.136.5
+   bundle (harmless, the bundle is offered first); removing them is a later cleanup.
+   *Name reserved 2026-11-18 (desk, in the user's Chrome, user: "use the fucking chrome I approve it"): Partner
    Center lists "Dino: Kids Books & Stories" as "Reserved for this app" next to "Dino Book Reader" (in use) and "Dino
    Reader". Microsoft drops a reservation unless the product is submitted with it within three months (by 2027-02-18).
    Next: the Microsoft listing title, then the manifest `DisplayName` with part B.* **Microsoft Store rename.** User step: reserve "Dino: Kids Books & Stories" (Partner Center, *Manage app names*
