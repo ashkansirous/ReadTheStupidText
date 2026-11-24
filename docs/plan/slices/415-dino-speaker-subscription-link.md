@@ -116,10 +116,10 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
 ## Work
 
 **Sonos moved out (owner's Claude Design canvas `docs/design/sonos/`, 2026-11-24):** items B, C and E's Sonos link are
-now Slice 438 (link once through the Dino app, optional, a story language per home; never-linked homes keep the
-anonymous browse, which replaces "Link required for all") and Slice 439 (a linked home plays the paid books it owns,
-single books included, which replaces decision 1 on Sonos; the owner checks 439 before it is built). This slice keeps
-Alexa (D) and the Alexa parts of F and G.
+now Slice 438 (every home links once through the Dino app, "Link required for all" kept, plus a story language per
+home) and Slice 439 (a linked home with an active subscription plays paid books; subscription only, decision 1 kept).
+Owner, 2026-11-24: "Slice 415 had "link required for all" is the correct decision!" and "sonos only works with
+subscriptions!". This slice keeps Alexa (D) and the Alexa parts of F and G.
 
 - [x] **A. Research** the two facts above; write the answers and source lines into this file; ask any
       result that changes a decision as one question set. (Done 2026-11-18; answers above.)

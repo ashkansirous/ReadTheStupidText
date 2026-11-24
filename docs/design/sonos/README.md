@@ -5,7 +5,10 @@
 - **Copied:** 2026-11-24, with the Artifact tool's `read` of every `project/*` file (byte-for-byte, sha256 checked by the
   tool). The canvas index is `canvas.json`; one `.dc.html` file per artboard. The `/_blob/...` cover images are uploads on
   the canvas and are not copied (they are the store covers of the sample books).
-- **Slices built from it:** 437 (anonymous browse), 438 (sign in once, story language), 439 (owned books), 440 (search).
+- **Slices built from it:** 437 (anonymous browse), 438 (sign in once, story language), 439 (subscription), 440 (search).
+- **Not built from it (owner, 2026-11-24):** the "Not now" button and a never-linked home (Slice 415's "link required for
+  all" stands), and "Owned" / "which books you own" (Sonos is subscription only). Where the canvas and the owner's
+  recorded decisions differ, the decisions win.
 
 ## Artboards
 

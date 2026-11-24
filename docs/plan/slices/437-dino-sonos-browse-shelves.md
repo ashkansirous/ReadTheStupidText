@@ -1,7 +1,8 @@
 # Slice 437 — Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z)
 **Product:** Dino
 
-*Planned 2026-11-24. Ships first of 437-440, no sign-in.*
+*Planned 2026-11-24. Ships first of 437-440, no sign-in: these are the screens until Slice 438 makes every home link
+(owner's "link required for all", Slice 415); after that the same shelves show for the linked home.*
 
 **Depends on:** Slice 283 (the Sonos service). **Replaces:** Slice 436 parts B and D (436 keeps A, real plays, and C, the
 5-minute list cache).

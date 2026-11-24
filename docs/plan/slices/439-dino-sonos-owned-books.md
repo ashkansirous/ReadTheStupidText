@@ -1,8 +1,7 @@
-# Slice 439 — Dino: a linked Sonos home plays the paid books it owns
+# Slice 439 — Dino: a linked Sonos home with an active Dino subscription plays the paid books
 **Product:** Dino
 
-*Planned 2026-11-24. Plan only: the owner checks it before it is built (owner, 2026-11-24: "Plan only; check with me
-before building").*
+*Planned 2026-11-24. Corrected the same day (owner: "no fucking owned books! sonos only works with subscriptions!").*
 
 **Depends on:** Slice 438 (the link and the per-home row). **Replaces:** Slice 415 item C's paid-track check on Sonos.
 
@@ -12,37 +11,37 @@ before building").*
 
 ## Why
 
-Owner's brief, 2026-11-24 (verbatim): "Slice C, owned books play on Sonos: a linked home that owns a paid book
-(worker/entitlements) can play it; subtitle "Owned". Plan only; check with me before building."
+Paid books fail on Sonos today (Slice 436, finding 1). Slice 415 settled how a speaker listener pays (owner,
+2026-11-18): only the Dino subscription, bought in the Dino app, opens paid books on Sonos. The brief pasted with the
+Claude Design canvas asked for "owned" books and an "Owned" subtitle; that was not the owner's decision and is not built.
 
 On origin/main (2026-11-24): a store proof is the header `X-Purchase-Proof: <store>:<productId>:<token>`
-(`worker/entitlements/proof.ts:5,9-20`); `gate.ts` asks Apple, Google or Microsoft whether the buyer owns a product that
-unlocks the book: its own product, a bundle or the subscription (`worker/entitlements/products.ts:36-37`). Answers are
-cached in memory only; nothing about the buyer is stored.
+(`worker/entitlements/proof.ts:5,9-20`); `gate.ts` checks it with Apple, Google or Microsoft;
+`worker/entitlements/subscription.ts` returns the subscription's state and end date for the same proof.
 
 ## Decisions
 
-- Owner, 2026-11-24 (the mock: the Link screen says Dino keeps "which books you own"; SET-Saved shows "Owned"): a linked
-  home plays every paid book its proof unlocks, single books and bundles as well as the subscription. This is newer than
-  Slice 415 decision 1 ("subscription only on Sonos", 2026-11-18) and replaces it on Sonos. Named for the owner's check
-  before building.
-- Paid books the home does not own keep Slice 437's "In the Dino app" row.
-
-## Design
-
-From `docs/design/sonos/SET-Saved.dc.html`: an owned paid book's subtitle ends "Owned" ("The Little Red Hen · 7 min ·
-Owned"); free books "Free"; not owned "In the Dino app".
+- **Subscription only** (owner, 2026-11-18, Slice 415 decision 1; 2026-11-24: "sonos only works with subscriptions"):
+  a single-book or bundle purchase opens nothing on Sonos; only an active Dino subscription does.
+- Slice 415 Q-A answer (owner, 2026-11-18): a linked home without an active subscription (lapsed, or never bought)
+  hears the free books, and a paid book plays the short spoken "subscribe in the Dino app" message instead of the story.
+- Decided by this session: with an active subscription a paid book's subtitle drops the access word ("Ages 3–5 ·
+  7 min"); without one it keeps Slice 437's "In the Dino app". Never "Owned".
 
 ## Work
 
-- [ ] C1. Slice 438's confirm step also stores the app's purchase-proof key for the home (the key only, as `gate.ts`
-      caches it; the raw token is kept only as the store checkers need it, decided after reading `gate.ts`).
-- [ ] C2. `worker/sonos.ts`: for a linked home, each paid track runs the stored proof through the gate (cached); owned →
-      playable, subtitle "Owned"; else Slice 437's row. `getMediaURI` checks again.
-- [ ] C3. The Dino app re-sends the proof when the purchase changes (a new book, a renewed subscription), Android and iOS.
-- [ ] C4. Tests: owned single book, bundle, active and lapsed subscription, no proof.
-- [ ] C5. Privacy text: the per-home row now holds a purchase proof key.
+- [ ] C1. Slice 438's confirm step stores the subscription proof's key for the home (only a subscription product's
+      proof is accepted; single-book proofs are refused with a clear reason to the app).
+- [ ] C2. `worker/sonos.ts`: for each paid track, the home's proof runs through the subscription check (cached as
+      `gate.ts` does); active → playable; else `getMediaURI` returns the spoken subscribe message. `getMediaURI` checks
+      again at play time.
+- [ ] C3. The spoken "subscribe in the Dino app" message in all 15 languages (rendered once with the apps' narrator
+      voices, served from R2).
+- [ ] C4. The Dino app re-sends the proof when the subscription renews or changes, Android and iOS.
+- [ ] C5. Tests: active subscription plays; lapsed, none and a single-book proof give the subscribe message.
+- [ ] C6. Privacy text: the per-home row holds a subscription proof key.
 
 ## Verification
 
-- `node --test worker/*.test.mjs`; owner's sandbox with a test purchase on the S21: the book shows "Owned" and plays.
+- `node --test worker/*.test.mjs`; owner's sandbox with a test subscription on the S21: a paid book plays; after the
+  test subscription ends, the same book plays the subscribe message.
