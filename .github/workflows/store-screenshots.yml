@@ -21,7 +21,7 @@ name: store-screenshots
 # Dispatch: gh workflow run store-screenshots.yml --ref <branch> -f app=both -f device=all
 #   app: both | dino | rtst      device: all (= ipad-13, iphone-6.9 and, for RTST only, iphone-6.5) | iphone-6.5 | ipad-13 | iphone-6.9 (one device alone, e.g. to redo a failed one)
 #   media: all (default) | shots | clips. all = two jobs per app and device, one for the screenshots and one for the preview clips (Dino, iPhone 6.9" and iPad 13"), each with its own time budget and its own draft release (store-shots-<app>-<device>-<run id> and store-clips-<app>-<device>-<run id>), so slow shots can never starve the clips.
-#   resume_run: optional run id whose draft releases supply the shots already taken (only a run on this same commit; this run's own draft wins)
+#   resume_run: optional run id whose draft releases supply the shots already taken (a run on another commit supplies only the files whose flow and src/ are unchanged, .github/scripts/store-shots-resume-filter.sh; this run's own draft wins)
 # Slice 433: Dino shoots six screens per device plus the Japanese language shot, seven files (the iPad 13" in landscape, 2752 x 2064) and records seven App Store preview clips, one recording each (iPhone 6.9" and iPad 13"; .mp4 files in the same draft release).
 # Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 3600 s (60 min), its step 66 min, the job 80 min (about 6 min of
 # setup before the step, a minute or two of hand-over after it). The worst case (boot 300 + seven shots x two attempts x 420 + seven clips x two attempts x 480 (a setup and a recorded flow of 240 each) + a restart 300 =
@@ -70,8 +70,8 @@ permissions:
 jobs:
   shots:
     name: ${{ matrix.media }}-${{ matrix.app }}-${{ matrix.device }}
-    # Slice 433 (device-test-pipeline section 5): job = setup + step + hand-over = 6 + 66 + 2 = 74 min, rounded up to 80. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (60 s)
-    # and, on a retry, a simulator restart (300 s): shot 60 + 420 + 60 = 540 s (shot 1, the full-shelf fill, 1020 s), clip 60 + 2 x 240 + 2 x 60 + 30 = 690 s, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
+    # Slice 433 (device-test-pipeline section 5): job = setup + step + hand-over = 6 + 66 + 2 = 74 min, rounded up to 80. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (20 s, run 45491086879 finding 1; skipped once the URL scheme is pre-approved)
+    # and, on a retry, a simulator restart (300 s): shot 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill, 980 s), clip 20 + 2 x 240 + 2 x 60 + 30 = 650 s, the per-device simulator restart that writes the URL scheme approval is charged to the script budget, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
     timeout-minutes: 80
     runs-on: xcode-27
     permissions:
@@ -194,7 +194,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       # Resume: the PNGs this run's own draft release already holds are downloaded into the output folder; only when it holds none, and resume_run
-      # is a run on this same commit, that run's draft is used. This run's draft is created (and given those PNGs) so each shot can be uploaded
+      # is a run on this or another commit, that run's draft is used (another commit: filtered file by file). This run's draft is created (and given those PNGs) so each shot can be uploaded
       # the moment it is taken; a failed create fails the step.
       - name: Fetch earlier shots and open this run's draft release
         run: |
@@ -205,15 +205,19 @@ jobs:
           have_png() { ls "$DIR"/*.png >/dev/null 2>&1 || ls "$DIR"/*.mp4 >/dev/null 2>&1; }
           # 1. This run's own draft first (a rerun of this run, or a resume_run dispatch that already took shots).
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
-          # 2. Only when it is absent or holds no PNG: the draft of resume_run, and only from a run on the same commit (an older commit may
-          #    have other flows or UI, and its PNGs would pass the size check).
+          # 2. Only when it is absent or holds no PNG: the draft of resume_run. From a run on another commit (run 45491086879, finding 2) a file is kept only when the app code (src/) and the flows that
+          #    produced it are unchanged between that commit and this one (store-shots-resume-filter.sh prints kept or dropped, with the reason, per file); a change of the script or the workflow alone keeps every file.
           if ! have_png && [ -n "${RESUME_RUN:-}" ] && [ "$RESUME_RUN" != "$GITHUB_RUN_ID" ]; then
             SRC_SHA="$(gh run view "$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha 2>/dev/null || true)"
-            if [ "$SRC_SHA" = "$GITHUB_SHA" ]; then
-              gh release download "$STORE_SHOTS_PREFIX-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
+            if [ -z "$SRC_SHA" ]; then
+              echo "::warning::resume_run $RESUME_RUN: its commit is unknown, starting with no shots"
+              echo "- resume_run $RESUME_RUN ignored: its commit could not be read, so all shots are taken" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "::warning::resume_run $RESUME_RUN is not on this commit (its sha: ${SRC_SHA:-unknown}, this run: $GITHUB_SHA): starting with no shots"
-              echo "- resume_run $RESUME_RUN ignored: it ran on another commit (${SRC_SHA:-sha unknown}), so all shots are taken" >> "$GITHUB_STEP_SUMMARY"
+              gh release download "$STORE_SHOTS_PREFIX-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
+              if [ "$SRC_SHA" != "$GITHUB_SHA" ]; then
+                echo "resume_run $RESUME_RUN ran on $SRC_SHA, this run on $GITHUB_SHA: judging each file"
+                bash .github/scripts/store-shots-resume-filter.sh "$SRC_SHA" "$APP" "$DEVICE" "$DIR" | tee -a "$GITHUB_STEP_SUMMARY"
+              fi
             fi
           fi
           if have_png; then

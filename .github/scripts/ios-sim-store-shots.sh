@@ -63,8 +63,8 @@ DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # The script stops starting new attempts after this (the missing shots are reported and the exit code is 1), so the hand-over step always has the
 # shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 80 (about 6 minutes of setup before the step, run
 # 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + seven shots at two attempts of 420 s (5880) + seven clips at two attempts of 480 s (a setup and a recorded flow of 240 s: 6720) + a restart 300 = 13200 s.
-# Slice 433 (run 45479054864, device findings 2-4): every attempt now starts with the Open-in pre-flow (PREFLIGHT_TIME_LIMIT_SECONDS 60 s at most) and every retry is preceded by a simulator restart (RESTART_TIME_LIMIT_SECONDS 300 s at most), and
-# each "will it fit" test above counts them: a shot attempt is 60 + 420 + 60 = 540 s (shot 1, the full-shelf fill: 60 + 900 + 60 = 1020 s), a clip attempt 60 + 2 x 240 + 2 x 60 + 20 + 10 = 690 s, a retry adds 300 s. No attempt starts unless its whole cost fits
+# Slice 433 (run 45479054864, device findings 2-4): every attempt now starts with the Open-in pre-flow (PREFLIGHT_TIME_LIMIT_SECONDS 20 s at most, and skipped on a device where the URL scheme is pre-approved, run 45491086879 finding 1) and every retry is preceded by a simulator restart (RESTART_TIME_LIMIT_SECONDS 300 s at most), and
+# each "will it fit" test above counts them: a shot attempt is 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill: 20 + 900 + 60 = 980 s), a clip attempt 20 + 2 x 240 + 2 x 60 + 20 + 10 = 650 s, a retry adds 300 s. No attempt starts unless its whole cost fits
 # in the 3600 s, so the script ends within 3600 s = 60 min; the workflow's step (66 min) and job (80 min: 6 setup + 66 step + 2 hand-over = 74) keep their margin.
 # It is not meant to: every shot is uploaded when taken, so `gh run rerun <run id> --failed` resumes and retakes only what is missing. RTST:
 # boot 300 + 2 x 600 + restart 300 + hierarchy 2 x 60 = 1920 s, which fits.
@@ -94,8 +94,15 @@ STORE_SHOTS_TAG="${STORE_SHOTS_TAG:-}"
 WATCHDOG_POLL_SECONDS=5
 HIERARCHY_TIME_LIMIT_SECONDS=60
 # Slice 433 (iOS run 45479054864, finding 2): before every attempt (first tries and retries) a small Maestro flow answers a SpringBoard "Open in <app>?" alert that a failed attempt left up.
-# It is one Maestro start (a driver start of up to DRIVER_STARTUP_TIMEOUT_MS = 180 s on a cold driver, a few seconds on a warm one) and no step when no alert is up; 60 s is its watchdog, and a miss is only a warning.
-PREFLIGHT_TIME_LIMIT_SECONDS=60
+# It is one Maestro start (a driver start of up to DRIVER_STARTUP_TIMEOUT_MS = 180 s on a cold driver, a few seconds on a warm one) and no step when no alert is up; 20 s is its watchdog, and a miss is only a warning.
+# Run 45491086879 (finding 1): on the iPad in landscape Maestro cannot tap that alert at all (Maestro issue 2065) and the pre-flow ran into its 60 s limit every attempt, so the alert is now prevented (approve_url_scheme: the
+# URL scheme is written into the simulator's LaunchServices approval plist) and the pre-flow is skipped on a device where that was confirmed; it stays, with this short limit, only as the fallback when the approval was not confirmed.
+PREFLIGHT_TIME_LIMIT_SECONDS=20
+# The URL scheme the flows open with openLink (every openLink in .maestro/dino/store-shot-ios-*.yaml is dino-test://) and the LaunchServices file that holds the approvals (Maestro issue 940, comment by satya164, 2025-11-27).
+APPROVED_URL_SCHEME="dino-test"
+SCHEME_APPROVAL_BRIDGE="com.apple.CoreSimulator.CoreSimulatorBridge"
+# "yes" once the scheme approval of the current device was written and read back.
+SCHEME_APPROVED=no
 PREFLIGHT_FLOW="$HERE/../../.maestro/dino/store-shot-ios-preflight.yaml"
 # Set when the clips' shelf set-up flow (store-shot-ios-shelfprep.yaml) failed on the device: no clip is recorded on a wrong shelf (run 45479054864: the iPad clips ran on a 4-book shelf).
 SHELF_PREP_FAILED=no
@@ -185,6 +192,36 @@ install_app() {
   plist="$bundle_app/Info.plist"
   run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl install "$udid" "$bundle_app" >&2 || return 1
   /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist"
+}
+
+# Run 45491086879 (finding 1): writes the approval of the app's URL scheme into the simulator's LaunchServices scheme-approval plist, so iOS never asks "Open in <app>?" for a dino-test:// link
+# (Maestro cannot tap that alert in landscape, issue 2065). Source: Maestro issue 940, the PlistBuddy line of a commenter, which names the file
+# <device data>/Library/Preferences/com.apple.launchservices.schemeapproval.plist and the key "<bridge>--><scheme>" with the app's bundle id as its string value.
+# The simulator is shut down while the file is written and booted again afterwards (the thread does not say whether a booted simulator re-reads it). Prints the written entry; returns 1 when it did not read back.
+approve_url_scheme() {
+  local udid="$1" bundle_id="$2" plist key written
+  [ "$APP" = dino ] || return 0
+  SCHEME_APPROVED=no
+  plist="$HOME/Library/Developer/CoreSimulator/Devices/$udid/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist"
+  key="$SCHEME_APPROVAL_BRIDGE-->$APPROVED_URL_SCHEME"
+  run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
+  mkdir -p "$(dirname "$plist")"
+  /usr/libexec/PlistBuddy -c "Delete :$key" "$plist" >/dev/null 2>&1 </dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :$key string $bundle_id" "$plist" </dev/null || true
+  written="$(/usr/libexec/PlistBuddy -c "Print :$key" "$plist" 2>/dev/null </dev/null || true)"
+  echo "scheme approval in $plist:"
+  /usr/libexec/PlistBuddy -c "Print" "$plist" 2>&1 </dev/null || true
+  if ! run_limited "$RESTART_TIME_LIMIT_SECONDS" "$udid" restart_simulator "$udid"; then
+    echo "::error::the simulator $udid did not boot again after the URL scheme approval was written"
+    return 1
+  fi
+  if [ "$written" != "$bundle_id" ]; then
+    echo "::error::the URL scheme approval did not take: $key reads '$written', expected '$bundle_id' ($plist)"
+    return 1
+  fi
+  SCHEME_APPROVED=yes
+  echo "URL scheme $APPROVED_URL_SCHEME:// is approved for $bundle_id on $udid"
+  return 0
 }
 
 # A copy of one flow whose appId is the bundle id; nothing on iOS reads the expect-log markers.
@@ -431,6 +468,7 @@ reset_simulator() {
 answer_open_in_prompt() {
   local udid="$1" bundle_id="$2" pre_run="$RUNNER_TEMP/store-preflight-$1.yaml" rc=0
   [ "$APP" = dino ] || return 0
+  [ "$SCHEME_APPROVED" = yes ] && return 0
   sed -e "s/^appId: .*/appId: $bundle_id/" "$PREFLIGHT_FLOW" > "$pre_run"
   run_limited "$PREFLIGHT_TIME_LIMIT_SECONDS" "$udid" maestro_test "$udid" "$pre_run" "$RUNNER_TEMP/maestro-out-preflight-$udid" || rc=$?
   [ "$rc" = "0" ] || echo "::warning::the Open-in pre-flow ended with status $rc on $udid; the attempt goes on"
@@ -844,6 +882,8 @@ shoot_device() {
   xcrun simctl list devices booted
   if ! bundle_id="$(install_app "$udid")"; then
     problem "$label: the app could not be installed from $APP_DIR"
+  elif ! approve_url_scheme "$udid" "$bundle_id"; then
+    problem "$label: the URL scheme $APPROVED_URL_SCHEME:// could not be approved for $bundle_id; no shot is taken without it (the iOS \"Open in\" alert cannot be tapped in landscape)"
   elif ! prepare_full_shelf "$label" "$udid" "$bundle_id"; then
     echo "no shot is taken on $label without the book packages"
   else

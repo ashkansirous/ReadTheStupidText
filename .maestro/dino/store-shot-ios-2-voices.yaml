@@ -15,6 +15,21 @@ name: Store screenshot 2 of 6, voices, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
+# English first, by the hook (Slice 433, iOS run 45491086879): a previous shot may have left another language, and the launch argument lang only sets the first-run language.
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
+    timeout: 60000
 # Shot 1 put 12 books on the shelf and the data survives the relaunch, so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle).
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
