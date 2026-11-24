@@ -115,6 +115,12 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
 
 ## Work
 
+**Sonos moved out (owner's Claude Design canvas `docs/design/sonos/`, 2026-11-24):** items B, C and E's Sonos link are
+now Slice 438 (link once through the Dino app, optional, a story language per home; never-linked homes keep the
+anonymous browse, which replaces "Link required for all") and Slice 439 (a linked home plays the paid books it owns,
+single books included, which replaces decision 1 on Sonos; the owner checks 439 before it is built). This slice keeps
+Alexa (D) and the Alexa parts of F and G.
+
 - [x] **A. Research** the two facts above; write the answers and source lines into this file; ask any
       result that changes a decision as one question set. (Done 2026-11-18; answers above.)
 - [ ] **B. Server link store** (`worker/speaker-link.ts`, D1 table in STATS), **Sonos only**: a link row holds the
@@ -126,7 +132,8 @@ Read by a web-research agent; the decisive lines re-read from the live pages by 
       `getDeviceAuthToken`, `refreshAuthToken`); `getAppLink`'s `authorizeAccount` opens the Dino app; every paid track
       checks the household's link and runs the stored proof through the existing subscription gate (cached as `gate.ts`
       does); no active subscription: the locked spoken message. Single-book purchase proofs are ignored (decision 1).
-      Settle with the user before building: what a family without the Dino app sees when adding the service.
+      Settled (owner, 2026-11-24): a family without the Dino app gets the app's download page for their phone's
+      system ("they should see the download page of the app on their phone with their os").
 - [ ] **D. Alexa (built for the US, tested on the UK)**: an Alexa In-Skill Purchasing subscription product for the kid skill (price and period
       chosen by the user, at most $9.99); `worker/alexa.ts` asks Amazon whether the customer is entitled and plays paid
       books only then, else the locked message; the purchase offer follows Amazon's kid-skill rules (parent approval).
