@@ -5,7 +5,7 @@
 
 **Depends on:** Slice 283 (Sonos service), Slice 289 (Sonos play counting). **Replaced in part by:** Slice 437 (parts B
 and D: the owner's Claude Design canvas `docs/design/sonos/`, 2026-11-24, lists paid books as "In the Dino app" instead of
-hiding them and gives the browse tree), Slices 438-440 (link, owned books, search).
+hiding them and gives the browse tree), Slices 438-440 (link, subscription, search).
 
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/speaker-usage.ts`,
 `worker/speaker-usage.test.mjs`, `worker/sonos-reporting.ts` (new), `worker/sonos-reporting.test.mjs` (new),
@@ -100,7 +100,7 @@ Paid books stay listed with "In the Dino app" and don't play (owner's mock, 2026
 
 ### D. Moved to Slices 437-440
 The owner made the mock (`docs/design/sonos/`, 2026-11-24); the browse tree is Slice 437, the link and story language
-Slice 438, owned books Slice 439, search Slice 440. The brief written here on 2026-11-24 is in git history.
+Slice 438, the subscription on Sonos Slice 439, search Slice 440. The brief written here on 2026-11-24 is in git history.
 
 ## Verification
 
