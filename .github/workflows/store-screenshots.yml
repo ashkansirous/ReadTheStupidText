@@ -70,7 +70,9 @@ permissions:
 jobs:
   shots:
     name: ${{ matrix.media }}-${{ matrix.app }}-${{ matrix.device }}
-    timeout-minutes: 80   # Slice 433: Dino also records seven preview clips per device (script budget 3600 s, step 66 min, about 6 minutes of setup and a minute or two of hand-over around it)
+    # Slice 433 (device-test-pipeline section 5): job = setup + step + hand-over = 6 + 66 + 2 = 74 min, rounded up to 80. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (60 s)
+    # and, on a retry, a simulator restart (300 s): shot 60 + 420 + 60 = 540 s (shot 1, the full-shelf fill, 1020 s), clip 60 + 2 x 240 + 2 x 60 + 30 = 690 s, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
+    timeout-minutes: 80
     runs-on: xcode-27
     permissions:
       contents: write   # gh release create --draft (the shots' home)
@@ -240,7 +242,7 @@ jobs:
       # needs a minute or two. A shot attempt is killed after 7 minutes (a driver start of up to 3 + the longest shot), the RTST unit after 10.
       - name: Take the shots on the simulator
         id: shots
-        timeout-minutes: 66
+        timeout-minutes: 66   # script budget 3600 s (60 min) + 6 min for the last attempt's kill and the final summary lines; see the job's timeout above
         run: bash .github/scripts/ios-sim-store-shots.sh "$APP" "$BUILD_DIR" "$FLOW" "$OUT_DIR" "$DEVICE"
 
       # Runs even when a shot failed: the shots that did come out are kept. Each was already uploaded when taken; this uploads them all again,

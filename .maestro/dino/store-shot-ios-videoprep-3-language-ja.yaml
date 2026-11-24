@@ -12,13 +12,28 @@ name: Store preview clip setup, 3 language ja, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
+# A previous clip may have left the app in another language (launchApp's lang only sets the first-run language), so English is set by the hook first, then the full shelf is asserted by its last book. No clearState: it would wipe the full shelf.
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
+    timeout: 60000
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000
 - openLink: "dino-test://set-language?lang=ja&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 30000
     optional: true
 - runFlow:
     when:
@@ -34,7 +49,7 @@ name: Store preview clip setup, 3 language ja, Dino Reader, iOS
 - openLink: "dino-test://open-book?id=three-little-pigs&page=6"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 30000
     optional: true
 - runFlow:
     when:

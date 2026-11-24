@@ -63,6 +63,9 @@ DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # The script stops starting new attempts after this (the missing shots are reported and the exit code is 1), so the hand-over step always has the
 # shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 80 (about 6 minutes of setup before the step, run
 # 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + seven shots at two attempts of 420 s (5880) + seven clips at two attempts of 480 s (a setup and a recorded flow of 240 s: 6720) + a restart 300 = 13200 s.
+# Slice 433 (run 45479054864, device findings 2-4): every attempt now starts with the Open-in pre-flow (PREFLIGHT_TIME_LIMIT_SECONDS 60 s at most) and every retry is preceded by a simulator restart (RESTART_TIME_LIMIT_SECONDS 300 s at most), and
+# each "will it fit" test above counts them: a shot attempt is 60 + 420 + 60 = 540 s (shot 1, the full-shelf fill: 60 + 900 + 60 = 1020 s), a clip attempt 60 + 2 x 240 + 2 x 60 + 20 + 10 = 690 s, a retry adds 300 s. No attempt starts unless its whole cost fits
+# in the 3600 s, so the script ends within 3600 s = 60 min; the workflow's step (66 min) and job (80 min: 6 setup + 66 step + 2 hand-over = 74) keep their margin.
 # It is not meant to: every shot is uploaded when taken, so `gh run rerun <run id> --failed` resumes and retakes only what is missing. RTST:
 # boot 300 + 2 x 600 + restart 300 + hierarchy 2 x 60 = 1920 s, which fits.
 SCRIPT_BUDGET_SECONDS="${SCRIPT_BUDGET_SECONDS:-3600}"
@@ -90,6 +93,12 @@ EXPECTED_SHOTS="${EXPECTED_SHOTS:-}"
 STORE_SHOTS_TAG="${STORE_SHOTS_TAG:-}"
 WATCHDOG_POLL_SECONDS=5
 HIERARCHY_TIME_LIMIT_SECONDS=60
+# Slice 433 (iOS run 45479054864, finding 2): before every attempt (first tries and retries) a small Maestro flow answers a SpringBoard "Open in <app>?" alert that a failed attempt left up.
+# It is one Maestro start (a driver start of up to DRIVER_STARTUP_TIMEOUT_MS = 180 s on a cold driver, a few seconds on a warm one) and no step when no alert is up; 60 s is its watchdog, and a miss is only a warning.
+PREFLIGHT_TIME_LIMIT_SECONDS=60
+PREFLIGHT_FLOW="$HERE/../../.maestro/dino/store-shot-ios-preflight.yaml"
+# Set when the clips' shelf set-up flow (store-shot-ios-shelfprep.yaml) failed on the device: no clip is recorded on a wrong shelf (run 45479054864: the iPad clips ran on a 4-book shelf).
+SHELF_PREP_FAILED=no
 # Set by run_limited: "yes" when the last call was killed at its limit (a command that exits 124 by itself is not mistaken for a kill).
 LIMIT_HIT=no
 # Set when a simulator did not come back after a restart: the rest of that device is skipped.
@@ -418,6 +427,16 @@ reset_simulator() {
   return 0
 }
 
+# Slice 433 (finding 2): runs the pre-flow on the simulator (Dino only) so a left-over "Open in" alert is answered before the attempt's own flow starts. Never fails the attempt.
+answer_open_in_prompt() {
+  local udid="$1" bundle_id="$2" pre_run="$RUNNER_TEMP/store-preflight-$1.yaml" rc=0
+  [ "$APP" = dino ] || return 0
+  sed -e "s/^appId: .*/appId: $bundle_id/" "$PREFLIGHT_FLOW" > "$pre_run"
+  run_limited "$PREFLIGHT_TIME_LIMIT_SECONDS" "$udid" maestro_test "$udid" "$pre_run" "$RUNNER_TEMP/maestro-out-preflight-$udid" || rc=$?
+  [ "$rc" = "0" ] || echo "::warning::the Open-in pre-flow ended with status $rc on $udid; the attempt goes on"
+  return 0
+}
+
 # Empties the attempt's output folder and removes the unit's shots from the working directory (Maestro may write them there), so a retry never mixes in a shot of the attempt before.
 reset_attempt() {
   local unit="$1" test_out="$2" name
@@ -445,10 +464,11 @@ run_unit_body() {
     return 1
   fi
   while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
-    if ! time_left_for $((UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
+    if ! time_left_for $((PREFLIGHT_TIME_LIMIT_SECONDS + UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
       problem "$label: $unit_name: no time left for attempt $attempt (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
       return 1
     fi
+    answer_open_in_prompt "$udid" "$bundle_id"
     reset_attempt "$unit" "$test_out"
     rc=0
     run_flow "$udid" "$flow_run" "$test_out" "$bundle_id" || rc=$?
@@ -464,11 +484,13 @@ run_unit_body() {
     if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
       echo "::warning::attempt $attempt of $unit_name failed on $udid (status $rc); retrying once on a fresh output folder (its shots are discarded)"
       note "- RETRY: $label $unit_name attempt $attempt failed (status $rc, killed at the $UNIT_LIMIT s limit: $killed), it runs once more (shots of the failed attempt discarded)"
-      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
+      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + PREFLIGHT_TIME_LIMIT_SECONDS + UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
         problem "$label: $unit_name: no time left for the retry (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
         return 1
       fi
-      if ! reset_simulator "$udid" "$bundle_id" "$killed"; then
+      # Slice 433 (finding 2): after ANY failed attempt the simulator is shut down and booted again, as after a kill (a failure can leave an Open-in alert or a rotation that no later launchApp clears);
+      # the next attempt's flow copy sets the orientation again (prepare_flow) after the pre-flow has answered a prompt.
+      if ! reset_simulator "$udid" "$bundle_id" yes; then
         SIM_BROKEN=yes
         problem "$label: the simulator did not come back within $RESTART_TIME_LIMIT_SECONDS s after $unit_name was killed; the rest of this device is skipped"
         return 1
@@ -492,17 +514,30 @@ run_unit() {
   return "$rc"
 }
 
+# Slice 433 (finding 3): the shelf set-up flow failing twice leaves a shelf of 4 books (iOS run 45479054864, iPad); the rest of the device (its shots, its clips) is stopped with one clear error line instead of failing each on the wrong shelf.
+stop_when_shelfprep_failed() {
+  local label="$1" unit="$2"
+  [ "$(basename "$unit")" = "store-shot-ios-shelfprep.yaml" ] || return 0
+  SHELF_PREP_FAILED=yes
+  echo "::error::$label: store-shot-ios-shelfprep failed; no clip or shot is taken on $label because the shelf is not the full 12-book shelf"
+}
+
 # Every unit in order on the booted simulator; one that failed does not stop the next, a simulator that did not come back does.
 run_units() {
   local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit index=0
   SIM_BROKEN=no
+  SHELF_PREP_FAILED=no
   for unit in "${UNITS[@]}"; do
     index=$((index + 1))
     if [ "$SIM_BROKEN" = "yes" ]; then
       problem "$label: $(basename "$unit" .yaml) skipped, the simulator is not usable"
       continue
     fi
-    run_unit "$label" "$accepted" "$udid" "$bundle_id" "$unit" "$index" || true
+    if [ "$SHELF_PREP_FAILED" = "yes" ]; then
+      problem "$label: $(basename "$unit" .yaml) skipped, store-shot-ios-shelfprep failed so the shelf is not the full one"
+      continue
+    fi
+    run_unit "$label" "$accepted" "$udid" "$bundle_id" "$unit" "$index" || stop_when_shelfprep_failed "$label" "$unit"
   done
 }
 
@@ -674,11 +709,12 @@ run_video_unit() {
   fi
   UNIT_LIMIT="$VIDEO_TIME_LIMIT_SECONDS"
   while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
-    if ! time_left_for $((2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
+    if ! time_left_for $((PREFLIGHT_TIME_LIMIT_SECONDS + 2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
       problem "$label: $unit_name: no time left for attempt $attempt (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
       UNIT_LIMIT="$base_limit"
       return 1
     fi
+    answer_open_in_prompt "$udid" "$bundle_id"
     reset_attempt "$unit" "$test_out"
     rc=0
     record_unit_attempt "$udid" "$prep_run" "$flow_run" "$test_out" "$bundle_id" "$video_tmp" || rc=$?
@@ -693,12 +729,13 @@ run_video_unit() {
     [ "$rc" != "0" ] || { rc=1; killed=no; echo "::warning::$label: $unit_name exited 0 but left no recording that can be read to the end and is long enough (leadIn + seconds in footage-cuts.json)"; rm -f "$video_tmp"; }
     if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
       note "- RETRY: $label $unit_name attempt $attempt failed (status $rc, killed at the $UNIT_LIMIT s limit: $killed), it is recorded once more"
-      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
+      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + PREFLIGHT_TIME_LIMIT_SECONDS + 2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
         problem "$label: $unit_name: no time left for the retry (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
         UNIT_LIMIT="$base_limit"
         return 1
       fi
-      if ! reset_simulator "$udid" "$bundle_id" "$killed"; then
+      # Slice 433 (finding 2): a fresh boot after every failed clip attempt, as after a kill (the setup flow turns the iPad again).
+      if ! reset_simulator "$udid" "$bundle_id" yes; then
         SIM_BROKEN=yes
         problem "$label: the simulator did not come back within $RESTART_TIME_LIMIT_SECONDS s after $unit_name; the rest of this device is skipped"
         UNIT_LIMIT="$base_limit"
@@ -717,6 +754,10 @@ run_video_units() {
   local label="$1" udid="$2" bundle_id="$3" unit index=0
   [ "$VIDEO_COUNT" -gt 0 ] || return 0
   video_device "$label" || return 0
+  if [ "$SHELF_PREP_FAILED" = "yes" ]; then
+    problem "$label: the $VIDEO_COUNT clip(s) are not recorded, store-shot-ios-shelfprep failed so the shelf is not the full one"
+    return 0
+  fi
   for unit in "${VIDEO_UNITS[@]}"; do
     index=$((index + 1))
     if [ "$SIM_BROKEN" = "yes" ]; then

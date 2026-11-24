@@ -35,7 +35,7 @@ name: Store screenshot 1 of 6, picture, Dino Reader, iOS
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 30000
     optional: true
 - runFlow:
     when:
@@ -55,7 +55,7 @@ name: Store screenshot 1 of 6, picture, Dino Reader, iOS
 - openLink: "dino-test://open-book?id=three-little-pigs&page=1"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 30000
     optional: true
 - runFlow:
     when:
