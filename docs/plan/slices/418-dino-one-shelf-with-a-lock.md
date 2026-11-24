@@ -2,6 +2,8 @@
 
 **Product:** Dino
 
+*Closed 2026-11-24 (user: "I think they are all done"): no work item is open; App Store Connect shows Dino 1.136.0 READY_FOR_DISTRIBUTION (read 2026-11-24). The Windows VM checks it left failing are Slice 420; its device lines stay in unverified.md.*
+
 *Built 2026-11-19 on feat/s418-lock (claimed the same day), PR #1308, not merged; passed on the emulator, not yet checked on the Windows VM, iOS or by native readers (see Not yet verified).*
 
 Source: user, 2026-11-19 (second round of user testing): "Onboarding was bad. On the listen step, users heard the book but

@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (356 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (358 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 ### Read The Stupid Text
 
@@ -36,7 +36,6 @@ Open slices only. Finished slices (356 rows) are in [slices-done](docs/plan/note
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | planned | #722, #1136, #1138, #1147 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879, fixes F1-F5 merged #1290 (deployed 2026-11-19); Add to Sonos works on the S21; waits on a real play, the Self Test result and Sonos's answer on case 09396143 | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 350 | Dino: high-resolution pictures for a printed Amazon book (Git LFS, `high-res/`), fixing faulty pages, one prompt per Gemini chat, stricter picture checks, Good Enough redrawn without text | in progress (Part D done for all 15 books, 2026-11-19: #1291-#1294 and earlier #1041, #1132, #1195, #1216-#1224; model 4 Hydrogen; left: the slice file's open items and the user's picture questions; B and C merged #1013) | #1013 | | [350-dino-high-res-pictures.md](docs/plan/slices/350-dino-high-res-pictures.md) |
-| 346 | Dino: four free books, the rest $0.99 each (store-account purchases, server receipt check, backups without book content) | planned | #1016, #1033, #1036, #1038, #1039, #1046, #1120 | | [346-dino-paid-books.md](docs/plan/slices/346-dino-paid-books.md) |
 | 415 | Dino: paid books on Sonos and Alexa through the subscription, linked from the Dino app | planned | | | [415-dino-speaker-subscription-link.md](docs/plan/slices/415-dino-speaker-subscription-link.md) |
 | 395 | Dino: recording a character shows and replaces only that character's quoted words; the narration around them keeps the book's own audio | planned | #1233 | | [395-dino-record-only-the-characters-words.md](docs/plan/slices/395-dino-record-only-the-characters-words.md) |
 | 397 | Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens) | planned | #1239, #1255 | | [397-dino-subscription-card-states.md](docs/plan/slices/397-dino-subscription-card-states.md) |
@@ -49,7 +48,6 @@ Open slices only. Finished slices (356 rows) are in [slices-done](docs/plan/note
 | 408 | Dino Worker: print-the-damn-book's own $0.99 print products per paid book, a print-access check and the print app's Windows ticket | planned | | | [408-print-app-purchases.md](docs/plan/slices/408-print-app-purchases.md) |
 | 413 | Dino: the new store name, subtitle and keywords in the other 13 languages, in each language's own search words (after 412) | planned | | | [413-dino-store-name-13-languages.md](docs/plan/slices/413-dino-store-name-13-languages.md) |
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
-| 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | built #1308, released as 1.136.0 (Play and App Store in review 2026-11-20); Windows VM checks partly verified, rest in 420 | #1308, #1313 | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
 | 420 | Dino: the Windows VM checks Slice 418 left failing (open book, page turn, desktop polish with the 270 rail, reorder) and Ctrl+L stages logged by name | planned | | | [420-dino-windows-checks-after-one-shelf.md](docs/plan/slices/420-dino-windows-checks-after-one-shelf.md) |
 | 423 | Dino: short links `/book/<book-id>` that printed books point at (for print-the-damn-book's KDP books) | verified (live 2026-11-20) | #1321 | | [423-dino-book-short-links.md](docs/plan/slices/423-dino-book-short-links.md) |
 | 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings): reproduce, read Play, and put the exit reason, session, last page and a current log tail in every unclean-exit report | planned | | | [424-dino-android-1136-unclean-exit.md](docs/plan/slices/424-dino-android-1136-unclean-exit.md) |
