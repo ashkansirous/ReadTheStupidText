@@ -26,7 +26,7 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 433 | Dino: store screenshots in a new look, App Store preview videos, Play feature graphic | planned | | | [433-dino-store-screenshots-video-play-appstore.md](docs/plan/slices/433-dino-store-screenshots-video-play-appstore.md) |
-| 434 | Dino: Microsoft Store 1920 x 1080 shots and the landscape video (Play YouTube link, Store trailer) | planned | | | [434-dino-windows-store-shots-and-landscape-video.md](docs/plan/slices/434-dino-windows-store-shots-and-landscape-video.md) |
+| 434 | Dino: Microsoft Store 1920 x 1080 shots and the landscape video (Play YouTube link, Store trailer) | built (items 3-5 open) | #1341 | | [434-dino-windows-store-shots-and-landscape-video.md](docs/plan/slices/434-dino-windows-store-shots-and-landscape-video.md) |
 | 435 | Dino: YouTube channel, the four free books read aloud in 15 languages | planned | | | [435-dino-youtube-read-aloud-channel.md](docs/plan/slices/435-dino-youtube-read-aloud-channel.md) |
 | 436 | Dino: Sonos counts only real plays, hides books it can't play, shows new books within 5 minutes; browsing from a Claude Design mock | planned | | | [436-dino-sonos-real-plays-and-browse.md](docs/plan/slices/436-dino-sonos-real-plays-and-browse.md) |
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | planned | #722, #1136, #1138, #1147 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
@@ -113,7 +113,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 530 checks across 191 slices (Read The Stupid Text 29, Dino Reader 328, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 534 checks across 192 slices (Read The Stupid Text 29, Dino Reader 332, Shared 173), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Slice 434 items 3-5 (Dino Windows Store set), open:** render the 1920 x 1080 landscape cut and thumbnail after Slice 433 merges; push the Microsoft Store screenshots, captions and trailer and read them back; the YouTube upload and Play video URL wait for Slice 435's upload script; record per store in Slice 291 and tick Slice 404 item 5. ([slice](docs/plan/slices/434-dino-windows-store-shots-and-landscape-video.md))
 - **Dino 1.136.3 waits for the 1.136.0 store reviews to finish** (user, 2026-11-20: "we should wait for the reviews to be done on google and ios, before we release a new version unless I explicitly say so"; Windows is not held: "for windows, we should always release", so the release run's Microsoft Store submission of 1.136.3 stands). 1.136.0 (Slice 418) is in Google Play and App Store review; 1.136.3 (Slice 420: a cover tap on the unlocked shelf reads again, Windows keyboard fixes) is on the Play internal track and TestFlight only. Once both reviews are done: promote 1.136.3 to Play production and submit it for App Store review. Check by hand: [Play publishing overview](https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/publishing), [App Store Connect](https://appstoreconnect.apple.com/apps/6825053435/distribution).
 
 **Needs you (checked 2026-11-19). Nothing else in this file waits on you.**
