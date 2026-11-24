@@ -38,7 +38,7 @@ NOG MEER
 - Neem elk personage op, op elke pagina, in elke verhaaltaal; maak een back-up en herstel je opnames.
 
 TALEN
-Engels, chinees, spaans, arabisch, frans, portugees, russisch, duits, japans, perzisch, nederlands, zweeds, deens, fins en noors: de app, de verhalen en de stemmen.
+Engels, Chinees, Spaans, Arabisch, Frans, Portugees, Russisch, Duits, Japans, Perzisch, Nederlands, Zweeds, Deens, Fins en Noors: de app, de verhalen en de stemmen.
 
 VEILIG EN PRIVÉ
 - Geen reclame en geen account. We bewaren niets over jou of je aankoop; het bewijs van de winkel wordt gecontroleerd en vergeten.
@@ -50,7 +50,7 @@ VEILIG EN PRIVÉ
 Dino leest prentenboekverhalen voor aan kinderen van 3 tot 9 jaar, met een andere stem voor elk personage. De verteller vertelt het verhaal, en de wolf, de biggetjes en het peperkoekmannetje praten elk met hun eigen stem.
 
 KIES JE VERHALEN
-Een volwassene kiest boeken uit de verhalenplank: klassieke sprookjes, zacht hervertelt, met een plaatje op elke pagina. Vier verhalen zijn gratis. Elk boek komt met zijn eigen vooraf gemaakte stemmen, in de taal die je kiest.
+Een volwassene kiest boeken uit de verhalenplank: klassieke sprookjes, zacht herverteld, met een plaatje op elke pagina. Vier verhalen zijn gratis. Elk boek komt met zijn eigen vooraf gemaakte stemmen, in de taal die je kiest.
 
 FAMILIE IN HET VERHAAL
 Een ouder of grootouder kan de eigen stem opnemen voor elk personage, op elke pagina en in elke verhaaltaal. Je kind hoort jou voorlezen, en de opname blijft op je apparaat.
@@ -65,7 +65,7 @@ VERHALEN EN PRIJZEN
 Vier geïllustreerde verhalen zijn gratis: De leeuw en de muis, Het peperkoekmannetje, De drie biggetjes en X markeert de schat. Elk ander verhaal op de plank kost 0,99 USD (Google Play toont de prijs in je eigen valuta). Een volwassene koopt een verhaal één keer, achter de volwassenenpoort, via Google Play, en kan eerdere aankopen op elk moment herstellen. Verhalen die je al hebt, blijven op je apparaat.
 
 VIJFTIEN TALEN
-De app, de verhalen en de stemmen zijn er in het Engels, chinees, spaans, arabisch, frans, portugees, russisch, duits, japans, perzisch, nederlands, zweeds, deens, fins en noors.
+De app, de verhalen en de stemmen zijn er in het Engels, Chinees, Spaans, Arabisch, Frans, Portugees, Russisch, Duits, Japans, Perzisch, Nederlands, Zweeds, Deens, Fins en Noors.
 
 GEMAAKT VOOR KINDEREN
 - Geen reclame.
