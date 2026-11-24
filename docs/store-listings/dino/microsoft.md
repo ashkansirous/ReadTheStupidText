@@ -74,3 +74,22 @@ Live paragraph "GESCHICHTEN INKLUSIVE" becomes:
     Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte im integrierten Geschichtenregal kostet je 0,99 € bzw. der entsprechende Preis in Ihrer Landeswährung (der Store zeigt den Preis an). Ein Erwachsener kauft eine Geschichte einmal, hinter der Erwachsenensperre, über den Microsoft Store und kann frühere Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
 
 Live feature "Keine Werbung, keine Käufe, keine Konten" becomes "Keine Werbung, kein Konto, Kauf nur wenn gewünscht". Live feature "Bebilderte Starter-Geschichten und kostenloses Regal" becomes "Vier Geschichten gratis, jede weitere je 0,99 € bzw. Landeswährung".
+
+## Feature lines per language (Microsoft only, submission 108, 2026-11-24)
+
+The 14 non-English listings keep their other five feature lines; lines 3, 4, 7 and 9 are these (record your voice; four free stories; no ads, no account, buy only if you want; offline once a story is downloaded). Machine-written by Claude, native read pending like the rest of Slice 413.
+
+- da: Indtal din egen stemme til enhver figur | Fire gratis historier, de andre 0,99 USD stykket | Ingen reklamer, ingen konto, køb kun hvis du vil | Virker uden internet, når historien er hentet
+- ar: سجّل صوتك لأي شخصية | أربع قصص مجانية، واشترِ غيرها قصة قصة | بلا إعلانات ولا حساب، والشراء فقط إن أردت | يعمل بلا إنترنت بعد تنزيل القصة
+- zh-hans: 为任何角色录下你自己的声音 | 四个故事免费，其他故事可单独购买 | 无广告、无需账户，想买才买 | 故事下载后可离线使用
+- nl: Spreek je eigen stem in voor elk personage | Vier gratis verhalen, de rest los te koop | Geen reclame, geen account, alleen kopen als je wilt | Werkt offline zodra een verhaal is gedownload
+- fi: Äänitä oma äänesi mille tahansa hahmolle | Neljä satua ilmaiseksi, muut voi ostaa yksitellen | Ei mainoksia eikä tiliä, osta vain jos haluat | Toimii ilman nettiä, kun satu on ladattu
+- fr: Enregistrez votre propre voix pour n'importe quel personnage | Quatre histoires gratuites, les autres à l’unité | Sans publicité ni compte, achat seulement si vous le voulez | Fonctionne hors ligne une fois l’histoire téléchargée
+- ja: どのキャラクターにも自分の声を録音できます | 4つのお話は無料、ほかは1冊ずつ購入 | 広告なし、アカウント不要、買うのは必要なときだけ | お話をダウンロードすればオフラインで使えます
+- nb: Les inn din egen stemme til hvilken som helst figur | Fire gratis historier, resten kan kjøpes enkeltvis | Ingen reklame, ingen konto, kjøp bare hvis du vil | Virker uten internett når historien er lastet ned
+- fa: صدای خودتان را برای هر شخصیتی ضبط کنید | چهار قصه رایگان، بقیه را تک‌تک بخرید | بدون تبلیغ و بدون حساب کاربری، خرید فقط اگر بخواهید | پس از دانلود قصه، بدون اینترنت کار می‌کند
+- pt: Grave sua própria voz para qualquer personagem | Quatro histórias grátis, as outras compradas uma a uma | Sem anúncios, sem conta, compre só se quiser | Funciona offline depois que a história é baixada
+- ru: Запишите свой голос для любого персонажа | Четыре сказки бесплатно, остальные можно купить по одной | Без рекламы и без аккаунта, покупки только по желанию | Работает без интернета после загрузки сказки
+- es: Graba tu propia voz para cualquier personaje | Cuatro cuentos gratis, los demás se compran por separado | Sin anuncios ni cuenta, compra solo si quieres | Funciona sin conexión una vez descargado el cuento
+- sv: Spela in din egen röst till vilken figur som helst | Fyra gratis sagor, resten köps en i taget | Ingen reklam, inget konto, köp bara om du vill | Fungerar utan internet när sagan är nedladdad
+- de: Eigene Stimme für jede Figur aufnehmen | Vier Geschichten gratis, jede weitere je 0,99 € bzw. Landeswährung | Keine Werbung, kein Konto, Kauf nur wenn gewünscht | Funktioniert offline, sobald eine Geschichte geladen ist
