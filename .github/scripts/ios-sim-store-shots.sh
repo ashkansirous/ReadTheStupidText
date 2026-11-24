@@ -110,6 +110,20 @@ SHELF_PREP_FAILED=no
 LIMIT_HIT=no
 # Set when a simulator did not come back after a restart: the rest of that device is skipped.
 SIM_BROKEN=no
+# Fail fast (ClaudeSkills device-test-pipeline section 5): when the first FAIL_FAST_AFTER shots (or clips) a device really attempts all fail twice and none
+# came out, the rest of that device is stopped with one ::error:: line instead of spending its whole budget failing (iOS run 45491086879: the iPad shot
+# for most of an hour and got 0). After an early success the device also stops once FAIL_FAST_AFTER + 1 attempted units fail in a row (a device that
+# broke mid-run). A shot kept from a resumed run is not an attempt and counts neither way.
+FAIL_FAST_AFTER="${FAIL_FAST_AFTER:-2}"
+case "$FAIL_FAST_AFTER" in
+  '' | *[!0-9]* | 0) echo "::error::FAIL_FAST_AFTER must be a whole number of at least 1, not '$FAIL_FAST_AFTER'"; exit 1 ;;
+esac
+UNITS_OK=0
+UNITS_FAILED=0
+UNITS_FAILED_IN_A_ROW=0
+FAIL_FAST_HIT=no
+# Set to "yes" by a unit that was kept from a resumed run instead of attempted.
+UNIT_KEPT=no
 UNITS=()
 UNIT_LIMIT="$SHOT_TIME_LIMIT_SECONDS"
 
@@ -248,6 +262,55 @@ check_size() {
   esac
 }
 
+# iOS run 45502209923: on the iPad in landscape the app is laid out landscape (app log "[Landscape] reading laid out landscape=True") but
+# Maestro's takeScreenshot writes the simulator's portrait frame buffer, 2064 x 2752, so every shot failed the 2752 x 2064 check. A portrait
+# PNG whose swapped size is accepted is turned upright: LANDSCAPE_LEFT puts the home side on the right, so the picture's top is the buffer's
+# right edge and a quarter turn anticlockwise (sips -r 270, sips turns clockwise) stands it up. The direction is reasoned, not yet seen: the
+# coordinator looks at one turned shot before any store upload. Only while LANDSCAPE=yes, and only when the app's own last [Landscape] log line
+# says it was laid out landscape (review: a shot whose rotation never applied must fail its size check, never be turned into a sideways pass).
+upright_landscape_shot() {
+  local png="$1" accepted="$2" udid="$3" bundle_id="$4" width height
+  [ "$LANDSCAPE" = "yes" ] || return 0
+  width="$(sips -g pixelWidth "$png" | awk '/pixelWidth/ {print $2}')"
+  height="$(sips -g pixelHeight "$png" | awk '/pixelHeight/ {print $2}')"
+  [ "$width" -lt "$height" ] || return 0
+  case " $accepted " in
+    *" ${height}x${width} "*) ;;
+    *) return 0 ;;
+  esac
+  if ! app_laid_out_landscape "$udid" "$bundle_id"; then
+    echo "::warning::$(basename "$png") is ${width}x${height} and the app's log does not say it was laid out landscape; not turned"
+    return 0
+  fi
+  if ! sips -r 270 "$png" >/dev/null; then
+    echo "::warning::sips could not turn $(basename "$png"); left at ${width}x${height}"
+    return 0
+  fi
+  echo "turned $(basename "$png") from ${width}x${height} to ${height}x${width} (portrait frame buffer of a landscape shot)"
+}
+
+# Lines in the app's test-hook log before this attempt's flow (run_flow sets HOOK_LOG_LINES_BEFORE), so only this attempt's lines are read.
+HOOK_LOG_LINES_BEFORE=0
+hook_log_line_count() {
+  local container
+  container="$(xcrun simctl get_app_container "$1" "$2" data 2>/dev/null)" || { echo 0; return 0; }
+  if [ -f "$container/Library/test-hook.log" ]; then wc -l < "$container/Library/test-hook.log" | tr -d ' '; else echo 0; fi
+}
+
+# 0 when the newest [Landscape] line THIS attempt wrote says landscape: reading "landscape=True" (LandscapeLayout.IsLandscape), or a shelf on
+# the rail that is neither tablet-portrait form (GalleryPage logs tabletUpright and tabletCorner = IsTabletPortrait for a child or grown-up
+# shelf; CornerLayout gives an upright tablet the rail too, so the rail alone, or tabletUpright=False alone, proves nothing: review pass 2).
+app_laid_out_landscape() {
+  local udid="$1" bundle_id="$2" container last
+  container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data 2>/dev/null)" || return 1
+  last="$(tail -n +"$((HOOK_LOG_LINES_BEFORE + 1))" "$container/Library/test-hook.log" 2>/dev/null | grep -F '[Landscape]' | grep -E 'landscape=(True|False)|layout=(rail|grid)' | tail -n 1)"
+  case "$last" in
+    *landscape=True*) return 0 ;;
+    *layout=rail*tabletUpright=False*tabletCorner=False*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # The path a shot gets in the out folder: store-<app>-ios-<n>-<screen> becomes <out>/<label>/store-<app>-<label>-<n>-<screen>.png.
 shot_target() {
   local label="$1" name="$2" rest
@@ -300,6 +363,7 @@ collect_unit() {
       continue
     fi
     cp "$found" "$target"
+    upright_landscape_shot "$target" "$accepted" "$udid" "$bundle_id" # udid and bundle_id: run_unit_body's locals, in scope here
     verdict="$(check_size "$target" "$accepted")"
     if [ "$verdict" = ok ]; then
       note "- $label: $(basename "$target") ok"
@@ -428,6 +492,7 @@ print_failure_evidence() {
 # Returns 0 on success, else the status; LIMIT_HIT=yes when it was killed at the limit.
 run_flow() {
   local udid="$1" flow_run="$2" test_out="$3" bundle_id="$4" rc=0 killed
+  HOOK_LOG_LINES_BEFORE="$(hook_log_line_count "$udid" "$bundle_id")"
   run_limited "$UNIT_LIMIT" "$udid" maestro_test "$udid" "$flow_run" "$test_out" || rc=$?
   killed="$LIMIT_HIT"
   if [ "$killed" = "yes" ]; then
@@ -491,7 +556,9 @@ reset_attempt() {
 run_unit_body() {
   local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit="$5" index="$6" flow_run test_out attempt=1 rc killed unit_name
   unit_name="$(basename "$unit" .yaml)"
+  UNIT_KEPT=no
   if unit_complete "$label" "$accepted" "$unit"; then
+    UNIT_KEPT=yes
     note "- $label: $unit_name kept (already taken at an accepted size, not retaken)"
     return 0
   fi
@@ -548,6 +615,13 @@ run_unit() {
     UNIT_LIMIT="$FULL_SHELF_UNIT_TIME_LIMIT_SECONDS"
   fi
   run_unit_body "$@" || rc=$?
+  # iOS run 45502209923: shot 1 (the full-shelf fill) was kept from the resumed run, so the fresh simulator kept its 4-book shelf
+  # ("shelf total=4") and shots 2-4 failed waiting for a paid book. A kept full-shelf shot still fills the shelf, by the shelf set-up flow.
+  if [ "$rc" -eq 0 ] && [ "$UNIT_KEPT" = "yes" ] && [ "$UNIT_LIMIT" != "$base_limit" ]; then
+    note "- $1: $(basename "$5" .yaml) was kept, so the shelf is filled by store-shot-ios-shelfprep instead"
+    run_unit_body "$1" "$2" "$3" "$4" "$(dirname "$5")/store-shot-ios-shelfprep.yaml" "$6-shelf" || rc=$?
+    [ "$rc" -eq 0 ] || stop_when_shelfprep_failed "$1" "$(dirname "$5")/store-shot-ios-shelfprep.yaml"
+  fi
   UNIT_LIMIT="$base_limit"
   return "$rc"
 }
@@ -560,22 +634,62 @@ stop_when_shelfprep_failed() {
   echo "::error::$label: store-shot-ios-shelfprep failed; no clip or shot is taken on $label because the shelf is not the full 12-book shelf"
 }
 
-# Every unit in order on the booted simulator; one that failed does not stop the next, a simulator that did not come back does.
+fail_fast_reset() {
+  UNITS_OK=0
+  UNITS_FAILED=0
+  UNITS_FAILED_IN_A_ROW=0
+  FAIL_FAST_HIT=no
+}
+
+# Counts one finished unit (its return code in $2) and stops the device once the first FAIL_FAST_AFTER attempted units all failed,
+# or FAIL_FAST_AFTER + 1 failed in a row after an earlier success.
+fail_fast_count() {
+  local label="$1" rc="$2"
+  [ "$UNIT_KEPT" = "yes" ] && return 0
+  if [ "$rc" -eq 0 ]; then
+    UNITS_OK=$((UNITS_OK + 1))
+    UNITS_FAILED_IN_A_ROW=0
+    return 0
+  fi
+  UNITS_FAILED=$((UNITS_FAILED + 1))
+  UNITS_FAILED_IN_A_ROW=$((UNITS_FAILED_IN_A_ROW + 1))
+  [ "$FAIL_FAST_HIT" = "no" ] || return 0
+  if [ "$UNITS_OK" -eq 0 ] && [ "$UNITS_FAILED" -ge "$FAIL_FAST_AFTER" ]; then
+    FAIL_FAST_HIT=yes
+    echo "::error::$label: the first $UNITS_FAILED shots or clips attempted all failed (or found no time left) and none came out; the rest of $label is stopped (fail fast) instead of using the whole budget. Fix the cause in the log above, then rerun."
+  elif [ "$UNITS_FAILED_IN_A_ROW" -gt "$FAIL_FAST_AFTER" ]; then
+    FAIL_FAST_HIT=yes
+    echo "::error::$label: $UNITS_FAILED_IN_A_ROW shots or clips in a row failed (or found no time left) after $UNITS_OK came out; the rest of $label is stopped (fail fast). Fix the cause in the log above, then rerun."
+  fi
+}
+
+# Prints why a unit is skipped and returns 0 when the device is stopped (simulator gone, wrong shelf, fail fast).
+unit_skipped() {
+  local label="$1" name="$2"
+  if [ "$SIM_BROKEN" = "yes" ]; then
+    problem "$label: $name skipped, the simulator is not usable"
+  elif [ "$SHELF_PREP_FAILED" = "yes" ]; then
+    problem "$label: $name skipped, store-shot-ios-shelfprep failed so the shelf is not the full one"
+  elif [ "$FAIL_FAST_HIT" = "yes" ]; then
+    problem "$label: $name skipped, fail fast (see the fail-fast error above)"
+  else
+    return 1
+  fi
+}
+
+# Every unit in order on the booted simulator; one that failed does not stop the next, unless the first ones all failed (fail fast) or the simulator did not come back.
 run_units() {
-  local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit index=0
+  local label="$1" accepted="$2" udid="$3" bundle_id="$4" unit index=0 rc
   SIM_BROKEN=no
   SHELF_PREP_FAILED=no
+  fail_fast_reset
   for unit in "${UNITS[@]}"; do
     index=$((index + 1))
-    if [ "$SIM_BROKEN" = "yes" ]; then
-      problem "$label: $(basename "$unit" .yaml) skipped, the simulator is not usable"
-      continue
-    fi
-    if [ "$SHELF_PREP_FAILED" = "yes" ]; then
-      problem "$label: $(basename "$unit" .yaml) skipped, store-shot-ios-shelfprep failed so the shelf is not the full one"
-      continue
-    fi
-    run_unit "$label" "$accepted" "$udid" "$bundle_id" "$unit" "$index" || stop_when_shelfprep_failed "$label" "$unit"
+    unit_skipped "$label" "$(basename "$unit" .yaml)" && continue
+    rc=0
+    run_unit "$label" "$accepted" "$udid" "$bundle_id" "$unit" "$index" || rc=$?
+    [ "$rc" -eq 0 ] || stop_when_shelfprep_failed "$label" "$unit"
+    fail_fast_count "$label" "$rc"
   done
 }
 
@@ -727,7 +841,9 @@ run_video_unit() {
   unit_name="$(basename "$unit" .yaml)"
   target="$(video_target "$label" "$unit")"
   prep_unit="$(dirname "$unit")/$(basename "$unit" | sed 's/^store-shot-ios-video-/store-shot-ios-videoprep-/')"
+  UNIT_KEPT=no
   if clip_recording_ok "$target" "$unit"; then
+    UNIT_KEPT=yes
     note "- $label: $(basename "$target") kept (already recorded, readable and long enough, not retaken)"
     return 0
   fi
@@ -789,20 +905,20 @@ run_video_unit() {
 
 # Every footage flow in order after the shots, on the devices Apple's previews come from; one that failed does not stop the next.
 run_video_units() {
-  local label="$1" udid="$2" bundle_id="$3" unit index=0
+  local label="$1" udid="$2" bundle_id="$3" unit index=0 rc
   [ "$VIDEO_COUNT" -gt 0 ] || return 0
   video_device "$label" || return 0
   if [ "$SHELF_PREP_FAILED" = "yes" ]; then
     problem "$label: the $VIDEO_COUNT clip(s) are not recorded, store-shot-ios-shelfprep failed so the shelf is not the full one"
     return 0
   fi
+  [ "$FAIL_FAST_HIT" = "yes" ] || fail_fast_reset
   for unit in "${VIDEO_UNITS[@]}"; do
     index=$((index + 1))
-    if [ "$SIM_BROKEN" = "yes" ]; then
-      problem "$label: $(basename "$unit" .yaml) skipped, the simulator is not usable"
-      continue
-    fi
-    run_video_unit "$label" "$udid" "$bundle_id" "$unit" "$index" || true
+    unit_skipped "$label" "$(basename "$unit" .yaml)" && continue
+    rc=0
+    run_video_unit "$label" "$udid" "$bundle_id" "$unit" "$index" || rc=$?
+    fail_fast_count "$label" "$rc"
   done
 }
 

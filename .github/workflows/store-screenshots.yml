@@ -241,9 +241,12 @@ jobs:
           fi
           echo "STORE_SHOTS_TAG=$TAG" >> "$GITHUB_ENV"
 
-      # About 6 minutes of setup come before this step (3 min 20 s measured, run 43748250465); the script starts no attempt after 45
-      # minutes (SCRIPT_BUDGET_SECONDS 2700; the worst case, 4800 s, does not fit and the rerun finishes it), and the hand-over step below
-      # needs a minute or two. A shot attempt is killed after 7 minutes (a driver start of up to 3 + the longest shot), the RTST unit after 10.
+      # About 6 minutes of setup come before this step (3 min 20 s measured, run 43748250465); the script starts no attempt that does
+      # not fit in 60 minutes (SCRIPT_BUDGET_SECONDS 3600, Slice 433; the arithmetic is beside the job's timeout above), and the hand-over step
+      # below needs a minute or two. A shot attempt is killed after 7 minutes (a driver start of up to 3 + the longest shot), a clip's setup and
+      # recording after 4 each, the RTST unit after 10. Fail fast: when a device's first 2 attempted shots or clips both fail, or 3 fail in a row
+      # after an earlier success, the rest of that device is stopped at once (FAIL_FAST_AFTER in the script), so a broken device costs 2 or 3
+      # shots' two attempts each, not the whole hour.
       - name: Take the shots on the simulator
         id: shots
         timeout-minutes: 66   # script budget 3600 s (60 min) + 6 min for the last attempt's kill and the final summary lines; see the job's timeout above
