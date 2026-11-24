@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (356 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 ### Read The Stupid Text
 
@@ -43,7 +43,6 @@ Open slices only. Finished slices (355 rows) are in [slices-done](docs/plan/note
 | 407 | Dino: the premade-audio Farsi delivery fixture matches Good Enough's cast again (suite red on main) | planned | | | [407-premade-audio-good-enough-fixture.md](docs/plan/slices/407-premade-audio-good-enough-fixture.md) |
 | 409 | Dino: the store upload only uploads (listening tracks built on the PC, the slice that changes old books ships them; audio-pack step 30 min for one book) | planned | | | [409-dino-store-ffmpeg-install.md](docs/plan/slices/409-dino-store-ffmpeg-install.md) |
 | 408 | Dino Worker: print-the-damn-book's own $0.99 print products per paid book, a print-access check and the print app's Windows ticket | planned | | | [408-print-app-purchases.md](docs/plan/slices/408-print-app-purchases.md) |
-| 412 | Dino: renamed "Dino: Kids Books & Stories" everywhere (icon label "Dino"), English listing with the words parents search for, Windows, Sonos and Alexa names; ids never change; nothing on Play until the first production release is out | planned | | | [412-dino-rename-kids-books-and-stories.md](docs/plan/slices/412-dino-rename-kids-books-and-stories.md) |
 | 413 | Dino: the new store name, subtitle and keywords in the other 13 languages, in each language's own search words (after 412) | planned | | | [413-dino-store-name-13-languages.md](docs/plan/slices/413-dino-store-name-13-languages.md) |
 | 414 | Dino: tune the iOS keyword field from search impressions 4-6 weeks after the new name is live | planned | | | [414-dino-ios-keyword-tuning.md](docs/plan/slices/414-dino-ios-keyword-tuning.md) |
 | 418 | Dino: one shelf with a lock (Books · Store · Settings · Lock, locked at start, auto-lock after 30 s) and a five-step onboarding (no second-language listen, Skip for recording, no corner tour) | built #1308, released as 1.136.0 (Play and App Store in review 2026-11-20); Windows VM checks partly verified, rest in 420 | #1308, #1313 | | [418-dino-one-shelf-with-a-lock.md](docs/plan/slices/418-dino-one-shelf-with-a-lock.md) |
