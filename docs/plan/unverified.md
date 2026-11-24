@@ -77,6 +77,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 434: Dino: Microsoft Store 1920 x 1080 shots and the landscape video ([slice](slices/434-dino-windows-store-shots-and-landscape-video.md))
+- [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back, after Slice 433 merges (its storyboard in `tools/dino/promo/store/`).
+- [session] The YouTube upload and the Play video URL wait for Slice 435's upload script.
+- [session] The dino-onboarding mic step failed once on the VM 2026-11-24 (run2.log: "FAIL R on the voice step started no recording and showed no microphone-off state (waited 15 s)"); recheck on main. The store-shots check follows `dino-onboarding-skip` and no longer runs that step.
+- [session] Run `store-size-check.ps1` on the eight Windows PNGs once Slice 433 merges.
+
 ### Slice 420: Dino Windows checks after one shelf ([slice](slices/420-dino-windows-checks-after-one-shelf.md))
 - [session] `needs-file/store-shot-phone` and `needs-file/store-shot-tablet` Maestro flows (tap on a book's dots by title) were not run.
 - [cloud] iOS: a cover tap reads the book on the unlocked shelf.

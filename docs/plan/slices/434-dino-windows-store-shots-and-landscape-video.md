@@ -3,7 +3,7 @@
 
 *Planned 2026-11-24 from the phone doc [2026-11-23-dino-store-screenshots-and-video.md](../notes/2026-11-23-dino-store-screenshots-and-video.md), milestone 3 and the landscape part of milestone 4; split from Slice 433 (user, 2026-11-24). Follow every line of that note's Constraints, Decisions (approved), Sizes and Video timeline; this file wins where they differ.*
 
-*Built 2026-11-24 (items 1 and 2: shots made on the VM, run 13 PASS); items 3-5 open; not merged.*
+*Built 2026-11-24 (items 1 and 2: shots made on the VM, run 13 PASS); items 3-5 open; merged as PR #1341 (8503a816).*
 
 **Premise check (2026-11-24, before the claim):** the `full-shelf` hook (`src/Dino/DinoReader.App/Testing/DinoTestCommands.FullShelf.cs:1`) and every `DinoTestCommands.*.cs` compile only under `#if DEBUG`; `DINO_TEST_BOOKS` (`DinoReader.App.csproj:162-165`, `tools/desktop-vm/Build-TestPackage.ps1:52`) compiles in only the 4 test books. So item 1 widens the hook's condition to `DEBUG || DINO_TEST_BOOKS` (and whatever of `Testing/` it needs), which gives the 12 books in the Release test package; the `DINO_TEST_BOOKS` route alone is not enough. `Set-ScreenResolution` exists (`tools/desktop-vm/checks/_lib.ps1:394-399`); there is no display-scale (DPI) setter and no window-sizing code, and whether the VM's display adapter offers a mode at or above 1920 x 1080 is unproven: item 1 proves it first. `store-size-check.ps1` is Slice 433's (plan-not-needed: 433); this slice merges `origin/main` after 433 merges and reuses it. Slice 435's upload script is not built (plan-not-needed: 435): the YouTube upload and the Play video URL in items 3-4 wait for it and go to *Not yet verified* if it has not merged when this slice ships.
 
@@ -51,7 +51,7 @@ Rules on the way: `tools/desktop-vm/CLAUDE.md` (dry-run limits on width/height c
 - `[session]` The dino-onboarding mic step failed once on the VM 2026-11-24 (run2.log: "FAIL R on the voice step started no recording and showed no microphone-off state (waited 15 s)"); recheck on main. The store-shots check follows `dino-onboarding-skip` and no longer runs that step.
 - `[session]` Run `store-size-check.ps1` on the eight Windows PNGs once Slice 433 merges.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-24)
 
 For `tools/desktop-vm/CLAUDE.md`:
 
