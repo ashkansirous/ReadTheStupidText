@@ -71,6 +71,10 @@ internal sealed record FullShelfPlan(IReadOnlyList<StoreItem> Download)
 
 	private static int Rank(string id) => string.Equals(id, LastBookId, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
 
+	/// <summary>Slice 434, the offline Windows VM: the ids of <see cref="BookIds"/> (free ones too) whose package is not among <paramref name="presentFiles"/>; empty when all eight can be read from the folder.</summary>
+	public static IReadOnlyList<string> MissingAllPackages(IReadOnlySet<string> presentFiles) =>
+		[.. BookIds.Where(id => !presentFiles.Contains(PackageName(id)))];
+
 	/// <summary>The paid books of <see cref="Download"/> whose package is not among <paramref name="presentFiles"/> (file names in <see cref="PackageFolder"/>); empty when every paid book can be imported.</summary>
 	public IReadOnlyList<string> MissingPackages(IReadOnlySet<string> presentFiles) =>
 		[.. Download.Where(item => item.Sale == BookSale.Paid && !presentFiles.Contains(PackageName(item.Id))).Select(item => item.Id)];

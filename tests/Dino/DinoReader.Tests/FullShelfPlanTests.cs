@@ -100,6 +100,15 @@ public class FullShelfPlanTests
     }
 
     [Fact]
+    public void The_offline_shelf_needs_a_package_for_every_chosen_book_free_ones_too()
+    {
+        var present = new HashSet<string>(FullShelfPlan.BookIds.Skip(1).Select(FullShelfPlan.PackageName), StringComparer.OrdinalIgnoreCase);
+
+        Assert.Equal([FullShelfPlan.BookIds[0]], FullShelfPlan.MissingAllPackages(present));
+        Assert.Empty(FullShelfPlan.MissingAllPackages(new HashSet<string>(FullShelfPlan.BookIds.Select(FullShelfPlan.PackageName), StringComparer.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
     public void The_package_file_is_named_by_the_book_id()
     {
         Assert.Equal("abc123.dino", FullShelfPlan.PackageName("abc123"));

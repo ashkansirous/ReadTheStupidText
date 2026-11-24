@@ -9,28 +9,58 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BUCKET_NAME, wranglerCommand } from './r2-wrangler.mjs';
 
 const DEFAULT_LIST_URL = 'https://dinoreader.sirous.uk/api/stories';
 const PAID = 'paid';
+const INCLUDE_FREE_FLAG = '--include-free'; // Slice 434: the Windows VM is offline, so its full shelf needs the free books' packages too
+const LISTING_FILE = 'shelf-listing.json'; // Slice 434: id -> { min, max, access, productId, unlockedBy } from the live list, next to the package folders; TestStore.ShelfListingOf reads its copy in the guest
 const WRANGLER_TIMEOUT_MS = 4 * 60 * 1000;
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BOOKS_FILE = join(REPO_ROOT, 'tools', 'dino', 'full-shelf-books.json');
 
 /** Pure: the packages to fetch, one `{ id, title, version, key }` per chosen book the list sells as paid; `missing` names chosen ids the list does not hold (the hook skips them too). */
-export function packagesToFetch(list, chosen) {
+export function packagesToFetch(list, chosen, includeFree = false) {
     const byId = new Map((list.stories ?? []).map((story) => [story.id, story]));
     const packages = [];
     const missing = [];
     for (const book of chosen) {
         const story = byId.get(book.id);
         if (!story) missing.push(book.id);
-        else if (story.access === PAID) packages.push({ id: book.id, title: story.title, version: story.version, bytes: story.bytes, key: `dinoreader/stories/${book.id}/story-v${story.version}.dino` });
+        else if (includeFree || story.access === PAID) packages.push({ id: book.id, title: story.title, version: story.version, bytes: story.bytes, key: `dinoreader/stories/${book.id}/story-v${story.version}.dino` });
     }
     return { packages, missing };
+}
+
+/** Pure: the sale fields `StoreClient`'s list parser reads (`access`, `productId`, `unlockedBy`), kept only when well formed; a free or older-Worker line has none. */
+function saleOf(story) {
+    if (story.access !== PAID) return {};
+    const sale = { access: PAID };
+    if (typeof story.productId === 'string' && story.productId.trim()) sale.productId = story.productId.trim();
+    if (Array.isArray(story.unlockedBy)) sale.unlockedBy = story.unlockedBy.filter((product) => typeof product === 'string' && product.trim());
+    return sale;
+}
+
+/**
+ * Pure (Slice 434): what the live list says about each fetched book, `{ <id>: { min?, max?, access?, productId?, unlockedBy? } }`: the age range (only when complete) and, for a paid book, the sale fields the app's own list parser
+ * reads, so the offline VM's test store shows each card as the live store does (price, subscription lock, or Free). The list carries no price: the platform store supplies it.
+ */
+export function shelfListingOf(list, packages) {
+    const byId = new Map((list.stories ?? []).map((story) => [story.id, story]));
+    const listing = {};
+    for (const { id } of packages) {
+        const story = byId.get(id) ?? {};
+        const entry = { ...saleOf(story) };
+        if (Number.isInteger(story.ageMin) && Number.isInteger(story.ageMax)) {
+            entry.min = story.ageMin;
+            entry.max = story.ageMax;
+        }
+        if (Object.keys(entry).length > 0) listing[id] = entry;
+    }
+    return listing;
 }
 
 /** Pure: a package already on disk is reused only when its size is exactly the live list's byte count for the book (a partial or stale file never is). */
@@ -66,14 +96,17 @@ function fetchPackage(item, outFolder) {
 
 async function main() {
     const outFolder = process.argv[2];
-    if (!outFolder) throw new Error('usage: node fetch-shelf-packages.mjs <out folder>');
+    if (!outFolder) throw new Error(`usage: node fetch-shelf-packages.mjs <out folder> [${INCLUDE_FREE_FLAG}]`);
+    const includeFree = process.argv.includes(INCLUDE_FREE_FLAG);
     const response = await fetch(process.env.DINO_STORIES_URL ?? DEFAULT_LIST_URL);
     if (!response.ok) throw new Error(`the live store list answered ${response.status}`);
     const chosen = JSON.parse(readFileSync(BOOKS_FILE, 'utf8')).books;
-    const { packages, missing } = packagesToFetch(await response.json(), chosen);
+    const list = await response.json();
+    const { packages, missing } = packagesToFetch(list, chosen, includeFree);
     if (missing.length > 0) throw new Error(`chosen book(s) not in the live store list (${DEFAULT_LIST_URL}), so the shelf would have fewer than 12 books: ${missing.join(', ')}`);
     for (const item of packages) fetchPackage(item, resolve(outFolder));
-    console.log(`${packages.length} paid package(s) ready in ${resolve(outFolder)}`);
+    writeFileSync(join(resolve(outFolder), LISTING_FILE), JSON.stringify(shelfListingOf(list, packages), null, 2));
+    console.log(`${packages.length} package(s)${includeFree ? ' (paid and free)' : ' (paid only)'} ready in ${resolve(outFolder)}`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
