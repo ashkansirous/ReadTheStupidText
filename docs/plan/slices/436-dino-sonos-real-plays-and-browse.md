@@ -1,16 +1,16 @@
-# Slice 436 — Dino: Sonos counts only real plays, hides books it can't play, shows new books quickly, and browses by a Claude Design mock
+# Slice 436 — Dino: Sonos counts only real plays and shows new books quickly
 **Product:** Dino
 
 *Planned 2026-11-24. Not built (user, 2026-11-24: "open a slice and write it there. dont do it yet").*
 
-**Depends on:** Slice 283 (Sonos service), Slice 289 (Sonos play counting). **Replaced in part by:** Slice 415 (paid books
-through the subscription), which brings the hidden paid books back as locked books.
+**Depends on:** Slice 283 (Sonos service), Slice 289 (Sonos play counting). **Replaced in part by:** Slice 437 (parts B
+and D: the owner's Claude Design canvas `docs/design/sonos/`, 2026-11-24, lists paid books as "In the Dino app" instead of
+hiding them and gives the browse tree), Slices 438-440 (link, owned books, search).
 
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/speaker-usage.ts`,
 `worker/speaker-usage.test.mjs`, `worker/sonos-reporting.ts` (new), `worker/sonos-reporting.test.mjs` (new),
 `worker/index.ts`, `worker/stories.ts`, `worker/stories-catalogue.test.mjs`, `worker/stats-rollup.ts`,
-`worker/stats.test.mjs`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/dino/privacy.html`, `docs/design/` (part D, the mock),
-this file.
+`worker/stats.test.mjs`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/dino/privacy.html`, this file.
 
 ## Why
 
@@ -60,8 +60,8 @@ Sonos documentation read 2026-11-24 (web-research):
 - Decided by this session: each counted play stores the reported played seconds, capped at the book's length, in place
   of the whole book's length; the dashboard keeps the Sonos hatch and "Sonos (estimate)" label (the Slice 287 mock)
   until a mock says otherwise. A play under 30 s is not a listen, the same bar as the apps ("Played for 30 s or more").
-- Decided by this session: paid books are left out of the Sonos browse until Slice 415 is built; Slice 415's decision 2
-  (every book listed, paid ones locked) replaces this when it ships.
+- ~~Decided by this session: paid books are left out of the Sonos browse until Slice 415 is built.~~ Replaced by the
+  owner's mock (2026-11-24): paid books stay listed as "In the Dino app" (Slice 437).
 - Decided by this session: the 18-24 Nov Sonos rows (and every earlier `sonos` `book_listened` row with detail
   `estimated`) were the owner's tests; Analytics Engine rows cannot be deleted, so the rollup leaves them out.
 
@@ -89,49 +89,27 @@ Sonos documentation read 2026-11-24 (web-research):
       language, seconds played; nothing about the home). `worker/CLAUDE.md`: Sonos plays are counted at `/timePlayed`,
       never at `getMediaURI` or the audio route.
 
-### B. Don't list books Sonos can't play
-- [ ] B1. `worker/sonos.ts` `tracksOf`/`loadTracks`: skip books whose `access` is paid; `getMediaURI`,
-      `getMediaMetadata` and `getExtendedMetadata` for a paid book's id return the SMAPI "item not found" fault, not a URL.
-      Tests for each.
-- [ ] B2. Note in `worker/CLAUDE.md` and in Slice 415's file that 415 reverses B1 (list every book, play the
-      subscribe message on a locked one).
+### B. Moved to Slice 437
+Paid books stay listed with "In the Dino app" and don't play (owner's mock, 2026-11-24); built in Slice 437.
 
 ### C. New books show up quickly
 - [ ] C1. Cut the Sonos list's colo Cache API lifetime (`worker/stories.ts:69-71`) from about 1 hour to 5 minutes, and keep
       the stale-while-rebuild path; test in `worker/stories-catalogue.test.mjs`.
-- [ ] C2. Return the same order every call (catalogue order today; part D may change it) and a stable `total`, so a
+- [ ] C2. Return the same order every call (Slice 437's shelf order once it ships) and a stable `total`, so a
       reload never shows a different count for the same catalogue.
 
-### D. Browsing layout from a Claude Design mock (waits on the mock)
-- [ ] D1. The owner makes the Sonos browse mock in Claude Design from the brief below; `import-claude-design` copies it
-      into `docs/design/` and `design-to-plan` rewrites this part to build exactly what it shows.
-- [ ] D2. Build the mock's tree in `worker/sonos.ts` (root containers, language handling from `Accept-Language`, order,
-      grouping, search through the presentation map and the search container if the mock has search).
-
-**Claude Design brief (paste into Claude Design):**
-
-> Design the browse screens of "Dino" (kids' picture books read aloud) inside the Sonos app, as a Sonos music service.
-> Constraints: Sonos draws its own UI. A service only controls a tree of containers and items, each with a title, an
-> optional subtitle and square artwork, plus an optional search box with categories. No custom colours, fonts or
-> buttons. Content: 8 books with audio today (16 in the catalogue), each in 15 languages (English, Arabic, Danish,
-> German, Spanish, Farsi, Finnish, French, Japanese, Norwegian, Dutch, Portuguese, Russian, Swedish, Chinese), each with
-> a cover, an age range (within 3-9), a length in minutes and a free or paid flag. The Sonos phone app tells us the
-> listener's language (Accept-Language); speakers themselves do not. Problems to solve: today the first screen is a list
-> of 15 languages to pick every time, then a flat unsorted list. Design the first screen and each level below it for a
-> parent choosing a story for a child, in their own language without picking it each time, with a way to reach other
-> languages, plus sorting or grouping that helps (for example new, by age, short ones for bedtime). Show the phone
-> screens for an English-speaking parent and a Farsi-speaking parent.
+### D. Moved to Slices 437-440
+The owner made the mock (`docs/design/sonos/`, 2026-11-24); the browse tree is Slice 437, the link and story language
+Slice 438, owned books Slice 439, search Slice 440. The brief written here on 2026-11-24 is in git history.
 
 ## Verification
 
 - `npm ci && npm run typecheck`, `node --test worker/*.test.mjs`: no row on getMediaURI; one row per `final` report of
-  30 s or more with the capped seconds; none for `update`, short or unknown reports; paid books absent from browse and
-  faulted by id; Sonos list cache 5 minutes; rollup drops pre-cutover estimated Sonos rows.
+  30 s or more with the capped seconds; none for `update`, short or unknown reports; Sonos list cache 5 minutes; rollup drops pre-cutover estimated Sonos rows.
 - Live, after the owner's A4 step: browse the service twice in the Sonos app without playing; an `analytics-query`
   shows no new `sonos` row. Play one free book for 2 minutes and stop; one row with about 120 s appears after Sonos's
   report. The dashboard's Sonos hours for 18-24 Nov drop to 0.
-- Live: browse shows only the 2 free books in each language; a new listening track published appears within about 5
-  minutes.
+- Live: a new listening track published appears within about 5 minutes.
 
 ## Not yet verified
 
