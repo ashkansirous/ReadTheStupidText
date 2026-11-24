@@ -398,6 +398,57 @@ function Set-ScreenResolution {
     $code = [NativeDisplay]::Set($Width, $Height)
     if ($code -ne 0) { throw "Windows refused ${Width}x${Height} (ChangeDisplaySettings returned $code)." }
     Start-Sleep -Seconds 2
+    return $code   # always 0 here (a non-zero code threw above); the caller prints it
+}
+
+function Initialize-NativeWindow {
+    # Slice 434: Win32 window sizing, compiled on first use only.
+    if ('NativeWindow' -as [type]) { return }
+    Add-Type -TypeDefinition @'
+using System; using System.Runtime.InteropServices;
+public static class NativeWindow {
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
+  [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X, Y; }
+  [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref POINT p);
+  [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+  [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+  [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr h);
+  public static uint Dpi(IntPtr h) { return GetDpiForWindow(h); }   // 96 = 100% scale
+  public static void Restore(IntPtr h) { ShowWindow(h, 9); }
+  // x, y, width, height of the client area, on the screen.
+  public static int[] Client(IntPtr h) {
+    RECT c; GetClientRect(h, out c); POINT p = new POINT(); ClientToScreen(h, ref p);
+    return new int[] { p.X, p.Y, c.R - c.L, c.B - c.T };
+  }
+  // Moves the window to (x, y) and gives its CLIENT area the size w x hgt (the frame is whatever Windows adds); returns the client area reached.
+  public static int[] SizeClient(IntPtr h, int x, int y, int w, int hgt) {
+    for (int i = 0; i < 4; i++) {
+      RECT win; GetWindowRect(h, out win); int[] cl = Client(h);
+      int frameW = (win.R - win.L) - cl[2], frameH = (win.B - win.T) - cl[3];
+      SetWindowPos(h, IntPtr.Zero, x, y, w + frameW, hgt + frameH, 0x4 | 0x10);   // SWP_NOZORDER | SWP_NOACTIVATE
+      System.Threading.Thread.Sleep(400);
+      int[] now = Client(h);
+      if (now[2] == w && now[3] == hgt) return now;
+    }
+    return Client(h);
+  }
+}
+'@
+}
+
+function Save-ClientScreenshot {
+    # Slice 434: only the window's client area (never the desktop) as a PNG; throws unless it is exactly $Width x $Height. The window must be on top and fully on screen. Returns "<w>x<h>".
+    param([Parameter(Mandatory)] $Window, [Parameter(Mandatory)] [string] $Path, [int] $Width = 1920, [int] $Height = 1080)
+    Initialize-NativeWindow
+    Add-Type -AssemblyName System.Drawing
+    $c = [NativeWindow]::Client([IntPtr]$Window.Current.NativeWindowHandle)
+    if ($c[2] -ne $Width -or $c[3] -ne $Height) { throw "FAIL the window client area is $($c[2])x$($c[3]), not ${Width}x${Height}" }
+    $bmp = New-Object System.Drawing.Bitmap $Width, $Height
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    try { $g.CopyFromScreen($c[0], $c[1], 0, 0, $bmp.Size); $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png) } finally { $g.Dispose(); $bmp.Dispose() }
+    return "$($bmp.Width)x$($bmp.Height)"
 }
 
 function Save-WindowScreenshot {

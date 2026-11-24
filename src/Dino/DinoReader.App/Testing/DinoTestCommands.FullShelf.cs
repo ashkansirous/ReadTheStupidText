@@ -1,7 +1,9 @@
-#if DEBUG
+#if DEBUG || DINO_TEST_BOOKS
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
+#if DEBUG
 using Sirous.Reading.Mobile.Shared.Testing;
+#endif
 
 namespace DinoReader.Testing;
 
@@ -16,29 +18,46 @@ internal static partial class DinoTestCommands
 {
 	private const string FullShelfName = "full-shelf";
 
-	private static async Task FullShelfAsync()
+#if !DEBUG
+	// Slice 434: a Release DINO_TEST_BOOKS package (the Windows VM build) has no hook dispatcher or TestHookLog; the Windows head's request file starts the hook (Platforms/Windows/FullShelfRequest.cs)
+	// and its outcome lines go to the sink it sets (window-trace.log), prefixed "HOOK" like the Debug ones.
+	internal static Action<string> ReleaseSink { get; set; } = _ => { };
+
+	private static void Log(string text) => ReleaseSink($"HOOK {text}");
+#endif
+
+	/// <summary>Slice 434: runs the full-shelf hook from outside the Debug dispatcher (the Windows request file).</summary>
+	/// <summary>Slice 434: the Windows VM has no network by design, so this variant reads all eight books from their packages in <c>&lt;app data&gt;/full-shelf/&lt;id&gt;.dino</c> (free ones too) and never asks the live store.</summary>
+	internal static Task RunFullShelfAsync() => FullShelfAsync(offline: true);
+
+	private static async Task FullShelfAsync(bool offline)
 	{
 		TestStoreMode previousMode = TestStore.Mode;
 		try
 		{
-			TestStore.Mode = TestStoreMode.Off; // the live list, not the four fixture books
+			// Off: the live list, not the four fixture books; Ok: the offline run never depends on a leftover mode.
+			TestStore.Mode = offline ? TestStoreMode.Ok : TestStoreMode.Off;
+
 			await TestBooks.PendingAsync();
+			if (offline)
+			{
+				ShowShelfSale();
+			}
+
 			if (MarkerMatchesPlan())
 			{
 				Log($"{FullShelfName} ok already"); // a retried shot: the shelf is full, nothing is cleared or fetched again
 				return;
 			}
 
-			IServiceProvider services = IPlatformApplication.Current!.Services;
-			StoreClient store = services.GetRequiredService<StoreClient>();
-			StoreListing listing = await store.ListAsync(CancellationToken.None);
-			if (listing.Status != StoreLoadStatus.Ok || listing.Items.Count == 0)
+			StoreClient store = IPlatformApplication.Current!.Services.GetRequiredService<StoreClient>();
+			IReadOnlyList<StoreItem>? listed = offline ? await PackageItemsAsync() : await LiveItemsAsync(store);
+			if (listed is null)
 			{
-				Log($"{FullShelfName} failed no live list {listing.Status} {listing.Items.Count}");
 				return;
 			}
 
-			FullShelfPlan plan = FullShelfPlan.For(listing.Items, await TestBookIdsAsync());
+			FullShelfPlan plan = FullShelfPlan.For(listed, await TestBookIdsAsync());
 			if (!AllBooksListed(plan) || !PackagesPresent(plan))
 			{
 				return; // the shelf is left as it was: nothing is cleared before every book can land
@@ -55,12 +74,64 @@ internal static partial class DinoTestCommands
 		catch (Exception ex)
 		{
 			// no-fallback: Debug-only test hook; the fault is written to the hook log
-			Log($"{FullShelfName} fault {TestHookLog.FaultSummary(ex)}");
+			Log($"{FullShelfName} fault {ex.GetType().Name}: {ex.Message.ReplaceLineEndings(" ")}");
 		}
 		finally
 		{
 			TestStore.Mode = previousMode;
 		}
+	}
+
+	// Slice 434: the offline VM has no platform store, so a paid card (listed paid by shelf-listing.json) would show "not for sale now". The pretend store gives it a price tag instead, as the live store shows one;
+	// the list carries no price (the platform store supplies it), so the price is the design mock's.
+	private const string ShelfPrice = "£0.99";
+
+	private static void ShowShelfSale()
+	{
+		IServiceProvider services = IPlatformApplication.Current!.Services;
+		services.GetRequiredService<SwitchablePurchases>().Override = new FakePurchases { Price = ShelfPrice };
+		BookSales sales = services.GetRequiredService<BookSales>();
+		sales.ForcedEnabled = true;
+		sales.Purchases.MarkStale();
+	}
+
+	// The live store's readable books, or null (after logging why) when it did not answer.
+	private static async Task<IReadOnlyList<StoreItem>?> LiveItemsAsync(StoreClient store)
+	{
+		StoreListing listing = await store.ListAsync(CancellationToken.None);
+		if (listing.Status != StoreLoadStatus.Ok || listing.Items.Count == 0)
+		{
+			Log($"{FullShelfName} failed no live list {listing.Status} {listing.Items.Count}");
+			return null;
+		}
+
+		return listing.Items;
+	}
+
+	// Offline (Slice 434): one listing line per chosen book, read from its package file; null (after logging each missing file) when any of the eight packages is not in the folder.
+	private static async Task<IReadOnlyList<StoreItem>?> PackageItemsAsync()
+	{
+		string folder = PackageFolderPath();
+		var present = new HashSet<string>(Directory.Exists(folder) ? Directory.EnumerateFiles(folder).Select(file => Path.GetFileName(file)) : [], StringComparer.OrdinalIgnoreCase);
+		IReadOnlyList<string> missing = FullShelfPlan.MissingAllPackages(present);
+		foreach (string id in missing)
+		{
+			Log($"{FullShelfName} book {id} missing-package");
+		}
+
+		if (missing.Count > 0)
+		{
+			Log($"{FullShelfName} failed {missing.Count} packages are not in {FullShelfPlan.PackageFolder}");
+			return null;
+		}
+
+		var items = new List<StoreItem>();
+		foreach (string id in FullShelfPlan.BookIds)
+		{
+			items.Add(await TestStore.ItemFromPackageAsync(Path.Combine(folder, FullShelfPlan.PackageName(id))));
+		}
+
+		return items;
 	}
 
 	private static string PackageFolderPath() => Path.Combine(FileSystem.AppDataDirectory, FullShelfPlan.PackageFolder);

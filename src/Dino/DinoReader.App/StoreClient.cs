@@ -303,6 +303,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			return null;
 		}
 
+#if DINO_TEST_BOOKS
+		if (Testing.TestStore.Serves(item.CoverUrl))
+		{
+			return Testing.TestStore.CoverFileOf(item.CoverUrl); // Slice 434: a test book's cover, already on disk
+		}
+#endif
 		string path = Path.Combine(FileSystem.CacheDirectory, CoverFolder, $"{item.Id}-v{item.Version}{CoverExtension}");
 		if (File.Exists(path))
 		{

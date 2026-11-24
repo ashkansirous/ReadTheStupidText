@@ -122,7 +122,7 @@ internal static partial class DinoTestCommands
 
 		if (command.Name == FullShelfName)
 		{
-			_ = FullShelfAsync();
+			_ = FullShelfAsync(offline: false);
 			return StartedOutcome;
 		}
 

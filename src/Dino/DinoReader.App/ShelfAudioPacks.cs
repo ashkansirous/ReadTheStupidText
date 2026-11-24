@@ -28,6 +28,11 @@ public sealed class ShelfAudioPacks
 	private DateTimeOffset _lastResume = DateTimeOffset.MinValue;
 
 	private const string InstalledKey = "dino.shelfaudio.installed";
+
+#if DEBUG || DINO_TEST_BOOKS
+	/// <summary>Slice 434: languages <see cref="OffersBook"/> accepts with no audio pack installed; set only by the story-language test hook.</summary>
+	internal static volatile string[] ForcedOfferedLanguages = [];
+#endif
 	private InstalledShelfAudio _installed; // under _gate: the last scan of which (book, language) packs are on the phone; the one source both pages read (Slice 278 part B, reviews/s278b-design.md)
 	private readonly ScanRequests _scanRequests = new();
 	private readonly object _scanLock = new();
@@ -159,6 +164,12 @@ public sealed class ShelfAudioPacks
 	/// <summary>Whether a book can be read in a language: the main one always, otherwise when that book's audio is installed. Reads the snapshot only, never the disk.</summary>
 	public bool OffersBook(string language, string main, string? bookId)
 	{
+#if DEBUG || DINO_TEST_BOOKS
+		if (ForcedOfferedLanguages.Contains(language))
+		{
+			return true; // Slice 434: the offline VM holds no audio packs, so the store-shot hook makes these languages readable (the translated text only)
+		}
+#endif
 		lock (_gate)
 		{
 			return _installed.OffersBook(language, main, bookId);

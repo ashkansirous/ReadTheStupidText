@@ -18,6 +18,7 @@ public partial class App : MauiWinUIApplication
 		this.UnhandledException += OnUnhandledException;
 		this.DebugSettings.LayoutCycleTracingLevel = Microsoft.UI.Xaml.LayoutCycleTracingLevel.High;
 		LayoutCycleTrace.Start();
+		DinoReader.FullShelfRequest.Start(); // Slice 434: the VM store-shot check's way to the full-shelf hook
 #endif
 	}
 
