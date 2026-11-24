@@ -32,7 +32,7 @@ name: Store screenshot 2 of 6, voices, Dino Reader, iOS
       - tapOn:
           text: Open
 - extendedWaitUntil:
-    visible: ".*(My stories|Stories|For grown-ups).*"
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
     timeout: 60000
 - extendedWaitUntil:
     visible:

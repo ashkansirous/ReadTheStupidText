@@ -28,7 +28,7 @@ name: Store preview clip setup, 1b voices, Dino Reader, iOS
       - tapOn:
           text: Open
 - extendedWaitUntil:
-    visible: ".*(My stories|Stories|For grown-ups).*"
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
     timeout: 60000
 - openLink: "dino-test://open-book?id=three-little-pigs&page=6"
 - extendedWaitUntil:

@@ -6,7 +6,7 @@
 # Usage: ios-sim-store-shots.sh <app> <app-dir> <flows> <out-dir> [device]
 #   app      dino | rtst: the shot names in the flows are store-<app>-ios-<n>-<screen> and become store-<app>-<device>-<n>-<screen>.png
 #   app-dir  the folder holding the built .app (a Debug iossimulator-arm64 build)
-#   flows    one Maestro flow file, or a glob that matches one file per shot (expanded here, taken in name order). Each file's appId line is
+#   flows    (with MEDIA=clips: the shelf set-up flow, which has no shot) one Maestro flow file, or a glob that matches one file per shot (expanded here, taken in name order). Each file's appId line is
 #            swapped for the app's bundle id and its `# expect-log:` lines are dropped. Several files = one shot each, run one Maestro
 #            invocation per shot (7 minutes per attempt); a single file = one unit (10 minutes per attempt, the RTST frames flow).
 #   out-dir  the folder that gets <device>/<png> (created)
@@ -69,6 +69,14 @@ SCRIPT_BUDGET_SECONDS="${SCRIPT_BUDGET_SECONDS:-3600}"
 # Slice 433: the preview footage. Each clip is a setup flow plus a recorded flow of its own, each with this limit. The recorder is given this long to write its file after it is stopped.
 VIDEO_FLOWS="${VIDEO_FLOWS:-}"
 EXPECTED_VIDEOS="${EXPECTED_VIDEOS:-}"
+# Slice 433 (run 45466463555: slow shots used the whole budget and all seven clips were skipped): shots and clips are separate jobs with separate budgets.
+# MEDIA = shots (no clips are recorded), clips (the workflow passes the shelf set-up flow as <flows>, see store-shot-ios-shelfprep.yaml, and the clips follow it) or all (both in one run, the default).
+MEDIA="${MEDIA:-all}"
+case "$MEDIA" in
+  shots) VIDEO_FLOWS="" ;;
+  clips | all) ;;
+  *) echo "::error::MEDIA must be shots, clips or all, not '$MEDIA'"; exit 1 ;;
+esac
 VIDEO_TIME_LIMIT_SECONDS=240   # each of a clip's two flows (setup, recorded)
 RECORDER_FINISH_SECONDS=20
 RECORDER_START_CHECK_SECONDS=5   # the recorder must be alive and its file must be growing within this long of starting
@@ -176,7 +184,8 @@ prepare_flow() {
   sed -e "s/^appId: .*/appId: $bundle_id/" -e "/^# expect-log:/d" "$source" > "$target"
   # A recorded clip flow (store-shot-ios-video-*) never rotates: its setup flow did, and a rotation inside the recording would be footage.
   if [ "$LANDSCAPE" = yes ] && [[ "$(basename "$source")" != store-shot-ios-video-* ]]; then
-    awk '{ print } !done && /^---$/ { print "- setOrientation: LANDSCAPE_LEFT"; done = 1 }' "$target" > "$target.land" && mv "$target.land" "$target"
+    # Upright first, then sideways: the simulator keeps its rotation between attempts, and the one transition that worked in run 45466463555 (shot 1, attempt 1) was upright to sideways before the launch.
+    awk '{ print } !done && /^---$/ { print "- setOrientation: PORTRAIT"; print "- setOrientation: LANDSCAPE_LEFT"; done = 1 }' "$target" > "$target.land" && mv "$target.land" "$target"
   fi
   grep -q "^appId: $bundle_id\$" "$target"
 }
@@ -352,6 +361,23 @@ print_hook_log() {
   return 0
 }
 
+# Slice 433 (run 45466463555: the iPad's landscape flows failed with no picture of the screen): after a failed attempt, the pixel size of the simulator's own screenshot
+# (2752x2064 = the screen is sideways, 2064x2752 = upright) and the tail of Maestro's own log, which names the element it could not find. Never fails the script.
+print_failure_evidence() {
+  local udid="$1" test_out="$2" shot="$RUNNER_TEMP/failure-evidence-$$.png" log
+  echo "::group::failure evidence"
+  if run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl io "$udid" screenshot "$shot" >/dev/null 2>&1; then
+    echo "simulator screen: $(sips -g pixelWidth -g pixelHeight "$shot" | awk '/pixel/ {printf "%s ", $2}')"
+    rm -f "$shot"
+  else
+    echo "simctl screenshot failed or hung"
+  fi
+  log="$(find "$test_out" -name 'maestro.log' -print -quit 2>/dev/null)"
+  if [ -n "$log" ]; then tail -n 40 "$log"; else echo "no maestro.log under $test_out"; fi
+  echo "::endgroup::"
+  return 0
+}
+
 # Runs one flow on a booted simulator under the time limit; prints Maestro's hierarchy when it fails (not after a kill: the driver is gone).
 # Returns 0 on success, else the status; LIMIT_HIT=yes when it was killed at the limit.
 run_flow() {
@@ -364,6 +390,7 @@ run_flow() {
     echo "::group::maestro hierarchy"
     run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" maestro --device "$udid" hierarchy || true
     echo "::endgroup::"
+    print_failure_evidence "$udid" "$test_out"
   fi
   # Time-limited like the hierarchy dump: simctl can hang on a simulator whose run loop hung (review pass 1, finding 2).
   [ "$rc" = "0" ] || run_limited "$HIERARCHY_TIME_LIMIT_SECONDS" "$udid" print_hook_log "$udid" "$bundle_id" || true
@@ -822,7 +849,7 @@ device_verdict() {
     fi
   fi
   if [ "$PROBLEMS" -eq "$problems_before" ] && [ "$got" -eq "$total" ] && [ "$vgot" -eq "$vtotal" ]; then
-    note "**RESULT $label: OK, all $total shots at an App Store size.**"
+    note "**RESULT $label: OK, all $total shots at an App Store size, $vgot of $vtotal clips.**"
   else
     note "**RESULT $label: FAILED, $got of $total shots (see the FAILED lines above).**"
     [ -z "$missing" ] || note "Missing on $label:$missing. Resume with: gh run rerun ${GITHUB_RUN_ID:-<run id>} --failed (it retakes only the missing shots)."
@@ -841,6 +868,10 @@ while IFS='|' read -r label patterns accepted <&3; do
     continue
   fi
   MATCHED=1
+  if [ "$MEDIA" = "clips" ] && ! video_device "$label"; then
+    note "### $APP on $label: no preview clips are recorded on this device, nothing to do"
+    continue
+  fi
   LANDSCAPE=no
   if [ "$label" = "ipad-13" ] && [ "$APP" = dino ]; then LANDSCAPE=yes; fi
   problems_before="$PROBLEMS"

@@ -20,11 +20,12 @@ name: store-screenshots
 #
 # Dispatch: gh workflow run store-screenshots.yml --ref <branch> -f app=both -f device=all
 #   app: both | dino | rtst      device: all (= ipad-13, iphone-6.9 and, for RTST only, iphone-6.5) | iphone-6.5 | ipad-13 | iphone-6.9 (one device alone, e.g. to redo a failed one)
+#   media: all (default) | shots | clips. all = two jobs per app and device, one for the screenshots and one for the preview clips (Dino, iPhone 6.9" and iPad 13"), each with its own time budget and its own draft release (store-shots-<app>-<device>-<run id> and store-clips-<app>-<device>-<run id>), so slow shots can never starve the clips.
 #   resume_run: optional run id whose draft releases supply the shots already taken (only a run on this same commit; this run's own draft wins)
 # Slice 433: Dino shoots six screens per device plus the Japanese language shot, seven files (the iPad 13" in landscape, 2752 x 2064) and records seven App Store preview clips, one recording each (iPhone 6.9" and iPad 13"; .mp4 files in the same draft release).
 # Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 3600 s (60 min), its step 66 min, the job 80 min (about 6 min of
 # setup before the step, a minute or two of hand-over after it). The worst case (boot 300 + seven shots x two attempts x 420 + seven clips x two attempts x 480 (a setup and a recorded flow of 240 each) + a restart 300 =
-# 13200 s) does not fit one job; the script then stops starting attempts, names the missing shots, exits 1, and the rerun finishes it.
+# 13200 s) does not fit ONE job, which is why media=all runs the shots (worst case 300 + 5880) and the clips (300 + shelf set-up 900 + 6720) as two jobs, each with the full budget; the script then stops starting attempts, names the missing shots, exits 1, and the rerun finishes it.
 
 on:
   workflow_dispatch:
@@ -48,6 +49,15 @@ on:
           - ipad-13
           - iphone-6.9
         default: all
+      media:
+        description: 'What to take. all = the screenshots and the preview clips, each in a job of its own with its own time budget (Slice 433); shots or clips = only that kind.'
+        required: true
+        type: choice
+        options:
+          - all
+          - shots
+          - clips
+        default: all
       resume_run:
         description: 'Optional run id: start from the shots in that run draft releases (store-shots-<app>-<device>-<run id>).'
         required: false
@@ -59,7 +69,7 @@ permissions:
 
 jobs:
   shots:
-    name: shots-${{ matrix.app }}-${{ matrix.device }}
+    name: ${{ matrix.media }}-${{ matrix.app }}-${{ matrix.device }}
     timeout-minutes: 80   # Slice 433: Dino also records seven preview clips per device (script budget 3600 s, step 66 min, about 6 minutes of setup and a minute or two of hand-over around it)
     runs-on: xcode-27
     permissions:
@@ -68,10 +78,12 @@ jobs:
       fail-fast: false
       # Slice 433 (review pass 1, finding 5): the whole matrix is one fromJSON (a documented form). `all` = ipad-13, iphone-6.9 and iphone-6.5 for RTST, but Dino skips the 6.5" set
       # (Apple takes the 6.9" set for it; pick iphone-6.5 by name to take it for Dino too), as the exclude says.
-      matrix: ${{ fromJSON(format('{{"app":{0},"device":{1},"exclude":{2}}}', inputs.app == 'both' && '["dino","rtst"]' || format('["{0}"]', inputs.app), inputs.device == 'all' && '["ipad-13","iphone-6.9","iphone-6.5"]' || format('["{0}"]', inputs.device), inputs.device == 'all' && '[{"app":"dino","device":"iphone-6.5"}]' || '[]')) }}
+      # Slice 433 (run 45466463555: seven slow shots used the whole 60-minute budget and all seven clips were skipped): `media` is a matrix dimension, so with media=all the shots and the clips are two jobs, each with its own budget and its own draft release. RTST has no clips and the iPhone 6.5" is not filmed (Apple takes the previews from the 6.9" and the iPad), so those pairs are excluded.
+      matrix: ${{ fromJSON(format('{{"app":{0},"device":{1},"media":{3},"exclude":{2}}}', inputs.app == 'both' && '["dino","rtst"]' || format('["{0}"]', inputs.app), inputs.device == 'all' && '["ipad-13","iphone-6.9","iphone-6.5"]' || format('["{0}"]', inputs.device), inputs.device == 'all' && '[{"app":"dino","device":"iphone-6.5"},{"app":"rtst","media":"clips"},{"device":"iphone-6.5","media":"clips"}]' || '[{"app":"rtst","media":"clips"},{"device":"iphone-6.5","media":"clips"}]', inputs.media == 'all' && '["shots","clips"]' || format('["{0}"]', inputs.media))) }}
     env:
       APP: ${{ matrix.app }}
       DEVICE: ${{ matrix.device }}
+      MEDIA: ${{ matrix.media }}
       GH_TOKEN: ${{ github.token }}
       RESUME_RUN: ${{ inputs.resume_run }}
     steps:
@@ -85,13 +97,17 @@ jobs:
             {
               echo "PROJECT=src/Dino/DinoReader.App/DinoReader.App.csproj"
               echo "BUILD_DIR=src/Dino/DinoReader.App/bin/Debug/net11.0-ios/iossimulator-arm64"
-              # One flow per shot; the script expands the glob and runs them in name order.
-              echo "FLOW=.maestro/dino/store-shot-ios-[0-9]-*.yaml"
-              # One PNG per flow file (Slice 433: seven, the six screens and the Japanese language shot); the script fails the device when fewer exist at the end.
-              echo "EXPECTED_SHOTS=7"
-              # Slice 433 item 6: the App Store preview footage, one recording per flow, on the iPhone 6.9" and the iPad 13" only.
-              echo "VIDEO_FLOWS=.maestro/dino/store-shot-ios-video-*.yaml"
-              echo "EXPECTED_VIDEOS=7"
+              if [ "$MEDIA" = "clips" ]; then
+                # Slice 433 item 6: the App Store preview footage, one recording per flow, on the iPhone 6.9" and the iPad 13" only. Its own job: the "flow" is the shelf set-up (no shot), then the clips.
+                echo "FLOW=.maestro/dino/store-shot-ios-shelfprep.yaml"
+                echo "VIDEO_FLOWS=.maestro/dino/store-shot-ios-video-*.yaml"
+                echo "EXPECTED_VIDEOS=7"
+              else
+                # One flow per shot; the script expands the glob and runs them in name order.
+                echo "FLOW=.maestro/dino/store-shot-ios-[0-9]-*.yaml"
+                # One PNG per flow file (Slice 433: seven, the six screens and the Japanese language shot); the script fails the device when fewer exist at the end.
+                echo "EXPECTED_SHOTS=7"
+              fi
             } >> "$GITHUB_ENV"
           else
             {
@@ -102,6 +118,10 @@ jobs:
             } >> "$GITHUB_ENV"
           fi
           echo "OUT_DIR=$RUNNER_TEMP/shots" >> "$GITHUB_ENV"
+          # Each kind has its own draft release (a tag unique per job, so the shots job and the clips job never race to create one); resume_run reads the same kind's draft of that run.
+          if [ "$MEDIA" = "clips" ]; then KIND="clips"; else KIND="shots"; fi
+          echo "STORE_SHOTS_TAG=store-$KIND-$APP-$DEVICE-$GITHUB_RUN_ID" >> "$GITHUB_ENV"
+          echo "STORE_SHOTS_PREFIX=store-$KIND-$APP-$DEVICE" >> "$GITHUB_ENV"
 
       - name: Set up .NET 11
         uses: actions/setup-dotnet@v4
@@ -177,7 +197,7 @@ jobs:
       - name: Fetch earlier shots and open this run's draft release
         run: |
           set -euo pipefail
-          TAG="store-shots-$APP-$DEVICE-$GITHUB_RUN_ID"
+          TAG="$STORE_SHOTS_TAG"
           DIR="$OUT_DIR/$DEVICE"
           mkdir -p "$DIR"
           have_png() { ls "$DIR"/*.png >/dev/null 2>&1 || ls "$DIR"/*.mp4 >/dev/null 2>&1; }
@@ -188,7 +208,7 @@ jobs:
           if ! have_png && [ -n "${RESUME_RUN:-}" ] && [ "$RESUME_RUN" != "$GITHUB_RUN_ID" ]; then
             SRC_SHA="$(gh run view "$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha 2>/dev/null || true)"
             if [ "$SRC_SHA" = "$GITHUB_SHA" ]; then
-              gh release download "store-shots-$APP-$DEVICE-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
+              gh release download "$STORE_SHOTS_PREFIX-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
             else
               echo "::warning::resume_run $RESUME_RUN is not on this commit (its sha: ${SRC_SHA:-unknown}, this run: $GITHUB_SHA): starting with no shots"
               echo "- resume_run $RESUME_RUN ignored: it ran on another commit (${SRC_SHA:-sha unknown}), so all shots are taken" >> "$GITHUB_STEP_SUMMARY"
@@ -210,7 +230,7 @@ jobs:
               exit 1
             fi
             if have_png; then
-              gh release upload "$TAG" "$DIR"/*.png --clobber --repo "$GITHUB_REPOSITORY"
+              find "$DIR" -maxdepth 1 \( -name '*.png' -o -name '*.mp4' \) -exec gh release upload "$TAG" --clobber --repo "$GITHUB_REPOSITORY" {} +
             fi
           fi
           echo "STORE_SHOTS_TAG=$TAG" >> "$GITHUB_ENV"
@@ -229,7 +249,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          TAG="store-shots-$APP-$DEVICE-$GITHUB_RUN_ID"
+          TAG="$STORE_SHOTS_TAG"
           if ! find "$OUT_DIR" \( -name '*.png' -o -name '*.mp4' \) -print -quit 2>/dev/null | grep -q .; then
             echo "::warning::No screenshot was taken: nothing to hand over."
             echo "### $APP on $DEVICE: no shot was taken" >> "$GITHUB_STEP_SUMMARY"

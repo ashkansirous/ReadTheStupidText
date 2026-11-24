@@ -27,7 +27,7 @@ name: Store preview clip setup, 3 language en, Dino Reader, iOS
       - tapOn:
           text: Open
 - extendedWaitUntil:
-    visible: ".*(My stories|Stories|For grown-ups).*"
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
     timeout: 60000
 # All navigation is here, never in the recorded flow: page 6 opens, its dialog is answered and the audio fetch is done, so the recording starts on the held page.
 - openLink: "dino-test://open-book?id=three-little-pigs&page=6"

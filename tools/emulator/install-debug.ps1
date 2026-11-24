@@ -48,9 +48,13 @@ function Build-Apk([string]$Dir, [string]$Key) {
     else { Assert-BuildPathLength $script:buildArtifacts }
     # Remove old signed APKs first, so the one found afterwards is certainly from this build.
     Get-ChildItem $apkDir -Filter $apkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
+    # Slice 433: Dino only. The live remote config has an Android minVersion above the project's 1.0, so an unstamped emulator build opens "Dino needs an update";
+    # 99.0.0 clears it (same value as store-screenshots.yml's iOS build). RTST's live minVersion is 0.0.0, so it keeps its version. The value is in the build key.
+    # @(...) around the if: a bare if returns the one string unrolled, and @versionArgs would then splat it one character at a time (MSB1001).
+    $versionArgs = @(if ($App -eq 'dino') { "-p:ApplicationDisplayVersion=$($script:EmulatorDinoDisplayVersion)" })
     # Slice 225 item 23: --disable-build-servers, so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
     dotnet build $project -f net11.0-android -c Debug --artifacts-path $script:buildArtifacts --disable-build-servers -p:RuntimeIdentifier=android-x64 `
-        -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$($cfg.Package)"
+        -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$($cfg.Package)" @versionArgs
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Get-ChildItem $apkDir -Filter $apkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $built) { throw 'Signed APK not found.' }
