@@ -1,0 +1,47 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): the SETUP of preview clip 1b-voices, "voices" (the note's video timeline, 3-6 s: the Wolf speaks, two characters in their own voices, words lighting up). NOT recorded (see store-shot-ios-videoprep-1a-reading.yaml).
+# Ends on page 6 of Three Little Pigs, the read not yet needed: the clip flow holds the page while the lines light up.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip setup, 1b voices, Dino Reader, iOS
+---
+- launchApp:
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|For grown-ups).*"
+    timeout: 60000
+- openLink: "dino-test://open-book?id=three-little-pigs&page=6"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 60000

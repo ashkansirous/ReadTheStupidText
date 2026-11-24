@@ -1,0 +1,79 @@
+# Slice 433 (review pass 1, finding 1): App Store shot 4 of 6, "language", Japanese: the seventh file, the twin of the Play phone and tablet `4-language-ja` shot. The note's language shot is English, Spanish and Japanese; the English one is shot 2's page, the Spanish one is store-shot-ios-4-language.yaml, this is the same page 6 of Three Little Pigs in Japanese. store-captions.ps1 gives it the caption of 4-language (Get-CaptionKey drops the -ja).
+# A stand-alone flow like the other six (see store-shot-ios-1-picture.yaml for how they are run): it relaunches keeping the app's data (no clearState; it needs shot 1's full shelf, so it runs after shot 1) and sets its own language (Japanese); every other flow sets English itself.
+# Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
+appId: uk.sirous.dinoreader.dbg
+name: Store screenshot 4 of 6, language (Japanese), Dino Reader, iOS
+---
+- launchApp:
+    # No clearState: the relaunch keeps the data. A relaunch builds a new window and leaves grown-up mode, so this starts on the kids' shelf.
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Shot 1 puts 12 books on the shelf and the data survives the relaunch: assert the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle).
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+# Japanese (if the Japanese screens or books are missing the flow fails on the wait below; there is no fall back to another language). set-language switches the screens; voice=0 starts no voice pack.
+- openLink: "dino-test://set-language?lang=ja&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+# Wait for a string only the Japanese shelf shows (Gallery_Title, Gallery_ShelfTitleShort "おはなし" in AppResources.ja.resx), not StoryTile: the English shelf has it too.
+- extendedWaitUntil:
+    visible: ".*おはなし.*"
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+# The shelf starts the Japanese audio fetch: let its bar appear (bounded, optional), then wait until the bar and Cancel are gone so no banner covers the shot.
+- extendedWaitUntil:
+    visible:
+      id: ShelfAudioCancel-ja
+    timeout: 10000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-ja
+    timeout: 60000
+- openLink: "dino-test://open-book?id=three-little-pigs&page=6"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 60000
+# The sound-line pill can come after the reading surface: let it appear (bounded, optional), then wait until it is gone.
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+    timeout: 10000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-ios-4-language-ja

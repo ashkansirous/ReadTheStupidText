@@ -1,8 +1,8 @@
-# Slice 291 item 5 (iOS part): App Store shot 4 of 5 of Dino Reader, "grownups": the grown-ups corner, Books tab (the books list shows no price). English, on the four test books.
-# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing the next one needs.
+# Slice 433 (was shot 4 of Slice 291 item 5, "grownups"): App Store shot 6 of 6 of Dino Reader, "ages": the grown-ups corner, Books tab (the books list shows no price). English, on the full 12-book shelf.
+# One of six stand-alone flows (see store-shot-ios-1-picture.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing the next one needs.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
 appId: uk.sirous.dinoreader.dbg
-name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
+name: Store screenshot 6 of 6, ages, Dino Reader, iOS
 ---
 - launchApp:
     # No clearState: the relaunch keeps the data and leaves grown-up mode (CreateWindow, App.xaml.cs:68).
@@ -15,8 +15,8 @@ name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
-# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
-# English, set explicitly (voice=0 starts no voice pack). Wait for a string only the English shelf shows (a previous flow may have left Farsi), not StoryTile.
+# Slice 404 (review pass: shots 2-6 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+# English, set explicitly (voice=0 starts no voice pack). Wait for a string only the English shelf shows (a previous flow may have left Spanish), not StoryTile.
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
@@ -35,7 +35,7 @@ name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 30000
-# After the English reset: shot 3 leaves the app in German (run 44419048246: the German shelf showed "Jack und die Bohnenranke"), so the full-shelf check waits for the English title only now.
+# After the English reset: shot 4 leaves the app in Spanish, so the full-shelf check waits for the English title only now.
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000
@@ -60,4 +60,4 @@ name: Store screenshot 4 of 5, grownups, Dino Reader, iOS
 # No price in a store image (Apple 2.3.7): fail rather than shoot one.
 - assertNotVisible:
     text: ".*[$£€].*"
-- takeScreenshot: store-dino-ios-4-grownups
+- takeScreenshot: store-dino-ios-6-ages

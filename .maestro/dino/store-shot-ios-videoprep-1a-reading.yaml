@@ -1,0 +1,49 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): the SETUP of preview clip 1a-reading, "reading" (the note's video timeline, 0-3 s: a page turns). NOT recorded: .github/scripts/ios-sim-store-shots.sh runs it first, then starts `xcrun simctl io <udid> recordVideo`, runs store-shot-ios-video-1a-reading.yaml and stops the recorder, so that recording holds exactly that clip.
+# One recording per clip: the clip's position never depends on how long a language switch or an audio fetch took. The file name carries store-shot-ios- so run-flows.ps1, lint-flows.ps1 and FullShelfPlanTests treat it as a store flow.
+# Stand-alone: relaunches keeping the app's data (no clearState) and needs the 12-book shelf of shot 1, so it runs after the shots. It ends on the English shelf.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip setup, 1a reading, Dino Reader, iOS
+---
+- launchApp:
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|For grown-ups).*"
+    timeout: 60000
+# All navigation is here, never in the recorded flow: page 5 opens and its dialog is answered, so the recording starts on the page that turns.
+- openLink: "dino-test://open-book?id=three-little-pigs&page=5"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 60000

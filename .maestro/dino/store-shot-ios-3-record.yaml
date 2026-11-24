@@ -1,8 +1,8 @@
-# Slice 291 item 5 (iOS part): App Store shot 2 of 5 of Dino Reader, "record": the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml). English, on the four test books.
-# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing the next one needs.
+# Slice 433 (was shot 2 of Slice 291 item 5): App Store shot 3 of 6 of Dino Reader, "record": the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml). English, on the full 12-book shelf.
+# One of six stand-alone flows (see store-shot-ios-1-picture.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing the next one needs.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
 appId: uk.sirous.dinoreader.dbg
-name: Store screenshot 2 of 5, record, Dino Reader, iOS
+name: Store screenshot 3 of 6, record, Dino Reader, iOS
 ---
 - launchApp:
     # No clearState: the relaunch keeps the data. A relaunch builds a new window, and CreateWindow leaves grown-up mode (App.xaml.cs:68), so this starts on the kids' shelf whatever the flow before did.
@@ -15,7 +15,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
     visible:
       id: StoryTile
     timeout: 60000
-# Slice 404 (review pass: shots 2-5 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
+# Slice 404 (review pass: shots 2-6 do not run the shelf hook): shot 1 puts 12 books on the shelf and the data survives the relaunch (no clearState), so this only asserts the shelf is already full, by the book the hook lands last (FullShelfPlan.LastBookTitle). Run it after shot 1.
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000
@@ -58,7 +58,7 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
     element:
       text: ".*Three Little Pigs.*"
     timeout: 30000
-# The book's own ••• button: TileMore whose label ("Options for <title>") names the book, not a position above a title.
+# The book's own ... button: TileMore whose label ("Options for <title>") names the book, not a position above a title.
 - tapOn:
     id: TileMore
     text: ".*Three Little Pigs.*"
@@ -79,4 +79,4 @@ name: Store screenshot 2 of 5, record, Dino Reader, iOS
 # No system microphone dialog over the shot (permissions: all: allow is not shown to cover the microphone on a simulator).
 - assertNotVisible:
     text: ".*(Would Like to Access the Microphone|Don.t Allow).*"
-- takeScreenshot: store-dino-ios-2-record
+- takeScreenshot: store-dino-ios-3-record

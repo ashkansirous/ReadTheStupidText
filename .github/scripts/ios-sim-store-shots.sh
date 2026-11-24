@@ -13,6 +13,10 @@
 #   device   iphone-6.5 | ipad-13 | iphone-6.9 | all (default all)
 # Env: EXPECTED_SHOTS (PNG count the flow set must produce, else the device fails), STORE_SHOTS_TAG (draft release each shot is uploaded to as
 # soon as it is taken; the workflow also downloads that release's PNGs into <out-dir>/<device>/ first, which is how a rerun resumes).
+# Slice 433: Dino's iPad 13" is shot in landscape (2752 x 2064; RTST's stays upright): the script adds `- setOrientation: LANDSCAPE_LEFT` after the `---` line of its copy of every flow on that device, so one set of flows serves both.
+# VIDEO_FLOWS (glob, optional; Dino) = the App Store preview clip flows (.maestro/dino/store-shot-ios-video-<clip>.yaml), one per clip (Slice 433, review pass 2: one recording per clip). On the iPhone 6.9" and the iPad 13" each clip first runs its
+# unrecorded setup flow (store-shot-ios-videoprep-<clip>.yaml), then `xcrun simctl io <udid> recordVideo` starts, the clip flow runs alone and the recorder is stopped, so the mp4 holds exactly that clip. It is kept as
+# <out-dir>/<device>/store-<app>-<device>-video-<clip>.mp4 (EXPECTED_VIDEOS of them, else the device fails; a file that cannot be read to the end counts as no recording). Apple's preview sizes need no 6.5" footage. tools/dino/promo/store/ trims and captions them.
 # Per shot: a shot already in <out-dir>/<device>/ at an accepted size is kept and never retaken; a shot that fails, exits 0 without a PNG of an
 # accepted size, or hits its time limit is
 # retried once on its own (app stopped, driver killed, simulator restarted after a kill); the shots after a shot that failed twice still run.
@@ -57,11 +61,21 @@ BOOT_RESERVE_SECONDS=300
 DRIVER_READY_ATTEMPT_SECONDS=330
 DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # The script stops starting new attempts after this (the missing shots are reported and the exit code is 1), so the hand-over step always has the
-# shots that came out. 2700 s = 45 min; the workflow's shots step is 48 minutes and its job 55 (about 6 minutes of setup before the step, run
-# 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + five shots at two attempts of 420 s (4200) + a restart 300 = 4800 s.
+# shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 80 (about 6 minutes of setup before the step, run
+# 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + seven shots at two attempts of 420 s (5880) + seven clips at two attempts of 480 s (a setup and a recorded flow of 240 s: 6720) + a restart 300 = 13200 s.
 # It is not meant to: every shot is uploaded when taken, so `gh run rerun <run id> --failed` resumes and retakes only what is missing. RTST:
 # boot 300 + 2 x 600 + restart 300 + hierarchy 2 x 60 = 1920 s, which fits.
-SCRIPT_BUDGET_SECONDS="${SCRIPT_BUDGET_SECONDS:-2700}"
+SCRIPT_BUDGET_SECONDS="${SCRIPT_BUDGET_SECONDS:-3600}"
+# Slice 433: the preview footage. Each clip is a setup flow plus a recorded flow of its own, each with this limit. The recorder is given this long to write its file after it is stopped.
+VIDEO_FLOWS="${VIDEO_FLOWS:-}"
+EXPECTED_VIDEOS="${EXPECTED_VIDEOS:-}"
+VIDEO_TIME_LIMIT_SECONDS=240   # each of a clip's two flows (setup, recorded)
+RECORDER_FINISH_SECONDS=20
+RECORDER_START_CHECK_SECONDS=5   # the recorder must be alive and its file must be growing within this long of starting
+RECORDER_KILLED=no
+# "yes" while the iPad 13" is shot: every flow copy is turned to landscape.
+LANDSCAPE=no
+VIDEO_UNITS=()
 # How many PNGs the app's flow set must produce on a device (the workflow sets it: Dino one per flow file = 5, RTST 4); empty = whatever the flows name.
 EXPECTED_SHOTS="${EXPECTED_SHOTS:-}"
 # When set (the workflow sets it), each shot is uploaded to this draft release as soon as it is taken, so a job that later times out has handed it over.
@@ -78,8 +92,14 @@ UNIT_LIMIT="$SHOT_TIME_LIMIT_SECONDS"
 # One line per device: label | ';'-separated device-type name patterns, in order | sizes App Store Connect accepts for that slot (WxH, portrait).
 device_specs() {
   echo 'iphone-6.5|iPhone 11 Pro Max;iPhone Xs Max;iPhone 14 Plus;iPhone 13 Pro Max;iPhone 12 Pro Max|1242x2688 1284x2778'
-  echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2064x2752 2048x2732'
-  echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
+  if [ "$APP" = dino ]; then
+    # Slice 433: Dino's iPad shots are landscape and its iPhone 6.9" shots are exactly the frame's size (tools/emulator/store-captions.ps1 does not stretch or crop to another).
+    echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2752x2064'
+    echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868'
+  else
+    echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2064x2752 2048x2732'
+    echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
+  fi
 }
 
 # The shot names one flow file takes, one per line.
@@ -112,11 +132,24 @@ time_left_for() {
   [ $((SECONDS + $1)) -le "$SCRIPT_BUDGET_SECONDS" ]
 }
 
-# Fills UNITS from the flows argument (a file, or a glob: unquoted expansion, sorted by name) and sets the per-attempt limit.
+# Slice 433 (review pass 2, finding 5): flow files in the order of their names WITHOUT the .yaml, byte-wise (LC_ALL=C), one per line. A glob sorts by the locale and with the extension,
+# which puts store-shot-ios-4-language-ja.yaml before store-shot-ios-4-language.yaml ('-' sorts before '.'); without the extension the Spanish shot comes before the Japanese one.
+order_flows() {
+  local file
+  for file in "$@"; do
+    echo "${file%.yaml}"
+  done | LC_ALL=C sort | sed 's/$/.yaml/'
+}
+
+# Fills UNITS from the flows argument (a file, or a glob: unquoted expansion, ordered by order_flows) and sets the per-attempt limit.
 load_units() {
+  local found=() unit
   # shellcheck disable=SC2206
-  UNITS=( $FLOW_SPEC )
-  local unit
+  found=( $FLOW_SPEC )
+  UNITS=()
+  while IFS= read -r unit; do
+    [ -z "$unit" ] || UNITS+=("$unit")
+  done < <(order_flows "${found[@]}")
   for unit in "${UNITS[@]}"; do
     [ -f "$unit" ] || { echo "::error::no flow file: $unit"; exit 1; }
   done
@@ -141,6 +174,10 @@ install_app() {
 prepare_flow() {
   local source="$1" bundle_id="$2" target="$3"
   sed -e "s/^appId: .*/appId: $bundle_id/" -e "/^# expect-log:/d" "$source" > "$target"
+  # A recorded clip flow (store-shot-ios-video-*) never rotates: its setup flow did, and a rotation inside the recording would be footage.
+  if [ "$LANDSCAPE" = yes ] && [[ "$(basename "$source")" != store-shot-ios-video-* ]]; then
+    awk '{ print } !done && /^---$/ { print "- setOrientation: LANDSCAPE_LEFT"; done = 1 }' "$target" > "$target.land" && mv "$target.land" "$target"
+  fi
   grep -q "^appId: $bundle_id\$" "$target"
 }
 
@@ -223,9 +260,16 @@ collect_unit() {
 
 # Removes PNGs in the device's out folder that no shot of the flows names (a stale file from an earlier run's draft release).
 prune_unexpected() {
-  local label="$1" png expected name found
+  local label="$1" png expected name found vunit candidates=("$OUT/$label"/*.png)
   expected="$(while IFS= read -r name; do [ -n "$name" ] && basename "$(shot_target "$label" "$name")"; done < <(all_shots))"
-  for png in "$OUT/$label"/*.png; do
+  # Slice 433 (review pass 3, finding 4): the footage recordings of the current clips are expected too; an old recording (an earlier clip layout) is pruned like a stale PNG.
+  if [ "$VIDEO_COUNT" -gt 0 ] && video_device "$label"; then
+    for vunit in "${VIDEO_UNITS[@]}"; do
+      expected="$expected"$'\n'"$(basename "$(video_target "$label" "$vunit")")"
+    done
+    candidates+=("$OUT/$label"/*.mp4)
+  fi
+  for png in "${candidates[@]}"; do
     [ -f "$png" ] || continue
     found="$(echo "$expected" | grep -Fx "$(basename "$png")" || true)"
     if [ -z "$found" ]; then
@@ -435,6 +479,227 @@ run_units() {
   done
 }
 
+# Slice 433 item 6: fills VIDEO_UNITS (and VIDEO_COUNT) from the VIDEO_FLOWS glob; empty when the variable is empty or matches nothing.
+VIDEO_COUNT=0
+load_video_units() {
+  local unit found=()
+  VIDEO_UNITS=()
+  VIDEO_COUNT=0
+  [ -n "$VIDEO_FLOWS" ] || return 0
+  # shellcheck disable=SC2206
+  found=( $VIDEO_FLOWS )
+  while IFS= read -r unit; do
+    if [ -f "$unit" ]; then
+      VIDEO_UNITS+=("$unit")
+      VIDEO_COUNT=$((VIDEO_COUNT + 1))
+    fi
+  done < <(order_flows "${found[@]}")
+}
+
+# Apple's preview sizes come from the iPhone 6.9" (886 x 1920) and the iPad 13" (1600 x 1200, landscape) only.
+video_device() {
+  case "$1" in
+    iphone-6.9 | ipad-13) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# The path a footage flow's recording gets: store-shot-ios-video-<n>-<screen> becomes <out>/<label>/store-<app>-<label>-video-<n>-<screen>.mp4.
+video_target() {
+  local label="$1" name rest
+  name="$(basename "$2" .yaml)"
+  rest="${name#store-shot-ios-video-}"
+  echo "$OUT/$label/store-${APP}-${label}-video-${rest}.mp4"
+}
+
+# Slice 433 (review pass 3, finding 3): footage-cuts.json holds ONE leadIn (the recorder's start-up, on a line of its own) and each clip's seconds; a recording must last leadIn + seconds.
+# Prints that minimum for a clip id (e.g. 3-language-es), or nothing when the file or the clip is not found.
+clip_min_seconds() {
+  local cuts="$REPO_ROOT/tools/dino/promo/store/footage-cuts.json" lead secs
+  [ -f "$cuts" ] || return 0
+  lead="$(sed -n 's/^ *"leadIn": *\([0-9.]*\),*$/\1/p' "$cuts" | head -1)"
+  secs="$(sed -n "s/^ *\"$1\": *{ *\"seconds\": *\\([0-9.]*\\) *}.*/\\1/p" "$cuts" | head -1)"
+  [ -n "$lead" ] && [ -n "$secs" ] || return 0
+  awk -v a="$lead" -v b="$secs" 'BEGIN { print a + b }'
+}
+
+# The clip id of a footage flow: store-shot-ios-video-<clip>.yaml gives <clip>.
+video_clip_id() {
+  local name
+  name="$(basename "$1" .yaml)"
+  echo "${name#store-shot-ios-video-}"
+}
+
+# Slice 433 (review pass 2, finding 2; pass 3, finding 3): a recording counts only when it can be read to the end and is long enough. ffprobe (when the runner has it) reads every video packet, which fails on an mp4 whose moov atom was never written,
+# and its duration must reach the optional second argument (leadIn + seconds: simctl writes frames only when the screen changes, so a held static clip can end early); without ffprobe the file must at least hold a moov atom.
+recording_readable() {
+  local file="$1" min_seconds="${2:-}" packets duration
+  [ -s "$file" ] || return 1
+  if command -v ffprobe >/dev/null 2>&1; then
+    packets="$(ffprobe -v error -count_packets -select_streams v:0 -show_entries stream=nb_read_packets -of csv=p=0 "$file" 2>/dev/null)" || return 1
+    [ "${packets:-0}" -gt 0 ] 2>/dev/null || return 1
+    [ -n "$min_seconds" ] || return 0
+    duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$file" 2>/dev/null)" || return 1
+    awk -v d="${duration:-0}" -v m="$min_seconds" 'BEGIN { exit !(d + 0 >= m - 0.1) }'
+    return
+  fi
+  LC_ALL=C grep -q moov "$file"
+}
+
+# A clip's recording is readable and at least as long as its cut needs.
+clip_recording_ok() {
+  recording_readable "$1" "$(clip_min_seconds "$(video_clip_id "$2")")"
+}
+
+# Slice 433 (review pass 3, finding 2): the recorder must be alive and its file must be growing within RECORDER_START_CHECK_SECONDS of starting; its stderr is kept in $3 and printed when it fails.
+recorder_started() {
+  local rec_pid="$1" video_tmp="$2" rec_log="$3" waited=0
+  while [ "$waited" -lt "$RECORDER_START_CHECK_SECONDS" ]; do
+    sleep 1
+    waited=$((waited + 1))
+    if ! kill -0 "$rec_pid" 2>/dev/null; then
+      echo "::warning::the screen recorder exited within $waited s of starting; its output:"
+      cat "$rec_log" 2>/dev/null || true
+      return 1
+    fi
+    # Alive plus either bytes in the file or simctl's "Recording started" line in its stderr log (that exact text is unconfirmed by any doc; either one passes).
+    if [ -s "$video_tmp" ] || grep -q "Recording started" "$rec_log" 2>/dev/null; then
+      return 0
+    fi
+  done
+  echo "::warning::the screen recorder is running but wrote nothing to its file in $RECORDER_START_CHECK_SECONDS s; its output:"
+  cat "$rec_log" 2>/dev/null || true
+  return 1
+}
+
+# Stops the recorder with SIGINT (simctl then finishes the file) and waits up to RECORDER_FINISH_SECONDS for it; only after that wait is it killed, and a killed recorder is a failed attempt (RECORDER_KILLED=yes), never a file to keep.
+stop_recorder() {
+  local rec_pid="$1" waited=0
+  RECORDER_KILLED=no
+  kill -INT "$rec_pid" 2>/dev/null || true
+  while kill -0 "$rec_pid" 2>/dev/null && [ "$waited" -lt "$RECORDER_FINISH_SECONDS" ]; do
+    sleep 1
+    waited=$((waited + 1))
+  done
+  if kill -0 "$rec_pid" 2>/dev/null; then
+    echo "::warning::the screen recorder did not finish within $RECORDER_FINISH_SECONDS s after SIGINT; it is killed and this attempt is retaken (its file is unusable)"
+    RECORDER_KILLED=yes
+    kill -9 "$rec_pid" 2>/dev/null || true
+  fi
+  wait "$rec_pid" 2>/dev/null || true
+  echo "recorder stopped after $waited s"
+}
+
+# One clip attempt: the unrecorded setup flow runs first; then the simulator screen is recorded (h264) while the clip flow runs alone, and the recorder is stopped, so the file holds exactly that clip.
+# Returns the failing flow's status (1 when the recorder had to be killed); LIMIT_HIT says whether a flow was killed at its limit.
+record_unit_attempt() {
+  local udid="$1" prep_run="$2" flow_run="$3" test_out="$4" bundle_id="$5" video_tmp="$6" rec_pid rec_log rc=0 killed
+  rm -f "$video_tmp"
+  rm -rf "$test_out-setup"
+  mkdir -p "$test_out-setup"
+  run_flow "$udid" "$prep_run" "$test_out-setup" "$bundle_id" || rc=$?
+  killed="$LIMIT_HIT"
+  if [ "$rc" != "0" ]; then
+    echo "::warning::the setup flow $(basename "$prep_run") failed (status $rc); nothing is recorded"
+    LIMIT_HIT="$killed"
+    return "$rc"
+  fi
+  rec_log="$test_out-recorder.log"
+  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$video_tmp" >"$rec_log" 2>&1 &
+  rec_pid=$!
+  if ! recorder_started "$rec_pid" "$video_tmp" "$rec_log"; then
+    stop_recorder "$rec_pid"
+    LIMIT_HIT=no
+    return 1
+  fi
+  run_flow "$udid" "$flow_run" "$test_out" "$bundle_id" || rc=$?
+  killed="$LIMIT_HIT"
+  stop_recorder "$rec_pid"
+  [ "$RECORDER_KILLED" = "no" ] || [ "$rc" != "0" ] || rc=1
+  echo "clip attempt of $(basename "$flow_run"): flow status $rc, file $(wc -c < "$video_tmp" 2>/dev/null | tr -d ' ') bytes"
+  LIMIT_HIT="$killed"
+  return "$rc"
+}
+
+# One footage flow: kept when its file is already in the out folder, else recorded, and once more on a failure (the same one retry as a shot).
+run_video_unit() {
+  local label="$1" udid="$2" bundle_id="$3" unit="$4" index="$5" target flow_run prep_unit prep_run test_out video_tmp attempt=1 rc killed base_limit="$UNIT_LIMIT" unit_name
+  unit_name="$(basename "$unit" .yaml)"
+  target="$(video_target "$label" "$unit")"
+  prep_unit="$(dirname "$unit")/$(basename "$unit" | sed 's/^store-shot-ios-video-/store-shot-ios-videoprep-/')"
+  if clip_recording_ok "$target" "$unit"; then
+    note "- $label: $(basename "$target") kept (already recorded, readable and long enough, not retaken)"
+    return 0
+  fi
+  rm -f "$target"
+  mkdir -p "$OUT/$label"
+  flow_run="$RUNNER_TEMP/store-video-$label-$index.yaml"
+  prep_run="$RUNNER_TEMP/store-videoprep-$label-$index.yaml"
+  test_out="$RUNNER_TEMP/maestro-out-video-$label-$index"
+  video_tmp="$RUNNER_TEMP/store-video-$label-$index.mp4"
+  if [ ! -f "$prep_unit" ]; then
+    problem "$label: $unit_name: no setup flow $(basename "$prep_unit")"
+    return 1
+  fi
+  if ! prepare_flow "$unit" "$bundle_id" "$flow_run" || ! prepare_flow "$prep_unit" "$bundle_id" "$prep_run"; then
+    problem "$label: $unit_name: the appId line was not swapped for $bundle_id"
+    return 1
+  fi
+  UNIT_LIMIT="$VIDEO_TIME_LIMIT_SECONDS"
+  while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
+    if ! time_left_for $((2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
+      problem "$label: $unit_name: no time left for attempt $attempt (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
+      UNIT_LIMIT="$base_limit"
+      return 1
+    fi
+    reset_attempt "$unit" "$test_out"
+    rc=0
+    record_unit_attempt "$udid" "$prep_run" "$flow_run" "$test_out" "$bundle_id" "$video_tmp" || rc=$?
+    killed="$LIMIT_HIT"
+    if [ "$rc" = "0" ] && clip_recording_ok "$video_tmp" "$unit"; then
+      cp "$video_tmp" "$target"
+      note "- $label: $(basename "$target") recorded ($(wc -c < "$target" | tr -d ' ') bytes)"
+      upload_shot "$target"
+      UNIT_LIMIT="$base_limit"
+      return 0
+    fi
+    [ "$rc" != "0" ] || { rc=1; killed=no; echo "::warning::$label: $unit_name exited 0 but left no recording that can be read to the end and is long enough (leadIn + seconds in footage-cuts.json)"; rm -f "$video_tmp"; }
+    if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
+      note "- RETRY: $label $unit_name attempt $attempt failed (status $rc, killed at the $UNIT_LIMIT s limit: $killed), it is recorded once more"
+      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + UNIT_LIMIT + HIERARCHY_TIME_LIMIT_SECONDS)); then
+        problem "$label: $unit_name: no time left for the retry (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
+        UNIT_LIMIT="$base_limit"
+        return 1
+      fi
+      if ! reset_simulator "$udid" "$bundle_id" "$killed"; then
+        SIM_BROKEN=yes
+        problem "$label: the simulator did not come back within $RESTART_TIME_LIMIT_SECONDS s after $unit_name; the rest of this device is skipped"
+        UNIT_LIMIT="$base_limit"
+        return 1
+      fi
+    fi
+    attempt=$((attempt + 1))
+  done
+  UNIT_LIMIT="$base_limit"
+  problem "$label: $unit_name failed twice (killed at the $VIDEO_TIME_LIMIT_SECONDS s limit, or Maestro failed; the log above says which)"
+  return 1
+}
+
+# Every footage flow in order after the shots, on the devices Apple's previews come from; one that failed does not stop the next.
+run_video_units() {
+  local label="$1" udid="$2" bundle_id="$3" unit index=0
+  [ "$VIDEO_COUNT" -gt 0 ] || return 0
+  video_device "$label" || return 0
+  for unit in "${VIDEO_UNITS[@]}"; do
+    index=$((index + 1))
+    if [ "$SIM_BROKEN" = "yes" ]; then
+      problem "$label: $(basename "$unit" .yaml) skipped, the simulator is not usable"
+      continue
+    fi
+    run_video_unit "$label" "$udid" "$bundle_id" "$unit" "$index" || true
+  done
+}
+
 # Slice 404: the Dino full-shelf hook imports a PAID book from a package file (the store refuses a paid download without a real receipt; nothing is faked).
 # Decision 5: a package is never built here. The paid books of the shelf (tools/dino/full-shelf-books.json) are read from the downloads bucket, where the store upload already put
 # dinoreader/stories/<id>/story-v<n>.dino, by .github/scripts/fetch-shelf-packages.mjs into artifacts/full-shelf/<id>/story-v<n>.dino (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, wrangler from `npm ci`);
@@ -521,6 +786,7 @@ shoot_device() {
     fi
     echo "driver warm-up on $label took $((SECONDS - warm_started)) s (charged to the $SCRIPT_BUDGET_SECONDS s script budget)"
     run_units "$label" "$accepted" "$udid" "$bundle_id"
+    run_video_units "$label" "$udid" "$bundle_id"
   fi
   kill_driver "$udid"
   run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl shutdown "$udid" || true
@@ -529,7 +795,7 @@ shoot_device() {
 
 # One summary line per device: which shots it produced, then OK or failed (the FAILED lines above say why).
 device_verdict() {
-  local label="$1" problems_before="$2" accepted="$3" name target made="" missing="" total=0 got=0
+  local label="$1" problems_before="$2" accepted="$3" name target made="" missing="" total=0 got=0 vunit vtotal=0 vgot=0
   while IFS= read -r name; do
     [ -n "$name" ] || continue
     total=$((total + 1))
@@ -545,7 +811,17 @@ device_verdict() {
   if [ -n "$EXPECTED_SHOTS" ] && { [ "$total" -lt "$EXPECTED_SHOTS" ] || [ "$got" -lt "$EXPECTED_SHOTS" ]; }; then
     problem "$label: $got PNG(s) at an App Store size, $EXPECTED_SHOTS expected for this flow set ($total named by the flows)"
   fi
-  if [ "$PROBLEMS" -eq "$problems_before" ] && [ "$got" -eq "$total" ]; then
+  if [ "$VIDEO_COUNT" -gt 0 ] && video_device "$label"; then
+    for vunit in "${VIDEO_UNITS[@]}"; do
+      vtotal=$((vtotal + 1))
+      if clip_recording_ok "$(video_target "$label" "$vunit")" "$vunit"; then vgot=$((vgot + 1)); fi
+    done
+    note "Footage $label produced ($vgot of $vtotal)"
+    if [ -n "$EXPECTED_VIDEOS" ] && { [ "$vtotal" -lt "$EXPECTED_VIDEOS" ] || [ "$vgot" -lt "$EXPECTED_VIDEOS" ]; }; then
+      problem "$label: $vgot preview recording(s), $EXPECTED_VIDEOS expected for this flow set ($vtotal named by the flows)"
+    fi
+  fi
+  if [ "$PROBLEMS" -eq "$problems_before" ] && [ "$got" -eq "$total" ] && [ "$vgot" -eq "$vtotal" ]; then
     note "**RESULT $label: OK, all $total shots at an App Store size.**"
   else
     note "**RESULT $label: FAILED, $got of $total shots (see the FAILED lines above).**"
@@ -557,6 +833,7 @@ device_verdict() {
 RUNNER_TEMP="${RUNNER_TEMP:-$(mktemp -d)}"
 mkdir -p "$OUT"
 load_units
+load_video_units
 MATCHED=0
 # The specs come in on fd 3: maestro and xcrun read stdin and would swallow the remaining lines.
 while IFS='|' read -r label patterns accepted <&3; do
@@ -564,6 +841,8 @@ while IFS='|' read -r label patterns accepted <&3; do
     continue
   fi
   MATCHED=1
+  LANDSCAPE=no
+  if [ "$label" = "ipad-13" ] && [ "$APP" = dino ]; then LANDSCAPE=yes; fi
   problems_before="$PROBLEMS"
   prune_unexpected "$label"
   shoot_device "$label" "$patterns" "$accepted" < /dev/null

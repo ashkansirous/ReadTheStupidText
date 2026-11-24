@@ -1,0 +1,21 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 1a-reading, "reading" (the note's video timeline, 0-3 s: a page turns). The RECORDED part: ios-sim-store-shots.sh runs store-shot-ios-videoprep-1a-reading.yaml first (no recording), then records this flow alone; the recording is kept as store-dino-<device>-video-1a-reading.mp4.
+# footage-cuts.json trims a fixed leadIn off its start (the recorder and Maestro start-up) and keeps `seconds`; the recording must be at least leadIn + seconds long, else the cut fails. No launchApp: the app is already on the English shelf from the setup flow.
+# The pauses are optional waits for an id that never shows (VideoHold), so they last their full timeout (a notVisible wait would return at once).
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip 1a, reading, Dino Reader, iOS
+---
+# Starts on page 5 of Three Little Pigs (the setup flow did all navigation, dialogs and waits).
+- extendedWaitUntil:
+    visible:
+      id: VideoHold
+    timeout: 1500
+    optional: true
+- swipe:
+    direction: LEFT
+    duration: 500
+# The page that turns, held (the read starts by itself on the page).
+- extendedWaitUntil:
+    visible:
+      id: VideoHold
+    timeout: 3000
+    optional: true

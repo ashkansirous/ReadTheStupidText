@@ -1,0 +1,9 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 1b-voices, "voices" (the note's video timeline, 3-6 s). The RECORDED part (see store-shot-ios-video-1a-reading.yaml): the page 6 the setup flow opened, held while the lit lines are read in the character voices.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip 1b, voices, Dino Reader, iOS
+---
+- extendedWaitUntil:
+    visible:
+      id: VideoHold
+    timeout: 6000
+    optional: true

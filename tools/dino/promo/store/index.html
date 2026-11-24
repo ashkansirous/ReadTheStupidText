@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=886, height=1920">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* Slice 433 item 6: the iPhone app preview (886 x 1920, portrait), about 20 s, the note's video timeline. Palette and font are the app's own (src/Dino/DinoReader.App/App.xaml: Brand, Sand, Ink; Resources/Fonts/Fredoka). */
+      @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+      :root {
+        --brand: #5b57e8;
+        --sand: #f3efe6;
+        --ink: #2b2540;
+        --body: #5a5470;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 886px; height: 1920px; overflow: hidden; background: var(--sand); }
+      #root { position: relative; width: 886px; height: 1920px; background: var(--sand); }
+      /* The simulator shot is 1320 x 2868 (iPhone 6.9"); the picture is scaled to the width (x 0.6712, so 886 x 1925), 125 px of status bar are cut off the top (186 px at full size) and the rest fills the area under the 192 px band, the same frame as tools/emulator/store-captions.ps1 -Form iphone-6.9. */
+      #win { position: absolute; left: 0; top: 192px; width: 886px; height: 1728px; overflow: hidden; background: var(--sand); }
+      .shot { position: absolute; left: 0; top: -125px; width: 886px; height: 1925px; }
+      #band { position: absolute; left: 0; top: 0; width: 886px; height: 192px; background: var(--brand); z-index: 5; }
+      .cap { position: absolute; left: 53px; top: 0; width: 780px; height: 192px; display: flex; align-items: center; justify-content: center; text-align: center; z-index: 6;
+        font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 60px; line-height: 1.12; color: #ffffff; }
+      #end { position: absolute; left: 0; top: 192px; width: 886px; height: 1728px; background: var(--sand); z-index: 4; }
+      #end-icon { position: absolute; left: 293px; top: 420px; width: 300px; height: 300px; border-radius: 68px; box-shadow: 0 14px 36px rgba(43, 37, 64, 0.18); }
+      #end-name { position: absolute; left: 0; top: 790px; width: 886px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 120px; line-height: 1; color: var(--ink); }
+      #end-sub { position: absolute; left: 0; top: 930px; width: 886px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 48px; color: var(--body); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="886" data-height="1920">
+      <!-- The footage: assets/footage/iphone/<clip>.mp4, cut by store-media.mjs (the `cut` command) from the simulator recordings of store-screenshots.yml (store-shot-ios-video-*.yaml). Real app footage only. -->
+      <div id="win">
+        <video id="v1a" class="clip shot" src="assets/footage/iphone/1a-reading.mp4" data-start="0" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v1b" class="clip shot" src="assets/footage/iphone/1b-voices.mp4" data-start="3" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v2" class="clip shot" src="assets/footage/iphone/2-record.mp4" data-start="6" data-duration="4" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3a" class="clip shot" src="assets/footage/iphone/3-language-en.mp4" data-start="10" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3b" class="clip shot" src="assets/footage/iphone/3-language-es.mp4" data-start="11" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3c" class="clip shot" src="assets/footage/iphone/3-language-ja.mp4" data-start="12" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v4" class="clip shot" src="assets/footage/iphone/4-shelf.mp4" data-start="13" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+      </div>
+
+      <!-- End frame, 16-20 s: icon and name; the band says that some books need a subscription (Apple: disclose it in the footage or on the end frame). -->
+      <div id="end" class="clip" data-start="16" data-duration="4" data-track-index="2">
+        <img id="end-icon" src="assets/images/dino-icon.png" alt="Dino Reader app icon" />
+        <div id="end-name">Dino</div>
+        <div id="end-sub">Kids Books &amp; Stories</div>
+      </div>
+
+      <div id="band"></div>
+      <div id="cap1" class="cap clip" data-start="0" data-duration="3" data-track-index="3">Stories read aloud</div>
+      <div id="cap2" class="cap clip" data-start="3" data-duration="3" data-track-index="3">A voice for every character</div>
+      <div id="cap3" class="cap clip" data-start="6" data-duration="4" data-track-index="3">Record Grandma as the wolf</div>
+      <div id="cap4" class="cap clip" data-start="10" data-duration="3" data-track-index="3">Stories in 15 languages</div>
+      <div id="cap5" class="cap clip" data-start="13" data-duration="3" data-track-index="3">New books on the shelf</div>
+      <div id="cap6" class="cap clip" data-start="16" data-duration="4" data-track-index="3">Some books need a subscription</div>
+
+      <!-- Music bed: HeyGen catalog "Astral Generated Music: 3602ebd4" (free catalog via HyperFrames), as in the LinkedIn films; it gives the preview its stereo AAC track (Apple wants one; the footage itself is silent). -->
+      <audio id="music" class="clip" src="assets/bgm/cheerful-kids-11.m4a" data-start="0" data-duration="20" data-track-index="5" data-volume="0.4" data-fade-in="0.5" data-fade-out="2"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        // Each caption fades in over 0.25 s and out over 0.2 s before its window ends; the band itself stays.
+        const caps = [["#cap1", 0, 3], ["#cap2", 3, 3], ["#cap3", 6, 4], ["#cap4", 10, 3], ["#cap5", 13, 3], ["#cap6", 16, 4]];
+        caps.forEach(function (c) {
+          tl.fromTo(c[0], { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, c[1]);
+          tl.to(c[0], { opacity: 0, duration: 0.2, ease: "power2.in" }, c[1] + c[2] - 0.2);
+        });
+        tl.fromTo("#end-icon", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 16.2);
+        tl.fromTo("#end-name", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 16.6);
+        tl.fromTo("#end-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 16.9);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

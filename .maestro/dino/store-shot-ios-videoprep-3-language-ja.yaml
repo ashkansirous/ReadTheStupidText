@@ -1,0 +1,52 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): the SETUP of preview clip 3-language-ja, Japanese. NOT recorded (see store-shot-ios-videoprep-3-language-en.yaml); the shelf words are in AppResources.ja.resx.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip setup, 3 language ja, Dino Reader, iOS
+---
+- launchApp:
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+- openLink: "dino-test://set-language?lang=ja&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-ja
+    timeout: 60000
+# All navigation is here, never in the recorded flow: page 6 opens, its dialog is answered and the audio fetch is done, so the recording starts on the held page.
+- openLink: "dino-test://open-book?id=three-little-pigs&page=6"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 60000

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1600, height=1200">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* Slice 433 item 6: the iPad app preview (1600 x 1200, landscape), the same timeline and captions as index.html (the iPhone one). */
+      @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+      :root {
+        --brand: #5b57e8;
+        --sand: #f3efe6;
+        --ink: #2b2540;
+        --body: #5a5470;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1600px; height: 1200px; overflow: hidden; background: var(--sand); }
+      #root { position: relative; width: 1600px; height: 1200px; background: var(--sand); }
+      /* The simulator shot is 2752 x 2064 (iPad 13" landscape); scaled to the width (x 0.5814, so 1600 x 1200), 28 px of status bar are cut off the top (48 px at full size) and the rest fills the area under the 84 px band, the video's own frame (the screenshot frame of store-captions.ps1 -Form ipad-13 has a 103 px band). */
+      #win { position: absolute; left: 0; top: 84px; width: 1600px; height: 1116px; overflow: hidden; background: var(--sand); }
+      .shot { position: absolute; left: 0; top: -28px; width: 1600px; height: 1200px; }
+      #band { position: absolute; left: 0; top: 0; width: 1600px; height: 84px; background: var(--brand); z-index: 5; }
+      .cap { position: absolute; left: 96px; top: 0; width: 1408px; height: 84px; display: flex; align-items: center; justify-content: center; text-align: center; z-index: 6;
+        font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 50px; line-height: 1.1; color: #ffffff; }
+      #end { position: absolute; left: 0; top: 84px; width: 1600px; height: 1116px; background: var(--sand); z-index: 4; }
+      #end-icon { position: absolute; left: 700px; top: 250px; width: 200px; height: 200px; border-radius: 46px; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18); }
+      #end-name { position: absolute; left: 0; top: 490px; width: 1600px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 100px; line-height: 1; color: var(--ink); }
+      #end-sub { position: absolute; left: 0; top: 610px; width: 1600px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 42px; color: var(--body); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1600" data-height="1200">
+      <!-- The footage: assets/footage/ipad/<clip>.mp4 (landscape recordings of the iPad 13" simulator), cut by store-media.mjs (the `cut` command). Real app footage only. -->
+      <div id="win">
+        <video id="v1a" class="clip shot" src="assets/footage/ipad/1a-reading.mp4" data-start="0" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v1b" class="clip shot" src="assets/footage/ipad/1b-voices.mp4" data-start="3" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v2" class="clip shot" src="assets/footage/ipad/2-record.mp4" data-start="6" data-duration="4" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3a" class="clip shot" src="assets/footage/ipad/3-language-en.mp4" data-start="10" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3b" class="clip shot" src="assets/footage/ipad/3-language-es.mp4" data-start="11" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v3c" class="clip shot" src="assets/footage/ipad/3-language-ja.mp4" data-start="12" data-duration="1" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+        <video id="v4" class="clip shot" src="assets/footage/ipad/4-shelf.mp4" data-start="13" data-duration="3" data-track-index="1" data-layout-allow-overflow muted playsinline></video>
+      </div>
+
+      <div id="end" class="clip" data-start="16" data-duration="4" data-track-index="2">
+        <img id="end-icon" src="assets/images/dino-icon.png" alt="Dino Reader app icon" />
+        <div id="end-name">Dino</div>
+        <div id="end-sub">Kids Books &amp; Stories</div>
+      </div>
+
+      <div id="band"></div>
+      <div id="cap1" class="cap clip" data-start="0" data-duration="3" data-track-index="3">Stories read aloud</div>
+      <div id="cap2" class="cap clip" data-start="3" data-duration="3" data-track-index="3">A voice for every character</div>
+      <div id="cap3" class="cap clip" data-start="6" data-duration="4" data-track-index="3">Record Grandma as the wolf</div>
+      <div id="cap4" class="cap clip" data-start="10" data-duration="3" data-track-index="3">Stories in 15 languages</div>
+      <div id="cap5" class="cap clip" data-start="13" data-duration="3" data-track-index="3">New books on the shelf</div>
+      <div id="cap6" class="cap clip" data-start="16" data-duration="4" data-track-index="3">Some books need a subscription</div>
+
+      <audio id="music" class="clip" src="assets/bgm/cheerful-kids-11.m4a" data-start="0" data-duration="20" data-track-index="5" data-volume="0.4" data-fade-in="0.5" data-fade-out="2"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const caps = [["#cap1", 0, 3], ["#cap2", 3, 3], ["#cap3", 6, 4], ["#cap4", 10, 3], ["#cap5", 13, 3], ["#cap6", 16, 4]];
+        caps.forEach(function (c) {
+          tl.fromTo(c[0], { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, c[1]);
+          tl.to(c[0], { opacity: 0, duration: 0.2, ease: "power2.in" }, c[1] + c[2] - 0.2);
+        });
+        tl.fromTo("#end-icon", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 16.2);
+        tl.fromTo("#end-name", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 16.6);
+        tl.fromTo("#end-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 16.9);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

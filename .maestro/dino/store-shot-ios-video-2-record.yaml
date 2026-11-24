@@ -1,0 +1,28 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 2-record, "record" (the note's video timeline, 6-10 s: the recording screen). The RECORDED part (see store-shot-ios-video-1a-reading.yaml). The record intro "Who will you record?" is shown and held: nothing is recorded (a simulator has no microphone to speak into).
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip 2, record, Dino Reader, iOS
+---
+# The book's ... button: options sheet, then the record intro.
+- tapOn:
+    id: TileMore
+    text: ".*Three Little Pigs.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: "Record your voice"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroStart
+    timeout: 20000
+- assertNotVisible:
+    text: ".*(Would Like to Access the Microphone|Don.t Allow).*"
+# Held: an optional wait for an id that never shows lasts its full timeout (a notVisible wait would return at once).
+- extendedWaitUntil:
+    visible:
+      id: VideoHold
+    timeout: 4500
+    optional: true

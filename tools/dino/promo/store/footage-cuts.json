@@ -1,0 +1,17 @@
+{
+  "_comment": "Slice 433 item 6 (review pass 3). Each clip has its own recording, store-dino-<device label>-video-<clip>.mp4, made by .maestro/dino/store-shot-ios-video-<clip>.yaml, which starts on the held page: the unrecorded store-shot-ios-videoprep-<clip>.yaml did all navigation (dialogs, loading, waits) first. So the only thing before the clip is the recorder's own start-up, one constant (leadIn, seconds) for every clip, and a clip is that lead-in trimmed off plus its planned length (seconds). store-media.mjs and ios-sim-store-shots.sh both fail a recording shorter than leadIn + seconds. Tune leadIn once on a contact sheet of a real recording (npx hyperframes snapshot) in the device stage. Clips 1a and 1b are two 3 s clips (no shot over about 4 s: the note). Keep \"leadIn\" on one line of its own: the shell script reads it with sed.",
+  "leadIn": 0.5,
+  "clips": {
+    "1a-reading": { "seconds": 3.0 },
+    "1b-voices": { "seconds": 3.0 },
+    "2-record": { "seconds": 4.0 },
+    "3-language-en": { "seconds": 1.0 },
+    "3-language-es": { "seconds": 1.0 },
+    "3-language-ja": { "seconds": 1.0 },
+    "4-shelf": { "seconds": 3.0 }
+  },
+  "devices": {
+    "iphone": { "label": "iphone-6.9", "width": 886, "height": 1920, "target": "preview-iphone", "composition": "index.html" },
+    "ipad": { "label": "ipad-13", "width": 1600, "height": 1200, "target": "preview-ipad", "composition": "variants/ipad.html" }
+  }
+}

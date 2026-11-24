@@ -1,12 +1,14 @@
-# Slice 291 items 5 and 8: the Play store screenshots of Dino Reader (phone), taken by tools/emulator/store-screenshots.ps1 -App dino -Form phone (the shot names store-dino-phone-<n>-<screen> become the PNG names).
-# Five shots, held upright, in the order of the store-listing skill's table (one difference per shot, strongest first): a character's line on the reading page, the record intro "Who will you record?",
-# the same page in German (the live books carry de translations; no voice pack is needed, set-language voice=0; Slice 404: never Farsi on a global or European listing; there is no fall back to another language: missing German screens fail the flow), the grown-ups Books tab (no price anywhere on it), the kids' shelf.
+# Slice 433 (replaces the five shots of Slice 291 items 5 and 8): the Play store screenshots of Dino Reader (phone), taken by tools/emulator/store-screenshots.ps1 -App dino -Form phone (the shot names store-dino-phone-<n>-<screen> become the PNG names).
+# Six shots, held upright, in the order of the note docs/plan/notes/2026-11-23-dino-store-screenshots-and-video.md ("The six screenshots"): a full-page picture (page 1 of Three Little Pigs), the reading screen with a character's line lit (page 6, the Wolf speaks), the record intro "Who will you record?",
+# the same page in Spanish (and, as an extra file, in Japanese: the note's language shot is English, Spanish and Japanese; never Farsi or Chinese on a global listing; no voice pack is needed, set-language voice=0), the 12-book shelf, the grown-ups Books tab (no price anywhere on it).
+# store-screenshots.ps1 sizes the emulator (wm size) so the shot fits the Play frame exactly; tools/emulator/store-captions.ps1 -Form phone then cuts the status bar off and puts the caption band on top.
 # Slice 404: the full-shelf hook puts the whole live catalogue on the shelf (needs the network; no Get, Buy or Redeem, no purchase) before any shot. The store page shows prices and no shot uses it.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened
 # expect-log: HOOK enter-grown-up ok
 # expect-log: HOOK full-shelf ok
-# expect-log: HOOK set-language ok de
+# expect-log: HOOK set-language ok es
+# expect-log: HOOK set-language ok ja
 appId: uk.sirous.dinoreader.dbg
 name: Store screenshots, Dino Reader, phone
 onFlowComplete:
@@ -38,7 +40,7 @@ onFlowComplete:
     visible: ".*Three Little Pigs.*"
     timeout: 15000
 # Slice 404: 12 books on the shelf (the four test books stay, eight more come from the live store and the packages it already stored). The hook lands "Jack and the Beanstalk" last (FullShelfPlan.LastBookId; a test checks these flows wait for FullShelfPlan.LastBookTitle) and the newest import comes first on the shelf, so it showing means every other book landed first; the run's expect-log line HOOK full-shelf ok proves the hook ended well (a flow cannot wait on a log), and the wait is 600 s (8 books one after another, each a package plus the audio packs, on an emulator link).
-# The data survives every relaunch below (no clearState), so shots 4 and 5 and the Books tab see the same full shelf.
+# The data survives every relaunch below (no clearState), so shots 5 and 6 and the Books tab see the same full shelf.
 - launchApp:
     stopApp: false
     arguments:
@@ -48,7 +50,21 @@ onFlowComplete:
     timeout: 600000
 - waitForAnimationToEnd:
     timeout: 5000
-# Shot 1: page 6 of Three Little Pigs opens with the Wolf speaking, so a character line is lit.
+# Shot 1: a full-page picture, page 1 of Three Little Pigs.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-phone-1-picture
+# Shot 2: page 6 of Three Little Pigs opens with the Wolf speaking, so a character line is lit.
 - launchApp:
     stopApp: false
     arguments:
@@ -61,7 +77,7 @@ onFlowComplete:
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
-- takeScreenshot: store-dino-phone-1-reading
+- takeScreenshot: store-dino-phone-2-voices
 - tapOn:
     id: ReadingBack
     waitToSettleTimeoutMs: 300
@@ -69,7 +85,7 @@ onFlowComplete:
     visible:
       id: GalleryTitle
     timeout: 15000
-# Shot 2: the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml).
+# Shot 3: the record intro "Who will you record?", before Start is tapped (path of record-per-character.yaml).
 - launchApp:
     stopApp: false
     arguments:
@@ -83,7 +99,7 @@ onFlowComplete:
     element:
       text: ".*Three Little Pigs.*"
     timeout: 30000
-# Slice 420: a tap on the cover reads the book; the sheet opens from the book's own ••• button: TileMore whose description ("Options for <title>") names the book (`above:` picked a neighbour's button, the title not being a text node on Android).
+# Slice 420: a tap on the cover reads the book; the sheet opens from the book's own ... button: TileMore whose description ("Options for <title>") names the book (`above:` picked a neighbour's button, the title not being a text node on Android).
 - tapOn:
     id: TileMore
     text: ".*Three Little Pigs.*"
@@ -101,28 +117,28 @@ onFlowComplete:
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 5000
-- takeScreenshot: store-dino-phone-2-record
+- takeScreenshot: store-dino-phone-3-record
 # Back to the shelf without recording anything: relaunch keeping the data (no clearState).
 - launchApp
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 60000
-# Shot 3: the same page as shot 1 in German (Slice 404). set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack.
+# Shot 4: the same page as shot 2 in Spanish. set-language switches the screens (skip-first-run lang=fa does not); voice=0 starts no voice pack. There is no fall back to another language: missing Spanish screens fail the flow.
 - launchApp:
     stopApp: false
     arguments:
       cmd: set-language
-      lang: de
+      lang: es
       voice: "0"
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 30000
-# The shelf starts the German audio fetch; wait until its bar and Cancel are gone so no banner covers the shot.
+# The shelf starts the Spanish audio fetch; wait until its bar and Cancel are gone so no banner covers the shot.
 - extendedWaitUntil:
     notVisible:
-      id: ShelfAudioCancel-de
+      id: ShelfAudioCancel-es
     timeout: 60000
 - launchApp:
     stopApp: false
@@ -140,7 +156,39 @@ onFlowComplete:
     timeout: 60000
 - waitForAnimationToEnd:
     timeout: 5000
-- takeScreenshot: store-dino-phone-3-language
+- takeScreenshot: store-dino-phone-4-language
+# Shot 4, Japanese: an extra file (the note's language shot is English, Spanish and Japanese); store-captions.ps1 gives it the caption of 4-language.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: ja
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-ja
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "6"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-phone-4-language-ja
 - launchApp:
     stopApp: false
     arguments:
@@ -151,7 +199,19 @@ onFlowComplete:
     visible:
       id: StoryTile
     timeout: 30000
-# Shot 4: the grown-ups corner, Books tab (the books list shows no price).
+# Shot 5: the kids' shelf, 12 books. Not Three Little Pigs: the test books sit below the fold (iOS run 44429604107); the book the hook lands last is at the top.
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: store-dino-phone-5-shelf
+# Shot 6: the grown-ups corner, Books tab (the books list shows no price): "For ages 3 to 9. No ads."
 - launchApp:
     stopApp: false
     arguments:
@@ -166,17 +226,4 @@ onFlowComplete:
 # No price in a store image (Apple 2.3.7): fail rather than shoot one.
 - assertNotVisible:
     text: ".*[$£€].*"
-- takeScreenshot: store-dino-phone-4-grownups
-# Shot 5: the kids' shelf of illustrated books.
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: StoryTile
-    timeout: 60000
-# Not Three Little Pigs: on the 12-book shelf (Slice 404, Decision 3) the test books sit below the fold (iOS run 44429604107); the book the hook lands last is at the top.
-- extendedWaitUntil:
-    visible: ".*Jack and the Beanstalk.*"
-    timeout: 15000
-- waitForAnimationToEnd:
-    timeout: 5000
-- takeScreenshot: store-dino-phone-5-shelf
+- takeScreenshot: store-dino-phone-6-ages

@@ -1,0 +1,13 @@
+{
+  "name": "dino-store",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.9.72 preview",
+    "check": "npx --yes hyperframes@0.9.72 check",
+    "render:iphone": "npx --yes hyperframes@0.9.72 render --composition index.html --fps 30 --quality high --output renders/iphone.mp4",
+    "render:ipad": "npx --yes hyperframes@0.9.72 render --composition variants/ipad.html --fps 30 --quality high --output renders/ipad.mp4",
+    "render:feature": "npx --yes hyperframes@0.9.72 render --composition variants/feature-graphic.html --format png-sequence --fps 24 --output renders/feature-frames",
+    "test": "node --test \"*.test.mjs\""
+  }
+}
