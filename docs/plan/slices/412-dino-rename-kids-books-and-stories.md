@@ -131,7 +131,7 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
 
 ## Work items
 
-1. [ ] **Popularity table (first step, milestone 1).** Apple Search Ads popularity (or a free checker such as
+1. [x] **Popularity table (first step, milestone 1).** Apple Search Ads popularity (or a free checker such as
    appdrift.co keyword difficulty) for: kids books, books for kids, bedtime stories, stories for kids, kids stories,
    children's stories, read aloud, picture books, storybook. Storefronts GB and US. One table in this file. Try it through
    a tool first (`web-research`, then the signed-in Chrome only if the user says so in that turn); Chrome hung on
@@ -143,6 +143,20 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    So nothing shows "bedtime stories" far ahead of "kids books", and the approved name and keyword field ship unchanged. The
    table can be filled from the user's signed-in Chrome or Apple Ads account if they ask; Slice 414 re-tunes keywords from
    App Store Connect impressions anyway.
+   *Closed 2026-11-24 (user: "do the other 2!"; `web-research` second pass plus one direct retry):* Google Trends answered
+   HTTP 429 to both the agent and a direct `trends/api/explore` call for GB; AppGoblin answered 401; Astro and MobileAction
+   have no public keyword pages. The only comparable figure: Appfigures keyword teardown #98 (US App Store, 2023-03-20,
+   https://appfigures.com/resources/keyword-teardowns/98-books-for-kids) gives "books for kids" popularity 32 and says
+   "bedtime stories" is "on par with" it.
+
+   | Phrase | GB | US |
+   | --- | --- | --- |
+   | books for kids | not reachable | 32 (Appfigures, 2023) |
+   | bedtime stories | not reachable | on par with "books for kids" (Appfigures, 2023, no number) |
+   | kids books, stories for kids, kids stories, children's stories, read aloud, picture books, storybook | not reachable | not reachable |
+
+   Nothing shows "bedtime stories" far ahead of "kids books", so the approved name and keyword field stay; real
+   impressions decide the keyword swaps in Slice 414.
 2. [x] **App name.** (Built: `DinoPublicName` added, `ApplicationTitle` = "Dino"; Android build label "Dino", Windows AppxManifest DisplayName is the full name; Windows manifest is a literal, MAUI does not overwrite it; iOS takes `ApplicationTitle` as CFBundleDisplayName, read from the iOS SDK targets, not built here.) One MSBuild property for the public name (e.g. `DinoPublicName` = "Dino: Kids Books & Stories" in
    `DinoReader.App.csproj`), `ApplicationTitle` = "Dino" (icon label). Windows `Package.appxmanifest` `DisplayName`
    (package and application) = the full name, since the Start menu shows it and it must equal the reserved Partner Center
@@ -184,7 +198,11 @@ Play production for Dino was still not live on 2026-11-18 (mirror read, 1.131.1 
    subscription wording. Submitted by `appstore-submit` after Slice 413's locales are on the same version.
    (b) retried: still 409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE` (group and both subscriptions APPROVED/ACTIVE);
    Apple allows no rename of an active subscription's display name here, so the old "Dino Book Reader" stays on them.
+   **(b) closed 2026-11-24 (user: "I dont care about fucking apple subscription", "close the fucking apple subscription
+   task"):** the old name stays on Apple's subscription group and subscriptions; never retried or raised again.
    The Dino ASC key in `D:\secrets\dinoreader` returns 401; the shared key in `D:\secrets\lets-call-mom` works.
+   *(c) tried 2026-11-24 (`store-listing` agent, Partner Center submission API; `MS_STORE_*` in `D:\secrets\dinoreader\secrets.env` works for it):* last published submission 1152921505702472995 (1.136.5 packages, no other pending one) still has en-us and zh-hans title "Dino Book Reader" and no title field on the other 13 listings; thirteen descriptions still name "Dino Book Reader" or "Dino Reader". Created draft 1152921505702495765 (PendingCommit, NOT committed; deleted 2026-11-24 with a 204, no pending submission left, published one unchanged). A `PUT` with title "Dino: Kids Books & Stories" answers 200 and echoes it, but a `GET` of the draft still reads "Dino Book Reader" (same with the reserved name "Dino Reader", so the API does not persist titles); a localized title (zh-hans "Dino: ...") is refused 400, only the reserved names "Dino Reader", "Dino Book Reader", "Dino: Kids Books & Stories" pass. Title stays open: set it in Partner Center (Dino, Store listings, each language, Product name = the reserved name), then submit. The draft's `isAdvancedPricingModel` reads false after the PUT (published: true), priceId stays Free: check Pricing before committing.
+   **Tooling gap (2026-11-24):** `.github/scripts/store-listings.mjs` leaves Dino's `en` and `de` listings unwritten and maps `zh`/`pt` to `zh-cn`/`pt-br` while the live submission names them `zh-hans`/`pt`, so a name change in the repo files never reaches the live Microsoft listings.
 7. [ ] *Name reserved 2026-11-18 (desk, in the user's Chrome, user: "use the fucking chrome I approve it"): Partner
    Center lists "Dino: Kids Books & Stories" as "Reserved for this app" next to "Dino Book Reader" (in use) and "Dino
    Reader". Microsoft drops a reservation unless the product is submitted with it within three months (by 2027-02-18).
