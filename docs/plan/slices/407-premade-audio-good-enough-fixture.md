@@ -1,6 +1,8 @@
 ### Slice 407 — Dino: the premade-audio Farsi delivery fixture matches Good Enough's cast again
 **Product:** Dino
 
+*Plan-cleanup check 2026-11-25: keep open. All three own-work items are unbuilt. Live: `python -I -W error -m unittest discover -s tools/dino/premade-audio` at origin/main 1a8bf725 gives 1 failure of 128 (good-enough pins only Hazelnut; the cast has Carrot and more); fixture and test untouched since 45089bff. No waits, no outside events, no side items to move.*
+
 *Planned.*
 
 **Touches:** `tools/dino/premade-audio/testdata/farsi-delivery-styles.json`, `tools/dino/premade-audio/test_premade_audio.py`

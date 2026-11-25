@@ -1,6 +1,8 @@
 # Slice 377: Feedback loop 2026-11-14-0726 leftovers
 **Product:** Shared
 
+*Plan cleanup 2026-11-25: verdict close. All 18 items are ticked; items 6 and 17 were closed 2026-11-18. The Outstanding "Parked" line was stale. The read-back and device lines stay in unverified.md.*
+
 *Built 2026-11-14, merged as PR #1131 (d0deb676); device check, iOS compile and live store read-back not yet done; items 6 and 17 closed 2026-11-18 (index pass, see their lines).* Wave scope: item 1 is built by Slice 354 item 18 and item 7 by Slice 354 item 13 (same files); item 11 by Slice 376 item 13; item 15 also covers Slice 376 item 14; item 3 (RTST App Store description) is pushed by the Slice 193 store job this wave. ClaudeSkills items go in their own ClaudeSkills PR (worktree `D:/ClaudeSkills-worktrees/cs377`). Was: *Parked: feedback loop, waits for the user.* Found by the 2026-11-14-0726 feedback loop ([note](../notes/2026-11-14-0726-feedback-loop.md)). Nothing here is built until the user has read it. Entry numbers are in that loop's digest of wave 1 (c8844e49), housekeeping 1 (7611eadc) and the starter session (3cda3d74).
 
 *Park note (2026-11-14, night 2026-11-14-1547 housekeeping 2):* parked: item 6 (driver notices a silent starter) did not pass review after four rounds in wave 2 (needs a redesign); item 17 waits for the LFS rejection to recur or one clean high-res push. PR #1131 stays.

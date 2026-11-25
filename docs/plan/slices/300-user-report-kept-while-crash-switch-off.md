@@ -1,6 +1,8 @@
 # Slice 300 — A kept problem report must not be wiped at next start when the remote crash switch is off
 **Product:** Shared
 
+*2026-11-25 plan-cleanup: own work (items 1-3) done and merged (#919); item 4 is the emulator/iOS check, which lives in unverified.md and does not hold the slice. The Debug hook that makes the user-report endpoint refuse still does not exist (no such hook in `src/Dino/DinoReader.App/Testing/` on origin/main); moved out to a proposed new slice (plan-cleanup `og5-new-1`). Verdict: close.*
+
 *Built 2026-11-07 (wave 3, night 2026-11-07-1412), merged as PR #919 (234b6290); emulator and iOS device checks not yet run.* *Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
 
 **Touches:** `src/Sirous.Reading.Mobile.Shared/Crashes/CrashReporter.UserReport.cs`, `src/Sirous.Reading.Mobile.Shared/Crashes/CrashReporter*.cs`, `src/Sirous.Reading.Application/Crashes/CrashSendPolicy.cs`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/300-user-report-kept-while-crash-switch-off.md`, `src/Sirous.Reading.Mobile.Shared/Crashes/**` (CrashSender.cs, the report store; widened at claim)

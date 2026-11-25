@@ -77,11 +77,19 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
-### Slice 434: Dino: Microsoft Store 1920 x 1080 shots and the landscape video ([slice](slices/434-dino-windows-store-shots-and-landscape-video.md))
+### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
+- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again.
+
+### Slice 445: Dino: Microsoft Store trailer, Partner Center push and Play video link ([slice](slices/445-dino-microsoft-store-trailer-and-play-video-link.md))
 - [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back, after Slice 433 merges (its storyboard in `tools/dino/promo/store/`).
 - [session] The YouTube upload and the Play video URL wait for Slice 435's upload script.
-- [session] The dino-onboarding mic step failed once on the VM 2026-11-24 (run2.log: "FAIL R on the voice step started no recording and showed no microphone-off state (waited 15 s)"); recheck on main. The store-shots check follows `dino-onboarding-skip` and no longer runs that step.
 - [session] Run `store-size-check.ps1` on the eight Windows PNGs once Slice 433 merges.
+
+### Slice 444: Dino: iPhone Duo store screenshot set and Duo preview ([slice](slices/444-dino-iphone-duo-store-screenshots-and-preview.md))
+- [owner] **Device:** the iPhone Duo set, until Xcode has a Duo simulator and Slice 403 has shipped.
+
+### Slice 434: Dino: Microsoft Store 1920 x 1080 shots and the landscape video ([slice](slices/434-dino-windows-store-shots-and-landscape-video.md))
+- [session] The dino-onboarding mic step failed once on the VM 2026-11-24 (run2.log: "FAIL R on the voice step started no recording and showed no microphone-off state (waited 15 s)"); recheck on main. The store-shots check follows `dino-onboarding-skip` and no longer runs that step.
 
 ### Slice 420: Dino Windows checks after one shelf ([slice](slices/420-dino-windows-checks-after-one-shelf.md))
 - [session] `needs-file/store-shot-phone` and `needs-file/store-shot-tablet` Maestro flows (tap on a book's dots by title) were not run.
@@ -96,11 +104,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 411: one command sets up a new book's sale product ([slice](slices/411-dino-book-product-every-store.md))
 - [session] **Device:** once Microsoft certifies add-on `9N6J9F50FM6G`, `node .github/scripts/store-products-local.mjs --check-prices` reads USD 0.99 for every book, Love from Seagull Island included (the first add-on priced through the API with `Tier1012`).
-
-### Slice 404: Dino: a full-shelf test hook, then every live store picture retaken ([slice](slices/404-dino-store-pictures-foldables-and-retake.md))
-- [owner] **Device:** the iPhone Duo set, until Xcode has a Duo simulator and Slice 403 has shipped.
-- [phone] **Device:** the `full-shelf` hook on the iOS simulator (`ios-sim-store-shots.sh` package copy into the container's Library, flows `store-shot-ios-1..5`) and on the tablet flow (`store-shot-tablet`): not run on a device.
-- [phone] **Device:** the package build in a fresh worktree or checkout (`git lfs pull` of each missing book's `high-res/` before `BookBuilder build`, in `store-screenshots.ps1` and `ios-sim-store-shots.sh`): proven only by the `test-store-screenshots.ps1` self-test and the macOS job run; the emulator run needed the pull done by hand.
 
 ### Slice 403: Dino: foldable layouts ([slice](slices/403-dino-foldable-layouts.md))
 - [owner] **Device:** the iPhone Duo on a simulator or device (no Duo in Xcode yet; Apple has published no pixel sizes, points or safe areas, 2026-11-16). The Fold8 and Ultra on a real device.
@@ -633,6 +636,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 343: Listening page: four Farsi voices ([slice](slices/343-four-farsi-voices.md))
+- [owner] **You:** ear check of the built comma fix (ganji-2, gyro-2, gyro-3) on a listening page after it ships.
 
 ### Slice 393: Feedback loop 2026-11-14-1547 leftovers ([slice](slices/393-feedback-loop-2026-11-14-1547-leftovers.md))
 - [phone] **Device:** `tools/phone/test-phone-lib.ps1` and a real-phone preflight after #1242's lease changes (a foreign lease gives `PREFLIGHT WARN` exit 3, `Invoke-LeaseFileOnly`, owner compare `-ceq`): never run, the lease was held by another session (feedback loop 2026-11-17-2105).

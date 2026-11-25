@@ -1,7 +1,7 @@
 ### Slice 409 — Dino: the store upload only uploads (listening tracks built on the PC, no backfill in unrelated runs)
 **Product:** Dino
 
-*Planned.*
+*Planned.* Plan-cleanup check 2026-11-25: keep open, nothing built. On origin/main `dino-store.yml` still installs ffmpeg (line 103), still has `LISTEN_BUDGET_SECONDS` (line 90) and the `build-listen` call (line 138); `.github/CLAUDE.md` line 157 still has the backfill sentence; no `listen-*.m4a` is committed (0 in the tree). No outside waits, no side items to move.
 
 **Touches:** `.github/workflows/dino-store.yml`, `.github/scripts/publish-store-books.mjs`, `.github/CLAUDE.md`, `tools/dino/DinoReader.BookBuilder/**`, `tools/dino/premade-audio/README.md`, `.claude/skills/create-dino-story/SKILL.md`, `content/dino/*/audio/*/listen-*.m4a` (new)
 

@@ -1,6 +1,8 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
+*Plan-cleanup check 2026-11-25: verdict close. Own work is built and merged (#722, #1136, #1138, #1147). Item 1: Android emulator and iOS simulator runs (43642530390, 43646782384) passed; the iPhone 8 run is moved out: nothing on this PC drives Maestro on a real iPhone (`tools/crashes/pull-iphone.ps1` only pulls logs), so it is a tooling gap, not this slice. Item 6 is written up (causes unproven); proof can only come from a symbolicated crash, now a Watch line. Live read 2026-11-25: `node tools/crashes/report.mjs -App dino -Since 2026-11-10` shows no NSDictionary and no 0xdead10cc crash; the only iOS entries are `unclean_exit` 1.131.0 (2026-11-15) and 1.118.0 (2026-11-21) with no Apple crash. User 2026-11-06: "IOS has been tested and seemed ok. no crashes." The 2026-11-15 background watchdog kill is owned by Slice 400 item 3. The park notes below are stale. Unverified lines stay in unverified.md.*
+
 *Wave 4 (2026-11-14) merged as PR #1147 (8f0b3962); open: the iPhone 8 run, item 6.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack); simulator run 3 (audio-backed) passed 2026-11-14.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
@@ -96,7 +98,7 @@ Premise check on origin/main corrected the slice:
 
 ## Work
 
-- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); the audio-backed simulator run 3 passed 2026-11-14 (run 43646782384); only the iPhone 8 run is open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
+- [x] 1. (closed 2026-11-25 by plan-cleanup: the iPhone 8 run is moved out, see the note under the Product line) (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); the audio-backed simulator run 3 passed 2026-11-14 (run 43646782384); only the iPhone 8 run is open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
   the user's iPhone 8 when it is free: read, press Back mid-sentence, read again, change page while reading, background
   the app while reading. Same flows on the Android emulator (parity). Record what crashes.
 - [x] 2. **Layout crash:** find every iOS place that builds an attributes dictionary or attributed string (our code and
@@ -110,7 +112,7 @@ Premise check on origin/main corrected the slice:
 - [x] 5. **`0xdead10cc`** (investigated, not fixed, cause unproven): find files held open across suspension (rolling log writer, crash run marker, settings,
   any SQLite); close or flush them on background (`UIApplication.DidEnterBackground`) or wrap the write in a background
   task. Same review on Android for its equivalents.
-- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until the iPhone 8 run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243. With audio playing, 3 rounds on the simulator (run 3, 2026-11-14) showed no crash, no Jetsam and no .ips; the three causes stay unproven because the simulator is not memory-limited.)
+- [x] 6. (closed 2026-11-25: written up; causes stay unproven and are not a hold) Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until the iPhone 8 run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243. With audio playing, 3 rounds on the simulator (run 3, 2026-11-14) showed no crash, no Jetsam and no .ips; the three causes stay unproven because the simulator is not memory-limited.)
 
 ## Verification
 

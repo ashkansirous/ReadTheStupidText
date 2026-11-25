@@ -1,6 +1,8 @@
 # Slice 299 — Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names)
 **Product:** Dino
 
+*Plan cleanup 2026-11-25: verdict close (all own work done; item 2 was never built). Item 2 read live on origin/main: Cancel or a failed list load still shows the "Connect to the internet" layer (`FirstBooksPage.cs:226-236,330-335`). Moved to a new slice (distinct cancelled/failed copy in 15 languages); the Outstanding line goes with it.*
+
 *Built 2026-11-07, merged as PR #912 (08f65b2f); items 1 and 3 built, item 2 not built (see Decisions), not yet verified on a device.* (Planned 2026-11-07.) Three leftovers from [Slice 261](261-dino-no-starters-first-run-book-picker.md), not built. Moved from plan.md's *Outstanding work*. App code is shared MAUI (Android and iOS together).
 
 **Touches:** `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/FirstBooksPage.cs`, `src/DinoReader.App/CLAUDE.md`, `.github/scripts/dino-starters.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books*.test.mjs`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets*.test.mjs`, `.github/workflows/dino-store.yml`, `.github/CLAUDE.md`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `tests/DinoReader.Tests/FirstBooks*Tests.cs`, `docs/plan/slices/299-slice-261-leftovers.md`, `docs/plan/unverified.md`

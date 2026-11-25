@@ -1,6 +1,8 @@
 ### Slice 435 — Dino: a YouTube channel with the four free books as read-aloud videos in 15 languages, rendered from the book files
 **Product:** Dino
 
+*Plan-cleanup check 2026-11-25 (origin/main 1a8bf725): verdict keep open, not started. Free list re-read live from dinoreader.sirous.uk/api/stories: the same four books. `tools/dino/promo/youtube/` does not exist yet (only `promo/linkedin/`); `ListenTrack.cs` and `StorySentences.cs` exist as cited. Source note present. No waits, no side items to move: all seven work items are own work. The user sign-in for the YouTube grant (item 4) and the "yes" on the first video are the owner steps the slice already names.*
+
 *Planned 2026-11-24 from the phone doc [2026-11-23-dino-youtube-story-channel.md](../notes/2026-11-23-dino-youtube-story-channel.md) (Scope Inbox, status ready). Follow every line of that note's Constraints (including the token budget), Decisions (approved) and Opening and closing cards; this file wins where they differ.*
 
 **Touches:** `tools/dino/promo/youtube/**` (new), `docs/plan/notes/2026-11-24-youtube-kids-policy.md` (new), `docs/plan/slices/435-dino-youtube-read-aloud-channel.md`. Reads `content/dino/<stem>/` only (book.json, story.md, translations, high-res pictures, covers, `audio/<lang>/manifest.json` and clips through Git LFS), never edits it.

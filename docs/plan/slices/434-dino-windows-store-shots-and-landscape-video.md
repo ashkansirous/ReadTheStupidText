@@ -1,6 +1,8 @@
 ### Slice 434 — Dino: Microsoft Store desktop screenshots at exactly 1920 x 1080 and the landscape video (YouTube for Play, Microsoft Store trailer)
 **Product:** Dino
 
+*Plan-cleanup 2026-11-25 (verdict: close): items 1-2 are built and merged (PR #1341 MERGED 2026-11-24T21:02Z; eight 1920 x 1080 PNGs on `origin/main` in `docs/store-listings/screenshots/dino/windows/`; HyperFrames project `tools/dino/promo/store-landscape/` on main). Items 3-5 only wait on other slices (433: still planned, draft PR #1342, so `store-size-check.ps1` and `tools/dino/promo/store/` are not on main; 435: planned, no upload script), so they moved to a new slice that starts after them. Slice 404 item 5 stays unticked until that slice pushes the set (still `[ ]` on origin/main).*
+
 *Planned 2026-11-24 from the phone doc [2026-11-23-dino-store-screenshots-and-video.md](../notes/2026-11-23-dino-store-screenshots-and-video.md), milestone 3 and the landscape part of milestone 4; split from Slice 433 (user, 2026-11-24). Follow every line of that note's Constraints, Decisions (approved), Sizes and Video timeline; this file wins where they differ.*
 
 *Built 2026-11-24 (items 1 and 2: shots made on the VM, run 13 PASS); items 3-5 open; merged as PR #1341 (8503a816).*
@@ -25,9 +27,9 @@ The Microsoft Store set must be landscape 1920 x 1080 with no text in the image 
 
 - [x] 1. **First step:** a VM check `dino-store-shots` that sets the guest display to a resolution and scale where the Dino window can be sized to exactly 1920 x 1080 client area, puts the 12 books on the shelf in the Release test package (a Release-reachable form of 404's `full-shelf` hook, or the `DINO_TEST_BOOKS` route, whichever works in Release), captures the app window only, and prints its size; a contact sheet of one shot written into this slice (picture and text fill the frame, no big empty margins: the note's acceptance line).
 - [x] 2. (Shots made; the size check with `store-size-check.ps1` waits for Slice 433 to merge, and the captions in Partner Center are item 4.) The six screens (the note's list) at 1920 x 1080 PNG, no text in the image; the six captions in each listing language in Partner Center's caption field (up to 200 characters); checked with Slice 433's `store-size-check.ps1` (if 433 has not merged, this slice adds that script and 433 reuses it).
-- [ ] 3. Landscape footage from the same window for the note's timeline; render the 1920 x 1080 cut with Slice 433's storyboard: H.264/AAC 48 kHz MP4 plus a 1920 x 1080 PNG thumbnail for the Microsoft Store trailer; the same file uploaded to YouTube (unlisted or public, ads off; through Slice 435's upload script once it exists) and its link set as the Play preview video.
-- [ ] 4. Push the Microsoft Store screenshots and trailer (Partner Center; through the `store-listing` agent) and read them back; set the Play video URL and read it back.
-- [ ] 5. Record per store in Slice 291's file; tick Slice 404 item 5 as replaced.
+- [ ] 3. (MOVED 2026-11-25 to the new slice "Microsoft Store trailer, Partner Center push and Play video link", starts after 433 and 435.) Landscape footage from the same window for the note's timeline; render the 1920 x 1080 cut with Slice 433's storyboard: H.264/AAC 48 kHz MP4 plus a 1920 x 1080 PNG thumbnail for the Microsoft Store trailer; the same file uploaded to YouTube (unlisted or public, ads off; through Slice 435's upload script once it exists) and its link set as the Play preview video.
+- [ ] 4. (MOVED, same slice.) Push the Microsoft Store screenshots and trailer (Partner Center; through the `store-listing` agent) and read them back; set the Play video URL and read it back.
+- [ ] 5. (MOVED, same slice.) Record per store in Slice 291's file; tick Slice 404 item 5 as replaced.
 
 Rules on the way: `tools/desktop-vm/CLAUDE.md` (dry-run limits on width/height constants unless the check sets a resolution, `Find-UiaExact`, no fixed sleeps, `# after:` prerequisites, English UI), `src/Dino/DinoReader.App/Platforms/Windows/CLAUDE.md`. Windows-only work: no Android or iOS twin needed (the phones are Slice 433).
 

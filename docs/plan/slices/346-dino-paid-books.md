@@ -1,6 +1,8 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 **Product:** Dino
 
+*Plan cleanup 2026-11-25: Outstanding line removed. App Store Connect read 2026-11-25: all 12 book in-app purchases APPROVED (the "waits on Apple's review" text is stale). Google's bank test deposit stays the user's own step; user-says finds no message about it (terms deposit, bank: 0 matches) and the slice records they said not to remind.*
+
 *Closed 2026-11-24 (user: "I think they are all done"): every build item is ticked and paid books are live since 2026-11-13. The one unticked line, the Google payments bank test deposit, is the user's own account step (not to be reminded) and holds no work.*
 
 *Parked 2026-11-18 (night 2026-11-17-2105 wave 4): only the user's Google payments bank test deposit is left (line 186); no build work for a wave.*
