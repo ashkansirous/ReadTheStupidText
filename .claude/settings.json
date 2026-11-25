@@ -1,4 +1,22 @@
 {
+  "enabledPlugins": {
+    "cloudflare@cloudflare": true,
+    "hyperframes@hyperframes": true
+  },
+  "extraKnownMarketplaces": {
+    "cloudflare": {
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/skills"
+      }
+    },
+    "hyperframes": {
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
+      }
+    }
+  },
   "hooks": {
     "SessionStart": [
       {
