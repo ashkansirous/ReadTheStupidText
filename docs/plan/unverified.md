@@ -403,8 +403,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 283: Dino: a Sonos music service for the store books ([slice](slices/283-dino-sonos-music-service.md))
 - [chrome] **Device:** Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
-- [owner] **You:** Sonos Self Test passes.
-- [owner] **You:** A real play on a Sonos speaker.
 - [chrome] **Device:** A cold `/sonos` call from a far colo under 1.5 s (EWR first calls 1.6-2.1 s on 2026-11-19).
 
 ### Slice 281: Dino: one listening track per store book and language ([slice](slices/281-dino-listening-tracks.md))

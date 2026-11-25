@@ -1,6 +1,8 @@
 # Slice 283 — Dino: a Sonos music service for the store books (anonymous, no login)
 **Product:** Dino
 
+*Closed 2026-11-25. The user played it on their own Sonos (user, 2026-11-24 19:58 UTC): "I tested the sonos extension. it works for the free books, but not the paid ones. that fails. also, not all the books are listed. once it listed 5 book, now I see 8 titles. It seems very random. also, in the usage report, I see many hours of usage, even for the ones that I did not listen to ... lastly, the listing is very bad." So the real play is done and must never be asked for again. The bugs and the redesign the user asked for are Slices 436 (real plays, new books quickly), 437 (shelves), 438 (link through the Dino app), 439 (subscription plays paid books) and 440 (search). The link changes the service's login from Anonymous to AppLink, so the Self Test rerun, Sonos case 09396143 and the production submission move to Slice 438 item B9.*
+
 *Code built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged as PR #879 (a0687a11); user steps open (Sonos partner account, submission, sandbox, Self Test, a play on their Sonos).* Server only (Cloudflare Worker); the apps do not change.
 
 *Claim notes (2026-11-06, unattended night):* the code is built now, as the Decisions say (build during Sonos's review weeks).
