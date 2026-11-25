@@ -4,7 +4,15 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { assertCutFits, clipTiming, cutArgs, cutStart, encodeArgs, loadConfig, markName, markText, readMark, recordingName } from './store-media.mjs';
+import { assertCutFits, clipTiming, cutArgs, cutStart, encodeArgs, loadConfig, markName, markText, nextChange, readMark, recordingName } from './store-media.mjs';
+
+test('a hook clip is anchored on the first screen change after the mark, inside the span; none is refused', () => {
+    // iPhone run 45607850849, 1a-reading: frames at 0 and 5.43 s, mark 2.14 s (the turn-page step's start), span 11.48 s.
+    assert.equal(nextChange([0, 5.428333], 2.141, 11.482), 5.428333);
+    assert.equal(nextChange([0, 2.141, 2.5], 2.141, 10), 2.5, 'a frame at the mark itself is not a change after it');
+    assert.throws(() => nextChange([0, 1.2], 2.141, 11.482), /no screen change/);
+    assert.throws(() => nextChange([0, 12.5], 2.141, 11.482), /no screen change/, 'a change after the recorder stopped does not count');
+});
 
 test('the cut starts beforeMark seconds before the mark, never below 0', () => {
     assert.ok(Math.abs(cutStart(6.2, 3) - 3.2) < 1e-9);
@@ -112,8 +120,9 @@ test('every clip has a recording flow with at least markStep steps, a setup flow
     const config = loadConfig();
     assert.equal(config.leadIn, undefined, 'leadIn is replaced by a per-clip beforeMark');
     for (const [clip, cut] of Object.entries(config.clips)) {
-        assert.deepEqual(Object.keys(cut), ['markStep', 'markAt', 'beforeMark', 'seconds'], clip);
+        assert.deepEqual(Object.keys(cut), ['markStep', 'markAt', 'snap', 'beforeMark', 'seconds'], clip);
         assert.ok(['start', 'end'].includes(cut.markAt), `${clip}: markAt`);
+        assert.ok(['none', 'nextChange'].includes(cut.snap), `${clip}: snap`);
         assert.ok(cut.beforeMark >= 0, `${clip}: beforeMark`);
         const flow = join(flows, `store-shot-ios-video-${clip}.yaml`);
         assert.ok(existsSync(flow), `${clip}: the recorded flow`);

@@ -147,12 +147,27 @@ function probePackets(file) {
     return Number.parseInt(ffprobe(['-count_packets', '-select_streams', 'v:0', '-show_entries', 'stream=nb_read_packets', '-of', 'csv=p=0', file]), 10) || 0;
 }
 
-// The cut of a clip from footage-cuts.json and its recording's mark file.
+// The time (s) of every video frame of a recording, from ffprobe (simctl writes a frame only when the screen changes).
+function probeFrameTimes(file) {
+    return ffprobe(['-select_streams', 'v:0', '-show_entries', 'frame=pts_time', '-of', 'csv=p=0', file])
+        .split(/\r?\n/).map((line) => Number.parseFloat(line)).filter(Number.isFinite);
+}
+
+// Pure: the first screen change after the mark (a frame later than mark + 0.01 s and within the span), for a clip whose action a hook starts at an unknown delay
+// (runs 45597845229, 45597851145, 45607845756, 45607850849: the turn-page hook acted 0.3 to 3.3 s after its openLink step started). Throws when there is none.
+export function nextChange(frameTimes, mark, span) {
+    const change = frameTimes.find((time) => time > mark + 0.01 && time <= span);
+    if (change === undefined) throw new Error(`no screen change between the mark ${mark} s and the end of the recording (${span} s): the action did not happen`);
+    return change;
+}
+
+// The cut of a clip from footage-cuts.json and its recording's mark file; with "snap": "nextChange" it is anchored on the first screen change after the mark.
 function clipCut(config, clip, recording) {
     const cut = config.clips[clip];
     if (!cut) throw new Error(`unknown clip '${clip}' (footage-cuts.json: ${Object.keys(config.clips).join(', ')})`);
     const { mark, span } = readMark(markName(recording));
-    return { start: cutStart(mark, cut.beforeMark), seconds: cut.seconds, mark, span };
+    const anchor = cut.snap === 'nextChange' ? nextChange(probeFrameTimes(recording), mark, span) : mark;
+    return { start: cutStart(anchor, cut.beforeMark), seconds: cut.seconds, mark: anchor, span };
 }
 
 // A recording counts when ffprobe reads its video to the end and the recorder ran long enough for its cut. Prints one line; returns 0, or throws naming why.
