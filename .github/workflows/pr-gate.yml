@@ -1,0 +1,45 @@
+name: pr-gate
+
+# Slice 456: the one check `main`'s ruleset requires (check name `all-checks`). It runs on every PR (no path filter,
+# unlike every other PR workflow) and passes only when every other check on the head commit finished without a failure
+# (.github/scripts/pr-gate.mjs). Dependabot PRs auto-merge on it (dependabot-auto-merge.yml).
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  all-checks:
+    name: all-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+      actions: read
+    steps:
+      # The base commit, not the PR's merge commit: a PR cannot change the gate script it is judged by. Only when the
+      # base has no gate script yet (the PR that adds it, Slice 456) is the PR's own copy used.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github/scripts
+      - name: Use the PR's gate script when the base has none
+        if: ${{ hashFiles('.github/scripts/pr-gate.mjs') == '' }}
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+      - name: Wait for every other check, fail if any failed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: node .github/scripts/pr-gate.mjs "$REPO" "$SHA" all-checks "$RUN_ID"

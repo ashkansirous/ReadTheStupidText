@@ -1,0 +1,28 @@
+name: dependabot-auto-merge
+
+# Slice 456: turn on GitHub auto-merge (merge commit, never squash) for every Dependabot PR, so GitHub merges it once
+# the required `all-checks` gate (pr-gate.yml) is green. A red gate leaves the PR open.
+# Known limits (GITHUB_TOKEN): the merge starts no push workflow, so the bump ships with the next release; a PR that
+# changes .github/workflows/** cannot be merged by this token and stays open for a session to merge.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  enable-auto-merge:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"
