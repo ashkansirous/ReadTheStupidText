@@ -1,7 +1,7 @@
 ### Slice 409 — Dino: the store upload only uploads (listening tracks built on the PC, no backfill in unrelated runs)
 **Product:** Dino
 
-*Built in the worktree 2026-11-25, not yet committed or reviewed.* Every Work item is done except the two that can only be measured on the merge's own release run (items 2's `meta.json` confirmation and 6's "after"), marked pending below. Design as built:
+*Built and merged 2026-11-25 as PR #1358 (0c56e9bb); done: the release run (`dino-store.yml` run 45591259826, started by `gh workflow run` on main because the merge carried [skip ci]) ended `success` and the public list shows every book's tracks.* Built 2026-11-25: every Work item is ticked. Design as built:
 - `build-listen-all [<book>...]` (BookBuilder, new, `ListenTrackFiles.BuildAll`) runs `build-audio` then `build-listen` per language on the PC; `build-listen` now writes `content/dino/<book>/audio/<lang>/listen-<lang>-v<n>.m4a` beside the clips (LFS already covers `content/dino/*/audio/**`; `git check-attr filter` says `lfs`), refuses clips that no longer hash to the `audioPacks` record, deletes the language's older track, and records `listenSeconds` in `audio-cast.json`.
 - `check-audio` (`ListenTrackFiles.Problems`, called from `AudioAlignment.RecordProblem`) fails a language whose record has no length, whose `listen-<lang>-v<record version>.m4a` is missing or empty (an LFS pointer counts by its recorded size, so CI, which pulls no clips, checks it too), or, where the clips are real files, whose clips no longer hash to the record (track older than its clips). Shown failing: a track renamed away gave `x-marks-the-treasure fa: the listening track audio/fa/listen-fa-v2.m4a is missing`, exit 1.
 - `dino-store.yml`: no ffmpeg install, no `build-listen`, no `LISTEN_BUDGET_SECONDS`, no "not reached" count, no "Fail when a listening track could not be built" step. `--audio-behind` now prints `<book> <language>` (pack behind) or `<book> <language> track` (live pack, track not live); a `track` pair fetches no clips and re-zips nothing (Slice 281 check-pass finding 10); every pair's committed track is pulled (`git lfs pull --include`) and copied next to the zips by the new `stage-listen`. A guard fails a book whose CI-built pack record differs from the committed one (`git diff --quiet` on its `audio-cast.json`), because the track's file name carries the pack version.
@@ -34,9 +34,9 @@ Work:
 
 - [x] `build-listen` (or a premade-audio step) writes each language's track into `content/dino/<book>/audio/<lang>/` (LFS) on the PC, after the clips; `check-audio`
       fails a book whose track is missing or older than its clips. (`ListenTrack.cs`, `ListenTrackFiles.cs`, `AudioAlignment.cs`; tests `ListenTrackFilesTests`, 8 cases.)
-- [ ] Build and commit the tracks for every live book now, in this slice (decision 1), and confirm in this slice's own release run that every book's `meta.json` lists them.
+- [x] Build and commit the tracks for every live book now, in this slice (decision 1), and confirm in this slice's own release run that every book's `meta.json` lists them.
       Built 2026-11-25 with this PC's ffmpeg 9.0.2 (`build-listen-all`, exit 0, no error): **240 tracks (16 books x 15 languages), 551,314,728 bytes (about 526 MiB)**, then `check-audio` for all 16 books: "All 240 audio manifests line up". The
-      commit is the caller's. **Pending (release run after merge):** that every book's `meta.json` in the bucket lists `listenSeconds` for all 15 languages.
+      commit is the caller's. **Confirmed 2026-11-25 after merge:** `https://dinoreader.sirous.uk/api/stories` lists all 16 books with 15 audio languages each, every one with `listenSeconds` > 0.
       Finding while building: `good-enough`'s committed record was behind the live store (committed v2/v3, live v3/v4 in 15 languages: CI bumped the version in the runner's workspace without committing it); `build-listen-all` printed 15 "pack version moved" warnings and
       the record is now v3/v4, equal to what is live, so no pack is re-uploaded for it.
 - [x] `dino-store.yml`: drop the ffmpeg install and the `build-listen` call; upload the committed track with the pack. Remove `LISTEN_BUDGET_SECONDS` and the
@@ -44,7 +44,7 @@ Work:
 - [x] Find why the Slice 281 backfill was still running on 2026-11-18 (the `--audio-behind` verdict for the 9 books in run 44293402445), and say it in this file. See *Cause* below ("likely": run 44293402445 and every dino-store run before 2026-11-24 are gone from GitHub).
 - [x] Rules: replace the *Listening tracks* backfill sentence in `.github/CLAUDE.md` with decision 1, add decision 1 to the create-dino-story skill, and the track step to
       the premade-audio README.
-- [ ] Report before/after: the audio-pack step on a one-book upload (today about 30 minutes, 15 of them apt). Before: below. **After: pending (measured on the release run after merge).**
+- [x] Report before/after: the audio-pack step on a one-book upload (today about 30 minutes, 15 of them apt). Before: below. **After: 25 s (run 45591259826), see *Before and after*.**
 
 **Verification:** after a one-book change, `dino-store.yml` builds only that book, installs nothing, and the audio-pack step takes under 3 minutes; the book's
 `meta.json` lists `listenSeconds` for all 15 languages.
@@ -60,13 +60,12 @@ Likely cause, from the code (`.github/workflows/dino-store.yml` before this slic
 #### Before and after (item 6)
 
 Before (read from logs): the step "Build the audio packs the live store lacks" took about **30 minutes** on 2026-11-18 (run 44293402445, per the user: 15 minutes `apt-get update && install ffmpeg`, about 13 minutes for 9 older books; the 09:24 run lost the same 15 minutes). On 2026-11-24 (run 45410724759, ffmpeg 8.0.1 already on the runner image, so no apt) the step took **12 min 24 s** (14:10:34 to 14:22:58) for 8 books, about 93 s a book (15 `build-audio` at about 2 s each plus `build-listen`), the whole job 20 min 47 s (14:08:08 to 14:28:55), the publish step 5 min 36 s.
-After: **pending**, measured on the release run after merge (a one-book change: the step zips that book's behind packs only, stages its committed tracks, installs nothing; target under 3 minutes).
+After (read 2026-11-25, `dino-store.yml` run 45591259826, `gh workflow run` on main after the merge, conclusion `success`): the step "Build the audio packs the live store lacks" took **25 s** with no ffmpeg install (target was under 3 minutes); the whole job 10:03:26Z to 10:10:32Z, about **7 minutes** (was about 30 minutes, 15 of them apt); the upload step 4 min 21 s.
 
 #### Not done, listed (scope)
 
-- The release run after merge must confirm that every book's `meta.json` lists `listenSeconds` for all 15 languages, and give the "after" time above. Both are marked pending, not measured.
 - The 551 MB of tracks are new Git LFS objects: about 526 MiB added to the repo's 10 GiB LFS storage allowance (on top of the ~510 MB of clips). The first release run after merge pulls all 240 of them (one `git lfs pull --include` per pair, about 526 MiB of the 10 GiB monthly download allowance); later runs pull only the tracks of the pairs they upload.
-- *Watch* (post-merge release run of `dino-store.yml`, items 2 and 6): every book's `meta.json` lists `listenSeconds` for all 15 languages, and the "after" time of the audio-pack step is read from that run's log and written into *Before and after*.
+- *Watch* (post-merge release run of `dino-store.yml`, items 2 and 6): **met 2026-11-25.** Run 45591259826 (success): audio-pack step 25 s, job about 7 min; the public list shows all 16 books with 15 languages and `listenSeconds` > 0 each. Numbers in *Before and after*.
 - The job's `timeout-minutes: 60` was raised for the backfill (Slice 281) and was left as is.
 
 #### From review
