@@ -131,3 +131,11 @@ For `.github/CLAUDE.md`, replacing the line that starts "iOS store screenshots c
 For `tools/CLAUDE.md`, appended to the "One emulator build key" line:
 
 - The emulator's Dino Debug build is stamped `-p:ApplicationDisplayVersion=99.0.0` (`$script:EmulatorDinoDisplayVersion` in `build-cache.ps1`) so it clears the live remote-config `minVersion` (else every flow opens "Dino needs an update"); the value is a `build-arg:` line of the build key, so an older 1.0 APK is never reused. RTST keeps its version. (Slice 433: docs/plan/slices/433-dino-store-screenshots-video-play-appstore.md)
+
+## App Store push record (2026-11-25, store-listing agent, apply mode)
+
+- No Dino version was editable (1.136.0 and 1.131.1 READY_FOR_SALE), so an editable draft **1.136.5** (id `5b44cc91-be58-4e50-bd1b-63aafda22757`, iOS, `PREPARE_FOR_SUBMISSION`, release type after approval) was created through the ASC API: 1.136.5 is the marketing version of the newest VALID build (`20261122.101918`). No build attached, no review submission, nothing submitted; `appstore-submit.yml` renames or uses this draft (ios-review-cadence rule 4). Draft page: https://appstoreconnect.apple.com/apps/6825053435/distribution/ios/version/inflight
+- The draft carried all 16 Apple locales (sv, pt-BR, pt-PT, da, en-US, ru, fr-FR, fi, es-MX, es-ES, ja, nl-NL, no, zh-Hans, ar-SA, de-DE); none had to be added (Apple has no Farsi listing).
+- Per locale, old iPhone 6.9" (`APP_IPHONE_67`) and iPad 13" (`APP_IPAD_PRO_3GEN_129`) sets were deleted (only en-US had any) and replaced by the captioned sets of the matching language folder (en for en-US; pt for pt-BR and pt-PT; es for es-MX and es-ES; nb for no; zh for zh-Hans), in the order 1-picture, 2-voices, 3-record, 4-language, 4-language-ja, 5-shelf, 6-ages. The old en-US 6.5" set (5 shots, `APP_IPHONE_65`) was left as it was (not named in the brief).
+- Previews `dino-preview-iphone.mp4` (886 x 1920, `IPHONE_67`) and `dino-preview-ipad.mp4` (1600 x 1200, `IPAD_PRO_3GEN_129`) uploaded in every locale with poster frame requested as 00:00:05.00 (ASC stores it as `00:00:05:01`, timecode with frame 1).
+- Read back: 16 locales x 2 display types x 7 screenshots, all `COMPLETE` in order; 32 of 32 previews `COMPLETE`, none refused, no retry round needed.
