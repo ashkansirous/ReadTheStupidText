@@ -475,14 +475,20 @@ public sealed class ReadingSurface : Border
 			return;
 		}
 
-		bool toNext = e.Direction == SwipeDirection.Left;
+		TurnPage(e.Direction == SwipeDirection.Left);
+	}
+
+	/// <summary>The page turn a swipe makes (and the Debug turn-page hook, Slice 433): one page forward or back, then <see cref="PageSwiped"/>. False at the first or last page, or before a layout is adopted.</summary>
+	internal bool TurnPage(bool toNext)
+	{
 		int target = Math.Clamp(_page + (toNext ? 1 : -1), 0, Math.Max(0, PageCount - 1));
 		if (_renderer is null || target == _page)
 		{
-			return;
+			return false;
 		}
 
 		ShowPage(target);
 		PageSwiped?.Invoke(this, _page);
+		return true;
 	}
 }

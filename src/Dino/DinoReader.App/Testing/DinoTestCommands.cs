@@ -69,7 +69,7 @@ internal static partial class DinoTestCommands
 	{
 		TestHookDispatcher.AppCommands = Run;
 		TestHookDispatcher.PastFirstRunSkip = () => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.ClearPendingOnboarding() ?? true; // Slice 376 item 2
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey, PaidKey, OwnedKey, PriceKey, BuyKey, OfflineKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey, DirKey, ByKey, DurationKey, PaidKey, OwnedKey, PriceKey, BuyKey, OfflineKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -204,6 +204,11 @@ internal static partial class DinoTestCommands
 		{
 			LockSeconds(command.Get(SecondsKey, string.Empty));
 			return TestHookDispatcher.Ok;
+		}
+
+		if (command.Name is TurnPageName or ScrollShelfName)
+		{
+			return MotionHook(command);
 		}
 
 		if (command.Name != Name)

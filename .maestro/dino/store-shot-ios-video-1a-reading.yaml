@@ -10,10 +10,10 @@ name: Store preview clip 1a, reading, Dino Reader, iOS
       id: VideoHold
     timeout: 1500
     optional: true
-- swipe:
-    direction: LEFT
-    duration: 500
-# The page that turns, held. Nothing is read in this clip (run 45518843110: the open-book hook does not play, and a swipe during a read
+# Maestro's `swipe` moves nothing on iOS 27.2 (CI runs 2026-11-24/25), so the turn is the Debug turn-page hook (DinoTestCommands.Motion.cs), which runs the surface's own swipe code (ReadingSurface.TurnPage).
+# The scheme is pre-approved on CI, so no "Open in" handling here. The turn lands about 1.5 s into the flow, 1 s into the kept window (0.5 s leadIn, 3 s kept).
+- openLink: "dino-test://turn-page?dir=next"
+# The page that turns, held. Nothing is read in this clip (run 45518843110: the open-book hook does not play, and a turn during a read
 # shows page 6 while page 5 is read); the 0-3 s cut needs only the turn. The lit lines are clip 1b's.
 - extendedWaitUntil:
     visible:
