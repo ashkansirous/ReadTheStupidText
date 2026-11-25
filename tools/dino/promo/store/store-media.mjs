@@ -49,10 +49,13 @@ function stepEnd(entry) {
 }
 
 // Pure: the mark and span of a clip recorded inside its flow, from Maestro's commands.json (an array of { command: { <kind>Command: ... }, metadata: { status, timestamp (epoch ms at the step's start), duration (ms), depth } }; Maestro 2.12.0).
-// Only top-level steps (depth 0) count. t = 0 of the recording is the end of the startRecording step; the mark is the end of the `markStep`-th step after it
-// (1 = the first recorded step); the span is how long the recorder ran (to the start of stopRecording). Throws, naming why, when the flow did not reach stopRecording
-// or a step before it failed, so the clip is retaken.
-export function clipTiming(entries, markStep) {
+// Only top-level steps (depth 0) count. t = 0 of the recording is the end of the startRecording step; the mark is the end (markAt 'end') or the start (markAt 'start')
+// of the `markStep`-th step after it (1 = the first recorded step); the span is how long the recorder ran (to the start of stopRecording). Throws, naming why, when the
+// flow did not reach stopRecording or a step before it failed, so the clip is retaken.
+// iPad run 45597845229: an openLink hook step took about 3 s and the app acted about 0.9 s after the step STARTED (the page turn at 3.91 s, step 2.98-6.15 s),
+// so an action that a hook starts is marked from its step's start.
+export function clipTiming(entries, markStep, markAt = 'end') {
+    if (markAt !== 'end' && markAt !== 'start') throw new Error(`markAt must be 'start' or 'end', not '${markAt}'`);
     if (!Array.isArray(entries)) throw new Error('commands.json is not an array of steps');
     const top = entries.filter((entry) => (entry?.metadata?.depth ?? 0) === 0);
     const startAt = top.findIndex((entry) => commandKind(entry).startsWith('startRecording'));
@@ -65,7 +68,7 @@ export function clipTiming(entries, markStep) {
     if (!(Number.isInteger(markStep) && markStep >= 1 && markStep <= steps.length)) throw new Error(`markStep ${markStep} is not one of the ${steps.length} recorded steps`);
     const zero = stepEnd(top[startAt]);
     return {
-        mark: (stepEnd(steps[markStep - 1]) - zero) / 1000,
+        mark: ((markAt === 'start' ? steps[markStep - 1].metadata.timestamp : stepEnd(steps[markStep - 1])) - zero) / 1000,
         span: (top[stopAt].metadata.timestamp - zero) / 1000,
         steps: steps.map((entry) => ({ kind: commandKind(entry), status: entry.metadata.status, at: (entry.metadata.timestamp - zero) / 1000, end: (stepEnd(entry) - zero) / 1000 })),
     };
@@ -166,10 +169,10 @@ function checkRecording(recording, clip) {
 function writeMark(commandsFile, clip, markFile) {
     const cut = loadConfig().clips[clip];
     if (!cut) throw new Error(`unknown clip '${clip}'`);
-    const timing = clipTiming(JSON.parse(readFileSync(commandsFile, 'utf8')), cut.markStep);
+    const timing = clipTiming(JSON.parse(readFileSync(commandsFile, 'utf8')), cut.markStep, cut.markAt);
     for (const [i, step] of timing.steps.entries()) console.log(`  ${clip} step ${i + 1} ${step.kind} ${step.status} ${step.at.toFixed(2)}-${step.end.toFixed(2)} s${i + 1 === cut.markStep ? '  <- mark' : ''}`);
     writeFileSync(markFile, markText(timing));
-    console.log(`${clip}: mark ${timing.mark.toFixed(3)} s (end of step ${cut.markStep}), recorder ran ${timing.span.toFixed(3)} s`);
+    console.log(`${clip}: mark ${timing.mark.toFixed(3)} s (${cut.markAt} of step ${cut.markStep}), recorder ran ${timing.span.toFixed(3)} s`);
     return 0;
 }
 

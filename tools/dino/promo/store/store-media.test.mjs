@@ -74,6 +74,9 @@ test('the mark is the end of the markStep-th recorded step and the span the reco
     assert.ok(Math.abs(one.span - 6.6) < 1e-9);
     assert.deepEqual(one.steps.map((step) => step.kind), ['extendedWaitUntilCommand', 'openLinkCommand', 'tapOnElementCommand']);
     assert.ok(Math.abs(clipTiming(commands(), 3).mark - 3.4) < 1e-9);
+    assert.ok(Math.abs(clipTiming(commands(), 2, 'start').mark - 1.5) < 1e-9, 'markAt start: the openLink step starts at 1.5 s');
+    assert.ok(Math.abs(clipTiming(commands(), 2, 'end').mark - 2.2) < 1e-9);
+    assert.throws(() => clipTiming(commands(), 2, 'middle'), /markAt must be/);
     assert.doesNotThrow(() => clipTiming(commands({ extendedWaitUntilCommand: 'WARNED' }), 1), 'an optional hold that timed out still counts');
 });
 
@@ -109,7 +112,8 @@ test('every clip has a recording flow with at least markStep steps, a setup flow
     const config = loadConfig();
     assert.equal(config.leadIn, undefined, 'leadIn is replaced by a per-clip beforeMark');
     for (const [clip, cut] of Object.entries(config.clips)) {
-        assert.deepEqual(Object.keys(cut), ['markStep', 'beforeMark', 'seconds'], clip);
+        assert.deepEqual(Object.keys(cut), ['markStep', 'markAt', 'beforeMark', 'seconds'], clip);
+        assert.ok(['start', 'end'].includes(cut.markAt), `${clip}: markAt`);
         assert.ok(cut.beforeMark >= 0, `${clip}: beforeMark`);
         const flow = join(flows, `store-shot-ios-video-${clip}.yaml`);
         assert.ok(existsSync(flow), `${clip}: the recorded flow`);
