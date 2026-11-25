@@ -1,7 +1,7 @@
 ### Slice 411 — Dino: one command sets up a new book's sale product in all three stores
 **Product:** Dino
 
-*Planned.*
+*Built 2026-11-18 (#1273), not yet verified: the Microsoft price check is in `docs/plan/unverified.md`. Its status row was missing from both `plan.md` and `slices-done.md` until 2026-11-25.*
 
 **Touches:** `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `.github/scripts/store-products-local.mjs` (new), `.claude/skills/create-dino-story/SKILL.md`, `.github/CLAUDE.md`
 
