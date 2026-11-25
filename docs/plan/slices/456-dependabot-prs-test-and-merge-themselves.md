@@ -18,8 +18,11 @@
 **Work:**
 - [x] 1. `pr-gate.mjs` + node tests (pure `verdict`), `pr-gate.yml` running it on every PR.
 - [x] 2. `dependabot-auto-merge.yml`: `gh pr merge --auto --merge` on Dependabot PRs.
-- [ ] 3. After merge: add `all-checks` (GitHub Actions) as a required status check to the `Protect` ruleset on `main`.
-- [ ] 4. Re-trigger #1177, #1332, #1333, #1334 (`@dependabot rebase`) and confirm each runs its checks and merges when green, or record why not.
+- [x] 3. `all-checks` (integration 15368, GitHub Actions) added as a required status check to the `Protect` ruleset on `main`, 2026-11-25 09:31Z, before #1357 merged (09:33Z).
+- [x] 4. Re-triggered the four PRs on 2026-11-25. #1332 (wrangler) and #1334 (WindowsAppSDK 2.7.0) ran their checks and auto-merged. #1333 (github-actions group) first had `version` red: `gittools/actions` v5 needs GitVersion 7.0.x, and the repo asks for 6.x. `all-checks` held the merge. A Dependabot ignore for `gittools/actions` major versions went in, the PR was recreated (checkout 7, setup-dotnet 6, gittools 4.7.2), went green and auto-merged at 09:52Z, although it changes `.github/workflows/**`. #1177 was closed by Dependabot as no longer needed: `main` already has DependencyInjection 11.0.0 (Slice 379).
 
-**Not yet verified:**
-- [session] `all-checks` passes on a normal PR and blocks merge while a check is red.
+**Built:** PR #1357 (merged 2026-11-25). As expected, the three auto-merges started no release run on `main`. The bumps ship with the next release.
+
+**Verified:** `all-checks` passed on #1357 after every other check finished, and it held #1333 while `version` was red.
+
+**Later:** moving to GitVersion 7 (`gittools/actions` v5) is not planned. Dependabot ignores that major version until someone unignores it.
