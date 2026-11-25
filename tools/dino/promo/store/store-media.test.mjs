@@ -104,7 +104,11 @@ test('the encode is Apple spec: exact size, 30 fps, h264 about 11 Mbps, stereo A
     assert.equal(value('-vf'), 'scale=886:1920:flags=lanczos,fps=30');
     assert.equal(value('-c:v'), 'libx264');
     assert.equal(value('-b:v'), '11M');
-    assert.equal(value('-maxrate'), '12M');
+    assert.equal(value('-minrate'), '11M');
+    assert.equal(value('-maxrate'), '11M');
+    assert.equal(value('-x264-params'), 'nal-hrd=cbr');
+    assert.equal(value('-profile:v'), 'high');
+    assert.equal(value('-level:v'), '4.0');
     assert.equal(value('-c:a'), 'aac');
     assert.equal(value('-b:a'), '256k');
     assert.equal(value('-ac'), '2');

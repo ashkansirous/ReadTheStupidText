@@ -74,12 +74,14 @@ export function clipTiming(entries, markStep, markAt = 'end') {
     };
 }
 
-// Pure: the ffmpeg arguments that encode a render to Apple's app preview spec at the exact size.
+// Pure: the ffmpeg arguments that encode a render to Apple's app preview spec at the exact size (re-read 2026-11-25: H.264 "up to High Profile Level 4.0", 10-12 Mbps,
+// at most 30 fps, AAC 256 kbps stereo 44.1 or 48 kHz, 15-30 s, at most 500 MB; 886 x 1920 and 1600 x 1200 both fit Level 4.0 at 30 fps). Constant bit rate (nal-hrd=cbr,
+// padded): the average-rate encode of the first renders came out at 2.8 to 3.4 Mbps on this mostly still footage, under Apple's 10-12 Mbps target.
 export function encodeArgs(input, output, { width, height }) {
     return [
         '-y', '-i', input,
         '-vf', `scale=${width}:${height}:flags=lanczos,fps=30`,
-        '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-b:v', '11M', '-maxrate', '12M', '-bufsize', '22M',
+        '-c:v', 'libx264', '-profile:v', 'high', '-level:v', '4.0', '-pix_fmt', 'yuv420p', '-b:v', '11M', '-minrate', '11M', '-maxrate', '11M', '-bufsize', '22M', '-x264-params', 'nal-hrd=cbr',
         '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-ac', '2',
         '-movflags', '+faststart', output,
     ];
