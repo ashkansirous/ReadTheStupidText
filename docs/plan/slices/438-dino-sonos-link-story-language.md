@@ -91,6 +91,9 @@ From `docs/design/sonos/` (Link, SET-Home, SET-Pick, SET-Saved, SET-FA-Home), wi
 - [ ] B8. Wording: `PRIVACY.md`, `site/dino/privacy.html` (no Sonos text today) and Slice 283's promo and description say
       what a linked home stores (story language, a hashed home id, the subscription proof key) and how to unlink. Show
       the owner the new wording before shipping.
+- [ ] B9. (Moved from Slice 283, 2026-11-25.) After the link is live: switch the sandbox integration to AppLink, rerun
+      the Sonos Self Test until it passes, follow up on Sonos developer case 09396143, then submit the service for
+      production. The user already played the anonymous service on their Sonos (2026-11-24); never ask for that play again.
 
 ## Verification
 
