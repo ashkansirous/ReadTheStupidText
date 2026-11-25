@@ -14,9 +14,11 @@
 # Env: EXPECTED_SHOTS (PNG count the flow set must produce, else the device fails), STORE_SHOTS_TAG (draft release each shot is uploaded to as
 # soon as it is taken; the workflow also downloads that release's PNGs into <out-dir>/<device>/ first, which is how a rerun resumes).
 # Slice 433: Dino's iPad 13" is shot in landscape (2752 x 2064; RTST's stays upright): the script adds `- setOrientation: LANDSCAPE_LEFT` after the `---` line of its copy of every flow on that device, so one set of flows serves both.
-# VIDEO_FLOWS (glob, optional; Dino) = the App Store preview clip flows (.maestro/dino/store-shot-ios-video-<clip>.yaml), one per clip (Slice 433, review pass 2: one recording per clip). On the iPhone 6.9" and the iPad 13" each clip first runs its
-# unrecorded setup flow (store-shot-ios-videoprep-<clip>.yaml), then `xcrun simctl io <udid> recordVideo` starts, the clip flow runs alone and the recorder is stopped, so the mp4 holds exactly that clip. It is kept as
-# <out-dir>/<device>/store-<app>-<device>-video-<clip>.mp4 plus store-<app>-<device>-video-<clip>.mark (one number: seconds from the recorder's start to the first step-end line (COMPLETED or WARNED) Maestro printed for the clip flow; a recording without a valid mark counts as not recorded) (EXPECTED_VIDEOS of them, else the device fails; a file that cannot be read to the end counts as no recording). Apple's preview sizes need no 6.5" footage. tools/dino/promo/store/ trims and captions them.
+# VIDEO_FLOWS (glob, optional; Dino) = the App Store preview clip flows (.maestro/dino/store-shot-ios-video-<clip>.yaml), one per clip. On the iPhone 6.9" and the iPad 13" every clip still missing runs in ONE
+# Maestro invocation (the iOS driver starts once; iPad run 45582715957 lost about 60 s of driver start per clip to the recording): each clip is a generated flow = runFlow of its unrecorded setup flow
+# (store-shot-ios-videoprep-<clip>.yaml), Maestro's own startRecording, the clip flow's steps, stopRecording. It is kept as <out-dir>/<device>/store-<app>-<device>-video-<clip>.mp4 plus
+# store-<app>-<device>-video-<clip>.mark (mark and span from that flow's commands.json, tools/dino/promo/store/footage-cuts.json); a clip that does not pass `store-media.mjs check` (ffprobe required) counts as not
+# recorded (EXPECTED_VIDEOS of them, else the device fails); the missing ones get one more invocation after a simulator restart. Apple's preview sizes need no 6.5" footage. tools/dino/promo/store/ trims and captions them.
 # Per shot: a shot already in <out-dir>/<device>/ at an accepted size is kept and never retaken; a shot that fails, exits 0 without a PNG of an
 # accepted size, or hits its time limit is
 # retried once on its own (app stopped, driver killed, simulator restarted after a kill); the shots after a shot that failed twice still run.
@@ -61,15 +63,15 @@ BOOT_RESERVE_SECONDS=300
 DRIVER_READY_ATTEMPT_SECONDS=330
 DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # The script stops starting new attempts after this (the missing shots are reported and the exit code is 1), so the hand-over step always has the
-# shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 80 (about 6 minutes of setup before the step, run
-# 43748250465: 3 min 20 s). The worst case does NOT fit one job: boot 300 + seven shots at two attempts of 420 s (5880) + seven clips at two attempts of 480 s (a setup and a recorded flow of 240 s: 6720) + a restart 300 = 13200 s.
+# shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 90 (about 6 minutes of setup before the step, run
+# 43748250465: 3 min 20 s). The worst case of shots and clips does NOT fit one job (boot 300 + seven shots at two attempts of 420 s = 5880, plus the clips below), so media=all runs them as two jobs.
 # Slice 433 (run 45479054864, device findings 2-4): every attempt now starts with the Open-in pre-flow (PREFLIGHT_TIME_LIMIT_SECONDS 20 s at most, and skipped on a device where the URL scheme is pre-approved, run 45491086879 finding 1) and every retry is preceded by a simulator restart (RESTART_TIME_LIMIT_SECONDS 300 s at most), and
-# each "will it fit" test above counts them: a shot attempt is 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill: 20 + 900 + 60 = 980 s), a clip attempt 20 + 2 x 240 + 2 x 60 + 20 + 10 = 650 s, a retry adds 300 s. No attempt starts unless its whole cost fits
-# in the 3600 s, so the script ends within 3600 s = 60 min; the workflow's step (66 min) and job (80 min: 6 setup + 66 step + 2 hand-over = 74) keep their margin.
+# each "will it fit" test above counts them: a shot attempt is 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill: 20 + 900 + 60 = 980 s), a clip round 20 + 240 + n x 240 + 2 x 60 + 10 s, a retry adds 300 s. No attempt starts unless its whole cost fits
+# in the 3600 s, so the script ends within 3600 s = 60 min; the workflow's step (66 min) and job (90 min: 6 setup + 8 ffmpeg install (clips) + 66 step + 2 hand-over = 82) keep their margin.
 # It is not meant to: every shot is uploaded when taken, so `gh run rerun <run id> --failed` resumes and retakes only what is missing. RTST:
 # boot 300 + 2 x 600 + restart 300 + hierarchy 2 x 60 = 1920 s, which fits.
 SCRIPT_BUDGET_SECONDS="${SCRIPT_BUDGET_SECONDS:-3600}"
-# Slice 433: the preview footage. Each clip is a setup flow plus a recorded flow of its own, each with this limit. The recorder is given this long to write its file after it is stopped.
+# Slice 433: the preview footage flows and how many recordings a device must end with.
 VIDEO_FLOWS="${VIDEO_FLOWS:-}"
 EXPECTED_VIDEOS="${EXPECTED_VIDEOS:-}"
 # Slice 433 (run 45466463555: slow shots used the whole budget and all seven clips were skipped): shots and clips are separate jobs with separate budgets.
@@ -80,10 +82,13 @@ case "$MEDIA" in
   clips | all) ;;
   *) echo "::error::MEDIA must be shots, clips or all, not '$MEDIA'"; exit 1 ;;
 esac
-VIDEO_TIME_LIMIT_SECONDS=240   # each of a clip's two flows (setup, recorded)
-RECORDER_FINISH_SECONDS=20
-RECORDER_START_CHECK_SECONDS=5   # the recorder must be alive and its file must be growing within this long of starting
-RECORDER_KILLED=no
+# Slice 433 (in-flow recording): all missing clips of a device run in one Maestro invocation whose limit is one driver start (CLIP_BATCH_DRIVER_SECONDS, above the 180 s
+# MAESTRO_DRIVER_STARTUP_TIMEOUT) plus VIDEO_TIME_LIMIT_SECONDS per clip (its setup and its recorded steps; the slowest setup took about 110 s in run 45582715957).
+# Clips job worst case: boot 300 + shelf set-up 900 + round 1 (20 + 240 + 7 x 240 + 120 + 10 = 2070) + restart 300 + round 2 for what is left: round 2 starts only when it fits.
+VIDEO_TIME_LIMIT_SECONDS=240
+CLIP_BATCH_DRIVER_SECONDS=240
+# Set by run_clip_batch: the clip flows of the last round that did not come out.
+CLIPS_MISSING=()
 # "yes" while the iPad 13" is shot: every flow copy is turned to landscape.
 LANDSCAPE=no
 VIDEO_UNITS=()
@@ -486,35 +491,9 @@ run_limited() {
 # Maestro run with the driver start timeout set; a function so run_limited can start it in the background.
 maestro_test() {
   local udid="$1" flow_run="$2" test_out="$3"
-  if [ -n "$CLIP_COMPLETED_FILE" ]; then
-    # Slice 433: a clip flow's stdout passes through the reader that stamps the first step-end line (COMPLETED or WARNED); every line still reaches the job log.
-    MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run" | stamp_first_completed "$CLIP_COMPLETED_FILE"
-    return "${PIPESTATUS[0]}"
-  fi
+  # $flow_run is one flow file, or (the preview clips) a folder of flows with its own config.yaml, run in one invocation.
   MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run"
 }
-
-# Slice 433 (cut point per recording): the clock as epoch seconds with fractions (macOS has no date %N; perl ships with it).
-epoch_now() {
-  perl -MTime::HiRes=time -e 'printf "%.3f\n", time'
-}
-
-# Passes every stdin line to stdout unchanged and writes the epoch time of the first step-end line to $1: the first line that holds a step result word
-# (COMPLETED, or WARNED for an optional step that timed out, as the VideoHold wait does in the hold-only clips: job log of run 45534156337; FAILED and SKIPPED too).
-stamp_first_completed() {
-  local out="$1" line stamped=no
-  while IFS= read -r line || [ -n "$line" ]; do
-    printf '%s\n' "$line"
-    if [ "$stamped" = "no" ]; then
-      case "$line" in
-        *' COMPLETED'*|*' WARNED'*|*' FAILED'*|*' SKIPPED'*) epoch_now > "$out"; stamped=yes ;;
-      esac
-    fi
-  done
-}
-
-# The file the first step-end time goes to while a clip's recorded flow runs; empty for every other flow.
-CLIP_COMPLETED_FILE=""
 
 # Slice 404: prints the app's test-hook log (the HOOK lines; the Debug build appends every line to Library/test-hook.log, TestHookLog.iOS.cs) and the
 # folder listing the hook reads, so a failed shot says why the hook did nothing. Never fails the script.
@@ -818,30 +797,14 @@ video_target() {
   echo "$OUT/$label/store-${APP}-${label}-video-${rest}.mp4"
 }
 
-# Slice 433 (cut point per recording, replaces the fixed leadIn): footage-cuts.json gives each clip a beforeMark and seconds on one line (`"<clip>": { "beforeMark": 1.0, "seconds": 3.0 }`);
-# the cut starts at max(0, mark - beforeMark), where mark is the recording's own .mark file (seconds from the recorder's start to the flow's first COMPLETED line).
-# Prints "<beforeMark> <seconds>" for a clip id (e.g. 3-language-es), or nothing when the file or the clip is not found.
-clip_cut_numbers() {
-  local cuts="$REPO_ROOT/tools/dino/promo/store/footage-cuts.json"
-  [ -f "$cuts" ] || return 0
-  sed -n "s/^ *\"$1\": *{ *\"beforeMark\": *\\([0-9.]*\\), *\"seconds\": *\\([0-9.]*\\) *}.*/\\1 \\2/p" "$cuts" | head -1
-}
-
-# The mark file that belongs to a recording: store-...-video-<clip>.mp4 gives store-...-video-<clip>.mark.
+# The mark file that belongs to a recording: store-...-video-<clip>.mp4 gives store-...-video-<clip>.mark (two lines: mark, span; tools/dino/promo/store/footage-cuts.json says what they are).
 mark_file_of() {
   echo "${1%.mp4}.mark"
 }
 
-# Prints the minimum recording length for a clip id and its mark file: max(0, mark - beforeMark) + seconds. Prints nothing (and the caller fails the recording) when the clip or the mark is missing or not a number.
-clip_min_seconds() {
-  local numbers before secs mark
-  numbers="$(clip_cut_numbers "$1")"
-  [ -n "$numbers" ] || return 0
-  before="${numbers% *}"
-  secs="${numbers#* }"
-  mark="$(head -1 "$2" 2>/dev/null | tr -d ' \r')"
-  case "$mark" in ''|*[!0-9.]*) return 0 ;; esac
-  awk -v m="$mark" -v b="$before" -v s="$secs" 'BEGIN { start = m - b; if (start < 0) start = 0; print start + s }'
+# Slice 433 (in-flow recording): the mark, the length check and the cut all live in one place, tools/dino/promo/store/store-media.mjs (node is set up for Dino by the workflow).
+store_media() {
+  node "$REPO_ROOT/tools/dino/promo/store/store-media.mjs" "$@"
 }
 
 # The clip id of a footage flow: store-shot-ios-video-<clip>.yaml gives <clip>.
@@ -851,221 +814,195 @@ video_clip_id() {
   echo "${name#store-shot-ios-video-}"
 }
 
-# Slice 433 (review pass 2, finding 2; pass 3, finding 3): a recording counts only when it can be read to the end and is long enough. ffprobe (when the runner has it) reads every video packet, which fails on an mp4 whose moov atom was never written,
-# and its duration must reach the optional second argument (mark - beforeMark + seconds: simctl writes frames only when the screen changes, so a held static clip can end early); without ffprobe the file must at least hold a moov atom.
-recording_readable() {
-  local file="$1" min_seconds="${2:-}" packets duration
-  [ -s "$file" ] || return 1
-  if command -v ffprobe >/dev/null 2>&1; then
-    packets="$(ffprobe -v error -count_packets -select_streams v:0 -show_entries stream=nb_read_packets -of csv=p=0 "$file" 2>/dev/null)" || return 1
-    [ "${packets:-0}" -gt 0 ] 2>/dev/null || return 1
-    [ -n "$min_seconds" ] || return 0
-    duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$file" 2>/dev/null)" || return 1
-    awk -v d="${duration:-0}" -v m="$min_seconds" 'BEGIN { exit !(d + 0 >= m - 0.1) }' && return 0
-    echo "::warning::$(basename "$file") is ${duration:-0} s long, shorter than the ${min_seconds} s its cut needs"
-    return 1
-  fi
-  LC_ALL=C grep -q moov "$file"
-}
-
-# A clip's recording is readable, has a mark file beside it and is at least as long as its cut needs (mark - beforeMark + seconds). A recording without a valid mark counts as not recorded, so it is retaken.
+# Slice 433 (iPad run 45582715957: the runner had no ffprobe, so a 29 s file passed for a 67 s cut): a clip's recording counts only when `store-media.mjs check` passes:
+# ffprobe (required; the workflow installs it) reads its video to the end, its mark file holds a mark and a span, and the recorder ran for the whole cut. Anything else is retaken.
 clip_recording_ok() {
-  local min
-  min="$(clip_min_seconds "$(video_clip_id "$2")" "$(mark_file_of "$1")")"
-  [ -n "$min" ] || return 1
-  recording_readable "$1" "$min"
+  [ -s "$1" ] && [ -s "$(mark_file_of "$1")" ] || return 1
+  store_media check "$1" "$(video_clip_id "$2")"
 }
 
-# Writes the mark (flow's first step-end time minus the recorder's start, seconds) to $3 from the stamp file $2 and the recorder start $1. Fails, writing nothing, when no step-end line was stamped or the flow was killed at its limit.
-write_clip_mark() {
-  local rec_start="$1" completed_file="$2" mark_out="$3" completed
-  rm -f "$mark_out"
-  [ "$LIMIT_HIT" != "yes" ] || { echo "::warning::the clip flow was killed at its limit, so the clip has no mark"; return 1; }
-  completed="$(head -1 "$completed_file" 2>/dev/null | tr -d ' \r')"
-  case "$completed" in ''|*[!0-9.]*) echo "::warning::no step-end line (COMPLETED or WARNED) was seen in Maestro's output, so the clip has no mark"; return 1 ;; esac
-  awk -v c="$completed" -v s="$rec_start" 'BEGIN { printf "%.3f\n", c - s }' > "$mark_out"
-  echo "clip mark $(head -1 "$mark_out") s (first step-end line, from the first recorded frame)"
+# Slice 433 (in-flow recording): writes the generated flow of one clip, $3/clip-<clip>.yaml. Maestro records INSIDE the flow (startRecording runs simctl recordVideo), so the
+# recording starts after the driver is up and after the unrecorded setup, and t = 0 is the end of the startRecording step in that flow's commands.json:
+#   runFlow prep/prep-<clip>.yaml (store-shot-ios-videoprep-<clip>.yaml), startRecording clip-<clip>, the steps of store-shot-ios-video-<clip>.yaml, stopRecording.
+write_clip_flow() {
+  local unit="$1" bundle_id="$2" dir="$3" clip prep_unit
+  clip="$(video_clip_id "$unit")"
+  prep_unit="$(dirname "$unit")/store-shot-ios-videoprep-$clip.yaml"
+  [ -f "$prep_unit" ] || { echo "::warning::no setup flow $(basename "$prep_unit")"; return 1; }
+  prepare_flow "$prep_unit" "$bundle_id" "$dir/prep/prep-$clip.yaml" || return 1
+  prepare_flow "$unit" "$bundle_id" "$dir/body/body-$clip.yaml" || return 1
+  {
+    printf 'appId: %s\nname: clip-%s\n---\n' "$bundle_id" "$clip"
+    printf -- '- runFlow: prep/prep-%s.yaml\n- startRecording: clip-%s\n' "$clip" "$clip"
+    sed '1,/^---$/d' "$dir/body/body-$clip.yaml"
+    printf -- '- stopRecording\n'
+  } > "$dir/clip-$clip.yaml"
 }
 
-# Slice 433 (review pass 3, finding 2): the recorder must be alive and its file must be growing within RECORDER_START_CHECK_SECONDS of starting; its stderr is kept in $3 and printed when it fails.
-recorder_started() {
-  local rec_pid="$1" video_tmp="$2" rec_log="$3" waited=0
-  while [ "$waited" -lt "$RECORDER_START_CHECK_SECONDS" ]; do
-    sleep 1
-    waited=$((waited + 1))
-    if ! kill -0 "$rec_pid" 2>/dev/null; then
-      echo "::warning::the screen recorder exited within $waited s of starting; its output:"
-      cat "$rec_log" 2>/dev/null || true
-      return 1
-    fi
-    # Alive plus either bytes in the file or simctl's "Recording started" line in its stderr log (that exact text is unconfirmed by any doc; either one passes).
-    if [ -s "$video_tmp" ] || grep -q "Recording started" "$rec_log" 2>/dev/null; then
-      return 0
-    fi
+# The folder one Maestro run gets: a generated flow per clip at the top, the setup and body copies in subfolders (only top-level flows run), and a config.yaml that
+# runs the clips in order and goes on after a failed one.
+write_clip_batch() {
+  local bundle_id="$1" dir="$2" unit
+  shift 2
+  rm -rf "$dir"
+  mkdir -p "$dir/prep" "$dir/body"
+  printf 'executionOrder:\n  continueOnFailure: true\n  flowsOrder:\n' > "$dir/config.yaml"
+  for unit in "$@"; do
+    write_clip_flow "$unit" "$bundle_id" "$dir" || return 1
+    printf '    - clip-%s\n' "$(video_clip_id "$unit")" >> "$dir/config.yaml"
   done
-  echo "::warning::the screen recorder is running but wrote nothing to its file in $RECORDER_START_CHECK_SECONDS s; its output:"
-  cat "$rec_log" 2>/dev/null || true
-  return 1
 }
 
-# Stops the recorder with SIGINT (simctl then finishes the file) and waits up to RECORDER_FINISH_SECONDS for it; only after that wait is it killed, and a killed recorder is a failed attempt (RECORDER_KILLED=yes), never a file to keep.
-stop_recorder() {
-  local rec_pid="$1" waited=0
-  RECORDER_KILLED=no
-  kill -INT "$rec_pid" 2>/dev/null || true
-  while kill -0 "$rec_pid" 2>/dev/null && [ "$waited" -lt "$RECORDER_FINISH_SECONDS" ]; do
-    sleep 1
-    waited=$((waited + 1))
-  done
-  if kill -0 "$rec_pid" 2>/dev/null; then
-    echo "::warning::the screen recorder did not finish within $RECORDER_FINISH_SECONDS s after SIGINT; it is killed and this attempt is retaken (its file is unusable)"
-    RECORDER_KILLED=yes
-    kill -9 "$rec_pid" 2>/dev/null || true
-  fi
-  wait "$rec_pid" 2>/dev/null || true
-  echo "recorder stopped after $waited s"
+# The commands.json of one clip's flow: the one beside its startRecording folder (Maestro 2.12.0 layout), else any commands*.json under the run's output that names its
+# recording path (the layout is read from Maestro's source, not yet seen on a run: review s433-inflow-high #6).
+clip_commands_file() {
+  local video="$1" test_out="$2" clip="$3" beside
+  beside="$(dirname "$(dirname "$video")")/commands.json"
+  if [ -f "$beside" ]; then echo "$beside"; return 0; fi
+  find "$test_out" -name 'commands*.json' -exec grep -l "\"clip-$clip\"" {} + 2>/dev/null | head -1
 }
 
-# Slice 433: starts the screen recorder (h264) into $3 and waits until it is running and writing. Sets REC_PID, and REC_START = the epoch time recorder_started saw it writing, which is
-# at or after the first captured frame (the mp4's t=0). The lag that remains is the gap between that first frame and the 1 s poll that saw it (under about 1 s); it makes the mark a
-# little too small, so the cut starts that much earlier than beforeMark says, never later. Returns 1 (recorder stopped) when it never started.
-start_clip_recorder() {
-  local udid="$1" rec_log="$2" video_tmp="$3"
-  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$video_tmp" >"$rec_log" 2>&1 &
-  REC_PID=$!
-  if ! recorder_started "$REC_PID" "$video_tmp" "$rec_log"; then
-    stop_recorder "$REC_PID"
-    return 1
-  fi
-  REC_START="$(epoch_now)"
+# The mp4 of one clip under the run's output: startRecording/clip-<clip>.mp4 (Maestro 2.12.0 layout), else a clip-<clip>.mp4 anywhere under it (review s433-inflow-high #5).
+clip_video_file() {
+  local test_out="$1" clip="$2" video
+  video="$(find "$test_out" -path '*/startRecording/*' -name "clip-$clip.mp4" -print -quit 2>/dev/null)"
+  [ -n "$video" ] || video="$(find "$test_out" -name "clip-$clip.mp4" -print -quit 2>/dev/null)"
+  echo "$video"
 }
 
-# Slice 433: runs the clip flow while the recorder records (Maestro's stdout is stamped at its first step-end line by maestro_test), stops the recorder and writes the mark.
-# Returns the flow's status (1 when the recorder was killed or no mark was written).
-run_clip_flow_marked() {
-  local udid="$1" flow_run="$2" test_out="$3" bundle_id="$4" video_tmp="$5" rc=0
-  CLIP_COMPLETED_FILE="$test_out-completed.txt"
-  rm -f "$CLIP_COMPLETED_FILE" "$(mark_file_of "$video_tmp")"
-  run_flow "$udid" "$flow_run" "$test_out" "$bundle_id" || rc=$?
-  stop_recorder "$REC_PID"
-  [ "$RECORDER_KILLED" = "no" ] || [ "$rc" != "0" ] || rc=1
-  write_clip_mark "$REC_START" "$CLIP_COMPLETED_FILE" "$(mark_file_of "$video_tmp")" || [ "$rc" != "0" ] || rc=1
-  CLIP_COMPLETED_FILE=""
-  return "$rc"
-}
-
-# One clip attempt: the unrecorded setup flow runs first; then the simulator screen is recorded (h264) while the clip flow runs alone, and the recorder is stopped, so the file holds exactly that clip.
-# Returns the failing flow's status (1 when the recorder had to be killed); LIMIT_HIT says whether a flow was killed at its limit.
-record_unit_attempt() {
-  local udid="$1" prep_run="$2" flow_run="$3" test_out="$4" bundle_id="$5" video_tmp="$6" rc=0 killed
-  rm -f "$video_tmp" "$(mark_file_of "$video_tmp")"
-  rm -rf "$test_out-setup"
-  mkdir -p "$test_out-setup"
-  run_flow "$udid" "$prep_run" "$test_out-setup" "$bundle_id" || rc=$?
-  killed="$LIMIT_HIT"
-  if [ "$rc" != "0" ]; then
-    echo "::warning::the setup flow $(basename "$prep_run") failed (status $rc); nothing is recorded"
-    LIMIT_HIT="$killed"
-    return "$rc"
-  fi
-  if ! start_clip_recorder "$udid" "$test_out-recorder.log" "$video_tmp"; then
-    LIMIT_HIT=no
-    return 1
-  fi
-  run_clip_flow_marked "$udid" "$flow_run" "$test_out" "$bundle_id" "$video_tmp" || rc=$?
-  killed="$LIMIT_HIT"
-  echo "clip attempt of $(basename "$flow_run"): flow status $rc, file $(wc -c < "$video_tmp" 2>/dev/null | tr -d ' ') bytes"
-  LIMIT_HIT="$killed"
-  return "$rc"
-}
-
-# One footage flow: kept when its file is already in the out folder, else recorded, and once more on a failure (the same one retry as a shot).
-run_video_unit() {
-  local label="$1" udid="$2" bundle_id="$3" unit="$4" index="$5" target flow_run prep_unit prep_run test_out video_tmp attempt=1 rc killed base_limit="$UNIT_LIMIT" unit_name
-  unit_name="$(basename "$unit" .yaml)"
+# Keeps one clip of a batch run: its mp4 (startRecording/clip-<clip>.mp4 under the run's output folder) is copied out, the mark file is written from its flow's commands.json
+# (store-media.mjs mark prints every recorded step's times) and store-media.mjs check decides. Returns 1, naming why, when it is not kept.
+collect_clip() {
+  local label="$1" unit="$2" test_out="$3" clip target video commands
+  clip="$(video_clip_id "$unit")"
   target="$(video_target "$label" "$unit")"
-  prep_unit="$(dirname "$unit")/$(basename "$unit" | sed 's/^store-shot-ios-video-/store-shot-ios-videoprep-/')"
-  UNIT_KEPT=no
-  if clip_recording_ok "$target" "$unit"; then
-    UNIT_KEPT=yes
-    note "- $label: $(basename "$target") kept (already recorded, readable and long enough, not retaken)"
-    return 0
-  fi
   rm -f "$target" "$(mark_file_of "$target")"
-  mkdir -p "$OUT/$label"
-  flow_run="$RUNNER_TEMP/store-video-$label-$index.yaml"
-  prep_run="$RUNNER_TEMP/store-videoprep-$label-$index.yaml"
-  test_out="$RUNNER_TEMP/maestro-out-video-$label-$index"
-  video_tmp="$RUNNER_TEMP/store-video-$label-$index.mp4"
-  if [ ! -f "$prep_unit" ]; then
-    problem "$label: $unit_name: no setup flow $(basename "$prep_unit")"
+  video="$(clip_video_file "$test_out" "$clip")"
+  if [ -z "$video" ]; then
+    echo "::warning::$label: clip $clip: no clip-$clip.mp4 under $test_out (its flow stopped before startRecording); the files there:"
+    find "$test_out" -maxdepth 4 | head -n 30
     return 1
   fi
-  if ! prepare_flow "$unit" "$bundle_id" "$flow_run" || ! prepare_flow "$prep_unit" "$bundle_id" "$prep_run"; then
-    problem "$label: $unit_name: the appId line was not swapped for $bundle_id"
+  commands="$(clip_commands_file "$video" "$test_out" "$clip")"
+  if [ -z "$commands" ] || [ ! -f "$commands" ]; then
+    echo "::warning::$label: clip $clip: no commands.json for its flow under $test_out, so it has no mark"
     return 1
   fi
-  UNIT_LIMIT="$VIDEO_TIME_LIMIT_SECONDS"
-  while [ "$attempt" -le "$FLOW_ATTEMPTS" ]; do
-    if ! time_left_for $((PREFLIGHT_TIME_LIMIT_SECONDS + 2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
-      problem "$label: $unit_name: no time left for attempt $attempt (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
-      UNIT_LIMIT="$base_limit"
-      return 1
-    fi
-    answer_open_in_prompt "$udid" "$bundle_id"
-    reset_attempt "$unit" "$test_out"
-    rc=0
-    record_unit_attempt "$udid" "$prep_run" "$flow_run" "$test_out" "$bundle_id" "$video_tmp" || rc=$?
-    killed="$LIMIT_HIT"
-    if [ "$rc" = "0" ] && clip_recording_ok "$video_tmp" "$unit"; then
-      cp "$video_tmp" "$target"
-      cp "$(mark_file_of "$video_tmp")" "$(mark_file_of "$target")"
-      note "- $label: $(basename "$target") recorded ($(wc -c < "$target" | tr -d ' ') bytes, mark $(head -1 "$(mark_file_of "$target")") s)"
-      upload_shot "$target"
-      upload_shot "$(mark_file_of "$target")"
-      UNIT_LIMIT="$base_limit"
-      return 0
-    fi
-    [ "$rc" != "0" ] || { rc=1; killed=no; echo "::warning::$label: $unit_name exited 0 but left no recording that can be read to the end and is long enough (mark - beforeMark + seconds, footage-cuts.json)"; rm -f "$video_tmp" "$(mark_file_of "$video_tmp")"; }
-    if [ "$attempt" -lt "$FLOW_ATTEMPTS" ]; then
-      note "- RETRY: $label $unit_name attempt $attempt failed (status $rc, killed at the $UNIT_LIMIT s limit: $killed), it is recorded once more"
-      if ! time_left_for $((RESTART_TIME_LIMIT_SECONDS + PREFLIGHT_TIME_LIMIT_SECONDS + 2 * UNIT_LIMIT + 2 * HIERARCHY_TIME_LIMIT_SECONDS + RECORDER_FINISH_SECONDS + 10)); then
-        problem "$label: $unit_name: no time left for the retry (script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
-        UNIT_LIMIT="$base_limit"
-        return 1
-      fi
-      # Slice 433 (finding 2): a fresh boot after every failed clip attempt, as after a kill (the setup flow turns the iPad again).
-      if ! reset_simulator "$udid" "$bundle_id" yes; then
-        SIM_BROKEN=yes
-        problem "$label: the simulator did not come back within $RESTART_TIME_LIMIT_SECONDS s after $unit_name; the rest of this device is skipped"
-        UNIT_LIMIT="$base_limit"
-        return 1
-      fi
-    fi
-    attempt=$((attempt + 1))
-  done
-  UNIT_LIMIT="$base_limit"
-  problem "$label: $unit_name failed twice (killed at the $VIDEO_TIME_LIMIT_SECONDS s limit, or Maestro failed; the log above says which)"
-  return 1
+  cp "$video" "$target"
+  if ! store_media mark "$commands" "$clip" "$(mark_file_of "$target")" || ! clip_recording_ok "$target" "$unit"; then
+    echo "::warning::$label: clip $clip is not kept (the line above says why)"
+    rm -f "$target" "$(mark_file_of "$target")"
+    return 1
+  fi
+  note "- $label: $(basename "$target") recorded ($(wc -c < "$target" | tr -d ' ') bytes, mark $(head -1 "$(mark_file_of "$target")") s)"
+  upload_shot "$target"
+  upload_shot "$(mark_file_of "$target")"
 }
 
-# Every footage flow in order after the shots, on the devices Apple's previews come from; one that failed does not stop the next.
-run_video_units() {
-  local label="$1" udid="$2" bundle_id="$3" unit index=0 rc
-  [ "$VIDEO_COUNT" -gt 0 ] || return 0
-  video_device "$label" || return 0
-  if [ "$SHELF_PREP_FAILED" = "yes" ]; then
-    problem "$label: the $VIDEO_COUNT clip(s) are not recorded, store-shot-ios-shelfprep failed so the shelf is not the full one"
+# Slice 433 (in-flow recording, iPad run 45582715957): the given clips in ONE Maestro invocation, so the iOS driver starts once (about 60 s per invocation, all of which the old
+# recorder filmed). Limit: one driver start plus VIDEO_TIME_LIMIT_SECONDS per clip. Sets CLIPS_MISSING to the clips that did not come out; returns 1 when the round could not start.
+run_clip_batch() {
+  local label="$1" udid="$2" bundle_id="$3" round="$4" dir test_out limit unit rc=0
+  shift 4
+  dir="$RUNNER_TEMP/clips-$label-$round"
+  test_out="$RUNNER_TEMP/maestro-out-clips-$label-$round"
+  limit=$((CLIP_BATCH_DRIVER_SECONDS + $# * VIDEO_TIME_LIMIT_SECONDS))
+  CLIPS_MISSING=("$@")
+  if ! time_left_for $((PREFLIGHT_TIME_LIMIT_SECONDS + limit + 2 * HIERARCHY_TIME_LIMIT_SECONDS + 10)); then
+    problem "$label: no time left for clip round $round ($# clip(s), limit $limit s; script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
+    return 1
+  fi
+  if ! write_clip_batch "$bundle_id" "$dir" "$@"; then
+    problem "$label: the clip flows of round $round could not be written for $bundle_id"
+    return 1
+  fi
+  answer_open_in_prompt "$udid" "$bundle_id"
+  rm -rf "$test_out"
+  mkdir -p "$test_out"
+  note "- $label: clip round $round, $# clip(s) in one Maestro run (limit $limit s)"
+  UNIT_LIMIT="$limit"
+  run_flow "$udid" "$dir" "$test_out" "$bundle_id" || rc=$?
+  echo "clip round $round on $label: Maestro status $rc (killed at the $limit s limit: $LIMIT_HIT)"
+  CLIPS_MISSING=()
+  for unit in "$@"; do
+    collect_clip "$label" "$unit" "$test_out" || CLIPS_MISSING+=("$unit")
+  done
+}
+
+# The clip ids of the given flows, space-separated (for the log).
+clip_names() {
+  local unit names=""
+  for unit in "$@"; do names="$names $(video_clip_id "$unit")"; done
+  echo "${names# }"
+}
+
+# The clips that still need a recording on this device (one already in the out folder that passes the check is kept), one per line.
+pending_clips() {
+  local label="$1" unit target
+  for unit in "${VIDEO_UNITS[@]}"; do
+    target="$(video_target "$label" "$unit")"
+    # The check's own line (kept, or why not) goes to the job log, not into the list (review s433-inflow-medium #5).
+    if [ -f "$target" ] && clip_recording_ok "$target" "$unit" >&2; then
+      note "- $label: $(basename "$target") kept (already recorded and checked, not retaken)" >&2
+    else
+      rm -f "$target" "$(mark_file_of "$target")"
+      echo "$unit"
+    fi
+  done
+}
+
+# Returns 0 when this device records clips now: it is a preview device, its shelf and simulator are usable, and ffprobe is there to check every recording.
+clips_can_start() {
+  local label="$1"
+  [ "$VIDEO_COUNT" -gt 0 ] || return 1
+  video_device "$label" || return 1
+  if [ "$SHELF_PREP_FAILED" = "yes" ] || [ "$SIM_BROKEN" = "yes" ]; then
+    problem "$label: the $VIDEO_COUNT clip(s) are not recorded, the shelf set-up failed or the simulator is not usable"
+    return 1
+  fi
+  if ! command -v ffprobe >/dev/null 2>&1; then
+    problem "$label: ffprobe is not on the PATH, so no recording can be checked; no clip is recorded (the workflow's Install ffmpeg step puts it there)"
+    return 1
+  fi
+}
+
+# Round 2: the clips of CLIPS_MISSING once more, after a simulator restart, only when the restart and the whole round fit the budget (review s433-inflow-high #1).
+# Every clip still missing after it is a problem.
+run_clip_retry() {
+  local label="$1" udid="$2" bundle_id="$3" unit pending=("${CLIPS_MISSING[@]}") cost
+  note "- RETRY: $label: $(clip_names "${pending[@]}") did not come out in round 1; they are recorded once more after a simulator restart"
+  cost=$((RESTART_TIME_LIMIT_SECONDS + PREFLIGHT_TIME_LIMIT_SECONDS + CLIP_BATCH_DRIVER_SECONDS + ${#pending[@]} * VIDEO_TIME_LIMIT_SECONDS + 2 * HIERARCHY_TIME_LIMIT_SECONDS + 10))
+  if ! time_left_for "$cost"; then
+    problem "$label: no time left for clip round 2 ($(clip_names "${pending[@]}"), $cost s; script budget $SCRIPT_BUDGET_SECONDS s, not a flow failure)"
     return 0
   fi
-  [ "$FAIL_FAST_HIT" = "yes" ] || fail_fast_reset
-  for unit in "${VIDEO_UNITS[@]}"; do
-    index=$((index + 1))
-    unit_skipped "$label" "$(basename "$unit" .yaml)" && continue
-    rc=0
-    run_video_unit "$label" "$udid" "$bundle_id" "$unit" "$index" || rc=$?
-    fail_fast_count "$label" "$rc"
+  if ! reset_simulator "$udid" "$bundle_id" yes; then
+    SIM_BROKEN=yes
+    problem "$label: the simulator did not come back within $RESTART_TIME_LIMIT_SECONDS s after clip round 1; $(clip_names "${pending[@]}") not recorded"
+    return 0
+  fi
+  run_clip_batch "$label" "$udid" "$bundle_id" 2 "${pending[@]}" || return 0
+  [ "${#CLIPS_MISSING[@]}" -gt 0 ] || return 0
+  for unit in "${CLIPS_MISSING[@]}"; do
+    problem "$label: clip $(video_clip_id "$unit") failed in both rounds (its warning lines above say why)"
   done
+}
+
+# Every clip after the shots, on the devices Apple's previews come from: all missing clips in one Maestro run (round 1), then run_clip_retry for what did not come out.
+# A round that could not start (no time, flows not written) has already said why and is not retried (review s433-inflow-high #9).
+run_video_units() {
+  local label="$1" udid="$2" bundle_id="$3" base_limit="$UNIT_LIMIT" unit pending=() rc=0
+  clips_can_start "$label" || return 0
+  mkdir -p "$OUT/$label"
+  while IFS= read -r unit; do
+    [ -n "$unit" ] && pending+=("$unit")
+  done < <(pending_clips "$label")
+  [ "${#pending[@]}" -gt 0 ] || return 0
+  run_clip_batch "$label" "$udid" "$bundle_id" 1 "${pending[@]}" || rc=$?
+  UNIT_LIMIT="$base_limit"
+  [ "$rc" -eq 0 ] && [ "${#CLIPS_MISSING[@]}" -gt 0 ] || return 0
+  run_clip_retry "$label" "$udid" "$bundle_id"
+  UNIT_LIMIT="$base_limit"
 }
 
 # Slice 404: the Dino full-shelf hook imports a PAID book from a package file (the store refuses a paid download without a real receipt; nothing is faked).

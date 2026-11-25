@@ -2,7 +2,7 @@ name: store-screenshots
 
 # Slice 291 item 5 (iOS part): the App Store screenshots of both apps from a macOS simulator, the same frames as the Play ones
 # (.maestro/<app>/needs-file/store-shot-phone.yaml): iPhone 6.9", iPhone 6.5" and iPad 13". Manual only (workflow_dispatch), never on a
-# push or pull request. One job per app and device (matrix app x device, in parallel, fail-fast off, 80 minutes each): every job builds the
+# push or pull request. One job per app and device (matrix app x device, in parallel, fail-fast off, 90 minutes each): every job builds the
 # Debug iossimulator-arm64 app itself (same macOS image, Xcode and workload as dinoreader-ios-sim.yml; no build output is passed between
 # jobs, the repo allows zero Actions artifacts), then .github/scripts/ios-sim-store-shots.sh boots that one simulator, installs the app and
 # Maestro runs the store-shot flows: Dino one flow per shot (.maestro/dino/store-shot-ios-<n>-<screen>.yaml, each its own Maestro run with
@@ -23,9 +23,10 @@ name: store-screenshots
 #   media: all (default) | shots | clips. all = two jobs per app and device, one for the screenshots and one for the preview clips (Dino, iPhone 6.9" and iPad 13"), each with its own time budget and its own draft release (store-shots-<app>-<device>-<run id> and store-clips-<app>-<device>-<run id>), so slow shots can never starve the clips.
 #   resume_run: optional run id whose draft releases supply the shots already taken (a run on another commit supplies only the files whose flow and src/ are unchanged, .github/scripts/store-shots-resume-filter.sh; this run's own draft wins)
 # Slice 433: Dino shoots six screens per device plus the Japanese language shot, seven files (the iPad 13" in landscape, 2752 x 2064) and records seven App Store preview clips, one recording each (iPhone 6.9" and iPad 13"; .mp4 files in the same draft release).
-# Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 3600 s (60 min), its step 66 min, the job 80 min (about 6 min of
-# setup before the step, a minute or two of hand-over after it). The worst case (boot 300 + seven shots x two attempts x 420 + seven clips x two attempts x 480 (a setup and a recorded flow of 240 each) + a restart 300 =
-# 13200 s) does not fit ONE job, which is why media=all runs the shots (worst case 300 + 5880) and the clips (300 + shelf set-up 900 + 6720) as two jobs, each with the full budget; the script then stops starting attempts, names the missing shots, exits 1, and the rerun finishes it.
+# Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 3600 s (60 min), its step 66 min, the job 90 min (about 6 min of
+# setup before the step, a minute or two of hand-over after it). Shots and clips together do not fit ONE job, which is why media=all runs the shots (worst case 300 + seven shots x two attempts x 420 = 6180) and
+# the clips (300 + shelf set-up 900 + one Maestro run of all seven clips, 240 + 7 x 240 = 1920, + a restart 300 and a second run of the clips that did not come out) as two jobs, each with the full budget; the script then
+# stops starting attempts, names what is missing, exits 1, and the rerun finishes it.
 
 on:
   workflow_dispatch:
@@ -70,9 +71,9 @@ permissions:
 jobs:
   shots:
     name: ${{ matrix.media }}-${{ matrix.app }}-${{ matrix.device }}
-    # Slice 433 (device-test-pipeline section 5): job = setup + step + hand-over = 6 + 66 + 2 = 74 min, rounded up to 80. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (20 s, run 45491086879 finding 1; skipped once the URL scheme is pre-approved)
-    # and, on a retry, a simulator restart (300 s): shot 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill, 980 s), clip 20 + 2 x 240 + 2 x 60 + 30 = 650 s, the per-device simulator restart that writes the URL scheme approval is charged to the script budget, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
-    timeout-minutes: 80
+    # Slice 433 (device-test-pipeline section 5): job = setup + ffmpeg (clips only, at most 8) + step + hand-over = 6 + 8 + 66 + 2 = 82 min, rounded up to 90. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (20 s, run 45491086879 finding 1; skipped once the URL scheme is pre-approved)
+    # and, on a retry, a simulator restart (300 s): shot 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill, 980 s), a clip round (all missing clips in one Maestro run) 20 + 240 + n x 240 + 2 x 60 + 10 s, the per-device simulator restart that writes the URL scheme approval is charged to the script budget, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
+    timeout-minutes: 90
     runs-on: xcode-27
     permissions:
       contents: write   # gh release create --draft (the shots' home)
@@ -165,6 +166,20 @@ jobs:
 
       - name: Install Maestro
         run: bash .github/scripts/ios-sim-install-maestro.sh
+
+      # Slice 433 (iPad run 45582715957: the xcode-27 image has no ffprobe, so a 29 s recording passed for a 67 s cut): every preview recording is checked with ffprobe
+      # (tools/dino/promo/store/store-media.mjs check), and the script records no clip without it.
+      # Bottles install in a few minutes; a missing bottle would mean a source build, so the step is capped (review s433-inflow-high #4) and the job allows for it.
+      - name: Install ffmpeg
+        if: matrix.media == 'clips'
+        timeout-minutes: 8
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+        run: |
+          set -euo pipefail
+          command -v ffprobe >/dev/null 2>&1 || brew install ffmpeg
+          ffprobe -version | head -n 1
 
       # Slice 404, Decision 5: the full-shelf hook's paid books come from the packages the store upload already stored (never built); fetch-shelf-packages.mjs reads them with wrangler
       # (the same pin and secrets dino-store.yml uses to publish them). Dino only: the RTST flow has no shelf.
