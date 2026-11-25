@@ -2,6 +2,7 @@
 appId: uk.sirous.dinoreader.dbg
 name: Store preview clip 1b, voices, Dino Reader, iOS
 ---
+# The read is already going: the setup flow pressed Play and waited for "Pause" (run 45518843110 held a still page for 52 s).
 - extendedWaitUntil:
     visible:
       id: VideoHold

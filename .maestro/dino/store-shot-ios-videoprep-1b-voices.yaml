@@ -1,5 +1,7 @@
 # Slice 433 item 6 (review pass 2, findings 3 and 6): the SETUP of preview clip 1b-voices, "voices" (the note's video timeline, 3-6 s: the Wolf speaks, two characters in their own voices, words lighting up). NOT recorded (see store-shot-ios-videoprep-1a-reading.yaml).
-# Ends on page 6 of Three Little Pigs, the read not yet needed: the clip flow holds the page while the lines light up.
+# Ends on page 6 of Three Little Pigs with the read going (Play pressed, the button reads "Pause"): the clip flow holds the page while the lines light up.
+# Run 45518843110: the open-book hook only moves to the page, so without this the clip held a still page for 52 s. The read starts here, not in the
+# recorded flow, so the recording opens on lines already lighting up (review: a tap in the recording falls in the lead-in or a Loading state).
 appId: uk.sirous.dinoreader.dbg
 name: Store preview clip setup, 1b voices, Dino Reader, iOS
 ---
@@ -46,3 +48,22 @@ name: Store preview clip setup, 1b voices, Dino Reader, iOS
     visible:
       id: ReadingSurface
     timeout: 60000
+# The sound pill may take a moment to show: wait for it briefly (optional), then for it to go (review pass 2, finding 1).
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+    timeout: 5000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 60000
+# Pressed only when the read is not already going, so a read that started by itself is never paused (review pass 2, finding 2).
+- runFlow:
+    when:
+      notVisible: Pause
+    commands:
+      - tapOn: Play
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 30000

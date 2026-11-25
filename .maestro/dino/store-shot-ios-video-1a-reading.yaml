@@ -13,7 +13,8 @@ name: Store preview clip 1a, reading, Dino Reader, iOS
 - swipe:
     direction: LEFT
     duration: 500
-# The page that turns, held (the read starts by itself on the page).
+# The page that turns, held. Nothing is read in this clip (run 45518843110: the open-book hook does not play, and a swipe during a read
+# shows page 6 while page 5 is read); the 0-3 s cut needs only the turn. The lit lines are clip 1b's.
 - extendedWaitUntil:
     visible:
       id: VideoHold
