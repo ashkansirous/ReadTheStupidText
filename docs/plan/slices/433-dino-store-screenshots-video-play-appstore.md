@@ -43,6 +43,15 @@ Open, preview clips (not shippable yet):
 - `launchApp` sometimes hangs until the kill (iPad clip 2-record twice in run 45521616983, iPhone shot 3 once in run 45512162060). Cause unknown.
 - The simulator recordings have no sound (`simctl io recordVideo` is video only), so the "voices" clip is silent; the HyperFrames composition needs the read's audio from elsewhere or captions instead.
 
+**Runs 45531807696 and 45534156337 (2026-11-25), checked frame by frame over the whole recording.** The test hooks work: clip 1a turns page 5 to 6 (iPhone 49 s in, iPad 194 s in), the iPad shelf scrolls from row 1 to row 3 at 49 s (the second scroll hits the end of the 12-book shelf), 2-record opens the book menu and "Your voice" from 31 s. The earlier "1a never turns" came from looking only at the first seconds. The real fault: Maestro takes 31 to 194 s after `recordVideo` starts before the clip flow's first step, varying per run, so the fixed `leadIn` 0.5 s cuts a still screen every time.
+
+Design, the cut point per recording (replaces the fixed leadIn):
+1. `ios-sim-store-shots.sh` stamps the recorder's start once it is seen writing (epoch seconds with fractions, `python3 -c 'import time; print(time.time())'` or `perl -MTime::HiRes`) and, while the clip flow runs, the time Maestro prints the flow's FIRST step-end line (`COMPLETED`, or `WARNED` for the optional hold that times out, job log of run 45534156337; pipe Maestro's stdout through a reader that stamps that line and passes every line on unchanged, so the job log keeps it). Mark = first-step-end time minus recorder start, in seconds.
+2. It writes the mark beside the clip as `store-dino-<device>-video-<clip>.mark` (one number), uploads it with the mp4 to the same draft release, and a kept recording without a mark counts as not recorded (retaken).
+3. `footage-cuts.json`: `leadIn` is replaced by a per-clip `beforeMark` (seconds kept before the mark; the first step of every clip flow is a hold of known length, so the action lands that hold after the mark): 1a 1.0 s before a 1.5 s hold → keep the hold's end and the turn; set each clip's value from its flow's first hold so the action lands inside its `seconds`. `store-media.mjs` cuts from `mark - beforeMark` (never below 0) for `seconds`; `assertCutFits` checks recording length >= cut start + seconds; tests updated.
+4. The script's length check becomes `mark - beforeMark + seconds`.
+5. After passing attempts the script prints the attempt's app HOOK lines (done, review `reviews/s433-hooklines-high.md`).
+
 Rules on the way: `.github/CLAUDE.md` (no Actions artifacts: shots and videos go to the `store-shots-*` draft release; iOS shots only from `store-screenshots.yml`), `tools/CLAUDE.md` (status-bar demo mode cannot be read back: the proof is the shot), the 12-book `full-shelf` hook and never building a book package (404 Decisions 3 and 5). Android and iOS both get the new look in this slice.
 
 ## Verification

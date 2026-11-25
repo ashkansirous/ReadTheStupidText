@@ -204,7 +204,7 @@ jobs:
           mkdir -p "$DIR"
           have_png() { ls "$DIR"/*.png >/dev/null 2>&1 || ls "$DIR"/*.mp4 >/dev/null 2>&1; }
           # 1. This run's own draft first (a rerun of this run, or a resume_run dispatch that already took shots).
-          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --pattern '*.mark' --clobber 2>/dev/null || true
           # 2. Only when it is absent or holds no PNG: the draft of resume_run. From a run on another commit (run 45491086879, finding 2) a file is kept only when the app code (src/) and the flows that
           #    produced it are unchanged between that commit and this one (store-shots-resume-filter.sh prints kept or dropped, with the reason, per file); a change of the script or the workflow alone keeps every file.
           if ! have_png && [ -n "${RESUME_RUN:-}" ] && [ "$RESUME_RUN" != "$GITHUB_RUN_ID" ]; then
@@ -213,7 +213,7 @@ jobs:
               echo "::warning::resume_run $RESUME_RUN: its commit is unknown, starting with no shots"
               echo "- resume_run $RESUME_RUN ignored: its commit could not be read, so all shots are taken" >> "$GITHUB_STEP_SUMMARY"
             else
-              gh release download "$STORE_SHOTS_PREFIX-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --clobber 2>/dev/null || true
+              gh release download "$STORE_SHOTS_PREFIX-$RESUME_RUN" --repo "$GITHUB_REPOSITORY" --dir "$DIR" --pattern '*.png' --pattern '*.mp4' --pattern '*.mark' --clobber 2>/dev/null || true
               if [ "$SRC_SHA" != "$GITHUB_SHA" ]; then
                 echo "resume_run $RESUME_RUN ran on $SRC_SHA, this run on $GITHUB_SHA: judging each file"
                 bash .github/scripts/store-shots-resume-filter.sh "$SRC_SHA" "$APP" "$DEVICE" "$DIR" | tee -a "$GITHUB_STEP_SUMMARY"
@@ -236,7 +236,7 @@ jobs:
               exit 1
             fi
             if have_png; then
-              find "$DIR" -maxdepth 1 \( -name '*.png' -o -name '*.mp4' \) -exec gh release upload "$TAG" --clobber --repo "$GITHUB_REPOSITORY" {} +
+              find "$DIR" -maxdepth 1 \( -name '*.png' -o -name '*.mp4' -o -name '*.mark' \) -exec gh release upload "$TAG" --clobber --repo "$GITHUB_REPOSITORY" {} +
             fi
           fi
           echo "STORE_SHOTS_TAG=$TAG" >> "$GITHUB_ENV"
@@ -259,7 +259,7 @@ jobs:
         run: |
           set -euo pipefail
           TAG="$STORE_SHOTS_TAG"
-          if ! find "$OUT_DIR" \( -name '*.png' -o -name '*.mp4' \) -print -quit 2>/dev/null | grep -q .; then
+          if ! find "$OUT_DIR" \( -name '*.png' -o -name '*.mp4' -o -name '*.mark' \) -print -quit 2>/dev/null | grep -q .; then
             echo "::warning::No screenshot was taken: nothing to hand over."
             echo "### $APP on $DEVICE: no shot was taken" >> "$GITHUB_STEP_SUMMARY"
             exit 0
@@ -267,7 +267,7 @@ jobs:
           FILES=()
           while IFS= read -r png; do
             FILES+=("$png")
-          done < <(find "$OUT_DIR" \( -name '*.png' -o -name '*.mp4' \) | sort)
+          done < <(find "$OUT_DIR" \( -name '*.png' -o -name '*.mp4' -o -name '*.mark' \) | sort)
           if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
               --title "Store screenshots, $APP, $DEVICE, run $GITHUB_RUN_ID" \

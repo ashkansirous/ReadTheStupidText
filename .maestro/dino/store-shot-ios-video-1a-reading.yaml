@@ -1,5 +1,5 @@
 # Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 1a-reading, "reading" (the note's video timeline, 0-3 s: a page turns). The RECORDED part: ios-sim-store-shots.sh runs store-shot-ios-videoprep-1a-reading.yaml first (no recording), then records this flow alone; the recording is kept as store-dino-<device>-video-1a-reading.mp4.
-# footage-cuts.json trims a fixed leadIn off its start (the recorder and Maestro start-up) and keeps `seconds`; the recording must be at least leadIn + seconds long, else the cut fails. No launchApp: the app is already on the English shelf from the setup flow.
+# footage-cuts.json cuts from `mark - beforeMark` (mark = the end of this flow's first step, the 1.5 s hold) and keeps `seconds`; the recording must reach the cut start + `seconds`, else the cut fails. No launchApp: the app is already on the English shelf from the setup flow.
 # The pauses are optional waits for an id that never shows (VideoHold), so they last their full timeout (a notVisible wait would return at once).
 appId: uk.sirous.dinoreader.dbg
 name: Store preview clip 1a, reading, Dino Reader, iOS
@@ -11,7 +11,7 @@ name: Store preview clip 1a, reading, Dino Reader, iOS
     timeout: 1500
     optional: true
 # Maestro's `swipe` moves nothing on iOS 27.2 (CI runs 2026-11-24/25), so the turn is the Debug turn-page hook (DinoTestCommands.Motion.cs), which runs the surface's own swipe code (ReadingSurface.TurnPage).
-# The scheme is pre-approved on CI, so no "Open in" handling here. The turn lands about 1.5 s into the flow, 1 s into the kept window (0.5 s leadIn, 3 s kept).
+# The scheme is pre-approved on CI, so no "Open in" handling here. The turn lands right after the mark (the first hold's end), 1 s into the kept window (beforeMark 1.0, 3 s kept).
 - openLink: "dino-test://turn-page?dir=next"
 # The page that turns, held. Nothing is read in this clip (run 45518843110: the open-book hook does not play, and a turn during a read
 # shows page 6 while page 5 is read); the 0-3 s cut needs only the turn. The lit lines are clip 1b's.

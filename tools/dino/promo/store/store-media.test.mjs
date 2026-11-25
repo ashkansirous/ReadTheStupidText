@@ -1,22 +1,43 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertCutFits, cutArgs, encodeArgs, loadConfig, recordingName } from './store-media.mjs';
+import { tmpdir } from 'node:os';
+import { assertCutFits, cutArgs, cutStart, encodeArgs, loadConfig, markName, readMark, recordingName } from './store-media.mjs';
 
-test('a recording shorter than leadIn + seconds, or a clip shorter than asked, is refused', () => {
-    const cut = { leadIn: 3, seconds: 1 };
-    assert.throws(() => assertCutFits('3-language-en', 2.5, cut), /shorter than leadIn 3 s \+ 1 s/);
-    assert.throws(() => assertCutFits('3-language-en', 3.5, cut), /shorter than leadIn/);
+test('the cut starts beforeMark seconds before the mark, never below 0', () => {
+    assert.ok(Math.abs(cutStart(6.2, 3) - 3.2) < 1e-9);
+    assert.equal(cutStart(0.4, 1), 0);
+    assert.equal(cutStart(2, 0), 2);
+    assert.throws(() => cutStart(-1, 0));
+    assert.throws(() => cutStart(2, -0.5));
+    assert.throws(() => cutStart(NaN, 1));
+});
+
+test('the mark file sits beside its recording, and a missing or empty one is refused', () => {
+    assert.equal(markName('store-dino-iphone-6.9-video-1a-reading.mp4'), 'store-dino-iphone-6.9-video-1a-reading.mark');
+    const dir = mkdtempSync(join(tmpdir(), 'store-media-'));
+    writeFileSync(join(dir, 'a.mark'), '2.345\n');
+    writeFileSync(join(dir, 'b.mark'), '\n');
+    assert.equal(readMark(join(dir, 'a.mark')), 2.345);
+    assert.throws(() => readMark(join(dir, 'b.mark')), /holds no mark/);
+    assert.throws(() => readMark(join(dir, 'c.mark')), /missing mark file/);
+    rmSync(dir, { recursive: true, force: true });
+});
+
+test('a recording shorter than start + seconds, or a clip shorter than asked, is refused', () => {
+    const cut = { start: 3, seconds: 1 };
+    assert.throws(() => assertCutFits('3-language-en', 2.5, cut), /shorter than the cut start 3 s \+ 1 s/);
+    assert.throws(() => assertCutFits('3-language-en', 3.5, cut), /shorter than the cut start/);
     assert.doesNotThrow(() => assertCutFits('3-language-en', 4, cut));
     assert.doesNotThrow(() => assertCutFits('3-language-en', 3.95, cut));
     assert.throws(() => assertCutFits('3-language-en', Infinity, cut, 0.4), /shorter than the 1 s/);
     assert.doesNotThrow(() => assertCutFits('3-language-en', Infinity, cut, 0.98));
 });
 
-test('a trim skips the fixed lead-in, keeps the planned length and drops the sound', () => {
-    const args = cutArgs('in.mp4', 'out.mp4', { leadIn: 3, seconds: 6 });
+test('a trim skips to the cut start, keeps the planned length and drops the sound', () => {
+    const args = cutArgs('in.mp4', 'out.mp4', { start: 3, seconds: 6 });
     assert.deepEqual(args.slice(0, 5), ['-y', '-ss', '3', '-i', 'in.mp4']);
     assert.ok(!args.includes('-sseof'), 'no cutting from the end of the recording');
     assert.ok(args.includes('-an'));
@@ -24,10 +45,10 @@ test('a trim skips the fixed lead-in, keeps the planned length and drops the sou
     assert.equal(args.at(-1), 'out.mp4');
 });
 
-test('a trim needs a lead-in of zero or more and a positive length', () => {
-    assert.doesNotThrow(() => cutArgs('in.mp4', 'out.mp4', { leadIn: 0, seconds: 1 }));
-    assert.throws(() => cutArgs('in.mp4', 'out.mp4', { leadIn: -1, seconds: 1 }));
-    assert.throws(() => cutArgs('in.mp4', 'out.mp4', { leadIn: 2, seconds: 0 }));
+test('a trim needs a start of zero or more and a positive length', () => {
+    assert.doesNotThrow(() => cutArgs('in.mp4', 'out.mp4', { start: 0, seconds: 1 }));
+    assert.throws(() => cutArgs('in.mp4', 'out.mp4', { start: -1, seconds: 1 }));
+    assert.throws(() => cutArgs('in.mp4', 'out.mp4', { start: 2, seconds: 0 }));
     assert.throws(() => cutArgs('in.mp4', 'out.mp4', { seconds: 1 }));
 });
 
@@ -48,12 +69,15 @@ test('the recording of a device label and clip', () => {
     assert.equal(recordingName('iphone-6.9', '3-language-es'), 'store-dino-iphone-6.9-video-3-language-es.mp4');
 });
 
-test('every clip has a recording flow and a setup flow, one shared leadIn, and a clip holds only its seconds', () => {
+test('every clip has a recording flow and a setup flow, a beforeMark and its seconds on one line the shell script can read', () => {
     const flows = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '.maestro', 'dino');
     const config = loadConfig();
-    assert.ok(config.leadIn > 0 && config.leadIn <= 1, 'leadIn covers only the recorder start-up');
+    assert.equal(config.leadIn, undefined, 'leadIn is replaced by a per-clip beforeMark');
+    const lines = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'footage-cuts.json'), 'utf8').split('\n');
     for (const [clip, cut] of Object.entries(config.clips)) {
-        assert.deepEqual(Object.keys(cut), ['seconds'], clip);
+        assert.deepEqual(Object.keys(cut), ['beforeMark', 'seconds'], clip);
+        assert.ok(cut.beforeMark >= 0, `${clip}: beforeMark`);
+        assert.ok(lines.some((line) => new RegExp(`^ *"${clip}": *\\{ *"beforeMark": *[0-9.]+, *"seconds": *[0-9.]+ *\\}`).test(line)), `${clip}: one line for sed`);
         assert.ok(existsSync(join(flows, `store-shot-ios-video-${clip}.yaml`)), `${clip}: the recorded flow`);
         assert.ok(existsSync(join(flows, `store-shot-ios-videoprep-${clip}.yaml`)), `${clip}: the unrecorded setup flow`);
     }

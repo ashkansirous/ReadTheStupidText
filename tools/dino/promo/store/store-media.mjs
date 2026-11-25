@@ -1,6 +1,6 @@
 // Slice 433 item 6: the two ffmpeg steps around the HyperFrames render of the App Store previews.
 //   node store-media.mjs cut <iphone|ipad> <folder of the downloaded recordings>
-//       trims each clip of footage-cuts.json (its own recording store-dino-<device label>-video-<clip>.mp4: one recording per clip) into assets/footage/<device>/<clip>.mp4 (silent, h264): a fixed lead-in off the start, then the planned length
+//       trims each clip of footage-cuts.json (its own recording store-dino-<device label>-video-<clip>.mp4: one recording per clip) into assets/footage/<device>/<clip>.mp4 (silent, h264): from max(0, mark - beforeMark), the mark being the number in the recording's own store-dino-<device label>-video-<clip>.mark file, for the planned length
 //   node store-media.mjs encode <iphone|ipad> <rendered mp4> <output mp4>
 //       encodes the render to Apple's app preview spec: exact size, 30 fps, H.264 high profile at about 11 Mbps (10-12), stereo AAC 256 kbps at 48 kHz, faststart
 // Then check the result with tools/emulator/store-size-check.ps1 -Target preview-iphone|preview-ipad -Path <output>.
@@ -13,10 +13,16 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CUTS_FILE = join(HERE, 'footage-cuts.json');
 const CUT_TOLERANCE_SECONDS = 0.1;
 
-// Pure: the ffmpeg arguments that trim a clip's own recording: skip `leadIn` seconds (recorder and Maestro start-up), keep `seconds`, no audio.
-export function cutArgs(input, output, { leadIn, seconds }) {
-    if (!(leadIn >= 0) || !(seconds > 0)) throw new Error(`a trim needs leadIn >= 0 and seconds > 0 (got leadIn ${leadIn}, seconds ${seconds})`);
-    return ['-y', '-ss', String(leadIn), '-i', input, '-t', String(seconds), '-an', '-c:v', 'libx264', '-crf', '12', '-pix_fmt', 'yuv420p', output];
+// Pure: where a clip's cut starts in its recording: `beforeMark` seconds before the mark (the flow's first step-end line), never below 0.
+export function cutStart(mark, beforeMark) {
+    if (!(mark >= 0) || !(beforeMark >= 0)) throw new Error(`a cut point needs mark >= 0 and beforeMark >= 0 (got mark ${mark}, beforeMark ${beforeMark})`);
+    return Math.max(0, mark - beforeMark);
+}
+
+// Pure: the ffmpeg arguments that trim a clip's own recording: skip `start` seconds, keep `seconds`, no audio.
+export function cutArgs(input, output, { start, seconds }) {
+    if (!(start >= 0) || !(seconds > 0)) throw new Error(`a trim needs start >= 0 and seconds > 0 (got start ${start}, seconds ${seconds})`);
+    return ['-y', '-ss', String(start), '-i', input, '-t', String(seconds), '-an', '-c:v', 'libx264', '-crf', '12', '-pix_fmt', 'yuv420p', output];
 }
 
 // Pure: the ffmpeg arguments that encode a render to Apple's app preview spec at the exact size.
@@ -45,9 +51,23 @@ function run(args) {
     return result.status ?? 1;
 }
 
-// Pure: throws when a clip cannot be what footage-cuts.json says: its own recording is shorter than leadIn + seconds (simctl recordVideo writes frames only when the screen changes, so a recording of a mostly static page can be shorter than the flow's wall-clock time), or the trimmed clip came out shorter than `seconds`.
-export function assertCutFits(clip, recordingSeconds, { leadIn, seconds }, clipSeconds = null) {
-    if (!(recordingSeconds >= leadIn + seconds - CUT_TOLERANCE_SECONDS)) throw new Error(`${clip}: the recording is ${recordingSeconds} s, shorter than leadIn ${leadIn} s + ${seconds} s: the clip would be short or empty. Tune leadIn in footage-cuts.json on the real recording, or record the clip again.`);
+// The mark of a recording, read from its .mark file (one number, seconds); throws when the file is missing or holds no number.
+export function readMark(file) {
+    if (!existsSync(file)) throw new Error(`missing mark file ${file}: a recording without a mark is retaken`);
+    const text = readFileSync(file, 'utf8').trim();
+    const mark = /^[0-9]+(\.[0-9]+)?$/.test(text) ? Number(text) : NaN;
+    if (!(mark >= 0)) throw new Error(`${file} holds no mark (a number of seconds, 0 or more)`);
+    return mark;
+}
+
+// Pure: the mark file that belongs to a recording file: ...video-<clip>.mp4 gives ...video-<clip>.mark.
+export function markName(recording) {
+    return recording.replace(/\.mp4$/, '.mark');
+}
+
+// Pure: throws when a clip cannot be what footage-cuts.json says: its own recording is shorter than start + seconds (start = mark - beforeMark; simctl recordVideo writes frames only when the screen changes, so a recording of a mostly static page can be shorter than the flow's wall-clock time), or the trimmed clip came out shorter than `seconds`.
+export function assertCutFits(clip, recordingSeconds, { start, seconds }, clipSeconds = null) {
+    if (!(recordingSeconds >= start + seconds - CUT_TOLERANCE_SECONDS)) throw new Error(`${clip}: the recording is ${recordingSeconds} s, shorter than the cut start ${start} s + ${seconds} s: the clip would be short or empty. Tune beforeMark in footage-cuts.json on the real recording, or record the clip again.`);
     if (clipSeconds !== null && !(clipSeconds >= seconds - CUT_TOLERANCE_SECONDS)) throw new Error(`${clip}: the clip is ${clipSeconds} s, shorter than the ${seconds} s asked for.`);
 }
 
@@ -79,7 +99,8 @@ function cutAll(deviceKey, folder) {
         const input = join(resolve(folder), recordingName(device.label, clip));
         if (!existsSync(input)) { console.error(`missing recording ${input}`); failed++; continue; }
         try {
-            const status = cutOne(clip, { leadIn: config.leadIn, seconds: cut.seconds }, input, join(outDir, `${clip}.mp4`));
+            const start = cutStart(readMark(markName(input)), cut.beforeMark);
+            const status = cutOne(clip, { start, seconds: cut.seconds }, input, join(outDir, `${clip}.mp4`));
             if (status !== 0) { console.error(`ffmpeg exited ${status} for ${clip}`); failed++; }
         } catch (error) { console.error(error.message); failed++; }
     }

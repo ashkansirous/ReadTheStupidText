@@ -1,6 +1,6 @@
 # Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 4-shelf, "shelf" (the note's timeline, 13-16 s). The RECORDED part (see store-shot-ios-video-1a-reading.yaml): the shelf at rest, then two slow scrolls along it.
 # Maestro's `swipe` moves nothing on iOS 27.2 (CI runs 2026-11-24/25), so the scrolls are the Debug scroll-shelf hook (DinoTestCommands.Motion.cs): by=0.6 of the visible height over ms=900, eased like a finger drag, returning at once.
-# The scheme is pre-approved on CI, so no "Open in" handling here. Timing against footage-cuts.json (0.5 s leadIn, 3 s kept): the second scroll starts about 2 s into the flow (holds 800 + 1000 ms plus two openLink calls),
+# The scheme is pre-approved on CI, so no "Open in" handling here. Timing against footage-cuts.json (mark = the end of the first 800 ms hold, beforeMark 0.5, 3 s kept): the second scroll starts about 1 s after the mark (the 1000 ms hold plus two openLink calls),
 # so it is moving inside the kept window; the first has to finish (900 ms) before it starts.
 # Holds are optional waits for an id that never shows: they last their full timeout (a notVisible wait would return at once).
 appId: uk.sirous.dinoreader.dbg
