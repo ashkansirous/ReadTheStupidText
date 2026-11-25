@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-composition-variables='[{"id":"lang","type":"string","label":"Caption language","default":"en"},{"id":"dir","type":"string","label":"Caption direction (ltr or rtl)","default":"ltr"},{"id":"capFont","type":"string","label":"Caption font family","default":"Fredoka"},{"id":"cap1","type":"string","label":"Caption 1 (reading)","default":"Stories read aloud"},{"id":"cap2","type":"string","label":"Caption 2 (voices)","default":"A voice for every character"},{"id":"cap3","type":"string","label":"Caption 3 (record)","default":"Record Grandma as the wolf"},{"id":"cap4","type":"string","label":"Caption 4 (languages)","default":"Stories in 15 languages"},{"id":"cap5","type":"string","label":"Caption 5 (shelf)","default":"New books on the shelf"},{"id":"cap6","type":"string","label":"End frame: subscription line","default":"Some books need a subscription"},{"id":"endSub","type":"string","label":"End frame: line under Dino","default":"Kids Books &amp; Stories"}]'>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=886, height=1920">
@@ -7,6 +7,11 @@
     <style>
       /* Slice 433 item 6: the iPhone app preview (886 x 1920, portrait), about 20 s, the note's video timeline. Palette and font are the app's own (src/Dino/DinoReader.App/App.xaml: Brand, Sand, Ink; Resources/Fonts/Fredoka). */
       @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+      /* Slice 433 item 10: the caption font per language, picked as tools/emulator/store-captions.ps1 does (preview-locales.mjs sets capFont and checks every glyph): Andika for Cyrillic, Vazirmatn for Arabic, the Windows UI fonts for Japanese and Chinese (local render only). */
+      @font-face { font-family: "Andika"; src: url("assets/fonts/Andika-Regular.ttf"); }
+      @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn.ttf"); font-weight: 100 900; }
+      @font-face { font-family: "CapJa"; src: local("Yu Gothic UI Semibold"), local("YuGothicUI-Semibold"); }
+      @font-face { font-family: "CapZh"; src: local("Microsoft YaHei UI"), local("MicrosoftYaHeiUI"); }
       :root {
         --brand: #5b57e8;
         --sand: #f3efe6;
@@ -26,7 +31,12 @@
       .pill { display: block; max-width: 708px; padding: 30px 48px; border-radius: 44px; background: var(--brand); box-shadow: 0 16px 44px rgba(43, 37, 64, 0.35);
         font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 64px; line-height: 1.14; color: #ffffff; }
       /* Coordinator 2026-11-25 (the user's objection to a top band covers the end frame too): the end frame's line is the same middle panel, under "Dino / Kids Books & Stories". */
-      .cap-end { top: 1210px; height: 260px; }
+      /* Slice 433 item 10: the panel hangs from its English top (1237 px, two lines) and grows downward, so a three-line translation never covers the line above it. */
+      .cap-end { top: 1237px; height: 600px; align-items: flex-start; }
+      /* Japanese has no spaces: break at phrase boundaries (Chrome's auto-phrase), never inside a word. */
+      #root:lang(ja) .pill, #root:lang(ja) #end-sub { word-break: auto-phrase; }
+      /* English keeps its accepted, unbalanced wrapping on purpose; translations balance their lines so no word or character is left alone. */
+      #root:not(:lang(en)) .pill, #root:not(:lang(en)) #end-sub { text-wrap: balance; }
       #end { position: absolute; left: 0; top: 192px; width: 886px; height: 1728px; background: var(--sand); z-index: 4; }
       #end-icon { position: absolute; left: 293px; top: 420px; width: 300px; height: 300px; border-radius: 68px; box-shadow: 0 14px 36px rgba(43, 37, 64, 0.18); }
       #end-name { position: absolute; left: 0; top: 790px; width: 886px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 120px; line-height: 1; color: var(--ink); }
@@ -50,22 +60,32 @@
       <div data-hf-id="hf-jf4c" id="end" class="clip" data-start="16" data-duration="4" data-track-index="2">
         <img data-hf-id="hf-d4pk" id="end-icon" src="assets/images/dino-icon.png" alt="Dino Reader app icon">
         <div data-hf-id="hf-2fh8" id="end-name">Dino</div>
-        <div data-hf-id="hf-jp2d" id="end-sub">Kids Books &amp; Stories</div>
+        <div data-hf-id="hf-jp2d" id="end-sub" data-var-text="endSub">Kids Books &amp; Stories</div>
       </div>
 
       <div id="dip"></div>
-      <div data-hf-id="hf-506x" id="cap1" class="cap clip" data-start="0" data-duration="3" data-track-index="3"><span data-hf-id="hf-whq0" class="pill">Stories read aloud</span></div>
-      <div data-hf-id="hf-q6fn" id="cap2" class="cap clip" data-start="3" data-duration="3" data-track-index="3"><span data-hf-id="hf-oroi" class="pill">A voice for every character</span></div>
-      <div data-hf-id="hf-6kr6" id="cap3" class="cap clip" data-start="6" data-duration="3.4" data-track-index="3"><span data-hf-id="hf-iiuc" class="pill">Record Grandma as the wolf</span></div>
-      <div data-hf-id="hf-rzrz" id="cap4" class="cap clip" data-start="9.4" data-duration="3.6" data-track-index="3"><span data-hf-id="hf-wkjl" class="pill">Stories in 15 languages</span></div>
-      <div data-hf-id="hf-s9hn" id="cap5" class="cap clip" data-start="13" data-duration="3" data-track-index="3"><span data-hf-id="hf-5nwi" class="pill">New books on the shelf</span></div>
-      <div data-hf-id="hf-25ss" id="cap6" class="cap cap-end clip" data-start="16" data-duration="4" data-track-index="3"><span class="pill">Some books need a subscription</span></div>
+      <div data-hf-id="hf-506x" id="cap1" class="cap clip" data-start="0" data-duration="3" data-track-index="3"><span data-hf-id="hf-whq0" class="pill" data-var-text="cap1">Stories read aloud</span></div>
+      <div data-hf-id="hf-q6fn" id="cap2" class="cap clip" data-start="3" data-duration="3" data-track-index="3"><span data-hf-id="hf-oroi" class="pill" data-var-text="cap2">A voice for every character</span></div>
+      <div data-hf-id="hf-6kr6" id="cap3" class="cap clip" data-start="6" data-duration="3.4" data-track-index="3"><span data-hf-id="hf-iiuc" class="pill" data-var-text="cap3">Record Grandma as the wolf</span></div>
+      <div data-hf-id="hf-rzrz" id="cap4" class="cap clip" data-start="9.4" data-duration="3.6" data-track-index="3"><span data-hf-id="hf-wkjl" class="pill" data-var-text="cap4">Stories in 15 languages</span></div>
+      <div data-hf-id="hf-s9hn" id="cap5" class="cap clip" data-start="13" data-duration="3" data-track-index="3"><span data-hf-id="hf-5nwi" class="pill" data-var-text="cap5">New books on the shelf</span></div>
+      <div data-hf-id="hf-25ss" id="cap6" class="cap cap-end clip" data-start="16" data-duration="4" data-track-index="3"><span class="pill" data-var-text="cap6">Some books need a subscription</span></div>
 
       <!-- Music bed: HeyGen catalog "Astral Generated Music: 3602ebd4" (free catalog via HyperFrames), as in the LinkedIn films; it gives the preview its stereo AAC track (Apple wants one; the footage itself is silent). -->
       <audio data-hf-id="hf-1toq" id="music" class="clip" src="assets/bgm/cheerful-kids-11.m4a" data-start="0" data-duration="20" data-track-index="5" data-volume="0.4" data-fade-in="0.5" data-fade-out="2"></audio>
     </div>
     <script>
       window.__timelines = window.__timelines || {};
+      // Slice 433 item 10: the captions' language, direction and font come from the render's variables (preview-locales.mjs rows; English by default).
+      (function () {
+        const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        const root = document.getElementById("root");
+        root.setAttribute("lang", v.lang || "en");
+        document.querySelectorAll(".pill, #end-sub").forEach(function (el) {
+          el.setAttribute("dir", v.dir === "rtl" ? "rtl" : "ltr");
+          el.style.fontFamily = '"' + (v.capFont || "Fredoka") + '", "Fredoka", sans-serif';
+        });
+      })();
       (function () {
         const tl = gsap.timeline({ paused: true });
         // User decision 2026-11-25 ("ok. do it"): each segment opens on its own footage dimmed and blurred (the video's inline start values) with its caption in the middle

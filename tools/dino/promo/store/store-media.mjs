@@ -8,7 +8,11 @@
 //   node store-media.mjs encode <iphone|ipad> <rendered mp4> <output mp4>
 //       encodes the render to Apple's app preview spec: exact size, 30 fps, H.264 high profile at about 11 Mbps (10-12), stereo AAC 256 kbps at 48 kHz, faststart
 // Then check the result with tools/emulator/store-size-check.ps1 -Target preview-iphone|preview-ipad -Path <output>.
+//   node store-media.mjs rows <rows.json>
+//       (Slice 433 item 10) writes one HyperFrames variable row per App Store language from preview-captions.json (captions, font, direction), after checking
+//       every caption glyph against its font; render them with `hyperframes render --composition index.html --batch <rows.json> --output "renders/loc/iphone-{lang}.mp4"`
 import { spawnSync } from 'node:child_process';
+import { previewRows } from './preview-locales.mjs';
 import { readFileSync, mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -229,13 +233,23 @@ function encode(deviceKey, input, output) {
     return run(encodeArgs(input, output, device));
 }
 
+// Slice 433 item 10: the batch rows (one per App Store language) for `hyperframes render --batch`, written only when every caption passes its glyph check.
+function writeRows(output) {
+    const rows = previewRows();
+    mkdirSync(dirname(output), { recursive: true });
+    writeFileSync(output, `${JSON.stringify({ rows }, null, 2)}\n`);
+    console.log(`${rows.length} preview languages: ${rows.map((row) => row.lang).join(', ')}`);
+    return 0;
+}
+
 function main(argv) {
     const [command, deviceKey, a, b] = argv;
+    if (command === 'rows' && deviceKey) return writeRows(deviceKey);
     if (command === 'cut' && deviceKey && a) return cutAll(deviceKey, a);
     if (command === 'encode' && deviceKey && a && b) return encode(deviceKey, a, b);
     if (command === 'mark' && deviceKey && a && b) return writeMark(deviceKey, a, b);
     if (command === 'check' && deviceKey && a) return checkRecording(deviceKey, a);
-    console.error('usage: store-media.mjs cut <iphone|ipad> <recordings folder> | encode <iphone|ipad> <render.mp4> <out.mp4> | mark <commands.json> <clip> <out.mark> | check <recording.mp4> <clip>');
+    console.error('usage: store-media.mjs rows <rows.json> | cut <iphone|ipad> <recordings folder> | encode <iphone|ipad> <render.mp4> <out.mp4> | mark <commands.json> <clip> <out.mark> | check <recording.mp4> <clip>');
     return 2;
 }
 

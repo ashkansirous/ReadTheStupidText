@@ -87,6 +87,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 433: Dino: new-look store screenshots, App Store previews, Play feature graphic ([slice](slices/433-dino-store-screenshots-video-play-appstore.md))
 - [owner] **You:** a native read of the machine-drafted screenshot captions (14 languages other than English, `docs/store-listings/screenshots/captions.json`), live on Play since 2026-11-25.
+- [owner] **You:** a native read of the machine-drafted App Store preview video captions (13 languages other than English, `tools/dino/promo/store/preview-captions.json`; the new lines are cap3 "Record Grandma as the wolf", cap6 "Some books need a subscription" and endSub, taken from each listing title; zh cap1 is its own line). Uploaded 2026-11-25 to the unsubmitted App Store draft 1.136.5 (item 10), not live on the store until that version ships.
 - [chrome] The public Play page (https://play.google.com/store/apps/details?id=uk.sirous.dinoreader) shows the new phone set and feature graphic (pushed and read back through the API 2026-11-25; the public page can lag by hours).
 - [chrome] The App Store page shows the new sets and previews, once the Watch line in plan.md has pushed them.
 
