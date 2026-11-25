@@ -25,7 +25,7 @@ name: store-screenshots
 # Slice 433: Dino shoots six screens per device plus the Japanese language shot, seven files (the iPad 13" in landscape, 2752 x 2064) and records seven App Store preview clips, one recording each (iPhone 6.9" and iPad 13"; .mp4 files in the same draft release).
 # Time limits (the arithmetic is in ios-sim-store-shots.sh): script budget 3600 s (60 min), its step 66 min, the job 90 min (about 6 min of
 # setup before the step, a minute or two of hand-over after it). Shots and clips together do not fit ONE job, which is why media=all runs the shots (worst case 300 + seven shots x two attempts x 420 = 6180) and
-# the clips (300 + shelf set-up 900 + one Maestro run of all seven clips, 240 + 7 x 240 = 1920, + a restart 300 and a second run of the clips that did not come out) as two jobs, each with the full budget; the script then
+# the clips (300 + shelf set-up 900 + one Maestro run of all seven clips, 330 + 7 x 150 = 1380, + a restart 300 and a second run of the clips that did not come out) as two jobs, each with the full budget; the script then
 # stops starting attempts, names what is missing, exits 1, and the rerun finishes it.
 
 on:
@@ -72,7 +72,7 @@ jobs:
   shots:
     name: ${{ matrix.media }}-${{ matrix.app }}-${{ matrix.device }}
     # Slice 433 (device-test-pipeline section 5): job = setup + ffmpeg (clips only, at most 8) + step + hand-over = 6 + 8 + 66 + 2 = 82 min, rounded up to 90. The step (66 min) holds the script budget of 3600 s = 60 min, which no attempt may pass: an attempt starts only when its whole worst case fits, and that case now counts the Open-in pre-flow (20 s, run 45491086879 finding 1; skipped once the URL scheme is pre-approved)
-    # and, on a retry, a simulator restart (300 s): shot 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill, 980 s), a clip round (all missing clips in one Maestro run) 20 + 240 + n x 240 + 2 x 60 + 10 s, the per-device simulator restart that writes the URL scheme approval is charged to the script budget, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
+    # and, on a retry, a simulator restart (300 s): shot 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill, 980 s), a clip round (all missing clips in one Maestro run) 20 + 330 + n x 150 + 2 x 60 + 10 s, the per-device simulator restart that writes the URL scheme approval is charged to the script budget, retry + 300 s. Shots job: 7 flows; clips job: shelf set-up + 7 clips; each is a job of its own with this same budget (media is a matrix dimension).
     timeout-minutes: 90
     runs-on: xcode-27
     permissions:
@@ -137,6 +137,24 @@ jobs:
           set -euo pipefail
           sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
           xcodebuild -version
+
+      # Slice 433 (run time): the simulator is created and booted in the background while the next steps build the app (about 5 min), with the URL scheme approval and
+      # Reduce Motion written before its first boot (ios-sim-store-preboot.sh). Its first boot took 4.7 to 11 min inside the shots step, and the second boot for those two values
+      # 3 to 3.5 min (runs 45597845229, 45607845756). The shots step waits for its state file and boots one itself when the pre-boot failed; the runner stops a background process
+      # only at the end of the job ("Cleaning up orphan processes", actions/runner JobExtension.cs). Dino only.
+      - name: Boot the simulator early (background)
+        if: matrix.app == 'dino'
+        run: |
+          set -euo pipefail
+          state="$RUNNER_TEMP/preboot-$DEVICE.state"
+          log="$RUNNER_TEMP/preboot-$DEVICE.log"
+          nohup bash .github/scripts/ios-sim-store-preboot.sh "$APP" "$DEVICE" "$PROJECT" "$state" > "$log" 2>&1 &
+          {
+            echo "PREBOOT_STATE=$state"
+            echo "PREBOOT_LOG=$log"
+            echo "PREBOOT_PID=$!"
+          } >> "$GITHUB_ENV"
+          echo "pre-boot of $DEVICE started (pid $!, log $log)"
 
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |

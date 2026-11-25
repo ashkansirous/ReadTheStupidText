@@ -161,10 +161,14 @@ export function nextChange(frameTimes, mark, span) {
     return change;
 }
 
+// The values footage-cuts.json may give `snap` (review s433-1b-preboot-high #5: a typo must not silently cut without the snap).
+const SNAP_KINDS = new Set(['none', 'nextChange']);
+
 // The cut of a clip from footage-cuts.json and its recording's mark file; with "snap": "nextChange" it is anchored on the first screen change after the mark.
 function clipCut(config, clip, recording) {
     const cut = config.clips[clip];
     if (!cut) throw new Error(`unknown clip '${clip}' (footage-cuts.json: ${Object.keys(config.clips).join(', ')})`);
+    if (!SNAP_KINDS.has(cut.snap ?? 'none')) throw new Error(`${clip}: snap must be one of ${[...SNAP_KINDS].join(', ')}, not '${cut.snap}'`);
     const { mark, span } = readMark(markName(recording));
     const anchor = cut.snap === 'nextChange' ? nextChange(probeFrameTimes(recording), mark, span) : mark;
     return { start: cutStart(anchor, cut.beforeMark), seconds: cut.seconds, mark: anchor, span };

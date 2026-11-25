@@ -66,7 +66,7 @@ DRIVER_READY_BUDGET_SECONDS=$((2 * DRIVER_READY_ATTEMPT_SECONDS + 10 + 30))
 # shots that came out. 3600 s = 60 min (Slice 433: it was 2700 s before the preview clips); the workflow's shots step is 66 minutes and its job 90 (about 6 minutes of setup before the step, run
 # 43748250465: 3 min 20 s). The worst case of shots and clips does NOT fit one job (boot 300 + seven shots at two attempts of 420 s = 5880, plus the clips below), so media=all runs them as two jobs.
 # Slice 433 (run 45479054864, device findings 2-4): every attempt now starts with the Open-in pre-flow (PREFLIGHT_TIME_LIMIT_SECONDS 20 s at most, and skipped on a device where the URL scheme is pre-approved, run 45491086879 finding 1) and every retry is preceded by a simulator restart (RESTART_TIME_LIMIT_SECONDS 300 s at most), and
-# each "will it fit" test above counts them: a shot attempt is 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill: 20 + 900 + 60 = 980 s), a clip round 20 + 240 + n x 240 + 2 x 60 + 10 s, a retry adds 300 s. No attempt starts unless its whole cost fits
+# each "will it fit" test above counts them: a shot attempt is 20 + 420 + 60 = 500 s (shot 1, the full-shelf fill: 20 + 900 + 60 = 980 s), a clip round 20 + 330 + n x 150 + 2 x 60 + 10 s, a retry adds 300 s. No attempt starts unless its whole cost fits
 # in the 3600 s, so the script ends within 3600 s = 60 min; the workflow's step (66 min) and job (90 min: 6 setup + 8 ffmpeg install (clips) + 66 step + 2 hand-over = 82) keep their margin.
 # It is not meant to: every shot is uploaded when taken, so `gh run rerun <run id> --failed` resumes and retakes only what is missing. RTST:
 # boot 300 + 2 x 600 + restart 300 + hierarchy 2 x 60 = 1920 s, which fits.
@@ -82,11 +82,26 @@ case "$MEDIA" in
   clips | all) ;;
   *) echo "::error::MEDIA must be shots, clips or all, not '$MEDIA'"; exit 1 ;;
 esac
-# Slice 433 (in-flow recording): all missing clips of a device run in one Maestro invocation whose limit is one driver start (CLIP_BATCH_DRIVER_SECONDS, above the 180 s
-# MAESTRO_DRIVER_STARTUP_TIMEOUT) plus VIDEO_TIME_LIMIT_SECONDS per clip (its setup and its recorded steps; the slowest setup took about 110 s in run 45582715957).
-# Clips job worst case: boot 300 + shelf set-up 900 + round 1 (20 + 240 + 7 x 240 + 120 + 10 = 2070) + restart 300 + round 2 for what is left: round 2 starts only when it fits.
-VIDEO_TIME_LIMIT_SECONDS=240
-CLIP_BATCH_DRIVER_SECONDS=240
+# Slice 433 (in-flow recording): all missing clips of a device run in one Maestro invocation whose limit is one driver start (CLIP_BATCH_DRIVER_SECONDS) plus
+# VIDEO_TIME_LIMIT_SECONDS per clip (its setup and its recorded steps). Measured: 54 to 111 s per clip in one batch (iPhone run 45607850849 attempt 2; iPad run 45607845756
+# about 95 s each), so 150 s per clip. Maestro 2.12.0 starts its iOS driver anew in every `maestro test` (--reinstall-driver defaults to true, LocalXCTestInstaller.kt) and waits
+# MAESTRO_DRIVER_STARTUP_TIMEOUT for it; the iPhone 6.9" needed 214 s in a warm-up (run 45607850849 attempt 2) and its clip batch died at the 180 s default of this script
+# (attempt 1, before any clip), so the clip batch waits up to CLIP_DRIVER_STARTUP_TIMEOUT_MS = 300 s, the warm-up's value, and the batch limit holds 330 s for it.
+# With those numbers a round 2 after a round 1 that died on the driver start fits the budget (restart 300 + 20 + 330 + 7 x 150 + 130 = 1830 s; attempt 1 had about 2200 s left).
+# Clips job worst case: boot 300 + shelf set-up 900 + round 1 (20 + 330 + 7 x 150 + 120 + 10 = 1530) + restart 300 + round 2 for what is left: round 2 starts only when it fits.
+VIDEO_TIME_LIMIT_SECONDS=150
+CLIP_BATCH_DRIVER_SECONDS=330
+CLIP_DRIVER_STARTUP_TIMEOUT_MS=300000
+# The driver start timeout of the next maestro_test (run_clip_batch raises it for the clip batch and sets it back).
+RUN_DRIVER_STARTUP_TIMEOUT_MS="$DRIVER_STARTUP_TIMEOUT_MS"
+# Slice 433 (run time): the simulator booted early by ios-sim-store-preboot.sh (workflow step "Boot the simulator early"): its state file, process id and log, and how long
+# to wait for it (its boot took 4.7 to 11 min; it starts about 5 min before this script). Set by use_preboot: the pre-booted udid and the bundle id approved before its first boot.
+PREBOOT_STATE="${PREBOOT_STATE:-}"
+PREBOOT_PID="${PREBOOT_PID:-}"
+PREBOOT_LOG="${PREBOOT_LOG:-}"
+PREBOOT_WAIT_SECONDS=900
+PREBOOT_UDID=""
+PREBOOT_BUNDLE=""
 # Set by run_clip_batch: the clip flows of the last round that did not come out.
 CLIPS_MISSING=()
 # "yes" while the iPad 13" is shot: every flow copy is turned to landscape.
@@ -132,18 +147,9 @@ UNIT_KEPT=no
 UNITS=()
 UNIT_LIMIT="$SHOT_TIME_LIMIT_SECONDS"
 
-# One line per device: label | ';'-separated device-type name patterns, in order | sizes App Store Connect accepts for that slot (WxH, portrait).
-device_specs() {
-  echo 'iphone-6.5|iPhone 11 Pro Max;iPhone Xs Max;iPhone 14 Plus;iPhone 13 Pro Max;iPhone 12 Pro Max|1242x2688 1284x2778'
-  if [ "$APP" = dino ]; then
-    # Slice 433: Dino's iPad shots are landscape and its iPhone 6.9" shots are exactly the frame's size (tools/emulator/store-captions.ps1 does not stretch or crop to another).
-    echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2752x2064'
-    echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868'
-  else
-    echo 'ipad-13|iPad Pro 13-inch \(M[0-9]\);iPad Air 13-inch \(M[0-9]\)|2064x2752 2048x2732'
-    echo 'iphone-6.9|iPhone 17 Pro Max;iPhone 16 Pro Max|1320x2868 1290x2796 1260x2736'
-  fi
-}
+# device_specs and device_patterns (Slice 433: shared with ios-sim-store-preboot.sh, which boots the same simulator early).
+# shellcheck source=ios-sim-store-devices.sh
+. "$HERE/ios-sim-store-devices.sh"
 
 # The shot names one flow file takes, one per line.
 unit_shots() {
@@ -213,60 +219,62 @@ install_app() {
   /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist"
 }
 
-# iOS run 45512162060: every iPad clip setup (and run 45502209923's iPhone Spanish one) hung on the first Maestro check after open-book
-# until the 240 s kill. Likely cause (code read, not proven): while the book's sound is prepared the reading page shows the wait overlay,
-# whose HoppingImage loops forever (src/Shared/.../HoppingImage.cs, repeat: () => true), and XCTest waits for the app to be idle before
-# every hierarchy read. The app stands that loop still when iOS Reduce Motion is on (ReduceMotion.IsOn), so the simulator gets Reduce
-# Motion: the same domain and key Appium's setReduceMotion writes (com.apple.Accessibility ReduceMotionEnabled = 1, appium-ios-simulator
-# lib/extensions/settings.ts), written into the shut-down simulator's preferences file so the reboot that follows reads it.
-# Karaoke highlight and page turns do not depend on it. A failed write is a warning: the shots and clips still run.
-reduce_motion_while_shut_down() {
-  local plist="$HOME/Library/Developer/CoreSimulator/Devices/$1/data/Library/Preferences/com.apple.Accessibility.plist" value
-  mkdir -p "$(dirname "$plist")"
-  /usr/libexec/PlistBuddy -c "Delete :ReduceMotionEnabled" "$plist" >/dev/null 2>&1 </dev/null || true
-  /usr/libexec/PlistBuddy -c "Add :ReduceMotionEnabled integer 1" "$plist" </dev/null || true
-  value="$(/usr/libexec/PlistBuddy -c "Print :ReduceMotionEnabled" "$plist" 2>/dev/null </dev/null || true)"
-  if [ "$value" = "1" ]; then
-    echo "Reduce Motion on for $1 ($plist)"
-  else
-    echo "::warning::Reduce Motion did not take on $1: ReduceMotionEnabled reads '$value' ($plist)"
-  fi
-}
-
-# Review pass 1 (finding 2): the file read-back cannot tell a wrong key, so after the reboot the simulator's own preferences are read too.
+# Why the store simulators get Reduce Motion and the URL scheme approval, and how both are written: .github/scripts/ios-sim-store-prefs.sh.
+# Review pass 1 (finding 2): the file read-back cannot tell a wrong key, so the booted simulator's own preferences are read too. Returns 1 when it does not read 1.
 reduce_motion_read_back() {
   local value
   value="$(xcrun simctl spawn "$1" defaults read com.apple.Accessibility ReduceMotionEnabled 2>&1 || true)"
   echo "Reduce Motion as the booted simulator $1 reads it: $value"
-  [ "$value" = "1" ] || echo "::warning::the booted simulator $1 does not read ReduceMotionEnabled = 1 ('$value'); animation loops may still block Maestro"
+  [ "$value" = "1" ] && return 0
+  echo "::warning::the booted simulator $1 does not read ReduceMotionEnabled = 1 ('$value'); animation loops may still block Maestro"
+  return 1
 }
 
-# Run 45491086879 (finding 1): writes the approval of the app's URL scheme into the simulator's LaunchServices scheme-approval plist, so iOS never asks "Open in <app>?" for a dino-test:// link
-# (Maestro cannot tap that alert in landscape, issue 2065). Source: Maestro issue 940, the PlistBuddy line of a commenter, which names the file
-# <device data>/Library/Preferences/com.apple.launchservices.schemeapproval.plist and the key "<bridge>--><scheme>" with the app's bundle id as its string value.
-# The simulator is shut down while the file is written and booted again afterwards (the thread does not say whether a booted simulator re-reads it). Prints the written entry; returns 1 when it did not read back.
-# Reduce Motion is written in the same shut-down window (reduce_motion_while_shut_down).
+# The bundle id the simulator's scheme-approval file holds for dino-test:// now (empty when none).
+scheme_approval_entry() {
+  local plist="$HOME/Library/Developer/CoreSimulator/Devices/$1/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist"
+  /usr/libexec/PlistBuddy -c "Print :$SCHEME_APPROVAL_BRIDGE-->$APPROVED_URL_SCHEME" "$plist" 2>/dev/null </dev/null || true
+}
+
+# Slice 433 (run time): true when this simulator was pre-booted with both values written before its first boot (ios-sim-store-preboot.sh), for this bundle id, and both
+# still hold on the booted simulator: then no second boot is needed (it took 3 to 3.5 min per run).
+preboot_prefs_kept() {
+  local udid="$1" bundle_id="$2"
+  [ -n "$PREBOOT_UDID" ] && [ "$PREBOOT_UDID" = "$udid" ] || return 1
+  if [ "$PREBOOT_BUNDLE" != "$bundle_id" ]; then
+    echo "the pre-boot approved $PREBOOT_BUNDLE, the installed app is $bundle_id"
+    return 1
+  fi
+  if [ "$(scheme_approval_entry "$udid")" != "$bundle_id" ]; then
+    echo "the URL scheme approval written before the first boot is not in the file after it"
+    return 1
+  fi
+  run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" reduce_motion_read_back "$udid"
+}
+
+# Run 45491086879 (finding 1): the app's URL scheme approved (no "Open in <app>?" alert, which Maestro cannot tap in landscape, issue 2065) and Reduce Motion on, before any flow.
+# A pre-booted simulator whose values held needs nothing more; otherwise the simulator is shut down, ios-sim-store-prefs.sh writes both and it is booted again
+# (the Maestro thread does not say whether a booted simulator re-reads the file). Returns 1 when the approval does not read back.
 approve_url_scheme() {
-  local udid="$1" bundle_id="$2" plist key written
+  local udid="$1" bundle_id="$2" written
   [ "$APP" = dino ] || return 0
   SCHEME_APPROVED=no
-  plist="$HOME/Library/Developer/CoreSimulator/Devices/$udid/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist"
-  key="$SCHEME_APPROVAL_BRIDGE-->$APPROVED_URL_SCHEME"
+  if preboot_prefs_kept "$udid" "$bundle_id"; then
+    SCHEME_APPROVED=yes
+    echo "URL scheme $APPROVED_URL_SCHEME:// approved for $bundle_id and Reduce Motion on since the first boot of $udid (pre-boot): no second boot"
+    return 0
+  fi
+  [ -z "$PREBOOT_UDID" ] || echo "the pre-boot values did not hold on $udid: written again with a second boot"
   run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
-  mkdir -p "$(dirname "$plist")"
-  /usr/libexec/PlistBuddy -c "Delete :$key" "$plist" >/dev/null 2>&1 </dev/null || true
-  /usr/libexec/PlistBuddy -c "Add :$key string $bundle_id" "$plist" </dev/null || true
-  written="$(/usr/libexec/PlistBuddy -c "Print :$key" "$plist" 2>/dev/null </dev/null || true)"
-  echo "scheme approval in $plist:"
-  /usr/libexec/PlistBuddy -c "Print" "$plist" 2>&1 </dev/null || true
-  reduce_motion_while_shut_down "$udid"
+  bash "$HERE/ios-sim-store-prefs.sh" "$udid" "$bundle_id" || true
   if ! run_limited "$RESTART_TIME_LIMIT_SECONDS" "$udid" restart_simulator "$udid"; then
     echo "::error::the simulator $udid did not boot again after the URL scheme approval was written"
     return 1
   fi
   run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" reduce_motion_read_back "$udid" || true
+  written="$(scheme_approval_entry "$udid")"
   if [ "$written" != "$bundle_id" ]; then
-    echo "::error::the URL scheme approval did not take: $key reads '$written', expected '$bundle_id' ($plist)"
+    echo "::error::the URL scheme approval did not take: it reads '$written', expected '$bundle_id'"
     return 1
   fi
   SCHEME_APPROVED=yes
@@ -492,7 +500,7 @@ run_limited() {
 maestro_test() {
   local udid="$1" flow_run="$2" test_out="$3"
   # $flow_run is one flow file, or (the preview clips) a folder of flows with its own config.yaml, run in one invocation.
-  MAESTRO_DRIVER_STARTUP_TIMEOUT="$DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run"
+  MAESTRO_DRIVER_STARTUP_TIMEOUT="$RUN_DRIVER_STARTUP_TIMEOUT_MS" maestro --device "$udid" test --test-output-dir "$test_out" "$flow_run"
 }
 
 # Slice 404: prints the app's test-hook log (the HOOK lines; the Debug build appends every line to Library/test-hook.log, TestHookLog.iOS.cs) and the
@@ -921,7 +929,9 @@ run_clip_batch() {
   mkdir -p "$test_out"
   note "- $label: clip round $round, $# clip(s) in one Maestro run (limit $limit s)"
   UNIT_LIMIT="$limit"
+  RUN_DRIVER_STARTUP_TIMEOUT_MS="$CLIP_DRIVER_STARTUP_TIMEOUT_MS"
   run_flow "$udid" "$dir" "$test_out" "$bundle_id" || rc=$?
+  RUN_DRIVER_STARTUP_TIMEOUT_MS="$DRIVER_STARTUP_TIMEOUT_MS"
   echo "clip round $round on $label: Maestro status $rc (killed at the $limit s limit: $LIMIT_HIT)"
   CLIPS_MISSING=()
   for unit in "$@"; do
@@ -1065,6 +1075,62 @@ prepare_full_shelf() {
   fi
 }
 
+# Slice 433 (run time): takes the simulator ios-sim-store-preboot.sh created and booted for this device while the workflow built the app (PREBOOT_STATE; its process id
+# PREBOOT_PID). Waits for the state file while the pre-boot still runs, at most PREBOOT_WAIT_SECONDS (a pre-boot still running then is stopped, so two simulators never boot at
+# once), and prints the pre-boot's log (PREBOOT_LOG). Sets PREBOOT_UDID and PREBOOT_BUNDLE when that simulator is booted and named for this device; leaves them empty
+# otherwise, and the caller boots one itself as before (review s433-1b-preboot-high #1: after shutting down and deleting every simulator the pre-boot made, so two never run at once).
+use_preboot() {
+  pick_preboot "$1"
+  [ -n "${PREBOOT_STATE:-}" ] && [ -z "$PREBOOT_UDID" ] || return 0
+  discard_preboot_simulators "$1"
+}
+
+# Shuts down and deletes every simulator named shots-<label> (what a failed, stopped or unusable pre-boot left), each simctl call under its limit.
+discard_preboot_simulators() {
+  local label="$1" udid
+  for udid in $(xcrun simctl list devices 2>/dev/null | sed -n "s/^ *shots-$label (\([0-9A-F-]*\)).*/\1/p"); do
+    echo "removing the pre-boot's simulator $udid (shots-$label)"
+    run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
+    run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" xcrun simctl delete "$udid" >/dev/null 2>&1 || true
+  done
+}
+
+# The pre-boot's simulator for use_preboot, or nothing.
+pick_preboot() {
+  local label="$1" started=$SECONDS udid bundle
+  PREBOOT_UDID=""
+  PREBOOT_BUNDLE=""
+  [ -n "${PREBOOT_STATE:-}" ] || return 0
+  while [ ! -f "$PREBOOT_STATE" ] && [ -n "${PREBOOT_PID:-}" ] && kill -0 "$PREBOOT_PID" 2>/dev/null \
+    && [ $((SECONDS - started)) -lt "$PREBOOT_WAIT_SECONDS" ]; do
+    sleep "$WATCHDOG_POLL_SECONDS"
+  done
+  echo "waited $((SECONDS - started)) s for the pre-boot of $label"
+  if [ ! -f "$PREBOOT_STATE" ] && [ -n "${PREBOOT_PID:-}" ] && kill -0 "$PREBOOT_PID" 2>/dev/null; then
+    echo "::warning::the pre-boot of $label did not finish in $PREBOOT_WAIT_SECONDS s; it is stopped and a simulator is booted here"
+    kill_tree "$PREBOOT_PID"
+  fi
+  if [ -n "${PREBOOT_LOG:-}" ] && [ -f "$PREBOOT_LOG" ]; then
+    echo "::group::pre-boot log ($label)"
+    cat "$PREBOOT_LOG"
+    echo "::endgroup::"
+  fi
+  [ -f "$PREBOOT_STATE" ] || { echo "no pre-boot state for $label: a simulator is booted here"; return 0; }
+  udid="$(sed -n 's/^udid=//p' "$PREBOOT_STATE")"
+  bundle="$(sed -n 's/^bundle=//p' "$PREBOOT_STATE")"
+  if [ -z "$udid" ]; then
+    echo "the pre-boot of $label failed ($(sed -n 's/^failed=//p' "$PREBOOT_STATE")): a simulator is booted here"
+    return 0
+  fi
+  if ! xcrun simctl list devices booted 2>/dev/null | grep -F "shots-$label ($udid)" >/dev/null; then
+    echo "::warning::the pre-booted simulator $udid is not booted as shots-$label: a simulator is booted here"
+    return 0
+  fi
+  PREBOOT_UDID="$udid"
+  PREBOOT_BUNDLE="$bundle"
+  note "- $label: pre-booted simulator $udid used (created and booted while the app was built)"
+}
+
 # One device: boot, install, run every shot, delete the simulator. Any failure is recorded and the next device still runs.
 shoot_device() {
   local label="$1" patterns="$2" accepted="$3" udid bundle_id
@@ -1074,7 +1140,9 @@ shoot_device() {
     problem "$label: no time left to boot a simulator (script budget $SCRIPT_BUDGET_SECONDS s)"
     return
   fi
-  udid="$(SIM_DEVICE_NAME="shots-$label" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' bash "$HERE/ios-sim-boot.sh" | tail -n 1 | sed 's/^udid=//')"
+  use_preboot "$label"
+  udid="$PREBOOT_UDID"
+  [ -n "$udid" ] || udid="$(SIM_DEVICE_NAME="shots-$label" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' bash "$HERE/ios-sim-boot.sh" | tail -n 1 | sed 's/^udid=//')"
   if [ -z "$udid" ]; then
     problem "$label: no simulator booted (device patterns: $patterns)"
     return
