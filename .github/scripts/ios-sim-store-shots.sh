@@ -208,10 +208,39 @@ install_app() {
   /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist"
 }
 
+# iOS run 45512162060: every iPad clip setup (and run 45502209923's iPhone Spanish one) hung on the first Maestro check after open-book
+# until the 240 s kill. Likely cause (code read, not proven): while the book's sound is prepared the reading page shows the wait overlay,
+# whose HoppingImage loops forever (src/Shared/.../HoppingImage.cs, repeat: () => true), and XCTest waits for the app to be idle before
+# every hierarchy read. The app stands that loop still when iOS Reduce Motion is on (ReduceMotion.IsOn), so the simulator gets Reduce
+# Motion: the same domain and key Appium's setReduceMotion writes (com.apple.Accessibility ReduceMotionEnabled = 1, appium-ios-simulator
+# lib/extensions/settings.ts), written into the shut-down simulator's preferences file so the reboot that follows reads it.
+# Karaoke highlight and page turns do not depend on it. A failed write is a warning: the shots and clips still run.
+reduce_motion_while_shut_down() {
+  local plist="$HOME/Library/Developer/CoreSimulator/Devices/$1/data/Library/Preferences/com.apple.Accessibility.plist" value
+  mkdir -p "$(dirname "$plist")"
+  /usr/libexec/PlistBuddy -c "Delete :ReduceMotionEnabled" "$plist" >/dev/null 2>&1 </dev/null || true
+  /usr/libexec/PlistBuddy -c "Add :ReduceMotionEnabled integer 1" "$plist" </dev/null || true
+  value="$(/usr/libexec/PlistBuddy -c "Print :ReduceMotionEnabled" "$plist" 2>/dev/null </dev/null || true)"
+  if [ "$value" = "1" ]; then
+    echo "Reduce Motion on for $1 ($plist)"
+  else
+    echo "::warning::Reduce Motion did not take on $1: ReduceMotionEnabled reads '$value' ($plist)"
+  fi
+}
+
+# Review pass 1 (finding 2): the file read-back cannot tell a wrong key, so after the reboot the simulator's own preferences are read too.
+reduce_motion_read_back() {
+  local value
+  value="$(xcrun simctl spawn "$1" defaults read com.apple.Accessibility ReduceMotionEnabled 2>&1 || true)"
+  echo "Reduce Motion as the booted simulator $1 reads it: $value"
+  [ "$value" = "1" ] || echo "::warning::the booted simulator $1 does not read ReduceMotionEnabled = 1 ('$value'); animation loops may still block Maestro"
+}
+
 # Run 45491086879 (finding 1): writes the approval of the app's URL scheme into the simulator's LaunchServices scheme-approval plist, so iOS never asks "Open in <app>?" for a dino-test:// link
 # (Maestro cannot tap that alert in landscape, issue 2065). Source: Maestro issue 940, the PlistBuddy line of a commenter, which names the file
 # <device data>/Library/Preferences/com.apple.launchservices.schemeapproval.plist and the key "<bridge>--><scheme>" with the app's bundle id as its string value.
 # The simulator is shut down while the file is written and booted again afterwards (the thread does not say whether a booted simulator re-reads it). Prints the written entry; returns 1 when it did not read back.
+# Reduce Motion is written in the same shut-down window (reduce_motion_while_shut_down).
 approve_url_scheme() {
   local udid="$1" bundle_id="$2" plist key written
   [ "$APP" = dino ] || return 0
@@ -225,10 +254,12 @@ approve_url_scheme() {
   written="$(/usr/libexec/PlistBuddy -c "Print :$key" "$plist" 2>/dev/null </dev/null || true)"
   echo "scheme approval in $plist:"
   /usr/libexec/PlistBuddy -c "Print" "$plist" 2>&1 </dev/null || true
+  reduce_motion_while_shut_down "$udid"
   if ! run_limited "$RESTART_TIME_LIMIT_SECONDS" "$udid" restart_simulator "$udid"; then
     echo "::error::the simulator $udid did not boot again after the URL scheme approval was written"
     return 1
   fi
+  run_limited "$SIMCTL_TIME_LIMIT_SECONDS" "$udid" reduce_motion_read_back "$udid" || true
   if [ "$written" != "$bundle_id" ]; then
     echo "::error::the URL scheme approval did not take: $key reads '$written', expected '$bundle_id' ($plist)"
     return 1
