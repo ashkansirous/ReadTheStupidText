@@ -49,6 +49,9 @@ test('fails on a completed workflow run that failed without any check run, but n
   const withRun = { ...run('build', 'completed', 'success'), check_suite: { id: 90 } };
   const rerunGreen = { ...broken, conclusion: 'failure' };
   assert.equal(verdict([withRun], [], OWN, [rerunGreen], '7').verdict, Verdict.Pass);
+  assert.equal(verdict([], [], OWN, [{ ...broken, conclusion: 'cancelled' }], '7').verdict, Verdict.Pass);
+  const noSuiteId = { id: 9, name: 'android', status: 'completed', conclusion: 'failure' };
+  assert.equal(verdict([run('build', 'completed', 'success')], [], OWN, [noSuiteId], '7').verdict, Verdict.Fail);
 });
 
 test('fails on a failed or errored commit status', () => {

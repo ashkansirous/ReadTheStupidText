@@ -35,8 +35,10 @@ export function verdict(checkRuns, statuses, ownName, workflowRuns = [], ownRunI
     ...statuses.filter((s) => !OK_STATES.has(s.state) && !PENDING_STATES.has(s.state))
       .map((s) => `${s.context}: ${s.state}`),
     // A workflow run can fail with no check run at all (a broken workflow file, startup_failure, action_required).
+    // A cancelled run is left out: concurrency cancels superseded runs, and its jobs' check runs carry any real failure.
     ...workflowRuns.filter((wf) => wf.status === 'completed' && String(wf.id) !== String(ownRunId)
-      && !OK_CONCLUSIONS.has(wf.conclusion) && !checkRuns.some((run) => run.check_suite?.id === wf.check_suite_id))
+      && !OK_CONCLUSIONS.has(wf.conclusion) && wf.conclusion !== 'cancelled'
+      && !checkRuns.some((run) => wf.check_suite_id != null && run.check_suite?.id === wf.check_suite_id))
       .map((wf) => `${wf.name} (workflow run): ${wf.conclusion}`),
   ];
   const waiting = [
