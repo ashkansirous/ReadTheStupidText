@@ -247,6 +247,12 @@ prepare_flow() {
     # Upright first, then sideways: the simulator keeps its rotation between attempts, and the one transition that worked in run 45466463555 (shot 1, attempt 1) was upright to sideways before the launch.
     awk '{ print } !done && /^---$/ { print "- setOrientation: PORTRAIT"; print "- setOrientation: LANDSCAPE_LEFT"; done = 1 }' "$target" > "$target.land" && mv "$target.land" "$target"
   fi
+  # Run 45512162060: the iPhone Spanish clip's setup hit its 240 s limit; three optional 30 s waits for an "Open in" alert that the approved
+  # URL scheme no longer lets appear took about 32 s each. Once the approval is read back (SCHEME_APPROVED), each such wait in the copy is 8 s
+  # (review pass 2: the read-back does not prove iOS honours the approval, so a late alert still gets 8 s; that run's iPhone clips met no alert in 6 waits).
+  if [ "$SCHEME_APPROVED" = yes ]; then
+    awk 'open_in && /^ *timeout: 30000$/ { sub(/30000/, "8000") } { open_in = ($0 ~ /visible: "\.\*Open in\.\*"/); print }' "$target" > "$target.fast" && mv "$target.fast" "$target"
+  fi
   grep -q "^appId: $bundle_id\$" "$target"
 }
 
@@ -985,6 +991,7 @@ prepare_full_shelf() {
 # One device: boot, install, run every shot, delete the simulator. Any failure is recorded and the next device still runs.
 shoot_device() {
   local label="$1" patterns="$2" accepted="$3" udid bundle_id
+  SCHEME_APPROVED=no # per device: approve_url_scheme sets it again only once this device's approval reads back
   note "### $APP on $label"
   if ! time_left_for $((BOOT_RESERVE_SECONDS + UNIT_LIMIT)); then
     problem "$label: no time left to boot a simulator (script budget $SCRIPT_BUDGET_SECONDS s)"
