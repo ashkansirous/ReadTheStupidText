@@ -91,7 +91,7 @@
   // once the skill exists, never in the dashboard: each deploy overwrites a dashboard value with this one.
   // Slice 419: Ninjalog forwarding of the Dino counts (worker/ninjalog.ts). On ("true", owner 2026-11-19); nothing is sent until
   // the NINJALOG_TOKEN Worker secret is set. Both configs must match (check-configs); change it by a PR, never in the dashboard.
-  "vars": { "ALEXA_SKILL_ID": "", "ANALYTICS_ACCOUNT_ID": "985d711340bd2cf7bf5d71f04a7e84c9", "NINJALOG_ENABLED": "true", "BOOK_LINK_TARGET": "https://dinoreader.sirous.uk/" },
+  "vars": { "ALEXA_SKILL_ID": "amzn1.ask.skill.32f02175-4e96-4a88-98c1-b858c48c048d", "ANALYTICS_ACCOUNT_ID": "985d711340bd2cf7bf5d71f04a7e84c9", "NINJALOG_ENABLED": "true", "BOOK_LINK_TARGET": "https://dinoreader.sirous.uk/" },
 
   // Slice 287: the hourly rollup of Analytics Engine into D1 for /stats (worker/stats-rollup.ts). Harmless without the
   // STATS binding: it logs and returns. The STATS binding is above, next to r2_buckets (docs/DEPLOYING.md).

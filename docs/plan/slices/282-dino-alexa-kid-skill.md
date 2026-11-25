@@ -111,10 +111,16 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 - [x] `skill-package/`: manifest marked child-directed, category `CHILDRENS_EDUCATION_AND_REFERENCE` (`KIDS` is not a value; a child-directed skill must use one of four CHILDRENS_ categories, per Amazon's skill-manifest reference), privacy policy URL, en-GB and en-US models, and the four PNG icons (108x108 and 512x512, from `site/dino/icon.png`) under `alexa/skill-package/assets/`.
 - [x] Privacy text (`PRIVACY.md` and `site/dino/privacy.html`; `site/privacy.html` is the RTST page and has no Sonos paragraph either): one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: a count
       of each book played and for how long, nothing about the home).
-- [ ] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
+- [x] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
       endpoint, enable testing; later, submit for certification. Steps Claude can do with a token (ASK CLI) it does.
+      *Done 2026-11-25:* the user created the Amazon developer account and signed the ASK CLI in once (profile `default`,
+      vendor `M2F7IO7I4G7Y5U`, no AWS link). Claude ran `ask deploy` from `alexa/` (new `alexa/ask-resources.json`; the
+      CLI's `alexa/.ask/` state is git-ignored): skill `amzn1.ask.skill.32f02175-4e96-4a88-98c1-b858c48c048d` created
+      from `skill-package/` with the endpoint `https://dinoreader.sirous.uk/alexa`, both models built, enabled for
+      testing (development stage). `ALEXA_SKILL_ID` set in both wrangler configs by this PR.
+- [ ] Submit for certification (Claude, ASK CLI `ask smapi submit-skill-for-certification`) after the first test on the live endpoint passes.
 
-**Waiting on the user** (blocks the skill going live, not the merge): create the Amazon developer account and the skill from `alexa/skill-package/`, set the endpoint `https://dinoreader.sirous.uk/alexa`, then the skill id goes into `ALEXA_SKILL_ID` in both wrangler configs by a PR (until then every request gets 400); enable testing; later submit for certification.
+**Skill console:** https://developer.amazon.com/alexa/console/ask/test/amzn1.ask.skill.32f02175-4e96-4a88-98c1-b858c48c048d/development/en_GB/
 
 ## Verification
 
