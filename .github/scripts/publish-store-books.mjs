@@ -25,7 +25,8 @@
  *                        wrangler cannot list a bucket, so the packages are found by probing upward from the live version until PROBE_WINDOW versions in a row are absent.
  *   --audio-behind       (Slice 265, BEFORE the build) prints `<book stem> <language>` for each audio pack in a book's audio-cast.json `audioPacks` that the live /api/stories `audio` lacks (or lists lower),
  *                        so the workflow runs `git lfs pull` for those books only and `BookBuilder build-audio` for those languages. Their zips then go up before the cover, package and meta.json,
- *                        never overwriting an existing object (the same version is the same bytes).
+ *                        never overwriting an existing object (the same version is the same bytes). Slice 409: `<book stem> <language> track` marks a pack that is live without its listening track: the committed
+ *                        track (built on the PC, LFS) is staged and uploaded, no clip is fetched and nothing is re-zipped.
  *   --audio-verdict <file>  (Slice 277, REQUIRED by --audio-behind and by every uploading run) the JSON `BookBuilder check-audio --verdict <file>` wrote. Fail closed: a book is published only when the file
  *                        holds a complete verdict for its id; a missing or unreadable file, or a book not in it, or one with a gap (a language with no pack, a sentence with no clip, a stale or empty clip)
  *                        builds no pack and uploads nothing, not even its meta.json. The other books go on and the run fails at the end naming it. A --dry-run may leave the flag out.
@@ -61,6 +62,7 @@ const STORY_ID_PATTERN = /^[0-9a-f]{32}$/;
 const AUDIO_PACK_FILE = /^audio-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.zip$/;
 const LISTEN_TRACK_FILE = /^listen-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.m4a$/; // Slice 281
 const LISTEN_TRACK_KEY_PARTS = /\/([0-9a-f]{32})\/listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
+const TRACK_ONLY = 'track'; // Slice 409: third word of an --audio-behind line whose pack is live (only the committed listening track goes up)
 const AUDIO_CAST_FILE = 'audio-cast.json';
 const VERIFY_ATTEMPTS = 7;
 const FETCH_TIMEOUT_MS = 30000;
@@ -478,18 +480,35 @@ export function putAudioPacks(book, folder, { put, packageExists }) {
  */
 export function audioPacksBehind(books, live, bucketAudio = () => null) {
     const liveById = new Map(live.map((story) => [story.id, story.audio ?? {}]));
-    return books.map(({ stem, id, packs }) => {
+    return books.map(({ stem, id, packs, listen }) => {
         const liveAudio = liveById.get(id) ?? {};
-        const languages = Object.keys(packs).sort().filter((language) => isBehind(liveAudio[language], packs[language], () => bucketAudio(id)?.[language]));
+        const hasTrack = (language) => listen === undefined || listen.includes(language); // Slice 409: only a track the book commits can be behind
+        const languages = Object.keys(packs).sort().filter((language) => packIsBehind(liveAudio[language], packs[language])
+            || (hasTrack(language) && trackIsBehind(liveAudio[language], packs[language], () => bucketAudio(id)?.[language])));
         return { stem, languages };
     }).filter((item) => item.languages.length > 0);
 }
 
+/**
+ * Pure (Slice 409): the `--audio-behind` lines. `<stem> <language>` when the pack is behind (its clips are fetched and zipped), `<stem> <language> track` when only the listening track is behind (the pack is live at
+ * that version: no clips are fetched and nothing is re-zipped; the committed track is staged). The track itself is committed (built on the PC by `BookBuilder build-listen`), never built here.
+ */
+export function audioBehindLines(books, live, bucketAudio = () => null) {
+    const liveById = new Map(live.map((story) => [story.id, story.audio ?? {}]));
+    const bookOf = new Map(books.map((book) => [book.stem, book]));
+    return audioPacksBehind(books, live, bucketAudio).flatMap(({ stem, languages }) => languages.map((language) => {
+        const { id, packs } = bookOf.get(stem);
+        return packIsBehind((liveById.get(id) ?? {})[language], packs[language]) ? `${stem} ${language}` : `${stem} ${language} ${TRACK_ONLY}`;
+    }));
+}
+
+function packIsBehind(liveInfo, version) {
+    return !(Number(liveInfo?.version) >= version);
+}
+
 // Slice 281: behind also means the pack version is live without its listening track. The track is looked for in the book's meta.json in the bucket (`bucketInfo()`, read only when the list shows no length), not in the Worker's list alone.
-function isBehind(liveInfo, version, bucketInfo) {
-    const liveVersion = Number(liveInfo?.version);
-    if (!(liveVersion >= version)) return true;
-    if (liveVersion !== version || Number(liveInfo?.listenSeconds) > 0) return false;
+function trackIsBehind(liveInfo, version, bucketInfo) {
+    if (Number(liveInfo?.version) !== version || Number(liveInfo?.listenSeconds) > 0) return false;
     const listed = bucketInfo();
     return !(Number(listed?.version) === version && Number(listed?.listenSeconds) > 0);
 }
@@ -917,8 +936,14 @@ async function writeLiveState(args) {
 function readAudioRecords() {
     return readContentBooks().map((book) => {
         const castPath = join(CONTENT_ROOT, book.stem, AUDIO_CAST_FILE);
-        return { stem: book.stem, id: book.id, packs: validPackVersions(recordsOf(castPath, book.stem)) };
+        const records = recordsOf(castPath, book.stem);
+        return { stem: book.stem, id: book.id, packs: validPackVersions(records), listen: listenLanguages(records) };
     }).filter((book) => Object.keys(book.packs).length > 0);
+}
+
+/** Pure (Slice 409): the languages whose committed `audioPacks` record carries a listening track length (the track is committed beside the clips and staged by `BookBuilder stage-listen`). */
+export function listenLanguages(records) {
+    return Object.entries(records ?? {}).filter(([, record]) => Number(record?.listenSeconds) > 0).map(([language]) => language).sort();
 }
 
 /** The `audioPacks` records of one audio-cast.json; an unreadable file is warned about and skipped so one bad book does not stop the others. */
@@ -938,10 +963,10 @@ export function validPackVersions(records) {
     return Object.fromEntries(entries.filter(([, version]) => Number.isInteger(version) && version > 0));
 }
 
-/** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks, so dino-store.yml fetches only those books' clips from Git LFS and packs them. */
+/** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks (dino-store.yml fetches only those books' clips from Git LFS and packs them) and `<stem> <language> track` for each live pack whose committed listening track is not live (Slice 409). */
 async function printAudioBehind(args) {
     const complete = completeIdsOf(args, true);
-    audioPacksBehind(onlyCompleteBooks(readAudioRecords(), complete), await fetchLive(args, process.env), bucketAudioOf(args)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
+    audioBehindLines(onlyCompleteBooks(readAudioRecords(), complete), await fetchLive(args, process.env), bucketAudioOf(args)).forEach((line) => console.log(line));
 }
 
 async function main() {

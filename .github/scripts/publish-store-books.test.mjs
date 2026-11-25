@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { publishedStateFrom } from './r2-wrangler.mjs';
-import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, hdBytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioBehindLines, listenLanguages, audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, hdBytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 import { accessOf, applyAccessToBuiltMetas, refuseSharedProductIds, withAccess, paidSwitchOn, storeSafeOf } from './publish-store-books.mjs';
 
@@ -384,6 +384,20 @@ test('Slice 281: a pack that is live at the same version without its listening t
     const books = [{ stem: 'pigs', id: A, packs: { de: 1, fa: 2 } }];
     const live = [{ id: A, audio: { de: { version: 1 }, fa: { version: 2, listenSeconds: 90 } } }];
     assert.deepEqual(audioPacksBehind(books, live), [{ stem: 'pigs', languages: ['de'] }]);
+});
+
+test('Slice 409: audioBehindLines marks a live pack that lacks only its track, and a book with no committed track is never behind for it', () => {
+    const books = [{ stem: 'pigs', id: A, packs: { de: 1, fa: 2, ja: 1 }, listen: ['de', 'fa'] }];
+    const live = [{ id: A, audio: { de: { version: 1 }, fa: { version: 1, listenSeconds: 60 }, ja: { version: 1 } } }];
+    // de: pack live, track committed and not live -> track only; fa: pack lower -> full line; ja: pack live, no committed track -> nothing
+    assert.deepEqual(audioBehindLines(books, live), ['pigs de track', 'pigs fa']);
+    assert.deepEqual(audioBehindLines([{ stem: 'new', id: B, packs: { fa: 1 }, listen: ['fa'] }], []), ['new fa']);
+    assert.deepEqual(audioBehindLines([{ stem: 'pigs', id: A, packs: { de: 1 }, listen: ['de'] }], [{ id: A, audio: { de: { version: 1, listenSeconds: 40 } } }]), []);
+});
+
+test('Slice 409: listenLanguages lists the committed records that carry a track length', () => {
+    assert.deepEqual(listenLanguages({ fa: { version: 1, listenSeconds: 90 }, de: { version: 1 }, ar: { version: 2, listenSeconds: 0 }, en: { version: 1, listenSeconds: 5 } }), ['en', 'fa']);
+    assert.deepEqual(listenLanguages(undefined), []);
 });
 
 test('Slice 281: audioUploadsFor adds the listening track of a pack after the packs, only for a listed length and a built file', () => {

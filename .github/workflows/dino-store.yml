@@ -84,46 +84,39 @@ jobs:
       # Slice 265: the clips are Git LFS objects (.lfsconfig keeps them out of a normal checkout). Only the audio packs the live store lacks are built: `--audio-behind` lists
       # `<book> <language>` pairs, each pair's clips are fetched alone (`--exclude ""` overrides the .lfsconfig exclusion) and packed before `build` so meta.json lists the pack.
       # The zips go up before the cover, package and meta.json (publish-store-books.mjs). A book with a pack that fails to build uploads none of its new packs (staged per book); the other books go on and the job fails at the end naming the pair.
+      # Slice 409: this step only zips and uploads. The listening track of each pack (`listen-<lang>-v<n>.m4a`, Slice 281) is built on the PC with ffmpeg (`BookBuilder build-listen-all`) and committed beside the clips (Git LFS), and
+      # check-audio above fails a book whose track is missing; so nothing is installed here and nothing is built beyond the zip. `--audio-behind` prints `<book> <language>` for a pack the live store lacks (clips fetched, zipped) and
+      # `<book> <language> track` for a live pack whose track is not live (no clips, no zip: the committed track is just staged). A slice that makes old books' files stale rebuilds and commits them in its own PR (Slice 409 decision 1), so this
+      # step has no time budget and no backfill.
       - name: Build the audio packs the live store lacks
         id: audio
-        env:
-          LISTEN_BUDGET_SECONDS: '900'
         run: |
           node .github/scripts/publish-store-books.mjs --audio-behind --bucket-state "$RUNNER_TEMP/live-store.json" --audio-verdict "$RUNNER_TEMP/audio-verdict.json" > "$RUNNER_TEMP/audio-behind.txt"
           cat "$RUNNER_TEMP/audio-behind.txt"
           failed=""
-          listen_failed=""
-          skipped=0
           if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
             dotnet build tools/dino/DinoReader.BookBuilder --configuration Release
-            # Slice 281: each pack also gets its listening track (build-listen joins the clips with ffmpeg and measures them with ffprobe); the runner image may not carry them. A failed install never blocks the zips, covers,
-            # packages and meta.json: the tracks are then recorded as failed (the "Fail when a listening track could not be built" step fails the job at the end).
-            have_ffmpeg=1
-            if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-              (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg) || echo "::warning::ffmpeg could not be installed; no listening track is built in this run."
-            fi
-            if command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null; then ffmpeg -version | head -n 1; else have_ffmpeg=0; fi
             git lfs install --local
             mkdir -p artifacts/store
-            started=$SECONDS
-            # One book at a time into its own staging folder: its zips are copied to artifacts/store only when every pair of the book built, so a book with a failed pair uploads none of its new packs.
-            # Slice 281 time budget: no new book is started once LISTEN_BUDGET_SECONDS are used (the first book always is), so the first run after the slice (a track for every live pack) fills in over several runs
-            # (a push or the daily cron) and never runs into the job's timeout (60 minutes: the 15-minute build budget + the other steps, ~10 min of normal run + the live-state reads of every story, ~10 min + the uploads of the built tracks, ~10 min + margin; estimates, untimed); what was not reached stays "behind" and is built next time. Every book finished is uploaded by the publish step below.
+            # One book at a time into its own staging folder: its zips and tracks are copied to artifacts/store only when every pair of the book went through, so a book with a failed pair uploads none of its new files.
             while IFS= read -r stem; do
-              if [ $((SECONDS - started)) -ge "$LISTEN_BUDGET_SECONDS" ]; then
-                skipped=$((skipped + $(grep -c "^${stem} " "$RUNNER_TEMP/audio-behind.txt")))
-                continue
-              fi
               stage="$RUNNER_TEMP/audio-stage/$stem"
               book_ok=1
               languages=""
+              includes=""
               # git and dotnet get </dev/null so neither can read the list from the loop's stdin and silently skip the pairs after it.
-              while read -r pair_stem language; do
+              while read -r pair_stem language kind; do
                 [ "$pair_stem" = "$stem" ] || continue
+                languages="${languages:+$languages,}$language"
+                includes="${includes:+$includes,}content/dino/${stem}/audio/${language}/listen-${language}-v*.m4a"
+                # Only the track is behind: the pack is live at this version, so no clips are fetched and nothing is zipped again.
+                if [ "$kind" = track ]; then
+                  echo "audio track only: $stem $language"
+                  continue
+                fi
                 if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" </dev/null \
                   && dotnet run --no-build --project tools/dino/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" --out "$stage" </dev/null; then
                   echo "audio pack built: $stem $language"
-                  languages="${languages:+$languages,}$language"
                 else
                   echo "::error::The audio pack of $stem [$language] could not be built."
                   failed="$failed $stem/$language"
@@ -131,25 +124,33 @@ jobs:
                   break
                 fi
               done < "$RUNNER_TEMP/audio-behind.txt"
-              # The listening tracks of the book's built languages, one process (the story is built once). A track that fails never holds back its zip: the zip, cover, package and meta.json go up without the track's length,
-              # the error is named here and the job fails at the end.
+              # The pack record build-audio wrote is the committed one: clips that differ from it would give another pack version than the track on the PC was built for.
+              if [ "$book_ok" = 1 ] && ! git diff --quiet -- "content/dino/${stem}/audio-cast.json"; then
+                echo "::error::The clips of $stem differ from its committed audioPacks record: run on the PC: dotnet run --project tools/dino/DinoReader.BookBuilder -- build-listen-all $stem, and commit the result (the pull-request check check-audio-record.mjs catches this before merge)."
+                failed="$failed $stem/record"
+                book_ok=0
+              fi
+              # The committed tracks of the book's pairs (LFS pulls only them), staged beside the zips. A track that cannot be staged holds the book back (the job fails at the end naming it).
               if [ "$book_ok" = 1 ] && [ -n "$languages" ]; then
-                if [ "$have_ffmpeg" = 1 ]; then
-                  dotnet run --no-build --project tools/dino/DinoReader.BookBuilder --configuration Release -- build-listen "$stem" --lang "$languages" --out "$stage" </dev/null \
-                    || listen_failed="$listen_failed $stem/$languages"
+                if git lfs pull --include "$includes" --exclude "" </dev/null \
+                  && dotnet run --no-build --project tools/dino/DinoReader.BookBuilder --configuration Release -- stage-listen "$stem" --lang "$languages" --out "$stage" </dev/null; then
+                  echo "listening tracks staged: $stem $languages"
                 else
-                  listen_failed="$listen_failed $stem/$languages(ffmpeg missing)"
+                  echo "::error::The committed listening tracks of $stem [$languages] could not be staged."
+                  failed="$failed $stem/listen"
+                  book_ok=0
                 fi
+              fi
+              # A held-back book keeps its committed record: the one build-audio rewrote names a pack version that was never staged, and build --live would list it in meta.json, then prune the live pack of that language.
+              if [ "$book_ok" = 0 ]; then
+                git checkout -- "content/dino/${stem}/audio-cast.json"
               fi
               if [ "$book_ok" = 1 ] && [ -d "$stage" ]; then
                 cp -r "$stage/." artifacts/store/
               fi
             done < <(cut -d' ' -f1 "$RUNNER_TEMP/audio-behind.txt" | sort -u)
-            echo "Audio packs not reached in this run's time budget (built by the next run): ${skipped}"
-            echo "- audio packs not reached in this run's time budget (built by the next run): ${skipped}" >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
-          echo "listen_failed=${listen_failed# }" >> "$GITHUB_OUTPUT"
           # No retry loop. A failed book is left out here (publish-store-books.mjs prunes its unbuilt packs from meta.json), every other book still builds and uploads, and the always() step below fails the job at the end.
 
       # Slice 375 B: a book with a complete high-res/ folder is built with its high-res package, so those pictures (Git LFS, .lfsconfig keeps them out of a checkout) are fetched here, and only these.
@@ -205,15 +206,7 @@ jobs:
         env:
           FAILED: ${{ steps.audio.outputs.failed }}
         run: |
-          echo "::error::These audio packs could not be built (that book uploaded none of its new packs; the other books were built and uploaded): ${FAILED}"
-          exit 1
-
-      - name: Fail when a listening track could not be built
-        if: always() && steps.audio.outputs.listen_failed != ''
-        env:
-          FAILED: ${{ steps.audio.outputs.listen_failed }}
-        run: |
-          echo "::error::These listening tracks could not be built (their audio packs and books were uploaded without the track, the next run builds them again; '(ffmpeg missing)' = ffmpeg or ffprobe could not be installed): ${FAILED}"
+          echo "::error::These audio packs or committed listening tracks could not be built or staged (that book uploaded none of its new files; the other books were built and uploaded; '/record' = its clips differ from the committed audioPacks record, '/listen' = its committed tracks could not be fetched or staged): ${FAILED}"
           exit 1
 
       - name: Fail when a store book was skipped as invalid

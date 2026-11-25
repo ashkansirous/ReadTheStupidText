@@ -3,6 +3,7 @@ using DinoReader.BookBuilder;
 // The Dino book builder (Slice 157, Decision 162): content/dino/<stem>/ in, .dino packages and artifacts/store/<id>/ out.
 const string OutFlag = "--out";
 const string KeepVersionFlag = "--keep-version";
+const string ForceFlag = "--force";
 const string LiveFlag = "--live";
 const string LangFlag = "--lang";
 const string ClipsFlag = "--clips";
@@ -20,8 +21,11 @@ const string Usage = """
       dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/dino/premade-audio
       build-audio <stem> --lang <code> [--clips <folder>] [--out <folder>]   pack the clips folder (default content/dino/<stem>/audio/<code>, Git LFS: git lfs pull --include it first; manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
-      build-listen <stem> --lang <code>[,<code>...] [--clips <folder>] [--out <folder>]   after build-audio (Slice 281): join the pack's clips in the app's read order, 150 ms between sentences and 900 ms at a page turn, into
-                                           artifacts/store/<id>/listen-<code>-v<n>.m4a (AAC mono 48 kb/s, ffmpeg from $FFMPEG or the PATH; a missing clip fails) and record its length in audio-cast.json; the next build lists it in meta.json
+      build-listen <stem> --lang <code>[,<code>...]   on the PC, after build-audio (Slice 281, 409): join the pack's clips in the app's read order, 150 ms between sentences and 900 ms at a page turn, into
+                                           content/dino/<stem>/audio/<code>/listen-<code>-v<n>.m4a beside the clips (Git LFS, commit it; AAC mono 48 kb/s, ffmpeg from $FFMPEG or the PATH; a missing clip, or clips that no longer match the pack record, fails)
+                                           and record its length in audio-cast.json; the next build lists it in meta.json. CI never builds a track: check-audio fails a missing one
+      build-listen-all [<stem>...] [--force]   on the PC (Slice 409): build-audio then build-listen for every language of every book (or the named ones); the repeatable step before committing tracks. A language whose track is current is skipped (no new LFS object); --force rebuilds all
+      stage-listen <stem> --lang <code>[,<code>...] [--clips <folder>] [--out <folder>]   CI (Slice 409): copy the committed, pulled track of each language into artifacts/store/<id>/ for the upload; no ffmpeg
       join-audio [<stem>...]             rewrite the Persian and Arabic audio manifests to the speaker-first join the app builds as it translates (Slice 280), from the clips already there (no recording, no
                                            translation); fails and writes nothing for a manifest if any piece the app reads would have no clip. Run build-audio for each book and language afterwards to raise the pack's version
       check-audio [<stem>...] [--live] [--verdict <file>]   fail unless every book has a complete audio pack in every language the app offers (Slice 272, 277): a pack exists, every sentence the app reads has its clip, no clip
@@ -72,8 +76,17 @@ try
             StoreBuilder.OutputFolder = outPath;
             return stems.Count != 1 || language is null ? Fail("build-audio needs one book and --lang <code>") : BookCommands.BuildAudio(stems[0], language, clipsPath);
         case "build-listen":
-            StoreBuilder.OutputFolder = outPath;
+            if (clipsPath is not null || outPath is not null)
+            {
+                return Fail("build-listen takes no --clips or --out: the track is written beside the clips in content/dino/<stem>/audio/<code>, where check-audio and stage-listen read it");
+            }
+
             return stems.Count != 1 || language is null ? Fail("build-listen needs one book and --lang <code>[,<code>...]") : ListenTrack.Run(stems[0], language, clipsPath);
+        case "build-listen-all":
+            return ListenTrackFiles.BuildAll(stems, arguments.Contains(ForceFlag));
+        case "stage-listen":
+            StoreBuilder.OutputFolder = outPath;
+            return stems.Count != 1 || language is null ? Fail("stage-listen needs one book and --lang <code>[,<code>...]") : ListenTrackFiles.Stage(stems[0], language, clipsPath);
         default:
             return Fail(Usage);
     }
