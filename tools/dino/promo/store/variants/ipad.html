@@ -18,7 +18,7 @@
       #root { position: relative; width: 1600px; height: 1200px; background: var(--sand); }
       /* The simulator shot is 2752 x 2064 (iPad 13" landscape); scaled to the width (x 0.5814, so 1600 x 1200) and its 28 px of status bar (48 px at full size) are cut off the top.
          User decision 2026-11-25 ("the text over is written on top? why? no one will see that! I think it should be in the middle of the page"): no top band; the footage uses the
-         whole frame (its 1172 px centred, 14 px of the app's sand above and below) and each caption is a Brand panel in the vertical middle. The end frame keeps its band. */
+         whole frame (its 1172 px centred, 14 px of the app's sand above and below) and each caption is a Brand panel in the vertical middle. The end frame's subscription line is a middle panel too (below). */
       #win { position: absolute; left: 0; top: 14px; width: 1600px; height: 1172px; overflow: hidden; background: var(--sand); }
       .shot { position: absolute; left: 0; top: -28px; width: 1600px; height: 1200px; }
       #dip { position: absolute; left: 0; top: 0; width: 1600px; height: 1200px; background: var(--sand); opacity: 0; z-index: 5; pointer-events: none; }
