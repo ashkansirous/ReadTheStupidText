@@ -3,6 +3,10 @@
 
 *Planned 2026-11-24. Corrected the same day (owner: "no fucking owned books! sonos only works with subscriptions!").*
 
+*Plan-cleanup 2026-11-25 (origin/main 1a8bf725): not started. `worker/sonos-link.ts` does not exist, `worker/sonos.ts` has no subscription check, no open Sonos PR, Slice 438 is still `planned`. The Why claims hold (`proof.ts`, `subscription.ts` exist). Verdict: keep open, C1-C6 all remain, nothing to move out.*
+
+**Starts after:** Slice 438 merges (a start condition, not a wait inside the work).
+
 **Depends on:** Slice 438 (the link and the per-home row). **Replaces:** Slice 415 item C's paid-track check on Sonos.
 
 **Touches:** `worker/sonos.ts`, `worker/sonos.test.mjs`, `worker/sonos-link.ts`, `worker/sonos-link.test.mjs`,

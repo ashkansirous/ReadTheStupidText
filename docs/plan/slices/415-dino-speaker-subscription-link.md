@@ -3,6 +3,13 @@
 
 *Planned 2026-11-18.*
 
+**Plan-cleanup check 2026-11-25:** verdict keep open, Alexa only. Sonos items B, C and the Sonos part of E, F, G are
+Slices 438 and 439 (both `planned` on origin/main; moved out 2026-11-24). What is left here is D (Alexa In-Skill
+Purchasing, kid skill) plus the Alexa lines of F and G. Checked: `worker/alexa.ts` has no purchase code and
+`alexa/skill-package/skill.json` has `"allowsPurchases": false`; `wrangler.jsonc` has `ALEXA_SKILL_ID: ""`, so the Alexa
+skill is not created yet (Slice 282 owner step). **Starts after:** Slice 282's skill exists and its id is set. The Alexa
+price and period are still the owner's choice, asked when D starts (`user-says` 2026-11-25 found no Alexa price answer).
+
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/alexa.ts`, `worker/alexa*.test.mjs`,
 `worker/speaker-link.ts` (new), `worker/speaker-link.test.mjs` (new), `worker/index.ts`, `worker/schema/stats.sql` (the
 link table), `alexa/skill-package/skill.json`,
@@ -123,12 +130,12 @@ subscriptions!". This slice keeps Alexa (D) and the Alexa parts of F and G.
 
 - [x] **A. Research** the two facts above; write the answers and source lines into this file; ask any
       result that changes a decision as one question set. (Done 2026-11-18; answers above.)
-- [ ] **B. Server link store** (`worker/speaker-link.ts`, D1 table in STATS), **Sonos only**: a link row holds the
+- [x] **B. Server link store** (MOVED to Slice 438, 2026-11-24) (`worker/speaker-link.ts`, D1 table in STATS), **Sonos only**: a link row holds the
       Sonos household id (hashed), the store proof's key (`proofKey`, never the raw token), created and last-checked
       times. One row per proof key; a new household with the same proof key replaces the old row (decisions 4, 5).
       Endpoints: start a link (from `getAppLink`, a short code), confirm a link (the Dino app sends the code plus its
       subscription proof), remove a link.
-- [ ] **C. Sonos**: authentication changes from Anonymous to AppLink in the portal and the server (`getAppLink`,
+- [x] **C. Sonos** (MOVED to Slices 438 and 439, 2026-11-24): authentication changes from Anonymous to AppLink in the portal and the server (`getAppLink`,
       `getDeviceAuthToken`, `refreshAuthToken`); `getAppLink`'s `authorizeAccount` opens the Dino app; every paid track
       checks the household's link and runs the stored proof through the existing subscription gate (cached as `gate.ts`
       does); no active subscription: the locked spoken message. Single-book purchase proofs are ignored (decision 1).
@@ -140,7 +147,7 @@ subscriptions!". This slice keeps Alexa (D) and the Alexa parts of F and G.
       The product is also offered in the en-GB locale, and the UK test (below) shows whether Amazon sells it there;
       the result is written here and taken to the user. Skill manifest (`allowsPurchases`) and testing instructions
       updated to match.
-- [ ] **E. Dino app, Android and iOS (same slice, both)**: a "Link a speaker" page in the grown-up area (Settings,
+- [x] **E. (MOVED to Slice 438: the link page is Sonos only, Alexa has no link, 2026-11-24)** Dino app, Android and iOS (same slice, both)**: a "Link a speaker" page in the grown-up area (Settings,
       "Books and buying" group of Slice 399) that opens from the speaker's link, shows which speaker it links, and
       confirms with the subscription proof; shows the linked Sonos home and an Unlink button. Only offered while a
       subscription is active. Windows: not in scope unless the user asks (the subscription is sold there too; noted

@@ -1,6 +1,8 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 **Product:** Dino
 
+**Plan-cleanup check 2026-11-25:** code merged (#935); live `ALEXA_SKILL_ID` is still empty in both wrangler configs and `POST https://dinoreader.sirous.uk/alexa` returns 400. Skill creation is the owner step (user, 2026-11-19: "I have problems with amazon developer. park until tomorrow"; nothing since). The observability/privacy line is not this slice's work (moved to Outstanding work); privacy.html on main has no Sonos or Alexa paragraph about server logs.
+
 *Built 2026-11-07 (night 2026-11-07-1412 wave 6), merged as PR #935 (e1d0a461); not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).

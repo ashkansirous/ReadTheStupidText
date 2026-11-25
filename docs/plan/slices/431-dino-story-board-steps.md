@@ -1,7 +1,9 @@
 ### Slice 431 — Dino: the story skill reports its steps to the agent board, with process keys
 **Product:** Dino
 
-*Planned.* Needs agent-progress-board Slice 55 (process keys and step counts) in the installed agent-board plugin.
+*Planned.* **Starts after:** agent-progress-board Slice 55 (a start condition; the slice has not started). Needs process keys and step counts in the installed agent-board plugin.
+
+*Plan-cleanup check 2026-11-25:* Slice 55 is still `planned (needs 54)` on agent-progress-board `origin/main` (plan.md row 55); `git grep process_key` finds nothing in its plugin; no `report_progress`, `under_step` or `story/` key exists in `.claude/` here. A-C are unbuilt and the claims hold. Verdict: keep open, not started; nothing to move out.
 
 **Touches:** `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-writer.md`,
 `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `.claude/agents/farsi-review.md`,

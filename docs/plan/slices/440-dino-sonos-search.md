@@ -3,6 +3,16 @@
 
 *Planned 2026-11-24.*
 
+*Plan-cleanup check 2026-11-25, verdict keep open (not started).* Read on origin/main 1a8bf725: no `search` action, no
+`worker/sonos-search.ts`, no `site/dino/sonos/` folder (`git grep -i search origin/main -- worker/sonos.ts worker/sonos-soap.ts`
+is empty); Slice 437, the dependency, is still `planned` in plan.md. The user has not said anything about search or the
+presentation map beyond the 2026-11-24 brief quoted below. D1-D4 are all this slice's own work and all open. The
+owner step in D2 (set the presentation map URL and version in the Sonos developer portal) is an owner login step that
+comes after D2 is deployed, not a wait inside the work; the portal deep link is not recorded in the repo (only the
+support case link in Slice 283), so the builder must look it up before writing that step.
+
+**Starts after:** Slice 437 merged (labels, art, ids).
+
 **Depends on:** Slice 437 (labels, art, ids).
 
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/sonos-search.ts` (new),

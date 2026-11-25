@@ -1,6 +1,8 @@
 # Slice 438 — Dino: every Sonos home links once through the Dino app and saves its story language
 **Product:** Dino
 
+*Plan-cleanup 2026-11-25: keep open, not started (row planned; Slices 437 and 439 also planned on origin/main). Checked: no `sonos-link.ts`, `sonos-homes.sql` or `site/dino/sonos-link.html` on origin/main. Correction: `PRIVACY.md:187` already has an anonymous-Sonos paragraph (no household id stored) that B8 must replace; only `site/dino/privacy.html` has no Sonos text. B9 moved out (outside waits: Sonos case 09396143, production submission) to a Watch line in plan.md Outstanding work.*
+
 *Planned 2026-11-24. Corrected the same day (owner: "Slice 415 had "link required for all" is the correct decision! I
 have not told claude design to change that!").*
 
@@ -88,10 +90,10 @@ From `docs/design/sonos/` (Link, SET-Home, SET-Pick, SET-Saved, SET-FA-Home), wi
       tests.
 - [ ] B7. Tests: link start/confirm/refresh/unlink, one row per home, a second home replaces the first, setlang saves,
       unlinked request faults, fallback page picks the store per user agent.
-- [ ] B8. Wording: `PRIVACY.md`, `site/dino/privacy.html` (no Sonos text today) and Slice 283's promo and description say
+- [ ] B8. Wording: `PRIVACY.md` (replace the anonymous-Sonos paragraph at line 187), `site/dino/privacy.html` (no Sonos text today) and Slice 283's promo and description say
       what a linked home stores (story language, a hashed home id, the subscription proof key) and how to unlink. Show
       the owner the new wording before shipping.
-- [ ] B9. (Moved from Slice 283, 2026-11-25.) After the link is live: switch the sandbox integration to AppLink, rerun
+- [moved out 2026-11-25 to a Watch line in plan.md, not this slice's work] B9. (Moved from Slice 283, 2026-11-25.) After the link is live: switch the sandbox integration to AppLink, rerun
       the Sonos Self Test until it passes, follow up on Sonos developer case 09396143, then submit the service for
       production. The user already played the anonymous service on their Sonos (2026-11-24); never ask for that play again.
 

@@ -1,6 +1,8 @@
 # Slice 390 — Dino iOS purchases: StoreKit 2
 **Product:** Dino
 
+*Plan cleanup 2026-11-25: verdict close. #1189 is in dino-v1.136.0 (git merge-base), and App Store Connect shows Dino 1.136.0 READY_FOR_SALE, so the signed Release build with the XCFramework shipped. The user's sandbox Buy and subscription worked (2026-11-15); only Restore and a second install stay in unverified.md.*
+
 *Built 2026-11-15, merged as PR #1189 (b0c4aa27); not yet verified on the iPhone (sandbox buy and restore). Item 4 passed on the branch: dinoreader-ios 43712501183 (XCFramework built, app compiled) and dinoreader-ios-sim 43714895380 (flow passed on attempt 2; attempt 1 timed out on `StoryTile`, the known flaky wait, Slice 393 item 23).*
 
 **Decision (user, 2026-11-15): route (a)**, our own small Swift wrapper over StoreKit 2 (products, buy, restore, owned books), built into an XCFramework by a macOS/Xcode CI step and called from `IosPurchases.cs`; no Plugin.InAppBilling. The Worker's purchase check takes StoreKit 2's signed transaction (JWS) for iOS. The sandbox buy and restore on the user's iPhone goes to Not yet verified.
