@@ -33,8 +33,9 @@ internal static class ListenTrack
     private const int Mp4aChannelsOffset = 20; // from the start of the "mp4a" tag: size-less entry = 6 reserved + 2 index + 8 reserved, then the channel count
     private const int Mp4aRateOffset = 28; // after channel count, sample size and 4 reserved bytes: the 16.16 sample rate, integer part first
 
-    /// <summary><c>build-listen &lt;stem&gt; --lang &lt;code&gt;[,&lt;code&gt;...] [--clips &lt;folder&gt;] [--out &lt;folder&gt;]</c>: run after <c>build-audio</c> for the same book and languages. Joins the clips into
-    /// <c>artifacts/store/&lt;id&gt;/listen-&lt;lang&gt;-v&lt;n&gt;.m4a</c> (n = the pack version recorded in audio-cast.json) and records the track's length there, which the next <c>build</c> lists in meta.json.
+    /// <summary><c>build-listen &lt;stem&gt; --lang &lt;code&gt;[,&lt;code&gt;...] [--clips &lt;folder&gt;]</c>: run on the PC after <c>build-audio</c> for the same book and languages (Slice 409). Joins the clips into
+    /// <c>content/dino/&lt;stem&gt;/audio/&lt;lang&gt;/listen-&lt;lang&gt;-v&lt;n&gt;.m4a</c> beside them (Git LFS, committed; n = the pack version recorded in audio-cast.json, which must match the clips) and records the track's length there, which the next <c>build</c> lists in meta.json.
+    /// A track of an older pack version is removed. CI only stages the committed track (<see cref="ListenTrackFiles.Stage"/>); it never builds one.
     /// The story is built once for all the languages. A failing language is named and does not stop the others; the exit code is 1 when any failed.</summary>
     public static int Run(string stem, string languages, string? clipsFolder)
     {
@@ -66,7 +67,9 @@ internal static class ListenTrack
             AudioPackRecord record = AudioPacks.RecordsIn(book.Dir).GetValueOrDefault(language)
                 ?? throw new InvalidOperationException($"{stem} has no audio pack record for '{language}'; run build-audio first.");
             string clips = clipsFolder ?? AudioPacks.ClipsFolderOf(book, language);
-            int seconds = Build(book, story, language, clips, record.Version, Path.Combine(StoreBuilder.StoreFolder(), book.Info.Id));
+            ListenTrackFiles.RequireCurrentRecord(record, clips, language);
+            int seconds = Build(book, story, language, clips, record.Version, clips);
+            ListenTrackFiles.RemoveOlder(clips, language, record.Version);
             AudioPacks.SaveRecord(book.Dir, language, record with { ListenSeconds = seconds });
             Console.WriteLine($"built {stem} listening track {language} v{record.Version} ({seconds} s)");
             return true;

@@ -117,77 +117,92 @@
     "ar": {
       "version": 2,
       "hash": "2bf7871901afe679c873f8c9d32c9c2e900c0d09f32dfd792ff4ec4263f4ff09",
-      "bytes": 2671948
+      "bytes": 2671948,
+      "listenSeconds": 477
     },
     "da": {
       "version": 1,
       "hash": "defd9a01adbe386a911b7ffcd88fb66372bfcab2c26344c2b2eac56164d111ef",
-      "bytes": 2144511
+      "bytes": 2144511,
+      "listenSeconds": 384
     },
     "de": {
       "version": 1,
       "hash": "89ff4ee68991eeed2449bca2db83f1e558dfbe37139dd8b41f41601050a4ea64",
-      "bytes": 2352032
+      "bytes": 2352032,
+      "listenSeconds": 416
     },
     "en": {
       "version": 1,
       "hash": "7abe67e99faa43fafdddef07dc4ef52c2b7c08c9534b19ca1839af5ec46fbbec",
-      "bytes": 2339664
+      "bytes": 2339664,
+      "listenSeconds": 415
     },
     "es": {
       "version": 1,
       "hash": "22855bb594978225cedcd042693ed73a0607865e029cdb0d95191d84e27ba679",
-      "bytes": 2513372
+      "bytes": 2513372,
+      "listenSeconds": 456
     },
     "fa": {
       "version": 2,
       "hash": "9af6267cadc3e79c8d6eeff40028d1b5acd7bc1b0fb4dc92cf356641851d376f",
-      "bytes": 2550059
+      "bytes": 2550059,
+      "listenSeconds": 471
     },
     "fi": {
       "version": 1,
       "hash": "02fe1548dcc2ce31e7c64d7e2881bbfce385ab9506c44bcc8ec093b9c9b21582",
-      "bytes": 2455824
+      "bytes": 2455824,
+      "listenSeconds": 441
     },
     "fr": {
       "version": 1,
       "hash": "a0a563db4240351ed416966b44b966e7fc343c7112f0c75e41b193d13e295a79",
-      "bytes": 2388002
+      "bytes": 2388002,
+      "listenSeconds": 433
     },
     "ja": {
       "version": 1,
       "hash": "a055e2b170ab061862f7102311f6473d3d005302d5675a2350712ea726887d73",
-      "bytes": 2658151
+      "bytes": 2658151,
+      "listenSeconds": 489
     },
     "nb": {
       "version": 1,
       "hash": "54f63ba0abce51c00f4f43c63a2a996e4ef97a28d08a5c127c81255aff53387a",
-      "bytes": 2297543
+      "bytes": 2297543,
+      "listenSeconds": 412
     },
     "nl": {
       "version": 1,
       "hash": "8359c574084dcebd0b3455b993f057b30e6ad47f25fa925a99c93931c1ad51da",
-      "bytes": 2221753
+      "bytes": 2221753,
+      "listenSeconds": 396
     },
     "pt": {
       "version": 1,
       "hash": "bfa5186b41fd461d6c56a0a369d072e94cca0c3b04c0f5ebba2665837e4c855f",
-      "bytes": 2579150
+      "bytes": 2579150,
+      "listenSeconds": 462
     },
     "ru": {
       "version": 1,
       "hash": "313bc18743d3cf26a182dc8b8407de19b6436cc98eb3d1b8c11126deda92b297",
-      "bytes": 2531552
+      "bytes": 2531552,
+      "listenSeconds": 451
     },
     "sv": {
       "version": 1,
       "hash": "e100061fd2408f7e39e95d9416e3525ca3dbdd5f1fe44a2f4a97423079d2bf05",
-      "bytes": 2338550
+      "bytes": 2338550,
+      "listenSeconds": 419
     },
     "zh": {
       "version": 1,
       "hash": "f35fb9076d81c855a3c729f2e37bc0f8f8e2bb346facf9b9926519ef726396a0",
-      "bytes": 2408600
+      "bytes": 2408600,
+      "listenSeconds": 436
     }
   }
 }

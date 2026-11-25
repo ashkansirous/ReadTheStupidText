@@ -58,6 +58,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Slice 409: file names only (no LFS pull). A pack whose clips changed needs its listening track and the book's audio-cast.json record in the same pull request, else dino-store.yml holds the book back as `<book>/record`.
+      - name: Check that changed audio clips come with their listening track and record
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node .github/scripts/check-audio-record.mjs "$BASE" "$GITHUB_SHA"
 
       - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
