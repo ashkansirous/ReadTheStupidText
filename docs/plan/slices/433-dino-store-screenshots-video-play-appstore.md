@@ -1,6 +1,8 @@
 ### Slice 433 — Dino: store screenshots in a new look, the App Store preview videos and the Play feature graphic (Google Play and App Store)
 **Product:** Dino
 
+*Closed 2026-11-25: all work items done (item 8 moved to Slice 444). The App Store sets and previews are on 1.136.5, WAITING_FOR_REVIEW (App Store Connect API, 2026-11-25), and show on the live App Store when Apple approves it. Checks still unrun are in docs/plan/unverified.md under Slice 433.*
+
 *Plan-cleanup 2026-11-25: verdict keep open. Nothing is built on origin/main 1a8bf725 (no `store-size-check.ps1`, no `tools/dino/promo/store/`, no `store-shot-ios-duo-*` or `store-video-*` flows; `store-captions.ps1` still has the `#2F5D50` fill at :28 and the 0.15 band at :26). Two outside waits moved out of the work: item 4's push (App Store version editable) is a Watch line in plan.md; item 8 (Duo, waits on Slice 403, still `planned`) moved to a new slice, so this slice closes after items 1-7 and 9.*
 
 *Planned 2026-11-24 from the phone doc [2026-11-23-dino-store-screenshots-and-video.md](../notes/2026-11-23-dino-store-screenshots-and-video.md) (Scope Inbox, status ready). Follow every line of that note's Constraints, Decisions (approved), Sizes, The six screenshots and Video timeline; this file wins where they differ.*
