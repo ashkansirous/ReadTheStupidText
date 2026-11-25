@@ -1,0 +1,11 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): preview clip 3-language-en, English (about 1 s in the preview). The RECORDED part (see store-shot-ios-video-1a-reading.yaml): page 6 of Three Little Pigs opens in English and is held; its own recording, so the position of the clip never depends on a language switch or an audio fetch.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip 3, language en, Dino Reader, iOS
+---
+# Starts on the held page (the setup flow did all navigation, dialogs and waits); nothing to do but hold it.
+# Held (an optional wait for an id that never shows lasts its full timeout).
+- extendedWaitUntil:
+    visible:
+      id: VideoHold
+    timeout: 3000
+    optional: true

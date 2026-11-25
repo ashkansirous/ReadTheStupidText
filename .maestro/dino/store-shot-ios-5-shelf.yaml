@@ -1,8 +1,8 @@
-# Slice 291 item 5 (iOS part): App Store shot 5 of 5 of Dino Reader, "shelf": the kids' shelf of illustrated books. English, on the four test books.
-# One of five stand-alone flows (see store-shot-ios-1-reading.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing behind.
+# Slice 433 (iOS part of Slice 291 item 5, now six shots): App Store shot 5 of 6 of Dino Reader, "shelf": the kids' shelf, 12 books. English.
+# One of six stand-alone flows (see store-shot-ios-1-picture.yaml for how they are run): it relaunches keeping the app's data (no clearState; skip-first-run and the microphone permission are passed again, and it needs shot 1's full shelf, so it runs after shot 1), sets its own language and leaves nothing behind.
 # Mid-flow hooks go to the running app as openLink on the dino-test:// URL; each openLink is followed by the guarded "Open in" tap ("Open in <app>?" is tapped only while that prompt's own text is on screen).
 appId: uk.sirous.dinoreader.dbg
-name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
+name: Store screenshot 5 of 6, shelf, Dino Reader, iOS
 ---
 - launchApp:
     # No clearState: the relaunch keeps the data and leaves grown-up mode (CreateWindow, App.xaml.cs:68), so this is the kids' shelf.
@@ -20,7 +20,7 @@ name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
 - openLink: "dino-test://set-language?lang=en&voice=0"
 - extendedWaitUntil:
     visible: ".*Open in.*"
-    timeout: 10000
+    timeout: 30000
     optional: true
 - runFlow:
     when:
@@ -29,13 +29,13 @@ name: Store screenshot 5 of 5, shelf, Dino Reader, iOS
       - tapOn:
           text: Open
 - extendedWaitUntil:
-    visible: ".*(My stories|Stories|For grown-ups).*"
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
     timeout: 60000
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 30000
-# After the English reset: shot 3 leaves the app in German (run 44419048246), so the full-shelf check waits for the English title only now.
+# After the English reset: shot 4 leaves the app in Spanish (it was German, run 44419048246), so the full-shelf check waits for the English title only now.
 - extendedWaitUntil:
     visible: ".*Jack and the Beanstalk.*"
     timeout: 30000

@@ -1,0 +1,11 @@
+# Slice 433 (iOS run 45479054864, finding 2): the pre-flow of .github/scripts/ios-sim-store-shots.sh, run before every attempt of a shot or a clip and before every retry. NOT a shot and not a clip (no takeScreenshot; the file name matches neither the store-shot-ios-[0-9]-* nor the store-shot-ios-video-* glob, so the script never runs it as one).
+# A SpringBoard "Open in <app>?" alert that a failed attempt left up (it came after that flow's optional wait, so nobody tapped it) blocks every later attempt: launchApp does not dismiss it and the orientation steps do not rotate behind it. Open is tapped only while the prompt's own text is on screen; with no alert this flow does nothing and passes at once.
+appId: uk.sirous.dinoreader.dbg
+name: Store shots pre-flow, answer a left-over Open in prompt, Dino Reader, iOS
+---
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open

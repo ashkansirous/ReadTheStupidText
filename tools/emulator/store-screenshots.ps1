@@ -18,6 +18,8 @@ param(
     [ValidateSet('phone', 'tablet')][string]$Form, # required, same
     [string]$Serial,
     [string]$OutRoot,
+    [int]$StatusBarPx = -1,   # Slice 433: the status bar height of the emulator in px; -1 reads it from the device (dumpsys window), else 24 dp
+    [int]$NavBarPx = -1,      # the navigation bar height in px; -1 reads it from the device (0 when it cannot be read)
     [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
@@ -27,6 +29,8 @@ $requestedSerial = $Serial
 . (Join-Path $PSScriptRoot 'contact-sheet.ps1')   # dot-sourced: Get-MaestroToolsDir only
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 if (-not $OutRoot) { $OutRoot = Join-Path $repoRoot 'docs\store-listings\screenshots' }
+# Slice 433: the frame sizes (Get-FrameSpec, Get-BandHeight) come from store-frames.ps1 (no param block, so nothing of this script's scope is reset), the same numbers store-captions.ps1 cuts the frame with.
+. (Join-Path $PSScriptRoot 'store-frames.ps1')
 
 # Pure: the emulator instance (as run-flows.ps1 -Instance takes it) for a serial `emulator-<port>`, else the form's default. Throws on a serial that is not one of the AVD ports.
 function Get-StoreShotInstance([string]$Serial, [string]$Form) {
@@ -75,6 +79,59 @@ function Invoke-StatusBarDemo([object[]]$Commands, [scriptblock]$AdbCall = { par
         try { $null = & $AdbCall $command } catch { $failures += "'$($command -join ' ')' failed: $($_.Exception.Message)" }
     }
     return @($failures)
+}
+
+# Slice 433 item 1: the emulator is run at the size that makes the raw shot fit the store frame exactly, so nothing is stretched, letterboxed or cut beyond the bars. The raw shot is the frame's area under the caption band plus the status bar on top and the
+# navigation bar at the bottom (store-captions.ps1 cuts both off): Play phone 1080 x (1920 - 288 band + bars), Play tablet 1440 x (2560 + bars). `wm size` changes the display size and keeps the density, and `wm size reset` puts it back.
+# Pure: the width and height to give `wm size`.
+function Get-StoreShotWmSize([string]$Form, [int]$StatusPx, [int]$NavPx) {
+    $spec = Get-FrameSpec $Form
+    $band = Get-BandHeight $spec.Height $spec.Band
+    return @([int]$spec.Width, [int]($spec.Height - $band + $StatusPx + $NavPx))
+}
+function Get-WmSizeEnterCommands([int[]]$Size) { return , @(, @('shell', 'wm', 'size', "$($Size[0])x$($Size[1])")) }   # the leading comma keeps the one command an array of arrays through the pipeline
+function Get-WmSizeExitCommands { return , @(, @('shell', 'wm', 'size', 'reset')) }
+
+# Pure: the height in px of a system bar from `dumpsys window` text. The status bar's inset frame is [0,0][W,H] (the height is the bottom edge); the navigation bar's is [0,top][W,bottom]. $null when the dump has no such line (the format is read from
+# Android's own InsetsSource lines and is not proven on this PC: the shot's own look is the proof, and -StatusBarPx / -NavBarPx override it).
+function Get-InsetBarPx([string]$Dump, [string]$Bar) {
+    $m = [regex]::Match($Dump, '(?m)type=' + [regex]::Escape($Bar) + '\b[^\r\n]*?frame=\[\d+,(\d+)\]\[\d+,(\d+)\]')
+    if (-not $m.Success) { return $null }
+    $top = [int]$m.Groups[1].Value; $bottom = [int]$m.Groups[2].Value
+    if ($Bar -eq 'statusBars') { return $bottom }
+    return [math]::Max(0, $bottom - $top)
+}
+
+# Pure: the density in dpi from `wm density` text (the override wins over the physical one); 0 when there is none.
+function Get-DensityDpi([string]$Text) {
+    $override = [regex]::Match($Text, 'Override density:\s*(\d+)')
+    if ($override.Success) { return [int]$override.Groups[1].Value }
+    $physical = [regex]::Match($Text, 'Physical density:\s*(\d+)')
+    if ($physical.Success) { return [int]$physical.Groups[1].Value }
+    return 0
+}
+
+# The status bar and navigation bar heights of the emulator in px: an explicit value wins, else the dump, else 24 dp at the density (nav 0). A navigation bar taller than 160 px is not a bar (gesture handle insets are read as one) and counts as 0.
+function Get-DeviceBars([int]$StatusOverride, [int]$NavOverride, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $dump = [string](& $AdbCall @('shell', 'dumpsys', 'window'))
+    $status = $StatusOverride
+    if ($status -lt 0) { $status = Get-InsetBarPx $dump 'statusBars' }
+    if ($null -eq $status) { $status = [int][math]::Round(24 * (Get-DensityDpi ([string](& $AdbCall @('shell', 'wm', 'density')))) / 160) }
+    $nav = $NavOverride
+    if ($nav -lt 0) { $nav = Get-InsetBarPx $dump 'navigationBars' }
+    if ($null -eq $nav -or $nav -gt 160) { $nav = 0 }
+    return @{ StatusPx = [int]$status; NavPx = [int]$nav }
+}
+
+# The raw shots must be exactly the size the emulator was set to: a shot of another size (the override did not take) would fail the frame later, so it fails here, naming the file. Returns the problem texts.
+function Get-RawShotSizeProblems([string[]]$Names, [string]$Dir, [int[]]$Size) {
+    $problems = @()
+    foreach ($name in $Names) {
+        $path = Join-Path $Dir "$name.png"
+        $found = if (Test-Path $path) { Get-PngSize $path } else { $null }
+        if (-not $found -or $found.Width -ne $Size[0] -or $found.Height -ne $Size[1]) { $problems += "$name.png is $(if ($found) { "$($found.Width) x $($found.Height)" } else { 'not a PNG' }), the emulator was set to $($Size[0]) x $($Size[1])" }
+    }
+    return @($problems)
 }
 
 # A snapshot or cold boot (run-flows.ps1 does one on a cache miss or a failed preflight) drops the demo mode, so it is applied only once the emulator is up: starts it first when it is not.
@@ -206,7 +263,9 @@ if ($names.Count -eq 0) { Write-Host "STORE SHOTS: $flowName takes no store-$App
 $instance = Get-StoreShotInstance $requestedSerial $Form
 $outDir = Join-Path $OutRoot "$App\$Form"
 if ($DryRun) {
-    Write-Host "STORE SHOTS dry run: flow $flowName on emulator instance $instance, writes $($names.Count) PNG(s) to $outDir"
+    $dryBars = @{ StatusPx = $(if ($StatusBarPx -ge 0) { $StatusBarPx } else { (Get-FrameSpec $Form).StatusPx }); NavPx = $(if ($NavBarPx -ge 0) { $NavBarPx } else { 0 }) }
+    $dryWm = Get-StoreShotWmSize $Form $dryBars.StatusPx $dryBars.NavPx
+    Write-Host "STORE SHOTS dry run: flow $flowName on emulator instance $instance, display set to $($dryWm[0]) x $($dryWm[1]) (bars as given or the form default, read from the device on a real run), writes $($names.Count) PNG(s) to $outDir"
     $names | ForEach-Object { Write-Host "  $_.png" }
     exit 0
 }
@@ -236,14 +295,31 @@ if ($demoFailures.Count -gt 0) {
     exit 1
 }
 Write-Host "STORE SHOTS: status bar demo mode requested ($script:DemoClock, full battery and signal, no notification icons) on $script:Serial; the first screenshot's status bar is the proof."
+# Slice 433: the emulator runs at the size the store frame needs (the status bar is cropped off by store-captions.ps1, demo mode or not).
+$bars = Get-DeviceBars $StatusBarPx $NavBarPx
+$wmSize = Get-StoreShotWmSize $Form $bars.StatusPx $bars.NavPx
+Write-Host "STORE SHOTS: status bar $($bars.StatusPx) px, navigation bar $($bars.NavPx) px; the display is set to $($wmSize[0]) x $($wmSize[1]) (wm size) for the $Form frame."
+$wmFailures = @(Invoke-StatusBarDemo (Get-WmSizeEnterCommands $wmSize))
+if ($wmFailures.Count -gt 0) {
+    $null = Invoke-StatusBarDemo (Get-WmSizeExitCommands)
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)
+    Write-Host "STORE SHOTS: wm size failed on $script:Serial, no flow was run: $($wmFailures -join '; ')"
+    exit 1
+}
 try {
     & (Join-Path $PSScriptRoot 'run-flows.ps1') -App $App -Instance $instance -Flow $flowName -NoBuild
     $runExit = $LASTEXITCODE
 } finally {
+    $null = Invoke-StatusBarDemo (Get-WmSizeExitCommands)          # the emulator is never left at the store size
     $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)   # a flow that failed or was stopped must not leave the emulator in demo mode
 }
 if ($runExit -ne 0) { Write-Host "STORE SHOTS: run-flows.ps1 exited $runExit; no shot was copied."; exit $(if ($runExit -eq 6) { 6 } else { 1 }) }
 $missing = @(Copy-StoreShots $names $roots $outDir)
 if ($missing.Count -gt 0) { Write-Host "STORE SHOTS: missing $($missing -join ', ') (searched $($roots -join ', '))."; exit 1 }
-Write-Host "STORE SHOTS: $($names.Count) PNG(s) written to $outDir"
+$sizeProblems = @(Get-RawShotSizeProblems $names $outDir $wmSize)
+if ($sizeProblems.Count -gt 0) { Write-Host "STORE SHOTS: $($sizeProblems -join '; '). The display size did not take: the frame would fail. Nothing was framed."; exit 1 }
+# Shots of an earlier set (other names, e.g. the five-shot set of Slice 291) would have no caption line: they leave the folder.
+Get-ChildItem $outDir -Filter 'store-*.png' -File | Where-Object { $names -notcontains $_.BaseName } | Remove-Item -Force
+@{ statusBarPx = $bars.StatusPx; navBarPx = $bars.NavPx; wmSize = "$($wmSize[0])x$($wmSize[1])" } | ConvertTo-Json | Set-Content (Join-Path $outDir 'frame-info.json') -Encoding UTF8
+Write-Host "STORE SHOTS: $($names.Count) PNG(s) written to $outDir (frame-info.json holds the bar heights store-captions.ps1 cuts off)"
 exit 0

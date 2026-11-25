@@ -4,6 +4,7 @@
 #>
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'store-screenshots.ps1')
+. (Join-Path $PSScriptRoot 'store-captions.ps1')   # Get-CaptionKey, for the caption data checks below (store-screenshots.ps1 shares only store-frames.ps1 with it)
 $script:failed = 0
 function Assert-Equal([string]$Name, $Expected, $Actual) {
     if ($Expected -ne $Actual) { Write-Host "FAIL $Name : expected '$Expected', got '$Actual'"; $script:failed++ }
@@ -25,13 +26,45 @@ $flow = "- takeScreenshot: store-dino-phone-1-reading`n- tapOn: x`n- takeScreens
 Assert-Equal 'shot names of the phone form, in order' 'store-dino-phone-1-reading,store-dino-phone-2-record' ((Get-StoreShotNames $flow 'dino' 'phone') -join ',')
 Assert-Equal 'no shot for another app' 0 @(Get-StoreShotNames $flow 'rtst' 'phone').Count
 
-# Slice 291 item 8: the real Dino flows take the five shots of the skill's table, in order (reading, record, language, grown-ups, shelf; no store shot).
-$dinoShots = 'reading', 'record', 'language', 'grownups', 'shelf'
+# Slice 433: the real Dino flows take the note's six shots in order (picture, voices, record, language, shelf, ages), with the Japanese language shot as an extra file after the Spanish one; every shot but the extra has a caption line.
+$dinoShots = '1-picture', '2-voices', '3-record', '4-language', '4-language-ja', '5-shelf', '6-ages'
+$captionData = Get-Content (Join-Path $PSScriptRoot '..\..\docs\store-listings\screenshots\captions.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 foreach ($form in 'phone', 'tablet') {
     $flowFile = Join-Path $PSScriptRoot "..\..\.maestro\dino\needs-file\store-shot-$form.yaml"
-    $expected = (1..5 | ForEach-Object { "store-dino-$form-$_-$($dinoShots[$_ - 1])" }) -join ','
-    Assert-Equal "the Dino $form flow's five shots" $expected ((Get-StoreShotNames (Get-Content -Raw $flowFile) 'dino' $form) -join ',')
+    $expected = ($dinoShots | ForEach-Object { "store-dino-$form-$_" }) -join ','
+    Assert-Equal "the Dino $form flow's shots" $expected ((Get-StoreShotNames (Get-Content -Raw $flowFile) 'dino' $form) -join ',')
 }
+foreach ($shot in $dinoShots) { Assert-Equal "shot $shot has an English caption line" $true ($null -ne $captionData.dino.(Get-CaptionKey $shot).en) }
+
+# Slice 433 item 1: the emulator is sized to the store frame; the bars come from the device, else the form default.
+Assert-Equal 'Play phone: 1080 wide, the area under the 288 px band plus the status bar' '1080 1695' ((Get-StoreShotWmSize 'phone' 63 0) -join ' ')
+Assert-Equal 'Play phone with a navigation bar' '1080 1759' ((Get-StoreShotWmSize 'phone' 63 64) -join ' ')
+Assert-Equal 'Play tablet: no band, 1440 wide' '1440 2623' ((Get-StoreShotWmSize 'tablet' 63 0) -join ' ')
+Assert-Equal 'wm size is set to WxH' 'shell wm size 1080x1695' ((Get-WmSizeEnterCommands @(1080, 1695))[0] -join ' ')
+Assert-Equal 'wm size is reset after the run' 'shell wm size reset' ((Get-WmSizeExitCommands)[0] -join ' ')
+$wmSent = New-Object System.Collections.Generic.List[string]
+$null = Invoke-StatusBarDemo (Get-WmSizeExitCommands) { param($a) $wmSent.Add(($a -join ' ')) }
+Assert-Equal 'the one wm size command is sent whole' 'shell wm size reset' ($wmSent -join '|')
+$dump = "InsetsSource id=1 type=statusBars frame=[0,0][1080,63] visible=true`r`nInsetsSource id=2 type=navigationBars frame=[0,2337][1080,2400] visible=true`r`n"
+Assert-Equal 'status bar height from the window dump' 63 (Get-InsetBarPx $dump 'statusBars')
+Assert-Equal 'navigation bar height from the window dump' 63 (Get-InsetBarPx $dump 'navigationBars')
+Assert-Equal 'no such bar in the dump' $null (Get-InsetBarPx 'nothing here' 'statusBars')
+Assert-Equal 'the override density wins' 420 (Get-DensityDpi "Physical density: 440`r`nOverride density: 420")
+Assert-Equal 'the physical density' 440 (Get-DensityDpi 'Physical density: 440')
+$adb = { param($a) if ($a -contains 'density') { 'Physical density: 420' } else { 'nothing about bars' } }
+Assert-Equal 'no bar in the dump: 24 dp at 420 dpi' '63 0' ((Get-DeviceBars -1 -1 $adb | ForEach-Object { "$($_.StatusPx) $($_.NavPx)" }))
+$adbDump = { param($a) if ($a -contains 'dumpsys') { $dump } else { '' } }
+Assert-Equal 'both bars read from the dump' '63 63' ((Get-DeviceBars -1 -1 $adbDump | ForEach-Object { "$($_.StatusPx) $($_.NavPx)" }))
+Assert-Equal 'an explicit value wins over the dump' '80 0' ((Get-DeviceBars 80 0 $adbDump | ForEach-Object { "$($_.StatusPx) $($_.NavPx)" }))
+$sizeDir = Join-Path ([IO.Path]::GetTempPath()) "store-size-test-$PID"
+try {
+    $null = New-Item -ItemType Directory -Force $sizeDir
+    $png = [byte[]](0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A, 0,0,0,13, 0x49,0x48,0x44,0x52, 0,0,4,56, 0,0,6,159, 8,2,0,0,0)   # 1080 x 1695
+    [IO.File]::WriteAllBytes((Join-Path $sizeDir 'store-dino-phone-1-picture.png'), $png)
+    Assert-Equal 'a raw shot at the set size has no problem' 0 @(Get-RawShotSizeProblems @('store-dino-phone-1-picture') $sizeDir @(1080, 1695)).Count
+    Assert-Equal 'a raw shot of another size is named' 1 @(Get-RawShotSizeProblems @('store-dino-phone-1-picture') $sizeDir @(1080, 2400)).Count
+    Assert-Equal 'a missing raw shot is named' 1 @(Get-RawShotSizeProblems @('store-dino-phone-2-voices') $sizeDir @(1080, 1695)).Count
+} finally { Remove-Item $sizeDir -Recurse -Force -ErrorAction SilentlyContinue }
 
 # Slice 393 item 14: status bar demo mode (fixed clock, full battery, no notification icons), on before the flow and off after it.
 $enter = @(Get-StatusBarDemoEnterCommands '1000')

@@ -1,0 +1,36 @@
+# Slice 433 item 6 (review pass 2, findings 3 and 6): the SETUP of preview clip 4-shelf, "shelf" (the note's timeline, 13-16 s: swiping along the shelf, 12 books). NOT recorded (see store-shot-ios-videoprep-1a-reading.yaml). English; no price shows on the kids' shelf. Ends on the shelf at rest.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clip setup, 4 shelf, Dino Reader, iOS
+---
+- launchApp:
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# A previous clip may have left the app in Spanish or Japanese (launchApp's lang only sets the first-run language), so English is set by the hook first, then the full shelf is asserted by its last book. No clearState: it would wipe the full shelf.
+- openLink: "dino-test://set-language?lang=en&voice=0"
+- extendedWaitUntil:
+    visible: ".*Open in.*"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible: ".*(My stories|Stories|Books|For grown-ups).*"
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000

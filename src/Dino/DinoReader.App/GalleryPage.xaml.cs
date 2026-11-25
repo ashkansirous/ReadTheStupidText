@@ -1431,6 +1431,24 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	/// <summary>Debug-only hook (<c>enter-grown-up tab=</c>, Slice 325 A6): picks a tab of the corner the way a tap on it does.</summary>
 	internal Task DebugSelectTabAsync(CornerTab tab) => SelectTabAsync(tab);
 
+	/// <summary>Slice 433 item 6, the scroll-shelf hook: scrolls the books list down by <paramref name="fraction"/> of its visible height (up when negative) over <paramref name="milliseconds"/>, animated. Empty when it did, else why not.</summary>
+	internal async Task<string> DebugScrollShelfAsync(double fraction, int milliseconds)
+	{
+		if (!StoryList.IsVisible || _reorder.IsVisible || StoryList.Height <= 0 || Navigation.NavigationStack.Count > 1)
+		{
+			return "shelf not showing";
+		}
+
+		int pixels = (int)Math.Round(fraction * StoryList.Height);
+		if (pixels == 0)
+		{
+			return "scroll distance rounds to 0 pixels";
+		}
+
+		bool moved = await Testing.ShelfScroller.ScrollAsync(StoryList, pixels, milliseconds);
+		return moved ? string.Empty : "no native list";
+	}
+
 	/// <summary>Debug-only hook for the shelf-reorder flow: opens the mode if it is closed, then moves the book at 1-based position <paramref name="from"/> before the one at <paramref name="to"/>, as a drop does.</summary>
 	internal string DebugReorderMove(int from, int to)
 	{
