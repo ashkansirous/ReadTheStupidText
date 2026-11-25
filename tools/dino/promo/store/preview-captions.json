@@ -1,0 +1,135 @@
+{
+  "_comment": "Slice 433 item 10: the App Store preview captions in each listing language (user, 2026-11-25: 'why the caption on video is not updated per language? it is all in english'). cap1-cap5 are the five segment captions, cap6 the end frame's subscription line, endSub the line under 'Dino' (the listing title after 'Dino: ', docs/store-listings/dino/<lang>.md). English is the accepted 2026-11-25 text, unchanged. cap1, cap2, cap4 and cap5 reuse the screenshot captions (docs/store-listings/screenshots/captions.json keys 1-picture, 2-voices, 4-language, 5-shelf), whose meaning matches (except zh cap1: the screenshot line adds 'bedtime stories', so the video says 有声绘本故事, review pass 2); cap3 ('Record Grandma as the wolf') and cap6 are new machine drafts in parents' words, using the app's own word for subscription (Settings_Subscription in AppResources.<lang>.resx); the native read is owed in docs/plan/unverified.md. appleLocales maps each App Store locale to its language.",
+  "appleLocales": {
+    "en-US": "en", "de-DE": "de", "es-ES": "es", "es-MX": "es", "fr-FR": "fr", "pt-BR": "pt", "pt-PT": "pt", "nl-NL": "nl",
+    "da": "da", "sv": "sv", "no": "nb", "fi": "fi", "ru": "ru", "ja": "ja", "zh-Hans": "zh", "ar-SA": "ar"
+  },
+  "lines": {
+    "en": {
+      "cap1": "Stories read aloud",
+      "cap2": "A voice for every character",
+      "cap3": "Record Grandma as the wolf",
+      "cap4": "Stories in 15 languages",
+      "cap5": "New books on the shelf",
+      "cap6": "Some books need a subscription",
+      "endSub": "Kids Books & Stories"
+    },
+    "de": {
+      "cap1": "Bilderbücher zum Vorlesen",
+      "cap2": "Jede Figur hat ihre eigene Stimme",
+      "cap3": "Oma als Wolf aufnehmen",
+      "cap4": "Geschichten in 15 Sprachen",
+      "cap5": "Neue Bücher im Regal",
+      "cap6": "Manche Bücher brauchen ein Abo",
+      "endSub": "Kinderbuch & Geschichten"
+    },
+    "es": {
+      "cap1": "Libros ilustrados, leídos en voz alta",
+      "cap2": "Una voz distinta para cada personaje",
+      "cap3": "Graba a la abuela en el papel del lobo",
+      "cap4": "Cuentos en 15 idiomas",
+      "cap5": "Libros nuevos en la estantería",
+      "cap6": "Algunos libros necesitan suscripción",
+      "endSub": "Libros Infantiles"
+    },
+    "fr": {
+      "cap1": "Livres illustrés lus à voix haute",
+      "cap2": "Une voix différente pour chaque personnage",
+      "cap3": "Enregistrez Mamie dans le rôle du loup",
+      "cap4": "Histoires en 15 langues",
+      "cap5": "De nouveaux livres sur l'étagère",
+      "cap6": "Certains livres demandent un abonnement",
+      "endSub": "Histoires pour Enfants"
+    },
+    "pt": {
+      "cap1": "Livros ilustrados lidos em voz alta",
+      "cap2": "Uma voz diferente para cada personagem",
+      "cap3": "Grave a voz da avó para o lobo",
+      "cap4": "Histórias em 15 idiomas",
+      "cap5": "Livros novos na estante",
+      "cap6": "Alguns livros precisam de assinatura",
+      "endSub": "Livros e Histórias"
+    },
+    "nl": {
+      "cap1": "Prentenboeken, voorgelezen",
+      "cap2": "Elk personage heeft zijn eigen stem",
+      "cap3": "Neem oma op als de wolf",
+      "cap4": "Verhalen in 15 talen",
+      "cap5": "Nieuwe boeken op de plank",
+      "cap6": "Sommige boeken vragen een abonnement",
+      "endSub": "Kinderboeken & Verhalen"
+    },
+    "da": {
+      "cap1": "Billedbøger, læst højt",
+      "cap2": "En egen stemme til hver figur",
+      "cap3": "Optag bedstemor som ulven",
+      "cap4": "Historier på 15 sprog",
+      "cap5": "Nye bøger på hylden",
+      "cap6": "Nogle bøger kræver abonnement",
+      "endSub": "Børnebøger & Historier"
+    },
+    "sv": {
+      "cap1": "Bilderböcker, upplästa",
+      "cap2": "En egen röst för varje figur",
+      "cap3": "Spela in mormor som vargen",
+      "cap4": "Sagor på 15 språk",
+      "cap5": "Nya böcker på hyllan",
+      "cap6": "Vissa böcker kräver abonnemang",
+      "endSub": "Barnböcker & Sagor"
+    },
+    "nb": {
+      "cap1": "Bildebøker, lest høyt",
+      "cap2": "En egen stemme til hver figur",
+      "cap3": "Spill inn bestemor som ulven",
+      "cap4": "Historier på 15 språk",
+      "cap5": "Nye bøker på hylla",
+      "cap6": "Noen bøker krever abonnement",
+      "endSub": "Barnebøker og historier"
+    },
+    "fi": {
+      "cap1": "Kuvakirjat luettuna ääneen",
+      "cap2": "Jokaisella hahmolla oma äänensä",
+      "cap3": "Äänitä mummo suden rooliin",
+      "cap4": "Tarinoita 15 kielellä",
+      "cap5": "Uusia kirjoja hyllyssä",
+      "cap6": "Osa kirjoista vaatii tilauksen",
+      "endSub": "Lastenkirjat ja sadut"
+    },
+    "ru": {
+      "cap1": "Книги с картинками, вслух",
+      "cap2": "У каждого героя свой голос",
+      "cap3": "Запишите бабушку в роли волка",
+      "cap4": "Сказки на 15 языках",
+      "cap5": "Новые книги на полке",
+      "cap6": "Для некоторых книг нужна подписка",
+      "endSub": "Детские книги и сказки"
+    },
+    "ja": {
+      "cap1": "声に出して読む絵本",
+      "cap2": "キャラクターごとに違う声",
+      "cap3": "おばあちゃんの声でオオカミを録音",
+      "cap4": "15の言語で読めるお話",
+      "cap5": "本棚に新しい絵本",
+      "cap6": "一部の本は定期購入が必要です",
+      "endSub": "子供の絵本と読み聞かせ"
+    },
+    "zh": {
+      "cap1": "有声绘本故事",
+      "cap2": "每个角色都有自己的声音",
+      "cap3": "录下奶奶当大灰狼",
+      "cap4": "15种语言的故事",
+      "cap5": "书架上有新书",
+      "cap6": "部分图书需要订阅",
+      "endSub": "儿童绘本与故事"
+    },
+    "ar": {
+      "cap1": "كتب مصورة تُقرأ بصوت عالٍ",
+      "cap2": "صوت مختلف لكل شخصية",
+      "cap3": "سجّل صوت الجدة في دور الذئب",
+      "cap4": "قصص بـ 15 لغة",
+      "cap5": "كتب جديدة على الرف",
+      "cap6": "بعض الكتب تحتاج إلى اشتراك",
+      "endSub": "كتب الأطفال والحكايات"
+    }
+  }
+}
