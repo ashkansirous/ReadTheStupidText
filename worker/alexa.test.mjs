@@ -1092,7 +1092,7 @@ test("slice 457 favourites: play them in a row, next and previous walk them, the
   assert.equal(parseToken(enqueue.audioItem.stream.token).book, BOOK_A);
   assert.deepEqual(Object.keys(queued.response), ["directives"]);
   const last = (await call({ type: "AudioPlayer.PlaybackNearlyFinished", token: enqueue.audioItem.stream.token, offsetInMilliseconds: 290_000 }, { env: shelf({ STATS: db }), envelope: asUser() })).json;
-  assert.match(playsOf(last)[0].audioItem.stream.url, /what-next-with-favourites\.m4a$/, "after the last favourite comes the clip (item 7)");
+  assert.match(playsOf(last)[0].audioItem.stream.url, /\/what-next\.m4a$/, "after the last favourite comes the plain clip (item 7, decision 17)");
   const resumed = (await call(intent("AMAZON.ResumeIntent"), { env: shelf({ STATS: db }), envelope: { ...asUser(), context: { AudioPlayer: { token: firstToken, offsetInMilliseconds: 5000 } } } })).json;
   assert.equal(parseToken(playsOf(resumed)[0].audioItem.stream.token).favourites, true, "resuming a favourites book keeps it in the favourites row");
 });
@@ -1117,11 +1117,11 @@ test("slice 457 item 7: an account with favourites gets the clip that offers a f
   const db = fakeDb();
   db.rows.push({ user_id: USER, book: BOOK_C });
   const withFavourites = (await call(nearlyFinished(`v1|${BOOK_A}|en|3|0`), { env: shelf({ STATS: db }), envelope: asUser() })).json;
-  assert.match(playsOf(withFavourites)[0].audioItem.stream.url, /\/what-next-with-favourites\.m4a$/);
+  assert.match(playsOf(withFavourites)[0].audioItem.stream.url, /\/what-next\.m4a$/, "decision 17: the clip is the plain one even with favourites");
   const unplayable = fakeDb();
-  unplayable.rows.push({ user_id: USER, book: BOOK_B }); // saved, but its track does not play: no "shuffle" into silence
+  unplayable.rows.push({ user_id: USER, book: BOOK_B });
   const silent = (await call(nearlyFinished(`v1|${BOOK_A}|en|3|0`), { env: shelf({ STATS: unplayable }), envelope: asUser() })).json;
-  assert.match(playsOf(silent)[0].audioItem.stream.url, /\/what-next\.m4a$/, "review: the clip follows the playable favourites, not the saved ids");
+  assert.match(playsOf(silent)[0].audioItem.stream.url, /\/what-next\.m4a$/);
   const failing = { prepare: () => ({ bind: () => ({ all: async () => { throw new Error("d1"); } }) }) };
   const broken = (await call(nearlyFinished(`v1|${BOOK_A}|en|3|0`), { env: shelf({ STATS: failing }), envelope: asUser() })).json;
   assert.match(playsOf(broken)[0].audioItem.stream.url, /\/what-next\.m4a$/);
@@ -1134,7 +1134,7 @@ test("slice 457 item 7: favourites in a row keep going to the end, then the clip
   const second = playsOf((await call(nearlyFinished(firstToken), { env: shelf({ STATS: db }), envelope: asUser() })).json)[0];
   assert.equal(second.audioItem.stream.url.includes("alexa-clips"), false, "the next favourite, not the clip, while favourites remain");
   const last = playsOf((await call(nearlyFinished(second.audioItem.stream.token), { env: shelf({ STATS: db }), envelope: asUser() })).json)[0];
-  assert.match(last.audioItem.stream.url, /\/what-next-with-favourites\.m4a$/);
+  assert.match(last.audioItem.stream.url, /\/what-next\.m4a$/);
   assert.equal(last.audioItem.stream.expectedPreviousToken, second.audioItem.stream.token);
   assert.equal(parseToken(last.audioItem.stream.token).book, BOOK_A);
   const afterClip = (await call(nearlyFinished(last.audioItem.stream.token), { env: shelf({ STATS: db }), envelope: asUser() })).json;
@@ -1153,17 +1153,16 @@ test("slice 457 item 7: 'start over' during or after the clip replays the book j
   assert.equal(parseToken(playsOf(command.json)[0].audioItem.stream.token).clip, undefined);
 });
 
-test("slice 457 item 7: 'next' from the clip plays a playable book other than the one just played, wrapping round; one book alone has no other", async () => {
-  const fromA = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_A) })).json;
+test("slice 457 item 7: 'next' from the clip plays a random playable book other than the one just played; one book alone replays that book", async () => {
+  const fromA = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0 } })).json;
   assert.equal(parseToken(playsOf(fromA)[0].audioItem.stream.token).book, BOOK_C);
-  const fromC = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_C) })).json;
-  assert.equal(parseToken(playsOf(fromC)[0].audioItem.stream.token).book, BOOK_A, "the last book wraps to the first, never the same book");
+  const fromC = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_C), services: { random: () => 0.99 } })).json;
+  assert.equal(parseToken(playsOf(fromC)[0].audioItem.stream.token).book, BOOK_A, "never the same book");
   const back = (await call(intent("AMAZON.PreviousIntent"), { env: shelf(), envelope: duringClip(BOOK_A) })).json;
   assert.equal(parseToken(playsOf(back)[0].audioItem.stream.token).book, BOOK_C);
   const single = { DOWNLOADS: bucketOf(bookFiles(BOOK_A, metaFor("Goldilocks and the Three Bears"), true)) };
   const alone = (await call(intent("AMAZON.NextIntent"), { env: single, envelope: duringClip(BOOK_A) })).json;
-  assert.equal(playsOf(alone).length, 0);
-  assert.match(speechOf(alone), /last book/);
+  assert.equal(parseToken(playsOf(alone)[0].audioItem.stream.token).book, BOOK_A, "decision 17: with one playable book, that one");
 });
 
 test("slice 457 item 7: 'play a favourite' plays one random favourite (not the one just played), alone, and says so when there are none", async () => {
@@ -1348,16 +1347,50 @@ test("slice 457 decision 12: 'repeat' and 'loop' replay the book just played aft
   }
 });
 
-test("slice 457 decision 12: 'shuffle' plays a random favourite, else a new playable book, never the one just played", async () => {
+test("slice 457 decision 17: 'next' and 'shuffle' in a plain run pick a random playable book, never the one just played", async () => {
+  for (const roll of [0, 0.2, 0.4, 0.6, 0.8, 0.999]) {
+    for (const name of ["AMAZON.NextIntent", "AMAZON.ShuffleOnIntent"]) {
+      const picked = tokenOfPlay((await call(intent(name), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => roll } })).json).book;
+      assert.notEqual(picked, BOOK_A, `${name} at ${roll}`);
+    }
+  }
+  const next = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0.5 } })).json;
+  const shuffle = (await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0.5 } })).json;
+  assert.deepEqual(tokenOfPlay(shuffle), tokenOfPlay(next), "shuffle equals next");
+  assert.match(speechOf((await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf(), envelope: asUser() })).json), /nothing to continue/, "nothing played yet");
+});
+
+test("slice 457 decision 17: a two-book shelf always draws the other book; three books reach both others", async () => {
+  for (const roll of [0, 0.5, 0.999]) {
+    const json = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => roll } })).json;
+    assert.equal(tokenOfPlay(json).book, BOOK_C, `two books at ${roll}`);
+  }
+  const three = { DOWNLOADS: bucketOf([...bookFiles(BOOK_A, metaFor("Goldilocks and the Three Bears"), true), ...bookFiles(BOOK_C, metaFor("The Little Red Hen"), true), ...bookFiles(BOOK_Q, metaFor("The Ugly Duckling"), true)]) };
+  const reached = new Set();
+  for (const roll of [0, 0.4, 0.6, 0.999]) {
+    const json = (await call(intent("AMAZON.NextIntent"), { env: three, envelope: duringClip(BOOK_A), services: { random: () => roll } })).json;
+    reached.add(tokenOfPlay(json).book);
+  }
+  assert.deepEqual([...reached].sort(), [BOOK_C, BOOK_Q].sort(), "every other book can be drawn, never the one just played");
+});
+
+test("slice 457 decision 17: the speaker button's NextCommandIssued is random in a plain run too, and plays the book plain", async () => {
+  for (const [roll, expected] of [[0, BOOK_C], [0.999, BOOK_C]]) {
+    const json = (await call({ type: "PlaybackController.NextCommandIssued" }, { env: shelf(), envelope: playing(BOOK_A, 1000), services: { random: () => roll } })).json;
+    assert.equal(tokenOfPlay(json).book, expected, `at ${roll}`);
+    assert.equal(tokenOfPlay(json).favourites, undefined);
+    assert.equal(json.response.outputSpeech, undefined);
+  }
+});
+
+test("slice 457 decision 17: 'shuffle' inside a favourites run does what 'next' does there (the next favourite)", async () => {
   const db = fakeDb();
   db.rows.push({ user_id: USER, book: BOOK_C }, { user_id: USER, book: BOOK_A });
-  const favourite = await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf({ STATS: db }), envelope: duringClip(BOOK_C), services: { random: () => 0 } });
-  assert.equal(tokenOfPlay(favourite.json).book, BOOK_A, "a favourite other than the book just played");
-  for (const env of [shelf({ STATS: fakeDb() }), shelf()]) {
-    const fresh = (await call(intent("AMAZON.ShuffleOnIntent"), { env, envelope: duringClip(BOOK_A) })).json;
-    assert.equal(tokenOfPlay(fresh).book, BOOK_C, "no favourites: a new playable book");
-    assert.match(speechOf((await call(intent("AMAZON.ShuffleOnIntent"), { env, envelope: asUser() })).json), /nothing to continue/, "nothing played yet");
-  }
+  const envelope = { ...asUser(), context: { AudioPlayer: { token: `v1|${BOOK_C}|en|3|0|f`, offsetInMilliseconds: 9 } } };
+  const next = (await call(intent("AMAZON.NextIntent"), { env: shelf({ STATS: db }), envelope })).json;
+  const shuffle = (await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf({ STATS: db }), envelope })).json;
+  assert.equal(tokenOfPlay(next).book, BOOK_A);
+  assert.equal(tokenOfPlay(shuffle).book, BOOK_A);
 });
 
 test("slice 457 decision 12: 'loop off' and 'shuffle off' say nothing and leave a playing story playing", async () => {

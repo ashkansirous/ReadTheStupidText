@@ -183,7 +183,11 @@
         },
         {
           "name": "AMAZON.NextIntent",
-          "samples": []
+          "samples": [
+            "next story",
+            "another story",
+            "a new story"
+          ]
         },
         {
           "name": "AMAZON.PreviousIntent",
