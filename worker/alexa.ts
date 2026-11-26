@@ -94,6 +94,7 @@ export const IntentName = {
   Cancel: "AMAZON.CancelIntent",
   NavigateHome: "AMAZON.NavigateHomeIntent",
   Next: "AMAZON.NextIntent",
+  NextStory: "NextStoryIntent", // custom: a built-in intent takes no samples, so "next story" needs its own (Slice 457 item 11)
   Previous: "AMAZON.PreviousIntent",
   StartOver: "AMAZON.StartOverIntent",
   Repeat: "AMAZON.RepeatIntent", // Slice 457 decision 12: the one word a small child says for "again"
@@ -534,16 +535,28 @@ function otherBook(queue: readonly Track[], played: Track, direction: number): T
   return direction > 0 ? others[behind % others.length] : others[(behind - 1 + others.length) % others.length];
 }
 
+/** One uniformly random book from a non-empty list (the roll is clamped, so a roll of 1 still lands on the last book). */
+function pickRandom(ctx: Context, choices: readonly Track[]): Track {
+  return choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)]!;
+}
+
 /** Decision 17: "next" in a plain run is a random playable book other than the one just played (that one only when it is the only one). */
 function randomOtherBook(ctx: Context, played: Track): Track {
   const others = ctx.tracks.filter((track) => track !== played);
-  const choices = others.length > 0 ? others : ctx.tracks; // never empty: the playing book was found in ctx.tracks
-  return choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)]!;
+  return pickRandom(ctx, others.length > 0 ? others : ctx.tracks); // never empty: the playing book was found in ctx.tracks
+}
+
+/** "Next" or "shuffle" with nothing playing (a session that just started): a random playable book, not the one the launch offered (when another exists). */
+function randomBookOrNothing(ctx: Context): Reply {
+  if (ctx.tracks.length === 0) return nothingPlaying();
+  const offered = objectAt(ctx.envelope, "session", "attributes", OFFERED_ATTRIBUTE);
+  const others = ctx.tracks.filter((track) => track.storyId !== offered);
+  return startBook(pickRandom(ctx, others.length > 0 ? others : ctx.tracks), 0, true, false);
 }
 
 async function step(ctx: Context, direction: number): Promise<Reply> {
   const playing = currentPlayback(ctx);
-  if (playing === null) return nothingPlaying();
+  if (playing === null) return direction > 0 ? randomBookOrNothing(ctx) : nothingPlaying();
   const { queue, favourites } = await queueOf(ctx, playing);
   if (direction > 0 && !favourites) {
     return startBook(randomOtherBook(ctx, playing.track), 0, true, false);
@@ -736,8 +749,7 @@ async function randomFavouriteFrom(ctx: Context, saved: readonly Track[]): Promi
   const justPlayed = currentPlayback(ctx)?.track;
   const others = saved.filter((track) => track !== justPlayed);
   const choices = others.length > 0 ? others : saved;
-  const pick = choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)];
-  if (pick !== undefined) return startBook(pick, 0, true);
+  if (choices.length > 0) return startBook(pickRandom(ctx, choices), 0, true);
   const none = (await hasFavourites(ctx)) ? Speech.NoFavouritePlays : Speech.NoFavourites;
   return { speech: none, directives: [], end: true, outcome: "favourites_none" };
 }
@@ -787,6 +799,7 @@ const INTENT_HANDLERS: Readonly<Record<string, Handler>> = {
   [IntentName.Cancel]: stop,
   [IntentName.NavigateHome]: stop,
   [IntentName.Next]: (ctx) => step(ctx, 1),
+  [IntentName.NextStory]: (ctx) => step(ctx, 1),
   [IntentName.Previous]: (ctx) => step(ctx, -1),
   [IntentName.StartOver]: startOver,
   [IntentName.Repeat]: startOver, // decision 12: during a book it restarts it; during or after the end-of-story clip it replays the book just played
@@ -807,7 +820,7 @@ function logOutcome(intent: string, outcome: string | undefined): void {
 function bookToOffer(ctx: Context): Track | undefined {
   const short = ctx.tracks.filter((track) => track.title.split(/\s+/).length <= MAX_OFFER_TITLE_WORDS);
   const choices = short.length > 0 ? short : ctx.tracks;
-  return choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)];
+  return choices.length === 0 ? undefined : pickRandom(ctx, choices);
 }
 
 /** Decision 14: one short question with a random playable book, nothing else; its id goes into the session for "yes". */

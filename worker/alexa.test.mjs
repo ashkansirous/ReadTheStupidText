@@ -1357,7 +1357,59 @@ test("slice 457 decision 17: 'next' and 'shuffle' in a plain run pick a random p
   const next = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0.5 } })).json;
   const shuffle = (await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0.5 } })).json;
   assert.deepEqual(tokenOfPlay(shuffle), tokenOfPlay(next), "shuffle equals next");
-  assert.match(speechOf((await call(intent("AMAZON.ShuffleOnIntent"), { env: shelf(), envelope: asUser() })).json), /nothing to continue/, "nothing played yet");
+  assert.match(speechOf((await call(intent("AMAZON.PreviousIntent"), { env: shelf(), envelope: asUser() })).json), /nothing to continue/, "previous with nothing played yet");
+});
+
+test("slice 457 item 11: 'next', 'next story' and 'shuffle' with nothing playing play a random book; NextStoryIntent equals next", async () => {
+  for (const name of ["AMAZON.NextIntent", "NextStoryIntent", "AMAZON.ShuffleOnIntent"]) {
+    const json = (await call(intent(name), { env: shelf(), envelope: asUser(), services: { random: () => 0.5 } })).json;
+    assert.equal(playsOf(json).length, 1, name);
+    assert.doesNotMatch(speechOf(json), /nothing to continue/, name);
+  }
+  const next = (await call(intent("AMAZON.NextIntent"), { env: shelf(), envelope: asUser(), services: { random: () => 0.5 } })).json;
+  const story = (await call(intent("NextStoryIntent"), { env: shelf(), envelope: asUser(), services: { random: () => 0.5 } })).json;
+  assert.deepEqual(tokenOfPlay(story), tokenOfPlay(next));
+  const during = (await call(intent("NextStoryIntent"), { env: shelf(), envelope: duringClip(BOOK_A), services: { random: () => 0.5 } })).json;
+  assert.notEqual(tokenOfPlay(during).book, BOOK_A, "after a book it is another one");
+});
+
+test("slice 457 item 11: with nothing playing, next picks any playable book across rolls, ends the session with REPLACE_ALL, and skips the offered book", async () => {
+  const three = { DOWNLOADS: bucketOf([...bookFiles(BOOK_A, metaFor("Goldilocks and the Three Bears"), true), ...bookFiles(BOOK_B, metaOf("No Track Book", { audio: { en: { version: 3, bytes: 5 } } }), false), ...bookFiles(BOOK_C, metaFor("The Little Red Hen"), true), ...bookFiles(BOOK_P, metaFor("The Lion and the Mouse", "paid"), true), ...bookFiles(BOOK_Q, metaFor("The Ugly Duckling"), true)]) };
+  const reached = new Set();
+  for (const name of ["AMAZON.NextIntent", "NextStoryIntent", "AMAZON.ShuffleOnIntent"]) {
+    for (const roll of [0, 0.5, 0.999]) {
+      const json = (await call(intent(name), { env: three, envelope: asUser(), services: { random: () => roll } })).json;
+      assert.equal(json.response.shouldEndSession, true, `${name} ${roll}`);
+      assert.equal(playsOf(json)[0].playBehavior, "REPLACE_ALL", `${name} ${roll}`);
+      reached.add(tokenOfPlay(json).book);
+    }
+  }
+  assert.deepEqual([...reached].sort(), [BOOK_A, BOOK_C, BOOK_Q].sort(), "every playable book, never the paid or the trackless one");
+  for (const name of ["AMAZON.NextIntent", "NextStoryIntent", "AMAZON.ShuffleOnIntent"]) {
+    for (const roll of [0, 0.5, 0.999]) {
+      const offered = { session: { attributes: { offered: BOOK_A } } };
+      const json = (await call(intent(name), { env: shelf(), envelope: offered, services: { random: () => roll } })).json;
+      assert.equal(tokenOfPlay(json).book, BOOK_C, `${name} ${roll}: the offered book is not drawn`);
+    }
+  }
+  const only = { DOWNLOADS: bucketOf(bookFiles(BOOK_A, metaFor("Goldilocks and the Three Bears"), true)) };
+  const json = (await call(intent("AMAZON.NextIntent"), { env: only, envelope: { session: { attributes: { offered: BOOK_A } } }, services: { random: () => 0.5 } })).json;
+  assert.equal(tokenOfPlay(json).book, BOOK_A, "a lone book is played even when it was the one offered");
+  const empty = (await call(intent("AMAZON.NextIntent"), { env: { DOWNLOADS: bucketOf([]) }, envelope: asUser(), services: { random: () => 0.5 } })).json;
+  assert.match(speechOf(empty), /nothing to continue/, "empty shelf");
+});
+
+test("slice 457 item 11: no built-in AMAZON intent other than Yes and No has samples, and NextStoryIntent holds the next-story words", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const locale of ["en-GB", "en-US"]) {
+    const model = JSON.parse(readFileSync(new URL(`../alexa/skill-package/interactionModels/custom/${locale}.json`, import.meta.url), "utf8")).interactionModel.languageModel;
+    const withSamples = model.intents.filter((item) => item.name.startsWith("AMAZON.") && (item.samples ?? []).length > 0).map((item) => item.name).sort();
+    assert.deepEqual(withSamples, ["AMAZON.NoIntent", "AMAZON.YesIntent"], locale);
+    const nextStory = model.intents.find((item) => item.name === "NextStoryIntent");
+    assert.deepEqual(nextStory.samples, ["next story", "another story", "a new story"], locale);
+    const all = model.intents.flatMap((item) => (item.samples ?? []).map((sample) => `${sample}`.toLowerCase()));
+    for (const sample of nextStory.samples) assert.equal(all.filter((other) => other === sample).length, 1, `${locale} ${sample}`);
+  }
 });
 
 test("slice 457 decision 17: a two-book shelf always draws the other book; three books reach both others", async () => {

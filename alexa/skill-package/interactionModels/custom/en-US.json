@@ -54,6 +54,15 @@
           ]
         },
         {
+          "name": "NextStoryIntent",
+          "slots": [],
+          "samples": [
+            "next story",
+            "another story",
+            "a new story"
+          ]
+        },
+        {
           "name": "AMAZON.YesIntent",
           "samples": [
             "yes",
@@ -183,11 +192,7 @@
         },
         {
           "name": "AMAZON.NextIntent",
-          "samples": [
-            "next story",
-            "another story",
-            "a new story"
-          ]
+          "samples": []
         },
         {
           "name": "AMAZON.PreviousIntent",
