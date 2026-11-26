@@ -116,6 +116,7 @@ export const Speech = {
   Ambiguous: "More than one book matches.",
   YouCanHear: "You can listen to",
   WithSubscription: "These come with the Dino subscription in the Dino app:",
+  MoreWithSubscription: "with the Dino subscription in the Dino app.", // "1 more comes ..." / "2 more come ..." / "2 books come ..." (the prompt already says 'more books')
   SubscriptionBook: "comes with the Dino subscription in the Dino app.",
   AllBooks: "That's all the books.",
   SayName: "Say a book's name, or say 'more books'.",
@@ -437,20 +438,29 @@ function pageOffset(ctx: Context): number {
   return isWhole(offset, MAX_LIST_OFFSET) ? offset : 0;
 }
 
+/** "1 more comes with the Dino subscription ...", "2 more come ...", and "2 books come ..." when no free book was named. */
+function hiddenPaidSpeech(count: number, afterFree: boolean): string {
+  if (afterFree) return `${count} more ${count === 1 ? "comes" : "come"} ${Speech.MoreWithSubscription}`;
+  return `${count} ${count === 1 ? "book comes" : "books come"} ${Speech.MoreWithSubscription}`;
+}
+
 /**
  * One page (MAX_LISTED_BOOKS) of every book, the ones that play first and then the ones that come with the subscription, then what to say
  * next. The next page's start goes back as a session attribute (Alexa returns it with the next request), so the Worker keeps nothing.
  */
-function listPage(ctx: Context, offset: number, intro: string, prompt: string = Speech.SayName): Reply {
+function listPage(ctx: Context, offset: number, intro: string, prompt: string = Speech.SayName, nameLocked: boolean = false): Reply {
   const books = allBooks(ctx);
   if (books.length === 0) return { speech: Speech.NoBooks, directives: [], end: true, outcome: "no_books" };
   const page = books.slice(offset, offset + MAX_LISTED_BOOKS);
   const free = page.filter((book) => ctx.tracks.includes(book));
-  const paid = page.filter((book) => ctx.locked.includes(book));
+  const paid = nameLocked ? page.filter((book) => ctx.locked.includes(book)) : [];
   const count = offset === 0 ? `I have ${books.length} ${books.length === 1 ? "book" : "books"}.` : "";
   const heard = free.length > 0 ? `${Speech.YouCanHear} ${titlesOf(free)}.` : "";
-  const sold = paid.length > 0 ? `${Speech.WithSubscription} ${titlesOf(paid)}.` : "";
-  const next = offset + page.length;
+  // The launch and "what books do you have" only count the paid books; "more books" continues at the first one and names them.
+  const next = nameLocked ? offset + page.length : offset + free.length;
+  // Counted only when every book after the named ones is a paid one; free books beyond the page are reached by "more books" instead.
+  const hidden = nameLocked || next < ctx.tracks.length ? 0 : books.length - next;
+  const sold = paid.length > 0 ? `${Speech.WithSubscription} ${titlesOf(paid)}.` : hidden > 0 ? hiddenPaidSpeech(hidden, free.length > 0) : "";
   const end = next >= books.length ? Speech.AllBooks : "";
   const speech = [intro, count, heard, sold, end, prompt].filter((part) => part !== "").join(" ");
   return { speech, reprompt: prompt, directives: [], end: false, outcome: `${LIST_PAGE_OUTCOME}:${offset}`, session: { [LIST_OFFSET_ATTRIBUTE]: next } };
@@ -607,7 +617,7 @@ function listBooks(ctx: Context): Reply {
 }
 
 function moreBooks(ctx: Context): Reply {
-  return listPage(ctx, pageOffset(ctx), "");
+  return listPage(ctx, pageOffset(ctx), "", Speech.SayName, true);
 }
 
 async function help(ctx: Context): Promise<Reply> {

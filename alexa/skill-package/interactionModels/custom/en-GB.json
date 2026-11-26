@@ -203,7 +203,13 @@
               "name": {
                 "value": "The Three Billy Goats Gruff",
                 "synonyms": [
-                  "three billy goats gruff"
+                  "three billy goats gruff",
+                  "gruff",
+                  "billy goats gruff",
+                  "billy goat gruff",
+                  "three billy goats",
+                  "billy goats",
+                  "three goats"
                 ]
               }
             },
@@ -216,7 +222,9 @@
                   "elves",
                   "shoemaker",
                   "the elves",
-                  "the shoemaker"
+                  "the shoemaker",
+                  "elves and shoemaker",
+                  "elf and the shoemaker"
                 ]
               }
             },
@@ -227,7 +235,9 @@
                 "synonyms": [
                   "freddy",
                   "slipper",
-                  "the slipper"
+                  "the slipper",
+                  "freddie",
+                  "freddie and the slipper"
                 ]
               }
             },
@@ -236,7 +246,10 @@
               "name": {
                 "value": "The Gingerbread Man",
                 "synonyms": [
-                  "gingerbread man"
+                  "gingerbread man",
+                  "gingerbread",
+                  "ginger bread man",
+                  "ginger bread"
                 ]
               }
             },
@@ -247,7 +260,16 @@
                 "synonyms": [
                   "goldilocks",
                   "three bears",
-                  "the three bears"
+                  "the three bears",
+                  "bears",
+                  "goldy",
+                  "goldie",
+                  "goldylock",
+                  "goldylocks",
+                  "goldilock",
+                  "goldie locks",
+                  "goldy locks",
+                  "goldilocks and the 3 bears"
                 ]
               }
             },
@@ -276,9 +298,7 @@
                 "synonyms": [
                   "lion and the mouse",
                   "lion",
-                  "mouse",
-                  "the lion",
-                  "the mouse"
+                  "the lion"
                 ]
               }
             },
@@ -287,7 +307,8 @@
               "name": {
                 "value": "The Little Red Hen",
                 "synonyms": [
-                  "little red hen"
+                  "little red hen",
+                  "hen"
                 ]
               }
             },
@@ -295,14 +316,22 @@
               "id": "9b77e4f2c83247fcbb16eef03d94ffd3",
               "name": {
                 "value": "Love from Seagull Island",
-                "synonyms": []
+                "synonyms": [
+                  "seagull",
+                  "seagull island",
+                  "love from seagull"
+                ]
               }
             },
             {
               "id": "1f0f0cb207b244368b7aef26028f4ac5",
               "name": {
                 "value": "Little Red Riding Hood",
-                "synonyms": []
+                "synonyms": [
+                  "hood",
+                  "red riding hood",
+                  "riding hood"
+                ]
               }
             },
             {
@@ -310,7 +339,11 @@
               "name": {
                 "value": "The Three Little Pigs",
                 "synonyms": [
-                  "three little pigs"
+                  "three little pigs",
+                  "pigs",
+                  "three pigs",
+                  "little pigs",
+                  "the 3 little pigs"
                 ]
               }
             },
@@ -323,7 +356,8 @@
                   "tortoise",
                   "hare",
                   "the tortoise",
-                  "the hare"
+                  "the hare",
+                  "tortoise and hare"
                 ]
               }
             },
@@ -336,7 +370,9 @@
                   "town mouse",
                   "country mouse",
                   "the town mouse",
-                  "the country mouse"
+                  "the country mouse",
+                  "town and country mouse",
+                  "town mouse and country mouse"
                 ]
               }
             },
@@ -345,7 +381,9 @@
               "name": {
                 "value": "The Ugly Duckling",
                 "synonyms": [
-                  "ugly duckling"
+                  "ugly duckling",
+                  "duckling",
+                  "ugly duck"
                 ]
               }
             },
@@ -353,7 +391,20 @@
               "id": "a02c0731b7ac475a896e9184f3575e7b",
               "name": {
                 "value": "X Marks the Treasure",
-                "synonyms": []
+                "synonyms": [
+                  "treasure",
+                  "x marks",
+                  "marks the treasure",
+                  "treasure map"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "mouse",
+                "synonyms": [
+                  "the mouse"
+                ]
               }
             }
           ]
