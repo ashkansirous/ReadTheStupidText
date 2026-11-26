@@ -53,7 +53,8 @@ Open slices only. Finished slices (406 rows) are in [slices-done](docs/plan/note
 | 452 | Dino: sound pill device check hook and Part B leftovers | planned | | | [452-dino-sound-pill-device-check-hook.md](docs/plan/slices/452-dino-sound-pill-device-check-hook.md) |
 | 453 | Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" | planned | | | [453-dino-first-books-cancelled-load-copy.md](docs/plan/slices/453-dino-first-books-cancelled-load-copy.md) |
 | 454 | Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps | planned | | | [454-dino-subscription-microsoft-addons-and-app-store-languages.md](docs/plan/slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md) |
-| 455 | Dino: buy, restore and subscription outcome events | planned | | | [455-dino-purchase-outcome-events.md](docs/plan/slices/455-dino-purchase-outcome-events.md) |
+| 455 | Dino: buy, restore and subscription outcome events | planned (extended 2026-11-26: trial/paid/code offer, book id, card shown) | | | [455-dino-purchase-outcome-events.md](docs/plan/slices/455-dino-purchase-outcome-events.md) |
+| 458 | Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications | planned | | | [458-dino-store-server-notifications.md](docs/plan/slices/458-dino-store-server-notifications.md) |
 
 ### Shared
 
@@ -119,6 +120,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 - **Not yet tried on a device:** 536 checks across 196 slices (Read The Stupid Text 29, Dino Reader 333, Shared 174), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Read 2026-11-25 (Play API, App Store Connect API, by the main thread): both 1.136.0 reviews are done; the hold is over.** Dino Play production is 1.136.0 and the internal track 1.136.5; the App Store has 1.136.0 READY_FOR_DISTRIBUTION and no newer version. 1.136.5 carries 1.136.3's cover-tap fix (Slice 420; tags dino-v1.136.3 to .5 exist). Promoting 1.136.5 to Play production is the owner's go (the user's 2026-11-20 rule: no new store version while one is in review, unless they say so): [Play Console, Dino production track](https://play.google.com/console/u/0/developers/5892509739539100062/app/4974567301865424326/tracks/production). Update 2026-11-25 (App Store Connect API): App Store version 1.136.5 is WAITING_FOR_REVIEW (draft created through the API, new screenshots and previews pushed and read back, Slice 433); 1.136.0 and 1.131.1 are READY_FOR_SALE. Windows is not held ("for windows, we should always release", user, 2026-11-20).
+
+- **Play sales reports unreadable (read 2026-11-26, Play API):** the `auto-deploy-to-google-play@read-the-stupid-text` service account lists `gs://pubsite_prod_5892509739539100062` but its `sales/`, `financial-stats/` and `earnings/` are empty, so Dino's Play trial and book-buy counts can't be read. Owner: tick "View financial data, orders, and cancellation survey responses" for that account in [Play Console, Users and permissions](https://play.google.com/console/u/0/developers/5892509739539100062/users-and-permissions); then rerun the Play count with `analytics-query`. Lasting fix: Slices 455 and 458.
 
 **Needs you (checked 2026-11-19). Nothing else in this file waits on you.**
 
