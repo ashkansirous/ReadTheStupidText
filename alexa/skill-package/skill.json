@@ -53,7 +53,7 @@
       "custom": {
         "endpoint": {
           "uri": "https://dinoreader.sirous.uk/alexa",
-          "sslCertificateType": "Trusted"
+          "sslCertificateType": "Wildcard"
         },
         "interfaces": [{ "type": "AUDIO_PLAYER" }]
       }
