@@ -10,6 +10,10 @@ Purchasing, kid skill) plus the Alexa lines of F and G. Checked: `worker/alexa.t
 skill is not created yet (Slice 282 owner step). **Starts after:** Slice 282's skill exists and its id is set. The Alexa
 price and period are still the owner's choice, asked when D starts (`user-says` 2026-11-25 found no Alexa price answer).
 
+**Update 2026-11-26:** the skill now exists (`ALEXA_SKILL_ID` set, PR #1372), so the start condition is met. **Alexa price,
+owner 2026-11-26 ("agree" to the suggestion): the same as the app, £1.99 a month or £14.99 a year, no free trial** (Decision 7
+below). Free and locked books on Alexa are worded by Slice 457 until D is built.
+
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/alexa.ts`, `worker/alexa*.test.mjs`,
 `worker/speaker-link.ts` (new), `worker/speaker-link.test.mjs` (new), `worker/index.ts`, `worker/schema/stats.sql` (the
 link table), `alexa/skill-package/skill.json`,
@@ -48,6 +52,8 @@ User, 2026-11-18 (this session, Decision 175):
    message.
 6. **Alexa has the same limit: one Amazon account per subscription** (user, 2026-11-18, answering O2: "yes"), and by
    the same rule a new Alexa link replaces the old one.
+7. **The Alexa subscription costs the same as the app: £1.99 a month or £14.99 a year, no free trial** (owner,
+   2026-11-26, "agree" to: one price everywhere so parents never see two prices; Amazon's cut accepted).
 
 User, 2026-11-18: "you can start doing the research now. dont do the implementation yet". Item A runs; B-G wait for the
 user's go after the research is read.
