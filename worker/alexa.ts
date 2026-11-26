@@ -31,7 +31,6 @@ const FAVOURITES_FLAG = "f"; // an optional sixth token part: this book is playi
 const CLIP_FLAG = "c"; // the other sixth token part: the "what next?" clip queued after this book (Slice 457 item 7); the token still names the book just played
 export const CLIP_FOLDER = "/dino/alexa-clips"; // static assets (site/dino/alexa-clips/), the same path on the Dino host and on workers.dev
 const CLIP_FILE_PLAIN = "what-next.m4a";
-const CLIP_FILE_WITH_FAVOURITES = "what-next-with-favourites.m4a";
 const CLIP_TITLE = "Dino Books";
 export const OFFERED_ATTRIBUTE = "offered"; // session attribute: the id of the book the launch question offered, which "yes" plays (decision 14)
 const MAX_OFFER_TITLE_WORDS = 7; // the launch question is 8 words plus the title: at most 15 words, about 5 seconds spoken (decision 14)
@@ -100,7 +99,7 @@ export const IntentName = {
   Repeat: "AMAZON.RepeatIntent", // Slice 457 decision 12: the one word a small child says for "again"
   LoopOn: "AMAZON.LoopOnIntent",
   LoopOff: "AMAZON.LoopOffIntent",
-  ShuffleOn: "AMAZON.ShuffleOnIntent", // "Alexa, shuffle": a random favourite
+  ShuffleOn: "AMAZON.ShuffleOnIntent", // "Alexa, shuffle": the same as next (decision 17)
   ShuffleOff: "AMAZON.ShuffleOffIntent",
   Help: "AMAZON.HelpIntent",
   Fallback: "AMAZON.FallbackIntent",
@@ -535,12 +534,22 @@ function otherBook(queue: readonly Track[], played: Track, direction: number): T
   return direction > 0 ? others[behind % others.length] : others[(behind - 1 + others.length) % others.length];
 }
 
+/** Decision 17: "next" in a plain run is a random playable book other than the one just played (that one only when it is the only one). */
+function randomOtherBook(ctx: Context, played: Track): Track {
+  const others = ctx.tracks.filter((track) => track !== played);
+  const choices = others.length > 0 ? others : ctx.tracks; // never empty: the playing book was found in ctx.tracks
+  return choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)]!;
+}
+
 async function step(ctx: Context, direction: number): Promise<Reply> {
   const playing = currentPlayback(ctx);
   if (playing === null) return nothingPlaying();
   const { queue, favourites } = await queueOf(ctx, playing);
+  if (direction > 0 && !favourites) {
+    return startBook(randomOtherBook(ctx, playing.track), 0, true, false);
+  }
   // The whole list wraps (a child's "next" never dead-ends, as after the clip); a favourites run keeps its ends.
-  const neighbour = playing.clip || !favourites ? otherBook(queue, playing.track, direction) : queue[queue.indexOf(playing.track) + direction];
+  const neighbour = !favourites ? otherBook(queue, playing.track, direction) : queue[queue.indexOf(playing.track) + direction];
   // Past either end the speech is the whole answer and the session ends: no reprompt exists to keep it open, and a speaker button
   // (PlaybackController) drops speech anyway.
   if (neighbour === undefined) return { speech: direction > 0 ? Speech.NoNext : Speech.NoPrevious, directives: [], end: true, outcome: "no_neighbour" };
@@ -678,10 +687,6 @@ async function hasFavourites(ctx: Context): Promise<boolean> {
   return ids !== null && ids.length > 0;
 }
 
-async function hasPlayableFavourite(ctx: Context): Promise<boolean> {
-  return ((await favouriteTracks(ctx)) ?? []).length > 0;
-}
-
 /** The book to save: the one named, else the one playing or last played (Alexa sends its token with every request). */
 function bookToSave(ctx: Context): Track[] {
   const named = namedBooks(ctx, TITLE_SLOT);
@@ -722,17 +727,6 @@ async function playRandomFavourite(ctx: Context): Promise<Reply> {
   const saved = await favouriteTracks(ctx);
   if (saved === null) return favouritesOff();
   return randomFavouriteFrom(ctx, saved);
-}
-
-/** "Alexa, shuffle" (decision 12): a random favourite, or, with no favourite that plays, a new playable book (never the one just played). */
-async function shuffleOn(ctx: Context): Promise<Reply> {
-  const saved = await favouriteTracks(ctx);
-  if (saved !== null && saved.length > 0) return randomFavouriteFrom(ctx, saved);
-  const playing = currentPlayback(ctx);
-  if (playing === null) return nothingPlaying();
-  const other = otherBook(ctx.tracks, playing.track, 1);
-  if (other === undefined) return { speech: Speech.NoNext, directives: [], end: true, outcome: "no_neighbour" };
-  return startBook(other, 0, true);
 }
 
 /** "Loop off" and "shuffle off" have nothing to turn off: no speech, and a story that was playing goes on. */
@@ -798,7 +792,7 @@ const INTENT_HANDLERS: Readonly<Record<string, Handler>> = {
   [IntentName.Repeat]: startOver, // decision 12: during a book it restarts it; during or after the end-of-story clip it replays the book just played
   [IntentName.LoopOn]: startOver,
   [IntentName.LoopOff]: nothingToTurnOff,
-  [IntentName.ShuffleOn]: shuffleOn,
+  [IntentName.ShuffleOn]: (ctx) => step(ctx, 1), // decision 17: "shuffle" is "next"
   [IntentName.ShuffleOff]: nothingToTurnOff,
   [IntentName.Help]: help,
   [IntentName.Fallback]: fallback,
@@ -863,16 +857,15 @@ async function onCommand(ctx: Context, type: string): Promise<Obj> {
 }
 
 /** The ENQUEUE of the "what next?" clip behind the stream with token `current` (a skill cannot speak after audio ends, so the clip is the question). */
-function clipDirective(ctx: Context, played: PlayToken, current: string, withFavourites: boolean): Directive {
-  const url = `${new URL(ctx.httpRequest.url).origin}${CLIP_FOLDER}/${withFavourites ? CLIP_FILE_WITH_FAVOURITES : CLIP_FILE_PLAIN}`;
+function clipDirective(ctx: Context, played: PlayToken, current: string): Directive {
+  const url = `${new URL(ctx.httpRequest.url).origin}${CLIP_FOLDER}/${CLIP_FILE_PLAIN}`;
   const stream = { url, token: clipTokenOf(played), offsetInMilliseconds: 0, expectedPreviousToken: current };
   return { type: "AudioPlayer.Play", playBehavior: ENQUEUE_BEHAVIOR, audioItem: { stream, metadata: { title: CLIP_TITLE } } };
 }
 
 async function enqueueClip(ctx: Context, played: PlayToken, current: string): Promise<Obj> {
-  const withFavourites = await hasPlayableFavourite(ctx); // saved but locked or gone books must not make the child say "shuffle" into silence
-  logOutcome(RequestType.PlaybackNearlyFinished, `clip:${played.book}:${withFavourites ? "favourites" : "plain"}`);
-  return toDirectivesOnly({ directives: [clipDirective(ctx, played, current, withFavourites)], end: true });
+  logOutcome(RequestType.PlaybackNearlyFinished, `clip:${played.book}:plain`); // decision 17: always the plain clip, "shuffle" is never offered
+  return toDirectivesOnly({ directives: [clipDirective(ctx, played, current)], end: true });
 }
 
 /**
