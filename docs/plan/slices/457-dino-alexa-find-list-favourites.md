@@ -51,7 +51,7 @@ Owner, 2026-11-26 (RefineScope answers):
 
 #### From review
 
-Review files read: `reviews/s457-high.md` (9 findings: 7 fixed, #6 and #7 skipped below), `reviews/s457-high2.md` (6: 4 fixed, #3 and #5 skipped below), `reviews/s457-medium.md` (8: 7 fixed, #6 skipped below), `reviews/s457-check.md` (check pass, 7 nits, none applied: launch double D1 read, favourites hint vs playable ones, next wrapping, shuffle dead end with one playable book, Help wording, empty synonyms, and the PlayFavouriteIntent collision that needs the post-deploy simulation).
+Review files read: `reviews/s457-high.md` (9 findings, 7 fixed), `reviews/s457-high2.md` (6 findings, 4 fixed), `reviews/s457-medium.md` (8 findings, 7 fixed); the rest are listed one by one below. `reviews/s457-check.md` is the check pass after the last fixes (7 nits, all left as they are: launch double D1 read, favourites hint vs playable ones, next wrapping, shuffle dead end with one playable book, Help wording, empty synonyms, and the PlayFavouriteIntent collision that needs the post-deploy simulation).
 
 - Skipped #6 (`reviews/s457-medium.md`): "alexa/skill-package/interactionModels/custom/en-US.json (and en-GB), nit." (the samples of PlayFavouriteIntent may collide with ReadBookIntent's carrier word "play {book}" on the AMAZON.SearchQuery slot) - can only be shown by `ask smapi simulate-skill` against the deployed model, which is item 6 (after deploy); no code change now.
 
