@@ -138,6 +138,19 @@
   device&rsquo;s IP address; this project&rsquo;s own server keeps only the short request log described next. When a store
   listing or an app update is opened, the app store (Google Play, the App Store or the Microsoft Store) handles that under its own privacy policy.</p>
 
+  <h2 id="alexa-favourites">On Alexa: favourites</h2>
+  <p>The Dino Bedtime Stories skill on Amazon Alexa is made for children, has no account linking and asks for no personal
+  information, and this project&rsquo;s server stores no name, household, device or Amazon account identifier for it, and no
+  recording or transcript of what was said. The one exception is the favourites list, and only when you ask for it: if you say
+  &ldquo;add this to my favourites&rdquo; (or ask the skill to save a story), the server saves two things in the project&rsquo;s own
+  database on Cloudflare (D1): the skill-user identifier Alexa gives this skill for your Amazon account (an opaque code, not your
+  name, e-mail or address, and different for every skill) and the id of the book. Nothing else is saved with them: no name, device,
+  household, time or anything that was said. It is used only to play, list and remove your favourites; removing a book deletes its
+  entry, and a list holds at most 50 books. If you disable the skill and enable it again, Amazon gives it a new identifier, so the
+  earlier list can no longer be reached. The skill&rsquo;s short request-log lines hold only which request it was and what the result
+  was (for example a book&rsquo;s id, a page of the list or a favourite saved), never what was said and never the identifier.
+  What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
+
   <h2 id="server-request-log">Server request log</h2>
   <p>This project&rsquo;s own server (dinoreader.sirous.uk) runs on Cloudflare Workers, and Cloudflare, which acts as the
   project&rsquo;s processor, keeps a short technical

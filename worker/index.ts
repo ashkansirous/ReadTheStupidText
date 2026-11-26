@@ -121,7 +121,9 @@ function serveAlexa(request: Request, url: URL, env: Env & EventsEnv & AlexaEnv 
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   const defer = (work: Promise<unknown>) => ctx.waitUntil(work);
   const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer, tee: ninjalogTee(env, defer) };
-  return handleAlexa(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
+  // Slice 457: paid books are locked on Alexa only while the Slice 346 paid-books switch is on.
+  const paidBooksEnabled = configCheck(env, APP_CONFIG_KEY, "paidBooks", (config) => config.paidBooks.enabled);
+  return handleAlexa(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, {}, { paidBooksEnabled });
 }
 
 // Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
