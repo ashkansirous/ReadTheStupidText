@@ -8,6 +8,7 @@
 // Kept free of enums and parameter properties so node's type stripping can run it in tests.
 
 import { AddResult, addFavourite, alexaUserId, listFavourites, removeFavourite } from "./alexa-favourites.ts";
+import { markSubscriptionTold, shouldTellSubscription, ToldState } from "./alexa-subscription-told.ts";
 import { SIGNATURE_HEADER, readCapped, verifyAlexaRequest } from "./alexa-verify.ts";
 import type { AlexaEnvelope, VerifyOptions } from "./alexa-verify.ts";
 import { STORY_ID_PATTERN } from "./download-keys.mjs";
@@ -31,8 +32,9 @@ const CLIP_FLAG = "c"; // the other sixth token part: the "what next?" clip queu
 export const CLIP_FOLDER = "/dino/alexa-clips"; // static assets (site/dino/alexa-clips/), the same path on the Dino host and on workers.dev
 const CLIP_FILE_PLAIN = "what-next.m4a";
 const CLIP_FILE_WITH_FAVOURITES = "what-next-with-favourites.m4a";
-const CLIP_TITLE = "Dino Bedtime Stories";
-const MAX_LIST_OFFSET = 10_000;
+const CLIP_TITLE = "Dino Books";
+export const OFFERED_ATTRIBUTE = "offered"; // session attribute: the id of the book the launch question offered, which "yes" plays (decision 14)
+const MAX_OFFER_TITLE_WORDS = 7; // the launch question is 8 words plus the title: at most 15 words, about 5 seconds spoken (decision 14)
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
 const MIN_FUZZY_LENGTH = 4; // words shorter than this must match exactly; a first-word prefix needs at least this many letters
 const LONG_WORD_LENGTH = 8; // 4-7 letters allow one slip, 8 or more allow two
@@ -51,13 +53,11 @@ const RESPONSE_VERSION = "1.0";
 const PLAY_BEHAVIOR = "REPLACE_ALL";
 const ENQUEUE_BEHAVIOR = "ENQUEUE";
 const MIN_WORD_MATCH = 0.75;
-export const LIST_OFFSET_ATTRIBUTE = "listOffset"; // session attribute: where "more books" continues
 export const PENDING_ATTRIBUTE = "pending"; // session attribute: the favourites action a "which book?" question belongs to
 export const PendingAction = { Save: "save", Remove: "remove" } as const;
 const LAUNCH_INTENT = "Launch"; // the log name of a LaunchRequest
 const UNKNOWN_INTENT = "unknown";
 const DEFAULT_OUTCOME = "ok";
-const LIST_PAGE_OUTCOME = "list_page";
 const RESUMABLE_ACTIVITIES: ReadonlySet<string> = new Set(["PLAYING", "BUFFER_UNDERRUN"]); // AudioPlayer activities a favourites answer carries on from; a paused story stays paused (speech only)
 
 /** The request types, intent names and slot this skill reads (skill-package/ has the same names). */
@@ -79,6 +79,9 @@ export const RequestType = {
 export const IntentName = {
   ReadBook: "ReadBookIntent",
   BookTitle: "BookTitleIntent",
+  Search: "SearchIntent", // decision 15: "search", "find", "find a book" ...
+  Yes: "AMAZON.YesIntent", // plays the book the launch question offered
+  No: "AMAZON.NoIntent", // goes to search
   ListBooks: "ListBooksIntent",
   MoreBooks: "MoreBooksIntent",
   AddFavourite: "AddFavouriteIntent",
@@ -108,26 +111,24 @@ export const TITLE_SLOT = "title";
 
 /** What the skill says (the backend speaks to the user here; there is no other UI). Titles are inserted escaped. */
 export const Speech = {
-  Welcome: "Welcome to Dino Bedtime Stories.",
+  OfferLead: "Do you want to hear", // decision 14: "<OfferLead> <title>? <OfferSearch>"
+  OfferSearch: "Or say: search.",
+  SaySearch: "Say: search.",
+  SaySearchOrName: "Say a book's name, or say: search.", // Help, and the reprompt after a launch or a miss (decision 16)
+  HelpWhilePlaying: "Or say: Alexa, repeat. Or: Alexa, next.",
+  WhichOne: "Which one?",
+  WhichStory: "Which story? Say a name, or a word like dragon.", // decision 15, an account with the subscription
+  MoreBooksLead: "There", // "There are 12 more books with the subscription." / "There is 1 more book with the subscription."
+  MoreBooksTail: "with the subscription.",
+  YouHave: "You have",
   Choose: "Which book would you like?",
   CanRead: "I can read",
   NoBooks: "There are no books to read yet. Please come back soon.",
-  NotFound: "I could not find that book.",
+  NotFound: "I don't know that one. Say: search.",
   Ambiguous: "More than one book matches.",
-  YouCanHear: "You can listen to",
-  WithSubscription: "These come with the Dino subscription in the Dino app:",
-  MoreWithSubscription: "with the Dino subscription in the Dino app.", // "1 more comes ..." / "2 more come ..." / "2 books come ..." (the prompt already says 'more books')
-  SubscriptionBook: "comes with the Dino subscription in the Dino app.",
-  AllBooks: "That's all the books.",
-  SayName: "Say a book's name, or say 'more books'.",
-  SayNameOrFavourites: "Say a book's name, say 'more books', or say 'play my favourites'.",
-  AfterStory: "After a story, say: Alexa, repeat. Or: Alexa, next.",
-  AfterStoryWithFavourites: "After a story, say: Alexa, repeat. Or: Alexa, next. Or: Alexa, shuffle.",
-  Help: "You can say a book's name, 'what books do you have', 'more books', 'add this to my favourites', 'play my favourites', 'what are my favourites' or 'remove' and a book's name from my favourites. While a story plays, say 'Alexa, ask Dino Bedtime Stories for' and a book's name. Or say 'Alexa, repeat' to hear it again, or 'Alexa, next' for a new story.",
-  HelpShuffle: "Say 'Alexa, shuffle' for a favourite.",
-  HelpAlso: "You can also say pause, resume or previous.",
+  SubscriptionBook: "comes with the subscription.",
   FavouritesOff: "Favourites are not available right now.",
-  NoFavourites: "You have no favourites yet. While a story plays, say 'Alexa, ask Dino Bedtime Stories to save this story'.",
+  NoFavourites: "You have no favourites yet. While a story plays, say 'Alexa, ask Dino Books to save this story'.",
   NoFavouritePlays: "None of your favourites can play right now.",
   YourFavourites: "Your favourites are",
   SaveWhat: "Tell me which book to save, or ask me while a story plays.",
@@ -137,7 +138,6 @@ export const Speech = {
   Removed: "Removed from your favourites:",
   NotInFavourites: "is not in your favourites.",
   FavouriteSubscription: "I can only save books that play right now.",
-  Sorry: "Sorry, I did not catch that.",
   NotAvailable: "That book is not available any more.",
   NothingPlaying: "There is nothing to continue.",
   NoNext: "That was the last book.",
@@ -160,6 +160,10 @@ export interface AlexaServices {
   readonly paidBooksEnabled?: () => Promise<boolean>;
   /** A number in [0, 1) for "play a favourite"; tests pin it. */
   readonly random?: () => number;
+  /** The clock for the once-a-week subscription line, in epoch milliseconds; tests pin it. */
+  readonly now?: () => number;
+  /** Whether the account has the subscription; absent means not (decision 15). Slice 415 replaces it with Alexa In-Skill Purchasing; tests pin it. */
+  readonly subscribed?: () => boolean | Promise<boolean>;
 }
 
 export interface PlayToken {
@@ -203,6 +207,8 @@ interface Context {
   readonly httpRequest: Request;
   readonly db: D1Database | undefined;
   readonly random: () => number;
+  readonly now: () => number;
+  readonly subscribed: () => boolean | Promise<boolean>;
 }
 
 type Obj = Record<string, unknown>;
@@ -433,38 +439,8 @@ const reply = (speech: string, outcome: string, extra: Partial<Reply> = {}): Rep
 
 const allBooks = (ctx: Context): Track[] => [...ctx.tracks, ...ctx.locked];
 
-function pageOffset(ctx: Context): number {
-  const offset = objectAt(ctx.envelope, "session", "attributes", LIST_OFFSET_ATTRIBUTE);
-  return isWhole(offset, MAX_LIST_OFFSET) ? offset : 0;
-}
-
-/** "1 more comes with the Dino subscription ...", "2 more come ...", and "2 books come ..." when no free book was named. */
-function hiddenPaidSpeech(count: number, afterFree: boolean): string {
-  if (afterFree) return `${count} more ${count === 1 ? "comes" : "come"} ${Speech.MoreWithSubscription}`;
-  return `${count} ${count === 1 ? "book comes" : "books come"} ${Speech.MoreWithSubscription}`;
-}
-
-/**
- * One page (MAX_LISTED_BOOKS) of every book, the ones that play first and then the ones that come with the subscription, then what to say
- * next. The next page's start goes back as a session attribute (Alexa returns it with the next request), so the Worker keeps nothing.
- */
-function listPage(ctx: Context, offset: number, intro: string, prompt: string = Speech.SayName, nameLocked: boolean = false): Reply {
-  const books = allBooks(ctx);
-  if (books.length === 0) return { speech: Speech.NoBooks, directives: [], end: true, outcome: "no_books" };
-  const page = books.slice(offset, offset + MAX_LISTED_BOOKS);
-  const free = page.filter((book) => ctx.tracks.includes(book));
-  const paid = nameLocked ? page.filter((book) => ctx.locked.includes(book)) : [];
-  const count = offset === 0 ? `I have ${books.length} ${books.length === 1 ? "book" : "books"}.` : "";
-  const heard = free.length > 0 ? `${Speech.YouCanHear} ${titlesOf(free)}.` : "";
-  // The launch and "what books do you have" only count the paid books; "more books" continues at the first one and names them.
-  const next = nameLocked ? offset + page.length : offset + free.length;
-  // Counted only when every book after the named ones is a paid one; free books beyond the page are reached by "more books" instead.
-  const hidden = nameLocked || next < ctx.tracks.length ? 0 : books.length - next;
-  const sold = paid.length > 0 ? `${Speech.WithSubscription} ${titlesOf(paid)}.` : hidden > 0 ? hiddenPaidSpeech(hidden, free.length > 0) : "";
-  const end = next >= books.length ? Speech.AllBooks : "";
-  const speech = [intro, count, heard, sold, end, prompt].filter((part) => part !== "").join(" ");
-  return { speech, reprompt: prompt, directives: [], end: false, outcome: `${LIST_PAGE_OUTCOME}:${offset}`, session: { [LIST_OFFSET_ATTRIBUTE]: next } };
-}
+/** Nothing is playing to continue (resume, start over, next, shuffle): say so, then the one short way on (decision 16). */
+const nothingPlaying = (): Reply => ({ speech: `${Speech.NothingPlaying} ${Speech.SaySearchOrName}`, reprompt: Speech.SaySearchOrName, directives: [], end: false, outcome: "nothing_playing" });
 
 /** Name the books that match and ask which; `pending` makes the next bare title finish a save or a remove instead of playing the book. */
 function chooseFrom(books: readonly Track[], intro: string, pending?: string): Reply {
@@ -478,10 +454,8 @@ function startBook(track: Track, offsetMs: number, announce: boolean, favourites
 }
 
 /** A paid book was asked for while paid books are gated: say so, and offer the ones that do play. Never a Play directive. */
-function subscriptionBook(ctx: Context, track: Track): Reply {
-  const free = ctx.tracks.slice(0, MAX_LISTED_BOOKS);
-  const offer = free.length > 0 ? ` ${Speech.YouCanHear} ${titlesOf(free)}.` : "";
-  return reply(`${escapeXml(track.title)} ${Speech.SubscriptionBook}${offer} ${Speech.Choose}`, `paid:${track.storyId}`);
+function subscriptionBook(track: Track): Reply {
+  return reply(`${escapeXml(track.title)} ${Speech.SubscriptionBook} ${Speech.SaySearch}`, `paid:${track.storyId}`, { reprompt: Speech.SaySearch });
 }
 
 // ---- what is playing now ----
@@ -530,7 +504,7 @@ const keepingPlaying = (handler: Handler): Handler => async (ctx) => keepPlaying
 
 function resume(ctx: Context): Reply {
   const playing = currentPlayback(ctx);
-  return playing === null ? listPage(ctx, 0, Speech.NothingPlaying) : startBook(playing.track, playing.offsetMs, false, playing.favourites);
+  return playing === null ? nothingPlaying() : startBook(playing.track, playing.offsetMs, false, playing.favourites);
 }
 
 function pause(): Reply {
@@ -543,7 +517,7 @@ function stop(): Reply {
 
 function startOver(ctx: Context): Reply {
   const playing = currentPlayback(ctx);
-  return playing === null ? listPage(ctx, 0, Speech.NothingPlaying) : startBook(playing.track, 0, false, playing.favourites);
+  return playing === null ? nothingPlaying() : startBook(playing.track, 0, false, playing.favourites);
 }
 
 /** The books next and previous walk through: the favourites (in the order they were saved, only those that play) for a favourites token, else the whole playable list. */
@@ -563,7 +537,7 @@ function otherBook(queue: readonly Track[], played: Track, direction: number): T
 
 async function step(ctx: Context, direction: number): Promise<Reply> {
   const playing = currentPlayback(ctx);
-  if (playing === null) return listPage(ctx, 0, Speech.NothingPlaying);
+  if (playing === null) return nothingPlaying();
   const { queue, favourites } = await queueOf(ctx, playing);
   // The whole list wraps (a child's "next" never dead-ends, as after the clip); a favourites run keeps its ends.
   const neighbour = playing.clip || !favourites ? otherBook(queue, playing.track, direction) : queue[queue.indexOf(playing.track) + direction];
@@ -598,37 +572,83 @@ function namedBooks(ctx: Context, slotName: string): Track[] {
 function openBooks(ctx: Context, found: readonly Track[]): Reply {
   if (found.length > 1) return chooseFrom(found, Speech.Ambiguous);
   const book = found[0];
-  if (book === undefined) return { ...listPage(ctx, 0, Speech.NotFound), outcome: "not_found" };
-  return ctx.locked.includes(book) ? subscriptionBook(ctx, book) : startBook(book, 0, true);
+  if (book === undefined) return notFound();
+  return ctx.locked.includes(book) ? subscriptionBook(book) : startBook(book, 0, true);
 }
 
-const readBook = (ctx: Context): Reply => openBooks(ctx, namedBooks(ctx, BOOK_SLOT));
+const IT_WORDS: ReadonlySet<string> = new Set(["it", "that", "that one", "this one"]);
+
+/** "play it" can reach a title slot as the word "it": with a book offered in the session that is a "yes" (decision 14); else the normal lookup. */
+function isItSlot(ctx: Context, slotName: string): boolean {
+  const spoken = objectAt(ctx.envelope, "request", "intent", "slots", slotName, "value");
+  const offered = objectAt(ctx.envelope, "session", "attributes", OFFERED_ATTRIBUTE);
+  return typeof spoken === "string" && IT_WORDS.has(spoken.trim().toLowerCase()) && typeof offered === "string";
+}
+
+async function readBook(ctx: Context): Promise<Reply> {
+  return isItSlot(ctx, BOOK_SLOT) ? yes(ctx) : openBooks(ctx, namedBooks(ctx, BOOK_SLOT));
+}
 
 /** A bare title: it answers a pending "which book?" for a save or a remove, else it opens the book. */
 async function readTitle(ctx: Context): Promise<Reply> {
   const pending = objectAt(ctx.envelope, "session", "attributes", PENDING_ATTRIBUTE);
   if (pending === PendingAction.Save) return keepPlaying(ctx, await addFavouriteBook(ctx));
   if (pending === PendingAction.Remove) return keepPlaying(ctx, await removeFavouriteBook(ctx));
-  return openBooks(ctx, namedBooks(ctx, TITLE_SLOT));
+  return isItSlot(ctx, TITLE_SLOT) ? yes(ctx) : openBooks(ctx, namedBooks(ctx, TITLE_SLOT));
 }
 
-function listBooks(ctx: Context): Reply {
-  return listPage(ctx, 0, "");
+/**
+ * Slice 457 decision 15: whether this account has the subscription. Alexa In-Skill Purchasing answers it once Slice 415 builds it; until
+ * then every account counts as without it. Slice 415 replaces this one function (it may become async there).
+ */
+async function isSubscribed(ctx: Context): Promise<boolean> {
+  return await ctx.subscribed(); // false in production until Slice 415
 }
 
-function moreBooks(ctx: Context): Reply {
-  return listPage(ctx, pageOffset(ctx), "", Speech.SayName, true);
+/** "There are 12 more books with the subscription." (the count of books that are locked), or "" when none are. */
+function moreBooksLine(count: number): string {
+  if (count <= 0) return "";
+  return `${Speech.MoreBooksLead} ${count === 1 ? "is 1 more book" : `are ${count} more books`} ${Speech.MoreBooksTail}`;
 }
 
-async function help(ctx: Context): Promise<Reply> {
-  const playable = await hasPlayableFavourite(ctx); // "shuffle" plays a favourite: only said when one can play
-  const intro = [Speech.Help, ...(playable ? [Speech.HelpShuffle] : []), Speech.HelpAlso].join(" ");
-  return { ...listPage(ctx, 0, intro), outcome: "help" };
+/** The subscription line, said at most once a week per account; the memory is read and written only when the line has something to say. */
+async function subscriptionLine(ctx: Context): Promise<string> {
+  const line = moreBooksLine(ctx.locked.length);
+  if (line === "") return "";
+  const userId = alexaUserId(ctx.envelope);
+  const state = await shouldTellSubscription(ctx.db, userId, ctx.now());
+  if (state === ToldState.Quiet) return "";
+  if (state === ToldState.Tell) await markSubscriptionTold(ctx.db, userId, ctx.now()); // an unreadable memory is not written to
+  return line;
 }
 
-function fallback(ctx: Context): Reply {
-  return { ...listPage(ctx, 0, Speech.Sorry), outcome: "fallback" };
+/** Decision 15: "search" (also "find", "more books", "no" ...): the books that play, preceded once a week by the subscription line; or, with the subscription, a question. */
+async function search(ctx: Context): Promise<Reply> {
+  if (await isSubscribed(ctx)) return reply(Speech.WhichStory, "search:subscribed", { reprompt: Speech.WhichStory });
+  if (ctx.tracks.length === 0) return { speech: Speech.NoBooks, directives: [], end: true, outcome: "no_books" };
+  const shown = ctx.tracks; // every playable book is named, so the count matches the names
+  const told = await subscriptionLine(ctx);
+  const have = `${Speech.YouHave} ${shown.length} ${shown.length === 1 ? "book" : "books"}: ${titlesOf(shown)}. ${Speech.WhichOne}`;
+  return reply([told, have].filter((part) => part !== "").join(" "), told === "" ? "search" : "search:told", { reprompt: Speech.WhichOne });
 }
+
+/** "Yes" plays the book the launch question offered; with none offered (a session that did not start with the question) it is a search. */
+async function yes(ctx: Context): Promise<Reply> {
+  const offered = objectAt(ctx.envelope, "session", "attributes", OFFERED_ATTRIBUTE);
+  const book = typeof offered === "string" ? ctx.tracks.find((track) => track.storyId === offered) : undefined;
+  return book === undefined ? search(ctx) : startBook(book, 0, true);
+}
+
+const notFound = (): Reply => ({ speech: Speech.NotFound, reprompt: Speech.SaySearch, directives: [], end: false, outcome: "not_found" });
+
+/** Decision 16: Help is one line; while a story plays it adds the two words that work without the skill's name. */
+function help(ctx: Context): Reply {
+  const playing = currentPlayback(ctx) !== null;
+  const speech = playing ? `${Speech.SaySearchOrName} ${Speech.HelpWhilePlaying}` : Speech.SaySearchOrName;
+  return { speech, reprompt: Speech.SaySearchOrName, directives: [], end: false, outcome: "help" };
+}
+
+const fallback = (): Reply => ({ ...notFound(), outcome: "fallback" });
 
 // ---- favourites (Slice 457 decision 6) ----
 
@@ -709,7 +729,7 @@ async function shuffleOn(ctx: Context): Promise<Reply> {
   const saved = await favouriteTracks(ctx);
   if (saved !== null && saved.length > 0) return randomFavouriteFrom(ctx, saved);
   const playing = currentPlayback(ctx);
-  if (playing === null) return listPage(ctx, 0, Speech.NothingPlaying);
+  if (playing === null) return nothingPlaying();
   const other = otherBook(ctx.tracks, playing.track, 1);
   if (other === undefined) return { speech: Speech.NoNext, directives: [], end: true, outcome: "no_neighbour" };
   return startBook(other, 0, true);
@@ -743,7 +763,7 @@ async function removeFavouriteBook(ctx: Context): Promise<Reply> {
   const found = namedBooks(ctx, TITLE_SLOT);
   if (found.length > 1) return chooseFrom(found, Speech.Ambiguous, PendingAction.Remove);
   const book = found[0];
-  if (book === undefined) return { ...listPage(ctx, 0, Speech.NotFound), outcome: "not_found" };
+  if (book === undefined) return notFound();
   const removed = await removeFavourite(store.db, store.userId, book.storyId);
   if (removed === null) return favouritesOff();
   const speech = removed ? `${Speech.Removed} ${escapeXml(book.title)}.` : `${escapeXml(book.title)} ${Speech.NotInFavourites}`;
@@ -757,8 +777,11 @@ type Handler = (ctx: Context) => Reply | Promise<Reply>;
 const INTENT_HANDLERS: Readonly<Record<string, Handler>> = {
   [IntentName.ReadBook]: readBook,
   [IntentName.BookTitle]: readTitle,
-  [IntentName.ListBooks]: listBooks,
-  [IntentName.MoreBooks]: moreBooks,
+  [IntentName.Search]: search,
+  [IntentName.Yes]: yes,
+  [IntentName.No]: search,
+  [IntentName.ListBooks]: search, // decision 15: every "what books" wording gets the one search reply
+  [IntentName.MoreBooks]: search,
   [IntentName.AddFavourite]: keepingPlaying(addFavouriteBook),
   [IntentName.PlayFavourites]: playFavourites,
   [IntentName.PlayFavourite]: playRandomFavourite,
@@ -786,20 +809,43 @@ function logOutcome(intent: string, outcome: string | undefined): void {
   console.log(`alexa intent=${intent} outcome=${outcome ?? DEFAULT_OUTCOME}`);
 }
 
-async function onLaunch(ctx: Context): Promise<Obj> {
-  const saved = await hasFavourites(ctx);
-  const hint = (await hasPlayableFavourite(ctx)) ? Speech.AfterStoryWithFavourites : Speech.AfterStory;
-  const prompt = `${saved ? Speech.SayNameOrFavourites : Speech.SayName} ${hint}`;
-  const launched = listPage(ctx, 0, Speech.Welcome, prompt);
+/** A random playable book to offer: one whose title keeps the question within 15 words (any playable book when none does). */
+function bookToOffer(ctx: Context): Track | undefined {
+  const short = ctx.tracks.filter((track) => track.title.split(/\s+/).length <= MAX_OFFER_TITLE_WORDS);
+  const choices = short.length > 0 ? short : ctx.tracks;
+  return choices[Math.min(Math.floor(ctx.random() * choices.length), choices.length - 1)];
+}
+
+/** Decision 14: one short question with a random playable book, nothing else; its id goes into the session for "yes". */
+function launchReply(ctx: Context): Reply {
+  const book = bookToOffer(ctx);
+  if (book === undefined) return { speech: Speech.NoBooks, directives: [], end: true, outcome: "no_books" };
+  const speech = `${Speech.OfferLead} ${escapeXml(book.title)}? ${Speech.OfferSearch}`;
+  return { speech, reprompt: Speech.SaySearchOrName, directives: [], end: false, outcome: `offer:${book.storyId}`, session: { [OFFERED_ATTRIBUTE]: book.storyId } };
+}
+
+function onLaunch(ctx: Context): Obj {
+  const launched = launchReply(ctx);
   logOutcome(LAUNCH_INTENT, launched.outcome);
   return toResponse(launched);
+}
+
+/** Outcomes of a reply that keeps the offer alive: a fallback, help, or a not-found or paid miss. Any other open reply (the search list, favourites prompts) drops it. */
+const OFFER_KEEPING_OUTCOMES: readonly string[] = ["fallback", "help", "not_found"];
+const keepsOffer = (outcome: string | undefined): boolean => outcome !== undefined && (OFFER_KEEPING_OUTCOMES.includes(outcome) || outcome.startsWith("paid:"));
+
+/** A miss, help or fallback carries the offered book forward so a later "yes" still plays it (decision 14); a search list or favourites prompt does not. */
+function withOffered(ctx: Context, answered: Reply): Reply {
+  const offered = objectAt(ctx.envelope, "session", "attributes", OFFERED_ATTRIBUTE);
+  if (answered.end || typeof offered !== "string" || !keepsOffer(answered.outcome) || answered.session?.[OFFERED_ATTRIBUTE] !== undefined) return answered;
+  return { ...answered, session: { ...answered.session, [OFFERED_ATTRIBUTE]: offered } };
 }
 
 async function onIntent(ctx: Context): Promise<Obj> {
   const name = objectAt(ctx.envelope, "request", "intent", "name");
   const known = typeof name === "string" && Object.hasOwn(INTENT_HANDLERS, name);
   const handler = known ? INTENT_HANDLERS[name]! : help;
-  const answered = await handler(ctx);
+  const answered = withOffered(ctx, await handler(ctx));
   logOutcome(known ? name : UNKNOWN_INTENT, answered.outcome);
   return toResponse(answered);
 }
@@ -942,7 +988,7 @@ async function respond(request: Request, envelope: AlexaEnvelope, env: { DOWNLOA
   const type = objectAt(envelope, "request", "type");
   try {
     const { tracks, locked } = await catalogueFor(type, envelope, request, env, pathPrefix, serve, services);
-    return jsonResponse(await answer({ envelope, tracks, locked, usage, httpRequest: request, db: env.STATS, random: services.random ?? Math.random }));
+    return jsonResponse(await answer({ envelope, tracks, locked, usage, httpRequest: request, db: env.STATS, random: services.random ?? Math.random, now: services.now ?? Date.now, subscribed: services.subscribed ?? (() => false) }));
   } catch {
     // no-fallback: the spoken answer is the fallback; a failure is never logged (ids and titles stay out of logs)
     const apology: Reply = { speech: Speech.Unavailable, directives: [], end: true };

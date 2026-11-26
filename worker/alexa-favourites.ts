@@ -22,7 +22,7 @@ export function alexaUserId(envelope: unknown): string | null {
 }
 
 /** One log line for a failed D1 call: the error's name and whether the table is missing, never the account, a book, the SQL or its message. */
-function logD1Error(error: unknown): void {
+export function logD1Error(error: unknown): void {
   const name = error instanceof Error ? error.name : typeof error;
   const message = error instanceof Error ? error.message : "";
   console.warn(`${D1_ERROR_LOG} error=${name} table_missing=${MISSING_TABLE_PATTERN.test(message)}`);

@@ -464,19 +464,21 @@ const playing = (book, offset, version = 3, start = 0) => ({ context: { AudioPla
 const intent = (intentName, slots) => ({ type: "IntentRequest", intent: { name: intentName, slots } });
 
 async function bookOrder() {
-  const { json } = await call({ type: "LaunchRequest" });
+  const { json } = await call(intent("SearchIntent"));
   const speech = json.response.outputSpeech.ssml;
   return speech.indexOf("Goldilocks") < speech.indexOf("Little Red Hen") ? [BOOK_A, BOOK_C] : [BOOK_C, BOOK_A];
 }
 
-test("launch greets and lists the books that have an English track, and keeps listening", async () => {
+test("launch asks about one playable book and keeps listening; search lists the books that have an English track", async () => {
   const { status, json } = await call({ type: "LaunchRequest" });
   assert.equal(status, 200);
   assert.equal(json.response.shouldEndSession, false);
-  assert.match(json.response.outputSpeech.ssml, /Goldilocks &amp; Bears/);
-  assert.match(json.response.outputSpeech.ssml, /Little Red Hen/);
-  assert.doesNotMatch(json.response.outputSpeech.ssml, /No Track Book/);
+  assert.match(json.response.outputSpeech.ssml, /^<speak>Do you want to hear (Goldilocks &amp; Bears|The Little Red Hen)\? Or say: search\.<\/speak>$/);
   assert.ok(json.response.reprompt.outputSpeech.ssml);
+  const searched = (await call(intent("SearchIntent"))).json.response.outputSpeech.ssml;
+  assert.match(searched, /Goldilocks &amp; Bears/);
+  assert.match(searched, /Little Red Hen/);
+  assert.doesNotMatch(searched, /No Track Book/);
 });
 
 test("launch with no books says so and ends the session", async () => {
@@ -497,11 +499,11 @@ test("reading a book plays its track from the start with a token carrying book, 
   assert.equal(json.response.shouldEndSession, true);
 });
 
-test("an unknown book name, or no name, lists the books instead of playing", async () => {
+test("an unknown book name, or no name, says it does not know it and what to say instead of playing", async () => {
   for (const slots of [{ book: { name: "book", value: "dragons" } }, {}]) {
     const { json } = await call(intent("ReadBookIntent", slots));
     assert.equal(json.response.directives, undefined);
-    assert.match(json.response.outputSpeech.ssml, /could not find that book/);
+    assert.match(json.response.outputSpeech.ssml, /I don't know that one\. Say: search\./);
     assert.equal(json.response.shouldEndSession, false);
   }
 });
@@ -565,10 +567,11 @@ test("start over plays the current book from 0", async () => {
   assert.equal(parseToken(json.response.directives[0].audioItem.stream.token).book, BOOK_C);
 });
 
-test("help and an unknown intent list the books", async () => {
-  for (const request of [intent("AMAZON.HelpIntent"), intent("AMAZON.FallbackIntent"), intent("SomethingElseIntent")]) {
-    assert.match((await call(request)).json.response.outputSpeech.ssml, /Goldilocks/);
+test("help and an unknown intent say the one short line; a fallback says it does not know that and what to say", async () => {
+  for (const request of [intent("AMAZON.HelpIntent"), intent("SomethingElseIntent")]) {
+    assert.equal((await call(request)).json.response.outputSpeech.ssml, "<speak>Say a book's name, or say: search.</speak>");
   }
+  assert.match((await call(intent("AMAZON.FallbackIntent"))).json.response.outputSpeech.ssml, /I don't know that one\. Say: search\./);
 });
 
 test("playback commands answer with directives only, never speech", async () => {
@@ -746,8 +749,17 @@ function shelf(extra = {}) {
   };
 }
 
-function fakeDb() {
+/** `told` is the alexa_subscription_told table (user id -> epoch ms); `missingTold` makes every query on it fail like a table that was never created. */
+function fakeDb({ missingTold = false } = {}) {
   const rows = [];
+  const told = new Map();
+  const toldAnswer = (sql, args) => {
+    const fail = () => { throw new Error("D1_ERROR: no such table: alexa_subscription_told"); };
+    return {
+      first: async () => (missingTold ? fail() : told.has(args[0]) ? { told_at: told.get(args[0]) } : null),
+      run: async () => (missingTold ? fail() : (told.set(args[0], args[1]), {})),
+    };
+  };
   const answer = (sql, args) => ({
     all: async () => ({ results: /SELECT/.test(sql) ? rows.filter((row) => row.user_id === args[0]).map((row) => ({ book: row.book })) : [] }),
     run: async () => {
@@ -756,39 +768,148 @@ function fakeDb() {
       return {};
     },
   });
-  return { rows, prepare: (sql) => ({ bind: (...args) => answer(sql, args) }) };
+  return { rows, told, prepare: (sql) => ({ bind: (...args) => (/alexa_subscription_told/.test(sql) ? toldAnswer(sql, args) : answer(sql, args)) }) };
 }
 
 const asUser = (envelope = {}) => ({ session: { application: { applicationId: SKILL }, user: { userId: USER } }, ...envelope });
 const speechOf = (json) => json.response.outputSpeech.ssml;
 const playsOf = (json) => (json.response.directives ?? []).filter((directive) => directive.type === "AudioPlayer.Play");
 
-test("slice 457 launch: counts the books, names the free ones first, says the rest come with the subscription and what to say next", async () => {
-  const { json } = await call({ type: "LaunchRequest" }, { env: shelf() });
-  const speech = speechOf(json);
-  assert.match(speech, /I have 3 books/);
-  assert.match(speech, /You can listen to .*Goldilocks and the Three Bears/);
-  assert.match(speech, /1 more comes with the Dino subscription in the Dino app\./, "slice 457 item 9: a count, not a name");
-  assert.equal((speech.match(/more books/g) ?? []).length, 1, "review 5: 'more books' is said once, in the prompt");
-  assert.ok(speech.indexOf("Little Red Hen") < speech.indexOf("1 more comes"));
-  assert.doesNotMatch(speech, /Lion and the Mouse|These come with/, "the paid book is named only on 'more books'");
-  assert.doesNotMatch(speech, /No Track Book/);
-  assert.match(speech, /Say a book's name, or say 'more books'\./);
-  assert.doesNotMatch(speech, /favourites/, "no favourites yet: not mentioned");
-  assert.match(speech, /Alexa, repeat\. Or: Alexa, next\./, "review: the launch teaches the child's words");
-  assert.doesNotMatch(speech, /shuffle/, "no playable favourite: shuffle is not taught");
-  assert.equal(playsOf(json).length, 0);
+const wordCount = (ssml) => ssml.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length;
+const T0 = Date.UTC(2026, 10, 26, 12);
+const DAY_MS = 24 * 60 * 60 * 1000;
+const at = (ms) => ({ now: () => ms });
+
+test("slice 457 decision 14: the launch is one short question about a random playable book, nothing else, and keeps the offered book", async () => {
+  const seen = new Set();
+  for (const random of [0, 0.4, 0.99]) {
+    const { json } = await call({ type: "LaunchRequest" }, { env: shelf(), services: { random: () => random } });
+    const speech = speechOf(json);
+    assert.match(speech, /^<speak>Do you want to hear (Goldilocks and the Three Bears|The Little Red Hen)\? Or say: search\.<\/speak>$/);
+    assert.ok(wordCount(speech) <= 15, `${wordCount(speech)} words`);
+    assert.doesNotMatch(speech, /Lion and the Mouse|No Track Book|favourites|books|subscription|repeat/, "no paid or trackless book, no counts, no list, no end-of-story words");
+    assert.ok([BOOK_A, BOOK_C].includes(json.sessionAttributes.offered));
+    seen.add(json.sessionAttributes.offered);
+    assert.equal(json.response.shouldEndSession, false);
+    assert.equal(playsOf(json).length, 0);
+  }
+  assert.equal(seen.size, 2, "the book is random each time");
 });
 
-test("slice 457 item 9: 'what books do you have' counts the paid books and 'more books' names them", async () => {
-  const listed = await call(intent("ListBooksIntent"), { env: shelf() });
-  assert.match(speechOf(listed.json), /1 more comes with the Dino subscription in the Dino app\./);
-  assert.doesNotMatch(speechOf(listed.json), /Lion and the Mouse|That's all the books/);
-  const attributes = listed.json.sessionAttributes;
-  assert.equal(attributes.listOffset, 2, "'more books' continues at the first paid book");
-  const more = await call(intent("MoreBooksIntent"), { env: shelf(), envelope: { session: { attributes } } });
-  assert.match(speechOf(more.json), /These come with the Dino subscription in the Dino app: .*Lion and the Mouse/);
-  assert.match(speechOf(more.json), /That's all the books/);
+test("slice 457 decision 14: a title too long for five seconds is not offered while a shorter book exists", async () => {
+  const files = [...bookFiles(BOOK_A, metaFor("The Extraordinarily Long Adventures of the Tiny Brave Little Bear"), true), ...bookFiles(BOOK_C, metaFor("The Little Red Hen"), true)];
+  for (const random of [0, 0.5, 0.99]) {
+    const { json } = await call({ type: "LaunchRequest" }, { env: { DOWNLOADS: bucketOf(files) }, services: { random: () => random } });
+    assert.equal(json.sessionAttributes.offered, BOOK_C);
+    assert.ok(wordCount(speechOf(json)) <= 15);
+  }
+});
+
+test("slice 457 decision 14: 'yes' plays the offered book; with none offered, or one that no longer plays, it is a search", async () => {
+  const { json } = await call(intent("AMAZON.YesIntent"), { env: shelf(), envelope: { session: { attributes: { offered: BOOK_C } } } });
+  assert.deepEqual(tokenOfPlay(json), { book: BOOK_C, language: "en", version: 3, segmentStartMs: 0 });
+  assert.equal(json.response.shouldEndSession, true);
+  for (const envelope of [{}, { session: { attributes: { offered: BOOK_P } } }, { session: { attributes: { offered: 7 } } }]) {
+    const searched = (await call(intent("AMAZON.YesIntent"), { env: shelf(), envelope })).json;
+    assert.equal(playsOf(searched).length, 0);
+    assert.match(speechOf(searched), /You have 2 books: .*Which one\?/);
+  }
+});
+
+test("slice 457 decision 15: 'no', 'search' and every older list wording give the same search reply", async () => {
+  const replies = [];
+  for (const name of ["AMAZON.NoIntent", "SearchIntent", "ListBooksIntent", "MoreBooksIntent"]) {
+    replies.push(speechOf((await call(intent(name), { env: shelf(), services: at(T0) })).json));
+  }
+  assert.equal(new Set(replies).size, 1);
+  assert.equal(replies[0], "<speak>There is 1 more book with the subscription. You have 2 books: Goldilocks and the Three Bears, The Little Red Hen. Which one?</speak>");
+});
+
+test("slice 457 decision 15: the subscription line is said once a week per account, then again after 7 days; the books are always said", async () => {
+  const db = fakeDb();
+  const search = async (now, id = USER) => speechOf((await call(intent("SearchIntent"), { env: shelf({ STATS: db }), envelope: asUser({ session: { application: { applicationId: SKILL }, user: { userId: id } } }), services: at(now) })).json);
+  assert.match(await search(T0), /^<speak>There is 1 more book with the subscription\. You have 2 books: /);
+  assert.equal(db.told.get(USER), T0);
+  const later = await search(T0 + 6 * DAY_MS);
+  assert.doesNotMatch(later, /subscription/);
+  assert.match(later, /^<speak>You have 2 books: Goldilocks and the Three Bears, The Little Red Hen\. Which one\?<\/speak>$/);
+  assert.equal(db.told.get(USER), T0, "a search that did not say the line does not move the date");
+  assert.match(await search(T0 + 7 * DAY_MS), /There is 1 more book with the subscription/);
+  assert.equal(db.told.get(USER), T0 + 7 * DAY_MS);
+  assert.match(await search(T0 + DAY_MS, "amzn1.ask.account.SOMEONEELSE"), /There is 1 more book with the subscription/, "another account is told on its own date");
+  assert.deepEqual(Object.keys(Object.fromEntries(db.told)).sort(), ["amzn1.ask.account.SOMEONEELSE", USER].sort());
+});
+
+test("slice 457 decision 15: while the told table is missing, or there is no database or account, the line is said every time and nothing breaks", async () => {
+  const missing = fakeDb({ missingTold: true });
+  for (const extra of [{ env: shelf({ STATS: missing }), envelope: asUser() }, { env: shelf() }, { env: shelf({ STATS: fakeDb() }) }]) {
+    for (let n = 0; n < 2; n++) {
+      const { status, json } = await call(intent("SearchIntent"), { ...extra, services: at(T0) });
+      assert.equal(status, 200);
+      assert.match(speechOf(json), /There is 1 more book with the subscription\. You have 2 books/);
+    }
+  }
+});
+
+test("slice 457 decision 15: a failing told-table read skips the write, so one warning is logged per search, not two", async () => {
+  const warnings = [];
+  const original = console.warn;
+  console.warn = (...args) => warnings.push(args.join(" "));
+  try {
+    const { status } = await call(intent("SearchIntent"), { env: shelf({ STATS: fakeDb({ missingTold: true }) }), envelope: asUser(), services: at(T0) });
+    assert.equal(status, 200);
+  } finally {
+    console.warn = original;
+  }
+  assert.equal(warnings.length, 1, warnings.join("\n"));
+});
+
+test("slice 457 decision 15: no line when no book is locked; until Slice 415 every account counts as without the subscription", async () => {
+  const none = speechOf((await call(intent("SearchIntent"), { env: manyBooks(3) })).json);
+  assert.equal(none, "<speak>You have 3 books: Story Number 1, Story Number 2, Story Number 3. Which one?</speak>");
+  assert.doesNotMatch(speechOf((await call(intent("SearchIntent"), { env: shelf(), services: at(T0) })).json), /Which story\?/);
+});
+
+test("slice 457 decision 15: counts grammar and every playable book is named, with a count that matches", async () => {
+  assert.match(speechOf((await call(intent("SearchIntent"), { env: mixedBooks(3, 12) })).json), /^<speak>There are 12 more books with the subscription\. You have 3 books: /);
+  const many = speechOf((await call(intent("SearchIntent"), { env: manyBooks(8) })).json);
+  assert.match(many, /You have 8 books: /);
+  assert.equal((many.match(/Story Number/g) ?? []).length, 8);
+});
+
+test("slice 457 decision 14: 'play it' as a book or title slot plays the offered book; with none offered it is the normal not-found", async () => {
+  const offered = { session: { attributes: { offered: BOOK_C } } };
+  for (const [name, slot] of [["ReadBookIntent", "book"], ["BookTitleIntent", "title"], ["ReadBookIntent", "book"]]) {
+    for (const word of ["it", "that", "That One", "this one"]) {
+      const { json } = await call(intent(name, { [slot]: { name: slot, value: word } }), { env: shelf(), envelope: offered });
+      assert.deepEqual(tokenOfPlay(json), { book: BOOK_C, language: "en", version: 3, segmentStartMs: 0 }, `${name} ${word}`);
+    }
+  }
+  const none = (await call(intent("ReadBookIntent", { book: { name: "book", value: "it" } }), { env: shelf() })).json;
+  assert.match(speechOf(none), /I don't know that one\. Say: search\./);
+});
+
+test("slice 457 decision 14: every reply that keeps the session open carries the offered book, so a later 'yes' still plays it", async () => {
+  const offered = { session: { attributes: { offered: BOOK_C } } };
+  for (const name of ["AMAZON.FallbackIntent", "AMAZON.HelpIntent"]) {
+    const { json } = await call(intent(name), { env: shelf(), envelope: offered });
+    assert.equal(json.response.shouldEndSession, false, name);
+    assert.equal(json.sessionAttributes.offered, BOOK_C, name);
+  }
+  const list = (await call(intent("SearchIntent"), { env: shelf(), envelope: offered })).json;
+  assert.equal(list.response.shouldEndSession, false);
+  assert.equal(list.sessionAttributes?.offered, undefined, "the search list drops the offer, so a following 'yes' searches again");
+  const after = (await call(intent("AMAZON.YesIntent"), { env: shelf(), envelope: {} })).json;
+  assert.match(speechOf(after), /You have 2 books/);
+  const miss = (await call(intent("BookTitleIntent", { title: { name: "title", value: "dragons" } }), { env: shelf(), envelope: offered })).json;
+  assert.equal(miss.sessionAttributes.offered, BOOK_C);
+  const paid = (await call(intent("AMAZON.YesIntent"), { env: shelf(), envelope: { session: { attributes: { offered: "nope" } } } })).json;
+  assert.equal(paid.sessionAttributes?.offered, undefined, "a 'yes' with an offer that no longer plays is a search, which drops it");
+});
+
+test("slice 457 decision 15: the subscription check may be async", async () => {
+  const { json } = await call(intent("SearchIntent"), { env: shelf(), services: { subscribed: async () => false, ...at(T0) } });
+  assert.match(speechOf(json), /You have 2 books: /);
 });
 
 function mixedBooks(free, paid) {
@@ -799,32 +920,25 @@ function mixedBooks(free, paid) {
   return { DOWNLOADS: bucketOf(files) };
 }
 
-const launchSpeech = async (env) => speechOf((await call({ type: "LaunchRequest" }, { env })).json);
-
-test("slice 457 review 4: more free books than one page are not counted as paid; the count says only the paid ones left, in right grammar", async () => {
-  const seven = await launchSpeech(mixedBooks(7, 2));
-  assert.doesNotMatch(seven, /come with the Dino subscription/, "2 free books are still unlisted: 'more books' reaches them first");
-  assert.match(await launchSpeech(mixedBooks(5, 2)), /2 more come with the Dino subscription in the Dino app\./);
-  assert.match(await launchSpeech(mixedBooks(2, 1)), /1 more comes with the Dino subscription/);
-  const none = await launchSpeech(mixedBooks(0, 2));
-  assert.match(none, /2 books come with the Dino subscription in the Dino app\./, "no free book named: not 'more'");
-  assert.doesNotMatch(none, /2 more/);
-  assert.equal((none.match(/more books/g) ?? []).length, 1);
+test("slice 457 decision 16: help, fallback and not-found are short and never name the paid book", async () => {
+  const misses = [
+    ["AMAZON.HelpIntent", {}, "Say a book's name, or say: search."],
+    ["AMAZON.FallbackIntent", {}, "I don't know that one. Say: search."],
+    ["BookTitleIntent", { title: { name: "title", value: "dragons" } }, "I don't know that one. Say: search."],
+  ];
+  for (const [name, slots, expected] of misses) {
+    const json = (await call(intent(name, slots), { env: shelf() })).json;
+    assert.equal(speechOf(json), `<speak>${expected}</speak>`, name);
+    assert.ok(json.response.reprompt.outputSpeech.ssml.length < 80, `${name}: the reprompt is short`);
+    assert.equal(json.response.shouldEndSession, false);
+  }
 });
 
-test("slice 457 review 6: help, fallback and not-found list the free books, and 'more books' after them names the paid ones", async () => {
-  const misses = [
-    ["AMAZON.HelpIntent", {}],
-    ["AMAZON.FallbackIntent", {}],
-    ["BookTitleIntent", { title: { name: "title", value: "dragons" } }],
-  ];
-  for (const [name, slots] of misses) {
-    const first = (await call(intent(name, slots), { env: shelf() })).json;
-    assert.doesNotMatch(speechOf(first), /Lion and the Mouse/, `${name}: the paid book is counted, not named`);
-    const more = (await call(intent("MoreBooksIntent"), { env: shelf(), envelope: { session: { attributes: first.sessionAttributes } } })).json;
-    assert.match(speechOf(more), /These come with the Dino subscription in the Dino app: .*Lion and the Mouse/, name);
-    assert.match(speechOf(more), /That's all the books/, name);
-  }
+test("slice 457 decision 15: an account with the subscription is asked for a name or a word, and no subscription line is said", async () => {
+  const { json } = await call(intent("SearchIntent"), { env: shelf(), services: { subscribed: () => true, ...at(T0) } });
+  assert.equal(speechOf(json), "<speak>Which story? Say a name, or a word like dragon.</speak>");
+  assert.equal(json.response.shouldEndSession, false);
+  assert.doesNotMatch(speechOf(json), /subscription|You have/);
 });
 
 test("slice 457 item 9: a word two books share ('mouse', a slot value with no book id) asks which book, naming both, the paid one too", async () => {
@@ -837,19 +951,19 @@ test("slice 457 item 9: a word two books share ('mouse', a slot value with no bo
   assert.equal(playsOf(json).length, 0);
 });
 
-test("slice 457 launch mentions the favourites only when the account has some", async () => {
+test("slice 457 decision 14: the launch never mentions favourites, even for an account that has some", async () => {
   const db = fakeDb();
-  assert.match(speechOf((await call({ type: "LaunchRequest" }, { env: shelf({ STATS: db }), envelope: asUser() })).json), /Say a book's name, or say 'more books'\./);
   db.rows.push({ user_id: USER, book: BOOK_A });
-  assert.match(speechOf((await call({ type: "LaunchRequest" }, { env: shelf({ STATS: db }), envelope: asUser() })).json), /say 'play my favourites'.*Alexa, shuffle/);
+  const speech = speechOf((await call({ type: "LaunchRequest" }, { env: shelf({ STATS: db }), envelope: asUser() })).json);
+  assert.match(speech, /^<speak>Do you want to hear .*\? Or say: search\.<\/speak>$/);
+  assert.doesNotMatch(speech, /favourite|shuffle|repeat/);
 });
 
 test("slice 457: a paid book is never sent as a Play while paid books are gated; it says it comes with the subscription and offers the free ones", async () => {
   for (const request of [intent("ReadBookIntent", { book: { name: "book", value: "lion and the mouse" } }), intent("BookTitleIntent", { title: { name: "title", value: "the lion" } })]) {
     const { json } = await call(request, { env: shelf() });
     assert.equal(playsOf(json).length, 0);
-    assert.match(speechOf(json), /The Lion and the Mouse comes with the Dino subscription in the Dino app\./);
-    assert.match(speechOf(json), /You can listen to .*Little Red Hen/);
+    assert.equal(speechOf(json), "<speak>The Lion and the Mouse comes with the subscription. Say: search.</speak>");
     assert.equal(json.response.shouldEndSession, false);
   }
 });
@@ -857,7 +971,7 @@ test("slice 457: a paid book is never sent as a Play while paid books are gated;
 test("slice 457: while the paid-books switch is off (the listen route answers without proof) a paid book plays like a free one", async () => {
   const { json } = await call(intent("BookTitleIntent", { title: { name: "title", value: "the lion" } }), { env: shelf(), services: SERVICES_OFF });
   assert.equal(parseToken(playsOf(json)[0].audioItem.stream.token).book, BOOK_P);
-  assert.match(speechOf((await call({ type: "LaunchRequest" }, { env: shelf(), services: SERVICES_OFF })).json), /I have 3 books.*Lion and the Mouse/);
+  assert.match(speechOf((await call(intent("SearchIntent"), { env: shelf(), services: SERVICES_OFF })).json), /You have 3 books.*Lion and the Mouse/);
   const broken = { paidBooksEnabled: async () => { throw new Error("config"); } };
   assert.equal(playsOf((await call(intent("BookTitleIntent", { title: { name: "title", value: "the lion" } }), { env: shelf(), services: broken })).json).length, 0, "an unreadable switch keeps paid books locked");
 });
@@ -898,8 +1012,7 @@ test("slice 457: an ambiguous name names the books and asks which; a miss lists 
   assert.match(speechOf(json), /Story Number 1.*Story Number 2/);
   assert.equal(playsOf(json).length, 0);
   const miss = (await call(intent("BookTitleIntent", { title: { name: "title", value: "dragons" } }), { env: shelf() })).json;
-  assert.match(speechOf(miss), /could not find that book/);
-  assert.match(speechOf(miss), /Say a book's name, or say 'more books'/);
+  assert.match(speechOf(miss), /I don't know that one\. Say: search\./);
 });
 
 function manyBooks(count) {
@@ -908,33 +1021,12 @@ function manyBooks(count) {
   return { DOWNLOADS: bucketOf(files) };
 }
 
-test("slice 457: the list pages through every book five at a time, then says that is all", async () => {
-  const first = (await call({ type: "LaunchRequest" }, { env: manyBooks(7) })).json;
-  assert.match(speechOf(first), /I have 7 books/);
-  assert.equal(first.sessionAttributes.listOffset, 5);
-  const more = (await call(intent("MoreBooksIntent"), { env: manyBooks(7), envelope: { session: { application: { applicationId: SKILL }, attributes: first.sessionAttributes } } })).json;
-  assert.match(speechOf(more), /That's all the books\./);
-  assert.equal((speechOf(more).match(/Story Number/g) ?? []).length, 2);
-  assert.doesNotMatch(speechOf(more), /I have 7 books/);
-  const again = (await call(intent("MoreBooksIntent"), { env: manyBooks(7), envelope: { session: { application: { applicationId: SKILL }, attributes: more.sessionAttributes } } })).json;
-  assert.match(speechOf(again), /That's all the books\./);
-  assert.equal((speechOf(again).match(/Story Number/g) ?? []).length, 0);
-  const restart = (await call(intent("ListBooksIntent"), { env: manyBooks(7), envelope: { session: { application: { applicationId: SKILL }, attributes: more.sessionAttributes } } })).json;
-  assert.match(speechOf(restart), /I have 7 books/);
-});
-
-test("slice 457: help lists every command, and an unheard request says what to say", async () => {
-  const help = speechOf((await call(intent("AMAZON.HelpIntent"), { env: shelf() })).json);
-  for (const phrase of ["more books", "add this to my favourites", "play my favourites", "what are my favourites", "Alexa, ask Dino Bedtime Stories for", "Alexa, repeat", "Alexa, next"]) assert.ok(help.includes(phrase), phrase);
-  assert.doesNotMatch(help, /start over|shuffle/, "decision 12: the child's words are repeat and next; shuffle only with a playable favourite");
-  const db = fakeDb();
-  db.rows.push({ user_id: USER, book: BOOK_C });
-  const withFavourite = speechOf((await call(intent("AMAZON.HelpIntent"), { env: shelf({ STATS: db }), envelope: asUser() })).json);
-  assert.match(withFavourite, /Alexa, shuffle/);
-  const gone = fakeDb();
-  gone.rows.push({ user_id: USER, book: BOOK_B }); // saved, but its track does not play
-  assert.doesNotMatch(speechOf((await call(intent("AMAZON.HelpIntent"), { env: shelf({ STATS: gone }), envelope: asUser() })).json), /shuffle/);
-  assert.match(speechOf((await call(intent("AMAZON.FallbackIntent"), { env: shelf() })).json), /Say a book's name/);
+test("slice 457 decision 16: help while a story plays adds the two words that need no skill name; paused or idle it does not", async () => {
+  const idle = speechOf((await call(intent("AMAZON.HelpIntent"), { env: shelf() })).json);
+  assert.equal(idle, "<speak>Say a book's name, or say: search.</speak>");
+  const during = speechOf((await call(intent("AMAZON.HelpIntent"), { env: shelf(), envelope: playing(BOOK_A, 5000) })).json);
+  assert.equal(during, "<speak>Say a book's name, or say: search. Or say: Alexa, repeat. Or: Alexa, next.</speak>");
+  assert.ok(wordCount(during) <= 20);
 });
 
 test("slice 457 favourites: save the playing book, again, remove, list, and the account's id is the only thing stored", async () => {
@@ -960,7 +1052,7 @@ test("slice 457 favourites: another account's favourites are never read, a paid 
   db.rows.push({ user_id: "amzn1.ask.account.OTHER", book: BOOK_C });
   assert.match(speechOf((await call(intent("ListFavouritesIntent"), { env: shelf({ STATS: db }), envelope: asUser() })).json), /no favourites yet/);
   const paid = (await call(intent("AddFavouriteIntent", { title: { name: "title", value: "lion" } }), { env: shelf({ STATS: db }), envelope: asUser() })).json;
-  assert.match(speechOf(paid), /Dino subscription/);
+  assert.match(speechOf(paid), /comes with the subscription/);
   assert.equal(db.rows.length, 1);
   assert.match(speechOf((await call(intent("AddFavouriteIntent"), { env: shelf({ STATS: db }), envelope: asUser() })).json), /Tell me which book to save/);
 });
@@ -1116,7 +1208,7 @@ test("slice 457 logs: intent and outcome only, never what was said, and no accou
     await call(intent("ReadBookIntent", { book: { name: "book", value: "purple-secret-words" } }), { env: shelf(), envelope: asUser() });
     await call(intent("BookTitleIntent", { title: { name: "title", value: "goldy" } }), { env: shelf(), envelope: asUser() });
     await call(intent("BookTitleIntent", { title: { name: "title", value: "the lion" } }), { env: shelf(), envelope: asUser() });
-    await call({ type: "LaunchRequest" }, { env: shelf(), envelope: asUser() });
+    await call({ type: "LaunchRequest" }, { env: shelf(), envelope: asUser(), services: { random: () => 0 } });
     await call(intent("AddFavouriteIntent"), { env: shelf({ STATS: fakeDb() }), envelope: { ...asUser(), ...playing(BOOK_A, 1) } });
   } finally {
     console.log = original;
@@ -1125,7 +1217,7 @@ test("slice 457 logs: intent and outcome only, never what was said, and no accou
     "alexa intent=ReadBookIntent outcome=not_found",
     `alexa intent=BookTitleIntent outcome=play:${BOOK_A}`,
     `alexa intent=BookTitleIntent outcome=paid:${BOOK_P}`,
-    "alexa intent=Launch outcome=list_page:0",
+    `alexa intent=Launch outcome=offer:${BOOK_A}`,
     `alexa intent=AddFavouriteIntent outcome=favourite_added:${BOOK_A}`,
   ]);
   assert.ok(lines.every((line) => !/purple|TESTUSER|goldy/.test(line)));
@@ -1139,6 +1231,33 @@ test("slice 457: a skill package check of the new intents: both locales carry th
     for (const wanted of ["BookTitleIntent", "ListBooksIntent", "MoreBooksIntent", "AddFavouriteIntent", "PlayFavouritesIntent", "ListFavouritesIntent", "RemoveFavouriteIntent"]) assert.ok(names.includes(wanted), `${locale} ${wanted}`);
     for (const name of ["BookTitleIntent", "AddFavouriteIntent", "RemoveFavouriteIntent"]) assert.deepEqual(model.intents.find((item) => item.name === name).slots, [{ name: "title", type: "DINO_BOOK_TITLE" }]);
     assert.ok(model.types.some((type) => type.name === "DINO_BOOK_TITLE" && type.values.length > 0));
+  }
+});
+
+test("slice 457 decisions 13-15: both models are called 'dino books', carry yes, no and one-word search, and no sample is said by two intents; the manifest says Dino Books", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (path) => JSON.parse(readFileSync(new URL(`../alexa/skill-package/${path}`, import.meta.url), "utf8"));
+  for (const locale of ["en-GB", "en-US"]) {
+    const model = read(`interactionModels/custom/${locale}.json`).interactionModel.languageModel;
+    assert.equal(model.invocationName, "dino books", locale);
+    const byName = Object.fromEntries(model.intents.map((item) => [item.name, item]));
+    assert.ok(byName["AMAZON.YesIntent"] && byName["AMAZON.NoIntent"] && byName.SearchIntent, locale);
+    for (const word of ["search", "find", "find a book", "what books", "other books"]) assert.ok(byName.SearchIntent.samples.includes(word), `${locale} ${word}`);
+    const owners = new Map();
+    for (const item of model.intents) {
+      for (const sample of item.samples ?? []) {
+        const key = sample.toLowerCase();
+        assert.ok(!owners.has(key) || owners.get(key) === item.name, `${locale}: "${sample}" is in ${owners.get(key)} and ${item.name}`);
+        owners.set(key, item.name);
+      }
+    }
+  }
+  const manifest = JSON.stringify(read("skill.json"));
+  assert.doesNotMatch(manifest, /Bedtime Stories/i);
+  for (const locale of ["en-GB", "en-US"]) {
+    const entry = read("skill.json").manifest.publishingInformation.locales[locale];
+    assert.equal(entry.name, "Dino Books");
+    assert.ok(entry.examplePhrases.includes("Alexa, open Dino Books"));
   }
 });
 
@@ -1209,9 +1328,9 @@ test("slice 457 review 3: a short name two books share is not resolved to one of
 });
 
 test("slice 457 review 8 and 9: the list page and pending attributes keep their names, and one objectAt serves both files", async () => {
-  const { LIST_OFFSET_ATTRIBUTE, PENDING_ATTRIBUTE } = await import("./alexa.ts");
+  const { OFFERED_ATTRIBUTE, PENDING_ATTRIBUTE } = await import("./alexa.ts");
   const { objectAt } = await import("./object-path.ts");
-  assert.equal(LIST_OFFSET_ATTRIBUTE, "listOffset");
+  assert.equal(OFFERED_ATTRIBUTE, "offered");
   assert.equal(PENDING_ATTRIBUTE, "pending");
   assert.equal(objectAt({ a: { b: { c: 1 } } }, "a", "b", "c"), 1);
   assert.equal(objectAt({ a: 1 }, "a", "b"), undefined);
