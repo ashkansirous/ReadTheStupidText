@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "dino bedtime stories",
+      "invocationName": "dino books",
       "intents": [
         {
           "name": "ReadBookIntent",
@@ -36,6 +36,38 @@
             "the story {title}",
             "I want {title}",
             "let's hear {title}"
+          ]
+        },
+        {
+          "name": "SearchIntent",
+          "slots": [],
+          "samples": [
+            "search",
+            "find",
+            "find a book",
+            "find a story",
+            "search for a book",
+            "what books",
+            "what stories",
+            "other books",
+            "other stories"
+          ]
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": [
+            "yes",
+            "yeah",
+            "ok",
+            "okay",
+            "play it"
+          ]
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": [
+            "no",
+            "nope"
           ]
         },
         {

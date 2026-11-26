@@ -35,3 +35,11 @@ CREATE TABLE IF NOT EXISTS alexa_favourites (
   book    TEXT NOT NULL,
   PRIMARY KEY (user_id, book)
 );
+
+-- Slice 457 decision 15: when the Alexa skill last told an account about the subscription books (worker/alexa-subscription-told.ts), so the
+-- line is said at most once a week. `told_at` is epoch milliseconds. Apply BEFORE the Worker that reads it is deployed; while the table is
+-- missing the skill says the line every time.
+CREATE TABLE IF NOT EXISTS alexa_subscription_told (
+  user_id TEXT PRIMARY KEY,
+  told_at INTEGER NOT NULL
+) WITHOUT ROWID;

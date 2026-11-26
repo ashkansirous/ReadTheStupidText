@@ -139,9 +139,10 @@
   listing or an app update is opened, the app store (Google Play, the App Store or the Microsoft Store) handles that under its own privacy policy.</p>
 
   <h2 id="alexa-favourites">On Alexa: favourites</h2>
-  <p>The Dino Bedtime Stories skill on Amazon Alexa is made for children, has no account linking and asks for no personal
+  <p>The Dino Books skill on Amazon Alexa is made for children, has no account linking and asks for no personal
   information, and this project&rsquo;s server stores no name, household, device or Amazon account identifier for it, and no
-  recording or transcript of what was said. The one exception is the favourites list, and only when you ask for it: if you say
+  recording or transcript of what was said. The exceptions are the favourites list, which is kept only when you ask for it, and the
+  weekly reminder described below. Favourites: if you say
   &ldquo;add this to my favourites&rdquo; (or ask the skill to save a story), the server saves two things in the project&rsquo;s own
   database on Cloudflare (D1): the skill-user identifier Alexa gives this skill for your Amazon account (an opaque code, not your
   name, e-mail or address, and different for every skill) and the id of the book. Nothing else is saved with them: no name, device,
@@ -149,6 +150,12 @@
   entry, and a list holds at most 50 books. If you disable the skill and enable it again, Amazon gives it a new identifier, so the
   earlier list can no longer be reached. The skill&rsquo;s short request-log lines hold only which request it was and what the result
   was (for example a book&rsquo;s id, a page of the list or a favourite saved), never what was said and never the identifier.
+  Weekly reminder: when you say &ldquo;search&rdquo;, the skill may tell you how many more books come with the subscription, but at
+  most once a week. To do that the server saves, in the same Cloudflare database, the same kind of opaque skill-user identifier and the
+  time it last told you, and nothing else (no name, device, household or anything that was said). It is used only to decide whether a
+  week has passed. It is stored under the same identifier as the favourites list, so the two rows belong to the same Amazon account
+  id. The row is overwritten each time the skill tells you the line (at most weekly) and is otherwise kept; it is not deleted when
+  you disable the skill, but after that the old identifier is never used again.
   What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
 
   <h2 id="server-request-log">Server request log</h2>
