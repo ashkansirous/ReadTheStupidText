@@ -51,26 +51,81 @@ export function shortNames(title) {
   return [...new Set(names.map((name) => name.toLowerCase()))].filter((name) => name !== full.toLowerCase());
 }
 
-/** How many books produce each short name (a book counts once). */
+/** Words that are never a name on their own (item 9: "the", "and", "from" ...). */
+const STOP_WORDS = new Set(["the", "a", "an", "and", "of", "from", "with", "to", "in", "on", "for", "my", "me"]);
+const MIN_WORD_LENGTH = 3;
+
+/**
+ * Ordinary words that are no book's name on their own ("good" must not start Good Enough). They stay in longer names ("red riding hood").
+ * Add a word here when a new book brings a common word that would start the wrong book on its own.
+ */
+export const GENERIC_WORDS = new Set([
+  "man", "good", "enough", "love", "island", "town", "country", "little", "red", "big", "three", "ugly", "marks", "riding", "billy", "goats",
+]);
+
+/** Every distinctive single word of a title ("goldilocks", "gingerbread", "pigs", "treasure"), lower case. */
+export function titleWords(title) {
+  return spoken(title)
+    .toLowerCase()
+    .split(" ")
+    .filter((word) => word.length >= MIN_WORD_LENGTH && !STOP_WORDS.has(word) && !GENERIC_WORDS.has(word));
+}
+
+/**
+ * How a child says the hard names, or how the speech recogniser spells them (spoken title, lower case -> extra synonyms). One small table,
+ * so a new near-spelling is one line here. A form another book also produces is dropped by the same shared-name rule as any other.
+ */
+export const SPOKEN_FORMS = {
+  "goldilocks and the three bears": ["goldy", "goldie", "goldylock", "goldylocks", "goldilock", "goldie locks", "goldy locks", "goldilocks and the 3 bears"],
+  "the three billy goats gruff": ["billy goats gruff", "billy goat gruff", "three billy goats", "billy goats", "three goats"],
+  "the three little pigs": ["three pigs", "little pigs", "the 3 little pigs"],
+  "little red riding hood": ["red riding hood", "riding hood"],
+  "the elves and the shoemaker": ["elves and shoemaker", "elf and the shoemaker"],
+  "the gingerbread man": ["gingerbread", "ginger bread man", "ginger bread"],
+  "love from seagull island": ["seagull island", "love from seagull"],
+  "x marks the treasure": ["x marks", "marks the treasure", "treasure map"],
+  "the ugly duckling": ["ugly duck"],
+  "the tortoise and the hare": ["tortoise and hare"],
+  "the town mouse and the country mouse": ["town and country mouse", "town mouse and country mouse"],
+  "freddy and the slipper": ["freddie", "freddie and the slipper"],
+};
+
+/** Every name a book answers to besides its full title: short names, each distinctive word, and the spoken forms. */
+function nameCandidates(book) {
+  const forms = SPOKEN_FORMS[spoken(book.title).toLowerCase()] ?? [];
+  return [...new Set([...shortNames(book.title), ...titleWords(book.title), ...forms])];
+}
+
+/** How many books produce each name (a book counts once). */
 function claimsPerName(books) {
   const claims = new Map();
-  for (const book of books) for (const name of new Set(shortNames(book.title))) claims.set(name, (claims.get(name) ?? 0) + 1);
+  for (const book of books) for (const key of new Set(nameCandidates(book).map(withoutArticle))) claims.set(key, (claims.get(key) ?? 0) + 1);
   return claims;
 }
 
 /**
- * The slot type: one value per book. A short name claimed by two or more books is left out of all of them, and so is one that is another
- * book's title: Alexa would resolve it to a single book without asking, so the Worker's own matcher sees the bare word and asks which.
+ * A single word two or more books produce ("mouse") is a value of its own with no id: the word reaches BookTitleIntent (not the fallback),
+ * the Worker finds no book id in the resolution and runs its own matcher on the spoken text, which asks which book. Its "the" form is a synonym.
+ */
+function sharedValues(claims, titles) {
+  const names = [...claims].filter(([name, count]) => count > 1 && !titles.has(name) && !name.includes(" "));
+  return names.map(([name]) => ({ name: { value: name, synonyms: [`the ${name}`] } }));
+}
+
+/**
+ * The slot type: one value per book (with its id), then one id-less value per word two books share. A name claimed by two or more
+ * books is left out of each book's own value, and so is one that is another book's title: Alexa would otherwise resolve it to a single
+ * book without asking, so the Worker's own matcher sees the bare word and asks which.
  */
 export function buildSlotType(books) {
   const titles = new Set(books.map((book) => spoken(book.title).toLowerCase()));
   const claims = claimsPerName(books);
   const values = books.map((book) => {
     const value = spoken(book.title);
-    const synonyms = shortNames(book.title).filter((name) => !titles.has(name) && claims.get(name) === 1);
+    const synonyms = nameCandidates(book).filter((name) => !titles.has(name) && claims.get(withoutArticle(name)) === 1);
     return { id: book.id, name: { value, synonyms } };
   });
-  return { name: SLOT_TYPE_NAME, values };
+  return { name: SLOT_TYPE_NAME, values: [...values, ...sharedValues(claims, titles)] };
 }
 
 /** The model text with the slot type in place (added when missing, replaced when there), in the repo's two-space JSON style. */

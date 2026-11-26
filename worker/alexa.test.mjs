@@ -768,13 +768,72 @@ test("slice 457 launch: counts the books, names the free ones first, says the re
   const speech = speechOf(json);
   assert.match(speech, /I have 3 books/);
   assert.match(speech, /You can listen to .*Goldilocks and the Three Bears/);
-  assert.ok(speech.indexOf("Little Red Hen") < speech.indexOf("These come with the Dino subscription"));
-  assert.ok(speech.indexOf("These come with the Dino subscription") < speech.indexOf("Lion and the Mouse"));
+  assert.match(speech, /1 more comes with the Dino subscription in the Dino app\./, "slice 457 item 9: a count, not a name");
+  assert.equal((speech.match(/more books/g) ?? []).length, 1, "review 5: 'more books' is said once, in the prompt");
+  assert.ok(speech.indexOf("Little Red Hen") < speech.indexOf("1 more comes"));
+  assert.doesNotMatch(speech, /Lion and the Mouse|These come with/, "the paid book is named only on 'more books'");
   assert.doesNotMatch(speech, /No Track Book/);
   assert.match(speech, /Say a book's name, or say 'more books'\./);
   assert.doesNotMatch(speech, /favourites/, "no favourites yet: not mentioned");
   assert.match(speech, /Alexa, repeat\. Or: Alexa, next\./, "review: the launch teaches the child's words");
   assert.doesNotMatch(speech, /shuffle/, "no playable favourite: shuffle is not taught");
+  assert.equal(playsOf(json).length, 0);
+});
+
+test("slice 457 item 9: 'what books do you have' counts the paid books and 'more books' names them", async () => {
+  const listed = await call(intent("ListBooksIntent"), { env: shelf() });
+  assert.match(speechOf(listed.json), /1 more comes with the Dino subscription in the Dino app\./);
+  assert.doesNotMatch(speechOf(listed.json), /Lion and the Mouse|That's all the books/);
+  const attributes = listed.json.sessionAttributes;
+  assert.equal(attributes.listOffset, 2, "'more books' continues at the first paid book");
+  const more = await call(intent("MoreBooksIntent"), { env: shelf(), envelope: { session: { attributes } } });
+  assert.match(speechOf(more.json), /These come with the Dino subscription in the Dino app: .*Lion and the Mouse/);
+  assert.match(speechOf(more.json), /That's all the books/);
+});
+
+function mixedBooks(free, paid) {
+  const files = [];
+  const add = (n, access) => files.push(...bookFiles(`7d0e5a4e0000400080000000000002${String(n).padStart(2, "0")}`, metaFor(`Story Number ${n}`, access), true));
+  for (let n = 1; n <= free; n++) add(n);
+  for (let n = free + 1; n <= free + paid; n++) add(n, "paid");
+  return { DOWNLOADS: bucketOf(files) };
+}
+
+const launchSpeech = async (env) => speechOf((await call({ type: "LaunchRequest" }, { env })).json);
+
+test("slice 457 review 4: more free books than one page are not counted as paid; the count says only the paid ones left, in right grammar", async () => {
+  const seven = await launchSpeech(mixedBooks(7, 2));
+  assert.doesNotMatch(seven, /come with the Dino subscription/, "2 free books are still unlisted: 'more books' reaches them first");
+  assert.match(await launchSpeech(mixedBooks(5, 2)), /2 more come with the Dino subscription in the Dino app\./);
+  assert.match(await launchSpeech(mixedBooks(2, 1)), /1 more comes with the Dino subscription/);
+  const none = await launchSpeech(mixedBooks(0, 2));
+  assert.match(none, /2 books come with the Dino subscription in the Dino app\./, "no free book named: not 'more'");
+  assert.doesNotMatch(none, /2 more/);
+  assert.equal((none.match(/more books/g) ?? []).length, 1);
+});
+
+test("slice 457 review 6: help, fallback and not-found list the free books, and 'more books' after them names the paid ones", async () => {
+  const misses = [
+    ["AMAZON.HelpIntent", {}],
+    ["AMAZON.FallbackIntent", {}],
+    ["BookTitleIntent", { title: { name: "title", value: "dragons" } }],
+  ];
+  for (const [name, slots] of misses) {
+    const first = (await call(intent(name, slots), { env: shelf() })).json;
+    assert.doesNotMatch(speechOf(first), /Lion and the Mouse/, `${name}: the paid book is counted, not named`);
+    const more = (await call(intent("MoreBooksIntent"), { env: shelf(), envelope: { session: { attributes: first.sessionAttributes } } })).json;
+    assert.match(speechOf(more), /These come with the Dino subscription in the Dino app: .*Lion and the Mouse/, name);
+    assert.match(speechOf(more), /That's all the books/, name);
+  }
+});
+
+test("slice 457 item 9: a word two books share ('mouse', a slot value with no book id) asks which book, naming both, the paid one too", async () => {
+  const files = [...bookFiles(BOOK_P, metaFor("The Lion and the Mouse", "paid"), true), ...bookFiles(BOOK_A, metaFor("The Town Mouse and the Country Mouse"), true)];
+  const slot = { title: { name: "title", value: "mouse", resolutions: { resolutionsPerAuthority: [{ status: { code: "ER_SUCCESS_MATCH" }, values: [{ value: { name: "mouse" } }] }] } } };
+  const json = (await call(intent("BookTitleIntent", slot), { env: { DOWNLOADS: bucketOf(files) } })).json;
+  assert.match(speechOf(json), /More than one book matches/);
+  assert.match(speechOf(json), /Town Mouse and the Country Mouse/);
+  assert.match(speechOf(json), /Lion and the Mouse/);
   assert.equal(playsOf(json).length, 0);
 });
 
