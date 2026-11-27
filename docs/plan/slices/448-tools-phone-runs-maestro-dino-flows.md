@@ -1,6 +1,8 @@
 # Slice 448 — tools/phone runs the .maestro/dino flows on a real phone
 **Product:** Shared
-**Touches:** `tools/phone/**`, `tools/CLAUDE.md`
+**Touches:** `tools/phone/**`, `tools/CLAUDE.md`, `tools/emulator/common.ps1` (widened at claim, wave 2026-11-27: only if `Set-ProcessJavaHome` or the flow runner needs a change)
+
+*In progress (wave 2026-11-27), draft PR.*
 
 *Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 396; not built).*
 
