@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/events-ui.test.mjs`, `src/Dino/DinoReader.Core/UsageEvent.cs`, `src/Dino/DinoReader.App/UsageCounter.cs`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/**`, `src/Dino/DinoReader.App/Platforms/Android/**`, `src/Dino/DinoReader.App/Platforms/Windows/**`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.Core/StoreKit2Answers.cs`, `tests/**` (Dino usage tests), `site/dino/privacy.html`, `STORE.md`, `src/Dino/DinoReader.App/BackupPage.xaml.cs` (widened at review fix 1, wave 4 of night 2026-11-27-0154: backup restore passes countAsRestore false)
 
-*Built 2026-11-27 (night 2026-11-27-0154, wave 4), PR #1408, not merged; not yet verified on a device or in the logs (see Not yet verified).* (Planned 2026-11-25; extended 2026-11-26 after the owner's ask.)
+*Built 2026-11-27 (night 2026-11-27-0154, wave 4), merged as PR #1408 (256eafa2); not yet verified on a device or in the logs (see Not yet verified).* (Planned 2026-11-25; extended 2026-11-26 after the owner's ask.)
 
 **Why:** the apps send no buy, restore or subscription event, so the logs cannot say whether a purchase, trial or restore happened (found 2026-11-15, Slice 390 line 38 "Finding for a later slice"; nothing owned it). On 2026-11-26 the owner asked who bought two iOS books and how many people started the free trial. Only App Store Connect could answer (2 Ugly Duckling buys, SG 2026-11-20 and CH 2026-11-25; 0 intro-trial starts and 2 "Gift Bahar" offer-code starts, 2026-09-16 to 2026-11-25). `dino_usage` had nothing, and Play's sales reports were unreadable with the current key. The owner's words: "this is a fucked up situation. add this to the plan so we collect these events".
 
@@ -57,7 +57,7 @@ High pass (`reviews/pr-1408-high.md`, 10 findings read): fixed 1-6, 9, 10; the o
 - #5 `BookPurchases.cs:321`: `ReadCoreAsync` is about 47 lines, over the 3-30 rule.
 - #6 `AndroidPurchases.cs:422` (pre-existing): any Play callback completes the current buy's task, not matched to the product.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - Purchase outcome events are one `purchase` event whose detail is `<what>.<outcome>[.<offer>]`; the closed lists live in `worker/events.ts` and `UsageEvent.cs` (`PurchaseDetail`) and `PurchaseUsageTests` compares them, so change both together. A `book` detail needs the book's GUID; an offer only goes on `sub_*`. (Slice 455: docs/plan/slices/455-dino-purchase-outcome-events.md)
 - `BookPurchases` logs `started` before the store call and the outcome after. Restore counts only from the Restore button; any other caller of `RestoreAsync` (the backup restore) passes `countAsRestore` false. (Slice 455: docs/plan/slices/455-dino-purchase-outcome-events.md)
