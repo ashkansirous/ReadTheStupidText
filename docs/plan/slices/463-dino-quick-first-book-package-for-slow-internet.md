@@ -3,7 +3,7 @@
 
 *Items 1, 3, 4, 5 built 2026-11-27 (night wave 9), merged as PR #1444 (844603a9). Open: item 2 (the owner's side-by-side page, an Artifact, needs an interactive session). No quick packages exist yet (no `content/dino/*/quick` folders), so nothing ships a quick copy until the quick pictures and clips are made after the owner's pick. The slow-link switch was not reached on a device (see Not yet verified).*
 
-*Follow-ups F1, F3, F5, F6, F7, F9 built 2026-11-27 (wave 2026-11-27, PR #1448, not merged), not yet verified on a device flow that reaches the switch (see Not yet verified). F2, F4, F8 and item 2 stay open. Items 1, 3, 4, 5 merged in #1444. Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
+*Follow-ups F1, F3, F5, F6, F7, F9 built 2026-11-27 (wave 2026-11-27, merged as PR #1448 (8c854575)), not yet verified on a device flow that reaches the switch (see Not yet verified). F2, F4, F8 and item 2 stay open. Items 1, 3, 4, 5 merged in #1444. Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
 
 **Design (coordinator, wave 2026-11-27, before the build; the builder builds this):**
 - **One owner of the state:** the installed book's variant (`quick` | `standard` | `hd`), stored with the high-res state the way `HighResUpgrades` keeps its ledger (`HighResStateFile.WriteAtomic`). Nothing else decides which copy is installed.
@@ -132,7 +132,7 @@ Findings files read to the last finding: high 9 of 9, medium 7 of 7, check 1 9 o
 - [ ] F14 (`reviews/pr-1448-check-2.md` #2): `UpgradeQuickPackAsync` re-checks cancel after the install gate wait.
 - [ ] F15 (`reviews/pr-1448-check-2.md` #3): `AudioPackStore.Open` runs `EmptyTrash` on the caller thread after a kill; move it to `Task.Run`.
 - [ ] F16 (`reviews/pr-1448-check-2.md` #4): the `.trash-<guid>` suffix adds about 39 characters and could reach MAX_PATH; use a short suffix.
-- [ ] F17: the `pack-failure-corrupt` Maestro flow fails (`ShelfAudioFailed-sv` never visible) on `origin/main` build 9ea9d6bd too; becomes its own planned slice in the index pass.
+- [ ] F17: the `pack-failure-corrupt` Maestro flow fails (`ShelfAudioFailed-sv` never visible) on `origin/main` build 9ea9d6bd too; now Slice 468 (docs/plan/slices/468-dino-pack-failure-corrupt-flow-never-shows-failed-chip.md).
 
 #### For CLAUDE.md (lifted 2026-11-27)
 

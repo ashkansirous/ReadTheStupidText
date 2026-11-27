@@ -1,7 +1,7 @@
 # Slice 458 — Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications
 **Product:** Dino
 
-*Built items 1, 2, 3, 5 (wave 2026-11-27), PR #1449, not yet merged; items 4 (console wiring) and 6 (Partner Center research) are open. Code written by a cloud session at 33f44bc9 (run cse_012UYzYUZFozXBxTHrqxPhPQ) and fixed locally.*
+*Built items 1, 2, 3, 5 (wave 2026-11-27), merged as PR #1449 (5c4cfca2); items 4 (console wiring) and 6 (Partner Center research) are open. Code written by a cloud session at 33f44bc9 (run cse_012UYzYUZFozXBxTHrqxPhPQ) and fixed locally.*
 
 **Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/events.test.mjs`, `wrangler.jsonc` (repo root; there is no `worker/wrangler.jsonc`), `wrangler.workers-dev.jsonc` (kept level with `wrangler.jsonc` by `check-configs.mjs`; widened by the coordinator after the cloud build), `STORE.md`, `site/dino/privacy.html`
 
@@ -60,7 +60,7 @@
 - Skipped #7 (`reviews/pr-1449-medium.md`): "An unknown product id forces a full R2 list plus one get per book on every delivery, with no negative cooldown." - unknown products are rare and the one refetch is already rate-bounded by the catalogue cache window.
 - Skipped #8 (`reviews/pr-1449-medium.md`): "A failed JWKS fetch returns the cached keys but does not refresh `cachedKeys.at`, so after expiry the 60 s cooldown blocks any new fetch and legitimate pushes get 401 for at least a minute." - a 60 s window of 401s makes Pub/Sub retry, so no push is lost.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 - `store` rows come only from `worker/store-notifications/` (Apple and Google handlers); `worker/events.ts` marks `store` server-only, so the app's `/api/events` must never be able to write it. Anything not Production (Apple Sandbox, Xcode, LocalTesting, missing `environment`; Play `testPurchase`) goes to `dino_usage_beta`, never `dino_usage`. (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
 - The store-notification dedup and freshness window is one constant, `DEDUP_WINDOW_MS` in `worker/store-notifications/dedup.ts`, and must stay above Apple's retry horizon of about 157 h. No account id, transaction id or token is stored. (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
 - A new `/api/store/*` style route needs its `assets.run_worker_first` entries in both `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (`check-configs.mjs` fails otherwise). (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
