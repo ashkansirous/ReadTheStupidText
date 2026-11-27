@@ -1,7 +1,7 @@
 ### Slice 431 — Dino: the story skill reports its steps to the agent board, with process keys
 **Product:** Dino
 
-*Planned.* The start condition is met: agent-progress-board Slice 55 (process keys and step counts in the agent-board plugin) merged as PR #209 and has been live since 2026-11-25 (stated in the Start pass brief of 2026-11-27; not re-read in that repo).
+*In progress (wave 2026-11-27), draft PR.* The start condition is met: agent-progress-board Slice 55 (process keys and step counts in the agent-board plugin) merged as PR #209 on 2026-11-25 (re-read with `gh pr list --repo ashkansirous/agent-progress-board` in wave 4 of night 2026-11-27-0154).
 
 *Plan-cleanup check 2026-11-25:* `git grep process_key` found nothing in the plugin then; no `report_progress`, `under_step` or `story/` key exists in `.claude/` here. A-C are unbuilt and the claims hold. Verdict: keep open, not started; nothing to move out.
 
