@@ -60,7 +60,13 @@ name: Cancelling a stalled audio pack download ends it as cancelled and keeps no
 - extendedWaitUntil:
     visible: "Your child can switch between these.*"
     timeout: 10000
-# The card with Cancel stays up while the stalled download runs (nothing ends it but the Cancel).
+# The card with Cancel stays up while the stalled download runs (nothing ends it but the Cancel). Slice 468: Swedish is the 12th row and is clipped by the page's ScrollView viewport on a 1080x2400 screen, so scroll to the row (always there) and centre it first, then wait for Cancel with the original 30 s budget.
+- scrollUntilVisible:
+    element:
+      id: ShelfAudioCard-sv
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - extendedWaitUntil:
     visible:
       id: ShelfAudioCancel-sv
@@ -76,6 +82,8 @@ name: Cancelling a stalled audio pack download ends it as cancelled and keeps no
 - tapOn:
     id: ShelfAudioCancel-sv
     waitToSettleTimeoutMs: 300
+# The row is asserted visible first, so the notVisible check below cannot pass with the row scrolled away.
+- assertVisible: "Svenska"
 - extendedWaitUntil:
     notVisible:
       id: ShelfAudioCancel-sv
