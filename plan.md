@@ -41,6 +41,7 @@ Open slices only. Finished slices (425 rows) are in [slices-done](docs/plan/note
 | 463 | Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background | planned (Slice 459 merged as PR #1395; owner picks quality) | | | [463-dino-quick-first-book-package-for-slow-internet.md](docs/plan/slices/463-dino-quick-first-book-package-for-slow-internet.md) |
 | 465 | Dino: the store-restore, paid-books and subscription flows pass on a real phone | planned | | | [465-dino-store-flows-pass-on-a-real-phone.md](docs/plan/slices/465-dino-store-flows-pass-on-a-real-phone.md) |
 | 466 | Dino: Sonos subscription follow-ups from Slice 439's review (relink-free proof, token refresh, SecureStorage, low items) | parked: the review gate did not converge after high, medium and check passes 1-5 (wave 8, 2026-11-27); next is one design where every write result has one owner (a failed write keeps the old copy, nothing cleared before a read-back), then the S21 and iPhone check; in-scope work for the next session; reviewed work uncommitted in worktree s466 | [#1437](https://github.com/ashkansirous/ReadTheStupidText/pull/1437) | | [466-dino-sonos-subscription-follow-ups.md](docs/plan/slices/466-dino-sonos-subscription-follow-ups.md) |
+| 467 | Dino: Sonos on dino.elinsoft.co.uk, a Reporting Endpoint the portal can reach | planned | | | [467-dino-sonos-on-dino-elinsoft.md](docs/plan/slices/467-dino-sonos-on-dino-elinsoft.md) |
 
 ### Shared
 
