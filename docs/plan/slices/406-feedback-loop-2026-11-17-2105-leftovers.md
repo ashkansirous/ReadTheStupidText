@@ -71,9 +71,9 @@
 - Skipped #4 (`reviews/pr-1443-medium.md`): "Folders skipped by `Test-WalkableFolder` or the widened catch in `Get-SourceFiles` are dropped silently" - recorded as open item 3f (print a warning when a source folder is skipped).
 - Read: `pr-1443-high.md` 7/7, `pr-1443-medium.md` 4/4. The Actions `paths`/`if` syntax was checked on docs.github.com by the high reviewer (context7 quota out for the builder).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
-- `.github/CLAUDE.md` (line 115, to fix in the index pass): `tools-selftests.yml` runs the full self-test set for `tools/**`, `.maestro/**` and the workflow itself; a PR that changes only `src/**/*.{cs,swift,kt,java}` runs only the small `flow-lint` job. (Slice 406: docs/plan/slices/406-feedback-loop-2026-11-17-2105-leftovers.md)
+- `.github/CLAUDE.md` (line 115): `tools-selftests.yml` runs the full self-test set for `tools/**`, `.maestro/**` and the workflow itself; a PR that changes only `src/**/*.{cs,swift,kt,java}` runs only the small `flow-lint` job. (Slice 406: docs/plan/slices/406-feedback-loop-2026-11-17-2105-leftovers.md)
 
 #### Not yet verified
 
