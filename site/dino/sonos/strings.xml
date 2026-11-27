@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stringtable xmlns="http://sonos.com/sonosapi">
+  <string stringId="Stories">
+      <stringtext language="ar">القصص</stringtext>
+      <stringtext language="da">Historier</stringtext>
+      <stringtext language="de">Geschichten</stringtext>
+      <stringtext language="en">Stories</stringtext>
+      <stringtext language="es">Cuentos</stringtext>
+      <stringtext language="fa">داستان‌ها</stringtext>
+      <stringtext language="fi">Tarinat</stringtext>
+      <stringtext language="fr">Histoires</stringtext>
+      <stringtext language="ja">お話</stringtext>
+      <stringtext language="nb">Historier</stringtext>
+      <stringtext language="nl">Verhalen</stringtext>
+      <stringtext language="pt">Histórias</stringtext>
+      <stringtext language="ru">Истории</stringtext>
+      <stringtext language="sv">Berättelser</stringtext>
+      <stringtext language="zh">故事</stringtext>
+  </string>
+  <string stringId="AllLanguages">
+      <stringtext language="ar">كل اللغات</stringtext>
+      <stringtext language="da">Alle sprog</stringtext>
+      <stringtext language="de">Alle Sprachen</stringtext>
+      <stringtext language="en">All languages</stringtext>
+      <stringtext language="es">Todos los idiomas</stringtext>
+      <stringtext language="fa">همه‌ی زبان‌ها</stringtext>
+      <stringtext language="fi">Kaikki kielet</stringtext>
+      <stringtext language="fr">Toutes les langues</stringtext>
+      <stringtext language="ja">すべての言語</stringtext>
+      <stringtext language="nb">Alle språk</stringtext>
+      <stringtext language="nl">Alle talen</stringtext>
+      <stringtext language="pt">Todos os idiomas</stringtext>
+      <stringtext language="ru">Все языки</stringtext>
+      <stringtext language="sv">Alla språk</stringtext>
+      <stringtext language="zh">所有语言</stringtext>
+  </string>
+</stringtable>

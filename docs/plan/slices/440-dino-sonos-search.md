@@ -46,13 +46,27 @@ are book rows as in Slice 437 ("The Three Billy Goats Gruff" / "Ages 3–5 · 6 
 - [ ] D1. Read docs.sonos.com (`web-research`): the presentation map's `SearchCategories` and string table format,
       where its URL and version are set in the portal, the `search` request (id, term, index, count) and the desktop
       search container. Quote the lines here.
-- [ ] D2. `site/dino/sonos/presentation-map.xml` and `strings.xml` (category names in the 15 languages), served by the
+- [x] D2. `site/dino/sonos/presentation-map.xml` and `strings.xml` (category names in the 15 languages), served by the
       Worker; owner step: set the presentation map URL and version in the Sonos portal (deep link in this file).
-- [ ] D3. `worker/sonos-search.ts`: match titles (case and accent folded, `Intl.Collator` base sensitivity) per category;
+- [x] D3. `worker/sonos-search.ts`: match titles (case and accent folded, `Intl.Collator` base sensitivity) per category;
       `worker/sonos-soap.ts` routes `search`; the search container in `getMetadata`.
-- [ ] D4. Tests: both categories, a Farsi term, no results, paging.
+- [x] D4. Tests: both categories, a Farsi term, no results, paging.
 
 ## Verification
 
 - `node --test worker/*.test.mjs`; owner's sandbox: searching "goat" in the S21 Sonos app gives the two English rows of
   the mock under Stories, and every language's match under All languages.
+
+## Sources (D1)
+
+docs.sonos.com could not be fetched from the build session (host not allowed on its network), so D1 stays open. Only the
+search-result summaries of https://docs.sonos.com/docs/search, https://docs.sonos.com/docs/add-search and
+https://docs.sonos.com/docs/getmetadata were read: mobile categories come from `SearchCategories` in the presentation map, desktop ones from
+`getMetadata` on id `search` (items with itemType `search`), and the two lists must carry identical ids. The XML shapes in
+`site/dino/sonos/` (`CustomCategory stringId`/`mappedId`, `stringtable` with `stringtext language=`) are from memory, not checked against the docs.
+
+## Not yet verified
+
+- D1: quote the lines from docs.sonos.com; check the presentation map and string table element names and the language codes, where the portal's presentation map URL and version are set (owner step, deep link not recorded), and the exact `search` request fields.
+- The owner step in D2 (presentation map URL and version in the Sonos Developer Portal).
+- The owner's sandbox check ("goat" in the S21 Sonos app).
