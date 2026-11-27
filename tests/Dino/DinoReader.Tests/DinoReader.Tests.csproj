@@ -32,6 +32,8 @@
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\FullShelfPlan.cs" Link="Linked\FullShelfPlan.cs" />
     <!-- Slice 433 item 6: the scroll-shelf and turn-page hooks' argument parsing and frame steps, plain .NET. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\ShelfScrollPlan.cs" Link="Linked\ShelfScrollPlan.cs" />
+    <!-- Slice 452: the sound-pill hook's state and percent parsing, plain .NET. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\SoundPillHookPlan.cs" Link="Linked\SoundPillHookPlan.cs" />
     <EmbeddedResource Include="..\..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.resx" Link="Linked\AppResources.resx" LogicalName="DinoReader.Resources.Strings.AppResources.resources" />
     <!-- The own-books cleanup's decision and failure handling (Slice 278 A3): plain .NET, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\OwnBooksCleanupRun.cs" Link="Linked\OwnBooksCleanupRun.cs" />

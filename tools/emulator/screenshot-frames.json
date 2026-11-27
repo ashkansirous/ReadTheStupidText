@@ -46,5 +46,9 @@
   { "shot": "shot-349-corner-books-ar", "flow": "dino-corner-status-bar-and-tabs", "label": "Grown-ups corner, Books tab, Arabic (right to left)", "mock": "Dino reader- 2026-11-08 grownup.dc.html", "frame": "P4" },
   { "shot": "shot-349-corner-store-ar", "flow": "dino-corner-status-bar-and-tabs", "label": "Grown-ups corner, Store tab, Arabic (right to left)", "mock": "Dino reader- 2026-11-08 grownup.dc.html", "frame": "P4" },
   { "shot": "shot-349-corner-books-fa", "flow": "dino-corner-status-bar-and-tabs", "label": "Grown-ups corner, Books tab, Farsi (right to left)", "mock": "Dino reader- 2026-11-08 grownup.dc.html", "frame": "P4" },
-  { "shot": "shot-349-corner-settings-fa", "flow": "dino-corner-status-bar-and-tabs", "label": "Grown-ups corner, Settings tab, Farsi (right to left)", "mock": "Dino reader- 2026-11-08 grownup.dc.html", "frame": "P4" }
+  { "shot": "shot-349-corner-settings-fa", "flow": "dino-corner-status-bar-and-tabs", "label": "Grown-ups corner, Settings tab, Farsi (right to left)", "mock": "Dino reader- 2026-11-08 grownup.dc.html", "frame": "P4" },
+  { "shot": "sound-pill-getting", "flow": "reading-sound-pill-states", "label": "Reading page sound pill, Getting with a count (Slice 452)", "mock": "Dino Reader Batch 50 Sound States and Sonos.dc.html", "frame": "197" },
+  { "shot": "sound-pill-wifi", "flow": "reading-sound-pill-states", "label": "Reading page sound pill, waiting for the internet (Slice 452)", "mock": "Dino Reader Batch 50 Sound States and Sonos.dc.html", "frame": "198" },
+  { "shot": "sound-pill-preparing", "flow": "reading-sound-pill-states", "label": "Reading page sound pill, getting ready (Slice 452)", "mock": "Dino Reader Batch 50 Sound States and Sonos.dc.html", "frame": "198" },
+  { "shot": "sound-pill-nosound", "flow": "reading-sound-pill-states", "label": "Reading page sound pill, no sound (Slice 452)", "mock": "Dino Reader Batch 50 Sound States and Sonos.dc.html", "frame": "199" }
 ]

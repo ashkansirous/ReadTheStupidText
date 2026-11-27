@@ -1,5 +1,8 @@
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
+#if DEBUG
+using Sirous.Reading.Mobile.Shared.Testing;
+#endif
 
 namespace DinoReader;
 
@@ -56,16 +59,81 @@ public sealed class SoundStatusPill : Border
 	/// </summary>
 	public void Show(SoundStatusPillState state, string text, string? nativeName = null)
 	{
-		Color ink = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandEdge : DinoTokens.Body);
-		BackgroundColor = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandTint : DinoTokens.SoundPillSand);
-		_label.TextColor = ink; // colours are re-read on every call, so a light/dark switch shows even when state and text are unchanged
-		if (_icon.IsVisible)
+#if DEBUG
+		if (TestHold)
 		{
-			_icon.Color = ink; // a theme switch recolours a shown icon; a hidden one is never rebuilt (its default kind is a padlock)
+			if (!_holdIgnoreLogged)
+			{
+				_holdIgnoreLogged = true; // one line per hold: a shelf download calls Show hundreds of times
+				TestHookLog.Write($"[Reading] sound-pill hold ignores page show kind={state.Kind}");
+			}
+
+			return; // a device check holds the pill in one state: the page's own calls wait until the hold is released
+		}
+#endif
+		ShowNow(state, text, nativeName);
+	}
+
+#if DEBUG
+	/// <summary>Slice 452 (Debug only): while true, <see cref="Show"/> from the page changes nothing and the pill stays visible, so a device check can screenshot each state (<c>sound-pill</c> hook).</summary>
+	public bool TestHold { get; private set; }
+
+	private bool _holdIgnoreLogged;
+
+	/// <summary>Slice 452 (Debug only): shows the pill in <paramref name="state"/> and holds it there until <see cref="ReleaseTestHold"/>; logs the shown kind and text.</summary>
+	public void ShowHeld(SoundStatusPillState state, string text, string? nativeName)
+	{
+		TestHold = true;
+		_holdIgnoreLogged = false;
+		ShowNow(state, text, nativeName);
+		IsVisible = true;
+		TestHookLog.Write($"[Reading] sound-pill held kind={state.Kind} text={text}");
+	}
+
+	/// <summary>Slice 452 (Debug only): lets the page's own calls through again and hides the pill (the page shows it again at its next status change).</summary>
+	public void ReleaseTestHold()
+	{
+		TestHold = false;
+		_shown = null;
+		_shownText = null;
+		_shownName = null;
+		IsVisible = false;
+		TestHookLog.Write("[Reading] sound-pill released");
+	}
+#endif
+
+	protected override void OnPropertyChanged(string? propertyName = null)
+	{
+		base.OnPropertyChanged(propertyName);
+		if (propertyName != nameof(IsVisible))
+		{
+			return;
 		}
 
-		_ring.Progress = state.RingProgress;
-		_ringView.Invalidate(); // the ring reads its colours when drawn: redraw on every call, so a theme switch shows too
+#if DEBUG
+		if (TestHold && !IsVisible)
+		{
+			IsVisible = true; // the page hides its status line when no piece lacks sound; the held pill stays
+			return;
+		}
+#endif
+		if (IsVisible)
+		{
+			_ringView.Invalidate(); // the ring is not redrawn while the pill is hidden (RedrawRing), so it catches up here
+		}
+	}
+
+	private void RedrawRing()
+	{
+		if (IsVisible)
+		{
+			_ringView.Invalidate();
+		}
+	}
+
+	private void ShowNow(SoundStatusPillState state, string text, string? nativeName)
+	{
+		Color ink = ApplyColours(state);
 		if (state == _shown && text == _shownText && nativeName == _shownName)
 		{
 			return; // nothing else changed: skip the icon and label rebuild
@@ -78,20 +146,44 @@ public sealed class SoundStatusPill : Border
 		ShowLeading(state, ink);
 	}
 
+	/// <summary>Sets the pill, label, icon and ring to <paramref name="state"/>'s colours and progress, and returns the ink colour.</summary>
+	private Color ApplyColours(SoundStatusPillState state)
+	{
+		Color ink = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandEdge : DinoTokens.Body);
+		BackgroundColor = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandTint : DinoTokens.SoundPillSand);
+		_label.TextColor = ink; // colours are re-read on every call, so a light/dark switch shows even when state and text are unchanged
+		if (_icon.IsVisible)
+		{
+			_icon.Color = ink; // a theme switch recolours a shown icon; a hidden one is never rebuilt (its default kind is a padlock)
+		}
+
+		_ring.Progress = state.RingProgress;
+		RedrawRing(); // the ring reads its colours when drawn: redraw on every call, so a theme switch shows too
+		return ink;
+	}
+
 	private void ShowText(string text, string? nativeName)
 	{
 		string font = DinoFonts.UiMediumForText(text);
 		_label.FontFamily = font;
 		_label.FlowDirection = UiFlow.ForText(text); // the row stays left-to-right; the words follow their own language when they wrap
+		SemanticProperties.SetDescription(_label, text); // a FormattedText label can have an empty UIA name on Windows (Slice 205: TextPages.cs)
+		IReadOnlyList<SoundPillRun> runs = SoundPillText.Split(text, nativeName);
+		if (runs.Count == 1)
+		{
+			_label.FormattedText = null; // one run needs no spans: plain Text keeps Label.Text real (it is null under FormattedText) and builds no FormattedString
+			_label.Text = text;
+			return;
+		}
+
 		var formatted = new FormattedString();
-		foreach (SoundPillRun run in SoundPillText.Split(text, nativeName))
+		foreach (SoundPillRun run in runs)
 		{
 			string runFont = SoundPillText.FontFor(run, font, DinoFonts.Persian); // only a right-to-left name needs another font
 			formatted.Spans.Add(new Span { Text = run.Text, FontFamily = runFont });
 		}
 
 		_label.FormattedText = formatted;
-		SemanticProperties.SetDescription(_label, text); // a FormattedText label can have an empty UIA name on Windows (Slice 205: TextPages.cs)
 	}
 
 	private static Grid BuildRow(GraphicsView ringView, IconView icon, Label label)
