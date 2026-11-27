@@ -5,7 +5,12 @@ namespace DinoReader.Core;
 /// translated text, the joined text and one span for each source sentence, in the same order. Sentence <c>i</c> here is sentence
 /// <c>i</c> of the source, so the spoken-sentence index, the page dots and a tap on a sentence work unchanged; only the text differs.
 /// </summary>
-public sealed record TranslatedStory(IReadOnlyList<StoryPage> Pages, string Text, IReadOnlyList<SentenceSpan> Sentences);
+/// <remarks><see cref="Parts"/> (Slice 395, work item 5) are the translated pieces with the source range each one was cut from, so the Record screen can show a source part's own translated words
+/// (no quote marks, no neighbouring narration); null for a story built without them.</remarks>
+public sealed record TranslatedStory(IReadOnlyList<StoryPage> Pages, string Text, IReadOnlyList<SentenceSpan> Sentences, IReadOnlyList<TranslatedPart>? Parts = null);
+
+/// <summary>One translated piece (Slice 395): its words as translated and the range of the source text it was cut from (<see cref="RecordPart.SourceStart"/> and the source segment it lies in match against it).</summary>
+public sealed record TranslatedPart(int SourceStart, int SourceEnd, string Text);
 
 /// <summary>Builds a <see cref="TranslatedStory"/> from the translated pieces a read speaks (Slice 110). Pure, so it is unit-tested.</summary>
 public static class TranslatedStoryBuilder
@@ -42,7 +47,8 @@ public static class TranslatedStoryBuilder
         }
 
         ParkUnplaced(spans, placed);
-        return new TranslatedStory(pages, Story.JoinPages(pages), spans);
+        IReadOnlyList<TranslatedPart> parts = translated.Select(p => new TranslatedPart(p.Segment.SourceStart, p.Segment.SourceEnd, p.Segment.Text)).ToList();
+        return new TranslatedStory(pages, Story.JoinPages(pages), spans, parts);
     }
 
     // The sentences that start on a kept page show their own words, whatever the translation made of them.

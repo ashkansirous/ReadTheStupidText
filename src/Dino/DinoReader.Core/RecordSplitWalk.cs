@@ -22,21 +22,55 @@ public sealed record RecordChoice(RecordMode Mode, IReadOnlySet<string> Ticked);
 public static class RecordSplitWalk
 {
     /// <summary>The clip, in the piece's own language (its key's, Slice 286), that covers every sentence of <paramref name="piece"/>, or null when the piece is not (fully) recorded.</summary>
-    public static StoryClipKey? ClipOf(Story story, RecordPiece piece) =>
-        StoryRecordings.Clips(story).Select(c => (StoryClipKey?)c.Key)
-            .FirstOrDefault(k => k!.Value.Language == piece.Key.Language && k.Value.Page == piece.Key.Page && k.Value.First <= piece.Key.First && piece.Key.Last <= k.Value.Last);
+    /// <remarks>Slice 395: a part piece is covered by a part clip that holds all its parts, else (Decision 5, an older recording) by a sentence clip that holds every sentence the piece lies in and whose first sentence is the piece's own speaker's. A sentence piece
+    /// is covered by a sentence clip only: the two kinds of clip never replace each other (nothing is deleted), so a part clip never marks a sentence card recorded.</remarks>
+    public static StoryClipKey? ClipOf(Story story, RecordPiece piece) => ClipOf(story, piece, new Lazy<IReadOnlyList<RecordPart>>(() => RecordSplitBook.PartListOf(story)));
+
+    /// <summary>As <see cref="ClipOf(Story, RecordPiece)"/> with the story's part list shared by the caller (cut once for a story and only when a part clip needs it), so a screen asking for every card does not cut the book each time.</summary>
+    public static StoryClipKey? ClipOf(Story story, RecordPiece piece, Lazy<IReadOnlyList<RecordPart>> parts) => ClipOfIn(story, piece, parts);
+
+    private static StoryClipKey? ClipOfIn(Story story, RecordPiece piece, Lazy<IReadOnlyList<RecordPart>> parts)
+    {
+        List<StoryClipKey> inPage = StoryRecordings.Clips(story).Select(c => c.Key).Where(k => k.Language == piece.Key.Language && k.Page == piece.Key.Page).ToList();
+        if (!piece.Key.IsPart)
+        {
+            return FirstOf(inPage.Where(k => !k.IsPart && k.First <= piece.Key.First && piece.Key.Last <= k.Last));
+        }
+
+        if (FirstOf(inPage.Where(k => k.IsPart && k.First <= piece.Key.First && piece.Key.Last <= k.Last && RecordSplitBook.PartFits(parts.Value, k))) is { } part)
+        {
+            return part;
+        }
+
+        return piece.FirstSentence < 0 ? null : FirstOf(inPage.Where(k => !k.IsPart && k.First <= piece.FirstSentence && piece.LastSentence <= k.Last && SaidBy(parts.Value, k, piece.Speaker)));
+    }
+
+    // Decision 5 lets an older sentence take cover a part card, but only one made for that speaker: a take of Mummy's sentence that holds Freddy's quoted words was never Freddy's recording.
+    // The speaker of a sentence is the one the book gives it: the first quote with a known character in it, else the Storyteller (RecordSplitBook.SpeakerOf).
+    private static bool SaidBy(IReadOnlyList<RecordPart> parts, StoryClipKey sentenceClip, string speaker)
+    {
+        RecordPart? quote = parts.FirstOrDefault(p => p.Page == sentenceClip.Page && p.InSentences && p.FirstSentence <= sentenceClip.First && sentenceClip.First <= p.LastSentence && p.Speaker != RecordSplit.Storyteller);
+        return (quote?.Speaker ?? RecordSplit.Storyteller) == speaker;
+    }
+
+    private static StoryClipKey? FirstOf(IEnumerable<StoryClipKey> keys) => keys.Select(k => (StoryClipKey?)k).FirstOrDefault();
 
     public static bool IsRecorded(Story story, RecordPiece piece) => ClipOf(story, piece) is not null;
 
     /// <summary>How many of <paramref name="pieces"/> are recorded.</summary>
-    public static int RecordedCount(Story story, IReadOnlyList<RecordPiece> pieces) => pieces.Count(p => IsRecorded(story, p));
+    public static int RecordedCount(Story story, IReadOnlyList<RecordPiece> pieces)
+    {
+        var parts = new Lazy<IReadOnlyList<RecordPart>>(() => RecordSplitBook.PartListOf(story)); // cut once, and only when a part clip needs it
+        return pieces.Count(p => ClipOfIn(story, p, parts) is not null);
+    }
 
     /// <summary>Where "Record the rest" starts: the first piece with no recording; -1 when every piece has one ("Record again from the start" starts at 0).</summary>
     public static int FirstUnrecorded(Story story, IReadOnlyList<RecordPiece> pieces)
     {
+        var parts = new Lazy<IReadOnlyList<RecordPart>>(() => RecordSplitBook.PartListOf(story));
         for (int i = 0; i < pieces.Count; i++)
         {
-            if (!IsRecorded(story, pieces[i]))
+            if (ClipOfIn(story, pieces[i], parts) is null)
             {
                 return i;
             }
@@ -78,16 +112,20 @@ public static class RecordSplitWalk
     private static RecordProgress PageProgress(Story story, RecordBook book, string language)
     {
         var pages = book.Sentences.GroupBy(s => s.Page).ToList();
-        int done = pages.Count(page => page.All(s => StoryRecordings.ClipCovering(story, s.Page, s.Index, language) is not null));
+        var parts = new Lazy<IReadOnlyList<RecordPart>>(() => []); // a sentence card is covered by a sentence clip only, so no part list is ever needed here
+        int done = pages.Count(page => page.All(s => ClipOfIn(story, SentencePiece(s, language), parts) is not null));
         return new RecordProgress(done, pages.Count, RecordUnit.Pages);
     }
+
+    private static RecordPiece SentencePiece(RecordSentence sentence, string language) =>
+        new(new StoryClipKey(sentence.Page, sentence.Index, sentence.Index, StoryClipKey.NoLanguage).In(language), sentence.Speaker, sentence.Text);
 
     /// <summary>The recordings "Listen and change" walks, in story order, each clip once (mock frame 190): in per-character mode the clips of ticked speakers, in whole-page mode all of them.
     /// A piece is the clip's own sentences, its speaker the one who says the first of them.</summary>
     public static IReadOnlyList<RecordPiece> Recorded(Story story, RecordBook book, RecordMode mode, IReadOnlySet<string> ticked, string language)
     {
         var pieces = new List<RecordPiece>();
-        foreach (StoryClipKey clip in StoryRecordings.Clips(story, language).Select(c => c.Key))
+        foreach (StoryClipKey clip in StoryRecordings.Clips(story, language).Select(c => c.Key).Where(k => !k.IsPart)) // Slice 395: a part take is listened to in place by Slice 443, not here
         {
             List<RecordSentence> covered = book.Sentences.Where(s => s.Page == clip.Page && s.Index >= clip.First && s.Index <= clip.Last).ToList();
             if (covered.Count == 0 || (mode == RecordMode.PerCharacter && !ticked.Contains(covered[0].Speaker)))

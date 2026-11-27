@@ -262,10 +262,11 @@ public static class StarterUpdate
         Story merged = target;
         foreach (ClipMove move in moves)
         {
-            bool covered = StoryRecordings.Clips(merged).Any(c => c.Key.Overlaps(move.To));
+            // Slice 395: a part move is judged against the clips the target already had, never against the part clips this pass just added, so overlapping part clips of the source both arrive.
+            bool covered = StoryRecordings.Clips(move.To.IsPart ? target : merged).Any(c => c.Key.Overlaps(move.To));
             if (!covered)
             {
-                merged = StoryRecordings.WithClip(merged, move.To, source.PieceRecordings![move.From] with { File = move.File });
+                merged = StoryRecordings.WithClip(merged, move.To, source.PieceRecordings![move.From] with { File = move.File }, keepOverlappingParts: true);
             }
         }
 
@@ -312,22 +313,34 @@ public static class StarterUpdate
         }
 
         IReadOnlyList<RecordingMove> wholeMoves = RecordingMoves(stored, bundled);
-        var taken = new HashSet<int>(); // pages taken by piece moves
-        IReadOnlyList<int> storedCounts = RecordSplitBook.SentenceCounts(stored);
-        IReadOnlyList<int> bundledCounts = RecordSplitBook.SentenceCounts(bundled);
-        foreach (int from in pieces.Keys.Where(k => k.IsValid && k.Page < stored.Pages.Count).Select(k => k.Page).Distinct().Order())
+        // Slice 395: sentence clips and part clips move on their own (each its own pages taken and its own count check, a part clip counting the page's segments), so a move of one kind never blocks or drops the other kind.
+        moves.AddRange(PieceMovesOf(stored, bundled, pieces.Keys.Where(k => !k.IsPart).ToList(), wholeMoves, RecordSplitBook.SentenceCounts(stored), RecordSplitBook.SentenceCounts(bundled)));
+        List<StoryClipKey> partKeys = pieces.Keys.Where(k => k.IsPart).ToList();
+        if (partKeys.Count > 0)
+        {
+            moves.AddRange(PieceMovesOf(stored, bundled, partKeys, [], RecordSplitBook.PartCounts(stored), RecordSplitBook.PartCounts(bundled))); // a whole-page move never blocks a part clip: they do not overlap
+        }
+
+        return moves;
+    }
+
+    private static List<ClipMove> PieceMovesOf(Story stored, Story bundled, List<StoryClipKey> keys, IReadOnlyList<RecordingMove> wholeMoves, IReadOnlyList<int> storedCounts, IReadOnlyList<int> bundledCounts)
+    {
+        var moves = new List<ClipMove>();
+        var taken = new HashSet<int>(); // pages taken by moves of this kind
+        foreach (int from in keys.Where(k => k.IsValid && k.Page < stored.Pages.Count).Select(k => k.Page).Distinct().Order())
         {
             string text = stored.Pages[from].Text;
             // Slice 286: a whole-page move only blocks a page for pieces of its own language; clips of two languages share a page.
-            var languages = pieces.Keys.Where(k => k.Page == from).Select(k => k.Language).ToHashSet();
+            var languages = keys.Where(k => k.Page == from).Select(k => k.Language).ToHashSet();
             var blocked = new HashSet<int>(taken);
             blocked.UnionWith(wholeMoves.Where(m => languages.Contains(UiLanguage.Resolve(stored.Recordings![m.From].Language))).Select(m => m.To));
             bool sameIndex = from < bundled.Pages.Count && !blocked.Contains(from) && string.Equals(bundled.Pages[from].Text, text, StringComparison.Ordinal);
             int to = sameIndex ? from : FirstFreePageWithText(bundled.Pages, text, blocked);
-            if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different sentence count means a different split (a language or break change): the range would cover other words
+            if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different count means a different split (a language or break change): the range would cover other words
             {
                 taken.Add(to);
-                moves.AddRange(pieces.Keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to })));
+                moves.AddRange(keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to })));
             }
         }
 

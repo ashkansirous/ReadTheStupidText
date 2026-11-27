@@ -369,7 +369,20 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 
 	private bool Listening => _setup?.Listening == true;
 
-	private StoryClipKey? KeptClip() => Piece is { } piece && _story is { } story ? RecordSplitWalk.ClipOf(story, piece) : null;
+	private StoryClipKey? KeptClip() => Piece is { } piece && _story is { } story ? RecordSplitWalk.ClipOf(story, piece, PartListOf(story)) : null;
+
+	// Slice 395: the book's part list is cut once for the story on show (and only when a part clip needs it), not on every render, chip and log line.
+	private (Story Story, Lazy<IReadOnlyList<RecordPart>> Parts)? _partList;
+
+	private Lazy<IReadOnlyList<RecordPart>> PartListOf(Story story)
+	{
+		if (_partList is not { } cached || !ReferenceEquals(cached.Story, story))
+		{
+			_partList = cached = (story, new Lazy<IReadOnlyList<RecordPart>>(() => RecordSplitBook.PartListOf(story)));
+		}
+
+		return cached.Parts;
+	}
 
 	private bool Idle => _state == RecorderState.Idle;
 
@@ -787,6 +800,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 
 	// Clips already in the book that share a sentence with a piece: a clip of exactly that piece, or a legacy whole-page one, a part or a line cut differently (Slice 279). They are the "old take"
 	// of a new recording and go only when it is committed.
+	// Slice 395: a part piece's old take is a part clip that shares one of its parts; an older sentence clip over the same words stays (it and a part clip never replace each other).
 	private IReadOnlyList<StoryClipKey> OldClipsOf(StoryClipKey key) =>
 		_story is { } story ? StoryRecordings.Clips(story).Select(c => c.Key).Where(k => k.Overlaps(key)).ToList() : [];
 

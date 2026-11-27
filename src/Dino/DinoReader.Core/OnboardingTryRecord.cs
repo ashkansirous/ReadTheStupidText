@@ -30,7 +30,7 @@ public sealed record OnboardingTryRecord(string BookId, IReadOnlyList<TryClip> C
     public IReadOnlyList<OnboardingTryRecord> PerBook() =>
         [.. Clips.GroupBy(c => c.BookId ?? BookId).Select(g => new OnboardingTryRecord(g.Key, [.. g.Select(c => c with { BookId = null })]))];
 
-    public string ToJson() => JsonSerializer.Serialize(new Dto(BookId, [.. Clips.Select(c => new ClipDto(c.Key.Page, c.Key.First, c.Key.Last, c.Key.Language, c.File, c.BookId))]));
+    public string ToJson() => JsonSerializer.Serialize(new Dto(BookId, [.. Clips.Select(c => new ClipDto(c.Key.Page, c.Key.First, c.Key.Last, c.Key.Language, c.File, c.BookId, c.Key.IsPart))]));
 
     /// <summary>The record in <paramref name="json"/>, or null for nothing or text that is not a record.</summary>
     public static OnboardingTryRecord? FromJson(string? json)
@@ -44,7 +44,7 @@ public sealed record OnboardingTryRecord(string BookId, IReadOnlyList<TryClip> C
         {
             Dto? dto = JsonSerializer.Deserialize<Dto>(json);
             return dto?.BookId is { Length: > 0 } id && dto.Clips is { } clips
-                ? new OnboardingTryRecord(id, [.. clips.Select(c => new TryClip(new StoryClipKey(c.Page, c.First, c.Last, c.Language ?? string.Empty), c.File ?? string.Empty, c.BookId))])
+                ? new OnboardingTryRecord(id, [.. clips.Select(c => new TryClip(new StoryClipKey(c.Page, c.First, c.Last, c.Language ?? string.Empty) { IsPart = c.IsPart }, c.File ?? string.Empty, c.BookId))])
                 : null;
         }
         catch (JsonException)
@@ -54,7 +54,8 @@ public sealed record OnboardingTryRecord(string BookId, IReadOnlyList<TryClip> C
         }
     }
 
-    private sealed record ClipDto(int Page, int First, int Last, string? Language, string? File, string? BookId = null);
+    // Slice 395: IsPart keeps a part key a part key across a restart (a record saved before it was written has none and reads as sentence keys, which is what they were).
+    private sealed record ClipDto(int Page, int First, int Last, string? Language, string? File, string? BookId = null, bool IsPart = false);
 
     private sealed record Dto(string? BookId, List<ClipDto>? Clips);
 }

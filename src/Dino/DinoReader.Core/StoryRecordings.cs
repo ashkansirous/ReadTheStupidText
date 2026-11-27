@@ -19,7 +19,7 @@ public static class StoryRecordings
     public const string TakePrefix = "take";
 
     // rec-[<lang>-]<page>[-<first>-<last>][-<8 hex>].m4a: the language part (Slice 286) is a short lower-case code and is never a number, so the older names still match.
-    private static readonly Regex FileNamePattern = new(@"^rec-([a-z]{2,3}-)?[1-9][0-9]{0,3}(-[1-9][0-9]{0,3}-[1-9][0-9]{0,3})?(-[0-9a-f]{8})?\.m4a$", RegexOptions.CultureInvariant);
+    private static readonly Regex FileNamePattern = new(@"^rec-([a-z]{2,3}-)?[1-9][0-9]{0,3}(-p?[1-9][0-9]{0,3}-[1-9][0-9]{0,3})?(-[0-9a-f]{8})?\.m4a$", RegexOptions.CultureInvariant); // Slice 395: a p before the range names parts
     private static readonly Regex TakeNamePattern = new(@"^take-[0-9a-f]{32}\.m4a$", RegexOptions.CultureInvariant);
 
     /// <summary>The file name of page <paramref name="page"/>'s whole-page recording (0-based index, the number in the name is 1-based).</summary>
@@ -28,7 +28,10 @@ public static class StoryRecordings
     /// <summary>The file name of a clip (Slice 279): <c>rec-&lt;lang&gt;-&lt;page&gt;.m4a</c> for a whole-page one, else <c>rec-&lt;lang&gt;-&lt;page&gt;-&lt;first&gt;-&lt;last&gt;.m4a</c> (Slice 286: the language leads;
     /// a key with no language keeps the older <c>rec-&lt;page&gt;.m4a</c> and <c>rec-&lt;page&gt;-&lt;first&gt;-&lt;last&gt;.m4a</c>), every number counted from 1. Two languages never share a name.</summary>
     public static string FileNameOf(StoryClipKey key) =>
-        key.IsWholePage ? $"{FilePrefix}-{LanguagePart(key)}{key.Page + 1}{FileExtension}" : $"{FilePrefix}-{LanguagePart(key)}{key.Page + 1}-{key.First + 1}-{key.Last + 1}{FileExtension}";
+        key.IsWholePage ? $"{FilePrefix}-{LanguagePart(key)}{key.Page + 1}{FileExtension}" : $"{FilePrefix}-{LanguagePart(key)}{key.Page + 1}-{(key.IsPart ? PartMark : string.Empty)}{key.First + 1}-{key.Last + 1}{FileExtension}";
+
+    // Slice 395: the letter before a part clip's range in its file name (rec-en-3-p2-4.m4a: parts 2 to 4 of page 3).
+    private const string PartMark = "p";
 
     /// <summary>The file a clip lives in when its story stores no name for it: a piece's usual name, but a whole-page clip's pre-Slice-286 name (<c>rec-&lt;page&gt;.m4a</c>), the file the older books
     /// recorded into. A whole-page clip made since always stores its own fresh name.</summary>
@@ -110,7 +113,7 @@ public static class StoryRecordings
         IEnumerable<KeyValuePair<StoryClipKey, PageRecording>> whole = RecordedPages(story)
             .Select(p => new KeyValuePair<StoryClipKey, PageRecording>(StoryClipKey.OfPage(p, ClipLanguageOf(story.Recordings![p])), story.Recordings![p]));
         IEnumerable<KeyValuePair<StoryClipKey, PageRecording>> pieces = (story.PieceRecordings ?? NoPieces).Where(e => e.Key.IsValid && e.Key.Page < story.Pages.Count);
-        return whole.Concat(pieces).OrderBy(c => c.Key.Page).ThenBy(c => c.Key.First).ThenBy(c => c.Key.Language, StringComparer.Ordinal);
+        return whole.Concat(pieces).OrderBy(c => c.Key.Page).ThenBy(c => c.Key.First).ThenBy(c => c.Key.Language, StringComparer.Ordinal).ThenBy(c => !c.Key.IsWholePage).ThenBy(c => c.Key.IsPart).ThenBy(c => c.Key.Last); // a stable total order (a whole-page clip first, then a sentence clip before a part clip, then the shorter run), so which of two overlapping clips plays never depends on dictionary order
     }
 
     // A recording that waits for its language (StoryJson.PendingLanguage, empty) stays empty; every other one is its resolved code.
@@ -137,14 +140,16 @@ public static class StoryRecordings
     public static IReadOnlyList<StoryClipKey> Overlapping(Story story, StoryClipKey key) =>
         Clips(story).Select(c => c.Key).Where(k => k != key && k.Overlaps(key)).ToList();
 
-    /// <summary>The story with <paramref name="recording"/> for <paramref name="key"/>. Any other clip that shares a sentence with it goes (a page cannot be read from two clips at once); the first clip of a book turns "Read with my voice" on.</summary>
-    public static Story WithClip(Story story, StoryClipKey key, PageRecording recording)
+    /// <summary>The story with <paramref name="recording"/> for <paramref name="key"/>. Any other clip that shares a sentence with it goes (a page cannot be read from two clips at once); the first clip of a book turns "Read with my voice" on.
+    /// Slice 395: a part clip and a sentence clip never share anything (<see cref="StoryClipKey.Overlaps"/>), so saving one kind never removes the other.</summary>
+    /// <param name="keepOverlappingParts">True on a merge or a move (Slice 395): a part clip then removes only the clip with exactly its key, so two part clips that overlap in a source (a restore, a hand edit) both arrive and no file is left naming nobody.</param>
+    public static Story WithClip(Story story, StoryClipKey key, PageRecording recording, bool keepOverlappingParts = false)
     {
         string language = key.Language.Length == 0 ? UiLanguage.Resolve(recording.Language) : key.Language;
         key = key.In(language); // the key and the recording always name the same language (Slice 286)
         recording = recording with { Language = language };
         bool first = Count(story) == 0;
-        Story cleared = Overlapping(story, key).Aggregate(story, WithoutClip);
+        Story cleared = keepOverlappingParts && key.IsPart ? story : Overlapping(story, key).Aggregate(story, WithoutClip);
         if (key.IsWholePage && (Of(cleared, key.Page) is not { } slot || ClipLanguageOf(slot) == key.Language))
         {
             Story withPage = With(WithoutClip(cleared, key), key.Page, recording);
@@ -180,11 +185,12 @@ public static class StoryRecordings
 
     /// <summary>The clip in <paramref name="language"/> of page <paramref name="page"/> that covers sentence <paramref name="sentence"/> (counted on the page), or null.</summary>
     public static StoryClipKey? ClipCovering(Story story, int page, int sentence, string language) =>
-        Clips(story, language).Select(c => c.Key).Where(k => k.Page == page && k.First <= sentence && sentence <= k.Last).Select(k => (StoryClipKey?)k).FirstOrDefault();
+        Clips(story, language).Select(c => c.Key).Where(k => !k.IsPart && k.Page == page && k.First <= sentence && sentence <= k.Last).Select(k => (StoryClipKey?)k).FirstOrDefault();
 
-    /// <summary>Whether the reader plays the clip <paramref name="key"/> while reading in <paramref name="readingLanguage"/>: the book's "Read with my voice" is on, the clip exists, and it was made in that language (Slice 286).</summary>
+    /// <summary>Whether the reader plays the clip <paramref name="key"/> while reading in <paramref name="readingLanguage"/>: the book's "Read with my voice" is on, the clip exists, and it was made in that language (Slice 286).
+    /// Slice 395: a part clip is kept but not played here; its playback in place of only its words is Slice 443.</summary>
     public static bool PlaysClip(Story story, StoryClipKey key, string readingLanguage) =>
-        story.UseRecordings && ClipOf(story, key) is not null && key.Language == UiLanguage.Resolve(readingLanguage);
+        !key.IsPart && story.UseRecordings && ClipOf(story, key) is not null && key.Language == UiLanguage.Resolve(readingLanguage);
 
     /// <summary>Every clip the reader plays while reading in <paramref name="readingLanguage"/>, in page order.</summary>
     public static IReadOnlyList<StoryClipKey> PlayingClips(Story story, string readingLanguage) =>
@@ -195,13 +201,20 @@ public static class StoryRecordings
         story.Recordings is { } all && page >= 0 && page < story.Pages.Count && all.TryGetValue(page, out PageRecording? recording) ? recording : null;
 
     /// <summary>How many clips the book holds (whole-page ones and pieces, every language).</summary>
-    public static int Count(Story story) => Clips(story).Count();
+    public static int Count(Story story) => Counted(Clips(story)).Count();
+
+    /// <summary>How many clips the book holds, part clips included whatever <see cref="PartTakes.Enabled"/> says: what a save must keep (the schema mark and the switch are written from this).</summary>
+    public static int CountStored(Story story) => Clips(story).Count();
 
     /// <summary>How many clips the book holds in <paramref name="language"/> (Slice 286).</summary>
-    public static int Count(Story story, string language) => Clips(story, language).Count();
+    public static int Count(Story story, string language) => Counted(Clips(story, language)).Count();
 
     /// <summary>The number of distinct pages that have a clip in <paramref name="language"/> (the Record intro's "8 of 12 pages").</summary>
-    public static int PagesRecorded(Story story, string language) => Clips(story, language).Select(c => c.Key.Page).Distinct().Count();
+    public static int PagesRecorded(Story story, string language) => Counted(Clips(story, language)).Select(c => c.Key.Page).Distinct().Count();
+
+    // Slice 395: while the switch is off a part clip is carried and saved untouched but no card, count, tile mark or "Read with my voice" toggle sees it (it never plays).
+    private static IEnumerable<KeyValuePair<StoryClipKey, PageRecording>> Counted(IEnumerable<KeyValuePair<StoryClipKey, PageRecording>> clips) =>
+        PartTakes.Enabled ? clips : clips.Where(c => !c.Key.IsPart);
 
     /// <summary>The indexes of the pages that have a whole-page recording (made before Slice 279 or in whole-page mode), in order. A page recorded in pieces is not listed: see <see cref="Clips"/>.</summary>
     public static IEnumerable<int> RecordedPages(Story story) =>
@@ -305,11 +318,15 @@ public static class StoryRecordings
 
     /// <summary>As <see cref="MergeablePages"/> for every clip of <paramref name="backed"/>, pieces included (Slice 279): the page is still there with the same text, <paramref name="hasAudio"/> says the backup
     /// carries the clip's file, and no different clip of the phone shares a sentence with it (a merge never drops what the phone recorded).</summary>
-    public static IReadOnlyList<StoryClipKey> MergeableClips(Story phone, Story backed, Func<string, bool> hasAudio) =>
-        Clips(backed).Select(c => c.Key)
+    public static IReadOnlyList<StoryClipKey> MergeableClips(Story phone, Story backed, Func<string, bool> hasAudio)
+    {
+        var phoneParts = new Lazy<IReadOnlyList<RecordPart>>(() => RecordSplitBook.PartListOf(phone));
+        return Clips(backed).Select(c => c.Key)
             .Where(k => k.Page < phone.Pages.Count && string.Equals(phone.Pages[k.Page].Text, backed.Pages[k.Page].Text, StringComparison.Ordinal)
+                && (!k.IsPart || RecordSplitBook.PartFits(phoneParts.Value, k)) // a part clip lands only on a page of the phone that has all the parts it names, or it would never play and could replace a phone clip it overlaps
                 && hasAudio(FileOf(backed, k)) && Overlapping(phone, k).Count == 0 && !ClashesWithOtherLanguage(phone, backed, k))
             .ToList();
+    }
 
     // Slice 286: a backup clip never lands on the file, or the whole-page slot, of a phone clip in another language (a migrated clip keeps its pre-language file name, so two
     // languages can name one file; placing the backup's audio there would destroy the phone's take).
@@ -323,7 +340,7 @@ public static class StoryRecordings
 
     /// <summary>As <see cref="WithMerged"/> for clips: <paramref name="phone"/> with the backup's recording for each of <paramref name="keys"/>.</summary>
     public static Story WithMergedClips(Story phone, Story backed, IReadOnlyList<StoryClipKey> keys) =>
-        keys.Aggregate(phone, (story, key) => WithClip(story, key, ClipOf(backed, key)!));
+        keys.Aggregate(phone, (story, key) => WithClip(story, key, ClipOf(backed, key)!, keepOverlappingParts: true));
 
     private static readonly IReadOnlyDictionary<int, PageRecording> NoRecordings = new Dictionary<int, PageRecording>();
     private static readonly IReadOnlyDictionary<StoryClipKey, PageRecording> NoPieces = new Dictionary<StoryClipKey, PageRecording>();

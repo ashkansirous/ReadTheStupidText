@@ -157,7 +157,8 @@ internal sealed class OnboardingVoicePage : ContentPage, IDinoKeyTarget
 		string language = StoryLanguages.Current().Main;
 		RecordBook source = RecordSplitBook.Of(story);
 		RecordBook book = await RecordBooks.InAsync(_services, story, source, language, CancellationToken.None) ?? source;
-		RecordBook demoPage = book with { Sentences = [.. book.Sentences.Where(s => s.Page == _demo.PageIndex)] };
+		// Slice 395: the onboarding try keeps whole-sentence lines: OnboardingDemo picks its line by sentence range and OnboardingTryRecord stores sentence keys (both outside this slice's Touches), so the demo page is cut without parts.
+		RecordBook demoPage = book with { Sentences = [.. book.Sentences.Where(s => s.Page == _demo.PageIndex).Select(s => s with { Parts = null })] };
 		var choice = new RecordChoice(RecordMode.PerCharacter, new HashSet<string> { _demo.Character });
 		IReadOnlyList<RecordPiece> pieces = OnboardingDemo.LinesOf(await Task.Run(() => RecordCard.Pieces(story, demoPage, choice, language)), _demo);
 		return pieces.Count == 0 ? null : new RecordSetup(story, book, choice, pieces, Listening: false, language);
