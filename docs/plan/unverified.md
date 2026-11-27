@@ -77,6 +77,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 459: Dino first books: the first book is playable within seconds of Continue ([slice](slices/459-dino-first-book-playable-in-seconds.md))
+- [phone] The S21 first run with the network throttled to 1 Mbit/s: the first book opens before the rest finish (`tools/emulator` has no throttle flag).
+- [cloud] iOS simulator first run.
+- [session] Windows VM first run (VM not started: 7.8 GB free memory, under the 8 GB the VM needs).
+- [session] The Ninjalog `wait_shown` query after release (the Verification line of the slice).
+
+### Slice 443: Dino: a parent's part take plays in place of only its words ([slice](slices/443-dino-parent-part-take-plays-its-words-only.md))
+- [phone] Hear "said Mummy" in the book's voice between two part takes on the S21 (the parent's ear).
+- [cloud] iOS simulator: record a part take and read it back.
+- [session] Windows VM: record a part take and read it back (the VM was not started, for memory).
+
 ### Slice 437: Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) ([slice](slices/437-dino-sonos-browse-shelves.md))
 - [owner] **You:** Sonos sandbox run in your Sonos app: the root opens in the phone's language, the shelf order, the paid row ("In the Dino app"), where the subtitle shows, and the element order.
 - [owner] **You:** A1 on your sandbox (S21 Sonos app): what a tap on a paid book, adding it to the queue and pressing Play on a shelf that holds one do with `canPlay` false and `Client.ItemNotFound`; whether the app's wording for it reads well.

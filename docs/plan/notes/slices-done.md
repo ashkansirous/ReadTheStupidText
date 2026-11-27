@@ -304,6 +304,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 430 | Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform | built | #1336 | — | [430-ninjalog-forced-update-dashboard.md](../slices/430-ninjalog-forced-update-dashboard.md) |
 | 446 | Dino: "says the <name>" gives the line to the right speaker | built | #1396 | — | [446-dino-says-the-name-speaker.md](../slices/446-dino-says-the-name-speaker.md) |
 | 437 | Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) | built (Sonos sandbox run and IMAGES binding open; checks in unverified.md) | #1398 | — | [437-dino-sonos-browse-shelves.md](../slices/437-dino-sonos-browse-shelves.md) |
+| 459 | Dino first books: the first book is playable within seconds of Continue | built (device checks in unverified.md) | #1395 | | [459-dino-first-book-playable-in-seconds.md](../slices/459-dino-first-book-playable-in-seconds.md) |
+| 443 | Dino: a parent's part take plays in place of only its words | built (device checks in unverified.md) | #1397 | | [443-dino-parent-part-take-plays-its-words-only.md](../slices/443-dino-parent-part-take-plays-its-words-only.md) |
 
 ## Shared
 
