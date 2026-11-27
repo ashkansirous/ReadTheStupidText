@@ -86,6 +86,15 @@ try {
     Assert-Equal 'only the usable one is listed' 'x64-jdk-17' (@(Get-InstalledJdkHomes @($r) | ForEach-Object { Split-Path -Leaf $_ }) -join ',')
     $env:JAVA_HOME = Join-Path $r 'studio-jbr'
     try { Assert-Equal 'JAVA_HOME at JDK 11 is not kept' (Join-Path $r 'x64-jdk-17') (Select-JdkHome $env:JAVA_HOME @($r)) } finally { $env:JAVA_HOME = $saved }
+
+    # Slice 449: every Maestro launcher calls Set-ProcessJavaHome and exits with the JDK-not-found code. tools/phone starts no Maestro (its scripts only mention it in comments), so it has none to list.
+    $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+    foreach ($launcher in @('tools\emulator\run-flows.ps1', 'tools\emulator\store-screenshots.ps1')) {
+        $text = (Get-Content -LiteralPath (Join-Path $repoRoot $launcher)) -replace '^\s*#.*$', '' -join "`n"   # comment-only lines do not count
+        Assert-Equal "$launcher calls Set-ProcessJavaHome and exits with ExitJdkNotFound" $true ($text -match 'if \(-not \(Set-ProcessJavaHome\)\) \{ exit \$script:ExitJdkNotFound \}')
+    }
+    $phoneStarts = @(Get-ChildItem (Join-Path $repoRoot 'tools\phone') -Filter '*.ps1' -Recurse | Where-Object { @(Get-Content -LiteralPath $_.FullName | ForEach-Object { ($_ -replace '\s#.*$', '') -replace '^\s*#.*$', '' } | Where-Object { $_ -match '(^|[\s&;|(''"\\/])maestro(\.bat|\.cmd)?(\s|$|[''")])' -and $_ -match '(&|Start-Process|Invoke-Expression|\biex\b|cmd(\.exe)?\s+/c)' }).Count -gt 0 } | ForEach-Object { $_.Name })
+    Assert-Equal 'no tools/phone script starts Maestro (add the call and list it above if one does)' '' ($phoneStarts -join ',')
 } finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
