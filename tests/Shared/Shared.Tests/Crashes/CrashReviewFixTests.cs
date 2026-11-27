@@ -87,7 +87,7 @@ public sealed class CrashReviewFixTests : IDisposable
     [Fact]
     public void The_tail_of_a_big_log_is_read_from_the_end_and_still_has_whole_lines_and_the_cap()
     {
-        var log = new RollingLogFile(_folder, 100_000);
+        using var log = new RollingLogFile(_folder, 100_000);
         for (int i = 0; i < 1500; i++)
         {
             log.Append($"line {i:D5} " + new string('y', 40), flush: false);
@@ -104,7 +104,7 @@ public sealed class CrashReviewFixTests : IDisposable
     [Fact]
     public async Task The_background_tail_holds_only_what_was_written_before_it_was_asked_for()
     {
-        var log = new RollingLogFile(_folder);
+        using var log = new RollingLogFile(_folder);
         log.Append("previous run", flush: true);
 
         Task<string> tail = log.TailInBackground();

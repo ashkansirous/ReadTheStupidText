@@ -15,7 +15,11 @@ public sealed class PendingCrashStore(string folder)
     private const string TempSuffix = ".tmp";
     private const string RunMarkerName = "running.marker";
 
+    private const string UncleanTailName = "last-unclean-tail.txt";
+
     private string RunMarkerPath => Path.Combine(folder, RunMarkerName);
+
+    private string UncleanTailPath => Path.Combine(folder, UncleanTailName);
 
     /// <summary>Writes <paramref name="report"/> as a new pending file and drops the oldest beyond <see cref="MaxPending"/>. Returns whether it was kept.</summary>
     public bool Save(CrashReport report, DateTimeOffset now)
@@ -116,14 +120,63 @@ public sealed class PendingCrashStore(string folder)
         }
     }
 
-    /// <summary>Deletes every pending file (the user's switch or the remote config says off).</summary>
+    /// <summary>Deletes every pending file (the user's switch or the remote config says off) and the note of the last unclean exit's tail.</summary>
     public void Clear()
     {
         foreach (string path in List())
         {
             Delete(path);
         }
+
+        Delete(UncleanTailPath);
     }
+
+    /// <summary>
+    /// Slice 424 item 6, one death one report: true when the unclean exit of the launch that started at <paramref name="launchStart"/> with this <paramref name="logTail"/> was already
+    /// reported (the note on disk holds the same launch and tail, so the same death is not counted twice). A different launch with the same tail is a different death and is not a
+    /// repeat; a launch of unknown start or an empty tail cannot be told apart, so it is never a repeat. A failure to read the note says false (a repeated report is better than a lost one).
+    /// </summary>
+    public bool IsUncleanReported(string logTail, DateTimeOffset? launchStart)
+    {
+        if (UncleanKey(logTail, launchStart) is not { } key)
+        {
+            return false;
+        }
+
+        try
+        {
+            return File.Exists(UncleanTailPath) && string.Equals(File.ReadAllText(UncleanTailPath, Encoding.UTF8).Trim(), key, StringComparison.Ordinal);
+        }
+        catch (Exception)
+        {
+            // no-fallback: an unreadable note means the death is reported (not a repeat), never silently dropped.
+            return false;
+        }
+    }
+
+    /// <summary>Remembers on disk that the unclean exit of this launch and tail was reported; call it only after the report is stored. Never throws.</summary>
+    public void NoteUncleanReported(string logTail, DateTimeOffset? launchStart)
+    {
+        if (UncleanKey(logTail, launchStart) is not { } key)
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(UncleanTailPath, key, new UTF8Encoding(false));
+        }
+        catch (Exception)
+        {
+            // no-fallback: without the note a repeat of this death is reported again (better than a lost report).
+        }
+    }
+
+    private static string? UncleanKey(string logTail, DateTimeOffset? launchStart) =>
+        logTail.Length == 0 || launchStart is not { } start
+            ? null
+            : Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes($"{start.UtcTicks}|{logTail}")));
 
     /// <summary>Notes that the app is in front. If the app dies before <see cref="MarkNotRunning"/>, the next launch sees the marker.</summary>
     public void MarkRunning()

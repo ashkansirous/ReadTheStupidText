@@ -22,7 +22,7 @@ public sealed class RollingLogFileTests : IDisposable
     [Fact]
     public void Lines_come_back_oldest_first_and_a_warning_is_on_disk_at_once()
     {
-        var log = new RollingLogFile(_folder);
+        using var log = new RollingLogFile(_folder);
         log.Append("one", flush: false);
         log.Append("two", flush: true);
 
@@ -33,7 +33,7 @@ public sealed class RollingLogFileTests : IDisposable
     public void The_two_files_swap_when_full_so_the_disk_use_stays_bounded_and_the_tail_is_the_newest()
     {
         const int fileBytes = 2000;
-        var log = new RollingLogFile(_folder, fileBytes);
+        using var log = new RollingLogFile(_folder, fileBytes);
         for (int i = 0; i < 400; i++)
         {
             log.Append($"line {i:D4} " + new string('x', 40), flush: false);
@@ -52,14 +52,14 @@ public sealed class RollingLogFileTests : IDisposable
     [Fact]
     public void The_tail_is_capped_in_bytes_and_a_fresh_instance_carries_on_in_the_newest_file()
     {
-        var first = new RollingLogFile(_folder, 4000);
+        using var first = new RollingLogFile(_folder, 4000);
         for (int i = 0; i < 100; i++)
         {
             first.Append($"first {i:D3}", flush: false);
         }
 
         first.Flush();
-        var second = new RollingLogFile(_folder, 4000);
+        using var second = new RollingLogFile(_folder, 4000);
         second.Append("second run", flush: true);
 
         string tail = second.Tail(maxLines: 300, maxBytes: 64);
@@ -75,7 +75,7 @@ public sealed class RollingLogFileTests : IDisposable
         Directory.CreateDirectory(_folder);
         string blocked = Path.Combine(_folder, "file");
         File.WriteAllText(blocked, "a file where the folder should be");
-        var log = new RollingLogFile(blocked);
+        using var log = new RollingLogFile(blocked);
 
         log.Append("lost", flush: true);
         log.Flush();

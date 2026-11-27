@@ -28,6 +28,81 @@ public static class CrashReportBuilder
     public static CrashReport? FromDescription(CrashContext context, string kind, string type, string message, string stack, string logTail, DateTimeOffset now) =>
         Build(context, kind, type, LogLineFormatter.ScrubMessage(message), stack, logTail, now);
 
+    /// <summary>
+    /// The message of an <c>unclean_exit</c> report (Slice 424 items 3-4): the fixed sentence, then the last page the dead launch showed (a class name, never text), then the system's
+    /// exit record of it when Android had one, each only when known. No new wire field: the Worker keeps the message as it is.
+    /// </summary>
+    public static string UncleanExitMessage(string? exitReason, string? lastPage)
+    {
+        var text = new StringBuilder(UncleanExitSentence);
+        if (!string.IsNullOrWhiteSpace(lastPage))
+        {
+            string page = lastPage.Trim();
+            text.Append(LastPageSeparator).Append(page.Length <= MaxPageChars ? page : page[..MaxPageChars]); // a long page name never takes the reason's room
+        }
+
+        if (!string.IsNullOrWhiteSpace(exitReason))
+        {
+            int room = Math.Max(0, MaxMessageChars - text.Length - PartSeparator.Length); // what is left of the 200 characters the message is cut at
+            string reason = exitReason.Trim();
+            text.Append(PartSeparator).Append(reason.Length <= room ? reason : reason[..room]); // the reason is cut at its own end (the description), never dropped
+        }
+
+        return text.ToString();
+    }
+
+    private const int MaxMessageChars = 200; // the cut LogLineFormatter.ScrubMessage makes
+    private const int MaxPageChars = 40;
+
+    /// <summary>Android (Slice 424 item 3): the text of the system's exit record of the dead launch, as <see cref="UncleanExitMessage"/> takes it.</summary>
+    public static string AndroidExitText(int reason, int status, int importance, string? description)
+    {
+        string text = $"{AndroidExitPrefix}{AndroidExitReasonName(reason)}, {AndroidStatusLabel}{status}, {AndroidImportanceLabel}{importance}";
+        return string.IsNullOrWhiteSpace(description) ? text : $"{text}, {AndroidDescriptionLabel}{description.Trim()}"; // an empty description is left out, never printed as a label with nothing after it
+    }
+
+    /// <summary>The name of an ApplicationExitInfo REASON_* code (the Android binding's ApplicationExitInfoReason names, values 0 to 16); an unknown code is its number. Pure.</summary>
+    public static string AndroidExitReasonName(int reason) => reason switch
+    {
+        0 => "Unknown",
+        1 => "ExitSelf",
+        2 => "Signaled",
+        3 => "LowMemory",
+        4 => "Crash",
+        5 => "CrashNative",
+        6 => "Anr",
+        7 => "InitializationFailure",
+        8 => "PermissionChange",
+        9 => "ExcessiveResourceUsage",
+        10 => "UserRequested",
+        11 => "UserStopped",
+        12 => "DependencyDied",
+        13 => "Other",
+        14 => "Freezer",
+        15 => "PackageStateChange",
+        16 => "PackageUpdated",
+        _ => reason.ToString(System.Globalization.CultureInfo.InvariantCulture),
+    };
+
+    /// <summary>
+    /// iOS (Slice 424 item 3): the exit counts of MetricKit's last daily period as the text <see cref="UncleanExitMessage"/> takes, e.g. <c>context, not this exit's cause - exits in the last day: memory limit 2, watchdog 1</c>. MetricKit's counts are per period, not per launch, so the text says so.
+    /// Only abnormal exits with a count above zero are named (a normal exit says nothing about a death); null when there are none. Pure.
+    /// </summary>
+    public static string? ExitCountsText(IEnumerable<(string Name, long Count)> counts)
+    {
+        string[] named = counts.Where(c => c.Count > 0).Select(c => $"{c.Name} {c.Count}").ToArray();
+        return named.Length == 0 ? null : ExitCountsPrefix + string.Join(", ", named);
+    }
+
+    private const string UncleanExitSentence = "The run marker was left behind";
+    private const string PartSeparator = "; ";
+    private const string LastPageSeparator = "; last page ";
+    private const string ExitCountsPrefix = "context, not this exit's cause - exits in the last day: ";
+    private const string AndroidExitPrefix = "exit reason ";
+    private const string AndroidStatusLabel = "status ";
+    private const string AndroidImportanceLabel = "importance ";
+    private const string AndroidDescriptionLabel = "description ";
+
     private static CrashReport? Build(CrashContext context, string kind, string type, string message, string stack, string logTail, DateTimeOffset now)
     {
         string? channel = InstallChannels.NameOf(context.Channel);

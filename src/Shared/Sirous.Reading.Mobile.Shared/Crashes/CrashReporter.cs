@@ -36,6 +36,10 @@ public static partial class CrashReporter
     private static volatile LaunchFacts? thisLaunch;
     private static volatile LaunchFacts? previousLaunch;
     private static bool factsBegun;
+    private static bool pageHooked;
+    private static readonly object PageGate = new();
+    private static Task pageWork = Task.CompletedTask;
+    private static string? lastShownPage;
     private static CrashContext? context;
     private static string? userSwitchKey;
     private static Exception? lastReported;
@@ -156,14 +160,65 @@ public static partial class CrashReporter
     {
         lock (FactsGate)
         {
-            if (!factsBegun || !reportingAllowed || thisLaunch is not { Foreground: false } current)
+            if (!factsBegun || !reportingAllowed || thisLaunch is not { } current)
             {
                 return;
             }
 
-            thisLaunch = current with { Foreground = true };
+            // Slice 424 item 4: the state and the session id are rewritten on every activation; the Foreground flag is set once
+            thisLaunch = (current with { Foreground = true }).WithState(SessionProvider?.Invoke(), null, CrashAppState.Foreground);
             launchFacts?.Write(thisLaunch);
         }
+    }
+
+    // Slice 424 item 4: the launch's own last page and app state, written to its facts file as they change, so an unclean exit of it can say where it was. Small file, no network, never throws.
+    private static void RecordLaunchState(string? lastPage, string? state)
+    {
+        try
+        {
+            lock (FactsGate)
+            {
+                if (!factsBegun || !reportingAllowed || thisLaunch is not { } current)
+                {
+                    return;
+                }
+
+                LaunchFacts next = current.WithState(SessionProvider?.Invoke(), lastPage, state);
+                if (next != current)
+                {
+                    thisLaunch = next;
+                    launchFacts?.Write(next);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: crash reporting must never report into itself; the report then has no last page
+            Debug.WriteLine($"Crash reporting could not record the launch state: {ex.Message}");
+        }
+    }
+
+    // Slice 424 item 5: a page change reaches the log file at once (and the page into the facts file), so a death loses at most a few seconds of the log.
+    // The UI thread only queues the work: the flush and the facts write run one after another on a background task, and a page shown again with no change in between does nothing.
+    // Going to the background still flushes at once on its own thread (SetRunning), so that guarantee does not wait for this queue.
+    private static void OnPageShown(string pageName)
+    {
+        lock (PageGate)
+        {
+            if (string.Equals(pageName, lastShownPage, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            lastShownPage = pageName;
+            pageWork = pageWork.ContinueWith(_ => FlushAndRecordPage(pageName), CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
+        }
+    }
+
+    private static void FlushAndRecordPage(string pageName)
+    {
+        CrashLog.Current?.Flush();
+        RecordLaunchState(pageName, null);
     }
 
     private static void AddUuidToThisLaunch()
@@ -225,6 +280,25 @@ public static partial class CrashReporter
         window.Stopped += (_, _) => SetRunning(false);
         AppTrace.AttachTo(Microsoft.Maui.Controls.Application.Current); // Slice 243 item 5: page, lifecycle and Back lines for the rolling log
         AppTrace.AttachTo(window);
+        if (Microsoft.Maui.Controls.Application.Current is { } application && TryMarkPageHooked())
+        {
+            application.PageAppearing += (_, page) => OnPageShown(page.GetType().Name); // after AppTrace's own handler, so the line it writes is flushed too
+        }
+    }
+
+    // True only for the first caller: the check and the set happen under PageGate, so PageAppearing is never subscribed twice.
+    private static bool TryMarkPageHooked()
+    {
+        lock (PageGate)
+        {
+            if (pageHooked)
+            {
+                return false;
+            }
+
+            pageHooked = true;
+            return true;
+        }
     }
 
     /// <summary>Re-reads the gate now (Debug: the scripted check has just set or cleared the stub mid-run). Never throws.</summary>
@@ -258,6 +332,8 @@ public static partial class CrashReporter
             else
             {
                 store?.MarkNotRunning();
+                CrashLog.Current?.Flush(); // Slice 424 item 5: going to the background writes the log, the system may end the process at any time after
+                RecordLaunchState(null, CrashAppState.Background);
             }
         }
         catch (Exception ex)
@@ -370,8 +446,7 @@ public static partial class CrashReporter
             bool explained = history.Count > 0 || (frontSince is { } since && CrashDedupe.ManagedReportSince(pending, since));
             if (frontSince is not null && !explained && context is not null)
             {
-                LaunchFacts? launch = LaunchFactsChoice.ForUncleanExit(previousLaunch, thisLaunch); // the previous launch's facts, never this launch's
-                Save(CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), launch),CrashKind.UncleanExit, UncleanType, "The run marker was left behind", string.Empty, tail, DateTimeOffset.UtcNow));
+                SaveUncleanExit(tail);
             }
 
             RememberReportedCrashes();
@@ -382,6 +457,45 @@ public static partial class CrashReporter
             // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not record the last run: {ex.Message}");
         }
+    }
+
+    // Slice 424 items 3, 4 and 6: the report carries the dead launch's own session id, last page and app state (from its facts file) and Android's exit record of it; the same dead
+    // launch (same start and same log tail) seen twice is reported once. A launch with no known start or an empty tail cannot be told apart, so it is always reported.
+    private static void SaveUncleanExit(string tail)
+    {
+        if (store is null || context is null)
+        {
+            return;
+        }
+
+        DateTimeOffset? deadLaunchStart = previousLaunch?.Since; // the dead launch's own start: the same tail from another launch is another death
+        if (store.IsUncleanReported(tail, deadLaunchStart))
+        {
+            Note("unclean exit repeats the last one reported (same launch, same log tail), skipped");
+            return;
+        }
+
+        LaunchFacts? launch = LaunchFactsChoice.ForUncleanExit(previousLaunch, thisLaunch); // the previous launch's facts, never this launch's
+        string? exit = LastExitDescription(deadLaunchStart);
+        Note($"unclean exit: session {(launch?.Session is null ? "none" : "kept")}, last page {launch?.LastPage ?? "none"}, state {launch?.State ?? "none"}, system exit record {(exit is null ? "none" : "found")}");
+        string message = CrashReportBuilder.UncleanExitMessage(exit, launch?.LastPage);
+        if (Save(CrashReportBuilder.FromDescription(LaunchFacts.About(ContextNow(context), launch), CrashKind.UncleanExit, UncleanType, message, string.Empty, tail, DateTimeOffset.UtcNow)))
+        {
+            store.NoteUncleanReported(tail, deadLaunchStart); // only once the report is stored: a failed save must not hide the next death
+        }
+    }
+
+    private static string? LastExitDescription(DateTimeOffset? since)
+    {
+#if ANDROID
+        return AndroidCrashHooks.LastExitDescription(since);
+#elif IOS
+        _ = since; // iOS has no per-launch record: the abnormal-exit counts of MetricKit's last daily period stand in
+        return IosCrashHooks.LastExitCounts();
+#else
+        _ = since;
+        return null;
+#endif
     }
 
     private static void SaveHistory(IReadOnlyList<NativeCrash> history, IReadOnlyList<CrashReport> pending, string tail)
@@ -482,16 +596,17 @@ public static partial class CrashReporter
         return facts;
     }
 
-    private static void Save(CrashReport? report)
+    private static bool Save(CrashReport? report)
     {
         if (report is null || store is null)
         {
             Note(report is null ? "report not made (this install's channel sends nothing)" : "report not saved (no store)");
-            return;
+            return false;
         }
 
         bool kept = store.Save(report, DateTimeOffset.UtcNow);
         Note($"{report.Kind} report {(kept ? "saved" : "could not be saved")}");
+        return kept;
     }
 
     private static DateTimeOffset ReadExitSeen()
@@ -530,6 +645,9 @@ public static partial class CrashReporter
 
     // Reports may be kept on the phone only while the switch is on and the build and install may send.
     private static bool MayReport() => SwitchOn() && BuildEligible();
+
+    // Slice 424 check 3 #1: the gate for anything saved on the phone outside the reporter's own paths (MetricKit's exit counts), read at save time.
+    internal static bool MayKeepLaunchFacts() => MayReport();
 
     // The log's gate: the cached answer, looked at again every few seconds, so a switch turned off is noticed without reading a preference per log line.
     private static bool LogMayBeWritten() =>
@@ -583,6 +701,9 @@ public static partial class CrashReporter
         }
 
         launchFacts?.Clear();
+#if IOS
+        IosCrashHooks.ForgetExitCounts(); // MetricKit's stored counts are launch facts too
+#endif
     }
 
     // One line per branch, for a device check to read: Debug builds only (a marker line for the scripted flows too).
