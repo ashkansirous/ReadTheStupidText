@@ -15,7 +15,9 @@
 
 *Planned 2026-11-15 from the 2026-11-15 Subscription mock (`docs/design/dino-reader/Dino Reader 2026-11-15 Subscription.dc.html`, sections 1 and 3, frames SB1-SB5 and SB10). Slice 384 was built without a mock; this slice builds what the mock adds or changes. Not built yet.*
 
-**Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`ApplySubscriptionCard`), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (new, pure), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**` (`FakePurchases`), `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/397-dino-subscription-card-states.md`
+**Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`ApplySubscriptionCard`), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (new, pure), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/StoreKit2/**` (`DinoStoreKit.swift`, item 3), `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**` (`FakePurchases`), `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/397-dino-subscription-card-states.md`
+
+*In progress (wave 2026-11-27), draft PR.* Item 3 (iOS per-account trial eligibility).
 
 ## Why
 
