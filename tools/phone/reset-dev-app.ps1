@@ -27,6 +27,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'checks\_lib.ps1')   # Slice 236 item 3: Get-DownloadHoldLines (pure). The dump parser there is Get-PackageUidFromDump, so the name never collides with common.ps1's adb Get-PackageUid.
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
+Set-PhoneBuildKeyInputs $App   # Slice 448: the phone build's arguments are part of the build key
 
 $package = Get-DevPackage $App
 $script:LanguageKeys = @{ rtst = 'Language'; dino = 'dino.ui.language' }  # MobilePreferencesSettingsStore.LanguageKey; Dino: LanguagePage.UiLanguageKey

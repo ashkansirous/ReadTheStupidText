@@ -689,13 +689,30 @@ function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinute
 
 # Item 5: the one phone build command (audio-timing.ps1 and run-checks.ps1 both call it, so a change cannot miss one). Unquoted arguments for `dotnet build`;
 # a caller that goes through Start-Process quotes the ones with spaces (ConvertTo-ProcessArguments).
-function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot) {
+function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot, [string]$App = '') {
     # Slice 225 item 23: --disable-build-servers (= -nodeReuse:false, UseSharedCompilation=false, UseRazorBuildServer=false) so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
     $arguments = @($Project, '-f', 'net11.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '--disable-build-servers', '-nodeReuse:false', '-p:UseSharedCompilation=false',
         "-p:RuntimeIdentifier=$Rid", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$Package")
     # .NET 11 runs CoreCLR: RunAOTCompilation (true or false) stops the build with XA1044. Its CoreCLR counterpart is ReadyToRun, which needs trimming (XA0119 otherwise).
     if ($Aot) { $arguments += '-p:PublishReadyToRun=true', '-p:PublishTrimmed=true' }
+    # Slice 448: Dino only, the same stamp as the emulator build ($script:EmulatorDinoDisplayVersion in tools/emulator/build-cache.ps1, which every caller dot-sources),
+    # so the live remote-config minVersion gate does not open "Dino needs an update". The key (Get-BuildKeyInputs) already holds this value as a build-arg line.
+    if ($App -eq 'dino') { $arguments += "-p:ApplicationDisplayVersion=$($script:EmulatorDinoDisplayVersion)" }
     return $arguments
+}
+
+# Slice 448: the key line for the phone build's arguments, so a change to Get-PhoneBuildArguments gives a new key and an older APK is never reused.
+# The project and artifacts paths (worktree-specific), the package and the rid (the cache platform folder carries them) are left out; Debug and AOT lists are both in.
+function Get-PhoneBuildKeyLine([string]$App) {
+    $debug = Get-PhoneBuildArguments 'PROJECT' 'ARTIFACTS' 'PACKAGE' 'RID' $false $App
+    $aot = Get-PhoneBuildArguments 'PROJECT' 'ARTIFACTS' 'PACKAGE' 'RID' $true $App
+    $keep = { param($list) @($list | Where-Object { $_ -notin @('PROJECT', 'ARTIFACTS', 'RID') -and $_ -notmatch 'ApplicationId=|RuntimeIdentifier=' }) -join ' ' }
+    return "phone-build-args=debug: $(& $keep $debug) | aot: $(& $keep $aot)"
+}
+
+# Called by every phone script right after it dot-sources build-cache.ps1: from then on Get-BuildKey includes the phone build's arguments.
+function Set-PhoneBuildKeyInputs([string]$App) {
+    $script:ExtraBuildKeyInputs = @(Get-PhoneBuildKeyLine $App)
 }
 
 function ConvertTo-ProcessArguments([string[]]$Arguments) {

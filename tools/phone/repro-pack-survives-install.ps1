@@ -20,6 +20,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'checks\_lib.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
+Set-PhoneBuildKeyInputs $App   # Slice 448: the phone build's arguments are part of the build key
 
 $package = Get-DevPackage $App
 $script:ApkFilter = '*-Signed.apk'

@@ -62,6 +62,15 @@ function Test-KeyBehaviour {
         Assert-Equal 'an untracked input file gives a new key' $true ((Get-BuildKey) -ne $changed)
         Assert-Equal 'the recorded inputs are the ones the key was hashed from' $true (@($script:BuildKeyResults[(Get-BuildKey)].Inputs).Count -gt 0)
         Assert-Equal 'the Dino emulator display version is a key input line' $true (@($script:BuildKeyResults[(Get-BuildKey)].Inputs) -contains "build-arg:ApplicationDisplayVersion=$($script:EmulatorDinoDisplayVersion)")
+        Assert-Equal 'Slice 448: the extra-input hook is empty by default (emulator keys unchanged)' 0 @($script:ExtraBuildKeyInputs).Count
+        $withoutExtra = Get-BuildKey
+        $script:ExtraBuildKeyInputs = @('phone-build-args=one')
+        $withOne = Get-BuildKey
+        $script:ExtraBuildKeyInputs = @('phone-build-args=two')
+        Assert-Equal 'Slice 448: an extra input line gives a new key' $true (($withOne -ne $withoutExtra) -and ((Get-BuildKey) -ne $withOne))
+        Assert-Equal 'Slice 448: the extra line is among the recorded inputs' $true (@($script:BuildKeyResults[(Get-BuildKey)].Inputs) -contains 'phone-build-args=two')
+        $script:ExtraBuildKeyInputs = @()
+        Assert-Equal 'Slice 448: clearing the hook gives the old key back' $withoutExtra (Get-BuildKey)
         Test-SimulatedGitFailureThrows
         Test-NotARepoThrows
     } finally {
