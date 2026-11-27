@@ -1,0 +1,98 @@
+# Slice 451 (Slice 300's emulator check): with the usage switch off, a user report the Worker refuses is not kept, and the page says so.
+# The `usage-switch` hook sets the switch off as the settings toggle does; `user-report-refuse status=503` starts a listener inside the app that answers every report with 503, and
+# `crash-stub url=http://127.0.0.1:8788` points the report address at it (Debug only, nothing reaches the Worker, no host stub needed). Send then fails, and with the switch off the
+# app saves no copy: the page shows the not-kept text (not the "kept on this phone" text) and the app logs `not kept, this build or the usage switch may not report`.
+# Fails against a build without the hooks: no HOOK ok lines, no refused report. Fails against the old behaviour too: a kept copy shows the other text and the marker says `kept for retry`.
+# The gate (hold, then a sum) is tapped through by hand: the enter-grown-up hook stands in for a passed gate.
+# Android only (the hooks arrive as intent extras).
+# Order matters: `crash-stub` must run after `usage-switch`. `usage-switch` only writes the preference; the report gate is re-read in `crash-stub` (CrashDebug.SetStub -> GateChanged), so a reordered flow keeps a stale cached gate.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK usage-switch ok off
+# expect-log: HOOK user-report-refuse ok 503
+# expect-log: HOOK crash-stub ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: HOOK user-report-refuse answered 503
+# expect-log: CRASH_REPORT user report failed (status 503), not kept, this build or the usage switch may not report
+appId: uk.sirous.dinoreader.dbg
+name: A refused problem report is not kept while the usage switch is off (Dino)
+# Runs after the flow pass or fail: puts the usage switch back on, clears the crash stub (`crash-stub` with no url removes the stored stub; it does not restore an earlier flow's stub, so a later flow that needs one sets its own) and turns the refuse hook off, so a later flow without clearState is not affected.
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: usage-switch
+        state: "on"
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: crash-stub
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: user-report-refuse
+        status: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books, pending crash reports); fine here: the flow needs only the starter shelf, the Settings list and an empty pending-report folder.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: usage-switch
+      state: "off"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: user-report-refuse
+      status: "503"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: crash-stub
+      url: http://127.0.0.1:8788
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: LockChip
+    timeout: 30000
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+# The row sits under About, which can be below the fold on a small screen.
+- scrollUntilVisible:
+    element:
+      id: SettingsReportProblemRow
+    timeout: 20000
+- tapOn:
+    id: SettingsReportProblemRow
+- extendedWaitUntil:
+    visible:
+      id: ReportProblemSend
+    timeout: 10000
+- tapOn:
+    id: ReportProblemSend
+# The refusal comes back at once; the page shows the not-kept line (ReportProblem_FailedNotKept) and no code.
+- extendedWaitUntil:
+    visible:
+      id: ReportProblemFailed
+    timeout: 30000
+- assertVisible: The report could not be sent just now. You can try again.
+- assertNotVisible: .*kept on this phone.*
+- assertNotVisible:
+    id: ReportProblemSent
+- assertNotVisible:
+    id: ReportProblemCode

@@ -111,6 +111,7 @@ public static class MauiProgram
 		CrashReporter.SessionProvider = () => sessionId; // a crash or problem report names the launch's usage session
 #if DEBUG
 		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.CompleteFirstRun(code) ?? false);
+		DinoReader.Testing.DinoTestCommands.ChainUserReportHooks(); // Slice 451: chains onto the commands TestHooks.Install just registered, before CrashTestHook wraps them
 		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them
 #endif
 		return app;
