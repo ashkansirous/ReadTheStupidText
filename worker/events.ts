@@ -94,6 +94,8 @@ export const FALLBACK_REASONS = [
   "download_refused", "purchase_not_valid",
   // Slice 362: the onboarding's recorded try could not be deleted
   "onboarding_try_not_deleted",
+  // Slice 460: why a store call failed (store_unreachable and store_failed stay accepted: older builds, and the other-cause catch-all)
+  "store_timeout", "store_no_network", "store_dns", "store_tls", "store_http_5xx", "store_http_4xx", "store_not_associated", "store_no_window", "store_settle_timeout",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;

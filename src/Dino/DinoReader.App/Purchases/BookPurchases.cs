@@ -338,6 +338,11 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
         ListenForStoreUpdates();
         string[] products = [.. listed.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
+        if (!interactive && !restore)
+        {
+            await PrepareQuietlyAsync(cancel); // Slice 460: the launch read's wait for the window sits outside the gate, so a Restore press is not queued behind it
+        }
+
         await _gate.WaitAsync(cancel);
         try
         {
@@ -359,7 +364,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             PurchaseTrace.Line($"could not read the store's purchases: {ex.GetType().Name} at {FirstFrame(ex)}"); // the Release log too: a throw here once hid a crash in the price query (Slice 358)
-            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+            fallbacks.Report(FallbackArea.Store, StoreCauses.Reason(StoreCauses.OfStoreHResult(ex.HResult))); // Slice 460: a Store that says "not associated" (0x803F6107) has its own reason; anything else is "other" (store_failed)
             if (NoteRead(HasInternet(), pricesFailed: true))
             {
                 Changed?.Invoke(this, EventArgs.Empty);
@@ -370,6 +375,20 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         finally
         {
             _gate.Release();
+        }
+    }
+
+    // Review 2 #6: a platform wait that throws (not a Cancel) is reported like any failed read and the read goes on: the read's own platform call then answers for itself.
+    private async Task PrepareQuietlyAsync(CancellationToken cancel)
+    {
+        try
+        {
+            await platform.PrepareAsync(cancel);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            PurchaseTrace.Line($"could not prepare the store's purchase read: {ex.GetType().Name} at {FirstFrame(ex)}");
+            fallbacks.Report(FallbackArea.Store, StoreCauses.Reason(StoreCauses.OfStoreHResult(ex.HResult)));
         }
     }
 
@@ -508,7 +527,9 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         {
             if (hasInternet)
             {
-                fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the platform store could not be asked though the device is online (no Play, a refused setup): the last snapshot stays
+                // The platform store could not be asked though the device is online (no Play, a refused setup): the last snapshot stays. Slice 460: a platform that knows why (Windows: no window yet, not associated) says so;
+                // every other failed read, on Windows, Android and iOS alike, is "other" (store_failed), set here so the three platforms report the same way.
+                fallbacks.Report(FallbackArea.Store, StoreCauses.Reason(read.Failure ?? StoreCause.Other));
             }
 
             return;

@@ -257,7 +257,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 			return await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: true, async cancel =>
 			{
 				using CancellationTokenSource both = CancellationTokenSource.CreateLinkedTokenSource(cancel, backCancel.Token);
-				return await _store.ListAsync(both.Token);
+				return await _store.ListWithRetryAsync(both.Token); // Slice 460: a failed list is tried again (1 s, 3 s, 7 s) behind this wait and its Cancel; the offline page shows only when the last try fails
 			});
 		}
 		finally

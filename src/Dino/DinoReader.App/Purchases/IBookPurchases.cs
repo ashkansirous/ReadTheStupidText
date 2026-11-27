@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using Sirous.Reading.Application.Usage;
 
 namespace DinoReader;
 
@@ -23,7 +24,7 @@ public sealed record BuyNote(string? Offer = null, bool AlreadyOwned = false)
 /// <summary>
 /// What the platform store said right now (Slice 346): the store's own formatted price per product, the products the signed-in store account owns, the ones waiting for approval, and a
 /// purchase proof per owned product (the token the Worker checks with the store). The prices of the subscription plans are under <see cref="SubscriptionProducts.Monthly"/> and <see cref="SubscriptionProducts.Yearly"/>; while the subscription runs
-/// its product is in <c>Owned</c> with its proof, and <c>Subscription</c> is the store's answer about it (null when this read did not ask, so nothing is concluded from silence; a store that knows none answers <see cref="SubscriptionStatus.None"/>). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked; <see cref="PricesFailed"/> is true when it was asked but its price query ended in an error (Slice 358: a non-OK Play response code, a StoreKit request failure or timeout, a Windows Store error), as opposed to answering with no price; <see cref="Restricted"/> is true when the device forbids purchases (iOS Screen Time), which is an answer and not a fault; <see cref="TrialAvailable"/> (Slice 397) is the store's answer about the free trial for this account (Play lists the trial offer only for an eligible account), null when the store cannot say (Windows, whose HasTrialPeriod is not eligibility; iOS when StoreKit 2 gives no eligibility answer; a read that did not ask), which keeps "Try free".
+/// its product is in <c>Owned</c> with its proof, and <c>Subscription</c> is the store's answer about it (null when this read did not ask, so nothing is concluded from silence; a store that knows none answers <see cref="SubscriptionStatus.None"/>). Held in memory only; <see cref="Reachable"/> is false when the store could not be asked; <see cref="PricesFailed"/> is true when it was asked but its price query ended in an error (Slice 358: a non-OK Play response code, a StoreKit request failure or timeout, a Windows Store error), as opposed to answering with no price; <see cref="Restricted"/> is true when the device forbids purchases (iOS Screen Time), which is an answer and not a fault; <see cref="TrialAvailable"/> (Slice 397) is the store's answer about the free trial for this account (Play lists the trial offer only for an eligible account), null when the store cannot say (Windows, whose HasTrialPeriod is not eligibility; iOS when StoreKit 2 gives no eligibility answer; a read that did not ask), which keeps "Try free". <see cref="Failure"/> (Slice 460) is why this read could not ask the store when the platform knows (Windows: no window yet, not associated), carried with the read so overlapping reads never share it; null otherwise.
 /// </summary>
 public sealed record PurchaseSnapshot(
     IReadOnlyDictionary<string, string> Prices,
@@ -36,7 +37,8 @@ public sealed record PurchaseSnapshot(
     SubscriptionStatus? Subscription = null,
     IReadOnlyDictionary<string, DateTimeOffset>? PurchasedAt = null,
     bool Incomplete = false,
-    bool? TrialAvailable = null)
+    bool? TrialAvailable = null,
+    StoreCause? Failure = null)
 {
     public static PurchaseSnapshot Empty { get; } = new(
         new Dictionary<string, string>(), new HashSet<string>(), new HashSet<string>(), new Dictionary<string, string>(), false);
@@ -56,6 +58,12 @@ public interface IBookPurchases
     /// button. No platform may prompt for a password here: iOS reads Apple's own entitlements silently (StoreKit 2, nothing is kept on the device) and only <see cref="RestoreAsync"/> asks Apple to sync, which may prompt.
     /// </summary>
     Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel);
+
+    /// <summary>
+    /// Slice 460 (review 2 #1): a wait a launch read may need before it can ask the store (Windows: the app's window is not there yet). It runs BEFORE the read takes its gate, so a Restore press or the Store tab is never queued behind
+    /// it. A platform with nothing to wait for does nothing; it never throws except for Cancel.
+    /// </summary>
+    Task PrepareAsync(CancellationToken cancel) => Task.CompletedTask;
 
     /// <summary>Opens the store's own purchase sheet for the product. The caller re-reads with <see cref="RefreshAsync"/> afterwards.</summary>
     Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel);
