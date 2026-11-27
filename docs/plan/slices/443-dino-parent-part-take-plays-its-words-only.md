@@ -1,6 +1,8 @@
 # Slice 443 — Dino: a parent's part take plays in place of only its words
 **Product:** Dino
-**Touches:** `src/Dino/DinoReader.App/**` (`ReadingSession`, `RecordSplitBook.cs`, `StarterUpdate.cs`), `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/**`
+**Touches:** `src/Dino/DinoReader.App/**` (`ReadingSession`), `src/Dino/DinoReader.Core/**` (`RecordSplitBook.cs`, `StarterUpdate.cs`, `PartTakes.cs`, `PartClipAdoption`, `ClipMove`, `FileStoryLibrary.cs`, `StoryRecordings.cs`, `CLAUDE.md`), `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/**`
+
+*In progress (wave 2026-11-27), draft PR.* Premise check at claim (2026-11-27): `RecordSplitBook.cs`, `StarterUpdate.cs` and `PartTakes.cs` are in `DinoReader.Core`, not App (Touches corrected); the line numbers `StarterUpdate.cs:944` and `RecordSplitBook.cs:658` in item 4 are from the old draft branch `fix/395-record-parts`, so item 4 re-finds those spots on main.
 
 *Planned 2026-11-25 (plan-cleanup of that day; not built).*
 
