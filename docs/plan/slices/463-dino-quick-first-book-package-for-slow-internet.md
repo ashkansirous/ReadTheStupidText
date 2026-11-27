@@ -29,6 +29,7 @@
   - If after about 3 s the measured speed predicts more than about 10 s left, cancel it and fetch the quick variant.
   - When the first book is playable, download the standard package in the background. Swap it in when it is complete and verified. The reading position is kept and nothing shows a gap.
 - Quick audio stays AAC, at 24 kb/s mono. Opus would save another 0.3 MB per book but changes the codec, the decoders and the publish pipeline. That's not worth it for the first version.
+- **Decision (Start pass 2026-11-27, obvious choice):** build the named defaults (448x600 pictures, AAC 24 kb/s mono) behind the quick variant; publish nothing as the default until the owner's pick (the `**You:**` line for Slice 463 in `docs/plan/unverified.md`).
 
 **Open for the owner:**
 - After item 2, the quick pictures (448x600) and audio (24 kb/s) need a look and a listen on a phone. Are they good enough for a child's first book? The slice publishes a private side-by-side page (standard against quick) for that look and listen (`voice-pick` pattern). The owner's pick sets the final picture size and audio bitrate before anything ships.

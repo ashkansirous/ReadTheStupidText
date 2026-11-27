@@ -22,6 +22,7 @@
 - After the intro the app lands on the shelf with the first downloaded book highlighted and a clear Play button.
 - The store lists free books first and shows a loading state for prices instead of empty slots.
 - Prices and the free list stay as they are. Changing either is the owner's call, asked first.
+- **Decision (Start pass 2026-11-27, obvious choice):** the "one more free German book?" question is asked only after item 1's finding is written; the night changes no prices and no free list.
 
 **Open for the owner:** after item 1, if the German shelf turns out thin, should one more German-language book be made free? Ask then; no change until answered.
 
