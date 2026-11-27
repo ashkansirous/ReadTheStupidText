@@ -7,6 +7,8 @@
 
 *Planned 2026-11-24 from the phone doc [2026-11-23-dino-youtube-story-channel.md](../notes/2026-11-23-dino-youtube-story-channel.md) (Scope Inbox, status ready). Follow every line of that note's Constraints (including the token budget), Decisions (approved) and Opening and closing cards; this file wins where they differ.*
 
+*In progress (wave 2026-11-27), draft PR: items 4 and 5.*
+
 **Touches:** `tools/dino/promo/youtube/**` (new), `docs/plan/notes/2026-11-24-youtube-kids-policy.md` (new), `docs/plan/slices/435-dino-youtube-read-aloud-channel.md`. Reads `content/dino/<stem>/` only (book.json, story.md, translations, high-res pictures, covers, `audio/<lang>/manifest.json` and clips through Git LFS), never edits it.
 
 ## Why
