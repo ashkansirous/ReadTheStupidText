@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/events-ui.test.mjs`, `src/Dino/DinoReader.Core/UsageEvent.cs`, `src/Dino/DinoReader.App/UsageCounter.cs`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/**`, `src/Dino/DinoReader.App/Platforms/Android/**`, `src/Dino/DinoReader.App/Platforms/Windows/**`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.Core/StoreKit2Answers.cs`, `tests/**` (Dino usage tests), `site/dino/privacy.html`, `STORE.md`
 
-*Planned 2026-11-25 (plan-cleanup of that day; not built). Extended 2026-11-26 after the owner's ask.*
+*In progress (wave 2026-11-27), draft PR.* (Planned 2026-11-25; extended 2026-11-26 after the owner's ask.)
 
 **Why:** the apps send no buy, restore or subscription event, so the logs cannot say whether a purchase, trial or restore happened (found 2026-11-15, Slice 390 line 38 "Finding for a later slice"; nothing owned it). On 2026-11-26 the owner asked who bought two iOS books and how many people started the free trial. Only App Store Connect could answer (2 Ugly Duckling buys, SG 2026-11-20 and CH 2026-11-25; 0 intro-trial starts and 2 "Gift Bahar" offer-code starts, 2026-09-16 to 2026-11-25). `dino_usage` had nothing, and Play's sales reports were unreadable with the current key. The owner's words: "this is a fucked up situation. add this to the plan so we collect these events".
 
