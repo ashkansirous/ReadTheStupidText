@@ -59,7 +59,14 @@ name: A side language fetches the shelf books' audio
 - extendedWaitUntil:
     visible: "Your child can switch between these.*"
     timeout: 10000
-# Mid-download: the card and its Cancel are there while the pack is held.
+# Mid-download: the card and its Cancel are there while the pack is held. Slice 468: Swedish is the 12th row and is clipped by the page's ScrollView viewport on a 1080x2400 screen, so scroll to the row
+# (always there) and centre it first, then wait for the card with the original 15 s budget.
+- scrollUntilVisible:
+    element:
+      id: ShelfAudioCard-sv
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - extendedWaitUntil:
     visible:
       id: ShelfAudioCard-sv
@@ -69,6 +76,8 @@ name: A side language fetches the shelf books' audio
 - tapOn:
     id: ShelfAudioCancel-sv
     waitToSettleTimeoutMs: 300
+# The row is asserted visible first, so the notVisible check below cannot pass with the row scrolled away.
+- assertVisible: "Svenska"
 - extendedWaitUntil:
     notVisible:
       id: ShelfAudioCancel-sv
@@ -84,7 +93,15 @@ name: A side language fetches the shelf books' audio
     arguments:
       cmd: shelf-audio
       lang: sv
-# The pack arrived (the log lines above), the bar and Cancel go, and the quiet line for the books without Swedish audio stays.
+# The pack arrived (the log lines above), the bar and Cancel go, and the quiet line for the books without Swedish audio stays. Re-centre the row so the checks below cannot pass with it scrolled away.
+- scrollUntilVisible:
+    element:
+      id: ShelfAudioCard-sv
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
+- assertVisible:
+    id: ShelfAudioCard-sv
 - extendedWaitUntil:
     visible:
       id: ShelfAudioNone-sv

@@ -1,6 +1,6 @@
 # Slice 310: a pack download whose connection drops part-way fails with a clear line, leaves no temp file, and the next launch fetches the pack. The Debug hook force-pack-failure makes every pack
 # download fail the named way (network = some bytes, then a network error) so nobody corrupts a .part file by hand. Same setup as side-language-audio: the test store lists one Swedish pack.
-# Slice 360: the run makes one try per pack (no 15 s / 30 s waits any more; PackRepair owns the retries: the hourly tick, the app return and opening the book), so the failed line shows at once. The app
+# Slice 360: the run makes one try per pack (no 15 s / 30 s waits any more; PackRepair owns the retries: the hourly tick, the app return and opening the book), so the failed state is set at once (the chip may be below the visible part of the page, so the flow scrolls to it). The app
 # is then restarted, which clears the process-wide failure switch, so the next launch fetches the pack.
 # Against the old behaviour there is no hook: "HOOK force-pack-failure ok network" is never written and the run installs the pack, so no failed line shows.
 # expect-log: HOOK skip-first-run ok
@@ -61,7 +61,14 @@ name: A dropped pack download shows the failure and the next launch retries
 - extendedWaitUntil:
     visible: "Your child can switch between these.*"
     timeout: 10000
-# Slice 360 makes one try per pack, so the failed line is already in the card state when the page opens; 60 s is generous (the old 120 s covered the removed 15 s / 30 s waits).
+# Slice 360 makes one try per pack, so the failed state is already set when the page opens. Slice 468: Swedish is the 12th row and the page's ScrollView viewport clips it on a 1080x2400 screen. The row exists
+# before any state, so scroll to it first and centre it (the chip sits in the card under it), then wait for the failed chip with the original 60 s budget; a plain wait for the chip id could never see it clipped.
+- scrollUntilVisible:
+    element:
+      id: ShelfAudioCard-sv
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - extendedWaitUntil:
     visible:
       id: ShelfAudioFailed-sv
