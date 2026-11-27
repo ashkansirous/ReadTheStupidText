@@ -159,8 +159,8 @@ Premise check on origin/main:
 - Skipped #2 (`reviews/s291c-check2.md`): "with no set -e and pipeline status unchecked" low; a failed boot fails loudly at install.
 - Skipped #3 (`reviews/s291c-check2.md`): "collect_shots also searches $PWD for <name>.png, names reused across the three devices" low; CI runners are fresh and the size check catches a wrong picture.
 - Skipped #4 (`reviews/s291c-check2.md`): "publishes the draft release even when the shots step failed" low; the release is a draft the coordinator looks at.
-- Skipped #5 (`reviews/s291c-check2.md`): "After openLink dino-test://enter-grown-up?tab=books the wait is on StoryTile" low; already deferred to the first CI run.
-- Skipped #6 (`reviews/s291c-check2.md`): "If boot fails partway, udid is empty and shoot_device returns without simctl delete" low; matters only on reused runners.
+- Skipped #5 (`reviews/s291c-check2.md`): ".maestro/dino/store-shot-ios-frames.yaml:53, low. After openLink dino-test://enter-grown-up?tab=books the wait is on StoryTile," - kept as it is: a wrong wait fails loudly on the first CI shot run, which then names the fix.
+- Skipped #6 (`reviews/s291c-check2.md`): ".github/scripts/ios-sim-store-shots.sh:105, low. If boot fails partway, udid is empty and" - kept as it is: each hosted CI job starts on a fresh Mac, so a leftover simulator never reaches the next job.
 
 ## From review (`reviews/s291c-check3.md`)
 

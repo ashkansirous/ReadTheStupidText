@@ -279,7 +279,7 @@ through `library-docs` or `web-research` before building that part.
 
 - Applied everything except the skips below.
 - Skipped #4 (`reviews/s346d-check1.md`): "SettlePurchasesAsync can wait up to 25 s silently on update" - background paths have no UI to show an overlay on; the single shared wait and its one fallback report are enough.
-- Skipped #3 (`reviews/s346d-check3.md`): "the stricter productId pattern for paid books" - latent: no book.json sets a productId today.
+- Skipped #3 (`reviews/s346d-check3.md`): "tools/DinoReader.BookBuilder/Books.cs:207, LOW (latent): the stricter productId pattern for paid books" - kept as it is: no book carries its own product id yet, so the pattern cannot turn away a real book today.
 - Skipped #4 (`reviews/s346d-check3.md`): "not confirmed by a real Microsoft call" - low; unknown until the Worker switch is on and a real Store token is used.
 - Skipped #5 (`reviews/s346d-check3.md`): "unknown counts as sold" - low; with an unknown config the Worker answers 402 once its switch is on.
 - Skipped #6 (`reviews/s346d-check3.md`): "a stale task from an earlier listing" - low; costs one wait at most.
@@ -289,7 +289,7 @@ through `library-docs` or `web-research` before building that part.
 - (reconstructed) Skipped #10 (`reviews/s346d-check3.md`): "src/DinoReader.Core/BookAccess.cs:153 (fork), LOW: LegacyAccess counts an" - low: counting an unlisted book as free is on purpose so a restore never loses a held book; noted in code.
 - Skipped #1 (`reviews/s346d-check4.md`): "a fully offline dry run now fails" - low; `--force-paid-switch-on` runs it offline.
 - Skipped #2 (`reviews/s346d-check4.md`): "staging metas follow production's switch" - low; staging dry run only.
-- Skipped #3 (`reviews/s346d-check4.md`): "verify rewrites the ids the other way" - low; rare, the next run self-heals.
+- Skipped #3 (`reviews/s346d-check4.md`): "publish-store-books.mjs:834, low: verify re-reads the switch after the upload run;" - kept as it is: a wrong result is put right by the next scheduled publish run, with nothing sold in between.
 
 *From review:* s346e high (`reviews/s346e-high.md`)
 
