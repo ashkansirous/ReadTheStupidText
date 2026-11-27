@@ -27,7 +27,7 @@
                 <local:ModeSwitch x:Name="Modes" AutomationId="ReadingModes" VerticalOptions="Center" ModeChanged="OnModeChanged" />
             </HorizontalStackLayout>
             <Label x:Name="TitleLabel" Grid.Row="1" Grid.ColumnSpan="3" Padding="8,0" FontSize="20" FontAttributes="Bold"
-                   LineHeight="1.25" SemanticProperties.HeadingLevel="Level1" />
+                   LineHeight="1.25" />
         </Grid>
 
         <Grid x:Name="SurfaceHost" Grid.Row="1" Margin="14,6,14,0">

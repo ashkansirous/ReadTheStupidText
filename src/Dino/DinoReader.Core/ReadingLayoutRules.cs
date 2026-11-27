@@ -1,5 +1,13 @@
 namespace DinoReader.Core;
 
+/// <summary>Which title label is the reading screen's level-1 heading (Slice 441).</summary>
+public enum HeadingLabel
+{
+    None,
+    Title,
+    Side,
+}
+
 /// <summary>The four shapes of the reading screen (Slice 98, Slice 174): upright, picture only held sideways, picture + text held sideways
 /// (words over the picture) and text held sideways.</summary>
 public enum ReadingLayout
@@ -119,6 +127,10 @@ public static class ReadingLayoutRules
     /// The one decision for both the title and the card's lowering (the page renderer and ReadingPage both ask it): a text card must be drawn on the page as well, or the title would stand alone.</summary>
     public static bool ShowsTabletTitle(ReadingLayout layout, ControlsPlacement controls, bool pageHasPictureBesideCard, bool pageDrawsTextCard, bool titleHasText) =>
         layout == ReadingLayout.PictureOverlay && controls == ControlsPlacement.Row && pageHasPictureBesideCard && pageDrawsTextCard && titleHasText;
+
+    /// <summary>Which visible title label carries the screen's level-1 heading (Slice 441): the header's own title when it is shown, else the tablet title, else none; never both.</summary>
+    public static HeadingLabel HeadingLabelFor(bool headerTitleVisible, bool tabletTitleVisible) =>
+        headerTitleVisible ? HeadingLabel.Title : tabletTitleVisible ? HeadingLabel.Side : HeadingLabel.None;
 
     /// <summary>The title's line in dp: the mock's 36, or the label's measured height when the system font scale makes it taller.</summary>
     public static double TitleLine(double measuredHeight) => Math.Max(TabletTitleLine, measuredHeight);

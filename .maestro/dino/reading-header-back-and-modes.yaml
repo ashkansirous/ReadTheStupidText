@@ -1,0 +1,43 @@
+# Slice 441: on the reading page the floating header (tablet, held sideways or stacked) must not become one accessibility element that hides Back and the view switch.
+# Run on the iPad simulator and an Android tablet; the hierarchy must list both ids.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=2
+# expect-log: [Reading] header heading=side
+appId: uk.sirous.dinoreader.dbg
+name: Reading page header keeps Back and the view switch reachable
+# The orientation is put back even when a step fails, so a failed run does not leave the device sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow opens a starter book and speaks nothing.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: ReadingBack
+    timeout: 15000
+- assertVisible:
+    id: ReadingBack
+- assertVisible:
+    id: ReadingModes
+# The level-1 heading sits on the visible title label: on a landscape tablet that is the tablet title; the expect-log line above shows the choice.
+- assertVisible:
+    id: ReadingTabletTitle

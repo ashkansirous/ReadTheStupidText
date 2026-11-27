@@ -37,6 +37,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly IStoryLibrary _library;
 	private readonly IServiceProvider _services;
 	private readonly UsageCounter _usage;
+	private HeadingLabel? _headingLabel; // last heading choice logged (Slice 441)
 	private bool _finishCounted;
 	private bool _openCounted;
 	private Action<bool>? _audibleHandler; // Slice 288: the same lifetime, for the listening-time tally
@@ -570,10 +571,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		TitleLabel.Text = title;
 		SideTitle.Text = title;
 		_onboarding?.SetBookTitle(title, language); // Slice 362: the onboarding's own title line
-		if (!TitleLabel.IsVisible)
-		{
-			SemanticProperties.SetDescription(Header, title);
-		}
 
 		TitleLabel.FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 		SideTitle.FlowDirection = TitleLabel.FlowDirection;
@@ -886,6 +883,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 #endif
 		}
 
+		ApplyHeading();
 		Surface.SetCardTop(CardTopFor(show)); // the one value: it and the title's visibility come from the same `show`
 	}
 
@@ -947,7 +945,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		Header.HorizontalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
 		Header.VerticalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
 		Header.Margin = HeaderMargin();
-		ApplyHeaderHeading(noTitle);
+		ApplyHeading();
 		ApplyBackChip();
 	}
 
@@ -963,11 +961,21 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : Sideways ? new Thickness(SideInsets().Left, ReadingLayoutRules.SidewaysTop, 0, 0) : default;
 	}
 
-	// With no visible title the header itself is the screen's level-1 heading, so a screen reader still hears which book this is.
-	private void ApplyHeaderHeading(bool noTitle)
+	// The level-1 heading sits on whichever title label is visible (the header's, else the tablet's), so a screen reader hears which book this is. The Header grid carries no description or heading: on iOS that would make it one element hiding Back and the view switch (Slice 441).
+	private void ApplyHeading()
 	{
-		SemanticProperties.SetHeadingLevel(Header, noTitle ? SemanticHeadingLevel.Level1 : SemanticHeadingLevel.None);
-		SemanticProperties.SetDescription(Header, noTitle ? TitleLabel.Text : null);
+		HeadingLabel chosen = ReadingLayoutRules.HeadingLabelFor(TitleLabel.IsVisible, SideTitle.IsVisible);
+		SemanticProperties.SetHeadingLevel(TitleLabel, chosen == HeadingLabel.Title ? SemanticHeadingLevel.Level1 : SemanticHeadingLevel.None);
+		SemanticProperties.SetHeadingLevel(SideTitle, chosen == HeadingLabel.Side ? SemanticHeadingLevel.Level1 : SemanticHeadingLevel.None);
+		if (_headingLabel == chosen)
+		{
+			return;
+		}
+
+		_headingLabel = chosen;
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] header heading={chosen.ToString().ToLowerInvariant()}");
+#endif
 	}
 
 	// Floating over the picture or in the card's corner the back button is a 44 px white circle (mock 92), and the view switch sits on the same chip, so both read on any picture.
