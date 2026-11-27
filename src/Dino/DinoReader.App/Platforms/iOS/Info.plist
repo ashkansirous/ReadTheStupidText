@@ -23,6 +23,18 @@
 		<string>ru</string>
 		<string>zh-Hans</string>
 	</array>
+	<!-- Slice 438: Sonos links a home through the Dino app: the link page (site/dino/sonos-link.html) opens dinoreader://sonos-link?code=... and SonosLinkRouter (MauiProgram, SceneOpenUrl/SceneWillConnect) shows the Link screen. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>uk.sirous.dinoreader.sonoslink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>dinoreader</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIDeviceFamily</key>

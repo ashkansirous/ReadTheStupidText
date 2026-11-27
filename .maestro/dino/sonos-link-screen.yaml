@@ -1,0 +1,48 @@
+# Slice 438 B6: Sonos opens the Dino app with dinoreader://sonos-link?code=... and the Link screen shows (Android intent filter, iOS URL scheme); Connect talks to the Worker.
+# The code below belongs to no link, so the live Worker answers 404 and the screen says the link has run out; a Worker that is not deployed yet (or no network) gives the "could not reach" line instead.
+# Either way the screen must stay open with its error line (no crash, no blank page), and the log must say which branch ran.
+# To see it fail against the old behaviour: before this slice the app has no handler for the scheme, so openLink opens nothing and "Play Dino stories on your Sonos" never appears.
+# expect-log: HOOK skip-first-run ok
+# expect-log: [SonosLink]
+appId: uk.sirous.dinoreader.dbg
+name: A Sonos link opens the Link screen and Connect answers on the screen
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, own books, downloaded packs); fine here: the flow needs only the starter shelf and a language set by the hook.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- openLink: "dinoreader://sonos-link?code=00000000000000000000000000000000"
+- runFlow:
+    when:
+      platform: iOS
+      visible: ".*Open in.*"
+    commands:
+      - tapOn:
+          text: Open
+- extendedWaitUntil:
+    visible:
+      id: SonosLinkTitle
+    timeout: 20000
+- assertVisible: "Play Dino stories on your Sonos"
+- assertVisible:
+    id: SonosLinkLanguage
+- assertVisible:
+    id: SonosLinkConnect
+# The mock's "Not now" is not built: every Sonos home links (owner, Slice 415).
+- assertNotVisible: "Not now"
+- tapOn:
+    id: SonosLinkConnect
+- extendedWaitUntil:
+    visible:
+      id: SonosLinkError
+    timeout: 30000
+- assertVisible:
+    text: "This link has run out.*|Dino could not reach its server.*"
+- assertVisible:
+    id: SonosLinkTitle

@@ -461,4 +461,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>De opnames en instellingen van je verhaal in één bestand. Het boek zelf komt terug uit de winkel. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>De opnames en instellingen van alle {0} verhalen in één bestand. De boeken zelf komen terug uit de winkel. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Haalt opnames en instellingen terug uit een bestand en haalt de boeken opnieuw op uit de winkel. Gekochte boeken hebben eerst Aankopen herstellen nodig.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Dino-app · geopend door Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>Speel Dino-verhalen af op je Sonos</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos vroeg om verbinding met Dino. Kies de taal waarin de verhalen worden afgespeeld. Je kunt dit later wijzigen in Sonos of hier.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dino bewaart twee dingen voor jouw Sonos-huis: deze verhalentaal en je abonnement. Niets over je kind.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Verbinden met Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Verbinden met Sonos…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dino kon zijn server niet bereiken. Controleer het internet en probeer het opnieuw.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>Deze link is verlopen. Begin opnieuw vanuit de Sonos-app.</value></data>
 </root>

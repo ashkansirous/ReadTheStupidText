@@ -462,4 +462,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات داستان شما در یک فایل. خود کتاب از فروشگاه برمی‌گردد. آن را در درایو یا فایل‌ها ذخیره کنید یا برای خودتان بفرستید.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات همه {0} داستان در یک فایل. خود کتاب‌ها از فروشگاه برمی‌گردند. آن را در درایو یا فایل‌ها ذخیره کنید یا برای خودتان بفرستید.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات را از یک فایل برمی‌گرداند و کتاب‌ها را دوباره از فروشگاه می‌گیرد. کتاب‌های خریداری‌شده ابتدا به «بازیابی خریدها» نیاز دارند.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>برنامه‌ی دینو · باز شده توسط Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>قصه‌های دینو را روی Sonos پخش کنید</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos خواست به دینو وصل شود. زبانی را که قصه‌ها به آن پخش می‌شوند انتخاب کنید. بعداً می‌توانید آن را در Sonos یا همین‌جا عوض کنید.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>دینو دو چیز را برای خانه‌ی Sonos شما نگه می‌دارد: همین زبان قصه‌ها و اشتراک شما. هیچ چیز درباره‌ی کودک شما نگه داشته نمی‌شود.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>اتصال به Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>در حال اتصال به Sonos…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>دینو به سرور خود نرسید. اینترنت را بررسی کنید و دوباره تلاش کنید.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>این پیوند منقضی شده است. دوباره از برنامه‌ی Sonos شروع کنید.</value></data>
 </root>

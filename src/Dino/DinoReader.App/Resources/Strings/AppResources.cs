@@ -232,6 +232,14 @@ public static class AppResources
 	public static string Recordings_StayHere_Device => Get();
 	public static string Backup_RestoreButton => Get();
 	public static string Backup_Footer => Get();
+	public static string SonosLink_Opened => Get();
+	public static string SonosLink_Title => Get();
+	public static string SonosLink_Body => Get();
+	public static string SonosLink_Note => Get();
+	public static string SonosLink_Connect => Get();
+	public static string SonosLink_Connecting => Get();
+	public static string SonosLink_Failed => Get();
+	public static string SonosLink_Expired => Get();
 	public static string Backup_Restored_One => Get();
 	public static string Backup_Restored_Other => Get();
 	public static string Backup_Added => Get();

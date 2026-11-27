@@ -462,4 +462,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>تسجيلات قصتك وإعداداتها في ملف واحد. أما الكتاب نفسه فيعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>تسجيلات القصص الـ {0} وإعداداتها في ملف واحد. أما الكتب نفسها فتعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>يعيد التسجيلات والإعدادات من ملف ويجلب الكتب من المتجر مرة أخرى. الكتب المشتراة تحتاج أولاً إلى استعادة المشتريات.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>تطبيق دينو · فتحه Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>شغّل قصص دينو على Sonos</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>طلب Sonos الاتصال بدينو. اختر اللغة التي تُروى بها القصص. يمكنك تغييرها لاحقًا في Sonos أو هنا.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>يحتفظ دينو بشيئين لمنزل Sonos: لغة القصص هذه واشتراكك. لا شيء عن طفلك.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>الاتصال بـ Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>جارٍ الاتصال بـ Sonos…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>تعذّر على دينو الوصول إلى خادمه. تحقق من الإنترنت وحاول مرة أخرى.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>انتهت صلاحية هذا الرابط. ابدأ من جديد من تطبيق Sonos.</value></data>
 </root>

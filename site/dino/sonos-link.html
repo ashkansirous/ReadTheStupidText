@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="robots" content="noindex" />
+  <title>Connect Dino to Sonos</title>
+  <link rel="icon" type="image/png" href="/dino/icon.png" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --card: #FFF6E6; --line: #d9d2c4; --brand: #5B57E8; --brand-ink: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1d1a2b; --ink: #f1edff; --soft: #c2bcd8; --card: #28243a; --line: #3a3450; --brand: #8a86f2; --brand-ink: #1d1a2b; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 30rem; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 .75rem; }
+    p { margin: 0 0 1rem; color: var(--soft); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: 1.25rem; }
+    .btn { display: block; text-align: center; padding: .85rem 1rem; border-radius: 2rem; background: var(--brand); color: var(--brand-ink); text-decoration: none; font-weight: 700; margin-top: .75rem; }
+    .btn.alt { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>Play Dino stories on your Sonos</h1>
+      <p id="note">Sonos asked to connect to Dino. Opening the Dino app so you can choose the story language&hellip;</p>
+      <a id="open" class="btn" href="#">Open the Dino app</a>
+      <a id="get" class="btn alt" href="https://dinoreader.sirous.uk/">Get the Dino app</a>
+    </div>
+  </main>
+  <script>
+    // Slice 438 B4. Where a phone without the Dino app goes: Android -> Google Play, iPhone and iPad -> App Store, Windows -> Microsoft Store,
+    // anything else -> the Dino home page with every store button. The store links are the ones on index.html. worker/sonos-link.test.mjs runs this block.
+    // storeFor:start
+    var DINO_HOME = "https://dinoreader.sirous.uk/";
+    var PLAY_URL = "https://play.google.com/store/apps/details?id=uk.sirous.dinoreader";
+    var APP_STORE_URL = "https://apps.apple.com/app/id6825053435";
+    var MICROSOFT_URL = "https://apps.microsoft.com/detail/9N9VHRLCZXN5";
+    function storeFor(userAgent, touchPoints) {
+      var ua = String(userAgent || "");
+      if (/Android/i.test(ua)) return { system: "android", url: PLAY_URL };
+      if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && touchPoints > 1)) return { system: "ios", url: APP_STORE_URL };
+      if (/Windows/i.test(ua)) return { system: "windows", url: MICROSOFT_URL };
+      return { system: "other", url: DINO_HOME };
+    }
+    // storeFor:end
+
+    (function () {
+      var CODE = /^[0-9a-f]{32}$/;
+      var SCHEME_LINK = "dinoreader://sonos-link?code=";
+      var ANDROID_PACKAGE = "uk.sirous.dinoreader";
+      var IOS_WAIT_MS = 1800;
+      var code = new URLSearchParams(location.search).get("code") || "";
+      var store = storeFor(navigator.userAgent, navigator.maxTouchPoints);
+      var open = document.getElementById("open");
+      var get = document.getElementById("get");
+      var note = document.getElementById("note");
+      get.href = store.url;
+      if (!CODE.test(code)) {
+        note.textContent = "This link is not complete. Start again from the Sonos app.";
+        open.style.display = "none";
+        return;
+      }
+      // Android: an intent link opens the app and, when it is not installed, Google Play (browser_fallback_url).
+      var appLink = store.system === "android"
+        ? "intent://sonos-link?code=" + code + "#Intent;scheme=dinoreader;package=" + ANDROID_PACKAGE + ";S.browser_fallback_url=" + encodeURIComponent(store.url) + ";end"
+        : SCHEME_LINK + code;
+      open.href = appLink;
+      if (store.system === "windows" || store.system === "other") {
+        note.textContent = "Connect Dino to Sonos from the Dino app on your phone. Get it here:";
+        open.style.display = "none";
+        return;
+      }
+      location.href = appLink;
+      if (store.system === "ios") {
+        // iOS shows no error for a scheme nobody handles: when the page is still in front after a moment, the app is not installed.
+        // Safari's "Open in Dino?" prompt leaves the page visible until a tap, so the jump to the store is cancelled by anything that shows the app took over (visibilitychange, pagehide, blur).
+        var timer = setTimeout(function () { if (!document.hidden && document.hasFocus()) location.href = store.url; }, IOS_WAIT_MS);
+        var cancel = function () { clearTimeout(timer); };
+        document.addEventListener("visibilitychange", function () { if (document.hidden) cancel(); });
+        window.addEventListener("pagehide", cancel);
+        window.addEventListener("blur", cancel);
+      }
+    })();
+  </script>
+</body>
+</html>
