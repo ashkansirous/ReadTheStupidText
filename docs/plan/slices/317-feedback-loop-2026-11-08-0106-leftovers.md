@@ -61,3 +61,7 @@
 - What the CLI docs say (Microsoft Learn, "Microsoft Store Developer CLI (preview) Commands (MSIX)", read 2026-11-14; v0.4.4 pinned, no `msstore` binary on this machine to run `--help`): `submission publish <productId>` is "Publishes a specific submission" and the page's own examples use it only to "Commit the draft"; the only commands that create a draft are `msstore publish` / `init --publish`. Not documented: the exit code or text when the product has no pending draft. So "fails cleanly rather than creating one" rests on the command taking only a product id and no package, which cannot create a package submission; it is unverified on a real run (listed in Not yet verified).
 - #4 (GalleryPage): a cancel is silent only when the page has no handler and the exception does not wrap a `TimeoutException`; an HttpClient timeout always reports. There is no timeout CTS of the shelf pass to catch, so the timeout is recognised by its inner exception.
 - #5: the probes are 10 s apart (the fixture hygiene point is gone with the fixture).
+
+## Follow-ups (live check 2026-11-27)
+
+- [ ] **Item 3, `pack-failure-network` fails twice on emulator-5554.** Both runs at ab345cbf (Dino Debug, 93-97 s) pass StoryTile, LockChip, SettingsTitle and "Your child can switch between these", then fail at assert `id: ShelfAudioFailed-sv` not visible after 60 s. Cause not looked into. Logs: `D:\ReadTheStupidText-worktrees\reviews\lc0154w7\emu-dino.log`, `.emulator\logcat-i1\`.

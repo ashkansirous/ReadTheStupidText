@@ -34,10 +34,11 @@ reference, and never measured the IPA.
       iOS with 0 errors.
 - [x] 2. (Built 2026-11-27: unsigned-keystore Release `-p:AndroidPackageFormat=apk` publish gives a debug-signed `-Signed.apk` of 18,319,747 bytes vs 20,838,787 before (-2,519,040); its `libassembly-store.so` names no PdfPig or OpenXml, while the RTST APK's store (42,775,428 bytes) still names both.) Android: publish the Dino Release APK and list its assemblies: no `UglyToad.PdfPig*`, `DocumentFormat.OpenXml*`;
       record the APK size before (20,838,787 bytes, `dino-v1.136.5`) and after. RTST APK still carries both libraries.
-- [ ] 3. iOS: after merge, take the new release's `DinoReader-<v>.ipa` asset and list `Payload/`: no PdfPig or OpenXml
+- [x] 3. iOS: after merge, take the new release's `DinoReader-<v>.ipa` asset and list `Payload/`: no PdfPig or OpenXml
       `.dll`; record the installed (uncompressed `Payload/`) size before (84.6 MB) and after, and the
       `DinoReader.App.r2r` size before (55.65 MB) and after. Also note which of `System.Text.Encoding.CodePages.dll`,
       `System.Private.Xml.dll` and `System.IO.Packaging.dll` disappeared with them. RTST IPA still carries both libraries.
+      *Live check 2026-11-27 (`DinoReader-1.136.7.ipa`, release-dino run 45968689462, includes PR #1389): no PdfPig or OpenXml `.dll` in `Payload/`; uncompressed `Payload/` 157.4 MB (157,398,882 bytes, 267 files) against 84.6 MB before, so the whole bundle grew for another reason (not explained here); `DinoReader.App.r2r` 34.94 MB (34,943,888 bytes) against 55.65 MB; `System.Text.Encoding.CodePages.dll` and `System.IO.Packaging.dll` are gone, `System.Private.Xml.dll` stays (70 KB). The RTST IPA was not opened.*
 - [x] 4. (Built: new `documents` group in `ship-targets.mjs` -> windows + android + ios + dinowin; `dinowin` also lists Documents, so `dinoreader-windows.yml`, `dinoreader.yml` and `release-dino.yml` keep it; `actionlint` clean.) CI path filters: a `src/Shared/Sirous.Reading.Documents/**` change no longer touches Dino Android or iOS.
       Drop it from `dinoreader-android.yml` and `dinoreader-ios.yml` (keep it in `dinoreader-windows.yml`), check
       `dinoreader.yml`, and make `ship-targets.mjs` map Documents to RTST (all heads) plus Dino Windows only, with
@@ -77,7 +78,6 @@ reference, and never measured the IPA.
 - Dino's phone apps never reference `Sirous.Reading.Documents`: it pulls PdfPig and OpenXml (about 8 MB of IL, plus their precompiled iOS code) that Dino does not use. Dino shares Domain/Application on Android and iOS; Windows reaches Documents only through Infrastructure. (Slice 432: docs/plan/slices/432-dino-drop-pdf-word-libraries.md) (already written in `src/Dino/DinoReader.App/CLAUDE.md` by the builder)
 
 #### Not yet verified
-- [cloud] Item 3: the IPA `Payload/` listing, sizes (`Payload/`, `DinoReader.App.r2r`) and which of the three System DLLs disappeared, from the next Dino release.
 - [phone] The Dino TestFlight build launches and opens a book.
 - [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up).
 - [session] A record-and-save flow (record-per-character) on the emulator.

@@ -46,7 +46,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** iPhone: change the reader language; no crash.
 
 ### Slice 201: norwegian pack crash ([slice](slices/201-norwegian-pack-crash.md))
-- [phone] **Device:** Run the Maestro flow .maestro/rtst/norsk-pack-reads.yaml.
 
 ### Slice 190: rtst phone sentence highlight ([slice](slices/190-rtst-phone-sentence-highlight.md))
 - [phone] **Device:** Slice 190 (PR #573): on-screen sentence highlight PASS on the S21 (2026-10-30); pause/resume mid-chunk; iOS TestFlight read of a 3-sentence ... [full text](notes/2026-10-30-outstanding-detail.md#o007) ([slice](slices/190-rtst-phone-sentence-highlight.md))
@@ -86,7 +85,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 439: Dino: a linked Sonos home with an active Dino subscription plays the paid books ([slice](slices/439-dino-sonos-owned-books.md))
 - [session] C3 clips (a render run with the narrator voices, then an upload to R2 `dinoreader/sonos/subscribe-<lang>.m4a`; nothing was rendered or uploaded; C3 stays open on this wait): the 15 texts are `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`; steps in `docs/DEPLOYING.md`, *The subscription proof column and the spoken message*. The render script is outside Slice 439's Touches and is not written (planned row: C3 in Slice 439).
-- [session] D1: apply the `ALTER TABLE ... ADD COLUMN proof TEXT` lines and the index lines in `docs/DEPLOYING.md` to the live STATS database before the batched release serves Sonos (not applied yet; this adds to the `sonos-homes.sql` step from Slice 438).
 - [owner] **You:** Device and Sonos sandbox: that Sonos sends the `Authorization: Bearer <token>` from `getMediaURI`'s `httpHeaders` to the media route and plays the story (the S21 with a test subscription; a refreshed token is picked up by the next `getMediaURI`, a track already queued with the old token gets 401), that the message clip plays for a lapsed home, and that a renewal on the S21 reaches the Worker (Debug log `[SonosLink] proof renew Renewed`).
 - [cloud] iOS: the shared `BookPurchases` code compiled for Windows and Android only; an iOS compile and a TestFlight run are owed (no Mac here).
 - [owner] **You (native read):** the 15 subscribe texts (`SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`).
@@ -95,12 +93,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** watch the first unlisted video on a TV and say yes or what to change: https://www.youtube.com/watch?v=Fjo-TUF3EoU . Items 6-7 wait on that yes.
 - [owner] **You:** verify the YouTube channel's phone number at https://www.youtube.com/verify so the thumbnail and playlist can be set (see the first-upload line below).
 - [owner] **You (native read):** the 14 non-English card lines, titles and descriptions in `lib/strings.mjs` were written by Claude, not a native speaker; read the first non-English video you open.
-- [session] First upload DONE 2026-11-27 (item 4), video `Fjo-TUF3EoU` (unlisted; API read-back: title, language en, madeForKids true, privacy unlisted). Not done: the custom thumbnail (`thumbnails.set` answered 403, likely an unverified channel; not confirmed) and the playlist "Dino Reader stories in English". After the owner's phone verification, rerun `upload.mjs`: it resumes from `uploaded.json` and finishes both; the check is the read-back of the playlist membership. Item 4 stays unticked until then.
+- [session] First upload DONE 2026-11-27 (item 4), video `Fjo-TUF3EoU` (unlisted; API read-back: title, language en, madeForKids true, privacy unlisted). Not done: the custom thumbnail (`thumbnails.set` answered 403, likely an unverified channel; not confirmed) and the playlist "Dino Reader stories in English". After the owner's phone verification, rerun `upload.mjs`: it resumes from `uploaded.json` and finishes both; the check is the read-back of the playlist membership. Item 4 stays unticked until then. (live check 2026-11-27: unreachable: waits on the owner's YouTube channel phone verification, which no tool can read)
 - [session] Item 5 spoken clips: 2 of 75 exist (`voice/en/grown-ups.m4a`, `voice/en/title-lion-and-mouse.m4a`); the other 73 wait on the Gemini daily cap. Render them with `make_voice.py` (`node voice-lines.mjs --book all --lang all > ../../../../tmp/lines.json && python make_voice.py --lines ../../../../tmp/lines.json`, about 75 requests, may take two days), then rerun the render; item 5's spoken half stays open until then.
 - [session] Private-lock check (answered 2026-11-27, no step for you): YouTube's revision history says videos from unverified API projects "are no longer restricted" to private (entry dated 2 November 2026); `upload.mjs` reads each video back and fails loudly if the privacy differs from the one requested, so the first real upload proves it.
 
 ### Slice 454: Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps ([slice](slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md))
-- [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`.
+- [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`. (live check 2026-11-27: unreachable: auto mode denies the live App Store apply in an unattended session; needs an interactive one)
 - [owner] **You:** create the two subscription add-ons in Partner Center: monthly `uk.sirous.dinoreader.sub.monthly` 1.99 GBP and yearly `uk.sirous.dinoreader.sub.yearly` 14.99 GBP, 7-day trial, listing texts from `docs/store-listings/dino/subscription-listings.md`, at https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/addons
 - [session] The Windows app's subscription card reads the two add-ons, after that owner step.
 - [owner] Native read of the machine-written subscription texts (already in unverified.md under Slice 384).
@@ -112,7 +110,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] S21: the Store card shows `sub_monthly.shown.trial`, and a cancelled buy sends `book.started` then `book.cancelled` with the book GUID (read in `dino_usage_beta` via `analytics-query`).
 - [owner] A real buy, restore and code redemption on iOS TestFlight.
 - [owner] Windows sandbox buy: trial versus paid is recorded correctly.
-- [session] The Swift wrapper builds in the iOS CI job (`dinoreader-ios-sim.yml`).
 
 ### Slice 452: Dino: sound pill device check hook and Part B leftovers ([slice](slices/452-dino-sound-pill-device-check-hook.md))
 - [session] Compare the four shots (`reading-sound-pill-states`) with mock frames 197-199 when `docs/design/dino-reader/frames` exists (only the HTML mock is in the repo today).
@@ -162,7 +159,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 410: Dino: the public name is "Dino Book Reader" everywhere a person sees it ([slice](slices/410-dino-public-name-guard.md))
 - [owner] Upload the new full logo and support banner to the Sonos sandbox and Send again (Slice 283 is closed; Slice 438 B9 holds the Self Test and case).
-- [session] Publish the two changed store books (`love-from-seagull-island`, `x-marks-the-treasure`, credit now "Dino Book Reader") through the repo's store upload route, then compare `meta.json` with `/api/stories`.
 - [owner] Rerun the Sonos Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal after the deploy.
 
 ### Slice 395: Dino: recording a character shows and replaces only that character's quoted words ([slice](slices/395-dino-record-only-the-characters-words.md))
@@ -175,7 +171,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] Whether the 5-then-8 count came from the hour-long cache (not reproduced 2026-11-24).
 
 ### Slice 432: Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps ([slice](slices/432-dino-drop-pdf-word-libraries.md))
-- [cloud] Item 3: the IPA `Payload/` listing, sizes (`Payload/`, `DinoReader.App.r2r`) and which of the three System DLLs disappeared, from the next Dino release.
 - [phone] The Dino TestFlight build launches and opens a book.
 - [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up).
 - [session] A record-and-save flow (record-per-character) on the emulator.
@@ -201,10 +196,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] Portal versus hosted presentation map: the current docs.sonos.com add-search page sets the search categories and their strings in the portal (Search Capabilities, Localization Resources) and does not mention a hosted presentation map, so `site/dino/sonos/presentation-map.xml` may be unused. The owner does the portal steps in D2 and says whether mobile search shows both categories; if it does not, the hosted map is not enough on its own.
 - [owner] **You:** the owner step in D2 (Search Capabilities categories "Stories" `stories` and "All languages" `all-languages`, Localization Resources and, if the portal has the field, the presentation map URL and version) in the Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos).
 - [owner] The sandbox check ("goat" in the S21 Sonos app: two English rows under Stories, the own-language matches under All languages).
-- [session] After deploy, `curl` that https://dinoreader.sirous.uk/dino/sonos/presentation-map.xml and https://dinoreader.sirous.uk/dino/sonos/strings.xml both load (HTTP 200, the XML bodies).
 
 ### Slice 438: Dino: every Sonos home links once through the Dino app and saves its story language ([slice](slices/438-dino-sonos-link-story-language.md))
-- [session] Apply `worker/schema/sonos-homes.sql` to the live D1 `STATS` per `docs/DEPLOYING.md` before the Worker deploy serves Sonos; until then every Sonos call answers `Server.ServiceUnavailable` (sandbox only).
 - [session] iOS simulator: the link opens `SonosLinkPage` and the Debug test-hook plist merge keeps the `dinoreader` scheme (review high #8).
 - [phone] The S21 opens the link from the Sonos page and hands back.
 - [owner] **You:** switch the Sonos integration's auth to AppLink once 438 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
@@ -271,8 +264,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] **Device:** other direct `ReadAsStreamAsync` calls bypass the guard (`RemoteConfigClient.cs:287`, `SubscriptionEndClient:48`; small bodies, same hazard class, outside the slice's Touches): not routed through `OpenBodyAsync`. (live check 2026-11-27: failed, follow-up in Slice 400)
 
 ### Slice 397: Dino: the Store's subscription card in every state ([slice](slices/397-dino-subscription-card-states.md))
-- [cloud] **Device:** item 3's uncompiled Swift (`DinoStoreKit.swift` `eligible` via `isEligibleForIntroOffer`) and iOS C# (`IosPurchases.cs`): compile them on the macOS CI simulator, `.github/workflows/dinoreader-ios-sim.yml`; nothing in that workflow exercises the `eligible` field yet.
-- [session] **Device:** iOS compile of the Slice 397 changes: no Mac this run.
 - [phone] **Device:** Windows head build of the Slice 397 changes (wide layout, Ctrl+R hint).
 - [phone] **Device:** layout of the card states on the emulator: no Maestro flow carries a `# layout-check` header, so only titles and log lines were checked.
 - [owner] **You:** real Play, App Store and Microsoft Store purchases: a second trial purchase on one account, the Grace and Fix payment paths.
@@ -333,7 +324,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 382: Dino reorder: held book wiggles, plain drag ([slice](slices/382-dino-reorder-held-book-wiggles-plain-drag.md))
 - [phone] **Device:** Windows VM `dino-reorder` (mouse drag, keyboard path, the new hint): blocked by the `dino-onboarding-keys` first-run Enter failure (Slice 391).
-- [phone] **Device:** S21: the same checks as the emulator (covers sharp on first open, plain swipe drag, held book wiggles, Done saves, Cancel restores).
 - [owner] **Device:** iOS pan (simulator or TestFlight): the scroll view waits for the cover's pan, no scroll before the drag, a tap on a cover still lifts.
 - [phone] **Device:** The drag's drop slot: the Maestro flow only proves that a drag happens, not where the book lands.
 - [phone] **Device:** Tap-lift a cover, then drag another cover: the new drag takes over the lift; look at it on a device.
@@ -405,7 +395,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** long-language credits in the grown band on a narrow phone beyond fa/ar.
 - [phone] **Device:** older installed apps showing the picture page.
 - [phone] **Device:** Good Enough's back cover (after its text-free redraw, Slice 350 part E, and its text rewrite).
-- [session] **Device:** the store upload of the 11 store books and their new versions on the live store.
 - [phone] **Device:** item 6: `layout-check` (the four back-cover flows carry no layout-check header).
 - [phone] **Device:** item 6: the Read again glyph on the back cover (screens show the play triangle; no flow asserts it).
 - [phone] **Device:** item 6: the tablet and Windows 360 card.
@@ -427,7 +416,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** corner screen row and a speed `setting_changed` on a device (the flows do not open them).
 - [phone] **Device:** the Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path); the package builds since Slice 353. Harness gap (2026-11-13 VM run): no VM check closes the window and reads the usage events.
 - [owner] **You:** the iOS simulator (none on this machine) and the `DidEnterBackground` flush.
-- [session] **Device:** `tools/usage-sessions` against live data after release.
+- [session] **Device:** `tools/usage-sessions` against live data after release. (live check 2026-11-27: failed, follow-up in Slice 352)
 
 ### Slice 351: Dino: every usage row says who and when, and audio failures say why ([slice](slices/351-dino-usage-context-and-audio-causes.md))
 - [phone] **Device:** `premade_audio:no_pack` with a book id, on a book whose pack is not downloaded.
@@ -452,7 +441,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** the Windows Store add-on on the VM.
 - [phone] **Device:** the switch-on store page against the real Worker.
 - [owner] **You:** the Microsoft Store ID flow against a live store.
-- [session] **Device:** E1's log lines appear in Workers Logs on the next real paid download (read with `CF_OBSERVABILITY_READ_TOKEN`).
 - [phone] **Device:** Part E on a device (merged #1120 on review and unit tests): on a Windows, Android and iOS paid row, the store row's wait and Cancel hold until the run ends, and a 403 `purchase-not-valid` after a real purchase is retried on the 3-30 s schedule (about 84 s) instead of showing "Try again" at once; a refused paid download reaches analytics as `download_refused` / `purchase_not_valid`.
 
 ### Slice 340: Listening page: Mid-book speed change on a phone ([slice](slices/340-mid-book-speed-change-on-a-phone.md))
@@ -469,7 +457,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** Windows VM with 6 or more books (only 2 books were used; 2026-11-13 VM run: still 2 books, `dino-reorder` passed, no 6-book + resize check exists), and a window resize while the layer is open (columns change, no layout cycle).
 - [phone] **Device:** A narrow Windows window after recheck fix 1.
 - [phone] **Device:** The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot). 2026-11-13 VM run: `dino-reorder` logged 30 px against the mock's 40, with 0 layout-cycle lines, but no assertion.
-- [phone] **Device:** The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
 - [owner] **You:** iOS phone/tablet: the same shared MAUI code; no Mac, not run.
 
 ### Slice 325: Dino every page in the 2026-11-08 design, parts A-F ([slice](slices/325-dino-2026-11-08-redesign.md))
@@ -660,7 +647,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 232 parts A-E: Dino landscape reading screen, shelf, Record, Cast, page text editor, intro, gate and first run ([slice](slices/232-dino-landscape-every-screen.md))
 - [phone] **Device:** Part E: screenshots against frames 121, 122, 123, 130 (the flows take none), including check 3 (gate keys uneven in tall rows) and check 4 (long language names in 3 columns).
-- [phone] **Device:** Part E: `first-run.yaml` on this build against main (the SIGSEGV; not proven unrelated).
 - [owner] **You:** Part E: the gate sum step sideways (the hold is not scriptable).
 - [owner] **You:** iPhone: Part E layouts.
 - [phone] **Device:** Part E: TalkBack order.
@@ -715,7 +701,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** iOS: a settings row with the button text left null keeps its height and look, and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
 
 ### Slice 203: Dino on the Microsoft Store: turn on automatic submissions and link it ([slice](slices/203-dino-microsoft-store-live.md))
-- [session] **Device:** Slice 203 (PR #578): the first automatic Dino Store submission (needs the next Dino release on `main`).
 
 ### Slice 197: dino download now tap dropped ([slice](slices/197-dino-download-now-tap-dropped.md))
 - [phone] **Device:** Slice 197 (PR #583): no stale "Downloading" status after the download ends; notification Cancel mid-download then nothing restarts; iOS TestFlight ... [full text](notes/2026-10-30-outstanding-detail.md#o016) ([slice](slices/197-dino-download-now-tap-dropped.md))
@@ -771,7 +756,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ## Shared
 
 ### Slice 448: tools/phone runs the .maestro/dino flows on a real phone ([slice](slices/448-tools-phone-runs-maestro-dino-flows.md))
-- [phone] The three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after Slice 465 (S21 run 4: 1 of 4 passed).
+- [phone] The three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after Slice 465 (S21 run 4: 1 of 4 passed). (live check 2026-11-27: failed, follow-up in Slice 448)
 
 ### Slice 343: Listening page: four Farsi voices ([slice](slices/343-four-farsi-voices.md))
 - [owner] **You:** ear check of the built comma fix (ganji-2, gyro-2, gyro-3) on a listening page after it ships.
@@ -786,18 +771,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 379: Everything to the latest stable, .NET 11 ([slice](slices/379-everything-to-latest-stable.md))
 - [owner] **Device:** RTST cold start on iOS under the scene lifecycle (MT7199 fix; RTST only compiled on CI, Dino's cold start is shown), on an iOS 27 and an older iOS device or simulator; the Debug test hooks firing through `SceneOpenUrl`, `SceneWillConnect` and `SceneOnActivated` in RTST; file "Open in" / share hand-off (none is declared today).
 - [owner] **You:** background audio continuing with the screen locked (Slice 49 / Dino story) on an iPhone; the pack-download paused notification and the downloader's active/inactive stall clock under scenes; a Dino StoreKit purchase sheet presenting; `VisionKitDocumentScanner` presenting from `Platform.GetCurrentUIViewController()` in RTST (`reviews/pr-1176-check2.md` #1).
-- [session] **Device:** the first release run after merge shows the TestFlight upload accepted (`altool` on `macos-26`, Xcode 26) for an .ipa built with Xcode 27.2 on `xcode-27` (`release-rtst.yml`, `release-dino.yml`).
-- [session] **Device:** `store-screenshots.yml` and the iPad 13" / iPhone 6.5" types on the `xcode-27` image: the 2026-11-16 simulator run booted an iOS 27.2 iPhone only.
+- [session] **Device:** `store-screenshots.yml` and the iPad 13" / iPhone 6.5" types on the `xcode-27` image: the 2026-11-16 simulator run booted an iOS 27.2 iPhone only. (live check 2026-11-27: unreachable: store-screenshots.yml has no run since the 2026-11-16 one)
 - [phone] **Device:** capture a CoreCLR native crash on the emulator and write its signature into `tools/emulator/speed.ps1`'s launch-crash retry, which still matches only Mono (`TODO(379B device run)`).
 - [phone] **Device:** phone `-Variant aot` (`tools/phone`): `PublishReadyToRun` and `PublishTrimmed` on a Debug `dotnet build` may not ReadyToRun-compile, and trimming may strip the Debug test hooks; one `-Build -Variant aot` phone run settles it.
-- [session] **Device:** `src/Shared/AndroidRelease.props` R8 guard still accepts the Android SDK pack floor 36.1.118: raise it to the 37.x pack once a release build shows the exact version.
+- [session] **Device:** `src/Shared/AndroidRelease.props` R8 guard still accepts the Android SDK pack floor 36.1.118: raise it to the 37.x pack once a release build shows the exact version. (live check 2026-11-27: failed, follow-up in Slice 379)
 - [phone] **Device:** Dino store list under CoreCLR: the 2026-11-16 emulator run logged `[Usage] fallback store:store_unreachable` on the shelf and ran no store flow; run a store flow with its stub (`store-tags`). Slice 393 lists `store_unreachable` as a tooling item.
 - [phone] **Device:** start-time and speed under CoreCLR against the Mono numbers (`tools/emulator/speed.ps1`).
 - [owner] **Device:** Dino's per-page iOS status-bar icon colour (`StatusBarPageViewController`, Slice 325 A4) on the handler-based NavigationPage: the icons still follow each page.
 - [owner] **Device:** iOS NavigationPage/TabbedPage handlers (Dino); Windows CollectionView2 (opted out for Dino, so unchanged).
-- [session] **Device:** Node 26 in the release scripts (first release run).
-- [session] **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle.
-- [session] **Device:** ARM64 MSIX.
+- [session] **Device:** Dependabot nuget/npm PRs, including versions held in `.props` files, after the first weekly cycle. (live check 2026-11-27: unreachable: no Dependabot PR has bumped a version held in a .props file yet; #1332-#1334 bumped others)
 - [phone] **Device:** Windows tray read in the Hyper-V VM.
 - [phone] **Device:** RTST Scan flow.
 
@@ -805,37 +787,32 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** `run-flows.ps1` end to end with a removed `JAVA_HOME` (cached build, then `-NoBuild`): the `Confirm-EmulatorPreflight` wiring prints the chosen JDK, and with no JDK at all it exits 7. The pick and the Maestro preflight themselves passed on emulator-5554.
 
 ### Slice 388: Shared tests: `PackDownloadLogTests` capture leaks another test's line ([slice](slices/388-shared-pack-download-log-capture-per-test.md))
-- [session] **Logs:** the shared tests job stays green over the next releases (no foreign PACKDL line); the CI flake was not reproduced locally.
 
 ### Slice 378: Build warnings gate ([slice](slices/378-build-warnings-gate.md))
 - [phone] **Device:** The scan-crop fix on an API 28-30 emulator image: no Android 9-11 system image is installed, and no flow scans a real page, so a scan flow is needed as well.
-- [session] **Device:** The first release run after merge: no Node 20 warnings, `tracks:` accepted by upload-google-play v1.1.5, GitTools v4.7.0 `configFilePath` (including `windows.yml`'s restored config), setup-node v7 caching.
+- [session] **Device:** The first release run after merge: no Node 20 warnings, `tracks:` accepted by upload-google-play v1.1.5, GitTools v4.7.0 `configFilePath` (including `windows.yml`'s restored config), setup-node v7 caching. (live check 2026-11-27: failed, follow-up in Slice 378)
 - [owner] **Device:** A TestFlight build with the gate on.
 - [phone] **Device:** Android 36 `ToggleSwitch` `CheckedState` (`ToggleSwitchAccessibility.cs`).
 
 ### Slice 317: Feedback loop 2026-11-08-0106 leftovers ([slice](slices/317-feedback-loop-2026-11-08-0106-leftovers.md))
-- [phone] Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested).
+- [phone] Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested). (live check 2026-11-27: failed, follow-up in Slice 317)
 - [session] The commit retry in `store-submit.yml` (a failed `msstore submission publish` is run once more after 60 s) has not run on a runner; what `submission publish` does when the draft is already committed or missing is undocumented and unverified.
 
 ### Slice 376: Feedback loop 2026-11-13-1149 leftovers ([slice](slices/376-feedback-loop-2026-11-13-1149-leftovers.md))
-- [session] iOS compile of the Farsi probe twin (`IosTtsEngine.cs` calling `FarsiEzafeProbe`).
 - [phone] Item 2: a run with a real stale onboarding flag (the run saw `pending=none`, so the cause stays likely).
 - [phone] Item 3: that `farsi-ezafe-reads` fails on a build before #1098.
 - [phone] Item 5: one emulator download row showing the pack version.
 - [phone] `premade-audio-past-roar` fixture clash (a real fa pack replaces `fixture-13.m4a` after `pm clear`): untouched, still open as item 2's second half.
 
 ### Slice 354: Feedback loop 2026-11-12-1337 leftovers ([slice](slices/354-feedback-loop-2026-11-12-1337-leftovers.md))
-- [session] `rerun-no-runner.yml` on a real release run with a no-runner cancel.
-- [session] `asc-confirm-build.mjs` and its steps on a real release run (the `filter[version]` call was checked live, read-only, in review).
-- [session] The TestFlight verdict on a real 500-then-success upload.
-- [session] The VM test-package compile step on the next Dino Windows run.
+- [session] `rerun-no-runner.yml` on a real release run with a no-runner cancel. (live check 2026-11-27: unreachable: no release run has had a no-runner cancel; all 5 runs skipped)
+- [session] The TestFlight verdict on a real 500-then-success upload. (live check 2026-11-27: unreachable: every TestFlight upload so far succeeded on the first try)
 - [owner] `gemini-grab.js` on a non-English Gemini page.
 - [phone] Item 9: the Mono SIGSEGV at cold start; no crash-store match, needs a device run (10 cold starts).
 
 ### Slice 377: Feedback loop 2026-11-14-0726 leftovers ([slice](slices/377-feedback-loop-2026-11-14-0726-leftovers.md))
 - [session] **Device:** item 2: a live read-back of one non-English Microsoft Store listing after certification (the store name in the text; the `pt-br` listing created beside any `pt-pt`; the `submission update` payload shape).
 - [phone] **Device:** item 16: first install on an unmetered link, turn the link metered mid-download: the standard pack arrives and the log line shows; a brief offline gap must not stop the high-res fetch.
-- [session] **Device:** item 16: the iOS head compile (no Mac here).
 
 ### Slice 193: German store listings ([slice](slices/193-german-store-listings.md))
 - [owner] **You:** native German read of both files (machine-written).
@@ -851,8 +828,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 370: Give the shared code a neutral name ([slice](slices/370-rename-shared-code.md))
 
 - [owner] iOS simulator upgrade test (old build, setting, pack, install the renamed build over it): no Mac available.
-- [phone] Release, R8 and aab builds of both Android apps (only Debug manifests and builds were compared).
-- [session] CI iOS builds on `main` after the merge (only compile checks ran locally).
 
 ### Slice 374: Store listings in 13 more languages ([slice](slices/374-store-listings-13-languages.md))
 
@@ -875,10 +850,8 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 369: One release workflow per product ([slice](slices/369-release-workflow-per-product.md))
 
-- [session] First Dino-only merge runs only `release-dino.yml` and cuts only a `dino-v` tag.
-- [session] First RTST-only merge runs only `release-rtst.yml` and cuts only an `rtst-v` tag.
-- [session] One batched `workflow_dispatch` releases each product whose files changed.
-- [session] No version goes backwards (new tags compared with the last `rtst-v` and `dino-v`).
+- [session] First Dino-only merge runs only `release-dino.yml` and cuts only a `dino-v` tag. (live check 2026-11-27: unreachable: no Dino-only merge has cut a release yet; every release run so far was a workflow_dispatch)
+- [session] First RTST-only merge runs only `release-rtst.yml` and cuts only an `rtst-v` tag. (live check 2026-11-27: unreachable: no RTST-only merge has cut a release yet; every release run so far was a workflow_dispatch)
 
 ### Slice 366: Plan split by product ([slice](slices/366-plan-split-by-product.md))
 
@@ -892,11 +865,9 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 368: Shared tests in their own project ([slice](slices/368-shared-tests-project.md))
 
-- [session] **Device:** the new `release-shared.yml` gates (`shared-test`, `rtst-test`, called by both product workflows) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
 
 ### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
 
-- [session] **Device:** the test run on Linux CI (the PR's checks).
 
 ### Slice 357: Server errors the user can see: standard messages per status ([slice](slices/357-server-error-messages.md))
 - [phone] **Device:** RTST pack-failure text on a device: no scripted hook for a pack server error.
@@ -912,7 +883,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - [owner] **You:** TestFlight iPhone check of the earlier Slice 274 crash path on a release build: open a parent page, leave it (language page), background, return; no crash. Needs a TestFlight build after merge; Slice 295 work item 5 (remove the Slice 274 workaround) waits on it.
 
 ### Slice 353: CI: keep the .NET 10 SDK on runners with .NET 11, fix the Dino Windows VM test package ([slice](slices/353-ci-sdk-pin-and-vm-test-package.md))
-- [session] **Device:** `android.yml` and one other workload workflow green on a run whose "Set up job" shows runner image 20261111 or later (the android jobs of PR #1024 and PR #1022 both ran on the old image 20261101.186.1, so the pin is not yet proven there).
 - [phone] **Device:** Dino VM checks of Slice 352 (desktop), now that `Build-TestPackage.ps1 -App dino` builds.
 
 ### Slice 339: RTST real-phone audio timing ([slice](slices/339-real-phone-audio-timing.md))
@@ -920,14 +890,12 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
 - [phone] **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
-- [phone] **Device:** On the S21: `run-checks -Prepare -App dino`. (`book-end` and `paused-notification-repost` passed on the S21 in Slice 372's run 2, PR #1077; removed by the 2026-11-13-1149 feedback loop.)
 - [owner] **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
 
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - [owner] **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 
 ### Slice 319: Fixes from the 2026-11-08 device run ([slice](slices/319-device-run-2026-11-08-fixes.md))
-- [phone] **Device:** Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
 - [phone] **Device:** Tablet emulator look of the Reorder layer after the geometry redesign (shared code; not run).
 
 ### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
