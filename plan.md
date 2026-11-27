@@ -55,6 +55,11 @@ Open slices only. Finished slices (406 rows) are in [slices-done](docs/plan/note
 | 454 | Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps | planned | | | [454-dino-subscription-microsoft-addons-and-app-store-languages.md](docs/plan/slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md) |
 | 455 | Dino: buy, restore and subscription outcome events | planned (extended 2026-11-26: trial/paid/code offer, book id, card shown) | | | [455-dino-purchase-outcome-events.md](docs/plan/slices/455-dino-purchase-outcome-events.md) |
 | 458 | Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications | planned | | | [458-dino-store-server-notifications.md](docs/plan/slices/458-dino-store-server-notifications.md) |
+| 459 | Dino first books: the first book is playable within seconds of Continue | planned (starts after 453) | | | [459-dino-first-book-playable-in-seconds.md](docs/plan/slices/459-dino-first-book-playable-in-seconds.md) |
+| 460 | Dino Windows: the store works at first run, or recovers on its own | planned (starts after 453) | | | [460-dino-windows-first-run-store-recovery.md](docs/plan/slices/460-dino-windows-first-run-store-recovery.md) |
+| 461 | Dino: after onboarding a new parent sees a book to play, and the store doesn't look empty | planned (starts after 453) | | | [461-dino-after-onboarding-next-book-and-store.md](docs/plan/slices/461-dino-after-onboarding-next-book-and-store.md) |
+| 462 | Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog | planned | | | [462-dino-drop-leaking-test-traffic.md](docs/plan/slices/462-dino-drop-leaking-test-traffic.md) |
+| 463 | Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background | planned (starts after 459; owner picks quality) | | | [463-dino-quick-first-book-package-for-slow-internet.md](docs/plan/slices/463-dino-quick-first-book-package-for-slow-internet.md) |
 
 ### Shared
 
