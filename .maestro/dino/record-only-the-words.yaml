@@ -1,8 +1,7 @@
 # Slice 395: recording a character shows and replaces only that character's words, not the narration around them.
-# Import Freddy and the Slipper, tick Mummy and Tummy only (untick the Storyteller and Freddy), record the first three lines, press Done, then read the book from the start.
+# Import Freddy and the Slipper, tick Mummy and Tummy only (untick the Storyteller and Freddy), record the first three lines, press Done, then check the clips the library holds.
 # Line 1 is Mummy's "Dinner, my dear! ..." with no "One evening his Mummy called," on the card; line 2 is "Just one little spoonful," and "said Mummy." is not on any card.
-# The record-state hook lists the clips: the first is a part clip of page 2 (file rec-en-2-p2-2-*.m4a, the narration before it is part 1). Reading back plays Mummy's take for that part only:
-# the "[RecordedClip] playing part take" line is written for each take and the narration between them is read by the book's own audio (shown for a beat here: the test store is offline, no pack).
+# The record-state hook lists the clips: the first is a part clip of page 2 (file rec-en-2-p2-2-*.m4a, the narration before it is part 1). Playing a part take in place of only its words when the book is read is Slice 443, so this flow does not read the book back.
 # The microphone permission is granted at launch. The emulator's microphone gives silence or noise, which is enough for a file with a length.
 # To see it fail against the old behaviour: before this slice the card held the whole sentence ("One evening his Mummy called, ..."), so the assertNotVisible below fails, and no clip file name carries "-p".
 # expect-log: HOOK test-store ok offline
@@ -10,7 +9,6 @@
 # expect-log: [Record] saved
 # expect-log: [RecordState] clip rec-en-2-p2-2-
 # expect-log: HOOK record-state ok clips=3
-# expect-log: [RecordedClip] playing part take
 appId: uk.sirous.dinoreader.dbg
 name: Record only the character's words and read the book back
 ---
@@ -171,21 +169,3 @@ name: Record only the character's words and read the book back
     visible:
       id: GalleryGrownUps
     timeout: 20000
-# Read the book from the start: the first take plays at "Dinner, my dear!", after the narration "One evening his Mummy called," (shown for a beat).
-- launchApp:
-    stopApp: false
-    arguments:
-      cmd: open-book
-      id: freddy-and-the-slipper
-      play: "1"
-- extendedWaitUntil:
-    visible:
-      id: ReadingSurface
-    timeout: 30000
-- extendedWaitUntil:
-    visible:
-      id: RecordNeverShown
-    timeout: 40000
-    optional: true
-- assertVisible:
-    id: ReadingSurface

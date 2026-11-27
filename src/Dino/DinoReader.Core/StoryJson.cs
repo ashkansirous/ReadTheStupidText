@@ -83,8 +83,8 @@ public static class StoryJson
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
         PieceRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count, parts: false),
         PartRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count, parts: true),
-        RecordingSchema = StoryRecordings.Count(s) > 0 && !StoryRecordings.HasPendingClips(s) ? LanguageKeyedRecordings : null,
-        UseRecordings = s.UseRecordings && StoryRecordings.Count(s) > 0 ? true : null,
+        RecordingSchema = StoryRecordings.CountStored(s) > 0 && !StoryRecordings.HasPendingClips(s) ? LanguageKeyedRecordings : null,
+        UseRecordings = s.UseRecordings && StoryRecordings.CountStored(s) > 0 ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
@@ -114,7 +114,7 @@ public static class StoryJson
             CleanLanguageCasts(f.LanguageCasts, f.Language),
             CleanRecordings(f.Recordings, storyPages.Count, f.Language, migrateTo), f.UseRecordings == true, f.AnimalSounds != false,
             f.TextInPictures == true, backCover, CleanAllPieces(f, storyPages.Count, migrateTo));
-        return StoryRecordings.WithoutSharedFiles(story); // Slice 395: no clip is dropped for overlapping another (covers are stored, and a restore never picks a winner by sort order); two clips never name one file (a hand edit, a restore): a re-record or delete of one would destroy the other's audio
+        return StoryRecordings.WithoutSharedFiles(story); // two clips never name one file (a hand edit, a restore): a re-record or delete of one would destroy the other's audio
     }
 
     // Slice 237: the back cover travels as one last page (its text the credits in English, for an older app that reads it like any page);
@@ -195,7 +195,7 @@ public static class StoryJson
     {
         List<PieceRecordingFile> files = (pieces ?? new Dictionary<StoryClipKey, PageRecording>())
             .Where(r => r.Key.IsValid && r.Key.Page < pageCount && r.Key.IsPart == parts).OrderBy(r => r.Key.Page).ThenBy(r => r.Key.First).ThenBy(r => r.Key.Language, StringComparer.Ordinal)
-            .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Key.Language.Length > 0 ? r.Key.Language : r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key), CoverFirst = r.Key.IsPart ? r.Value.CoverFirst : null, CoverLast = r.Key.IsPart ? r.Value.CoverLast : null }).ToList();
+            .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Key.Language.Length > 0 ? r.Key.Language : r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key) }).ToList();
         return files.Count == 0 ? null : files;
     }
 
@@ -209,20 +209,13 @@ public static class StoryJson
     private static string? FileToKeep(string? name, StoryClipKey key) =>
         name is not null && (name == StoryRecordings.FileNameOf(key) || StoryRecordings.IsFreshFileNameOf(name, key) || StoryRecordings.IsLegacyFileNameOf(name, key)) ? name : null;
 
-    // On a schema migration a sentence clip with no kept name keeps the name it had before the language key. No earlier app wrote a part clip, so that name is invented for one (Slice 395 review): a part clip
-    // keeps the recording file name it stores, whatever it is called, and with none stored it has its usual name.
-    private static string? MigratedFile(string? stored, StoryClipKey key, string? migrateTo, bool parts)
-    {
-        if (migrateTo is null)
-        {
-            return null;
-        }
+    // On a schema migration a sentence clip with no kept name keeps the name it had before the language key. No earlier app wrote a part clip, so that name is invented for one: a part clip with no
+    // name of its own key keeps its usual name (never another clip's file, which two clips would then share).
+    private static string? MigratedFile(StoryClipKey key, string? migrateTo, bool parts) =>
+        migrateTo is null || parts ? null : StoryRecordings.LegacyFileNameOf(key);
 
-        return parts ? (StoryRecordings.IsRecordingFileName(stored) ? stored : null) : StoryRecordings.LegacyFileNameOf(key);
-    }
-
-    // A piece for a page the story does not have, or with a range that is not one, is dropped (a hand edit). One that shares a sentence with another piece is kept (Slice 395 review: no clip is dropped
-    // for an overlap, or its audio file would be left on disk with nothing naming it); the reader plays only the first of two overlapping clips (StoryRecordings.PlayingClips).
+    // A piece for a page the story does not have, with a range that is not one, or (a sentence piece) that shares a sentence of the same language with an earlier piece, is dropped (a hand edit).
+    // Slice 395: two part pieces that overlap are both kept, as which of them is the newer take is not known on load: a recording is never dropped by sort order.
     // A missing language reads as the story's own. A migrated piece without a stored name keeps the name it had before the language key.
     private static IReadOnlyDictionary<StoryClipKey, PageRecording>? CleanPieces(List<PieceRecordingFile>? pieces, int pageCount, string storyLanguage, string? migrateTo, bool parts)
     {
@@ -233,8 +226,11 @@ public static class StoryJson
             if (r is not null && key.IsValid && key.Page < pageCount)
             {
                 key = key with { Language = ClipLanguage(r.Language, storyLanguage, migrateTo) }; // already a resolved code, or the pending (empty) one
-                string? file = FileToKeep(r.File, key) ?? MigratedFile(r.File, key, migrateTo, parts);
-                kept.TryAdd(key, new PageRecording(key.Language, Math.Max(0, r.Seconds), file, parts ? r.CoverFirst : null, parts ? r.CoverLast : null)); // the same key twice is one clip
+                string? file = FileToKeep(r.File, key) ?? MigratedFile(key, migrateTo, parts);
+                if (parts || !kept.Keys.Any(k => k.Overlaps(key)))
+                {
+                    kept.TryAdd(key, new PageRecording(key.Language, Math.Max(0, r.Seconds), file)); // the same key twice is one clip
+                }
             }
         }
 
@@ -486,7 +482,7 @@ public static class StoryJson
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<PieceRecordingFile>? PieceRecordings { get; set; }
 
-        /// <summary>The parent's recordings of a run of a page's parts, its quote and narration segments (Slice 395): the file of each is <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/> (a <c>p</c> before the range); absent when there are none. An older app ignores the field.</summary>
+        /// <summary>The parent's recordings of a run of a page's parts, its quote and narration segments (Slice 395): the file of each is <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/> (a <c>p</c> before the range); absent when there are none. An older app ignores the field and writes the story without it on its next save; the files stay in the folder and <see cref="PartClipAdoption"/> names them again on load.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<PieceRecordingFile>? PartRecordings { get; set; }
 
@@ -525,13 +521,6 @@ public static class StoryJson
         public int Last { get; set; }
         public string? Language { get; set; }
         public int Seconds { get; set; }
-
-        /// <summary>Slice 395: the sentences a part clip sat in when it was saved (counted on the page); absent for a sentence clip and for a part clip saved before they were stored.</summary>
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public int? CoverFirst { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public int? CoverLast { get; set; }
 
         /// <summary>The clip's file when it is not the usual name (Slice 279); absent otherwise.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

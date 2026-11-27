@@ -392,11 +392,11 @@ public sealed class StarterStories(IStoryLibrary library)
 
 	private async Task<Story> MoveMissingRecordingsAsync(Story extra, Story keep)
 	{
-		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => !StoryRecordings.Occupies(keep, StoryClipKey.OfPage(m.To, UiLanguage.Resolve(extra.Recordings![m.From].Language)))).ToList(); // Slice 395: the one overlap rule, so a page holding the kept copy's part clips is never taken whole
+		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => !StoryRecordings.Clips(keep).Any(c => c.Key.Overlaps(StoryClipKey.OfPage(m.To, UiLanguage.Resolve(extra.Recordings![m.From].Language))))).ToList();
 		IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(extra, keep, wanted);
 		Story withPages = StarterUpdate.WithMovedRecordings(keep, extra, copied);
 		// The piece moves are decided against the story as it stands after the whole-page ones, so no file is copied for a range the story then skips (an orphan nothing would carry or delete).
-		IReadOnlyList<StarterUpdate.ClipMove> wantedClips = StarterUpdate.FreePieceMoves(extra, keep, withPages); // by the covers stored in the clips, one move after another
+		var wantedClips = StarterUpdate.PieceMoves(extra, keep).Where(m => !StoryRecordings.Clips(withPages).Any(c => c.Key.Overlaps(m.To))).ToList();
 		IReadOnlyList<StarterUpdate.ClipMove> copiedClips = await CopyClipsAsync(extra, keep, wantedClips);
 		if (copied.Count == 0 && copiedClips.Count == 0)
 		{

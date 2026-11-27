@@ -329,7 +329,7 @@ public sealed class RecordSplitTests
         Assert.Equal(1, StoryRecordings.Count(story)); // nothing is changed by recording the take
 
         string page = File.ReadAllText(Path.Combine(DinoReader.BookBuilder.StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.App", "RecordPage.cs"));
-        Assert.Contains("if (OldClipsOf(take.Piece).Count == 0)", page); // only a piece with no clip over it is saved at once
+        Assert.Contains("if (OldClipsOf(take.Piece.Key).Count == 0)", page); // only a piece with no clip over it is saved at once
         Assert.True(page.IndexOf("await SaveWithClipAsync(", StringComparison.Ordinal) < page.IndexOf("await DeleteReplacedFilesAsync(", StringComparison.Ordinal)); // new file and story first, replaced files last
         Assert.True(page.IndexOf("await SaveWithClipAsync(", StringComparison.Ordinal) < page.IndexOf("TryDelete(take.Path);", page.IndexOf("await SaveWithClipAsync(", StringComparison.Ordinal), StringComparison.Ordinal)); // the take file goes only after the story saved
 

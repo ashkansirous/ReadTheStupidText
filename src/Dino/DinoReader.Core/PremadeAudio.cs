@@ -125,17 +125,8 @@ public sealed class PremadeAudio
 /// Marks a <see cref="VoicedSegment"/> whose text has a pre-made clip (Slice 246 C2). Everything else delegates to the segment's own transform, so when the clip cannot play the
 /// segment is still read by the device voice exactly as it would have been without the marker.
 /// </summary>
-public sealed record PremadeClipMarker(IVoicedAudioTransform? Inner, string ClipPath, bool IsPartTake = false, int TakeEnd = -1, IReadOnlyList<VoicedSegment>? Covered = null) : IVoicedAudioTransform
+public sealed record PremadeClipMarker(IVoicedAudioTransform? Inner, string ClipPath) : IVoicedAudioTransform
 {
-    /// <summary>Slice 395 review: the segments a part take stands for, as they were before the take replaced them; when the take will not play they are read as they would have been without it (empty for any other segment).</summary>
-    public static IReadOnlyList<VoicedSegment> CoveredOf(VoicedSegment segment) => (segment.Transform as PremadeClipMarker)?.Covered ?? [];
-
-    /// <summary>Slice 395: whether the segment's clip is a parent's part take (set from the clip's key by <see cref="RecordPartTakes"/>, never guessed from the file name); it plays at its own pace, not the reading speed.</summary>
-    public static bool IsTake(VoicedSegment segment) => (segment.Transform as PremadeClipMarker)?.IsPartTake == true;
-
-    /// <summary>Slice 395: where the part take the segment stands for ends in the story's text, or -1 when it is no take.</summary>
-    public static int TakeEndOf(VoicedSegment segment) => segment.Transform is PremadeClipMarker { IsPartTake: true } marker ? marker.TakeEnd : -1;
-
     public string CacheTag => Inner?.CacheTag ?? VoicedAudio.NoTag;
 
     public float Pace => VoicedAudio.PaceOf(Inner);

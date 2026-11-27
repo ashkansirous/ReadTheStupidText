@@ -41,7 +41,7 @@ public readonly record struct StoryClipKey(int Page, int First, int Last, string
     public bool IsWholePage => !IsPart && First == 0 && Last == WholePage;
 
     /// <summary>Whether the two clips of the same language and kind share a sentence (or a part, for two part clips), so only one of them can stand (clips of different languages never overlap).
-    /// A part clip against a sentence clip is judged by <see cref="StoryRecordings.WithClip"/>, which knows the sentences the part sits in.</summary>
+    /// A part clip and a sentence clip never overlap, whatever sentences the parts lie in: saving one kind never removes the other.</summary>
     public bool Overlaps(StoryClipKey other) => Page == other.Page && Language == other.Language && IsPart == other.IsPart && First <= other.Last && other.First <= Last;
 
     /// <summary>Whether the key is a usable range (not negative, first not after last).</summary>

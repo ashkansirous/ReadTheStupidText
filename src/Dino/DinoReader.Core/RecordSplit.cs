@@ -27,12 +27,9 @@ public sealed record RecordPart(int Page, int Index, string Speaker, string Text
 public sealed record RecordSpeaker(string Id, string Name);
 
 /// <summary>One thing to record: the sentences (or, for a part key, the parts) of one page it covers (<see cref="Key"/>), who says it and its words as the book shows them.
-/// A part piece also names the sentences it sits in (<see cref="FirstSentence"/>, <see cref="LastSentence"/>), which an older sentence clip is matched with.</summary>
-public sealed record RecordPiece(StoryClipKey Key, string Speaker, string Text, int FirstSentence = -1, int LastSentence = -1)
-{
-    /// <summary>The sentences this piece lies in (a sentence piece: its own range), or null for a part piece made without them.</summary>
-    public StoryRecordings.SentenceCover? Cover => Key.IsPart ? (FirstSentence >= 0 ? new StoryRecordings.SentenceCover(FirstSentence, LastSentence) : null) : new StoryRecordings.SentenceCover(Key.First, Key.Last);
-}
+/// A part piece also names the sentences it sits in now (<see cref="FirstSentence"/>, <see cref="LastSentence"/>, -1 when it sits in none), which an older sentence clip is matched with to show it as recorded;
+/// they are read from today's text for that display only, never stored with a clip.</summary>
+public sealed record RecordPiece(StoryClipKey Key, string Speaker, string Text, int FirstSentence = -1, int LastSentence = -1);
 
 /// <summary>
 /// The pure split of a book into the pieces a grown-up records (Slice 279, work items 1 and 2). Per character: the lines of the ticked speakers in story order, where a line is a run of

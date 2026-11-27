@@ -539,7 +539,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
                     await SaveMigratedRecordingsAsync(story, mainLanguage!);
                 }
 
-                return story;
+                return PartTakes.Enabled ? PartClipAdoption.Adopt(story, PartFileNamesIn(id)) : story; // Slice 395: a part take an older app's re-save dropped from the story file is found again by its file; with the switch off no folder is listed and nothing is adopted
             }
 
             Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
@@ -554,6 +554,20 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             // no-fallback: a busy or locked file (a save in progress) is transient; the book is back on the next refresh, so it is not counted as unreadable
             return null;
+        }
+    }
+
+    private IEnumerable<string> PartFileNamesIn(string id)
+    {
+        try
+        {
+            string folder = FolderOf(id);
+            return Directory.Exists(folder) ? [.. Directory.EnumerateFiles(folder, PartClipAdoption.FilePattern).Select(f => Path.GetFileName(f))] : [];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: an unreadable folder adopts nothing now; the files are looked at again on the next read
+            return [];
         }
     }
 

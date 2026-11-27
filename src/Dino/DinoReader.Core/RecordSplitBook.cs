@@ -27,14 +27,13 @@ public static class RecordSplitBook
         AttributionResult attribution = StoryCast.Resolve(new SpeakerAttributor(rules).Attribute(text, segments), story.Cast);
         IReadOnlyList<SentenceSpan> spans = SentencesOf(story);
         List<RecordSentence> plain = Sentences(story, text, attribution, spans);
-        IReadOnlyList<RecordSentence> sentences = WithParts(plain, PartListIn(story, attribution, spans));
+        IReadOnlyList<RecordSentence> sentences = PartTakes.Enabled ? WithParts(plain, PartListIn(story, attribution, spans)) : plain; // Slice 395: no parts (so only sentence cards and sentence keys) until Slice 443 plays a part take
         return new RecordBook(sentences, Speakers(attribution, sentences));
     }
 
     /// <summary>The one list of a story's parts (Slice 395, review round 2): every segment of every page, in order, one entry each, numbered from 0 on its page the way the reading screen counts them, with its
-    /// speaker, its words, where it lies in the story's text and the sentences (counted on the page) it sits in. Every other view of the parts derives from it: the cards (<see cref="Of"/>), a part clip's
-    /// range and cover (<see cref="CoverOfParts"/>), whether a clip fits a page (<see cref="PartCounts(IReadOnlyList{RecordPart}, int)"/>, <see cref="PartFits"/>), the overlap rule, the progress counts and the
-    /// reader's takes. It is cut from the story's own text, so it is the same in every story language; a segment in no sentence stays in it (with <see cref="RecordPart.InSentences"/> false), so no index has a gap.</summary>
+    /// speaker, its words, where it lies in the story's text and the sentences (counted on the page) it sits in. Every other view of the parts derives from it: the cards (<see cref="Of"/>), whether a clip fits a
+    /// page (<see cref="PartCounts(IReadOnlyList{RecordPart}, int)"/>, <see cref="PartFits"/>) and the progress counts. It is cut from the story's own text, so it is the same in every story language; a segment in no sentence stays in it (with <see cref="RecordPart.InSentences"/> false), so no index has a gap.</summary>
     public static IReadOnlyList<RecordPart> PartListOf(Story story)
     {
         if (story.Pages.Count == 0)
@@ -66,19 +65,6 @@ public static class RecordSplitBook
     /// <summary>Whether every part the part clip <paramref name="key"/> names is on its page in <paramref name="list"/> (else it was recorded for other words).</summary>
     public static bool PartFits(IReadOnlyList<RecordPart> list, StoryClipKey key) =>
         key.FitsPage(list.Count(p => p.Page == key.Page));
-
-    /// <summary>The sentences (counted on the page) the part clip <paramref name="key"/> sits in, from <paramref name="list"/>: null when the page lacks one of its parts or none of them sits in a sentence.</summary>
-    public static StoryRecordings.SentenceCover? CoverOfParts(IReadOnlyList<RecordPart> list, StoryClipKey key)
-    {
-        List<RecordPart> named = list.Where(p => p.Page == key.Page && p.Index >= key.First && p.Index <= key.Last).ToList();
-        if (named.Count != key.Last - key.First + 1)
-        {
-            return null; // the page has no such part: the clip was recorded for other words
-        }
-
-        List<RecordPart> held = named.Where(p => p.InSentences).ToList();
-        return held.Count == 0 ? null : new StoryRecordings.SentenceCover(held.Min(p => p.FirstSentence), held.Max(p => p.LastSentence));
-    }
 
     // Every segment as a part (Slice 395): its words without quote marks, its speaker (the Storyteller for narration and for a quote nobody is known to say) and the sentences it sits in.
     private static List<RecordPart> PartListIn(Story story, AttributionResult attribution, IReadOnlyList<SentenceSpan> spans)
@@ -151,7 +137,7 @@ public static class RecordSplitBook
 
         IReadOnlySet<int> lined = PagesThatLineUp(book, translated);
         IReadOnlyList<RecordSentence> sentences = book.Sentences
-            .Select((s, i) => s with { Text = TranslatedShown(translated.Text, translated.Sentences[i]), Parts = lined.Contains(s.Page) ? TranslatedParts(s.Parts!, translated) : null }).ToList();
+            .Select((s, i) => s with { Text = TranslatedShown(translated.Text, translated.Sentences[i]), Parts = lined.Contains(s.Page) && s.Parts is { } sourceParts ? TranslatedParts(sourceParts, translated) : null }).ToList();
         return book with { Sentences = sentences };
     }
 
@@ -241,62 +227,4 @@ public static class RecordSplitBook
 
         return speakers;
     }
-}
-
-/// <summary>A parent's take that stands in for a run of a page's parts (Slice 395): the story-text range those parts cover and the file to play.</summary>
-public readonly record struct PartTake(int SourceStart, int SourceEnd, string Path);
-
-/// <summary>
-/// Puts the parent's part takes into a voiced read (Slice 395, work item 3). The first voiced segment inside a take's range becomes a clip step playing the take (the segment keeps its own voice
-/// shaping behind the marker, as a pre-made clip's does); the other segments in the same range are dropped, so the take plays once, and so is an animal's sound slot inside the range (the parent's take is
-/// the whole stretch, the sound they make included; it would otherwise play before or after the take, never inside it); every segment outside any range is returned as it was, so the narration
-/// and the characters nobody recorded are read in order by the book's own audio. The take's marker says it is a parent's take (<see cref="PremadeClipMarker.IsPartTake"/>) and where it ends, so the
-/// player never guesses either from a file name or from which segment the take landed on. Pure.
-/// </summary>
-public static class RecordPartTakes
-{
-    public static IReadOnlyList<VoicedSegment> Apply(IReadOnlyList<VoicedSegment> segments, IReadOnlyList<PartTake> takes)
-    {
-        if (takes.Count == 0)
-        {
-            return segments;
-        }
-
-        var placed = new List<VoicedSegment>();
-        var used = new HashSet<int>();
-        ILookup<int, VoicedSegment> covered = segments.ToLookup(s => TakeAt(takes, s.SourceStart));
-        foreach (VoicedSegment segment in segments)
-        {
-            int take = TakeAt(takes, segment.SourceStart);
-            if (take < 0)
-            {
-                placed.Add(segment);
-            }
-            else if (segment.Transform is not AnimalClipMarker && used.Add(take))
-            {
-                placed.Add(Marked(segment, takes[take], covered[take].ToList()));
-            }
-        }
-
-        return placed;
-    }
-
-    private static int TakeAt(IReadOnlyList<PartTake> takes, int position)
-    {
-        for (int i = 0; i < takes.Count; i++)
-        {
-            if (position >= takes[i].SourceStart && position < takes[i].SourceEnd)
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    // The take replaces a pre-made clip marker's path, if the segment had one, and keeps whatever shaping was behind it. The take always plays from its start, so the step starts where the take starts: a read
-    // that began inside the take (the earlier segments were already cut) highlights the take's first sentence, as a sentence clip started mid-clip does.
-    // The marker keeps the segments the take stands for (Slice 395 review), so a take that will not play at play time is replaced by them and the covered parts are still read.
-    private static VoicedSegment Marked(VoicedSegment segment, PartTake take, IReadOnlyList<VoicedSegment> covered) =>
-        segment with { SourceStart = Math.Min(segment.SourceStart, take.SourceStart), Transform = new PremadeClipMarker(segment.Transform is PremadeClipMarker marker ? marker.Inner : segment.Transform, take.Path, IsPartTake: true, TakeEnd: take.SourceEnd, Covered: covered) };
 }
