@@ -3,7 +3,7 @@
 
 *Plan-cleanup check 2026-11-25 (origin/main 1a8bf725): keep open, nothing built. Re-read live: `worker/sonos.ts:220` still calls `recordSpeakerPlay` in `getMediaUri`; no `sonos-reporting.ts`, no `timePlayed` anywhere in `worker/`; `SHARED_HOLD_SECONDS` is still 1 h in `worker/stories.ts`. Slice 283 is closed (user played it 2026-11-24), so the Depends-on line is satisfied. Parts B and D live in Slices 437-440, all still planned. No `user-says` hit for the Reporting Endpoint step, so A4 is still the owner's. A4 owner step: the portal integration id is `a6BPs000000qWNBMA2` (Slice 283 *Progress 2026-11-17/18*); the exact page URL is not in the repo, find it before handing the step over. The two *Not yet verified* lines stay in unverified.md and do not hold the slice; whether an anonymous service gets reports is known only after A4 is done.*
 
-*Planned 2026-11-24. Not built (user, 2026-11-24: "open a slice and write it there. dont do it yet").*
+*Planned 2026-11-24 (user, 2026-11-24: "open a slice and write it there. dont do it yet"; later set to planned).* *In progress (wave 2026-11-27), draft PR.*
 
 **Depends on:** Slice 283 (Sonos service), Slice 289 (Sonos play counting). **Replaced in part by:** Slice 437 (parts B
 and D: the owner's Claude Design canvas `docs/design/sonos/`, 2026-11-24, lists paid books as "In the Dino app" instead of
