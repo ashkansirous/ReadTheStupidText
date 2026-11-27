@@ -244,6 +244,67 @@ public static class SubscriptionLinks
     };
 }
 
+/// <summary>
+/// Slice 397: the free-trial answer for this Apple ID from the StoreKit 2 wrapper's products answer. Each subscription plan carries <c>trial</c> (the product has a free-trial intro offer) and <c>eligible</c>
+/// (<c>isEligibleForIntroOffer</c>, this account's own answer). Pure, so it is tested on any OS.
+/// </summary>
+public static class SubscriptionTrialAnswer
+{
+    /// <summary>
+    /// True when a plan offers a trial this account may still use; false when the plans answered and none does (SB2, the plain-price card); null when nothing can be said (no plan in the answer, an older wrapper
+    /// with no <c>eligible</c>, an unreadable answer), which keeps "Try free".
+    /// </summary>
+    public static bool? Read(string json)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty(StoreKit2Answers.ProductsKey, out JsonElement products) || products.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            // Any plan with a usable trial answers true: both plans share one subscription group, so Apple's eligibility is the same for each (Slice 397 review #2).
+            bool? answer = null;
+            foreach (JsonElement product in products.EnumerateArray())
+            {
+                if (PlanOffersTrial(product) is not { } offersTrial)
+                {
+                    continue;
+                }
+
+                if (offersTrial)
+                {
+                    return true;
+                }
+
+                answer = false;
+            }
+
+            return answer;
+        }
+        catch (JsonException)
+        {
+            // no-fallback: an unreadable answer says nothing about the trial; the card keeps "Try free" (the price read reports its own failure)
+            return null;
+        }
+    }
+
+    // True when the plan has a trial this account may use, false when it answered that it may not (or has none), null when it is not a plan or carries no eligible answer.
+    private static bool? PlanOffersTrial(JsonElement product)
+    {
+        if (!IsPlan(product) || !product.TryGetProperty(StoreKit2Answers.EligibleKey, out JsonElement eligible) || eligible.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            return null;
+        }
+
+        return eligible.GetBoolean() && product.TryGetProperty(StoreKit2Answers.TrialKey, out JsonElement trial) && trial.ValueKind == JsonValueKind.True;
+    }
+
+    private static bool IsPlan(JsonElement product) =>
+        product.ValueKind == JsonValueKind.Object && product.TryGetProperty(StoreKit2Answers.IdKey, out JsonElement id) && id.ValueKind == JsonValueKind.String && SubscriptionProducts.Is(id.GetString()!);
+}
+
 /// <summary>The persisted "what opened each book" record (Slice 384): book id to <see cref="BookUnlock"/>, one JSON object, written once at download and only ever upgraded.</summary>
 public static class BookUnlockRecords
 {

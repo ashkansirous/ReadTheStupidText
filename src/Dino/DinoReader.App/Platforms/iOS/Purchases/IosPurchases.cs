@@ -57,9 +57,9 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
             PurchaseTrace.Line("purchases restricted on this device"); // no prices, so no Buy and no fallback event (BookPurchases); what the account already owns still shows
         }
 
-        (Dictionary<string, string> prices, bool pricesFailed) = restricted ? (new Dictionary<string, string>(), false) : await QueryPricesAsync(bridge, productIds, cancel); // a failed or timed-out request is a failed query; whether the store was reached is BookPurchases' call (the device's internet)
+        (Dictionary<string, string> prices, bool pricesFailed, bool? trialAvailable) = restricted ? (new Dictionary<string, string>(), false, null) : await QueryPricesAsync(bridge, productIds, cancel); // a failed or timed-out request is a failed query; whether the store was reached is BookPurchases' call (the device's internet)
         StoreKitEntitlements? owned = await ReadEntitlementsAsync(bridge, cancel); // an unverified entry is left out (Apple's rule): the verified ones are the whole truth of this read
-        return Snapshot(prices, owned) with { PricesFailed = pricesFailed, Restricted = restricted };
+        return Snapshot(prices, owned) with { PricesFailed = pricesFailed, Restricted = restricted, TrialAvailable = trialAvailable };
     }
 
     // The Restore purchases button: Apple syncs the account's purchases (and may ask for the password), then the list is read again.
@@ -252,11 +252,12 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
     }
 
     // Failed is true when the request failed or timed out (billing_error when the device has internet); products Apple does not know come back as no price (prices_missing).
-    private static async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(StoreKit2Bridge bridge, IReadOnlyCollection<string> productIds, CancellationToken cancel)
+    // TrialAvailable (Slice 397) is Apple's per-account answer (isEligibleForIntroOffer) for the subscription plans; null when the request failed or the answer has none, which keeps "Try free".
+    private static async Task<(Dictionary<string, string> Prices, bool Failed, bool? TrialAvailable)> QueryPricesAsync(StoreKit2Bridge bridge, IReadOnlyCollection<string> productIds, CancellationToken cancel)
     {
         if (productIds.Count == 0)
         {
-            return ([], false);
+            return ([], false, null);
         }
 
         string? answer = await AskAsync(bridge.ProductsAsync(productIds), QueryTimeout, cancel);
@@ -264,11 +265,17 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
         if (read is null)
         {
             PurchaseTrace.Line($"products request failed or timed out error={(answer is null ? "timeout" : StoreKit2Answers.Error(answer))}"); // the domain and code only, never the localized text
-            return ([], true);
+            return ([], true, null);
         }
 
         PurchaseTrace.Line($"products response: got={read.Value.Prices.Count} invalid={string.Join(",", read.Value.Invalid)}"); // product ids Apple does not know (not yet approved or wrong id)
-        return (read.Value.Prices, false);
+        bool? trialAvailable = SubscriptionTrialAnswer.Read(answer!);
+        if (productIds.Any(SubscriptionProducts.Is)) // only a read that asked for the plans, as Android does (Slice 397 review #1)
+        {
+            PurchaseTrace.Line($"subscription trial available={(trialAvailable?.ToString() ?? "unknown")}"); // Slice 397: which card branch the next read shows (offer with the trial, or the plain price); the same line as Android's
+        }
+
+        return (read.Value.Prices, false, trialAvailable);
     }
 
     private static async Task<StoreKitEntitlements?> ReadEntitlementsAsync(StoreKit2Bridge bridge, CancellationToken cancel)

@@ -65,16 +65,22 @@ public func dinoSkCanPay() -> Int32 {
     return AppStore.canMakePayments ? 1 : 0
 }
 
-/// Prices: `{"ok":true,"products":[{"id","price","trial"}],"invalid":[ids]}`; `price` is the App Store's own text in the storefront's currency.
+/// Prices: `{"ok":true,"products":[{"id","price","trial","eligible"}],"invalid":[ids]}`; `price` is the App Store's own text in the storefront's currency.
 @_cdecl("dino_sk_products")
 public func dinoSkProducts(_ idsJson: UnsafePointer<CChar>, _ requestId: Int32, _ callback: DinoCallback) {
     let ids = idsOf(idsJson)
     Task {
         do {
             let found = try await Product.products(for: ids)
-            let products = found.map { product -> [String: Any] in
+            var products: [[String: Any]] = []
+            for product in found {
                 let offer = product.subscription?.introductoryOffer
-                return ["id": product.id, "price": product.displayPrice, "trial": offer?.paymentMode == .freeTrial]
+                // Slice 397: `eligible` is this Apple ID's own answer (isEligibleForIntroOffer, per subscription group), null for a product that is not a subscription.
+                var eligible: Any = NSNull()
+                if let info = product.subscription {
+                    eligible = await info.isEligibleForIntroOffer
+                }
+                products.append(["id": product.id, "price": product.displayPrice, "trial": offer?.paymentMode == .freeTrial, "eligible": eligible])
             }
             let missing = ids.filter { id in !found.contains { $0.id == id } }
             deliver(callback, requestId, ["ok": true, "products": products, "invalid": missing])
