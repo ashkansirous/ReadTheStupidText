@@ -311,6 +311,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 464 | Dino: an older part-take file never plays after a new take is saved | built (device walk-through in unverified.md) | #1402 | | [464-dino-reused-part-take-file-orphan.md](../slices/464-dino-reused-part-take-file-orphan.md) |
 | 431 | Dino: the story skill reports its steps to the agent board, with process keys | built (item C, one real book run, in unverified.md) | #1409 | | [431-dino-story-board-steps.md](../slices/431-dino-story-board-steps.md) |
 | 441 | Dino: iPad reading page hides Back and the view switch from VoiceOver | built (iPad, VoiceOver, TalkBack, Narrator checks in unverified.md) | #1405 | | [441-dino-ipad-reading-header-voiceover.md](../slices/441-dino-ipad-reading-header-voiceover.md) |
+| 452 | Dino: sound pill device check hook and Part B leftovers | built (iOS simulator run and mock comparison in unverified.md) | #1407 | | [452-dino-sound-pill-device-check-hook.md](../slices/452-dino-sound-pill-device-check-hook.md) |
+| 455 | Dino: buy, restore and subscription outcome events | built (device and log checks in unverified.md) | #1408 | | [455-dino-purchase-outcome-events.md](../slices/455-dino-purchase-outcome-events.md) |
 
 ## Shared
 

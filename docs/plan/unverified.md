@@ -77,6 +77,16 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 455: Dino: buy, restore and subscription outcome events ([slice](slices/455-dino-purchase-outcome-events.md))
+- [phone] S21: the Store card shows `sub_monthly.shown.trial`, and a cancelled buy sends `book.started` then `book.cancelled` with the book GUID (read in `dino_usage_beta` via `analytics-query`).
+- [owner] A real buy, restore and code redemption on iOS TestFlight.
+- [owner] Windows sandbox buy: trial versus paid is recorded correctly.
+- [session] The Swift wrapper builds in the iOS CI job (`dinoreader-ios-sim.yml`).
+
+### Slice 452: Dino: sound pill device check hook and Part B leftovers ([slice](slices/452-dino-sound-pill-device-check-hook.md))
+- [session] Compare the four shots (`reading-sound-pill-states`) with mock frames 197-199 when `docs/design/dino-reader/frames` exists (only the HTML mock is in the repo today).
+- [session] iOS simulator run of the same flow (iOS is not compiled on this PC).
+
 ### Slice 431: Dino: the story skill reports its steps to the agent board ([slice](slices/431-dino-story-board-steps.md))
 - [owner] Item C: when the owner next makes a new book, read the book card back with `get_item` on the board (steps, process keys, the owner-read wait).
 
