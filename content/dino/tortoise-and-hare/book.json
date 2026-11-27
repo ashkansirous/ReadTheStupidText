@@ -2,9 +2,9 @@
   "kind": "Starter",
   "id": "0fa29ae0d09643a9a16a5e586e8c7119",
   "title": "The Tortoise and the Hare",
-  "version": 12,
-  "ageMin": 4,
-  "ageMax": 7,
+  "version": 15,
+  "ageMin": 3,
+  "ageMax": 5,
   "author": "Aesop",
   "credits": "Retold from Aesop · free to share",
   "colour": 0,
@@ -72,7 +72,7 @@
       ]
     }
   ],
-  "contentHash": "66a9c08b0813a8a5b89ef65f1d8decefab1360139b59337c82878c6b6dfdf05b",
+  "contentHash": "091cc7fae05a56ce4680295eae8383eb7cb71c92a1c603f561afdad85c0e99e5",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن إيسوب · مجانية للمشاركة",
     "da": "Genfortalt efter Æsop · frit at dele",
@@ -90,5 +90,63 @@
     "zh": "改编自伊索寓言 · 可自由分享"
   },
   "storyBy": "Aesop",
-  "retold": true
+  "retold": true,
+  "namesByLanguage": {
+    "ar": {
+      "Aesop": "إيسوب",
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Aesop": "Æsop",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Aesop": "Äsop",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Aesop": "Esopo",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Aesop": "ازوپ",
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Aesop": "Aisopos",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Aesop": "Ésope",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Aesop": "イソップ",
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Aesop": "Aisopos",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Aesop": "Aesopus",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Aesop": "Esopo",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Aesop": "Эзоп",
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Aesop": "Aisopos",
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Aesop": "伊索",
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  }
 }

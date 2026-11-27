@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完了</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>続ける</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader を閉じますか？</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino: Kids Books &amp; Stories を閉じますか？</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>とどまる</value></data>
   <data name="Common_Close" xml:space="preserve"><value>閉じる</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>削除</value></data>
@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>人気</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>おすすめ</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>新着</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0}分</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>ストアにはインターネットが必要です。本だなにあるおはなしは、つながらなくても読めます。</value></data>
@@ -94,13 +94,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>すでにあるのでスキップ</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>読み込めませんでした</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>私の物語を見る</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino Book Reader のものです。アプリを更新してからもう一度お試しください。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino Book Reader のバックアップではありません。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino: Kids Books &amp; Stories のものです。アプリを更新してからもう一度お試しください。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino: Kids Books &amp; Stories のバックアップではありません。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>バックアップに失敗しました。もう一度お試しください。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>大きすぎて復元できませんでした</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} 件をバックアップに追加できませんでした。</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>こんにちは！ディノはどの言語を使いますか？</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>アプリのボタンや言葉の言語です。あとでおとなのコーナーで変更できます。</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>アプリのボタンや言葉の言語です。あとで設定で変更できます。</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>続ける</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>はじめの本をえらぼう</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>2冊以上えらんでください。ほかの本は、いつでもストアで手に入ります。</value><comment>Machine draft: needs native review</comment></data>
@@ -118,18 +118,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>きく</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>ご家族はどの言語で読みますか？</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0}は常にオンです。お子さまが耳にする言語があれば、ほかにも追加してください。</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0}は常にオンです。</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>なぜ複数選ぶの？</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>家では1つの言語、学校や祖父母のところでは別の言語、というお子さまはたくさんいます。どの本も、選んだすべての言語で読み上げられ、お子さまはどのページでも切り替えられます。最大3つまで選べます。</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>アプリの言語 · 常にオン</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>この本を入手</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>ディノの読み聞かせを聞こう</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>どのキャラクターにも自分の声があり、ディノは気持ちを込めて読みます。</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>{0}でした。次は、同じページをもう1つの言語で聞いてみましょう。</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>{0}をタップして、同じページを聞いてみましょう。</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>同じ声で、今度は{0}です。お子さまはどのページでも言語を切り替えられます。</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>どのキャラクターにも自分の声があり、ディノは気持ちを込めて読みます。{0}でした。今度は同じ声で{1}で読みます。お子さまはどのページでも言語を切り替えられます。</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>このステップをスキップ</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>キャラクターの声になろう</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>このページの{0}のせりふを録音して、**あなた**が{0}を演じるページを聞いてみましょう。</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>このページの{0}のせりふを録音して、**あなた**が{0}を演じるページを聞いてみましょう。スキップもできます。</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>あなたの声はこのスマートフォンの中だけに残ります</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>あなたの声はこのタブレットの中だけに残ります</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>あなたの声はこのコンピューターの中だけに残ります</value></data>
@@ -141,33 +139,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>録音せずに続ける</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0}のせりふ</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>あなたの声です！</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>あなたの声の{0}です。これは試し録りなので、セットアップが終わると削除されます。キャラクターの録音は、あとでおとなのコーナーでいつでもできます。</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>あなたの声の{0}です。これは試し録りなので、セットアップが終わると削除されます。キャラクターの録音は、あとで本の「•••」メニューからいつでもできます。</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · あなたの声</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>もう一度再生</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>ここはおとなのコーナーです</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>おとなだけが入る場所です。ここでできること:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>ストアで本を入手</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>無料と有料のお話が、ご家族のすべての言語で。</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>本を管理</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>本棚の並び順を変えたり、本を削除したり、どのキャラクターにもあなたの声を録音したり。</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>設定を変更</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>言語、読む速さ、音、バックアップなど、アプリ全体の設定。</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>案内してもらう</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>あなたの本です。本の「•••」をタップすると、あなたの声を録音したり、本を削除したりできます。並べ替えで本棚の順番が変わります。</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>ストア</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>新しいお話が、無料も有料も。どの本もご家族のすべての言語で読めます。以前に購入しましたか？ここで本を復元できます。</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>言語、読む速さ、音、バックアップなど、アプリ全体の設定。</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>お子さまの本棚を見てみよう</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>**お子さまの本棚**をタップすると、お子さまに見える画面を確認できます。</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>最後のステップ</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>見てみる</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>これがお子さまの本棚です</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>お子さまがディノを開くたびに見る画面です。お子さまの本だけが並び、うっかり変えてしまうものはありません。</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>おとなのコーナーに戻るには、**おとな向け**をタップして3秒間長押しします。</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>読み始める</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>はじめる前に、Dinoには2冊の本が必要です。Wi-Fiかモバイルデータをオンにして、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} / {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
   <data name="Language_Title" xml:space="preserve"><value>言語</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino はこの言語で読み上げ、翻訳します</value></data>
@@ -179,23 +156,28 @@
   <data name="Settings_About" xml:space="preserve"><value>アプリについて・アップデート</value></data>
   <data name="Settings_On" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>オフ</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>本と購入</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>定期購入</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>年額 · {0}に更新</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>月額 · {0}に更新</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>無料体験は{0}まで</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>定期購入なし</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>お支払いに問題があります</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>この Google アカウントで購入した本と定期購入</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>この Apple ID で購入した本と定期購入</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>この Microsoft アカウントで購入した本と定期購入</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Google Play のギフトコードまたはプロモーションコード</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>App Store のギフトコードまたはプロモーションコード</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Microsoft Store のギフトコードまたはプロモーションコード</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>設定、ストア、本だな</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>おとな向け</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>おとな向け</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>おとなのコーナー（ロック中）</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>おとなのコーナー</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンタップで戻れます。</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>お子さまの本棚にもどる</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>ほん</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>お子さまの本棚</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>おとなだけに見えます。</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>おはなし</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>並べ替え</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を本棚の新しい場所にドラッグします。</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>表紙の絵を待っています</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>新しい順番を保存できませんでした</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。「完了」でもう一度試すか、「キャンセル」で元の順番のままにします。</value></data>
@@ -212,9 +194,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>別の言語の物語は、その物語で「自分の言語に翻訳」をオンにしない限り、その言語のまま読み上げられます。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>おとなのコーナー</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>ロック中</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>ロック解除中</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>ロック中。タップして解除します。</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>ロック解除中。タップしてロックします。</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>ロック解除中 · {0}秒</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>ストアと設定はおとな用です。ロックをタップして解除してください。</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>もう一度ロックしました。30秒間、おとなのタップがありませんでした。</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>ロックしました。</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>タップしてロックします。おとなのタップがないと{0}秒でロックされます。</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>そのまま押し続けて…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>質問へ進む</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>おはなしに戻る</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>計算してね</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>消す</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>マウスで、またはスペースキーを押し続けます。</value></data>
@@ -227,7 +218,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすい - 左右の矢印キーで変更</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>もう一度読む</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンクリックで戻れます。</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>おしまい</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} たす {1} は？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 自動判定</value></data>
@@ -253,7 +244,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>自分の声で読む</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{1}ページ中{0}ページを録音済み。ほかのページはディノの声を使います。</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>マイクがオフです</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino Book Reader にマイクを許可してから、もう一度お試しください。</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino: Kids Books &amp; Stories にマイクを許可してから、もう一度お試しください。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>録音できませんでした。もう一度お試しください。</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -393,6 +384,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0}と{1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>と</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}、{1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>{0}を購入</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>{0}を{1}で購入</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>購入するにはインターネットに接続してください</value></data>
@@ -403,15 +396,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>試行回数が多すぎます。1分待ってからもう一度お試しください。</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>この本はもうストアにありません。</value></data>
   <data name="Store_Free" xml:space="preserve"><value>無料</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>以前に本を購入しましたか？</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>この Google アカウントで購入した本は、この電話にも戻ります。</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>この Google アカウントで購入した本は、このタブレットにも戻ります。</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>この Apple ID で購入した本は、この電話にも戻ります。</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>この Apple ID で購入した本は、このタブレットにも戻ります。</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>この Microsoft アカウントで購入した本は、このコンピューターにも戻ります。</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>復元しています…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>この Google アカウントでの購入はまだありません。</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>この Apple ID での購入はまだありません。</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>この Microsoft アカウントでの購入はまだありません。</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>購入済みですか？ 購入を復元</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1冊の本を復元しました。本棚にあります。</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0}冊の本を復元しました。本棚にあります。</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>このアカウントに購入済みの本は見つかりませんでした。</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>ストアに問題が発生しています</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>購入を復元</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>コードを使う</value></data>
@@ -432,6 +423,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>もう一度定期購入</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>この本を購入</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>ロック中：定期購入が終了しました</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>{0}%おトク</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>年額 {0}</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>月額 {0}</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>表示の料金で毎月または毎年自動的に更新されます。ストアのアカウントで解約するまで続きます。いつでも解約できます。</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>無料体験は{0}まで。その後は年額 {1}です。それまでに解約すれば請求されません。</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>無料体験は{0}まで。その後は月額 {1}です。それまでに解約すれば請求されません。</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>年額プラン · {0}に更新されます。</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>月額プラン · {0}に更新されます。</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>含まれています</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>お支払いができませんでした</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Google Playが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>App Storeが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Microsoft Storeが再試行している間、{0}まですべての本が読めます。お支払い方法を確認して、続けて読めるようにしてください。</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>お支払いを修正</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>本棚の1冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>本棚の{0}冊がロックされ、お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0}冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>ストアでプランを見る</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>購入 · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>定期購入を確認できません</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>インターネットに接続されていません。定期購入の本は、ストアが最後に示した日の3日後の{0}まで開けます。接続すると開いたままになります。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>ストアにある無料の本は自動で戻ります。ストアで配信が終わった本は戻りませんが、録音はバックアップファイルに残ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>

@@ -23,6 +23,9 @@ internal static class OnboardingState
 
 	public static bool InProgress => Step is not null;
 
+	/// <summary>True when the install was killed on the removed corner-tour step (stored 5, Slice 418): it has finished the path, so the start finishes it normally (<see cref="OnboardingRoute.Finish"/>).</summary>
+	public static bool SavedOnOldCornerStep => OnboardingFlow.IsOldCornerStep(Preferences.Default.Get(StepKey, NotRunning));
+
 	/// <summary>Saves <paramref name="step"/> (listen, voice or corner) as the one a restart resumes at.</summary>
 	public static void Begin(OnboardingStep step) => Preferences.Default.Set(StepKey, (int)step);
 
@@ -95,7 +98,7 @@ internal static class OnboardingTryStore
 /// <summary>The words of the onboarding steps that are not a plain string: the step's name, the privacy card's title for this device, and the copy with <c>**bold**</c> words.</summary>
 internal static class OnboardingText
 {
-	/// <summary>The name after "Step 3 of 6 ·" (N1 Language, N2 Story languages, N3 Books, N4 Listen, N5 to N7 Your voice).</summary>
+	/// <summary>The name after "Step 3 of 5 ·" (NO1 Language, NO2 Story languages, NO3 Books, NO4 Listen, NO5 to NO7 Your voice).</summary>
 	public static string StepName(OnboardingStep step) => step switch
 	{
 		OnboardingStep.Language => AppResources.Onboarding_Step_Language,
@@ -109,6 +112,17 @@ internal static class OnboardingText
 	public static string StaysTitle() => DeviceInfo.Idiom == DeviceIdiom.Tablet ? AppResources.Onboarding_StaysTitle_Tablet
 		: DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Onboarding_StaysTitle_Phone
 		: AppResources.Onboarding_StaysTitle_Device;
+
+	/// <summary>"Skip this step" (mock NO5, NO6; Slice 418 decision 2): the brand-coloured text button at the bottom of both voice screens, 44 high. <paramref name="skipped"/> runs after the press is counted.</summary>
+	public static Button SkipStepLink(Action skipped)
+	{
+		var link = new Button
+		{
+			AutomationId = "OnboardingSkipStep", Text = AppResources.Onboarding_SkipStep, FontSize = 15.5, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#4a46d6"),
+			BackgroundColor = Colors.Transparent, BorderWidth = 0, HeightRequest = 44, Padding = new Thickness(0),
+		};
+		return UiUsage.Press(link, UiControls.Skip, skipped);
+	}
 
 	/// <summary>Puts <paramref name="text"/> in <paramref name="label"/>, its <c>**bold**</c> words as bold spans (the label's colour, size and font apply to every span).</summary>
 	public static void ShowMarkup(Label label, string text)
@@ -137,7 +151,7 @@ internal static class OnboardingUsage
 }
 
 /// <summary>
-/// The step bar every onboarding screen starts with (mock A): six segments, 5 high, the done and current ones brand blue, the later ones sand, and under them "Step {0} of {1} · {2}" in 12.5 semibold.
+/// The step bar every onboarding screen starts with (mock A): five segments, 5 high, the done and current ones brand blue, the later ones sand, and under them "Step {0} of {1} · {2}" in 12.5 semibold.
 /// Never mirrored, like the rest of the first run.
 /// </summary>
 internal sealed class OnboardingStepBar : VerticalStackLayout

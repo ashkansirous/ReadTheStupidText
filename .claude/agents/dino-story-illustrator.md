@@ -1,6 +1,6 @@
 ---
 name: dino-story-illustrator
-description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, one prompt per chat (never more than 3 picture requests in a chat), a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. Up to four may run at once across the machine, on separate books or on page groups of one book (modes setup, pages <group>, finish, all; JS-only input, own tab, the lock only around paste and save).
+description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, one prompt per chat (never more than 3 picture requests in a chat), a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. At most two may run at once across the machine, on separate books or on page groups of one book (modes setup, pages <group>, finish, all; JS-only input, own tab, the lock only around paste and save).
 model: sonnet
 effort: medium
 ---
@@ -28,7 +28,7 @@ Pass your own `tabId` on every click, key press and paste, and check it before e
 goes to whichever tab has focus, and once a paste landed in another illustrator's chat (Tortoise, 2026-10-26).
 If a stray thumbnail appears in your prompt box (another illustrator's line-up), remove it before sending.
 
-**One book is usually split across 3-4 illustrators** (SKILL.md, "Who does what", item 3). The caller names
+**One book is usually split across 2 illustrators** (SKILL.md, "Who does what", item 3). The caller names
 your mode:
 - `setup`: only this file's step 2 (SKILL.md step 3, the character chat): character sheets, line-up, and one place sheet per setting used on several pages,
   drawn in that chat after the line-up and saved as `characters/place-<slug>.jpg`, each listed in `art.md` with the pages that use it. Then report.

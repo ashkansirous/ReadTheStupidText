@@ -46,7 +46,7 @@ name: A dropped pack download shows the failure and the next launch retries
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings

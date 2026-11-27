@@ -23,7 +23,7 @@ name: Settings, Reading speed page survives home and back
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings
@@ -42,13 +42,13 @@ name: Settings, Reading speed page survives home and back
 - launchApp:
     stopApp: false
 # The correct screen after coming back is the kids' shelf: App.xaml.cs OnStopped -> CloseGrownUpPagesAsync leaves grown-up mode and pops the grown-ups pages
-# (GalleryDone, the grown-up bar's button, and GallerySettings are hidden in kids' mode). Not the Reading speed page, not a launcher or crash dialog.
+# (Slice 418: the "Unlocked" chip is gone, the lock is closed again and the Store and Settings tabs are faded.) Not the Reading speed page, not a launcher or crash dialog.
 - extendedWaitUntil:
     visible:
       id: StoryTile
     timeout: 30000
 - assertNotVisible:
-    id: GallerySettings
+    id: LockChip
 - assertNotVisible: Slower is easier for little ones
 # A restarted process would also show the shelf, so the run's expect-log lines (checked by run-flows.ps1 after the flow) are what prove the SAME process lived through the stop:
 # "[GrownUps] closed on stop" is written by OnStopped's pop of the grown-ups pages, after the Reading speed page was on screen. A crash or restart leaves it missing and the flow fails.

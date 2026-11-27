@@ -37,7 +37,7 @@ git lfs pull --include "content/dino/<book>/audio/**" --exclude ""   # one book 
 
 Fetch a book's clips before rendering or packing it: the generator treats a pointer file as an existing clip (so it would skip it) and `build-audio` refuses one. `git lfs ls-files` shows which clips are
 downloaded (`*`) and which are pointers (`-`). After a render, commit the changed clips (`git add content/dino/<book>/audio`; the filter stores them in LFS) and the book's `audio-cast.json` (its `audioPacks`
-record, updated by `build-audio`). `dino-store.yml` does the rest on merge: it fetches only the books whose pack the live store lacks, builds those packs and uploads them with the book. The working files
+record, updated by `build-audio`). **Then build the listening track on this PC (Slice 409):** `dotnet run --project tools/dino/DinoReader.BookBuilder -- build-listen-all <book>` runs `build-audio` and `build-listen` for every language that has a manifest (ffmpeg and ffprobe on the PATH, or `$FFMPEG`/`$FFPROBE`; about 1.5 to 4 minutes a book) and writes `audio/<lang>/listen-<lang>-v<n>.m4a` beside the clips (n is the pack version in `audio-cast.json`; an older track of the language is deleted; `build-listen` refuses clips that no longer match the pack record); commit the tracks (LFS) with the clips and `audio-cast.json`, which now holds each language's `listenSeconds`. `check-audio` fails a language whose track is missing, empty, of another pack version or older than its clips. `dino-store.yml` does the rest on merge and installs no ffmpeg: it fetches only the books whose pack the live store lacks, builds those packs, stages the committed tracks of any pack or track the live store lacks and uploads them with the book. The working files
 (`batch-state.json`, `variants/`, kept `.wav`, `manifest.json.bak`) are git-ignored; the lock and `usage.json` stay in `artifacts/premade-audio`.
 
 **Check the manifests against the app (Slice 272):** `dotnet run --project tools/dino/DinoReader.BookBuilder -- check-audio [<book>...]` compares every `audio/<lang>/manifest.json` with the sentences the app reads now, position by position, and fails naming the book, language and first bad position (CI runs it on pull requests that touch Core, `StoryVoicing.cs`, the BookBuilder or `content/dino/**`, and in `dino-store.yml` before any pack is built). Fetch the manifests first: `git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""`. After a change that moves the count, re-run `generate.py` on the new dump (all clips present sends 0 requests and re-indexes the manifest) and `build-audio`.
@@ -50,6 +50,13 @@ the dump piece's `speaker` (`null` for the narrator) and English `source`, which
 differently), so one cast serves every language. `occurrence` (1-based, in dump order) is needed only when that speaker says that source more than once. An entry that matches no
 piece, matches several without an `occurrence`, or sets a field of one piece twice fails the run before any request. `direction` applies in every language. The delivery sent to Gemini is `<style>; <direction>`
 (`speech_metadata.style`). A speaker with no entry fails the run before any request. `check(sentences, language)` must run before any delivery (the language is a lower-case code such as `fa`). Format and rules: `audio_cast.py`. Fixture dumps for the Pigs binding test: `tools/dino/premade-audio/testdata/` (regenerate with `dump-sentences three-little-pigs --lang en|fa --out ...`).
+
+### `as`: a line spoken in another character's voice
+
+A line entry takes `"as": "<character name>"` (a name in `characters`): that piece is delivered with that character's voice, style and direction instead of its own speaker's. For a line the dump
+tags as narration though characters say it, e.g. a chorus "they said together": `{"speaker": null, "source": "We all miss you, ...", "as": "Granny Seagull", "direction": "..."}` (Love from Seagull Island, page 15).
+A `direction` on the same entry still wins over the character's own. An `as` that names no character, or sits on an entry whose speaker is not null, fails when the cast is loaded: `as` is for narration pieces only. It applies in every language.
+`testdata/farsi-delivery-styles.json` pins the styles recorded before the accent moved (A8); entries for books added after A8 are copies of the current cast, so they guard only against later drift.
 
 ### `say`: a Gemini-only pronunciation fix per line (A6)
 
@@ -107,6 +114,8 @@ python tools/dino/premade-audio/generate.py --sentences tmp/pigs-fa.json --batch
 - **Errors:** a request that failed (or came back without audio, or silent) is reported by key, the good clips are kept, and the failed ones stay misses for the next run; exit 1. A FAILED/EXPIRED/CANCELLED job clears its state, is reported, exit 1. A 400/401/403 on submit or poll exits 4 with the message and no retry (jobs already submitted stay in the state file).
 - Clips an earlier run held back (silent, or failed in two batch results) are printed as `note:` lines and do not make a rerun exit 1; a clip already saved is never rewritten from a batch result that arrives later. A submit that failed with 429/5xx exits 1 and says a rerun resumes (it looks the job up by name first). A state file with a malformed entry stops the run with a message and sends nothing.
 - `--dry-run --batch` prints how many requests and jobs it would send. It cannot be combined with `--variants`.
+- **A whole book: three languages at a time** (measured 2026-11-18, `docs/plan/notes/2026-11-18-premade-audio-parallel.md`: about 1:43 a language against 3:45 one by one). The lock allows one run per output folder, so give each process its own scratch `--out <scratch>/pa-<lang>` (empty, or holding only that language's earlier batch state), run at most three at once (`xargs -P3`), and when one exits 0, check its `manifest.json` names only bare clip files, then copy that language's clips and `manifest.json` into `content/dino/<book>/audio/<lang>/`. Not more than three until a wider run is measured.
+- **429 "exceeded its monthly spending cap"** is the Gemini project's spend cap, not a rate limit: stop, don't resubmit, and ask the user to raise it at https://ai.studio/spend; jobs already submitted wait (`BATCH_STATE_RUNNING`, all requests pending) and a rerun polls them once the cap is raised.
 
 ## Encoding
 

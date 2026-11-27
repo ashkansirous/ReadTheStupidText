@@ -3,8 +3,8 @@
   "id": "1ca50c6936cc44788b992726784e8132",
   "title": "The Lion and the Mouse",
   "version": 10,
-  "ageMin": 4,
-  "ageMax": 7,
+  "ageMin": 3,
+  "ageMax": 5,
   "author": "Aesop",
   "credits": "Retold from Aesop · free to share",
   "colour": 1,
@@ -59,5 +59,21 @@
   },
   "storyBy": "Aesop",
   "retold": true,
+  "namesByLanguage": {
+    "ar": { "Aesop": "إيسوب", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Aesop": "Æsop", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Aesop": "Äsop", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Aesop": "Esopo", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Aesop": "ازوپ", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Aesop": "Aisopos", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Aesop": "Ésope", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Aesop": "イソップ", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Aesop": "Aisopos", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Aesop": "Aesopus", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Aesop": "Esopo", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Aesop": "Эзоп", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Aesop": "Aisopos", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Aesop": "伊索", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  },
   "access": "free"
 }

@@ -4,6 +4,7 @@
 #   2 Start recording -> the Record screen: one piece, Skip / Record / key labels "Skip . S", "Record . R"
 #   3 S -> trace line "Dino keyboard: S used" (a piece skipped)
 #   4 Esc -> back out of the Record screen (before R: R may raise the microphone consent prompt, a window outside the app)
+#   (In a full run dino-onboarding has already denied the first-use microphone prompt, so stage 5 sees no prompt and expects the alert; run alone on a clean image it denies the prompt itself.)
 #   5 reopen, R last -> the trace line "Dino keyboard: R used" AND a recording state (Stop button) or the app's "Microphone is off" alert; the system consent prompt, if it shows, is denied through its UIA button first (Slice 319), the window that has focus after R is named; R again stops
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName, [Parameter(Position = 1)] [string] $AlertTextsBase64)
 . "$PSScriptRoot\_lib.ps1"
@@ -55,8 +56,8 @@ function Press-Key {
 }
 function Find-Visible { param([string] $Id) try { return Find-UiaVisibleById (Get-DinoWindow) $Id } catch { return $null } }
 function Enter-GrownUpMode {
-    if (Find-Visible 'GalleryDone') { return }
-    Invoke-Uia (Wait-Until { Find-Visible 'GalleryGrownUps' } 15 'no For grown-ups button')
+    if (Find-Visible 'LockChip') { return }   # Slice 418: the chip shows only while the shelf is unlocked
+    Invoke-Uia (Wait-Until { Find-Visible 'GalleryLock' } 15 'no lock on the shelf')
     Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' | Out-Null
     $sum = Invoke-GateHold -FindRing { Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' } -PackageName $PackageName -HoldMs $HoldMs
     # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
@@ -70,7 +71,7 @@ function Enter-GrownUpMode {
         }
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'no OK key')
     }
-    Wait-Until { Find-Visible 'GalleryDone' } 15 'grown-up mode did not open' | Out-Null
+    Wait-Until { Find-Visible 'LockChip' } 15 'the shelf did not unlock' | Out-Null
 }
 function Start-RecordingFromIntro {
     # Waits until Start recording is visible and enabled, invokes it, then waits for the app's "Start tapped" trace line; a click that never reached the app is invoked once more.
@@ -206,7 +207,7 @@ function Add-Result {
 function Reset-ToGallery {
     # A failed stage can leave the Record screen (mic live) or the intro open: Esc back out until a gallery button shows, so the next check starts from the shelf.
     for ($i = 0; $i -lt 5; $i++) {
-        try { if ((Find-Visible 'GalleryGrownUps') -or (Find-Visible 'GalleryDone')) { return } } catch { $null = $_ }
+        try { if (Find-Visible 'GalleryLock') { return } } catch { $null = $_ }   # the lock is on the one shelf, locked or not (Slice 418)
         try { Press-Key $VkEscape } catch { return }
         Start-Sleep -Milliseconds 800
     }
@@ -215,12 +216,9 @@ function Reset-ToGallery {
 Invoke-Check -ResultFile $ResultFile -Body {
     Add-Result 'intro' {
         Enter-GrownUpMode
-        $tile = Wait-Until {
-            foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-                if ($e.Current.AutomationId -eq 'StoryTile' -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
-            }
-        } 15 'no visible story tile in the grown-ups corner'
-        Invoke-Uia $tile
+        # Slice 420: a cover tap reads the book; the sheet opens from the book's dots button (TileMore).
+        $dots = Wait-Until { Find-FirstTileMore (Get-DinoWindow) } 15 'no dots button (TileMore) on a book of the unlocked shelf'
+        Invoke-Uia $dots
         Wait-Until { Find-Visible 'BookSheetClose' } 10 'book sheet did not open' | Out-Null
         $names = (Get-VisibleNames (Get-DinoWindow) 40) -join ' / '
         $pill = Wait-Until { Find-UiaByName -Root (Get-DinoWindow) -Name 'Record your voice' } 5 "no Record pill on the book sheet. UI: $names"

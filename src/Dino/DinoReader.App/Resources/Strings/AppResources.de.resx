@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="App_Name" xml:space="preserve"><value>Dino Book Reader</value></data>
+  <data name="App_Name" xml:space="preserve"><value>Dino: Kids Books &amp; Stories</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
@@ -23,7 +23,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Fertig</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Weiter</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader schließen?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino: Kids Books &amp; Stories schließen?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Bleiben</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
@@ -57,7 +57,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Beliebt</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Empfohlen</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Neu</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} Seiten · {1} Min.</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} Min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Kostenlos und ohne Konto. Es wird nichts über dich oder dein Kind gesendet.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du bist offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Für den Laden brauchst du das Internet. Geschichten, die schon im Regal stehen, werden auch ohne Internet gelesen.</value></data>
@@ -96,13 +96,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Schon da, übersprungen</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Ließ sich nicht lesen</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Meine Geschichten ansehen</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Diese Sicherung stammt von einem neueren Dino Book Reader. Aktualisiere die App und versuche es dann noch einmal.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Diese Datei ist keine Sicherung von Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Diese Sicherung stammt von einem neueren Dino: Kids Books &amp; Stories. Aktualisiere die App und versuche es dann noch einmal.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Diese Datei ist keine Sicherung von Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Die Sicherung hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Zu groß zum Wiederherstellen</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} konnte nicht zur Sicherung hinzugefügt werden.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! Welche Sprache soll Dino benutzen?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Für die Knöpfe und Wörter der App. Du kannst sie später im Bereich für Erwachsene ändern.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Für die Knöpfe und Wörter der App. Du kannst sie später in den Einstellungen ändern.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Weiter</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Wähle deine ersten Bücher</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Wähle mindestens zwei. Weitere gibt es jederzeit im Store.</value><comment>Machine draft: needs native review</comment></data>
@@ -120,18 +120,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Zuhören</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>In welchen Sprachen liest deine Familie?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} ist immer dabei. Füge weitere Sprachen hinzu, die dein Kind hört.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} ist immer dabei.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Warum mehr als eine?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Viele Kinder hören zu Hause eine Sprache und in der Schule oder bei den Großeltern eine andere. Jedes Buch wird in jeder gewählten Sprache vorgelesen, und dein Kind kann auf jeder Seite wechseln. Wähle bis zu drei.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App-Sprache · immer an</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Diese Bücher holen</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Hör Dino beim Vorlesen zu</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>Jede Figur hat ihre eigene Stimme, und Dino liest mit Gefühl.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Das war {0}. Hör dir jetzt dieselbe Seite in deiner anderen Sprache an.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Tippe jetzt auf {0}, um dieselbe Seite zu hören.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Dieselben Stimmen, jetzt auf {0}. Dein Kind kann auf jeder Seite die Sprache wechseln.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Jede Figur hat ihre eigene Stimme, und Dino liest mit Gefühl. Das war {0}; jetzt lesen dieselben Stimmen es auf {1}. Dein Kind kann auf jeder Seite die Sprache wechseln.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Diesen Schritt überspringen</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Sei die Stimme einer Figur</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Sprich die Zeilen von {0} auf dieser Seite ein und hör dir dann die Seite mit **dir** als {0} an.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Sprich die Zeilen von {0} auf dieser Seite ein und hör dir dann die Seite mit **dir** als {0} an. Du kannst das überspringen.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Deine Stimme bleibt auf diesem Handy</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Deine Stimme bleibt auf diesem Tablet</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Deine Stimme bleibt auf diesem Computer</value></data>
@@ -143,33 +141,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Ohne Aufnahme weiter</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Zeilen von {0}</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Das bist du!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Das ist {0} mit deiner Stimme. Das war nur ein Versuch, deshalb wird er gelöscht, wenn die Einrichtung endet. Später kannst du im Bereich für Erwachsene jede Figur aufnehmen.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Das ist {0} mit deiner Stimme. Das war nur ein Versuch, deshalb wird er gelöscht, wenn die Einrichtung endet. Später kannst du jede Figur über das •••-Menü eines Buchs aufnehmen.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · deine Stimme</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Nochmal abspielen</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Das ist der Bereich für Erwachsene</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Hier sind nur Erwachsene. Hier kannst du:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Bücher im Laden holen</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Kostenlose und kostenpflichtige Geschichten in allen Sprachen deiner Familie.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Deine Bücher verwalten</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Die Reihenfolge im Regal ändern, ein Buch entfernen oder deine Stimme für jede Figur aufnehmen.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Einstellungen ändern</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Sprachen, Lesetempo, Töne und Sicherung für die ganze App.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Zeig mir alles</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Deine Bücher. Tippe bei einem Buch auf •••, um deine Stimme aufzunehmen oder es zu entfernen. Mit dem Umsortieren änderst du die Reihenfolge im Regal.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Der Laden</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Neue Geschichten, kostenlos und kostenpflichtig. Jedes Buch gibt es in allen Sprachen deiner Familie. Schon früher gekauft? Hier stellst du deine Bücher wieder her.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Sprachen, Lesetempo, Töne und Sicherung für die ganze App.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Sieh dir das Regal deines Kindes an</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Tippe auf **Kinderregal**, um zu sehen, was dein Kind sieht.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Letzter Schritt</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Zeig es mir</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Das ist das Regal deines Kindes</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Das sieht dein Kind jedes Mal, wenn es Dino öffnet: nur seine Bücher, ohne dass etwas aus Versehen geändert werden kann.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Um zurück in den Bereich für Erwachsene zu kommen, tippe auf **Für Erwachsene** und halte dann 3 Sekunden gedrückt.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Lesen starten</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino braucht zwei Bücher, bevor es losgeht. Schalte WLAN oder mobile Daten ein und versuche es noch einmal.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} von {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Bereit für mein Kind</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Erwachsenen-Modus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Sprache</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino liest und übersetzt in diese Sprache</value></data>
@@ -181,23 +158,28 @@
   <data name="Settings_About" xml:space="preserve"><value>Info und Updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>An</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Aus</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Bücher und Käufe</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Abo</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Jährlich · verlängert sich am {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Monatlich · verlängert sich am {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Gratis testen bis {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Kein Abo</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Zahlungsproblem</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit diesem Google-Konto</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit dieser Apple-ID</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Bücher und ein Abo, gekauft mit diesem Microsoft-Konto</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode von Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode aus dem App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Ein Geschenk- oder Aktionscode aus dem Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Einstellungen, Laden und Regal</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Erwachsene</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Bücher hinzufügen und bearbeiten</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Für Erwachsene</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Für Erwachsene</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Bereich für Erwachsene, gesperrt</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Bereich für Erwachsene</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Tipp entfernt.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Zurück zum Regal meines Kindes</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Bücher</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Kinderregal</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Das sehen nur Erwachsene.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Geschichten</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Neu anordnen</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Zieh ein Buch an einen neuen Platz. Das Regal deines Kindes zeigt dieselbe Reihenfolge.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Zieh ein Buch an einen neuen Platz im Regal.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Warte auf das Titelbild</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Die neue Reihenfolge ließ sich nicht speichern</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Etwas verwendet die Datei noch. Tippe auf Fertig, um es noch einmal zu versuchen, oder auf Abbrechen, um die alte Reihenfolge zu behalten.</value></data>
@@ -214,9 +196,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>Eine Geschichte in einer anderen Sprache wird weiter in ihrer eigenen Sprache gelesen, außer „In meine Sprache übersetzen“ ist für diese Geschichte an.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Drücke und halte 3 Sekunden lang.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Drücken und 3 Sekunden halten</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Bereich für Erwachsene</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Gesperrt</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Entsperrt</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Gesperrt. Zum Entsperren tippen.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Entsperrt. Zum Sperren tippen.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Entsperrt · {0} s</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Laden und Einstellungen sind für Erwachsene. Tippe auf das Schloss, um zu entsperren.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Wieder gesperrt: 30 Sekunden lang kein Tippen eines Erwachsenen.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Gesperrt.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Zum Sperren tippen. Sperrt sich in {0} s von selbst, wenn kein Erwachsener tippt.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Weiter halten …</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Weiter zur Frage</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Zurück zur Geschichte</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Was ist</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Löschen</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Mit der Maus oder die Leertaste gedrückt halten.</value></data>
@@ -229,7 +220,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langsamer ist leichter für die Kleinen - mit den Pfeiltasten links und rechts ändern</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Noch einmal lesen</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Klick entfernt.</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Ende</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Was ist {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Sprache der Geschichte</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · erkannt</value></data>
@@ -255,7 +246,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Mit meiner Stimme vorlesen</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} von {1} Seiten aufgenommen. Die anderen Seiten nutzen Dinos Stimmen.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Das Mikrofon ist aus</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Erlaube in den Einstellungen deines Geräts das Mikrofon für Dino Book Reader und versuche es dann noch einmal.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Erlaube in den Einstellungen deines Geräts das Mikrofon für Dino: Kids Books &amp; Stories und versuche es dann noch einmal.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Die Aufnahme hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -394,6 +385,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} und {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>und</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>{0} kaufen</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>{0} für {1} kaufen</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Zum Kaufen mit dem Internet verbinden</value></data>
@@ -404,15 +397,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Dieses Buch ist nicht mehr im Shop.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Kostenlos</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Schon früher Bücher gekauft?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Mit diesem Google-Konto gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Handy zurück.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Mit dieser Apple-ID gekaufte Bücher kommen auch auf diesem Tablet zurück.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Mit diesem Microsoft-Konto gekaufte Bücher kommen auch auf diesem Computer zurück.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Wird wiederhergestellt …</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Mit diesem Google-Konto wurde noch nichts gekauft.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Mit dieser Apple-ID wurde noch nichts gekauft.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Mit diesem Microsoft-Konto wurde noch nichts gekauft.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Schon gekauft? Käufe wiederherstellen</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 Buch wiederhergestellt. Es steht im Regal.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} Bücher wiederhergestellt. Sie stehen im Regal.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Auf diesem Konto wurden keine gekauften Bücher gefunden.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Der Shop hat ein Problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Käufe wiederherstellen</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Code einlösen</value></data>
@@ -433,6 +424,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>Erneut abonnieren</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Dieses Buch kaufen</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Gesperrt: Das Abo ist abgelaufen</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>{0} % sparen</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} pro Jahr</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} pro Monat</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Verlängert sich automatisch jeden Monat oder jedes Jahr zum angezeigten Preis, bis du in deinem Store-Konto kündigst. Jederzeit kündbar.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis testen bis {0}. Danach {1} pro Jahr, außer du kündigst vorher.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis testen bis {0}. Danach {1} pro Monat, außer du kündigst vorher.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Jahresabo · verlängert sich am {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Monatsabo · verlängert sich am {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Inklusive</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Deine Zahlung ist nicht durchgegangen</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während Google Play es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während der App Store es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alle Bücher bleiben bis {0} offen, während der Microsoft Store es erneut versucht. Prüfe deine Zahlungsmethode, um sie zu behalten.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Zahlung beheben</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Dein Abo ist abgelaufen</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 Buch in deinem Regal ist gesperrt und vor deinem Kind verborgen. Abonniere erneut oder kaufe das Buch, das du behalten möchtest.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} Bücher in deinem Regal sind gesperrt und vor deinem Kind verborgen. Abonniere erneut oder kaufe die Bücher, die du behalten möchtest.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Dein Abo ist abgelaufen</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} Bücher sind gesperrt. Dein Kind sieht sie nicht. Abonniere erneut oder kaufe die Bücher, die du behalten möchtest.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 Buch ist gesperrt. Dein Kind sieht es nicht. Abonniere erneut oder kaufe das Buch, das du behalten möchtest.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Tarife im Store ansehen</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Kaufen · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Abo kann nicht geprüft werden</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Kein Internet. Abo-Bücher bleiben bis {0} geöffnet, 3 Tage nach dem letzten vom Store genannten Datum. Verbinde dich, damit sie geöffnet bleiben.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bücher, die aus dem Store zurückkommen</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Kostenlose Bücher kommen von selbst zurück. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Kostenlose Bücher, die noch im Store sind, kommen von selbst zurück. Ein Buch, das der Store nicht mehr anbietet, kommt nicht zurück, seine Aufnahmen bleiben aber in der Backup-Datei. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>

@@ -1,0 +1,23 @@
+# Slice 412 part B: Back on the kids' shelf asks "Close Dino: Kids Books & Stories?" and Stay keeps the app open.
+# expect-log: HOOK skip-first-run ok
+appId: uk.sirous.dinoreader.dbg
+name: Back on the shelf asks to close Dino, Stay keeps it
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, packs, own books); fine here: only the starter shelf is needed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Close Dino: Kids Books & Stories?"
+    timeout: 10000
+- tapOn: "Stay"
+- assertNotVisible: "Close Dino: Kids Books & Stories?"
+- assertVisible:
+    id: StoryTile

@@ -18,6 +18,8 @@ param(
     [ValidateSet('phone', 'tablet')][string]$Form, # required, same
     [string]$Serial,
     [string]$OutRoot,
+    [int]$StatusBarPx = -1,   # Slice 433: the status bar height of the emulator in px; -1 reads it from the device (dumpsys window), else 24 dp
+    [int]$NavBarPx = -1,      # the navigation bar height in px; -1 reads it from the device (0 when it cannot be read)
     [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
@@ -27,6 +29,8 @@ $requestedSerial = $Serial
 . (Join-Path $PSScriptRoot 'contact-sheet.ps1')   # dot-sourced: Get-MaestroToolsDir only
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 if (-not $OutRoot) { $OutRoot = Join-Path $repoRoot 'docs\store-listings\screenshots' }
+# Slice 433: the frame sizes (Get-FrameSpec, Get-BandHeight) come from store-frames.ps1 (no param block, so nothing of this script's scope is reset), the same numbers store-captions.ps1 cuts the frame with.
+. (Join-Path $PSScriptRoot 'store-frames.ps1')
 
 # Pure: the emulator instance (as run-flows.ps1 -Instance takes it) for a serial `emulator-<port>`, else the form's default. Throws on a serial that is not one of the AVD ports.
 function Get-StoreShotInstance([string]$Serial, [string]$Form) {
@@ -43,6 +47,161 @@ function Get-StoreShotInstance([string]$Serial, [string]$Form) {
 function Get-StoreShotNames([string]$FlowText, [string]$App, [string]$Form) {
     $pattern = '(?m)^\s*-\s+takeScreenshot:\s*(store-' + [regex]::Escape($App) + '-' + [regex]::Escape($Form) + '-\d+-[A-Za-z0-9-]+)\s*$'
     return @([regex]::Matches($FlowText, $pattern) | ForEach-Object { $_.Groups[1].Value })
+}
+
+# Slice 393 item 14: the status bar of a store shot is the same in every shot (the Play phone set had a download notification, a shield icon and a clock that moved from 8:54 to 8:55). The system UI's demo mode shows a fixed clock, full battery
+# and signal and no notification icons. Pure: the adb argument lists that switch it on / off, in order (the broadcast is `am broadcast -a com.android.systemui.demo -e command <name> ...`).
+$script:DemoClock = '1000'
+function New-DemoBroadcast([string[]]$Extras) { return @('shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo') + $Extras }
+function Get-StatusBarDemoEnterCommands([string]$Clock = $script:DemoClock) {
+    return @(
+        , @('shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1')
+        , (New-DemoBroadcast @('-e', 'command', 'enter'))
+        , (New-DemoBroadcast @('-e', 'command', 'clock', '-e', 'hhmm', $Clock))
+        , (New-DemoBroadcast @('-e', 'command', 'battery', '-e', 'level', '100', '-e', 'plugged', 'false'))
+        , (New-DemoBroadcast @('-e', 'command', 'network', '-e', 'wifi', 'show', '-e', 'level', '4', '-e', 'fully', 'true'))
+        , (New-DemoBroadcast @('-e', 'command', 'network', '-e', 'mobile', 'show', '-e', 'datatype', 'none', '-e', 'level', '4', '-e', 'fully', 'true'))
+        , (New-DemoBroadcast @('-e', 'command', 'notifications', '-e', 'visible', 'false'))
+    )
+}
+function Get-StatusBarDemoExitCommands {
+    return @(
+        , (New-DemoBroadcast @('-e', 'command', 'exit'))
+        , @('shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '0')
+    )
+}
+
+# Runs the commands through the emulator's adb (the serial common.ps1 holds for the chosen instance). Never throws (each call is caught); returns the failed commands' messages (an empty list when every call went through).
+# No setting read-back proves the demo mode (sysui_demo_allowed is persistent and reads 1 whether or not the broadcasts took): the proof is the first screenshot's status bar, checked in the device run.
+function Invoke-StatusBarDemo([object[]]$Commands, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $failures = @()
+    foreach ($command in $Commands) {
+        try { $null = & $AdbCall $command } catch { $failures += "'$($command -join ' ')' failed: $($_.Exception.Message)" }
+    }
+    return @($failures)
+}
+
+# Slice 433 item 1: the emulator is run at the size that makes the raw shot fit the store frame exactly, so nothing is stretched, letterboxed or cut beyond the bars. The raw shot is the frame's area under the caption band plus the status bar on top and the
+# navigation bar at the bottom (store-captions.ps1 cuts both off): Play phone 1080 x (1920 - 288 band + bars), Play tablet 1440 x (2560 + bars). `wm size` changes the display size and keeps the density, and `wm size reset` puts it back.
+# Pure: the width and height to give `wm size`.
+function Get-StoreShotWmSize([string]$Form, [int]$StatusPx, [int]$NavPx) {
+    $spec = Get-FrameSpec $Form
+    $band = Get-BandHeight $spec.Height $spec.Band
+    return @([int]$spec.Width, [int]($spec.Height - $band + $StatusPx + $NavPx))
+}
+function Get-WmSizeEnterCommands([int[]]$Size) { return , @(, @('shell', 'wm', 'size', "$($Size[0])x$($Size[1])")) }   # the leading comma keeps the one command an array of arrays through the pipeline
+function Get-WmSizeExitCommands { return , @(, @('shell', 'wm', 'size', 'reset')) }
+
+# Pure: the height in px of a system bar from `dumpsys window` text. The status bar's inset frame is [0,0][W,H] (the height is the bottom edge); the navigation bar's is [0,top][W,bottom]. $null when the dump has no such line (the format is read from
+# Android's own InsetsSource lines and is not proven on this PC: the shot's own look is the proof, and -StatusBarPx / -NavBarPx override it).
+function Get-InsetBarPx([string]$Dump, [string]$Bar) {
+    $m = [regex]::Match($Dump, '(?m)type=' + [regex]::Escape($Bar) + '\b[^\r\n]*?frame=\[\d+,(\d+)\]\[\d+,(\d+)\]')
+    if (-not $m.Success) { return $null }
+    $top = [int]$m.Groups[1].Value; $bottom = [int]$m.Groups[2].Value
+    if ($Bar -eq 'statusBars') { return $bottom }
+    return [math]::Max(0, $bottom - $top)
+}
+
+# Pure: the density in dpi from `wm density` text (the override wins over the physical one); 0 when there is none.
+function Get-DensityDpi([string]$Text) {
+    $override = [regex]::Match($Text, 'Override density:\s*(\d+)')
+    if ($override.Success) { return [int]$override.Groups[1].Value }
+    $physical = [regex]::Match($Text, 'Physical density:\s*(\d+)')
+    if ($physical.Success) { return [int]$physical.Groups[1].Value }
+    return 0
+}
+
+# The status bar and navigation bar heights of the emulator in px: an explicit value wins, else the dump, else 24 dp at the density (nav 0). A navigation bar taller than 160 px is not a bar (gesture handle insets are read as one) and counts as 0.
+function Get-DeviceBars([int]$StatusOverride, [int]$NavOverride, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $dump = [string](& $AdbCall @('shell', 'dumpsys', 'window'))
+    $status = $StatusOverride
+    if ($status -lt 0) { $status = Get-InsetBarPx $dump 'statusBars' }
+    if ($null -eq $status) { $status = [int][math]::Round(24 * (Get-DensityDpi ([string](& $AdbCall @('shell', 'wm', 'density')))) / 160) }
+    $nav = $NavOverride
+    if ($nav -lt 0) { $nav = Get-InsetBarPx $dump 'navigationBars' }
+    if ($null -eq $nav -or $nav -gt 160) { $nav = 0 }
+    return @{ StatusPx = [int]$status; NavPx = [int]$nav }
+}
+
+# The raw shots must be exactly the size the emulator was set to: a shot of another size (the override did not take) would fail the frame later, so it fails here, naming the file. Returns the problem texts.
+function Get-RawShotSizeProblems([string[]]$Names, [string]$Dir, [int[]]$Size) {
+    $problems = @()
+    foreach ($name in $Names) {
+        $path = Join-Path $Dir "$name.png"
+        $found = if (Test-Path $path) { Get-PngSize $path } else { $null }
+        if (-not $found -or $found.Width -ne $Size[0] -or $found.Height -ne $Size[1]) { $problems += "$name.png is $(if ($found) { "$($found.Width) x $($found.Height)" } else { 'not a PNG' }), the emulator was set to $($Size[0]) x $($Size[1])" }
+    }
+    return @($problems)
+}
+
+# A snapshot or cold boot (run-flows.ps1 does one on a cache miss or a failed preflight) drops the demo mode, so it is applied only once the emulator is up: starts it first when it is not.
+function Confirm-EmulatorForDemo([int]$InstanceNumber) {
+    if (Test-EmulatorOnline) { return }
+    Write-Host "STORE SHOTS: $script:Serial is not up; starting it before the status bar demo mode."
+    & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $InstanceNumber | Out-Null
+}
+
+# Slice 404: the Dino full-shelf hook imports a PAID book from a package file, because the store refuses a paid download without a real receipt (no fake receipt, no live config). Decision 5: a package is never built here;
+# .github/scripts/fetch-shelf-packages.mjs reads the one the store upload already stored (dinoreader/stories/<id>/story-v<n>.dino in the downloads bucket, through wrangler: a login on this PC or CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID) into artifacts/full-shelf/<id>/story-v<n>.dino, and this copies the newest package of every book into the app's data folder, files/full-shelf/<id>.dino
+# (the hook's FullShelfPlan.PackageFolder). The flow's first launch must not clear the app's data (it would delete them): the script clears it once, before the copy.
+$script:FullShelfDeviceTemp = '/data/local/tmp/full-shelf'
+$script:FullShelfAppFolder = 'files/full-shelf'
+
+# Pure: the newest package of each book under $StoreRoot as @{ Id; Path } (the highest story-v<n>.dino of each <id> folder); empty when the root or a package is missing.
+function Get-FullShelfPackages([string]$StoreRoot) {
+    if (-not (Test-Path $StoreRoot)) { return @() }
+    $books = foreach ($folder in Get-ChildItem $StoreRoot -Directory) {
+        $newest = Get-ChildItem $folder.FullName -Filter 'story-v*.dino' -File |
+            Where-Object { $_.BaseName -match '^story-v(\d+)$' } |
+            Sort-Object { [int]($_.BaseName -replace '^story-v', '') } -Descending | Select-Object -First 1
+        if ($newest) { [pscustomobject]@{ Id = $folder.Name; Path = $newest.FullName } }
+    }
+    return @($books)
+}
+
+# Pure: the node argument list that fetches the stored packages (the same script the iOS job runs) into $Folder.
+function Get-FetchShelfPackagesArguments([string]$RepoRoot, [string]$Folder) {
+    return @((Join-Path $RepoRoot '.github\scripts\fetch-shelf-packages.mjs'), $Folder)
+}
+
+# Fetches the packages the store upload already stored (never builds one). Returns the failure text, or an empty string when the script exited 0. $Run takes the node argument list and returns the exit code (a seam for the self-test).
+function Invoke-FetchShelfPackages([string]$RepoRoot, [string]$Folder, [scriptblock]$Run = { param($a) & node @a | Out-Host; $LASTEXITCODE }) {
+    $code = & $Run (Get-FetchShelfPackagesArguments $RepoRoot $Folder)
+    if ($code -ne 0) { return "fetch-shelf-packages.mjs exited $code (it reads dinoreader/stories/<id>/story-v<n>.dino from the downloads bucket: run npm ci in the repo and be logged in to wrangler, or set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID)" }
+    return ''
+}
+
+# Pure: the adb argument lists that clear the app's data, copy each package in (through /data/local/tmp and run-as, the debug app's own files folder) and remove the temp folder, in order.
+function Get-FullShelfPushCommands([string]$PackageName, [object[]]$Books) {
+    $commands = @(
+        , @('shell', 'pm', 'clear', $PackageName)
+        , @('shell', 'rm', '-rf', $script:FullShelfDeviceTemp)
+        , @('shell', 'mkdir', '-p', $script:FullShelfDeviceTemp)
+        , @('shell', 'run-as', $PackageName, 'mkdir', '-p', $script:FullShelfAppFolder)
+    )
+    foreach ($book in $Books) {
+        $commands += , @('push', $book.Path, "$($script:FullShelfDeviceTemp)/$($book.Id).dino")
+        $commands += , @('shell', 'run-as', $PackageName, 'cp', "$($script:FullShelfDeviceTemp)/$($book.Id).dino", "$($script:FullShelfAppFolder)/$($book.Id).dino")
+    }
+    $commands += , @('shell', 'rm', '-rf', $script:FullShelfDeviceTemp)
+    return $commands
+}
+
+# Returns the problem text when the debug app is not installed on the emulator (checked before `pm clear` and `run-as` touch it), or an empty string when `pm list packages` lists it exactly.
+function Get-AppNotInstalledProblem([string]$PackageName, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    try { $listed = [string](& $AdbCall @('shell', 'pm', 'list', 'packages', $PackageName)) } catch { return "could not ask the emulator whether $PackageName is installed: $($_.Exception.Message)" }
+    if ($listed -notmatch "(?im)^package:$([regex]::Escape($PackageName))\s*$") { return "$PackageName is not installed on the emulator (install the Debug build first: tools/emulator/install-debug.ps1); a Release build cannot take the packages (run-as needs a debuggable app)" }
+    return ''
+}
+
+# Runs the commands in order through the emulator's adb; stops at the first one that fails and returns its message (an empty string when all went through). `run-as` and `push` print their failure, so the text is checked too.
+function Invoke-FullShelfPush([object[]]$Commands, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    foreach ($command in $Commands) {
+        try { $out = [string](& $AdbCall $command) } catch { return "'$($command -join ' ')' failed: $($_.Exception.Message)" }
+        if ($out -imatch 'error:|No such file|not debuggable|Permission denied|is unknown|failed|failure|not installed|unknown package|exception') { return "'$($command -join ' ')' failed: $($out.Trim())" }
+    }
+    return ''
 }
 
 # Pure: the pixel width and height in a PNG's IHDR chunk, or $null when the file is not a PNG. Reads 24 bytes only.
@@ -104,7 +263,9 @@ if ($names.Count -eq 0) { Write-Host "STORE SHOTS: $flowName takes no store-$App
 $instance = Get-StoreShotInstance $requestedSerial $Form
 $outDir = Join-Path $OutRoot "$App\$Form"
 if ($DryRun) {
-    Write-Host "STORE SHOTS dry run: flow $flowName on emulator instance $instance, writes $($names.Count) PNG(s) to $outDir"
+    $dryBars = @{ StatusPx = $(if ($StatusBarPx -ge 0) { $StatusBarPx } else { (Get-FrameSpec $Form).StatusPx }); NavPx = $(if ($NavBarPx -ge 0) { $NavBarPx } else { 0 }) }
+    $dryWm = Get-StoreShotWmSize $Form $dryBars.StatusPx $dryBars.NavPx
+    Write-Host "STORE SHOTS dry run: flow $flowName on emulator instance $instance, display set to $($dryWm[0]) x $($dryWm[1]) (bars as given or the form default, read from the device on a real run), writes $($names.Count) PNG(s) to $outDir"
     $names | ForEach-Object { Write-Host "  $_.png" }
     exit 0
 }
@@ -112,10 +273,53 @@ if ($DryRun) {
 $toolsDir = Get-MaestroToolsDir $repoRoot $env:MAESTRO_HOME
 $roots = @((Join-Path $toolsDir "maestro-home\i$instance"), (Join-Path $toolsDir "maestro-out\i$instance"))   # this emulator's folders only: another instance's run of the same flow must not be picked up
 Remove-OldStoreShots $names $roots
-& (Join-Path $PSScriptRoot 'run-flows.ps1') -App $App -Instance $instance -Flow $flowName -NoBuild
-$runExit = $LASTEXITCODE
+Set-EmulatorInstance $instance
+try { Confirm-EmulatorForDemo ([int]$instance) } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)" }
+if ((Get-Content $flowFile -Raw) -match '(?m)^\s*cmd:\s*full-shelf\s*$') {
+    $shelfFolder = Join-Path $repoRoot 'artifacts\full-shelf'
+    $fetchFailure = Invoke-FetchShelfPackages $repoRoot $shelfFolder
+    if ($fetchFailure) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but the stored book packages could not be fetched, no flow was run: $fetchFailure"; exit 1 }
+    $packages = @(Get-FullShelfPackages $shelfFolder)
+    if ($packages.Count -eq 0) { Write-Host "STORE SHOTS: $flowName uses the full-shelf hook but $shelfFolder holds no package after the fetch."; exit 1 }
+    $appPackage = [regex]::Match((Get-Content $flowFile -Raw), '(?m)^appId:\s*(\S+)').Groups[1].Value
+    $notInstalled = Get-AppNotInstalledProblem $appPackage
+    if ($notInstalled) { Write-Host "STORE SHOTS: $notInstalled; no flow was run."; exit 1 }
+    $pushFailure = Invoke-FullShelfPush (Get-FullShelfPushCommands $appPackage $packages)
+    if ($pushFailure) { Write-Host "STORE SHOTS: could not put the book packages on $script:Serial, no flow was run: $pushFailure"; exit 1 }
+    Write-Host "STORE SHOTS: app data cleared and $($packages.Count) book package(s) copied to $appPackage files/full-shelf on $script:Serial."
+}
+$demoFailures = @(Invoke-StatusBarDemo (Get-StatusBarDemoEnterCommands))
+if ($demoFailures.Count -gt 0) {
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)
+    Write-Host "STORE SHOTS: the status bar demo mode commands failed on $script:Serial, no flow was run: $($demoFailures -join '; ')"
+    exit 1
+}
+Write-Host "STORE SHOTS: status bar demo mode requested ($script:DemoClock, full battery and signal, no notification icons) on $script:Serial; the first screenshot's status bar is the proof."
+# Slice 433: the emulator runs at the size the store frame needs (the status bar is cropped off by store-captions.ps1, demo mode or not).
+$bars = Get-DeviceBars $StatusBarPx $NavBarPx
+$wmSize = Get-StoreShotWmSize $Form $bars.StatusPx $bars.NavPx
+Write-Host "STORE SHOTS: status bar $($bars.StatusPx) px, navigation bar $($bars.NavPx) px; the display is set to $($wmSize[0]) x $($wmSize[1]) (wm size) for the $Form frame."
+$wmFailures = @(Invoke-StatusBarDemo (Get-WmSizeEnterCommands $wmSize))
+if ($wmFailures.Count -gt 0) {
+    $null = Invoke-StatusBarDemo (Get-WmSizeExitCommands)
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)
+    Write-Host "STORE SHOTS: wm size failed on $script:Serial, no flow was run: $($wmFailures -join '; ')"
+    exit 1
+}
+try {
+    & (Join-Path $PSScriptRoot 'run-flows.ps1') -App $App -Instance $instance -Flow $flowName -NoBuild
+    $runExit = $LASTEXITCODE
+} finally {
+    $null = Invoke-StatusBarDemo (Get-WmSizeExitCommands)          # the emulator is never left at the store size
+    $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)   # a flow that failed or was stopped must not leave the emulator in demo mode
+}
 if ($runExit -ne 0) { Write-Host "STORE SHOTS: run-flows.ps1 exited $runExit; no shot was copied."; exit $(if ($runExit -eq 6) { 6 } else { 1 }) }
 $missing = @(Copy-StoreShots $names $roots $outDir)
 if ($missing.Count -gt 0) { Write-Host "STORE SHOTS: missing $($missing -join ', ') (searched $($roots -join ', '))."; exit 1 }
-Write-Host "STORE SHOTS: $($names.Count) PNG(s) written to $outDir"
+$sizeProblems = @(Get-RawShotSizeProblems $names $outDir $wmSize)
+if ($sizeProblems.Count -gt 0) { Write-Host "STORE SHOTS: $($sizeProblems -join '; '). The display size did not take: the frame would fail. Nothing was framed."; exit 1 }
+# Shots of an earlier set (other names, e.g. the five-shot set of Slice 291) would have no caption line: they leave the folder.
+Get-ChildItem $outDir -Filter 'store-*.png' -File | Where-Object { $names -notcontains $_.BaseName } | Remove-Item -Force
+@{ statusBarPx = $bars.StatusPx; navBarPx = $bars.NavPx; wmSize = "$($wmSize[0])x$($wmSize[1])" } | ConvertTo-Json | Set-Content (Join-Path $outDir 'frame-info.json') -Encoding UTF8
+Write-Host "STORE SHOTS: $($names.Count) PNG(s) written to $outDir (frame-info.json holds the bar heights store-captions.ps1 cuts off)"
 exit 0

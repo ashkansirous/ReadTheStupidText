@@ -14,7 +14,7 @@ name: First run on a tablet held upright, two panes
     visible:
       id: FirstRunLanguage
     timeout: 25000
-- assertVisible: "Step 1 of 6 · Language"
+- assertVisible: "Step 1 of 5 · Language"
 - assertVisible: "Hello! Which language should Dino use?"
 - takeScreenshot: shot-NT1-language
 - tapOn:
@@ -28,7 +28,7 @@ name: First run on a tablet held upright, two panes
     visible:
       id: OnboardingLanguages
     timeout: 15000
-- assertVisible: "Step 2 of 6 · Story languages"
+- assertVisible: "Step 2 of 5 · Story languages"
 - assertVisible: "App language · always on"
 - assertNotVisible: "Why more than one?"
 - assertVisible:

@@ -10,7 +10,8 @@ namespace DinoReader;
 
 /// <summary>
 /// Step 5 of the first run, "Your voice" (Slice 362, mock N5 and WN5): the grown-up is asked to be the voice of one character on the demo page and sees where their voice stays (on this device, never uploaded, deleted when setup ends).
-/// Record opens the Record page on that character's lines on the demo page only (mock N6a, N6b: no Skip, no Done; the microphone is asked there, not here); when the clips are in the page shows "That's you" (<see cref="OnboardingRoute.ShowHearYourselfAsync"/>).
+/// Record opens the Record page on that character's lines on the demo page only (mock N6a, N6b: no Done; the microphone is asked there, not here); when the clips are in the page shows "That's you" (<see cref="OnboardingRoute.ShowHearYourselfAsync"/>).
+/// Skip this step (Slice 418, mock NO5) sits under Record and ends setup at once; the Record page has the same link (mock NO6).
 /// A refused microphone shows "Microphone is off" with Open settings and a quiet Continue without recording, the only way past the step with no recording (Decision 4). Android and iOS ask for the microphone in <see cref="RecordPage"/>; Windows has no prompt.
 /// </summary>
 internal sealed class OnboardingVoicePage : ContentPage, IDinoKeyTarget
@@ -85,7 +86,8 @@ internal sealed class OnboardingVoicePage : ContentPage, IDinoKeyTarget
 		var ask = new Label { Text = AppResources.Onboarding_MicAsk, FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center, FontFamily = DinoFonts.Ui };
 		_record = new CoralButton { Text = AppResources.Format(AppResources.Onboarding_RecordLines, _characterName), AutomationId = "OnboardingRecord" };
 		UiUsage.Press(_record, UiControls.Record, () => _ = _busy.RunAsync(RecordAsync));
-		var foot = new VerticalStackLayout { Spacing = 8, Children = { ask, _record } };
+		Button skip = OnboardingText.SkipStepLink(() => _ = _busy.RunAsync(() => OnboardingRoute.VoiceDoneAsync(_services, tried: false))); // Slice 418 decision 2: the try (none yet here) is deleted and setup ends
+		var foot = new VerticalStackLayout { Spacing = 8, Children = { ask, _record, skip } };
 		return new OnboardingShell(left, right, foot, stepBar: new OnboardingStepBar(OnboardingStep.Voice));
 	}
 
@@ -199,6 +201,11 @@ internal sealed class OnboardingVoicePage : ContentPage, IDinoKeyTarget
 		{
 			// no-fallback: the Record page did not report finished in time; the recorded clips (if any) are read below and the page stays usable
 			OnboardingLog("record page did not report finished");
+		}
+
+		if (record.OnboardingSkipped)
+		{
+			return; // Slice 418: Skip this step on the record page ended setup; the route replaces the root
 		}
 
 		if (record.MicRefused)

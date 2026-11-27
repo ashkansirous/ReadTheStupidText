@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Privacy Policy &mdash; Dino Book Reader</title>
-  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, sells extra books through the app store without keeping anything about the buyer, keeps a family&rsquo;s voice recordings on the device, and sends only anonymous counts and crash reports (which can be turned off) that identify no one." />
+  <title>Privacy Policy &mdash; Dino: Kids Books &amp; Stories</title>
+  <meta name="description" content="Privacy policy for Dino: Kids Books &amp; Stories, a children&rsquo;s story app. The app has no accounts or ads, sells extra books through the app store without keeping anything about the buyer, keeps a family&rsquo;s voice recordings on the device, and sends only anonymous counts and crash reports (which can be turned off) that identify no one." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
@@ -26,17 +26,17 @@
   </style>
 </head>
 <body>
-  <h1>Privacy Policy &mdash; Dino Book Reader</h1>
-  <p class="eff"><strong>Effective date:</strong> 13 November 2026</p>
+  <h1>Privacy Policy &mdash; Dino: Kids Books &amp; Stories</h1>
+  <p class="eff"><strong>Effective date:</strong> 19 November 2026</p>
 
-  <p class="lede">Dino Book Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 9. It reads
+  <p class="lede">Dino: Kids Books &amp; Stories (&ldquo;the app&rdquo;) is a story app for children aged 3 to 9. It reads
   stories aloud with a different voice for each character, and a family can record their own voice for the characters. This policy explains how the app handles
   data, for the children who use it and the grown-ups who set it up.</p>
 
   <h2>The short version</h2>
-  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare keeps and deletes on its own schedule (see &ldquo;Server request log&rdquo; below).</strong>
-  It has no accounts of its own, no advertising, and no third-party analytics. Extra books are bought through the app store (Apple, Google or Microsoft); this project keeps nothing about the buyer (see &ldquo;Buying books&rdquo; below). It does send anonymous usage counts to this
-  project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
+  <p><strong>The Dino: Kids Books &amp; Stories app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare keeps and deletes on its own schedule (see &ldquo;Server request log&rdquo; below).</strong>
+  It has no accounts of its own, no advertising, and no advertising or tracking companies; its anonymous counts are processed for this project by two services, Cloudflare and Ninjalog (see &ldquo;Anonymous usage counts&rdquo; below). Extra books are bought through the app store (Apple, Google or Microsoft); this project keeps nothing about the buyer (see &ldquo;Buying books&rdquo; below). It does send anonymous usage counts to this
+  project&rsquo;s own server (which passes them on to those two services), with no name, no identifier of the child, the install or the device, and nothing a
   child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Like most web servers,
   this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for as long as Cloudflare sets
   (see &ldquo;Server request log&rdquo; below). If the app crashes it can also
@@ -108,9 +108,9 @@
   with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
   still waiting in the app's local send queue; it is removed from the queue once those counts are sent. The server stores it with each count, and a crash report or a Report a problem from that start of the app carries it too, so the reports and the counts of one start of the app can be put side by side. It is not tied to a person, an install or a device, and it cannot tell two sessions of one person apart. It puts the counts of one start of the app in order. The server (like any web
   server) may see the IP address of the request, which is not stored with the counts (only the approximate country it maps to, as described above); it can appear in the short server request log described below. The counts are
-  stored with Cloudflare Analytics Engine (our processor), which keeps them for the time Cloudflare sets for that service (Cloudflare documents three months), and read only as totals. Once an hour the project also copies daily totals (a day, a book, a platform and a count, with no session number) into its own database, and keeps them there. The project can turn counting down or
+  stored with Cloudflare Analytics Engine (our processor), which keeps them for the time Cloudflare sets for that service (Cloudflare documents three months), and read as totals. The same counts, with the same fields plus the time our server received them and nothing more (no IP address, no install or device identifier), are also sent from our server to Ninjalog (app.ninjalog.dev, hosted in the European Union), a log search service that is our second processor; it keeps them for 90 days, and the project reads them there as totals and as the timeline of one start of the app (the counts that share a session number, in order), for example to see where in the app a first start stopped; this never involves an install or device identifier. Once an hour the project also copies daily totals (a day, a book, a platform and a count, with no session number) into its own database, and keeps them there. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
-  better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Development builds, emulators and the test devices store review tools use send no counts. Builds installed through TestFlight, and the copy Apple&rsquo;s App Review opens, send the same counts to a separate store for beta builds; they are never added to the counts of the published app.</p>
+  better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Development builds, emulators and the test devices store review tools use send no counts. Builds installed through TestFlight, and the copy Apple&rsquo;s App Review opens, send the same counts to a separate store for beta builds; they are never added to the counts of the published app and never sent to Ninjalog.</p>
   <p><strong>Crash reports (Android and iPhone).</strong> If the app crashes or stops unexpectedly, it can send a crash report to
   this project&rsquo;s own server (dinoreader.sirous.uk) the next time it starts. It follows the same switch as the counts: a
   grown-up can turn it off under &ldquo;Help make Dino better&rdquo; in Settings (behind the grown-ups gate), and then nothing is kept or
@@ -138,6 +138,26 @@
   device&rsquo;s IP address; this project&rsquo;s own server keeps only the short request log described next. When a store
   listing or an app update is opened, the app store (Google Play, the App Store or the Microsoft Store) handles that under its own privacy policy.</p>
 
+  <h2 id="alexa-favourites">On Alexa: favourites</h2>
+  <p>The Dino Books skill on Amazon Alexa is made for children, has no account linking and asks for no personal
+  information, and this project&rsquo;s server stores no name, household, device or Amazon account identifier for it, and no
+  recording or transcript of what was said. The exceptions are the favourites list, which is kept only when you ask for it, and the
+  weekly reminder described below. Favourites: if you say
+  &ldquo;add this to my favourites&rdquo; (or ask the skill to save a story), the server saves two things in the project&rsquo;s own
+  database on Cloudflare (D1): the skill-user identifier Alexa gives this skill for your Amazon account (an opaque code, not your
+  name, e-mail or address, and different for every skill) and the id of the book. Nothing else is saved with them: no name, device,
+  household, time or anything that was said. It is used only to play, list and remove your favourites; removing a book deletes its
+  entry, and a list holds at most 50 books. If you disable the skill and enable it again, Amazon gives it a new identifier, so the
+  earlier list can no longer be reached. The skill&rsquo;s short request-log lines hold only which request it was and what the result
+  was (for example a book&rsquo;s id, a page of the list or a favourite saved), never what was said and never the identifier.
+  Weekly reminder: when you say &ldquo;search&rdquo;, the skill may tell you how many more books come with the subscription, but at
+  most once a week. To do that the server saves, in the same Cloudflare database, the same kind of opaque skill-user identifier and the
+  time it last told you, and nothing else (no name, device, household or anything that was said). It is used only to decide whether a
+  week has passed. It is stored under the same identifier as the favourites list, so the two rows belong to the same Amazon account
+  id. The row is overwritten each time the skill tells you the line (at most weekly) and is otherwise kept; it is not deleted when
+  you disable the skill, but after that the old identifier is never used again.
+  What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
+
   <h2 id="server-request-log">Server request log</h2>
   <p>This project&rsquo;s own server (dinoreader.sirous.uk) runs on Cloudflare Workers, and Cloudflare, which acts as the
   project&rsquo;s processor, keeps a short technical
@@ -158,7 +178,7 @@
   a recording is running. On Android the app also declares the <strong>Foreground service</strong> (data sync) and <strong>Notifications</strong> permissions, because it includes a shared download component that can keep a large download running with a progress notice that has a Cancel button, and a &ldquo;download paused&rdquo; notice. This app downloads no such packs, so nothing starts that component; the permissions send nothing. The app&rsquo;s code never asks for camera, photo, contacts or location access. The iPhone build still declares camera and photo-library usage texts that nothing uses; they are being removed. Saving or restoring a backup uses the standard file picker or share sheet of the device, and the app only opens the file a grown-up picks.</p>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts of its own, no ads, no social
+  <p>Dino: Kids Books &amp; Stories is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts of its own, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
   that leaves the device is the anonymous counts and crash reports described above (no identifier, off at a grown-up&rsquo;s choice),
   and a Report a problem that a grown-up chooses to send, none of which includes any content a child creates. A grown-up can buy extra books through the app store: the store handles the purchase, this project receives no name or payment detail, and a child cannot buy anything without passing the grown-ups gate. Settings and the story library sit behind a
@@ -176,6 +196,6 @@
   <p>Questions about this policy can be raised by opening an issue at
   <a href="https://github.com/ashkansirous/ReadTheStupidText/issues">the GitHub repository</a>.</p>
 
-  <footer>&copy; 2026 Ashkan Sirous. <a href="./">Dino Book Reader</a></footer>
+  <footer>&copy; 2026 Ashkan Sirous. <a href="./">Dino: Kids Books &amp; Stories</a></footer>
 </body>
 </html>

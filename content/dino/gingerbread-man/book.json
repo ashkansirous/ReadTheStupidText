@@ -2,9 +2,9 @@
   "kind": "Starter",
   "id": "bee62232085d4c1ab50cdf574530f473",
   "title": "The Gingerbread Man",
-  "version": 12,
+  "version": 15,
   "ageMin": 3,
-  "ageMax": 6,
+  "ageMax": 5,
   "author": "Traditional",
   "credits": "Retold traditional tale · free to share",
   "colour": 1,
@@ -80,7 +80,7 @@
     "Grandpa",
     "Granny"
   ],
-  "contentHash": "3b9450c4698f730d6768e986455bfcf577a93b67f36a269f7ed9506688b2c54d",
+  "contentHash": "544c776d7a9e62979c7da42483615f13205b0fb0299b51749646133af02943a9",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -99,5 +99,49 @@
   },
   "storyBy": "traditional",
   "retold": true,
+  "namesByLanguage": {
+    "ar": {
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  },
   "access": "free"
 }

@@ -438,7 +438,7 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
 | `H.NotifyIcon.WinUI` | tray icon | MIT |
 | `org.k2fsa.sherpa.onnx` | neural TTS runtime | Apache-2.0 |
 | Supertonic-3 voice model (`VoiceModel/`) | neural voices | Sample code MIT (`VoiceModel/LICENSE`); the model weights are **BigScience OpenRAIL-M** per the Hugging Face model card and its `LICENSE` file (checked 2026-10-25; this row said Apache-2.0 before). See "Supertonic weights licence" below |
-| Kokoro-82M v1.0 voices (downloaded storyteller pack `kokoro-en`, Dino Book Reader only, not in the package; sherpa-onnx int8 build `kokoro-int8-multi-lang-v1_0`) | English storyteller voices | Apache-2.0 (model card, checked 2026-10-25; the licence text is in the pack as `LICENSE-Kokoro-Apache-2.0`) |
+| Kokoro-82M v1.0 voices (downloaded storyteller pack `kokoro-en`, Dino only, not in the package; sherpa-onnx int8 build `kokoro-int8-multi-lang-v1_0`) | English storyteller voices | Apache-2.0 (model card, checked 2026-10-25; the licence text is in the pack as `LICENSE-Kokoro-Apache-2.0`) |
 | Piper `fa_IR` "ganji_adabi" voice, the default (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji_adabi/medium); model card). Fine-tuned from `ganji`, itself fine-tuned from `amir` (dataset `SadeghK/datacula-pertts-amir`, Apache-2.0, so the pack keeps that attribution) |
 | Piper `fa_IR` "ganji" voice (same pack) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji/medium); its own site `tts.datacula.com` did not respond on 2026-10-22, so CC0 rests on the Piper model card) |
 | "Mana" Persian Piper voice (same pack; no sherpa-onnx build, so metadata and int8 quantization are added in `packs.yml`) | Persian neural voice | Model MIT ([MahtaFetrat/Mana-Persian-Piper](https://huggingface.co/MahtaFetrat/Mana-Persian-Piper)), data CC0 ([MahtaFetrat/Mana-TTS](https://huggingface.co/datasets/MahtaFetrat/Mana-TTS), released by the Nasl-e-Mana magazine) |
@@ -453,7 +453,7 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
 | `Microsoft.ML.OnnxRuntime` (iOS only) | the same binding plus its own static onnxruntime for PaddleOCR; sherpa-onnx's iOS framework does not export one | MIT |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
-| Fredoka, Andika, Vazirmatn fonts (Dino Book Reader only, bundled in `src/Dino/DinoReader.App/Resources/Fonts/`) | Dino Book Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/Dino/DinoReader.App/Licenses/`) |
+| Fredoka, Andika, Vazirmatn fonts (Dino only, bundled in `src/Dino/DinoReader.App/Resources/Fonts/`) | Dino UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/Dino/DinoReader.App/Licenses/`) |
 
 No GPL/LGPL components ship in the package. There is one deliberate, scoped
 exception (Decision 63): the Persian voice is a Piper voice that needs the
@@ -465,7 +465,7 @@ or the `.ipa`, and the app only passes its folder path to the engine (a
 data-file use at arm's length), so the Store package itself stays free of GPL
 code. Check this by unzipping the app package: there is no `espeak-ng-data`.
 
-The same exception covers the Kokoro storyteller pack `kokoro-en` (Slice 114, Decision 119): Dino Book Reader's
+The same exception covers the Kokoro storyteller pack `kokoro-en` (Slice 114, Decision 119): Dino's
 English storyteller voices run on espeak-ng phonemes, so that pack carries the GPL-3.0 espeak-ng data inside its zip
 only, with its licence text (`LICENSE`) and the source link (`SOURCE`), and the app only passes its folder path to the
 engine. Check this by unzipping the app package: still no `espeak-ng-data`.
@@ -493,7 +493,7 @@ dataset terms were never settled (Slice 51 notes). `gyro`'s own card names no le
 Afghan-accented, not Farsi); `reza_ibrahim` (dataset page gone, Quran-recitation corpus), Gooya v2
 (needs its own G2P front end) and MMS-TTS (CC-BY-NC) were rejected.
 
-### Dino Book Reader: animal recordings (Slice 255)
+### Dino: animal recordings (Slice 255)
 
 The real animal sounds in `src/Dino/DinoReader.App/Resources/Raw/animal-sounds/` are Freesound sounds under **CC0** (public domain; no credit is required, listed anyway). Each was trimmed
 and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bear, lion, rabbit and wolf have no recording and make no sound. (docs/plan/slices/255-dino-real-animal-sounds.md)
@@ -516,7 +516,7 @@ and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bea
 | `mouse.m4a` | "Mouse Squeaks.wav" by shyguy014, https://freesound.org/people/shyguy014/sounds/463789/ |
 | `dog.m4a` | "Ladrido [Bark]" by SmirnoffLulo, https://freesound.org/people/SmirnoffLulo/sounds/585873/ |
 
-### Dino Book Reader: audio packs of a store book (Slice 246 B2)
+### Dino: audio packs of a store book (Slice 246 B2)
 
 A store book may have premade narration, one **audio pack per book and language**: the zip `audio-<lang>-v<n>.zip` (`manifest.json` version 3 plus the clips it names, flat, stored) in the book's own R2 folder
 `dinoreader/stories/<id>/`, never inside the `.dino`. `dotnet run --project tools/dino/DinoReader.BookBuilder -- build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` makes it into
@@ -812,9 +812,9 @@ needed (Decision 60); the packs folder is excluded from iCloud backup.
 
 **Translation on iOS (Slice 160).** Translation (ML Kit) now runs on Android and iPhone, on device after a one-time model download. Apple's Translation framework was not used (Swift-only, no Farsi). iOS simulator builds have no translator (the MLKitTranslate xcframework has no simulator slice), so the card hides there.
 
-## Dino Book Reader on Windows (Slice 67)
+## Dino: Kids Books & Stories on Windows (Slice 67)
 
-Dino Book Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
+Dino: Kids Books & Stories is a **separate Store product** from Read The Stupid Text: its own listing, its own
 package identity, the same developer account. The package is `src/Dino/DinoReader.App` (a MAUI WinUI head,
 `net11.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release-dino.yml`'s `build-dinowin` job
 as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
@@ -827,7 +827,7 @@ https://apps.microsoft.com/detail/9N9VHRLCZXN5. `Platforms/Windows/Package.appxm
 reservation: `Name` `AshkanSirous.DinoReader`, `Publisher` `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7`,
 `PublisherDisplayName` `Ashkan Sirous`. They must keep matching exactly or submission fails.
 
-The Partner Center app name **"Dino Book Reader"** must be reserved under `9N9VHRLCZXN5` before the first Store
+The Partner Center app name **"Dino: Kids Books & Stories"** (Slice 412; it was "Dino Book Reader") must be reserved under `9N9VHRLCZXN5` before the first Store
 submission: the manifest `DisplayName` must match a reserved name.
 
 **Capabilities (Package.appxmanifest):**
@@ -859,7 +859,7 @@ the repository variable `DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` is set, so every 
 itself (Slice 203). Never start a Partner Center draft by hand while a release may run: the CLI publish
 discards a pending draft.
 
-## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
+## Dino: anonymous usage counts (Slice 133, Decisions 140-142)
 
 Dino sends anonymous counts to its own Worker (`POST dinoreader.sirous.uk/api/events`, `worker/events.ts`, stored in the Workers
 Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened`, `book_finished`, `store_download`, `own_book_added`, `recording_made`, `voice_changed`, `reading_language_changed`, `app_opened`; Slice 134; `intro_started`, `intro_step`, `intro_ended` for the first-run intro, Slice 155: detail `first_run`/`replay`, `store`/`record`/`add`/`languages` + `:tried`/`skipped`, `finished`/`skipped_all`; Slice 173: `story_languages_set` (detail `<1-3>:intro`/`settings`, language = the app language), `story_language_added` (language added), `story_language_switched` (the child's switch; language = the new one, book as for `book_opened`, `none` from the shelf button), `voice_pack_download` (language, detail `done`/`failed`/`cancelled`); from Slice 173 `book_opened`/`book_finished` carry the language the book was read in, not the book's own), the book (a shelf book's
@@ -877,6 +877,7 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
 - **Slice 351 (who and when on every count):** each count also carries the app's screen language (one of the fifteen), an install-age range (`first`, `d0`, `d1_7`, `d8_30`, `d31_plus`), a launch-count range (`1`, `2_5`, `6_20`, `21_plus`) and the whole seconds since the app opened this time (`double6`); the first-launch day and the launch count stay in local preferences and are never sent, so there is still no install id. These fit the types already declared above (Google Play **App activity > App interactions**; App Store **Usage Data > Product Interaction**, not linked, no tracking): no new Data safety or App Privacy row is needed, and `PrivacyInfo.xcprivacy` is unchanged. `site/dino/privacy.html` lists the four fields in plain words.
 - **Slice 352 (Dino): screens, button presses, settings, where a read started, leaving the app.** New counts `screen` (detail `<screen>:<action>`, actions shown/next/back/skip/close), `tap` (detail `<screen>:<control>`), `setting_changed` (`<setting>:<value>`: a switch on/off, a reading speed bucket slow/normal/fast, a reading mode, the app language), `app_backgrounded` and `app_resumed` (the screen); `book_opened` and `read_started` carry their origin (`wizard`, `shelf`, `corner`) as detail; every count also carries the screen it was made on (`blob20`). Closed lists only (`worker/events.ts`): no typed text, no title, no author or age chosen, no gate key, no new id (the per-launch session from Slice 250 is the only one); same switches (`telemetry.enabled`, the grown-up's "Help make Dino better"), production builds only. These are the types already declared above (Google Play **App activity > App interactions**, App Store **Usage Data > Product Interaction**, both already declared, not linked, no tracking, purpose Analytics): **no new data type and no console form to change** if those two rows are saved as listed. The privacy page (`site/dino/privacy.html`) now says screens, button presses, changed settings and where a read started are counted. Waiting on the user: confirm in Play Console (Data safety) and App Store Connect (App Privacy) that those two rows are saved for Dino, as the item H note in the slice file says; this slice did not touch a console.
 - **Microsoft Store (Dino):** no data-collection question beyond the privacy policy URL; it must point at the updated `site/dino/privacy.html`.
+- **Slice 419 (Dino): the same counts are also posted from the Worker to Ninjalog** (app.ninjalog.dev, EU-hosted, our second processor, kept 90 days; owner decision 2026-11-19, no terms or DPA exist). Same fields, no IP, no id, no new data type, and the apps send nothing new. Play's Data safety definition of "share" excludes a service provider that processes data on the developer's behalf (Play Data safety help, <https://support.google.com/googleplay/android-developer/answer/10787469>, not re-read this session; to be re-checked), so the rows stay "collected, not shared"; Apple's App Privacy answers are unchanged (same data types, not linked, no tracking). No console form change expected. `site/dino/privacy.html` names Ninjalog.
 - Cloudflare Analytics Engine is the processor. The `DINO_USAGE` binding (dataset `dino_usage`) is in both wrangler configs;
   `telemetry.enabled` in `dinoreader/config.json` switches counting (see "Landing site" in `CLAUDE.md`). Each
   point's double is the count's weight (1 / the sample rate it was counted at), so query with

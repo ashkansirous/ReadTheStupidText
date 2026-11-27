@@ -61,6 +61,7 @@ function Test-KeyBehaviour {
         Set-Content (Join-Path $repo 'src\b.txt') 'new untracked input'
         Assert-Equal 'an untracked input file gives a new key' $true ((Get-BuildKey) -ne $changed)
         Assert-Equal 'the recorded inputs are the ones the key was hashed from' $true (@($script:BuildKeyResults[(Get-BuildKey)].Inputs).Count -gt 0)
+        Assert-Equal 'the Dino emulator display version is a key input line' $true (@($script:BuildKeyResults[(Get-BuildKey)].Inputs) -contains "build-arg:ApplicationDisplayVersion=$($script:EmulatorDinoDisplayVersion)")
         Test-SimulatedGitFailureThrows
         Test-NotARepoThrows
     } finally {

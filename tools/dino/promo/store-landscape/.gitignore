@@ -1,0 +1,9 @@
+# Slice 434: footage clips (large), renders and HyperFrames caches stay local; only the project files are committed
+assets/footage/*.mp4
+renders/
+.hyperframes/
+node_modules/
+.thumbnails/
+.transcode-cache/
+.waveform-cache/
+.media/

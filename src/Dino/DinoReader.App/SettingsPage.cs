@@ -4,6 +4,8 @@ using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Sirous.Reading.Application.Settings;
 using Sirous.Reading.Mobile.Shared.Crashes;
+using Sirous.Reading.Mobile.Shared.Waiting;
+using WaitStage = Sirous.Reading.Application.Reading.WaitStage;
 
 namespace DinoReader;
 
@@ -70,7 +72,7 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage, ICornerSubPag
 	protected INavigation Nav => _hostPage?.Navigation ?? Navigation;
 
 	/// <summary>An alert on the page the user sees (the gallery).</summary>
-	protected Task AlertAsync(string title, string message, string ok) => (_hostPage ?? this).DisplayAlertAsync(title, message, ok);
+	protected Task AlertAsync(string title, string message, string ok) => LockHolds.WhileAsync("alert", () => (_hostPage ?? this).DisplayAlertAsync(title, message, ok));
 
 	View ICornerSubPage.HostIn(Page owner, Func<Task> close)
 	{
@@ -139,8 +141,13 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 	private const string ListMarkerId = "SettingsTitle"; // the list's first heading: flows wait for it to know the Settings list is on screen (the page that owned this id, with its own title, is gone)
 	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
 	private const string ReportProblemRowId = "SettingsReportProblemRow";
+	private const string BooksAndBuyingId = "SettingsBooksAndBuying"; // Slice 399: the group's heading
+	private const string SubscriptionRowId = "SettingsSubscriptionRow";
+	private const string RestoreRowId = "SettingsRestoreRow";
+	private const string RedeemRowId = "SettingsRedeemRow";
 
 	private readonly IServiceProvider _services;
+	private readonly WaitController _wait;
 	private readonly AppConfigClient _config;
 	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
@@ -161,6 +168,9 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		_scroll = new ScrollView { Content = _body };
 		_scroll.SizeChanged += (_, _) => FitBody(_scroll.Width);
 		_stage.Add(_scroll);
+		WaitOverlay overlay = DinoWait.OverPage(); // Slice 399: asking the store after a redeemed code can take seconds; over 500 ms the shared wait overlay shows
+		_stage.Add(overlay);
+		_wait = new WaitController(overlay);
 		Content = _stage;
 		Unloaded += (_, _) => Release();
 	}
@@ -179,6 +189,8 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		_appeared = true;
 		_config.Changed -= OnConfigChanged; // never twice
 		_config.Changed += OnConfigChanged;
+		Sales.Purchases.Changed -= OnPurchasesChanged; // Slice 399: the Subscription row follows the store's answer
+		Sales.Purchases.Changed += OnPurchasesChanged;
 		Rebuild();
 		_open?.HostAppearing();
 	}
@@ -193,6 +205,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 	private void Release()
 	{
 		_config.Changed -= OnConfigChanged;
+		Sales.Purchases.Changed -= OnPurchasesChanged;
 		_appeared = false;
 	}
 
@@ -224,6 +237,15 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 
 	private void OnConfigChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Rebuild);
 
+	// Only the list is rebuilt: a hosted sub-page keeps its own state, and the list is built again when it shows (ShowListAgain).
+	private void OnPurchasesChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
+	{
+		if (_open is null)
+		{
+			Rebuild();
+		}
+	});
+
 	private void FitBody(double available)
 	{
 		if (available > 0)
@@ -240,6 +262,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		Grid[] device = DeviceRows();
 		_body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading, ListMarkerId));
 		_body.Children.Add(SettingsRows.RowsCard(reading));
+		AddBooksAndBuying();
 		_body.Children.Add(SettingsRows.GroupHeading(DeviceGroupTitle()));
 		_body.Children.Add(SettingsRows.RowsCard(device));
 	}
@@ -251,6 +274,99 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 		return AppResources.Settings_GroupComputer;
 #else
 		return AppResources.Settings_GroupPhone;
+#endif
+	}
+
+	private BookSales Sales => _services.GetRequiredService<BookSales>();
+
+	// Slice 399 (mock SB9): "Books and buying" always sits between Reading and This phone; Restore and Redeem work whether or not books are sold.
+	private void AddBooksAndBuying()
+	{
+		SettingsSubscriptionRow subscription = CurrentSubscription();
+		string store = Sales.Purchases.StoreName;
+		_body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_BooksAndBuying, BooksAndBuyingId));
+		_body.Children.Add(SettingsRows.RowsCard([SubscriptionRow(subscription), RestoreRow(store), RedeemRow(store)]));
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[SettingsBuying] group shown sub={subscription.Line} opensStore={subscription.OpensStore} store={store}");
+#endif
+	}
+
+	// The same inputs as the Store's card, so the row and the card always agree.
+	private SettingsSubscriptionRow CurrentSubscription()
+	{
+		BookPurchases purchases = Sales.Purchases;
+		IReadOnlyDictionary<string, string> prices = purchases.Snapshot.Prices;
+		SubscriptionCardPlan plan = SubscriptionCard.Choose(true, purchases.Subscription.Record, Sales.SubscriptionActive, purchases.Snapshot.TrialAvailable,
+			prices.GetValueOrDefault(SubscriptionProducts.Monthly), prices.GetValueOrDefault(SubscriptionProducts.Yearly), Sales.LapsedCount(), DateTimeOffset.UtcNow);
+		return SettingsSubscription.Of(plan);
+	}
+
+	private Grid SubscriptionRow(SettingsSubscriptionRow subscription) =>
+		SettingsRows.BuyRow(AppResources.Settings_Subscription, SettingsBuyingText.SubscriptionLine(subscription), BuyingRowIcons.ExternalLink(), () => OpenSubscriptionAsync(subscription), _busy, SubscriptionRowId);
+
+	private Grid RestoreRow(string store) =>
+		SettingsRows.BuyRow(AppResources.Store_RestorePurchases, SettingsBuyingText.RestoreLine(store), BuyingRowIcons.Restore(), RestoreAsync, _busy, RestoreRowId);
+
+	private Grid RedeemRow(string store) =>
+		SettingsRows.BuyRow(AppResources.Store_RedeemCode, SettingsBuyingText.RedeemLine(store), BuyingRowIcons.Ticket(), RedeemAsync, _busy, RedeemRowId);
+
+	// Subscribed: the store's own subscription page (cancel and change plan happen there, Slice 384). Not subscribed: the Store tab, where the plans are.
+	private async Task OpenSubscriptionAsync(SettingsSubscriptionRow subscription)
+	{
+		if (subscription.OpensStore)
+		{
+			LogBuying("subscription row opens the Store tab");
+			_services.GetRequiredService<GrownUpMode>().SelectTab(CornerTab.Store);
+			return;
+		}
+
+		ExternalActivityGuard external = _services.GetRequiredService<ExternalActivityGuard>();
+		if (external.IsActive)
+		{
+			return;
+		}
+
+		bool opened = await external.RunAsync(Sales.Purchases.ManageSubscriptionAsync);
+		LogBuying($"manage subscription opened={opened}");
+		if (!opened && _owner is not null)
+		{
+			await LockHolds.WhileAsync("alert", () => _owner.DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_ManageFailed, AppResources.Common_Ok));
+		}
+	}
+
+	// The restore of Slice 396 lives on the Store tab, which owns its wait, its result message and its error: this row leaves one request for it and shows that tab. Nothing is shown here.
+	private Task RestoreAsync()
+	{
+		StorePage.RequestRestore(); // before the tab switch, so the Store's Appearing finds the request however fast it runs
+		_services.GetRequiredService<GrownUpMode>().SelectTab(CornerTab.Store);
+		LogBuying("restore requested of the Store tab (not yet run)");
+		return Task.CompletedTask;
+	}
+
+	private async Task RedeemAsync()
+	{
+		BookPurchases purchases = Sales.Purchases;
+		ExternalActivityGuard external = _services.GetRequiredService<ExternalActivityGuard>();
+		if (external.IsActive)
+		{
+			return; // the store's subscription or redeem screen is already open or returning
+		}
+
+		bool opened = await external.RunAsync(purchases.RedeemCodeAsync); // the store's own redeem screen
+		if (!opened)
+		{
+			LogBuying("redeem screen did not open, the store was not read again");
+			return; // nothing was redeemed: no wait overlay, no store prompt, no rebuild
+		}
+
+		await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false, _ => purchases.RefreshLastListedAsync(CancellationToken.None)); // a code redeemed there shows without opening the Store
+		LogBuying("redeem finished and the store was read again");
+	}
+
+	private static void LogBuying(string line)
+	{
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[SettingsBuying] {line}");
 #endif
 	}
 

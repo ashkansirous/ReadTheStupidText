@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完成</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>继续</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>关闭 Dino Book Reader？</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>关闭 Dino: Kids Books &amp; Stories？</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>留下</value></data>
   <data name="Common_Close" xml:space="preserve"><value>关闭</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>热门</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>推荐</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>新书</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} 分钟</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>商店需要联网。书架上已有的故事无需联网也能阅读。</value></data>
@@ -94,13 +94,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>已存在，已跳过</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>无法读取</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>查看我的故事</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino Book Reader。请先更新应用，再重试。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino Book Reader 备份。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino: Kids Books &amp; Stories。请先更新应用，再重试。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino: Kids Books &amp; Stories 备份。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>备份没有成功，请重试。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>太大，无法恢复</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>有 {0} 个故事无法加入备份。</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>你好！Dino 要用哪种语言？</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>用于应用的按钮和文字。你之后可以在家长角更改。</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>用于应用的按钮和文字。你之后可以在设置中更改。</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>继续</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>至少选两本。你随时可以去商店获取更多。</value><comment>Machine draft: needs native review</comment></data>
@@ -118,18 +118,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>聆听</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>你们家用哪些语言阅读？</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0}始终开启。再添加孩子会听到的其他语言。</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0}始终开启。</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>为什么要选不止一种？</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>很多孩子在家听一种语言，在学校或和祖辈在一起时听另一种。每本书都会用你选的每种语言朗读，孩子可以在任何一页切换。最多选三种。</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>应用语言 · 始终开启</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>获取这些书</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>听 Dino 朗读</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>每个角色都有自己的声音，Dino 读得很有感情。</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>刚才是{0}。现在用你的另一种语言听同一页。</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>现在点按{0}，听同一页。</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>同样的声音，现在用{0}。孩子可以在任何一页切换语言。</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>每个角色都有自己的声音，Dino 读得很有感情。刚才是{0}；现在同样的声音用{1}朗读。孩子可以在任何一页切换语言。</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>跳过此步骤</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>来当角色的声音</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>录下这一页上{0}的台词，然后听听由**你**来演{0}的这一页。</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>录下这一页上{0}的台词，然后听听由**你**来演{0}的这一页。你也可以跳过这一步。</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>你的声音只留在这部手机上</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>你的声音只留在这台平板上</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>你的声音只留在这台电脑上</value></data>
@@ -141,33 +139,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>不录音，继续</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0}的台词</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>这就是你！</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>这是用你的声音演的{0}。这只是一次试录，所以会在设置结束时删除。以后你可以在家长角为任何角色录音。</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>这是用你的声音演的{0}。这只是一次试录，所以会在设置结束时删除。以后你可以在书的“•••”菜单中为任何角色录音。</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · 你的声音</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>再播一次</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>这里是家长角</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>只有大人会来这里。在这里你可以：</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>在商店获取图书</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>免费和付费的故事，涵盖你们家的所有语言。</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>管理你的图书</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>调整书架顺序、移除图书，或为任何角色录下你的声音。</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>更改设置</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>语言、阅读速度、声音和备份，适用于整个应用。</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>带我看看</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>你的图书。点按图书上的 ••• 可录下你的声音或移除它。“重新排序”可调整书架顺序。</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>商店</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>全新的故事，有免费也有付费。每本书都有你们家所有语言的版本。以前买过？在这里恢复你的图书。</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>语言、阅读速度、声音和备份，适用于整个应用。</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>看看孩子的书架</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>点按**孩子的书架**，看看孩子看到的内容。</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>最后一步</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>带我去</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>这是孩子的书架</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>孩子每次打开 Dino 都会看到这个：只有他们自己的书，不会不小心改动任何东西。</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>要回到家长角，请点按**家长**，然后按住 3 秒。</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>开始阅读</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>开始前 Dino 需要两本书。请打开 Wi-Fi 或移动数据，然后重试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>第 {0} 步，共 {1} 步</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>交给孩子</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>家长模式</value></data>
   <data name="Language_Title" xml:space="preserve"><value>语言</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino 会用这种语言朗读和翻译</value></data>
@@ -179,23 +156,28 @@
   <data name="Settings_About" xml:space="preserve"><value>关于与更新</value></data>
   <data name="Settings_On" xml:space="preserve"><value>开</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>关</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>图书与购买</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>订阅</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>年度 · {0} 续订</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>月度 · {0} 续订</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>免费试用至 {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>未订阅</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>付款有问题</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>用这个 Google 账号购买的图书和订阅</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>用这个 Apple ID 购买的图书和订阅</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>用这个 Microsoft 账号购买的图书和订阅</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>来自 Google Play 的礼品码或优惠码</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>来自 App Store 的礼品码或优惠码</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>来自 Microsoft Store 的礼品码或优惠码</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>设置、商店和书架</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>家长</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>添加和编辑书籍</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>家长专区</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>家长</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>家长角，已锁定</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需轻点一下。</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>返回孩子的书架</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>图书</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>孩子的书架</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>只有家长能看到这里。</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>故事</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>重新排序</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>将一本书拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>将一本书拖到书架上的新位置。</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>正在等待封面图片</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>无法保存新的顺序</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>文件仍被占用。点按“完成”重试，或点按“取消”保留原来的顺序。</value></data>
@@ -212,9 +194,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>其他语言的故事仍会用它自己的语言朗读，除非该故事开启了“翻译成我的语言”。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>已锁定</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>已解锁</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>已锁定。点按解锁。</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>已解锁。点按锁定。</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>已解锁 · {0}秒</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>商店和设置仅供家长使用。点按锁图标即可解锁。</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>已再次锁定：30秒内没有家长点按。</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>已锁定。</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>点按锁定。若家长{0}秒内无点按，会自动锁定。</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>继续按住…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>继续答题</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>返回故事</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>计算</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>删除</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>用鼠标，或按住空格键。</value></data>
@@ -227,7 +218,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>慢一点对小朋友更容易 - 用左右方向键调整</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>再读一遍</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需点击一下。</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>完</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} 加 {1} 等于多少？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>故事语言</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 已识别</value></data>
@@ -253,7 +244,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>用我的声音朗读</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>已录制 {0} / {1} 页。其他页使用恐龙的声音。</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>麦克风已关闭</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino Book Reader 使用麦克风，然后重试。</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino: Kids Books &amp; Stories 使用麦克风，然后重试。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>录音失败了。请再试一次。</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -393,6 +384,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0}和{1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>和</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}、{1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>购买 {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>以 {1} 购买 {0}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>请连接互联网后购买</value></data>
@@ -403,15 +396,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>尝试次数过多。请等一分钟再试。</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>这本书已不在商店里。</value></data>
   <data name="Store_Free" xml:space="preserve"><value>免费</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>以前买过书吗？</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>用这个 Google 账号购买的书，也会回到这部手机上。</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>用这个 Google 账号购买的书，也会回到这台平板电脑上。</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>用这个 Apple ID 购买的书，也会回到这部手机上。</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>用这个 Apple ID 购买的书，也会回到这台平板电脑上。</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>用这个 Microsoft 账号购买的书，也会回到这台电脑上。</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>正在恢复…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>这个 Google 账号还没有购买过任何内容。</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>这个 Apple ID 还没有购买过任何内容。</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>这个 Microsoft 账号还没有购买过任何内容。</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>已经买过了？恢复购买</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>已恢复 1 本书，已放上书架。</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>已恢复 {0} 本书，已放上书架。</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>这个账号下没有找到已购买的书。</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>商店出了点问题</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>恢复购买</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>兑换代码</value></data>
@@ -432,6 +423,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>重新订阅</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>购买这本书</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>已锁定：订阅已结束</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>省 {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>每年 {0}</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>每月 {0}</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>按所示价格每月或每年自动续订，直到你在商店账户中取消。随时可以取消。</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>免费试用至 {0}。之后每年 {1}，如在此之前取消则不收费。</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>免费试用至 {0}。之后每月 {1}，如在此之前取消则不收费。</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>年度方案 · {0} 续订。</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>月度方案 · {0} 续订。</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>已包含</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>你的付款未成功</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>在 Google Play 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>在 App Store 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>在 Microsoft Store 重试期间，所有书籍到 {0} 前都保持开放。请检查你的付款方式，以便继续使用。</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>修复付款</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>书架上有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>书架上有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那些。</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的书。</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>在商店查看方案</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>购买 · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>无法检查你的订阅</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>没有网络。订阅的书会保持打开到 {0}，即商店给出的最后日期后的 3 天。连接网络即可保持打开。</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>免费的书会自动回来。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>仍在商店里的免费书会自动回来。商店已下架的书不会回来，但它的录音仍保存在备份文件里。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>

@@ -1,0 +1,71 @@
+name: public-name
+
+# Slices 410 and 412: the Dino app's public name is `publicName` in tools/dino/public-name.json ("Dino: Kids Books & Stories"); the old names "Dino Reader" and "Dino Book Reader" must not reach a file a
+# person reads. Node only, no install. site-checks ignores content/dino/** (a book-only change starts no other check), so this
+# workflow has its own path filter that lists everything tools/dino/check-public-name.mjs scans, books included.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'PRIVACY.md'
+      - 'site/**'
+      - 'alexa/skill-package/**'
+      - 'content/dino/*/book.json'
+      - 'worker/*.ts'
+      - 'docs/plan/slices/**'
+      - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
+      - 'src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest'
+      - 'src/Dino/DinoReader.App/Resources/Strings/AppResources.resx'
+      - 'tools/dino/*.mjs'
+      - 'tools/dino/public-name.json'
+      - 'docs/store-listings/dino/*.md'
+      - 'docs/analytics/ninjalog-*.template.json'
+      - 'docs/analytics/ninjalog-dashboards/**'
+      - '.github/workflows/public-name.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PRIVACY.md'
+      - 'site/**'
+      - 'alexa/skill-package/**'
+      - 'content/dino/*/book.json'
+      - 'worker/*.ts'
+      - 'docs/plan/slices/**'
+      - 'src/Dino/DinoReader.App/DinoReader.App.csproj'
+      - 'src/Dino/DinoReader.App/Platforms/Windows/Package.appxmanifest'
+      - 'src/Dino/DinoReader.App/Resources/Strings/AppResources.resx'
+      - 'tools/dino/*.mjs'
+      - 'tools/dino/public-name.json'
+      - 'docs/store-listings/dino/*.md'
+      - 'docs/analytics/ninjalog-*.template.json'
+      - 'docs/analytics/ninjalog-dashboards/**'
+      - '.github/workflows/public-name.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-name-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  public-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+
+      - name: Check the Dino public name
+        run: node tools/dino/check-public-name.mjs
+
+      - name: Test the check
+        run: node --test "tools/dino/*.test.mjs"

@@ -1,0 +1,114 @@
+{
+  "kind": "Store",
+  "id": "9b77e4f2c83247fcbb16eef03d94ffd3",
+  "title": "Love from Seagull Island",
+  "version": 1,
+  "ageMin": 3,
+  "ageMax": 5,
+  "author": "Ashkan Sirous",
+  "credits": "A picture book from Dino: Kids Books & Stories",
+  "colour": 1,
+  "added": "2026-11-17",
+  "order": 12,
+  "characters": [
+    "Pancake Polly",
+    "Seagull",
+    "Kathryn",
+    "Granny Seagull",
+    "Grampy Seagull"
+  ],
+  "cast": [
+    {
+      "name": "Seagull",
+      "voice": "duckling2",
+      "gender": "Female",
+      "age": "Child",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Kathryn",
+      "voice": "princess",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Bold",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Pancake Polly",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Warm",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Granny Seagull",
+      "voice": "hen",
+      "gender": "Female",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Grampy Seagull",
+      "voice": "bear",
+      "gender": "Male",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Booming"
+      ]
+    }
+  ],
+  "notAnimals": [
+    "Seagull",
+    "Granny Seagull",
+    "Grampy Seagull"
+  ],
+  "creditsByLanguage": {
+    "ar": "كتاب مصوّر من Dino: Kids Books & Stories",
+    "da": "En billedbog fra Dino: Kids Books & Stories",
+    "de": "Ein Bilderbuch von Dino: Kids Books & Stories",
+    "es": "Un libro ilustrado de Dino: Kids Books & Stories",
+    "fa": "یک کتاب تصویری از Dino: Kids Books & Stories",
+    "fi": "Kuvakirja sovelluksesta Dino: Kids Books & Stories",
+    "fr": "Un livre illustré de Dino: Kids Books & Stories",
+    "ja": "Dino: Kids Books & Storiesの絵本",
+    "nb": "En bildebok fra Dino: Kids Books & Stories",
+    "nl": "Een prentenboek van Dino: Kids Books & Stories",
+    "pt": "Um livro ilustrado do Dino: Kids Books & Stories",
+    "ru": "Книжка с картинками Dino: Kids Books & Stories",
+    "sv": "En bilderbok från Dino: Kids Books & Stories",
+    "zh": "Dino: Kids Books & Stories绘本"
+  },
+  "storyBy": "Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": { "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
+}

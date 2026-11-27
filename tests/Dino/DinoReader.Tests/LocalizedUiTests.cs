@@ -44,6 +44,8 @@ public partial class LocalizedUiTests
             Assert.Equal(10, strings["BackCover_Digits"].Length);
             Assert.Equal(["{0}", "{1}"], Placeholders(strings["BackCover_And"]));
             Assert.Equal(["{0}", "{1}"], Placeholders(strings["BackCover_Date"]));
+            Assert.Equal(["{0}", "{1}"], Placeholders(strings["BackCover_List"]));
+            Assert.False(string.IsNullOrWhiteSpace(strings["BackCover_AndWord"]), $"{file}: BackCover_AndWord is empty");
         }
     }
 
@@ -96,7 +98,7 @@ public partial class LocalizedUiTests
         foreach (string file in LanguageFiles())
         {
             Dictionary<string, string> translated = Load(file);
-            Assert.True(translated.ContainsKey("Gallery_GrownUpsButton"), $"{file}: Gallery_GrownUpsButton missing");
+            Assert.True(translated.ContainsKey("Gallery_ForGrownUps"), $"{file}: Gallery_ForGrownUps missing");
             Assert.DoesNotContain("Settings_Books", translated.Keys);
             foreach (string key in keys)
             {

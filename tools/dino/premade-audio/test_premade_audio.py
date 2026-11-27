@@ -315,6 +315,52 @@ class PigsWolfHuffTests(unittest.TestCase):
         self.assertEqual(1, len({e["direction"] for e in huff}))
 
 
+class AsLineTests(unittest.TestCase):
+    """A line entry with `as` speaks a narration piece in a character's voice (Love from Seagull Island, the grandparents' chorus)."""
+
+    def test_a_narration_line_is_spoken_as_the_named_character(self):
+        data = dict(CAST_DATA, characters={"Granny": {"voice": "Gacrux", "style": "warm granny", "direction": "kind"}}, lines=[{"speaker": None, "source": "x", "as": "Granny"}])
+        dump = [sentence(0, "x"), sentence(1, "y")]
+        cast = checked(audio_cast.AudioCast(data), dump, "en")
+        self.assertEqual(("Gacrux", "warm granny; kind"), (cast.delivery(dump[0]).voice, cast.delivery(dump[0]).prompt))
+        self.assertEqual("warm storyteller", cast.delivery(dump[1]).prompt)
+
+    def test_as_must_name_a_character(self):
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, lines=[{"speaker": None, "source": "x", "as": "Nobody"}]))
+
+    def test_the_entrys_direction_beats_the_as_characters_direction(self):
+        data = dict(CAST_DATA, characters={"Granny": {"voice": "Gacrux", "style": "warm granny", "direction": "kind"}},
+                    lines=[{"speaker": None, "source": "x", "as": "Granny", "direction": "loud"}])
+        dump = [sentence(0, "x")]
+        cast = checked(audio_cast.AudioCast(data), dump, "en")
+        self.assertEqual(("Gacrux", "warm granny; loud"), (cast.delivery(dump[0]).voice, cast.delivery(dump[0]).prompt))
+
+    def test_as_still_applies_in_a_language_other_than_the_says(self):
+        data = dict(CAST_DATA, characters={"Granny": {"voice": "Gacrux", "style": "warm granny"}},
+                    lines=[{"speaker": None, "source": "x", "as": "Granny", "say": "iks", "lang": "fa"}])
+        dump = [sentence(0, "x")]
+        cast = checked(audio_cast.AudioCast(data), dump, "en")
+        delivery = cast.delivery(dump[0])
+        self.assertEqual(("Gacrux", ""), (delivery.voice, delivery.say))
+
+    def test_a_non_string_as_is_rejected(self):
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, lines=[{"speaker": None, "source": "x", "as": 5, "direction": "d"}]))
+
+    def test_two_entries_setting_as_for_one_piece_are_rejected(self):
+        data = dict(CAST_DATA, characters={"Granny": {"voice": "Gacrux", "style": "s"}},
+                    lines=[{"speaker": None, "source": "x", "as": "Granny"}, {"speaker": None, "source": "x", "as": "Granny"}])
+        with self.assertRaises(audio_cast.CastError):
+            checked(audio_cast.AudioCast(data), [sentence(0, "x")], "en")
+
+    def test_as_on_a_spoken_piece_is_rejected(self):
+        data = dict(CAST_DATA, characters={"Granny": {"voice": "Gacrux", "style": "s"}},
+                    lines=[{"speaker": "Granny", "source": "x", "as": "Granny"}])
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(data)
+
+
 class AccentTests(unittest.TestCase):
     """Slice 246 A8: the accent is a per-language line added when the delivery is built, not part of any cast's style."""
 

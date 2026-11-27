@@ -1,18 +1,18 @@
-# Google Play listing: Dino Book Reader (en-GB) - subscription version
+# Google Play listing: Dino: Kids Books & Stories (en-GB) - subscription version
 
 **Draft 2026-11-14 (Slice 291 item 10). Push only when Slice 384 (`docs/plan/slices/384-dino-subscription.md`) is live on Play; until then `play.md` is the live text.** Same as `play.md` except the payment paragraph and the privacy line. Plans from Slice 384 Decisions 2 and 5: £1.99 a month or £14.99 a year, 7-day free trial (once per store account), single books still sold and kept, free and bought books never affected. Play's subscription disclosures (price, period, trial conversion, cancel) live in the app's offer screen (`.claude/skills/store-listing/stores.md`, *Subscriptions*); this text must not contradict it. Re-check the privacy line against what Slice 384's Worker check really keeps before pushing. The App Store version must also link the Terms of Use (EULA) and the privacy policy (https://dinoreader.sirous.uk/privacy.html).
 
-## Title (<= 30)
+## Title (<= 30, 26 chars)
 
-Dino Book Reader
+Dino: Kids Books & Stories
 
-## Short description (<= 80)
+## Short description (<= 80, 77 chars)
 
-Every character has its own voice - and Grandma can record hers as the wolf
+Narrated bedtime stories & picture books for kids. Record your own voice too.
 
 ## Full description (<= 4,000)
 
-In Dino Book Reader every character has its own voice. The narrator tells the story, the wolf and the little pigs each sound like themselves, and a parent or grandparent can record their own voice as any character: Grandma can be the wolf.
+Bedtime stories for kids, picture books read aloud: Dino is a story app for children's stories in which every character has its own voice. The narrator tells the story, the wolf and the little pigs each sound like themselves, and a parent or grandparent can record their own voice as any character: Grandma can be the wolf.
 
 Every story comes in 15 languages, for families who keep a home language next to the school language: Farsi, Arabic, Swedish, Norwegian, Danish, Finnish and more. A grown-up picks two or three story languages, and the child can switch between them while reading, hearing the same story and learning the words in both.
 
@@ -34,7 +34,7 @@ MORE TO ENJOY
 - Record any character, on any page, in any story language; back up and restore your recordings.
 
 LANGUAGES
-English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish: the app, the stories and the voices.
+English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian: the app, the stories and the voices.
 
 SAFE AND PRIVATE
 - No ads, and no account to create. Purchases and subscriptions live in your Google Play account; we store nothing about you, and the store's proof is checked and forgotten.

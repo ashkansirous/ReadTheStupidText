@@ -54,7 +54,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
 	public string TitleFont => TextDirection.StartsRightToLeft(Title) ? DinoFonts.Persian : DinoFonts.Ui;
 
-	/// <summary>The detail line, "Ages 5–8 · 14 pages · 7 min": the age range leads the length (each part is left out when the server gave none).</summary>
+	/// <summary>The detail line, "Ages 5–8 · 7 min" (Slice 397, mock SB1): the age range leads the length (each part is left out when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
 
 	/// <summary>The sub-line under the title: the credit line in the app language (Slice 192: <c>creditsByLanguage</c>, else <c>credits</c>), or the language in its own name when the story has none.</summary>
@@ -63,8 +63,8 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>The tag badges above the title (Slice 260): at most two, in list order; none for an untagged book or an older Worker.</summary>
 	public IReadOnlyList<StoreTag> Badges => Item.Badges;
 
-	/// <summary>The line under the credits on a card (frame T2): the length, "12 pages · 6 min"; empty when the server gave none.</summary>
-	public string Meta => StoreText.Length(Item);
+	/// <summary>The line under the credits on a card (frame T2, Slice 397 mock): "Ages 5–8 · 6 min"; empty when the server gave neither.</summary>
+	public string Meta => StoreText.Detail(Item);
 
 	public bool HasDetail => Detail.Length > 0;
 	public bool HasMeta => Meta.Length > 0;
@@ -87,6 +87,13 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public bool IsFree => Item.Sale == BookSale.Free;
 
 	public string GetLabel => AppResources.Store_Get;
+
+	private bool _included;
+
+	/// <summary>Slice 397 (mock SB3, SB4): the tint "Included" tag after the length of a paid book the subscription opens (the brand Get stays instead of a price).</summary>
+	public bool IsIncluded => _included && _state is StoreRowState.Get or StoreRowState.Downloading or StoreRowState.Downloaded;
+
+	public string IncludedLabel => AppResources.Store_Included;
 
 	public string TryAgainLabel => AppResources.Store_TryAgain;
 
@@ -173,6 +180,14 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public string ErrorText => _error is null ? string.Empty : StoreText.ErrorMessage(_error);
 
+	/// <summary>Slice 396 (mock RR4): the 402 strip ("You need to buy this book first.") carries the Restore link after the sentence, for a family that bought it already.</summary>
+	public bool HasBoughtItAlready => _error?.Kind == HttpErrorKind.PaymentRequired;
+
+	/// <summary>The strip's sentence with the gap before the link (the red strip's first span).</summary>
+	public string ErrorLead => HasBoughtItAlready ? ErrorText + " " : ErrorText;
+
+	public string BoughtItAlreadyText => HasBoughtItAlready ? AppResources.Store_BoughtItAlready : string.Empty;
+
 	/// <summary>Mock S3: no answer at all is the calm sand strip; every server answer is the red one.</summary>
 	public bool HasCalmError => HasError && _error?.Kind == HttpErrorKind.Offline;
 
@@ -187,7 +202,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 		_cancelling = false;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(ErrorLead), nameof(HasBoughtItAlready), nameof(BoughtItAlreadyText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(IsIncluded), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint), nameof(IsWaitingForStore));
 	}
 
 	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
@@ -224,13 +239,14 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public string Price => _price;
 
 	/// <summary>Shows what <see cref="BookAccess"/> decided for this row. A download that is running or has just failed is never overwritten.</summary>
-	public void Apply(StoreCardPlan plan)
+	public void Apply(StoreCardPlan plan, bool included = false)
 	{
 		if (_state == StoreRowState.Downloading || (_state == StoreRowState.Failed && plan.Action != StoreAction.OnShelf))
 		{
 			return;
 		}
 
+		_included = included;
 		_price = plan.Price ?? string.Empty;
 		SetState(plan.Action switch
 		{
@@ -288,9 +304,7 @@ public static class StoreText
 		min == max ? AppResources.Format(AppResources.Store_AgeSingle, min) : AppResources.Format(AppResources.Store_Ages, min, max);
 
 	public static string Length(StoreItem item) =>
-		item.PageCount is { } pages && item.Minutes is { } minutes
-			? AppResources.Format(AppResources.Store_Length, pages, minutes)
-			: string.Empty;
+		item.Minutes is { } minutes ? AppResources.Format(AppResources.Store_LengthMinutes, minutes) : string.Empty;
 
 	public static string BandLabel(StoreAgeBand band) => band switch
 	{
@@ -318,21 +332,15 @@ public static class StoreText
 
 	public static string ProgressHint(string title, string percent) => title + " " + percent;
 
-	/// <summary>The "Bought books before?" card's account line (Slice 364, mock S3): which account brings the books back, in the words for a phone, a tablet or a computer.</summary>
-	public static string BoughtBeforeLine(DevicePlatform platform, DeviceIdiom idiom)
+	/// <summary>The restore's "nothing found" message (Slice 396, mock RR3): names the store account the platform buys with (Apple ID, Microsoft account, else Google account).</summary>
+	public static string NothingBoughtLine(DevicePlatform platform)
 	{
-		bool phone = idiom == DeviceIdiom.Phone;
 		if (platform == DevicePlatform.iOS || platform == DevicePlatform.MacCatalyst)
 		{
-			return phone ? AppResources.Store_BoughtBefore_Apple : AppResources.Store_BoughtBefore_Apple_Tablet;
+			return AppResources.Store_NothingBought_Apple;
 		}
 
-		if (platform == DevicePlatform.WinUI)
-		{
-			return AppResources.Store_BoughtBefore_Microsoft;
-		}
-
-		return phone ? AppResources.Store_BoughtBefore_Google : AppResources.Store_BoughtBefore_Google_Tablet;
+		return platform == DevicePlatform.WinUI ? AppResources.Store_NothingBought_Microsoft : AppResources.Store_NothingBought_Google;
 	}
 }
 
@@ -360,12 +368,14 @@ public partial class StorePage : ContentView, ICornerTabView
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<StoreRow> _rows = [];
 	private readonly List<StoreRow> _allRows = [];
-	private StoreAgeBand _band = StoreAgeBand.All;
+	private StoreAgeBand _band = StoreAgeBand.All; // Slice 394: the REQUESTED band and author; what is shown is _state, from StoreFilter.Resolve
 	private string? _author;
+	private StoreFilterState _state = StoreFilter.Resolve([], StoreAgeBand.All, null);
 	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
-	private CancellationTokenSource? _restoreRun; // the one restore run of this visit: a new run or Disappearing cancels it, and a cancelled run never shows a result line (Slice 364 review)
-	private bool _purchaseAreaInFooter;
+	private CancellationTokenSource? _restoreRun; // the one restore run of this visit: a new run or Disappearing cancels it, and a cancelled run never shows a result message (Slice 364 review)
+	private CancellationTokenSource? _messageTimer; // the 5 second life of the result message (Slice 396); a new message or leaving the tab ends it
+	private const int MessageSeconds = 5;
 	private bool _loaded;
 	private bool _loading;
 
@@ -380,12 +390,10 @@ public partial class StorePage : ContentView, ICornerTabView
 		StoreRoot.Children.Remove(SubscriptionCard); // Slice 384: the card is the head of the book list, so it scrolls away with the books
 		StoryList.Header = SubscriptionCard;
 		BuildChips();
-		ShowAuthor();
 		WaitOverlay overlay = DinoWait.OverPage(); // Slice 346: a purchase or a restore waits for the store; over 500 ms shows the shared wait overlay
-		StoreRoot.Children.Add(overlay);
+		Grid.SetRowSpan(overlay, 2);
+		StoreRoot.Children.Insert(StoreRoot.Children.IndexOf(RestoreResultView), overlay); // under the result message, which stays pinned above everything
 		_wait = new WaitController(overlay);
-		RestoreButton.AutomationId = "StoreRestorePurchases";
-		RedeemButton.AutomationId = "StoreRedeemCode";
 		HandlerChanged += OnHandlerChanged;
 	}
 
@@ -395,6 +403,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		if (Handler is null)
 		{
 			_onScreen = false;
+			ClearOnScreen();
 			_client.Sales.Purchases.Changed -= OnPurchasesChanged;
 		}
 	}
@@ -425,7 +434,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			HashSet<string> onShelf = await _client.InstalledIdsAsync();
 			foreach (StoreRow row in _allRows.ToList())
 			{
-				row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)));
+				row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)), _client.Sales.IsIncluded(row.Item));
 			}
 
 			ApplyPurchaseChrome();
@@ -437,16 +446,13 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 	}
 
-	// Restore and Redeem show only while books are sold; the footer line then says purchases go through the store account.
+	// The Restore link on the Store's first line shows only while books are sold; the footer line then says purchases go through the store account.
 	private void ApplyPurchaseChrome()
 	{
 		bool sold = _client.Sales.SwitchKnownOn;
-		BoughtBeforeCard.IsVisible = sold;
-		BoughtBeforeTitle.Text = AppResources.Store_BoughtBeforeTitle;
-		BoughtBeforeLine.Text = StoreText.BoughtBeforeLine(DeviceInfo.Platform, DeviceInfo.Idiom);
+		RestoreLinkRow.IsVisible = sold;
 		FooterLabel.Text = sold ? AppResources.Store_FooterPaid : AppResources.Store_Footer;
 		ApplySubscriptionCard();
-		PlacePurchaseArea();
 	}
 
 	// Slice 384: the card shows while books are sold and the store priced a plan (both plans with their own recurring price and the trial line), or while the subscription runs (then it says so, and keeps Manage).
@@ -457,16 +463,86 @@ public partial class StorePage : ContentView, ICornerTabView
 		string? monthly = prices.GetValueOrDefault(SubscriptionProducts.Monthly);
 		string? yearly = prices.GetValueOrDefault(SubscriptionProducts.Yearly);
 		bool active = sold && _client.Sales.SubscriptionActive;
-		SubscriptionCard.IsVisible = sold && (active || BookAccess.HasPrice(monthly) || BookAccess.HasPrice(yearly));
-		SubscriptionLine.Text = active ? AppResources.Sub_Active : AppResources.Sub_Line;
-		SubscriptionPlans.IsVisible = !active;
-		SubscribeMonthlyButton.IsVisible = BookAccess.HasPrice(monthly);
-		SubscribeYearlyButton.IsVisible = BookAccess.HasPrice(yearly);
-		SubscribeMonthlyButton.Text = BookAccess.HasPrice(monthly) ? AppResources.Format(AppResources.Sub_Monthly, monthly!) : string.Empty;
-		SubscribeYearlyButton.Text = BookAccess.HasPrice(yearly) ? AppResources.Format(AppResources.Sub_Yearly, yearly!) : string.Empty;
+		BookPurchases purchases = _client.Sales.Purchases;
+		int locked = _client.Sales.LapsedCount();
+		SubscriptionCardPlan plan = DinoReader.Core.SubscriptionCard.Choose(sold, purchases.Subscription.Record, active, purchases.Snapshot.TrialAvailable, monthly, yearly, locked, DateTimeOffset.UtcNow);
+		SubscriptionCard.IsVisible = plan.Visible;
+		ApplyCardTexts(plan, monthly, yearly);
+		ApplyCardLook(plan.Kind);
+		ApplyCardPlans(plan, monthly, yearly);
+		_cardShowsPlans = plan.ShowPlans;
+		_planShowsTrial = plan.PlansHaveTrial;
+		ApplyCardLayout();
 #if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)}");
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)} kind={plan.Kind} save={plan.SaveTag?.ToString() ?? "none"} trial={plan.PlansHaveTrial} locked={plan.LockedCount} wide={_cardWide}");
 #endif
+	}
+
+	private bool _cardWide;
+	private bool _cardShowsPlans;
+	private bool _planShowsTrial = true;
+
+	private static readonly Color TileGreen = Color.FromArgb("#DFF5E3");
+	private static readonly Color TileGreenIcon = Color.FromArgb("#2E7D32");
+	private static readonly Color TileRed = Color.FromArgb("#FFF0EA");
+	private static readonly Color TileRedIcon = Color.FromArgb("#A4462A");
+	private static readonly Color GraceRing = Color.FromArgb("#F5C9B8");
+	private const double GraceRingThickness = 2;
+	private const double CardColumnGap = 20;
+	private const double CardRowGap = 12;
+
+	// Title and line by state; the line is hidden when there is nothing to say (subscribed with no usable date). Grace and ended get their own copy (SB4, SB5).
+	private void ApplyCardTexts(SubscriptionCardPlan plan, string? monthly, string? yearly)
+	{
+		string? product = _client.Sales.Purchases.Subscription.Record?.ProductId;
+		SubscriptionTitle.Text = SubscriptionCardText.Title(plan);
+		SubscriptionLine.Text = SubscriptionCardText.Line(plan, _client.Sales.Purchases.StoreName, monthly, yearly, product);
+		SubscriptionLine.IsVisible = SubscriptionLine.Text.Length > 0;
+	}
+
+	// The tile and ring: layers on the brand tint for the offer and the ended card, a green check while subscribed, a red card with a ring for a failed payment.
+	private void ApplyCardLook(SubscriptionCardKind kind)
+	{
+		bool grace = kind == SubscriptionCardKind.Grace;
+		bool subscribed = kind is SubscriptionCardKind.Trial or SubscriptionCardKind.Active;
+		SubscriptionTile.BackgroundColor = grace ? TileRed : subscribed ? TileGreen : (Color)Application.Current!.Resources["BrandTint"];
+		SubscriptionTileIcon.Stroke = new SolidColorBrush(grace ? TileRedIcon : subscribed ? TileGreenIcon : (Color)Application.Current!.Resources["Brand"]);
+		SubscriptionTileIcon.Data = (Geometry)new PathGeometryConverter().ConvertFromInvariantString((string)Resources[grace ? "PaymentGlyph" : subscribed ? "CheckGlyph" : "LayersGlyph"])!;
+		SubscriptionCard.Stroke = grace ? GraceRing : Colors.Transparent;
+		SubscriptionCard.StrokeThickness = grace ? GraceRingThickness : 0;
+	}
+
+	// The two plan buttons (yearly first, monthly second), the Save tag, the terms, and Manage or Fix payment.
+	private void ApplyCardPlans(SubscriptionCardPlan plan, string? monthly, string? yearly)
+	{
+		bool hasMonthly = BookAccess.HasPrice(monthly);
+		bool hasYearly = BookAccess.HasPrice(yearly);
+		SubscriptionPlans.IsVisible = plan.ShowPlans;
+		SubscriptionTermsBlock.IsVisible = plan.ShowTerms;
+		SubscribeMonthlyButton.IsVisible = hasMonthly;
+		SubscribeYearlyButton.IsVisible = hasYearly;
+		SubscribeMonthlyLabel.Text = hasMonthly ? SubscriptionCardText.Monthly(plan, monthly!) : string.Empty;
+		SubscribeYearlyLabel.Text = hasYearly ? SubscriptionCardText.Yearly(plan, yearly!) : string.Empty;
+		SemanticProperties.SetDescription(SubscribeMonthlyPress, SubscribeMonthlyLabel.Text);
+		SemanticProperties.SetDescription(SubscribeYearlyPress, plan.SaveTag is { } tag && hasYearly ? $"{SubscribeYearlyLabel.Text}. {SubscriptionCardText.Save(tag)}" : SubscribeYearlyLabel.Text); // the face (label and Save tag) is out of the accessibility tree: the Button says it all
+		SubscribeSaveTag.IsVisible = hasYearly && plan.SaveTag is not null;
+		SubscribeSaveLabel.Text = plan.SaveTag is { } save ? SubscriptionCardText.Save(save) : string.Empty;
+		SubscriptionTerms.Text = SubscriptionCardText.Terms(plan);
+		SubscriptionManageRow.IsVisible = plan.ShowManage && !plan.ShowFixPayment;
+		SubscriptionFixPayment.IsVisible = plan.ShowFixPayment;
+	}
+
+	// Mock SB10: from 600 dp the words stay at the left and the plans sit in a 300-wide column at the right; narrower, header, plans and terms stack. No plans (subscribed) leaves no empty column.
+	private void ApplyCardLayout()
+	{
+		bool split = _cardWide && _cardShowsPlans;
+		SubscriptionGrid.ColumnDefinitions[1].Width = split ? DinoReader.Core.SubscriptionCard.PlansColumnWidth : 0;
+		SubscriptionGrid.ColumnSpacing = split ? CardColumnGap : 0; // spacing only where a column or row shows: the hidden parts add no blank space (review fix 6)
+		SubscriptionPlans.Margin = split ? new Thickness(0) : new Thickness(0, CardRowGap, 0, 0);
+		Grid.SetColumn(SubscriptionPlans, split ? 1 : 0);
+		Grid.SetRow(SubscriptionPlans, split ? 0 : 1);
+		Grid.SetRowSpan(SubscriptionPlans, split ? 2 : 1);
+		Grid.SetRow(SubscriptionTermsBlock, split ? 1 : 2);
 	}
 
 	// no-tap-count (all five subscription presses): the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet, and a new one is outside Slice 384's files; the store sheet's outcome is the fact that matters and the store holds it
@@ -478,9 +554,11 @@ public partial class StorePage : ContentView, ICornerTabView
 	// did, the store is read again and every row and the card follow it (a subscription that started opens the paid books for download at once).
 	private async Task SubscribeAsync(string plan)
 	{
-		RestoreResultView.IsVisible = false;
+		UiUsage.NoteGrownUp(); // an uncounted press inside the Store is still a grown-up tap (Slice 418 decision 13)
+		HideRestoreMessage();
+		bool withTrial = _planShowsTrial; // the buy follows what the card promised (review 4): an Ended card shows no trial, so the sheet starts none
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
-			_ => _client.Sales.Purchases.BuyAsync(plan, _allRows.Select(r => r.Item), CancellationToken.None));
+			_ => _client.Sales.Purchases.BuyAsync(plan, _allRows.Select(r => r.Item), CancellationToken.None, withTrial));
 		await ReplanRowsAsync();
 		if (_mode.IsGrownUp && outcome == BuyOutcome.Failed)
 		{
@@ -495,7 +573,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		await _external.RunAsync(() => Launcher.Default.OpenAsync(new Uri(SubscriptionLinks.Privacy)));
 
 	// Slice 384: false means the store's sheet or page failed (BookPurchases has reported it): the grown-up is told. A tap while the store's sheet is already open does nothing.
-	private async void OnSubscriptionManageTapped(object? sender, TappedEventArgs e) // no-tap-count: opens the store's own subscription page, see above
+	private async void OnSubscriptionManageTapped(object? sender, EventArgs e) // no-tap-count: opens the store's own subscription page, see above
 	{
 		if (_external.IsActive)
 		{
@@ -513,10 +591,10 @@ public partial class StorePage : ContentView, ICornerTabView
 	public async void Appearing()
 	{
 		_onScreen = true;
+		_onScreenStore = this;
 		_client.Sales.Purchases.Changed -= OnPurchasesChanged; // never twice, whatever the host raises
 		_client.Sales.Purchases.Changed += OnPurchasesChanged;
-		RefreshChips();
-		ShowAuthor();
+		RenderFilter();
 		_client.Sales.RefreshConfigOnStoreTab(); // quiet, never awaited, at most once per 10 minutes
 		if (_lifetime.IsCancellationRequested)
 		{
@@ -542,13 +620,20 @@ public partial class StorePage : ContentView, ICornerTabView
 				_loading = false;
 			}
 
+			bool restoreAfterLoad = TakeRestoreRequest(); // Slice 399: the one place a request is consumed after a load; the wait text shows at once
 			if (_loaded && (_client.Sales.SwitchKnownOn || changedWhileHidden))
 			{
 				await ReplanRowsAsync(); // a purchase change that came while the list loaded (or while the tab was hidden) shows on the first rows too
 			}
+
+			if (restoreAfterLoad)
+			{
+				await RestoreNowAsync();
+			}
 		}
 		else
 		{
+			bool restoreAfterRefresh = TakeRestoreRequest(); // Slice 399: the already-loaded Store shows "Restoring…" before the refresh below, which can take a network round trip
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
 			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
 			await RefreshOnShelfAsync();
@@ -558,6 +643,10 @@ public partial class StorePage : ContentView, ICornerTabView
 			}
 
 			await ReplanRowsAsync();
+			if (restoreAfterRefresh)
+			{
+				await RestoreNowAsync();
+			}
 		}
 	}
 
@@ -585,14 +674,15 @@ public partial class StorePage : ContentView, ICornerTabView
 				continue;
 			}
 
-			row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id))); // Get, On the shelf, Buy or a note, by the shelf and the store's answer (a failed download keeps Try again)
+			row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)), _client.Sales.IsIncluded(row.Item)); // Get, On the shelf, Buy or a note, by the shelf and the store's answer (a failed download keeps Try again)
 		}
 	}
 
 	/// <summary>The tab went off screen (another tab, the shelf): cover fetches stop. A download keeps running into the library and only a real failure ends it.</summary>
 	public void Disappearing()
 	{
-		RestoreResultView.IsVisible = false; // a restore line is for the visit it ran in
+		HideRestoreMessage(); // a restore message is for the visit it ran in
+		ClearOnScreen();
 		_restoreRun?.Cancel(); // a running restore stops fetching and shows no line (its downloads may still finish, as a row's do)
 		_onScreen = false; // the subscription stays: a change while hidden is remembered (check8 #7)
 		_lifetime.Cancel();
@@ -602,6 +692,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	// rotation changes the grid's span only: the rows, the filter, the open download and the scroll position are never rebuilt.
 	public void ApplyShape(double contentWidth)
 	{
+		_cardWide = DinoReader.Core.SubscriptionCard.IsWide(contentWidth);
+		ApplyCardLayout(); // Slice 397: the subscription card's own split (SB10), independent of the book columns below
 		int columns = SettingsLayout.StoreColumns(contentWidth);
 		if (columns == _shownColumns)
 		{
@@ -675,13 +767,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		_allRows.Clear();
 		_allRows.AddRange(items.Select(item => NewRow(item, onShelf)));
 		ApplyPurchaseChrome();
-		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
-		{
-			_author = null;
-		}
-
-		ApplyFilter();
-		ShowAuthor();
+		RenderFilter();
 		Show(_allRows.Count == 0 ? EmptyView : ListPanel);
 		_ = LoadCoversAsync(_allRows.ToList(), cancel);
 	}
@@ -689,22 +775,34 @@ public partial class StorePage : ContentView, ICornerTabView
 	private StoreRow NewRow(StoreItem item, HashSet<string> onShelf)
 	{
 		var row = new StoreRow(item, onShelf.Contains(item.Id));
-		row.Apply(_client.Sales.PlanFor(item, onShelf.Contains(item.Id)));
+		row.Apply(_client.Sales.PlanFor(item, onShelf.Contains(item.Id)), _client.Sales.IsIncluded(item));
 		return row;
+	}
+
+	// Slice 394: the one path that decides and draws the filter (load, Appearing, chip tap, author tap): Resolve once, then chips, author row and list all come from that one result.
+	private void RenderFilter()
+	{
+		_state = StoreFilter.Resolve(_allRows.Select(r => r.Item).ToList(), _band, _author);
+		RefreshChips();
+		ShowAuthor();
+		ApplyFilter();
 	}
 
 	// Slice 112: filtering is on the phone, over the rows already fetched (so it works on the cached list offline); rows keep their download state.
 	private void ApplyFilter()
 	{
-		_rows.Clear();
-		foreach (StoreRow row in StoreFilter.Apply(_allRows, r => r.Item, _band, _author))
+		IReadOnlyList<StoreRow> shown = StoreFilter.Apply(_allRows, r => r.Item, _state.Band, _state.Author);
+		if (!shown.SequenceEqual(_rows))
 		{
-			_rows.Add(row);
+			_rows.Clear(); // only when the resolved list changed, so coming back to the Store keeps its scroll
+			foreach (StoreRow row in shown)
+			{
+				_rows.Add(row);
+			}
 		}
 
 		// A filter that matches nothing says so, rather than leaving a blank list.
 		NoMatchLabel.IsVisible = _allRows.Count > 0 && _rows.Count == 0;
-		PlacePurchaseArea();
 	}
 
 	// The four chips are built once; a tap only recolours them, so the tapped chip is never torn down inside its own handler.
@@ -716,7 +814,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			AgeChips.Children.Add(MakeChip(band));
 		}
 
-		RefreshChips();
+		RenderFilter();
 	}
 
 	private Border MakeChip(StoreAgeBand band)
@@ -741,11 +839,18 @@ public partial class StorePage : ContentView, ICornerTabView
 		return chip;
 	}
 
+	// Slice 394: chips are never added or removed after BuildChips (no view changes parent, so no Android "child already has a parent"); an empty band's chip is only hidden.
 	private void RefreshChips()
 	{
+		bool filterable = _state.ChipsShown; // one band alone filters nothing
+		AgeChipsScroll.IsVisible = filterable; // the scroll view holds the 10 dp margin, so hiding it leaves no gap
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[AgeChips] visible={filterable} bands={_state.VisibleBands.Count} selected={(int)_state.Band}");
+#endif
 		foreach ((StoreAgeBand band, (Border chip, Label label)) in _chips)
 		{
-			bool selected = band == _band;
+			chip.IsVisible = filterable && (band == StoreAgeBand.All || _state.VisibleBands.Contains(band));
+			bool selected = band == _state.Band;
 			string text = StoreText.BandLabel(band);
 			chip.BackgroundColor = selected ? (Color)Application.Current!.Resources[BrandColorKey] : Colors.White;
 			label.Text = text;
@@ -757,30 +862,21 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private void SelectBand(StoreAgeBand band)
 	{
-		if (band == _band)
+		if (band == _band) // the requested band, not the resolved one: tapping "All ages" while a requested band is empty must still clear the request
 		{
 			return;
 		}
 
+		_author = _state.Author; // Slice 394 decision: the requested band is kept, but an author the shown list does not offer is dropped for good
 		_band = band;
-		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
-		{
-			_author = null;
-		}
-
-		ShowAuthor();
-		RefreshChips();
-		ApplyFilter();
+		RenderFilter();
 	}
 
-	// The picker offers only authors with a story in the chosen age band, so a pick never empties the list.
-	private IReadOnlyList<string> AuthorsInBand() =>
-		StoreFilter.Authors(StoreFilter.Apply(_allRows, r => r.Item, _band, null).Select(r => r.Item));
-
+	// Draws the author row from _state; the picker offers only authors with a story in the chosen age band, so a pick never empties the list.
 	private void ShowAuthor()
 	{
-		AuthorValue.Text = _author ?? AppResources.Store_Anyone;
-		AuthorRow.IsVisible = AuthorsInBand().Count > 0;
+		AuthorValue.Text = _state.Author ?? AppResources.Store_Anyone;
+		AuthorRow.IsVisible = _state.AuthorRowShown;
 	}
 
 	private async void OnAuthorTapped(object? sender, TappedEventArgs e)
@@ -788,7 +884,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		UiUsage.Tap(UiControls.Filter); // Slice 352: the author filter (which author is never counted)
 		// Each button label maps to its author (null for "Anyone"); an author named like a fixed button gets a visible number so the pick is never misread.
 		var choices = new Dictionary<string, string?> { [AppResources.Store_Anyone] = null };
-		foreach (string author in AuthorsInBand())
+		foreach (string author in _state.AuthorsInBand)
 		{
 			choices[UniqueLabel(author, choices)] = author;
 		}
@@ -798,15 +894,14 @@ public partial class StorePage : ContentView, ICornerTabView
 			return; // the tab is not on a window (it was torn down)
 		}
 
-		string? picked = await page.DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]);
+		string? picked = await LockHolds.WhileAsync("author sheet", () => page.DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]));
 		if (picked is null || !choices.TryGetValue(picked, out string? chosen))
 		{
 			return;
 		}
 
 		_author = chosen;
-		ShowAuthor();
-		ApplyFilter();
+		RenderFilter();
 	}
 
 	private static string UniqueLabel(string author, Dictionary<string, string?> taken)
@@ -853,32 +948,6 @@ public partial class StorePage : ContentView, ICornerTabView
 		{
 			view.IsVisible = view == visible;
 		}
-
-		PlacePurchaseArea();
-	}
-
-	// Slice 364 review: the "Bought books before?" card is the foot of the list while the list shows books, and sits at the bottom of the page in every other state (empty, filtered to nothing, offline),
-	// so Restore and Redeem are always reachable; it stays out of the way while the first load runs.
-	private void PlacePurchaseArea()
-	{
-		bool inList = ListPanel.IsVisible && _rows.Count > 0;
-		PurchaseArea.IsVisible = _client.Sales.SwitchKnownOn && !LoadingView.IsVisible;
-		if (inList == _purchaseAreaInFooter)
-		{
-			return;
-		}
-
-		_purchaseAreaInFooter = inList;
-		if (inList)
-		{
-			StoreRoot.Children.Remove(PurchaseArea);
-			StoryList.Footer = PurchaseArea;
-		}
-		else
-		{
-			StoryList.Footer = null;
-			StoreRoot.Add(PurchaseArea, column: 0, row: 1);
-		}
 	}
 
 	private void OnCancelWaitTapped(object? sender, TappedEventArgs e)
@@ -916,7 +985,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			return;
 		}
 
-		RestoreResultView.IsVisible = false; // a buy changes what the last restore line counted
+		HideRestoreMessage(); // a buy changes what the last restore counted
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
 			_ => _client.Sales.Purchases.BuyAsync(product, _allRows.Select(r => r.Item), CancellationToken.None));
 		await ReplanRowsAsync();
@@ -936,33 +1005,166 @@ public partial class StorePage : ContentView, ICornerTabView
 	}
 
 	private Task AlertAsync(string message) =>
-		Window?.Page is { } page ? page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok) : Task.CompletedTask;
+		Window?.Page is { } page ? LockHolds.WhileAsync("alert", () => page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok)) : Task.CompletedTask;
 
 	private async void OnRestorePurchasesClicked(object? sender, EventArgs e)
 	{
 		UiUsage.Tap(UiControls.Restore); // Slice 352
-		RestoreResultView.IsVisible = false; // the last restore's line never outlives the next try, even when the grown-up gate ends it early
-		await _busy.RunAsync(RestorePurchasesAsync);
+		await RestoreNowAsync();
 	}
 
-	// One owner of a restore: the run's token is linked to this visit, a new run cancels the old one and Disappearing cancels it. The line appears only when the run finishes un-cancelled.
-	private async Task RestorePurchasesAsync()
+	// Slice 396: the 402 strip's "Bought it already? Restore purchases" and Ctrl+R run the very restore the first line runs.
+	// The tap lands on the whole strip (a bigger target, one accessibility action); only a strip that carries the link (a 402) acts.
+	private async void OnBoughtItAlreadyTapped(object? sender, TappedEventArgs e)
 	{
-		_restoreRun?.Cancel();
+		if ((sender as BindableObject)?.BindingContext is not StoreRow { HasBoughtItAlready: true })
+		{
+			return;
+		}
+
+		UiUsage.Tap(UiControls.Restore);
+		await RestoreNowAsync();
+	}
+
+	private bool _restoring; // a restore is going: the first line already says "Restoring…", so a second tap (or Ctrl+R) is the same restore and is not started again
+
+	private static DateTime? _restoreRequestedAtUtc; // Slice 399: Settings asked for a restore at this UTC time; the Store tab consumes it once. Main thread only.
+
+	private static readonly TimeSpan RestoreRequestLifetime = TimeSpan.FromSeconds(30);
+
+	/// <summary>
+	/// Slice 399: Settings' Restore purchases row. The Store tab owns the restore (its wait text, its result message, its error): this only leaves one request carrying its UTC time, which the tab
+	/// consumes at the end of a completed load while it shows, or on an Appearing that finds the catalog loaded. A request older than 30 s is dropped silently. Main thread only.
+	/// </summary>
+	public static void RequestRestore() => _restoreRequestedAtUtc = DateTime.UtcNow;
+
+	// The one place a request is consumed. Returns true when a restore must run now (its wait text already shows). Off screen the request stays for the next Appearing (or expires);
+	// a request that cannot run (catalog not loaded, grown-up gate not met) shows the restore-failed notice; a restore already running answers it.
+	private bool TakeRestoreRequest()
+	{
+		if (_restoreRequestedAtUtc is not { } askedAt || !_onScreen)
+		{
+			return false;
+		}
+
+		_restoreRequestedAtUtc = null;
+		if (DateTime.UtcNow - askedAt > RestoreRequestLifetime)
+		{
+			return false; // expired: dropped silently
+		}
+
+		if (!_loaded || !_mode.IsGrownUp)
+		{
+			ShowRestoreMessage(AppResources.Store_OfflineTitle, RestoreMessageKind.Notice); // the notice the Restore link shows when the store could not be asked
+			return false;
+		}
+
+		if (_restoring)
+		{
+			return false; // the running restore's message is the answer
+		}
+
+		HideRestoreMessage();
+		ShowRestoring(true);
+		return true;
+	}
+
+	// Slice 396 review: one restore at a time, visible from the tap (spinner) and queued behind a buy or a redeem that holds the guard, never dropped. Only the ask-the-store part holds the guard;
+	// the book downloads that follow run outside it, so Buy, Subscribe and Redeem keep working while they arrive.
+	private async Task RestoreNowAsync()
+	{
+		if (_restoring)
+		{
+			return;
+		}
+
+		_restoring = true;
+		HideRestoreMessage(); // the last restore's message never outlives the next try, even when the grown-up gate ends it early
 		_restoreRun?.Dispose();
 		_restoreRun = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
-		CancellationToken cancel = _restoreRun.Token;
-		PurchaseSnapshot snapshot = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false,
-			_ => _client.Sales.Purchases.RestoreAsync(_allRows.Select(r => r.Item), CancellationToken.None));
-		await ReplanRowsAsync();
-		if (!_mode.IsGrownUp || cancel.IsCancellationRequested)
+		ShowRestoring(true);
+		try
+		{
+			await RestorePurchasesAsync(_restoreRun.Token);
+		}
+		catch (OperationCanceledException) when (_restoreRun is { IsCancellationRequested: true })
+		{
+			// no-fallback: the grown-up left the tab or started a newer restore; nobody is waiting for a message. Any other cancel (a timeout) goes to the catch-all below. (Slice 396 review check2 #2)
+		}
+		catch (Exception ex)
+		{
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 396: a restore that throws shows the "could not ask the store" notice, never a crash from the async-void handlers
+			Debug.WriteLine($"Dino Reader store restore failed: {ex}");
+			if (_restoreRun is { IsCancellationRequested: false })
+			{
+				ShowRestoreMessage(ex is HttpRequestException ? AppResources.Store_OfflineTitle : AppResources.Error_Server, RestoreMessageKind.Notice); // Slice 396 review #3: only a network error says "offline"; nothing shows once the tab is gone
+			}
+		}
+		finally
+		{
+			_restoring = false;
+			ShowRestoring(false);
+		}
+	}
+
+	private static StorePage? _onScreenStore; // the Store tab while it shows (Appearing to Disappearing), so the Windows head's Ctrl+R finds it without the gallery
+
+	private void ClearOnScreen()
+	{
+		if (ReferenceEquals(_onScreenStore, this))
+		{
+			_onScreenStore = null;
+		}
+	}
+
+	/// <summary>
+	/// Ctrl+R on the Windows head (Slice 396): runs Restore from the Store tab, as the first line's link does. Returns whether the key was used: false when the Store tab is not showing or books are not sold
+	/// (the Restore link is then not shown either).
+	/// </summary>
+	public static bool TryRestoreFromKeyboard()
+	{
+		if (_onScreenStore is not { RestoreLinkRow.IsVisible: true } store || !store._mode.IsGrownUp || DinoKeyTargets.TopPage(store.Window) is not GalleryPage)
+		{
+			return false; // not showing, not the grown-ups' corner, or a gate, a book or another page is on top of the tab
+		}
+
+		store.RestoreFromKeyboard();
+		return true;
+	}
+
+	private async void RestoreFromKeyboard()
+	{
+		UiUsage.Tap(UiControls.Restore);
+		await RestoreNowAsync();
+	}
+
+	// Slice 396 (mock RR1): the first line's icon turns into a spinner and its text into "Restoring…" while the run goes; the rest of the Store stays usable.
+	private void ShowRestoring(bool running)
+	{
+		RestoreLineIcon.IsVisible = !running;
+		RestoreSpinner.IsVisible = running;
+		RestoreSpinner.IsRunning = running;
+		RestoreLineLabel.Text = running ? AppResources.Store_Restoring : AppResources.Store_RestorePurchases;
+	}
+
+	// One owner of a restore: the run's token is linked to this visit, a new run cancels the old one and Disappearing cancels it. The message appears only when the run finishes un-cancelled.
+	// Slice 396 (mock RR1): the first line shows "Restoring…" with a spinner for the run and the Store stays usable, so the wait overlay is not used.
+	private async Task RestorePurchasesAsync(CancellationToken cancel)
+	{
+		PurchaseSnapshot? snapshot = null;
+		await _busy.RunWhenFreeAsync(async () =>
+		{
+			snapshot = await _client.Sales.Purchases.RestoreAsync(_allRows.Select(r => r.Item), CancellationToken.None);
+			await ReplanRowsAsync();
+		}, cancel); // Slice 396 review #1: leaving the tab ends a restore that is still queued behind a buy
+		if (snapshot is null || !_mode.IsGrownUp || cancel.IsCancellationRequested)
 		{
 			return;
 		}
 
 		if (!snapshot.Reachable)
 		{
-			ShowRestoreText(AppResources.Store_OfflineTitle, found: false); // the store could not be asked: the sand strip says so rather than "nothing found"
+			ShowRestoreMessage(AppResources.Store_OfflineTitle, RestoreMessageKind.Notice); // the store could not be asked: the message says so rather than "nothing found"
 			return;
 		}
 
@@ -995,48 +1197,96 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 
 		int arrived = arriving.Count(r => r.State == StoreRowState.Downloaded);
-		RestoreLine line = StoreRowRestore.LineFor(arriving.Count - alreadyDownloading, arrived, alreadyDownloading);
-#if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
-#endif
-		if (line == RestoreLine.NothingToRestore && _client.Sales.SubscriptionActive)
+		if (_allRows.Count == 0 && (ownedNow.Count > 0 || _client.Sales.SubscriptionActive))
 		{
-			ShowRestoreText(AppResources.Sub_Active, found: true); // Slice 384: Restore also brings back a running subscription
+			HideRestoreMessage(); // the catalog is not loaded, so what the store says it owns cannot be matched to books: say nothing rather than guess
 			return;
 		}
 
+		bool ownsBooks = ownedNow.Count > 0 || _allRows.Any(r => BookAccess.BoughtProduct(r.Item, ownedNow) is not null); // the store's own owned list counts even for a book the catalog does not show; all on the shelf already is "restored", not "nothing bought"
+		RestoreLine line = StoreRowRestore.LineFor(arriving.Count - alreadyDownloading, arrived, alreadyDownloading, _client.Sales.SubscriptionActive, ownsBooks); // Slice 384: Restore also brings back a running subscription
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] toFetch={arriving.Count - alreadyDownloading} downloading={alreadyDownloading} arrived={arrived} line={line}");
+#endif
 		ShowRestoreLine(line, arrived);
 	}
 
 	private void ShowRestoreLine(RestoreLine line, int arrived)
 	{
-		if (line == RestoreLine.None)
+		switch (line)
 		{
-			RestoreResultView.IsVisible = false; // every book failed: the rows' own strips say why
-			return;
+			case RestoreLine.RestoredOne:
+				ShowRestoreMessage(AppResources.Store_Restored_One, RestoreMessageKind.Restored);
+				break;
+			case RestoreLine.RestoredMany:
+				ShowRestoreMessage(AppResources.Format(AppResources.Store_Restored_Other, arrived), RestoreMessageKind.Restored);
+				break;
+			case RestoreLine.SubscriptionBack:
+				ShowRestoreMessage(AppResources.Sub_Active, RestoreMessageKind.Restored);
+				break;
+			case RestoreLine.AllOnShelf:
+				ShowRestoreMessage(AppResources.Store_OnShelf, RestoreMessageKind.Restored);
+				break;
+			case RestoreLine.NothingFound:
+				ShowRestoreMessage(StoreText.NothingBoughtLine(DeviceInfo.Platform), RestoreMessageKind.NothingFound);
+				break;
+			default:
+				HideRestoreMessage(); // every book failed: the rows' own strips say why
+				break;
 		}
-
-		string text = line switch
-		{
-			RestoreLine.RestoredOne => AppResources.Store_Restored_One,
-			RestoreLine.RestoredMany => AppResources.Format(AppResources.Store_Restored_Other, arrived),
-			_ => AppResources.Store_NothingToRestore,
-		};
-		ShowRestoreText(text, found: line is RestoreLine.RestoredOne or RestoreLine.RestoredMany);
 	}
 
-	private void ShowRestoreText(string text, bool found)
+	/// <summary>The look of the dark message (Slice 396): a green check, an amber alert with the Redeem a code action, or an amber alert alone.</summary>
+	private enum RestoreMessageKind
 	{
+		Restored,
+		NothingFound,
+		Notice,
+	}
+
+	// Slice 396 (mock RR2, RR3): a dark message pinned above the tab bar for MessageSeconds, then it goes by itself; a new message, a buy or leaving the tab ends it earlier.
+	private void ShowRestoreMessage(string text, RestoreMessageKind kind)
+	{
+		_messageTimer?.Cancel();
+		_messageTimer?.Dispose();
+		_messageTimer = new CancellationTokenSource();
+		bool restored = kind == RestoreMessageKind.Restored;
 		RestoreResultLabel.Text = text;
-		RestoreResultView.BackgroundColor = (Color)Resources[found ? "ResultGreenFill" : "StripSandFill"];
-		RestoreResultLabel.TextColor = (Color)Resources[found ? "ResultGreenText" : "StripSandText"];
+		RestoreResultIcon.Data = (Geometry)new PathGeometryConverter().ConvertFromInvariantString((string)Resources[restored ? "CheckGlyph" : "AlertGlyph"])!;
+		RestoreResultIcon.Stroke = (Color)Resources[restored ? "MessageGreen" : "MessageAmber"];
+		RestoreResultIcon.StrokeThickness = restored ? 3 : 2.2;
+		RestoreRedeemAction.IsVisible = kind == RestoreMessageKind.NothingFound;
 		RestoreResultView.IsVisible = true;
+		SemanticScreenReader.Announce(text); // a screen reader user hears the result that disappears after MessageSeconds
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[StoreRestore] message={kind} text={text}");
+#endif
+		_ = HideRestoreMessageLaterAsync(_messageTimer.Token);
+	}
+
+	private async Task HideRestoreMessageLaterAsync(CancellationToken token)
+	{
+		try
+		{
+			await Task.Delay(TimeSpan.FromSeconds(MessageSeconds), token);
+			RestoreResultView.IsVisible = false;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a newer message or a hide replaced this one; the timer of that one hides it.
+		}
+	}
+
+	private void HideRestoreMessage()
+	{
+		_messageTimer?.Cancel();
+		RestoreResultView.IsVisible = false;
 	}
 
 	private async void OnRedeemCodeClicked(object? sender, EventArgs e) => await _busy.RunAsync(async () =>
 	{
 		UiUsage.Tap(UiControls.Pick); // Slice 352: the redeem-code button (the code itself is typed on the store's own screen, never seen here)
-		RestoreResultView.IsVisible = false; // a redeemed code changes what the last restore line counted
+		HideRestoreMessage(); // a redeemed code changes what the last restore counted
 		await _external.RunAsync(_client.Sales.Purchases.RedeemCodeAsync); // the store's own redeem screen
 		await RefreshPurchasesAsync(CancellationToken.None); // a code redeemed there shows as owned without pressing Restore
 		await ReplanRowsAsync();
@@ -1051,8 +1301,8 @@ public partial class StorePage : ContentView, ICornerTabView
 	{
 		row.SetState(StoreRowState.Downloading);
 		// The filters in use when Get was tapped, not when the download ends.
-		bool ageFilterSet = _band != StoreAgeBand.All;
-		bool authorFilterSet = _author is not null;
+		bool ageFilterSet = _state.Band != StoreAgeBand.All;
+		bool authorFilterSet = _state.Author is not null;
 		DownloadOutcome outcome = DownloadOutcome.Failed;
 		CancellationToken cancel = row.BeginDownload();
 		int run = row.Run;

@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>All the books - Dino Book Reader</title>
-  <meta name="description" content="Every book in the Dino Book Reader story store, which are free and which are paid, and the price. Books are chosen and read in the app." />
+  <title>All the books - Dino: Kids Books &amp; Stories</title>
+  <meta name="description" content="Every book in the Dino: Kids Books &amp; Stories story store, which are free and which are paid, and the price. Books are chosen and read in the app." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root {
@@ -74,7 +74,7 @@
 <body>
   <header>
     <div class="wrap">
-      <a class="brandmark" href="./"><img src="/dino/icon.png" width="40" height="40" alt="" /><span>Dino Book Reader</span></a>
+      <a class="brandmark" href="./"><img src="/dino/icon.png" width="40" height="40" alt="" /><span>Dino: Kids Books &amp; Stories</span></a>
       <div class="tools">
         <a id="home" href="./">Home</a>
         <label for="lang" id="langLabel">Language</label>
@@ -104,8 +104,8 @@
         <h2 id="getTitle"></h2>
         <div class="actions">
           <a class="btn" href="https://apps.microsoft.com/detail/9N9VHRLCZXN5">Windows - Microsoft Store</a>
-          <a class="btn alt" href="./#platforms">Android - Google Play</a>
-          <a class="btn alt" href="https://testflight.apple.com/join/WnF7M53D">iPhone, iPad - TestFlight</a>
+          <a class="btn alt" href="https://play.google.com/store/apps/details?id=uk.sirous.dinoreader">Android - Google Play</a>
+          <a class="btn alt" href="https://apps.apple.com/app/id6825053435">iPhone, iPad - App Store</a>
         </div>
       </section>
     </div>
@@ -126,21 +126,21 @@
   var DEFAULT_PRICE = "$0.99 / €0.99 / £0.99";
   var ALIASES = { no: "nb", nn: "nb" };
   var LANGUAGES = {
-    en: { name: "English", dir: "ltr", s: { title: "All the books", lede: "Every book in the Dino Book Reader story store. This page only lists them: books are chosen and read in the app.", free: "Free", ages: "Ages", pages: "Pages", minutes: "Minutes", getApp: "Get it in the app", loading: "Loading the books…", error: "The books could not be loaded.", retry: "Try again", cancel: "Cancel", cancelled: "Loading was cancelled.", language: "Language", empty: "No books yet.", home: "Home" } },
-    fa: { name: "فارسی", dir: "rtl", s: { title: "همهٔ کتاب‌ها", lede: "همهٔ کتاب‌های فروشگاه داستان Dino Book Reader. این صفحه فقط فهرست است: کتاب‌ها را در برنامه انتخاب می‌کنید و می‌خوانید.", free: "رایگان", ages: "سن", pages: "صفحه", minutes: "دقیقه", getApp: "از برنامه بگیرید", loading: "در حال بارگذاری کتاب‌ها…", error: "کتاب‌ها بارگذاری نشدند.", retry: "دوباره تلاش کنید", cancel: "لغو", cancelled: "بارگذاری لغو شد.", language: "زبان", empty: "هنوز کتابی نیست.", home: "صفحهٔ اصلی" } },
-    fr: { name: "Français", dir: "ltr", s: { title: "Tous les livres", lede: "Tous les livres de la boutique d’histoires de Dino Book Reader. Cette page ne fait que les lister : les livres se choisissent et se lisent dans l’application.", free: "Gratuit", ages: "Âges", pages: "Pages", minutes: "Minutes", getApp: "Obtenir dans l’application", loading: "Chargement des livres…", error: "Les livres n’ont pas pu être chargés.", retry: "Réessayer", cancel: "Annuler", cancelled: "Le chargement a été annulé.", language: "Langue", empty: "Pas encore de livres.", home: "Accueil" } },
-    es: { name: "Español", dir: "ltr", s: { title: "Todos los libros", lede: "Todos los libros de la tienda de cuentos de Dino Book Reader. Esta página solo los enumera: los libros se eligen y se leen en la aplicación.", free: "Gratis", ages: "Edades", pages: "Páginas", minutes: "Minutos", getApp: "Consíguelo en la app", loading: "Cargando los libros…", error: "No se pudieron cargar los libros.", retry: "Reintentar", cancel: "Cancelar", cancelled: "Se canceló la carga.", language: "Idioma", empty: "Aún no hay libros.", home: "Inicio" } },
-    pt: { name: "Português", dir: "ltr", s: { title: "Todos os livros", lede: "Todos os livros da loja de histórias do Dino Book Reader. Esta página só os lista: os livros são escolhidos e lidos na aplicação.", free: "Grátis", ages: "Idades", pages: "Páginas", minutes: "Minutos", getApp: "Obtenha na aplicação", loading: "A carregar os livros…", error: "Não foi possível carregar os livros.", retry: "Tentar de novo", cancel: "Cancelar", cancelled: "O carregamento foi cancelado.", language: "Idioma", empty: "Ainda não há livros.", home: "Início" } },
-    zh: { name: "中文", dir: "ltr", s: { title: "所有图书", lede: "Dino Book Reader 故事商店里的全部图书。本页只做展示：图书需在应用内挑选和阅读。", free: "免费", ages: "年龄", pages: "页数", minutes: "分钟", getApp: "在应用中获取", loading: "正在加载图书…", error: "无法加载图书。", retry: "重试", cancel: "取消", cancelled: "已取消加载。", language: "语言", empty: "暂时还没有图书。", home: "首页" } },
-    ar: { name: "العربية", dir: "rtl", s: { title: "كل الكتب", lede: "كل كتب متجر القصص في Dino Book Reader. هذه الصفحة للعرض فقط: تُختار الكتب وتُقرأ داخل التطبيق.", free: "مجاني", ages: "الأعمار", pages: "الصفحات", minutes: "الدقائق", getApp: "احصل عليه من التطبيق", loading: "جارٍ تحميل الكتب…", error: "تعذّر تحميل الكتب.", retry: "حاول مرة أخرى", cancel: "إلغاء", cancelled: "تم إلغاء التحميل.", language: "اللغة", empty: "لا توجد كتب بعد.", home: "الرئيسية" } },
-    ru: { name: "Русский", dir: "ltr", s: { title: "Все книги", lede: "Все книги магазина историй Dino Book Reader. Эта страница только перечисляет их: книги выбирают и читают в приложении.", free: "Бесплатно", ages: "Возраст", pages: "Страниц", minutes: "Минут", getApp: "Получить в приложении", loading: "Загружаем книги…", error: "Не удалось загрузить книги.", retry: "Повторить", cancel: "Отмена", cancelled: "Загрузка отменена.", language: "Язык", empty: "Книг пока нет.", home: "На главную" } },
-    ja: { name: "日本語", dir: "ltr", s: { title: "すべての本", lede: "Dino Book Reader のおはなしストアにある本の一覧です。このページは一覧だけで、本はアプリで選んで読みます。", free: "無料", ages: "対象年齢", pages: "ページ数", minutes: "所要時間（分）", getApp: "アプリで入手", loading: "本を読み込んでいます…", error: "本を読み込めませんでした。", retry: "再試行", cancel: "キャンセル", cancelled: "読み込みをキャンセルしました。", language: "言語", empty: "まだ本がありません。", home: "ホーム" } },
-    da: { name: "Dansk", dir: "ltr", s: { title: "Alle bøgerne", lede: "Alle bøgerne i historiebutikken i Dino Book Reader. Siden viser dem kun: bøgerne vælges og læses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Henter bøgerne…", error: "Bøgerne kunne ikke hentes.", retry: "Prøv igen", cancel: "Annuller", cancelled: "Indlæsningen blev annulleret.", language: "Sprog", empty: "Ingen bøger endnu.", home: "Forside" } },
-    fi: { name: "Suomi", dir: "ltr", s: { title: "Kaikki kirjat", lede: "Kaikki Dino Book Readerin tarinakaupan kirjat. Tämä sivu vain luettelee ne: kirjat valitaan ja luetaan sovelluksessa.", free: "Ilmainen", ages: "Ikä", pages: "Sivuja", minutes: "Minuuttia", getApp: "Hanki sovelluksesta", loading: "Ladataan kirjoja…", error: "Kirjoja ei voitu ladata.", retry: "Yritä uudelleen", cancel: "Peruuta", cancelled: "Lataus peruttiin.", language: "Kieli", empty: "Kirjoja ei vielä ole.", home: "Etusivu" } },
-    sv: { name: "Svenska", dir: "ltr", s: { title: "Alla böcker", lede: "Alla böcker i berättelsebutiken i Dino Book Reader. Den här sidan listar dem bara: böckerna väljs och läses i appen.", free: "Gratis", ages: "Ålder", pages: "Sidor", minutes: "Minuter", getApp: "Hämta i appen", loading: "Läser in böckerna…", error: "Det gick inte att läsa in böckerna.", retry: "Försök igen", cancel: "Avbryt", cancelled: "Inläsningen avbröts.", language: "Språk", empty: "Inga böcker ännu.", home: "Startsida" } },
-    nb: { name: "Norsk", dir: "ltr", s: { title: "Alle bøkene", lede: "Alle bøkene i historiebutikken i Dino Book Reader. Denne siden bare lister dem: bøkene velges og leses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Laster bøkene…", error: "Bøkene kunne ikke lastes.", retry: "Prøv igjen", cancel: "Avbryt", cancelled: "Lastingen ble avbrutt.", language: "Språk", empty: "Ingen bøker ennå.", home: "Forside" } },
-    nl: { name: "Nederlands", dir: "ltr", s: { title: "Alle boeken", lede: "Alle boeken uit de verhalenwinkel van Dino Book Reader. Deze pagina toont ze alleen: boeken kies en lees je in de app.", free: "Gratis", ages: "Leeftijd", pages: "Pagina’s", minutes: "Minuten", getApp: "Haal het in de app", loading: "De boeken worden geladen…", error: "De boeken konden niet worden geladen.", retry: "Opnieuw proberen", cancel: "Annuleren", cancelled: "Laden is geannuleerd.", language: "Taal", empty: "Nog geen boeken.", home: "Home" } },
-    de: { name: "Deutsch", dir: "ltr", s: { title: "Alle Bücher", lede: "Alle Bücher im Geschichtenladen von Dino Book Reader. Diese Seite listet sie nur auf: Bücher werden in der App ausgewählt und gelesen.", free: "Kostenlos", ages: "Alter", pages: "Seiten", minutes: "Minuten", getApp: "In der App holen", loading: "Bücher werden geladen…", error: "Die Bücher konnten nicht geladen werden.", retry: "Erneut versuchen", cancel: "Abbrechen", cancelled: "Das Laden wurde abgebrochen.", language: "Sprache", empty: "Noch keine Bücher.", home: "Startseite" } }
+    en: { name: "English", dir: "ltr", s: { title: "All the books", lede: "Every book in the Dino: Kids Books & Stories story store. This page only lists them: books are chosen and read in the app.", free: "Free", ages: "Ages", pages: "Pages", minutes: "Minutes", getApp: "Get it in the app", loading: "Loading the books…", error: "The books could not be loaded.", retry: "Try again", cancel: "Cancel", cancelled: "Loading was cancelled.", language: "Language", empty: "No books yet.", home: "Home" } },
+    fa: { name: "فارسی", dir: "rtl", s: { title: "همهٔ کتاب‌ها", lede: "همهٔ کتاب‌های فروشگاه داستان Dino: Kids Books & Stories. این صفحه فقط فهرست است: کتاب‌ها را در برنامه انتخاب می‌کنید و می‌خوانید.", free: "رایگان", ages: "سن", pages: "صفحه", minutes: "دقیقه", getApp: "از برنامه بگیرید", loading: "در حال بارگذاری کتاب‌ها…", error: "کتاب‌ها بارگذاری نشدند.", retry: "دوباره تلاش کنید", cancel: "لغو", cancelled: "بارگذاری لغو شد.", language: "زبان", empty: "هنوز کتابی نیست.", home: "صفحهٔ اصلی" } },
+    fr: { name: "Français", dir: "ltr", s: { title: "Tous les livres", lede: "Tous les livres de la boutique d’histoires de Dino: Kids Books & Stories. Cette page ne fait que les lister : les livres se choisissent et se lisent dans l’application.", free: "Gratuit", ages: "Âges", pages: "Pages", minutes: "Minutes", getApp: "Obtenir dans l’application", loading: "Chargement des livres…", error: "Les livres n’ont pas pu être chargés.", retry: "Réessayer", cancel: "Annuler", cancelled: "Le chargement a été annulé.", language: "Langue", empty: "Pas encore de livres.", home: "Accueil" } },
+    es: { name: "Español", dir: "ltr", s: { title: "Todos los libros", lede: "Todos los libros de la tienda de cuentos de Dino: Kids Books & Stories. Esta página solo los enumera: los libros se eligen y se leen en la aplicación.", free: "Gratis", ages: "Edades", pages: "Páginas", minutes: "Minutos", getApp: "Consíguelo en la app", loading: "Cargando los libros…", error: "No se pudieron cargar los libros.", retry: "Reintentar", cancel: "Cancelar", cancelled: "Se canceló la carga.", language: "Idioma", empty: "Aún no hay libros.", home: "Inicio" } },
+    pt: { name: "Português", dir: "ltr", s: { title: "Todos os livros", lede: "Todos os livros da loja de histórias do Dino: Kids Books & Stories. Esta página só os lista: os livros são escolhidos e lidos na aplicação.", free: "Grátis", ages: "Idades", pages: "Páginas", minutes: "Minutos", getApp: "Obtenha na aplicação", loading: "A carregar os livros…", error: "Não foi possível carregar os livros.", retry: "Tentar de novo", cancel: "Cancelar", cancelled: "O carregamento foi cancelado.", language: "Idioma", empty: "Ainda não há livros.", home: "Início" } },
+    zh: { name: "中文", dir: "ltr", s: { title: "所有图书", lede: "Dino: Kids Books & Stories 故事商店里的全部图书。本页只做展示：图书需在应用内挑选和阅读。", free: "免费", ages: "年龄", pages: "页数", minutes: "分钟", getApp: "在应用中获取", loading: "正在加载图书…", error: "无法加载图书。", retry: "重试", cancel: "取消", cancelled: "已取消加载。", language: "语言", empty: "暂时还没有图书。", home: "首页" } },
+    ar: { name: "العربية", dir: "rtl", s: { title: "كل الكتب", lede: "كل كتب متجر القصص في Dino: Kids Books & Stories. هذه الصفحة للعرض فقط: تُختار الكتب وتُقرأ داخل التطبيق.", free: "مجاني", ages: "الأعمار", pages: "الصفحات", minutes: "الدقائق", getApp: "احصل عليه من التطبيق", loading: "جارٍ تحميل الكتب…", error: "تعذّر تحميل الكتب.", retry: "حاول مرة أخرى", cancel: "إلغاء", cancelled: "تم إلغاء التحميل.", language: "اللغة", empty: "لا توجد كتب بعد.", home: "الرئيسية" } },
+    ru: { name: "Русский", dir: "ltr", s: { title: "Все книги", lede: "Все книги магазина историй Dino: Kids Books & Stories. Эта страница только перечисляет их: книги выбирают и читают в приложении.", free: "Бесплатно", ages: "Возраст", pages: "Страниц", minutes: "Минут", getApp: "Получить в приложении", loading: "Загружаем книги…", error: "Не удалось загрузить книги.", retry: "Повторить", cancel: "Отмена", cancelled: "Загрузка отменена.", language: "Язык", empty: "Книг пока нет.", home: "На главную" } },
+    ja: { name: "日本語", dir: "ltr", s: { title: "すべての本", lede: "Dino: Kids Books & Stories のおはなしストアにある本の一覧です。このページは一覧だけで、本はアプリで選んで読みます。", free: "無料", ages: "対象年齢", pages: "ページ数", minutes: "所要時間（分）", getApp: "アプリで入手", loading: "本を読み込んでいます…", error: "本を読み込めませんでした。", retry: "再試行", cancel: "キャンセル", cancelled: "読み込みをキャンセルしました。", language: "言語", empty: "まだ本がありません。", home: "ホーム" } },
+    da: { name: "Dansk", dir: "ltr", s: { title: "Alle bøgerne", lede: "Alle bøgerne i historiebutikken i Dino: Kids Books & Stories. Siden viser dem kun: bøgerne vælges og læses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Henter bøgerne…", error: "Bøgerne kunne ikke hentes.", retry: "Prøv igen", cancel: "Annuller", cancelled: "Indlæsningen blev annulleret.", language: "Sprog", empty: "Ingen bøger endnu.", home: "Forside" } },
+    fi: { name: "Suomi", dir: "ltr", s: { title: "Kaikki kirjat", lede: "Kaikki sovelluksen Dino: Kids Books & Stories tarinakaupan kirjat. Tämä sivu vain luettelee ne: kirjat valitaan ja luetaan sovelluksessa.", free: "Ilmainen", ages: "Ikä", pages: "Sivuja", minutes: "Minuuttia", getApp: "Hanki sovelluksesta", loading: "Ladataan kirjoja…", error: "Kirjoja ei voitu ladata.", retry: "Yritä uudelleen", cancel: "Peruuta", cancelled: "Lataus peruttiin.", language: "Kieli", empty: "Kirjoja ei vielä ole.", home: "Etusivu" } },
+    sv: { name: "Svenska", dir: "ltr", s: { title: "Alla böcker", lede: "Alla böcker i berättelsebutiken i Dino: Kids Books & Stories. Den här sidan listar dem bara: böckerna väljs och läses i appen.", free: "Gratis", ages: "Ålder", pages: "Sidor", minutes: "Minuter", getApp: "Hämta i appen", loading: "Läser in böckerna…", error: "Det gick inte att läsa in böckerna.", retry: "Försök igen", cancel: "Avbryt", cancelled: "Inläsningen avbröts.", language: "Språk", empty: "Inga böcker ännu.", home: "Startsida" } },
+    nb: { name: "Norsk", dir: "ltr", s: { title: "Alle bøkene", lede: "Alle bøkene i historiebutikken i Dino: Kids Books & Stories. Denne siden bare lister dem: bøkene velges og leses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Laster bøkene…", error: "Bøkene kunne ikke lastes.", retry: "Prøv igjen", cancel: "Avbryt", cancelled: "Lastingen ble avbrutt.", language: "Språk", empty: "Ingen bøker ennå.", home: "Forside" } },
+    nl: { name: "Nederlands", dir: "ltr", s: { title: "Alle boeken", lede: "Alle boeken uit de verhalenwinkel van Dino: Kids Books & Stories. Deze pagina toont ze alleen: boeken kies en lees je in de app.", free: "Gratis", ages: "Leeftijd", pages: "Pagina’s", minutes: "Minuten", getApp: "Haal het in de app", loading: "De boeken worden geladen…", error: "De boeken konden niet worden geladen.", retry: "Opnieuw proberen", cancel: "Annuleren", cancelled: "Laden is geannuleerd.", language: "Taal", empty: "Nog geen boeken.", home: "Home" } },
+    de: { name: "Deutsch", dir: "ltr", s: { title: "Alle Bücher", lede: "Alle Bücher im Geschichtenladen von Dino: Kids Books & Stories. Diese Seite listet sie nur auf: Bücher werden in der App ausgewählt und gelesen.", free: "Kostenlos", ages: "Alter", pages: "Seiten", minutes: "Minuten", getApp: "In der App holen", loading: "Bücher werden geladen…", error: "Die Bücher konnten nicht geladen werden.", retry: "Erneut versuchen", cancel: "Abbrechen", cancelled: "Das Laden wurde abgebrochen.", language: "Sprache", empty: "Noch keine Bücher.", home: "Startseite" } }
   };
 
   // "nb-NO", "no", "nn", "zh-Hans-CN", "pt_BR" all reduce to one of the fifteen codes; anything else is null.
@@ -206,12 +206,14 @@
   var PREFIX = location.pathname.indexOf("/dino/") === 0 ? "/dino" : "";
   var SLOW_MS = 500;
   var TIMEOUT_MS = 15000;
+  // The chooser lists the fifteen languages by total speakers, most first (Slice 417).
+  var LANGUAGE_ORDER = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "ja", "fa", "nl", "sv", "da", "fi", "nb"];
   var $ = function (id) { return document.getElementById(id); };
   var state = { code: DEFAULT_LANGUAGE, stories: [], config: readConfig(null), loaded: false, controller: null, slowTimer: null, cancelled: false };
 
   function fillLanguageChooser() {
     var select = $("lang");
-    Object.keys(LANGUAGES).forEach(function (code) {
+    LANGUAGE_ORDER.forEach(function (code) {
       var option = document.createElement("option");
       option.value = code; option.textContent = LANGUAGES[code].name; option.lang = code;
       select.appendChild(option);
@@ -222,7 +224,7 @@
     var code = state.code;
     document.documentElement.lang = code;
     document.documentElement.dir = LANGUAGES[code].dir;
-    document.title = text(code, "title") + " - Dino Book Reader";
+    document.title = text(code, "title") + " - Dino: Kids Books & Stories";
     $("lang").value = code;
     $("title").textContent = text(code, "title");
     $("lede").textContent = text(code, "lede");

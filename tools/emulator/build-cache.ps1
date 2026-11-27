@@ -10,6 +10,9 @@
 $script:BuildInputPaths = @('src', 'global.json', 'Directory.Build.props', 'Directory.Build.targets', 'Directory.Build.rsp', 'Directory.Packages.props',
     'Directory.Solution.props', 'Directory.Solution.targets', '.editorconfig', '.globalconfig', 'NuGet.config', 'nuget.config', 'ReadTheStupidText.slnx')
 $script:BuildKeyLength = 12
+# Slice 433: the emulator's Dino Debug build is stamped with this version so it clears the live remote-config minVersion gate (android 1.131.1 at the time;
+# without it the app opens "Dino needs an update"). It is a build argument, not a file, so it is part of the key as its own line: an old 1.0 APK is never reused.
+$script:EmulatorDinoDisplayVersion = '99.0.0'
 $script:KeepBuildsPerWorktree = 3
 $script:BuildMetaFile = 'build.json'
 $script:BuildLockWaitMinutes = 60
@@ -50,6 +53,7 @@ function Get-BuildKeyInputs {
         $hashes[$fields[1]] = ($fields[0] -split ' ')[2]
     }
     $lines = @(foreach ($path in $script:BuildInputPaths) { if ($hashes.ContainsKey($path)) { "$path=$($hashes[$path])" } })
+    if ($lines.Count -gt 0) { $lines += "build-arg:ApplicationDisplayVersion=$($script:EmulatorDinoDisplayVersion)" }  # Slice 433: a build argument the key must see
     # Slice 294: no input line means the wrong root or an empty tree; every such tree would hash to the same key and reuse a foreign build.
     if ($lines.Count -eq 0) { throw "No build input ($($script:BuildInputPaths -join ', ')) was found in git tree $tree of $($script:ToolsRepoRoot): refusing to make a build key from nothing." }
     return [pscustomobject]@{ Tree = $tree; Inputs = $lines }

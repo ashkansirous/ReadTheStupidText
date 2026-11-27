@@ -26,3 +26,20 @@ CREATE TABLE IF NOT EXISTS rollup_days (
   day       TEXT PRIMARY KEY,
   rolled_at TEXT NOT NULL
 ) WITHOUT ROWID;
+
+-- Slice 457: a child's favourite books on the Alexa skill (worker/alexa-favourites.ts). One row per Alexa account x book; `user_id` is
+-- Alexa's opaque account id and nothing else about the person is kept. Rows are read oldest first (rowid), which is the order they play in.
+-- Apply BEFORE the Worker that reads it is deployed (the same wrangler d1 execute command as above).
+CREATE TABLE IF NOT EXISTS alexa_favourites (
+  user_id TEXT NOT NULL,
+  book    TEXT NOT NULL,
+  PRIMARY KEY (user_id, book)
+);
+
+-- Slice 457 decision 15: when the Alexa skill last told an account about the subscription books (worker/alexa-subscription-told.ts), so the
+-- line is said at most once a week. `told_at` is epoch milliseconds. Apply BEFORE the Worker that reads it is deployed; while the table is
+-- missing the skill says the line every time.
+CREATE TABLE IF NOT EXISTS alexa_subscription_told (
+  user_id TEXT PRIMARY KEY,
+  told_at INTEGER NOT NULL
+) WITHOUT ROWID;

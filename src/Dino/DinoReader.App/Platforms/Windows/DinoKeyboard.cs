@@ -93,6 +93,43 @@ internal sealed class DinoKeyboard
 		return true;
 	}
 
+	// Slice 396: Ctrl+R on the Store tab runs Restore purchases (the rail shows "Ctrl+R" next to Store). Plain Ctrl, no Alt or Shift; a held key acts once; the Store tab decides whether it is showing and books are sold.
+	private static bool TryRestoreShortcut(object sender, KeyRoutedEventArgs e)
+	{
+		if (e.Key != VirtualKey.R || !IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || IsDown(VirtualKey.Shift) || e.KeyStatus.WasKeyDown || TextFieldHasFocus(sender)) // Ctrl+R in a text field is the field's
+		{
+			return false;
+		}
+
+		if (!StorePage.TryRestoreFromKeyboard())
+		{
+			return false;
+		}
+
+		e.Handled = true;
+		WindowTrace.Write("Dino keyboard: Ctrl+R used (Store tab, Restore purchases)");
+		return true;
+	}
+
+	// Slice 418: Ctrl+L is the lock (the rail shows "Ctrl+L" on its lock row): it opens the unlock popup while locked and locks at once while unlocked, as a tap on the lock does. Plain Ctrl, no Alt or Shift; a held key acts once;
+	// only the gallery answers, and only when nothing else is open over it.
+	private bool TryLockShortcut(object sender, KeyRoutedEventArgs e)
+	{
+		if (e.Key != VirtualKey.L || !IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || IsDown(VirtualKey.Shift) || e.KeyStatus.WasKeyDown || TextFieldHasFocus(sender))
+		{
+			return false;
+		}
+
+		if (DinoKeyTargets.TopPage(_window) is not GalleryPage gallery || !gallery.TryToggleLockFromKeyboard())
+		{
+			return false;
+		}
+
+		e.Handled = true;
+		WindowTrace.Write("Dino keyboard: Ctrl+L used (the lock)");
+		return true;
+	}
+
 	private static RecordKey? RecordKeyOf(VirtualKey key) => key switch
 	{
 		VirtualKey.R => RecordKey.Record,
@@ -105,13 +142,13 @@ internal sealed class DinoKeyboard
 
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
 	{
-		if (TryRecordKey(sender, e))
+		if (TryRecordKey(sender, e) || TryRestoreShortcut(sender, e) || TryLockShortcut(sender, e))
 		{
 			return;
 		}
 
 		DinoKey key = Map(e.Key);
-		if (key == DinoKey.Other)
+		if (key == DinoKey.Other || (e.Key == VirtualKey.F10 && !IsDown(VirtualKey.Shift))) // plain F10 is the system's menu key, not ours
 		{
 			return;
 		}
@@ -171,7 +208,7 @@ internal sealed class DinoKeyboard
 	}
 
 	private bool IsOneShotKey(DinoKey key) =>
-		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape
+		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape or DinoKey.ContextMenu
 		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is GalleryPage { InCorner: true }); // the Settings tab's Right arrow opens a row once per press
 
 	private static bool HasShortcutModifier(DinoKey key) =>
@@ -229,6 +266,7 @@ internal sealed class DinoKeyboard
 		VirtualKey.Escape => DinoKey.Escape,
 		VirtualKey.Enter => DinoKey.Enter,
 		VirtualKey.Back => DinoKey.Backspace,
+		VirtualKey.Application or VirtualKey.F10 => DinoKey.ContextMenu, // the Menu key; F10 only with Shift (OnKeyDown checks it)
 		>= VirtualKey.Number0 and <= VirtualKey.Number9 => DinoKey.Digit0 + (key - VirtualKey.Number0),
 		>= VirtualKey.NumberPad0 and <= VirtualKey.NumberPad9 => DinoKey.Digit0 + (key - VirtualKey.NumberPad0),
 		_ => DinoKey.Other,

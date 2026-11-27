@@ -203,3 +203,32 @@ Method notes: click the newest picture by its `find` ref right after `__grab(1)`
 Usage meter (Settings > Usage Limits, Pro plan): start 6% current / 6% weekly (current resets 10:05 AM, weekly Oct 27 10:05 AM); after about 30 pictures 11%; end 16% current / 6% weekly. The old Lion-and-Mouse Gemini tabs were closed before the first prompt (none of their chats were opened or changed).
 
 Review redo (2026-10-26, pages 2, 4, 5, 6, 12): each in a fresh chat with the line-up pasted, 3.5 Flash-Lite, full-bleed wording ("no border, no vignette, no blank paper, no signature"); bottom 30% strips cropped and checked for marks. Usage meter after the redo: not re-read.
+
+## High-res pictures for print (Slice 350 D1, 2026-11-19)
+
+`high-res/` (Git LFS, never read by the app or the store) holds `cover.jpg`, `1.jpg`..`14.jpg` (1792x2400, JPEG 85 through `prepare-story-pictures.ps1 -HighRes`), the earlier `back-cover.jpg` and `contact-sheet.jpg`. Cover and pages 1-7 and 12-14 are the user-accepted pictures' own 1792x2400 originals, found untouched in `%USERPROFILE%\Downloads` (matched by a 24x32 greyscale score under 1; not redrawn). Pages 8-11 are drawn again to fix the empty bottom (page 8 also: swimming in the water, not standing on it), each in its own new chat on 4 Hydrogen, 1792x2400, one try each except page 11:
+
+| Page | Tries | Chat | Download bytes | Notes |
+| --- | --- | --- | --- | --- |
+| 8 | 1 | 36d7bcc72b62e223 | 3347769 | birds float low in the water with ripples; water and floating leaves run to the bottom edge; 3 yellow ducklings, 3 swans; line70 pass |
+| 9 | 1 | defa171913c0c93e | 3111845 | snowy yard with footprints and straw to the bottom edge; 6 birds; line70 pass |
+| 10 | 1 | 10bf36cf7c2d7ee6 | 3531298 | straw floor to the bottom edge; 6 birds; one-pane window; the Duckling's feet end about 70%; line70 pass |
+| 11 | 2 | a4777b29e13dce22 | 3188283 | try 1 (chat 093daca037e3930c) put the reflection tip at about 75%; try 2 ends at about 72.5%, a faint reflection fading into the water (not a character) |
+
+Not run: D2 (`dino-story-reviewer` over the high-res files) and D3 (commit). The app copies (item E) are not changed.
+
+### Reviewer, 2026-11-19 (Slice 350 D2, full mode, high-res files)
+
+**FAIL: 1 page (11), plus one back-cover file fault that blocks D3.** Checked on small copies and `line70.ps1` overlays of cover, 1-14 and the back cover, against `story.md`, the picture plan above and `characters/lineup.jpg`; one full-size crop of page 11's reflection only.
+
+- **Page 11 (picture):** the reflection's outlined neck curve reaches y=1785 of 2400 (74.4%), about 33 px into the bottom 27% strip, not 72.5% as noted in the D1 table. It is a pencil-outlined white swan shape, not faint, and the plan line says "his reflection ... and both stay above the 70% line". Redraw (try 3 of 3) with the swan standing further back up the bank, or his head lower and closer to the water, so the whole reflection ends above 73%; keep everything else (tuft, green willow, lily pads and reeds to the bottom edge).
+- **Back cover (file, not the picture):** `high-res/back-cover.jpg` is Gemini's untouched download, 3,107,191 bytes. With cover and 1-14 added the set is complete, so `HighResPack.GateProblems` refuses the book (over 1.5 MB). Re-save it through `prepare-story-pictures.ps1 -HighRes` before D3 (Slice 350 tooling item k).
+- **Pages 8, 9, 10 pass:** page 8 the five birds float low in rippled water, which runs to the bottom edge; page 9 snowy yard with footprints and straw to the edge, barn door and fence match page 7; page 10 straw floor to the edge, one-pane window as planned, six birds, Duckling between Mother Duck and Dilly. Counts, outfits (bonnet, apron, Dilly's daisy, the tuft), limbs, no text: all right.
+- **Cover, 1-7, 12-14:** user-accepted originals, nothing unsafe, all characters above the 73% line; kept.
+- **Back-cover picture:** passes (Mother Duck, grey cygnet, three yellow ducklings with Dilly's daisy, middle open for the credits). Credits in `book.json` (Andersen, retold, "free to share" for a public-domain tale, `namesByLanguage` in all 14) are right; the in-app back cover was not run.
+- Non-blocking: pages 1, 2, 4-7 and 12-14 (accepted) have a flat, plain bottom strip like the one fixed on 8-11, if the user wants the same fix for print; page 8 Mother Duck looks ahead rather than up at the swans she points out.
+
+### Page 11 try 3 and the back cover file (Slice 350 D1, 2026-11-19, after the reviewer's FAIL)
+
+- `high-res/back-cover.jpg` re-saved through `prepare-story-pictures.ps1 -HighRes`: 3,107,191 bytes down to 780,809 (under the 1.5 MB gate).
+- Page 11 try 3 (chat 3f114df28269a88d, Hydrogen, 3245019 bytes): swan higher on the bank, water's edge at about 38%, but the reflection's head and beak curl down to about 79%, worse than try 2. Not used. Best of the 3 is **try 2 (chat a4777b29e13dce22), kept in `high-res/11.jpg`**: the swan and everything else are above the line; only the reflection's neck curve reaches about 74.4% (reviewer's full-size measure), about 33 px into the bottom 27%. **For the user (D1 rule, 3 tries used):** accept this reflection tip, or ask for a drawing with the reflection left out or the head lifted. Try 1 (chat 093daca037e3930c) was about 75%.

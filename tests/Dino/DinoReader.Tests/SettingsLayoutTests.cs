@@ -12,14 +12,14 @@ public class SettingsLayoutTests
     [InlineData(602, 1)]  // phone landscape 852 less the 250 rail
     [InlineData(799.9, 1)]
     [InlineData(800, 2)]
-    [InlineData(820, 2)]  // Windows 1100 less the 280 rail
+    [InlineData(830, 2)]  // Windows 1100 less the 270 rail
     [InlineData(890, 2)]  // tablet landscape 1180 less the 290 rail (frame T2)
     public void The_store_has_one_column_below_800_dp_of_content_and_two_from_800(double content, int expected) =>
         Assert.Equal(expected, SettingsLayout.StoreColumns(content));
 
     [Theory]
     [InlineData(1180, 290, 890)]
-    [InlineData(1100, 280, 820)]
+    [InlineData(1100, 270, 830)]
     [InlineData(393, 0, 393)]
     [InlineData(200, 280, 0)]
     public void The_content_column_is_the_window_less_the_rail(double window, double rail, double expected) =>

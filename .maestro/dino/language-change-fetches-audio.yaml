@@ -30,7 +30,7 @@ name: Changing the app language fetches the books' audio in it
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - runFlow:
     when:
@@ -65,13 +65,13 @@ name: Changing the app language fetches the books' audio in it
 # Leave grown-up mode: the open-book hook refuses while grown-up mode is on.
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 15000
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 15000
 # The open-book hook waits for the book's pack before it plays (up to 120 s), as in shelf-audio-on-start.
 - launchApp:

@@ -10,18 +10,9 @@ namespace DinoReader;
 /// <summary>What a new install still owes the grown-up (Slice 93, Decision 98).</summary>
 public static class FirstRunState
 {
-	private const string HandoverPendingKey = "dino.handover.pending";
-
 	/// <summary>A fresh install has no language yet: Dino no longer picks English by itself. Every install made
 	/// before this slice stored one at launch, so none of them sees the first run.</summary>
 	public static bool IsNeeded(ISettingsStore settings) => settings.Language is null;
-
-	/// <summary>True from "See what Dino can do" until the grown-up first hands the phone to the child ("Ready for my child").</summary>
-	public static bool HandoverPending
-	{
-		get => Preferences.Default.Get(HandoverPendingKey, false);
-		set => Preferences.Default.Set(HandoverPendingKey, value);
-	}
 }
 
 /// <summary>The coral call-to-action of the first-run screens (onboarding mock): 56 high by default (50 or 52 beside the panes, see <see cref="SetSize"/>), fully rounded, a 5 px darker edge underneath.</summary>
@@ -114,7 +105,7 @@ public sealed class CoralButton : Border
 }
 
 /// <summary>
-/// The first run (Slice 93, Decision 98; onboarding mock 2026-11-13, Slice 362): step 1 of 6, the grown-up picks the language. Then come the story languages (<see cref="OnboardingLanguagesPage"/>), at least two of the
+/// The first run (Slice 93, Decision 98; onboarding mock 2026-11-13, Slice 362): step 1 of 5, the grown-up picks the language. Then come the story languages (<see cref="OnboardingLanguagesPage"/>), at least two of the
 /// store's books (<see cref="FirstBooksPage"/>), the listen and voice steps and the grown-ups' corner tour (<see cref="OnboardingRoute"/>). Slice 278 part B: there is no voice to download, so the books' own audio packs
 /// (fetched with the books) are all that is fetched. The language is stored at the pick; a kill before the books are chosen reopens on the book picker (<see cref="FirstBooksGate"/>), a kill after resumes at the saved
 /// step (<see cref="OnboardingState"/>). The page sits on <see cref="OnboardingShell"/>.

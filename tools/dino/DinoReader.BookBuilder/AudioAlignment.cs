@@ -121,10 +121,19 @@ internal static class AudioAlignment
     }
 
     /// <summary>Slice 277: clips and a manifest are not enough; the pack the store serves comes from the language's <c>audioPacks</c> record in audio-cast.json (<c>build-audio</c> writes it), so a language without one ships no audio. Not asked when the manifest is missing (that is already a gap).</summary>
-    private static IEnumerable<string> RecordProblem(IReadOnlyDictionary<string, AudioPackRecord> records, string language, string folder) =>
-        !File.Exists(Path.Combine(folder, PremadeAudio.ManifestFile)) || records.Keys.Any(key => string.Equals(key, language, StringComparison.OrdinalIgnoreCase))
-            ? []
-            : [$"{AudioPacks.CastFile} has no {AudioPacks.RecordsKey} record for this language: run build-audio"];
+    /// <remarks>Slice 409: a language with a record must also have its listening track (<see cref="ListenTrackFiles.Problems"/>), committed on the PC, so CI needs no ffmpeg.</remarks>
+    private static IEnumerable<string> RecordProblem(IReadOnlyDictionary<string, AudioPackRecord> records, string language, string folder)
+    {
+        if (!File.Exists(Path.Combine(folder, PremadeAudio.ManifestFile)))
+        {
+            return [];
+        }
+
+        KeyValuePair<string, AudioPackRecord> own = records.FirstOrDefault(pair => string.Equals(pair.Key, language, StringComparison.OrdinalIgnoreCase));
+        return own.Value is null
+            ? [$"{AudioPacks.CastFile} has no {AudioPacks.RecordsKey} record for this language: run build-audio"]
+            : ListenTrackFiles.Problems(own.Value, language, folder).ToList();
+    }
 
     internal static IEnumerable<string> LanguageProblems(string stem, Story story, string language, string folder)
     {

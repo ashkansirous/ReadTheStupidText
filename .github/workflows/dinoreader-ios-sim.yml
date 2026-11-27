@@ -165,6 +165,13 @@ jobs:
           fi
           echo "cold start ok: $BUNDLE_ID alive after 20 s, no crash report"
 
+      # Slice 393 item 23: start Maestro's iOS driver (retried) before the flow, so the flow does not pay for the cold driver start.
+      # A driver that never answers is a warning here; the flow's own driver start follows.
+      - name: Warm the Maestro driver
+        timeout-minutes: 20
+        run: |
+          bash .github/scripts/ios-sim-driver-ready.sh "$SIM_UDID" || echo "::warning::the Maestro driver did not answer the warm-up; the flow starts it itself"
+
       # The flow's appId is the Android dev package; the iOS app's bundle id has no .dbg suffix.
       # MAESTRO_DRIVER_STARTUP_TIMEOUT (milliseconds): run 43935624690 on iOS 27.2 died with "iOS driver not ready in time"
       # while the XCTest driver was first built and started on the cold runner.

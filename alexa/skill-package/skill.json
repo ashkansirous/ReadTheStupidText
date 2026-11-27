@@ -4,29 +4,29 @@
     "publishingInformation": {
       "locales": {
         "en-GB": {
-          "name": "Dino Book Reader",
+          "name": "Dino Books",
           "summary": "Free picture-book stories, read aloud for children.",
-          "description": "Dino Book Reader reads free children's stories aloud. Ask for a book by name and listen. You can pause, carry on, skip to the next story or start again. There is nothing to sign in to and nothing to buy.",
+          "description": "Dino Books reads free children's stories aloud. Say a book's name, or say search, and listen. You can pause, carry on, skip to the next story or start again. There is nothing to sign in to and nothing to buy.",
           "smallIconUri": "file://assets/en-GB_smallIcon.png",
           "largeIconUri": "file://assets/en-GB_largeIcon.png",
           "examplePhrases": [
-            "Alexa, open Dino Book Reader",
-            "Alexa, ask Dino Book Reader to read Goldilocks",
-            "Alexa, ask Dino Book Reader to play the little red hen"
+            "Alexa, open Dino Books",
+            "Alexa, ask Dino Books to read Goldilocks",
+            "Alexa, ask Dino Books to play the little red hen"
           ],
           "keywords": ["stories", "children", "bedtime", "books", "read aloud"],
           "updatesDescription": "First version."
         },
         "en-US": {
-          "name": "Dino Book Reader",
+          "name": "Dino Books",
           "summary": "Free picture-book stories, read aloud for children.",
-          "description": "Dino Book Reader reads free children's stories aloud. Ask for a book by name and listen. You can pause, carry on, skip to the next story or start again. There is nothing to sign in to and nothing to buy.",
+          "description": "Dino Books reads free children's stories aloud. Say a book's name, or say search, and listen. You can pause, carry on, skip to the next story or start again. There is nothing to sign in to and nothing to buy.",
           "smallIconUri": "file://assets/en-US_smallIcon.png",
           "largeIconUri": "file://assets/en-US_largeIcon.png",
           "examplePhrases": [
-            "Alexa, open Dino Book Reader",
-            "Alexa, ask Dino Book Reader to read Goldilocks",
-            "Alexa, ask Dino Book Reader to play the little red hen"
+            "Alexa, open Dino Books",
+            "Alexa, ask Dino Books to read Goldilocks",
+            "Alexa, ask Dino Books to play the little red hen"
           ],
           "keywords": ["stories", "children", "bedtime", "books", "read aloud"],
           "updatesDescription": "First version."
@@ -36,7 +36,7 @@
       "distributionCountries": ["GB", "US"],
       "distributionMode": "PUBLIC",
       "category": "CHILDRENS_EDUCATION_AND_REFERENCE",
-      "testingInstructions": "No account linking, no sign-in and no purchases. Say 'Alexa, open Dino Book Reader' to hear the list of books, then 'read <a book from the list>'. Pause, resume, next, previous, start over and stop all work with the standard Alexa commands. The books come from the live store list, so a book appears here only once its listening track is published."
+      "testingInstructions": "No account linking, no sign-in and no purchases. Say 'Alexa, open Dino Books' to be offered a book, then say 'yes' to hear it or 'search' to hear the list of books and say one of them. Pause, resume, next, previous, start over and stop all work with the standard Alexa commands. The books come from the live store list, so a book appears here only once its listening track is published."
     },
     "privacyAndCompliance": {
       "allowsPurchases": false,
@@ -53,7 +53,7 @@
       "custom": {
         "endpoint": {
           "uri": "https://dinoreader.sirous.uk/alexa",
-          "sslCertificateType": "Trusted"
+          "sslCertificateType": "Wildcard"
         },
         "interfaces": [{ "type": "AUDIO_PLAYER" }]
       }

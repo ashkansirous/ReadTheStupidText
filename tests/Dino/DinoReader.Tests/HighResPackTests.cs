@@ -71,7 +71,26 @@ public sealed class HighResPackTests : IDisposable
 
         Assert.True(HighResPack.Find(book)!.HasPointers);
         Assert.Contains("tiny has a complete high-res/ folder but its pictures are Git LFS pointers", HighResPack.UnpulledProblem(book));
-        Assert.Null(HighResPack.UnpulledProblem(TinyBook(BookKind.Starter)));
+
+        BookFolder starter = TinyBook(BookKind.Starter); // Slice 422: the kind never decides picture size
+        WriteHighRes(starter, "1.jpg", "2.jpg");
+        Assert.NotNull(HighResPack.Find(starter));
+        Assert.Null(HighResPack.UnpulledProblem(starter));
+        File.WriteAllText(Path.Combine(HighResPack.FolderOf(starter), "2.jpg"), PointerOf(PrintPicture));
+        Assert.Contains("tiny has a complete high-res/ folder", HighResPack.UnpulledProblem(starter));
+    }
+
+    [Fact]
+    public void A_starter_with_an_incomplete_high_res_set_gets_no_pack_and_its_hash_ignores_the_set()
+    {
+        BookFolder starter = TinyBook(BookKind.Starter);
+        string plain = BookHash.Of(starter);
+
+        WriteHighRes(starter, "1.jpg");
+
+        Assert.Null(HighResPack.Find(starter));
+        Assert.Null(HighResPack.UnpulledProblem(starter));
+        Assert.Equal(plain, BookHash.Of(starter));
     }
 
     [Fact]
@@ -126,14 +145,17 @@ public sealed class HighResPackTests : IDisposable
     }
 
     [Fact]
-    public void The_hash_of_a_starter_ignores_high_res_so_the_stored_hashes_stay_current()
+    public void The_hash_of_a_starter_includes_a_complete_high_res_set()
     {
         BookFolder starter = TinyBook(BookKind.Starter);
         string plain = BookHash.Of(starter);
 
         WriteHighRes(starter, "1.jpg", "2.jpg");
+        string withHighRes = BookHash.Of(starter);
+        Assert.NotEqual(plain, withHighRes);
 
-        Assert.Equal(plain, BookHash.Of(starter));
+        File.WriteAllBytes(Path.Combine(HighResPack.FolderOf(starter), "2.jpg"), [7, 7]);
+        Assert.NotEqual(withHighRes, BookHash.Of(starter));
     }
 
     [Fact]
@@ -166,6 +188,82 @@ public sealed class HighResPackTests : IDisposable
         Assert.Equal(StandardPicture, EntryBytes(Path.Combine(folder, StoreBuilder.PackageFileName(3)), "page-1.jpg"));
         Assert.Equal(PrintPicture, EntryBytes(hdPath, "page-1.jpg"));
         Assert.Equal(PrintPicture, EntryBytes(hdPath, "page-2.jpg"));
+    }
+
+    [Fact]
+    public async Task A_book_whose_pages_are_named_by_lines_json_gets_print_pictures_under_those_names()
+    {
+        BookFolder book = TinyBook(BookKind.Starter);
+        WriteHighRes(book, "1.jpg", "2.jpg");
+        HighResFiles files = HighResPack.Find(book)!;
+        string folder = Path.Combine(_root, "out");
+        Directory.CreateDirectory(folder);
+
+        await StarterBuilder.InScratchAsync(async library =>
+        {
+            Story built = StarterBuilder.Build(book.Info.Id, book.Info.Title, book.Text!, book.Info.Colour);
+            Story story = built with { Pages = built.Pages.Select((p, i) => p with { ImageFile = $"{i + 1}.jpg" }).ToList() }; // Good Enough: N.jpg, not page-N.jpg
+            await library.AddAsync(story);
+            foreach (StoryPage page in story.Pages)
+            {
+                File.WriteAllBytes(library.TryResolveFile(story.Id, page.ImageFile)!, StandardPicture);
+            }
+
+            await using (FileStream standard = File.Create(Path.Combine(folder, StoreBuilder.PackageFileName(3))))
+            {
+                await StoryPackageWriter.WriteAsync(story, library, standard, includeRecordings: false, version: 3);
+            }
+
+            await HighResPack.WriteAsync(story, library, files, folder, 3);
+        });
+
+        string hdPath = Path.Combine(folder, HighResPack.HdPackageFileName(3));
+        Assert.Equal(PrintPicture, EntryBytes(hdPath, "1.jpg"));
+        Assert.Equal(PrintPicture, EntryBytes(hdPath, "2.jpg"));
+    }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(1)]
+    public async Task A_high_res_set_with_another_page_count_than_the_story_is_a_named_problem(int highResPages)
+    {
+        BookFolder book = TinyBook(BookKind.Store);
+        string folder = Path.Combine(_root, "out");
+        Directory.CreateDirectory(folder);
+        HighResFiles files = new(Enumerable.Range(1, highResPages).Select(i => $"{i}.jpg").ToList(), null, null);
+
+        await StarterBuilder.InScratchAsync(async library =>
+        {
+            Story story = StarterBuilder.WithPictures(StarterBuilder.Build(book.Info.Id, book.Info.Title, book.Text!, book.Info.Colour), StarterBuilder.PictureFilesIn(book.PicturesPath));
+            await library.AddAsync(story);
+            InvalidOperationException e = await Assert.ThrowsAsync<InvalidOperationException>(() => HighResPack.WriteAsync(story, library, files, folder, 3));
+            Assert.Contains("high-res page count differs", e.Message);
+        });
+    }
+
+    [Fact]
+    public async Task A_high_res_pack_whose_pictures_are_not_the_high_res_bytes_is_refused()
+    {
+        BookFolder book = TinyBook(BookKind.Store);
+        WriteHighRes(book, "1.jpg", "2.jpg");
+        string folder = Path.Combine(_root, "out");
+        Directory.CreateDirectory(folder);
+        string standardPath = Path.Combine(folder, StoreBuilder.PackageFileName(3));
+
+        await StarterBuilder.InScratchAsync(async library =>
+        {
+            Story story = StarterBuilder.WithPictures(StarterBuilder.Build(book.Info.Id, book.Info.Title, book.Text!, book.Info.Colour), StarterBuilder.PictureFilesIn(book.PicturesPath));
+            await library.AddAsync(story);
+            StarterBuilder.CopyPictures(story, StarterBuilder.PictureFilesIn(book.PicturesPath), library);
+            await using (FileStream standard = File.Create(standardPath))
+            {
+                await StoryPackageWriter.WriteAsync(story, library, standard, includeRecordings: false, version: 3);
+            }
+
+            string hdPath = Path.Combine(folder, HighResPack.HdPackageFileName(3));
+            File.Copy(standardPath, hdPath); // an hd pack that kept the standard pictures
+            Assert.NotNull(HighResPack.PictureBytesProblem(story, HighResPack.Find(book)!, standardPath, hdPath));
+        });
     }
 
     [Fact]

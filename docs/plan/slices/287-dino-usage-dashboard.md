@@ -1,6 +1,8 @@
 # Slice 287 — Dino: a public usage dashboard at dinoreader.sirous.uk/stats
 **Product:** Dino
 
+**Plan-cleanup check 2026-11-25:** the Worker is deployed and live: https://dinoreader.sirous.uk/stats returns 200 and `/api/stats?from=2026-11-18&to=2026-11-24&group=day` returns real D1 rows (android, iphone, sonos). The "live setup still waits" line is stale. Left own work: item 3b (side-by-side check against frame 200) and the Not yet verified lines. Verdict: keep open for 3b only.
+
 *Built 2026-11-08 (wave 43, night 2026-11-08-0106), merged as PR #940 (b7fb4c4e). Code for Work 1-6 is built and passes the local checks; nothing is live (no D1 database, binding, secret or deploy), see Waiting on the user.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
 
 **User answer (2026-11-08): the dashboard is public.** "its not private! I want everyone to see that dashboard". So there is

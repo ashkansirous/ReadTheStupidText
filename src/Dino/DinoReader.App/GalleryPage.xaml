@@ -9,13 +9,28 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="None">
 
-    <!-- Home screen: the child's stories. Slice 325 (2026-11-08 grown-up mock): the kids' shelf (ShelfHeader) and the grown-ups' corner (CornerShell, CornerTabs) are two chromes around this one grid.
-         Under 600 dp wide the chrome is a header (and, in the corner, a tab bar); from 600 it is a left rail. The chrome views are built in code (GalleryPage.xaml.cs, AddChrome); the page is edge to edge
-         (SafeAreaEdges None) so the ink and the cream run under the status bar and the notch, and each piece keeps its own contents clear with its own safe area. -->
+    <!-- Home screen: one shelf with a lock (Slice 418, 2026-11-19 mock). The header (ShelfHeader) and the menu Books, Store, Settings, Lock (CornerTabs) are the one chrome around this grid; the grown-ups' places
+         open when the lock does. Under 600 dp wide the chrome is a header and a bottom bar; from 600 it is a left rail. The chrome views are built in code (GalleryPage.xaml.cs, AddChrome); the page is edge to edge
+         (SafeAreaEdges None) so the cream runs under the status bar and the notch, and each piece keeps its own contents clear with its own safe area. -->
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
         <x:Double x:Key="TileTitleHeight">36</x:Double>
         <!-- Everything below follows the window's size (GalleryPage.xaml.cs, ApplyShape): the cover's radius and shadow, the title size, the gap under the cover and the grown-ups' "⋯" dot. -->
+        <!-- Slice 398 (mock SB6, SB7): the sand card of both banners: fill, the icon and title ink, the body ink, the link blue, read from the mock's own values. -->
+        <Color x:Key="SandFill">#F0E8D8</Color>
+        <Color x:Key="SandIcon">#3f3a52</Color>
+        <Color x:Key="SandText">#3a3450</Color>
+        <Style x:Key="BannerLink" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="#4a46d6" />
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="MinimumWidthRequest" Value="44" />
+            <Setter Property="HorizontalOptions" Value="Start" />
+        </Style>
         <x:Double x:Key="TileWidth">-1</x:Double>
         <x:Int32 x:Key="TileTitleLines">2</x:Int32>
         <x:Double x:Key="TileSpacing">7</x:Double>
@@ -40,26 +55,45 @@
 
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
             <VerticalStackLayout Spacing="{DynamicResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
-                <Grid Opacity="{Binding TileOpacity}">
-                    <local:StoryCover AutomationId="StoryTile" ShadowDepth="{DynamicResource TileShadowOffset}">
-                        <local:StoryCover.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnStoryTapped" />
-                        </local:StoryCover.GestureRecognizers>
-                    </local:StoryCover>
-                    <local:TileOverlay OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
+                <Grid SizeChanged="OnTileCoverSizeChanged" BindingContextChanged="OnTileCoverSizeChanged">
+                    <!-- Slice 398 (mock SB6): a locked cover is drawn at 55% with a grey veil, a 40 dp ink lock badge centred at 22% of the cover's height and no "⋯" menu; its name for a screen reader says it is locked, no caption is drawn. -->
+                    <Grid Opacity="{Binding TileOpacity}">
+                        <local:StoryCover AutomationId="StoryTile" ShadowDepth="{DynamicResource TileShadowOffset}" SemanticProperties.Description="{Binding CoverAccessibleName}">
+                            <local:StoryCover.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStoryTapped" />
+                            </local:StoryCover.GestureRecognizers>
+                        </local:StoryCover>
+                        <Border AutomationId="LapsedVeil" IsVisible="{Binding ShowGreyVeil}" InputTransparent="True" BackgroundColor="#B38A8399" StrokeThickness="0" AutomationProperties.IsInAccessibleTree="False">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="{DynamicResource TileCoverRadius}" />
+                            </Border.StrokeShape>
+                        </Border>
+                    </Grid>
+                    <Border AutomationId="LapsedLockBadge" IsVisible="{Binding IsLapsed}" InputTransparent="True" WidthRequest="40" HeightRequest="40" BackgroundColor="{StaticResource Ink}" StrokeThickness="0"
+                            HorizontalOptions="Center" VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20" />
+                        </Border.StrokeShape>
+                        <local:IconView Kind="Lock" Color="#FFC24D" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <local:TileOverlay IsVisible="{Binding ShowMore}" OpenRequested="OnOpenRequested" ReadRequested="OnReadRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
-                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle" Opacity="{Binding TileOpacity}">
+                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoryTapped" />
                     </Label.GestureRecognizers>
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsLapsed}" Value="True">
+                            <Setter Property="TextColor" Value="{StaticResource Body}" />
+                        </DataTrigger>
+                    </Label.Triggers>
                 </Label>
-                <!-- Slice 384: a book the ended subscription locked (parents' shelf only; the child's shelf does not get the tile): what it is and the two ways to open it again. -->
-                <VerticalStackLayout IsVisible="{Binding IsLapsed}" Spacing="4">
-                    <Label AutomationId="LapsedNote" Text="{Binding LockedLabel}" FontSize="11.5" TextColor="{StaticResource Muted}" LineBreakMode="TailTruncation" MaxLines="2" />
-                    <Button AutomationId="LapsedSubscribe" Text="{Binding SubscribeAgainLabel}" HeightRequest="34" CornerRadius="17" Padding="8,0" FontSize="12" FontAttributes="Bold"
+                <!-- Slice 398 (mock SB6): a locked book's two full-width pills, 32 high: Subscribe again (opens the Store tab) and Buy · price (the store sheet). Parents' shelf only. -->
+                <VerticalStackLayout IsVisible="{Binding IsLapsed}" Spacing="5">
+                    <Button AutomationId="LapsedSubscribe" Text="{Binding SubscribeAgainLabel}" HeightRequest="32" CornerRadius="16" Padding="8,0" FontSize="12.5" FontAttributes="Bold" HorizontalOptions="Fill"
                             BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnLapsedSubscribeClicked" />
-                    <Button AutomationId="LapsedBuy" Text="{Binding BuyThisLabel}" HeightRequest="34" CornerRadius="17" Padding="8,0" FontSize="12" FontAttributes="Bold"
-                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnLapsedBuyClicked" />
+                    <Button AutomationId="LapsedBuy" Text="{Binding BuyThisLabel}" HeightRequest="32" CornerRadius="16" Padding="8,0" FontSize="12.5" FontAttributes="Bold" HorizontalOptions="Fill"
+                            BackgroundColor="{StaticResource BrandTint}" TextColor="#2f2b6b" Clicked="OnLapsedBuyClicked" />
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </DataTemplate>
@@ -74,26 +108,56 @@
         <Label x:Name="TitleProbe" Grid.ColumnSpan="2" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
 
-        <!-- The content column: in the corner a title row (the tab's name, and under a bar the one-line note) above the grid of books; on the shelf the grid alone. -->
-        <Grid x:Name="ContentHost" Grid.Row="1" Grid.ColumnSpan="2" RowDefinitions="Auto,*">
-            <Grid x:Name="ContentHeader" IsVisible="False" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+        <!-- The content column: beside a rail a title row (the tab's name, the unlock chip, the reading-language button at its end, mock WL1, WL2) above the grid; under a bar the header is the ShelfHeader and this row is hidden. -->
+        <Grid x:Name="ContentHost" Grid.Row="1" Grid.ColumnSpan="2" RowDefinitions="Auto,Auto,*">
+            <Grid x:Name="ContentHeader" IsVisible="False" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
                 <!-- no-tap-count: the title's seven taps open the developer switch, not a control -->
-                <Label x:Name="ContentTitle" AutomationId="GalleryRailTitle" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
+                <Label x:Name="ContentTitle" AutomationId="GalleryRailTitle" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-                <Label x:Name="ContentNote" AutomationId="GalleryCornerLine" Grid.Column="1" TextColor="{StaticResource Body}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="2" />
-                <!-- Slice 325 part B (frame T2): the Store tab's sub-line under its title, "Picked and cast for Dino", 14 / Muted. -->
-                <Label x:Name="ContentSub" AutomationId="GalleryStoreSub" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="False" FontSize="14" TextColor="{StaticResource Muted}" LineBreakMode="TailTruncation" MaxLines="2" />
+                <!-- Slice 396 (mock RR1): the Store tab's sub-line "Picked and cast for Dino" lives in StorePage's first line, beside Restore purchases. -->
             </Grid>
-            <CollectionView Grid.Row="1" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" ItemTemplate="{StaticResource Selector}">
+            <!-- Slice 398 (mock SB6, SB7): the Books tab's two banners, the parents' only. The locked books' "why" (a tinted card with two links) and the calm sand "can't check your subscription" notice. Filled by ApplyShelfBanners. -->
+            <VerticalStackLayout x:Name="ShelfBanners" Grid.Row="1" Spacing="8" IsVisible="False">
+                <Border x:Name="LockedBanner" AutomationId="LockedBanner" IsVisible="False" Padding="14,12" BackgroundColor="{StaticResource SandFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <local:IconView Kind="Lock" Color="{StaticResource SandIcon}" Size="20" StrokeWidth="2.2" VerticalOptions="Start" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label x:Name="LockedBannerTitle" AutomationId="LockedBannerTitle" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource SandIcon}" SemanticProperties.HeadingLevel="Level2" />
+                            <Label x:Name="LockedBannerBody" AutomationId="LockedBannerBody" FontSize="13" LineHeight="1.4" TextColor="{StaticResource SandText}" />
+                            <!-- Two real buttons drawn as links (mock: 13.5 semibold, 16 apart), 44 dp tall for a parent's thumb and announced as buttons. -->
+                            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" Margin="0,4,0,0">
+                                <Button x:Name="LockedBannerPlans" AutomationId="LockedBannerPlans" Style="{StaticResource BannerLink}" Margin="0,0,16,0" Clicked="OnBannerPlansClicked" />
+                                <Button x:Name="LockedBannerRestore" AutomationId="LockedBannerRestore" Style="{StaticResource BannerLink}" Clicked="OnBannerRestoreClicked" />
+                            </FlexLayout>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+                <Border x:Name="OfflineBanner" AutomationId="OfflineBanner" IsVisible="False" Padding="14,12" BackgroundColor="{StaticResource SandFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <local:IconView Kind="CloudOff" Color="{StaticResource SandIcon}" Size="20" StrokeWidth="2.2" VerticalOptions="Start" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label x:Name="OfflineBannerTitle" AutomationId="OfflineBannerTitle" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource SandIcon}" SemanticProperties.HeadingLevel="Level2" />
+                            <Label x:Name="OfflineBannerBody" AutomationId="OfflineBannerBody" FontSize="13" LineHeight="1.4" TextColor="{StaticResource SandText}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+            <CollectionView Grid.Row="2" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" ItemTemplate="{StaticResource Selector}">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
                 </CollectionView.ItemsLayout>
             </CollectionView>
             <!-- Slice 325 part B: the Store and Settings tabs (StorePage, SettingsTab) are shown here, in place of the books, inside the corner's chrome. Built in code (GalleryPage.xaml.cs, ApplyTab). -->
-            <ContentView x:Name="TabHost" Grid.Row="1" IsVisible="False" />
+            <ContentView x:Name="TabHost" Grid.Row="2" IsVisible="False" />
         </Grid>
 
         <local:BookSheet Grid.RowSpan="3" Grid.ColumnSpan="2" x:Name="BookInfo" />

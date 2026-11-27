@@ -89,16 +89,29 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     /// <summary>Asks the store again for the products of the listing. Never throws; a failure keeps the last snapshot and reports one store fallback.</summary>
     public Task<PurchaseSnapshot> RefreshAsync(IEnumerable<StoreItem> items, CancellationToken cancel, bool interactive = false) => ReadAsync(items, restore: false, interactive, cancel);
 
+    /// <summary>Slice 399: asks the store again for the listing the Store tab last gave (none yet: only the subscription, and "listed" stays unset so the Store's first listing is still the first), for a screen with no listing of its own (Settings, after a code was redeemed). Never throws.</summary>
+    public Task<PurchaseSnapshot> RefreshLastListedAsync(CancellationToken cancel)
+    {
+        StoreItem[]? listed;
+        lock (_listedLock)
+        {
+            listed = _lastListed;
+        }
+
+        return ReadAsync(listed ?? [], restore: false, interactive: true, cancel, subscriptionOnly: listed is null);
+    }
+
     /// <summary>The Restore purchases button: as <see cref="RefreshAsync"/>, with the platform's own restore where it has one.</summary>
     public Task<PurchaseSnapshot> RestoreAsync(IEnumerable<StoreItem> items, CancellationToken cancel) => ReadAsync(items, restore: true, interactive: true, cancel);
 
     /// <summary>Buys the product, then re-reads the store; returns how it ended. Never throws.</summary>
-    public async Task<BuyOutcome> BuyAsync(string productId, IEnumerable<StoreItem> items, CancellationToken cancel)
+    public async Task<BuyOutcome> BuyAsync(string productId, IEnumerable<StoreItem> items, CancellationToken cancel, bool withTrial = true)
     {
         BuyOutcome outcome;
         try
         {
-            outcome = await platform.BuyAsync(productId, cancel);
+            using IDisposable hold = LockHolds.Begin("purchase"); // Slice 418 decision 16: the store's own buying sheet pauses the 30-second lock, on every platform (every buy goes through here)
+            outcome = await platform.BuyAsync(productId, withTrial, cancel);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -180,12 +193,15 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
-    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
+    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel, bool subscriptionOnly = false)
     {
         StoreItem[] listed = [.. items];
-        lock (_listedLock)
+        if (!subscriptionOnly) // an empty listing is never remembered: the Store's first listing stays the first
         {
-            _lastListed = listed;
+            lock (_listedLock)
+            {
+                _lastListed = listed;
+            }
         }
 
         ListenForStoreUpdates();
@@ -197,7 +213,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             bool hasInternet = HasInternet(); // read once per read: the only thing that says "store not reached"
             ReportReadProblems(listed, read, hasInternet);
             bool subscriptionChanged = KeepSubscription(read, hasInternet);
-            bool snapshotChanged = Keep(read, hasInternet);
+            bool snapshotChanged = !subscriptionOnly && Keep(read, hasInternet); // nothing listed: the read says nothing about books, so Owned and Prices stand
             RecordBought(listed); // before Changed: the shelf the event rebuilds must see the book as bought, not as opened by the subscription
             if (subscriptionChanged || snapshotChanged)
             {
@@ -443,11 +459,11 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
         PurchaseSnapshot before = _snapshot;
         Interlocked.Exchange(ref _readAt, Stopwatch.GetTimestamp());
-        _snapshot = read with { Prices = BookAccess.KeepPrices(before.Prices, read.Prices) };
+        _snapshot = read with { Prices = BookAccess.KeepPrices(before.Prices, read.Prices), TrialAvailable = read.TrialAvailable ?? before.TrialAvailable }; // a read that says nothing about the trial keeps the last answer, like the prices
 #if DEBUG
         Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count(p => !SubscriptionProducts.Is(p.Key))}"); // the books' prices only: the paid-books flow counts them (Slice 346), the plans are the subscription flow's (Slice 384)
 #endif
-        return flipped || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key));
+        return flipped || before.TrialAvailable != _snapshot.TrialAvailable || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key));
     }
 }
 
@@ -534,11 +550,17 @@ public sealed class BookSales(AppConfigClient config, BookPurchases purchases)
     /// <summary>Slice 384: true while the subscription opens paid books.</summary>
     public bool SubscriptionActive => purchases.SubscriptionActive;
 
+    /// <summary>Slice 397 (mock SB3, SB4): a sold book the running subscription (in its trial, paying or in grace) opens; its row shows the "Included" tag.</summary>
+    public bool IsIncluded(StoreItem item) => BookAccess.IsSold(SwitchKnownOn, item) && purchases.SubscriptionActive;
+
     /// <summary>Slice 384: whether the book on the shelf may be opened; only a book the subscription alone opened can be locked, and only once the subscription has ended (greyed for parents, hidden from the child).</summary>
     public ShelfAccess ShelfAccessOf(string bookId) =>
         BookAccess.ShelfAccessOf(SwitchKnownOn, purchases.Subscription.UnlockOf(bookId), purchases.SubscriptionActive);
 
     public bool IsLapsed(string bookId) => ShelfAccessOf(bookId) == ShelfAccess.LockedByLapse;
+
+    /// <summary>How many downloaded books the lapsed subscription has locked, from the device's own unlock records (not the store listing, which can miss a book that left it).</summary>
+    public int LapsedCount() => purchases.Subscription.SubscriptionOpenedBooks().Count(IsLapsed);
 
     /// <summary>Whether a story on the shelf is locked: the unlock records are kept under the store item's id, which a store book carries as its <see cref="Story.SourceId"/> (its own <see cref="Story.Id"/> is new at every import); a story with no source is never locked.</summary>
     public bool IsLapsed(Story story) => story.SourceId is { } sourceId && IsLapsed(sourceId);

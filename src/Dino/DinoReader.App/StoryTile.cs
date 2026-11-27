@@ -14,14 +14,30 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 	/// <summary>Slice 384: the subscription that opened this book has ended: greyed out on the parents' shelf with Subscribe again and Buy this book (the child's shelf does not get the tile at all).</summary>
 	public bool IsLapsed { get; init; }
 
-	/// <summary>The cover and title of a locked book are dimmed; the two actions under them are not.</summary>
-	public double TileOpacity => IsLapsed ? 0.45 : 1.0;
+	/// <summary>The store's own price string for the book (Slice 398); null while the store has not given one.</summary>
+	public string? BuyPrice { get; init; }
+
+	private const double LockedCoverOpacity = 0.55;
+
+	/// <summary>Slice 398 (mock SB6): a locked cover is dimmed to 55% (and greyed by <see cref="ShowGreyVeil"/>); the title and the two pills under it are not.</summary>
+	public double TileOpacity => IsLapsed ? LockedCoverOpacity : 1.0;
+
+	/// <summary>Slice 398: no "⋯" menu on a locked tile. Slice 418 decision 10: none on a locked shelf either. The gallery's own IsVisible binding replaces the overlay's root binding to Mode.IsGrownUp,
+	/// so the lock has to be here; the tiles are built again on every lock change (OnModeChanged).</summary>
+	public bool ShowMore => TileMenuRule.ShowMore(Mode.IsGrownUp, IsLapsed);
+
+	/// <summary>Slice 398: MAUI has no greyscale filter for an image on every platform, so a locked cover gets a grey veil over it that takes the colour out as far as a veil can.</summary>
+	public bool ShowGreyVeil => IsLapsed;
+
+	/// <summary>Slice 398: what a screen reader says on a locked cover; the caption "Locked: the subscription ended" is not drawn (mock SB6).</summary>
+	public string? CoverAccessibleName => IsLapsed ? $"{Title}. {LockedLabel}" : null;
 
 	public string LockedLabel => AppResources.Sub_Locked;
 
 	public string SubscribeAgainLabel => AppResources.Sub_Again;
 
-	public string BuyThisLabel => AppResources.Sub_BuyThis;
+	/// <summary>"Buy · £0.99" with the store's price (Slice 398); with no price known the plain "Buy this book".</summary>
+	public string BuyThisLabel => BuyPrice is { Length: > 0 } price ? AppResources.Format(AppResources.Sub_BuyPrice, price) : AppResources.Sub_BuyThis;
 
 	public bool HasImage => CoverImagePath is not null;
 
@@ -60,19 +76,44 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 	/// <summary>The chip's text, also what a screen reader says.</summary>
 	public string YourVoiceLabel => AppResources.Record_You;
 
-	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null, bool lapsed = false)
+	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null, bool lapsed = false, string? buyPrice = null)
 	{
 		string? image = library.TryResolveFile(story.Id, story.CoverImageFile);
-		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode) { DisplayTitle = displayTitle, IsLapsed = lapsed };
+		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode) { DisplayTitle = displayTitle, IsLapsed = lapsed, BuyPrice = buyPrice };
 	}
+}
+
+/// <summary>Slice 398 (mock SB7): whether the device is offline, behind one seam so a Debug test hook can pretend (the real answer is the platform's network state).</summary>
+public static class NetworkProbe
+{
+#if DEBUG
+	private static Func<bool>? _override;
+
+	/// <summary>Raised when the Debug <c>fake-offline</c> hook changes the pretend answer, so the open gallery works out its banners again.</summary>
+	public static event EventHandler? OverrideChanged;
+
+	/// <summary>Only the Debug <c>fake-offline</c> hook sets this; null = ask the platform.</summary>
+	public static void SetOverride(Func<bool>? offline)
+	{
+		_override = offline;
+		OverrideChanged?.Invoke(null, EventArgs.Empty);
+	}
+
+	public static bool IsOffline() => _override?.Invoke() ?? PlatformOffline();
+#else
+	public static bool IsOffline() => PlatformOffline();
+#endif
+
+	// Only None and Local (no way out to the internet) count as offline; Unknown and ConstrainedInternet (a captive portal, a limited route) are online for the notice, which says "No internet" and so must not lie while connected.
+	private static bool PlatformOffline() => Connectivity.Current.NetworkAccess is NetworkAccess.None or NetworkAccess.Local;
 }
 
 /// <summary>Maps the Core layout (<see cref="GalleryLayout"/>) onto the grid's items.</summary>
 public static class GalleryItems
 {
-	public static List<StoryTile> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null, Func<Story, bool>? lapsedOf = null) =>
+	public static List<StoryTile> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null, Func<Story, bool>? lapsedOf = null, Func<Story, string?>? priceOf = null) =>
 		GalleryLayout.Build(stories)
-			.Select(e => StoryTile.From(e.Story, library, mode, titleOf?.Invoke(e.Story), lapsedOf?.Invoke(e.Story) ?? false))
+			.Select(e => StoryTile.From(e.Story, library, mode, titleOf?.Invoke(e.Story), lapsedOf?.Invoke(e.Story) ?? false, priceOf?.Invoke(e.Story)))
 			.ToList();
 }
 

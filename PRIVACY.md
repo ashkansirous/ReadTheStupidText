@@ -1,6 +1,6 @@
 # Privacy Policy — Read The Stupid Text
 
-**Effective date:** 8 November 2026
+**Effective date:** 19 November 2026
 
 Read The Stupid Text ("the app") reads text aloud. It ships as a Windows tray
 utility, an Android app and an iPhone app. This policy explains how the app
@@ -130,10 +130,10 @@ A count is a name plus a few values from fixed lists:
 Every count also carries the app version, the platform and the UTC date (no time of day).
 Counts never contain the text you read, file names, scanned images, names, or any install,
 device, account or advertising identifier, so they cannot be put together into a history of
-one person. (Dino Reader's counts also carry a random session number: it is made new every time the
+one person. (the counts of Dino: Kids Books & Stories also carry a random session number: it is made new every time the
 app starts and never reused for a later start. It lives in memory, and is also written only inside counts
 still waiting in the app's local send queue, and is gone once those counts are sent. It cannot tell two sessions of one person
-apart. Read The Stupid Text sends none. Dino Reader also counts when a book was listened to for 30 seconds or more, and
+apart. Read The Stupid Text sends none. Dino: Kids Books & Stories also counts when a book was listened to for 30 seconds or more, and
 how many seconds of audio were played in a reading, as one whole number when it is paused or stopped: no time of day, no title.) Only a share of launches may count at all, as set by the project.
 
 Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form
@@ -147,7 +147,7 @@ stored with the counts (it can appear in the short server request log described 
 
 Counts are sent in small batches to this project's own server
 (`readthestupidtext.sirous.uk`) and stored in Cloudflare's Workers Analytics Engine
-(Cloudflare is the processor) for about three months, then deleted. As with any web request,
+(Cloudflare is the processor) for about three months, then deleted. The counts of Dino: Kids Books & Stories (never those of Read The Stupid Text), with the same fields and nothing more (no IP address, no install or device identifier), are also sent from the project's server to Ninjalog (app.ninjalog.dev, hosted in the European Union), a log search service that is a second processor for the project; it keeps them for 90 days, and the project reads them there as totals and as the timeline of one start of the app (the counts sharing a session number). As with any web request,
 the server sees your IP address while the request is handled; it is not stored with the
 counts and is not used for anything else (only the country it maps to, as described above). It can appear
 in the short server request log described below. The project can also switch counting off for everyone
@@ -173,7 +173,7 @@ bugs, kept only as long as that needs, and not shared with anyone else or used f
 development builds, emulators and the test devices store review tools use send no reports; builds installed through
 TestFlight do. The project can switch crash reports off for everyone from the server.
 
-**Reports you send yourself.** Dino Reader, this project's children's reading app, has a **Report a problem** button
+**Reports you send yourself.** Dino: Kids Books & Stories, this project's children's reading app, has a **Report a problem** button
 in its grown-ups' corner (Android and iPhone). Read The Stupid Text has no such button. Nothing is sent until a grown-up
 presses **Send** on that page, whatever the usage switch says. The report holds the same things as a crash report
 without an error: the app and its version, the platform, the store or TestFlight, the app's recent technical log
@@ -184,14 +184,14 @@ you, your phone or your install). It goes to the same server, is stored the same
 find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
 advertising or tracking.
 
-**Dino Reader on Sonos (optional).** Dino Reader's free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos's own privacy policy.
+**Dino: Kids Books & Stories on Sonos (optional).** The free story-store books of Dino: Kids Books & Stories can also be played through its music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same places and for the same times as the apps' counts (Cloudflare about three months, Ninjalog 90 days), then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos's own privacy policy.
 
-**Dino Reader on Alexa (optional).** Dino Reader's free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
+**Dino: Kids Books & Stories on Alexa (optional).** The free story-store books of Dino: Kids Books & Stories can also be read by the Dino Books skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device or Amazon account identifier, and no recording or transcript of what was said. The exceptions are the favourites list described next, which is kept only when you ask for it, and the weekly reminder described after it. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same places and for the same times as the apps' counts (Cloudflare about three months, Ninjalog 90 days), then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. **Favourites.** If you say "add this to my favourites" (or ask the skill to save a story), the server saves, in the project's own database on Cloudflare (D1), two things: the skill-user identifier Alexa gives this skill for your Amazon account (an opaque code, not your name, e-mail or address, and different for every skill) and the id of the book. Nothing else is saved with them: no name, device, household, time or anything that was said. It is used only to play, list and remove your favourites ("play my favourites", "what are my favourites", "remove" a book "from my favourites"); removing a book deletes its entry, and a child's list holds at most 50 books. If you disable the skill and enable it again Amazon gives it a new identifier, so the earlier list can no longer be reached. The skill's short request-log lines hold only which request it was and what the result was (for example a book's id, a page of the list or a favourite saved), never what was said and never the identifier. **Weekly reminder.** When you say "search", the skill may tell you how many more books come with the subscription, but at most once a week. To do that the server saves, in the same Cloudflare database, the same kind of opaque skill-user identifier and the time it last told you, and nothing else (no name, device, household or anything that was said). It is used only to decide whether a week has passed. It is stored under the same identifier as the favourites list, so the two rows belong to the same Amazon account id. The row is overwritten each time the skill tells you the line (at most weekly) and is otherwise kept; it is not deleted when you disable the skill, but after that the old identifier is never used again. Apart from that row, the favourites and this reminder, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
 
 ## Server request log
 
 This project's own servers (`readthestupidtext.sirous.uk` for Read The Stupid Text and
-`dinoreader.sirous.uk` for Dino Reader, which work the same way) run on Cloudflare Workers,
+`dinoreader.sirous.uk` for Dino: Kids Books & Stories, which work the same way) run on Cloudflare Workers,
 and Cloudflare, which acts as the project's
 processor, keeps a short technical log of each request to it for the project, whatever the
 request is for. A log entry holds the address that was asked for (including anything after
@@ -201,7 +201,7 @@ The log also holds the server's own short error and status messages.
 Entries are deleted automatically after at most seven days (three on Cloudflare's free plan).
 The project uses it only to find and fix problems with the server and does not combine it
 with the usage counts or crash reports; it is not shared and never used for
-advertising or tracking. Dino Reader's server also serves a public page of usage totals
+advertising or tracking. The server of Dino: Kids Books & Stories also serves a public page of usage totals
 (`dinoreader.sirous.uk/stats`), which shows only totals.
 
 ## Permissions
@@ -237,6 +237,9 @@ language pack on every platform rather than bundled):
 - **Cloudflare** (Workers and Analytics Engine) — hosts this project's website and
   receives the anonymous usage counts described above on the phone apps; it is a
   processor for the project, and no count holds anything that identifies you.
+- **Ninjalog** (EU) — receives, from the project's server, the anonymous usage counts of
+  Dino: Kids Books & Stories (not the app itself) and keeps them for 90 days; a second
+  processor for the project.
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on every platform.
 - **Piper** (Persian voice) with **espeak-ng** data, and **MeloTTS** (Chinese

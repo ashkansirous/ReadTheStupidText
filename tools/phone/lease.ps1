@@ -5,28 +5,48 @@
   -Take -Owner <name> [-Minutes 120]  writes the lease (renews it when the same owner holds it); exits 4 naming the holder and its expiry when another owner holds it.
   -Renew -Owner <name> [-Minutes 120] moves the expiry of the lease this owner holds to that many minutes from now; exits 4 when someone else holds it or nobody does.
                                       Scripts also renew the caller's own lease by themselves when under 15 minutes remain.
-  -Release -Owner <name>              removes the lease; exits 4 when another owner holds a live one. An expired lease is free. Then (Slice 225) writes back the stay_on_while_plugged_in value
+  -Release [-Owner <name>]            removes the lease; -Owner defaults to $env:RTST_PHONE_OWNER, and with neither it says so and exits 2 (Slice 393 item 4); exits 4 when another owner holds a live one. An expired lease is free. Then (Slice 225) writes back the stay_on_while_plugged_in value
                                       recorded when this owner took the lease (nothing recorded by this owner: nothing changed). The screen is left to the phone's own timeout.
-  -Show                               prints who holds the phone, or that it is free. A corrupt lease file is named as such, with its age and when it frees itself (Slice 216).
+  -Show                               (also what no parameters at all means) prints who holds the phone, or that it is free. A corrupt lease file is named as such, with its age and when it frees itself (Slice 216).
   -Clear -Corrupt                     removes the lease file only when it is corrupt (does not parse); a valid lease, live or expired, is never touched. Exits 0 when the file was cleared or there was nothing to clear. With no phone connected it checks every phone lease file instead (no pairing needed).
   The lease is a file in <worktrees folder>\.phone\ (one per phone, keyed by `getprop ro.serialno`, not by the adb name), taken under a named mutex and written through a temp file and a rename. Scripts that touch the phone (audio-timing,
   reset-dev-app, tap) exit 4 when a live lease belongs to someone else than $env:RTST_PHONE_OWNER; set that variable to your owner name after -Take.
   No lease at all means every script is allowed, as before.
 #>
+[CmdletBinding(DefaultParameterSetName = 'Show')]
 param(
     [Parameter(Mandatory, ParameterSetName = 'Take')][switch]$Take,
     [Parameter(Mandatory, ParameterSetName = 'Renew')][switch]$Renew,
     [Parameter(Mandatory, ParameterSetName = 'Release')][switch]$Release,
-    [Parameter(Mandatory, ParameterSetName = 'Show')][switch]$Show,
+    [Parameter(ParameterSetName = 'Show')][switch]$Show,   # Slice 393 item 4: no parameters at all is -Show, not a parameter-set error
     [Parameter(Mandatory, ParameterSetName = 'Clear')][switch]$Clear,
     [Parameter(Mandatory, ParameterSetName = 'Clear')][switch]$Corrupt,
-    [Parameter(Mandatory, ParameterSetName = 'Take')][Parameter(Mandatory, ParameterSetName = 'Renew')][Parameter(Mandatory, ParameterSetName = 'Release')][string]$Owner,
+    [Parameter(Mandatory, ParameterSetName = 'Take')][Parameter(Mandatory, ParameterSetName = 'Renew')][Parameter(ParameterSetName = 'Release')][string]$Owner,
     [Parameter(ParameterSetName = 'Take')][Parameter(ParameterSetName = 'Renew')][ValidateRange(1, 1440)][int]$Minutes = 120,
     [string]$Serial
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 
+# Slice 393 item 4: -Release without -Owner releases as the session's own owner name ($env:RTST_PHONE_OWNER, set after -Take); with neither it says so and exits 2.
+if ($Release -and -not $Owner) {
+    $Owner = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
+    if (-not $Owner) { Write-Host "-Release needs -Owner <name> (or `$env:$($script:LeaseOwnerVariable) set to the owner name used for -Take)."; exit 2 }
+}
+# Slice 393 review 5: -Release / -Renew with no phone connected work on this owner's lease file(s) directly. The screen timeout is not written back (no adb): the phone's own record stays for the next take or -Release with the phone.
+function Invoke-LeaseFileOnly {
+    $dir = Get-LeaseDir 'phone'
+    $keys = @(if (Test-Path $dir) { Get-ChildItem $dir -Filter 'lease-*.json' -File | ForEach-Object { $_.BaseName.Substring('lease-'.Length) } })
+    $mine = @($keys | Where-Object { $held = Read-Lease $_; $held -and "$($held.Owner)" -ceq $Owner })
+    if (-not $mine.Count) { Write-Host "No phone is connected and no lease file is held by '$Owner'. Nothing to $(if ($Release) { 'release' } else { 'renew' })."; return $(if ($Release) { 0 } else { $script:ExitLeaseHeld }) }
+    $failed = $false
+    foreach ($key in $mine) {
+        if ($Release) { if (Remove-Lease $key $Owner) { Write-Host "No phone connected: lease file for $key released by '$Owner' (the screen timeout was not written back; no adb)." } else { Write-Host "No phone connected: lease file for $key is now held by someone else, not by '$Owner'. Not releasing it."; $failed = $true } }
+        elseif ((Update-Lease $key $Owner $Minutes) -eq 'Renewed') { Write-Host "No phone connected: lease of '$Owner' on $key renewed for $Minutes min." }
+        else { Write-Host "No phone connected: lease of '$Owner' on $key expired or was taken by someone else. Nothing renewed."; $failed = $true }
+    }
+    return $(if ($failed) { $script:ExitLeaseHeld } else { 0 })
+}
 if (-not $Serial) { $Serial = Find-Phone '' }
 if ($Clear) {
     # A corrupt file can be removed with or without a phone connected: check every phone lease file
@@ -39,11 +59,12 @@ if ($Clear) {
     if (-not $cleared.Count -and -not $unreadable.Count) { Write-Host 'No corrupt phone lease file found.' }
     exit $(if ($unreadable.Count) { 1 } else { 0 })
 }
+if (-not $Serial -and ($Release -or $Renew)) { exit (Invoke-LeaseFileOnly) }   # Slice 393 review 5: the lease file needs no phone, so an unplugged phone never keeps it held
 if (-not $Serial) { Write-PairingAsk $Serial; exit 2 }
 $adbSerial = $Serial
 $Serial = Get-PhoneLeaseKey $Serial  # the phone's own serial number, the same whichever adb name it was found under
 $held = Read-Lease $Serial
-if ($Show) {
+if ($Show -or $PSCmdlet.ParameterSetName -eq 'Show') {
     if ($held) { Write-Host "Phone $Serial is leased by $(Format-LeaseHolder $held)." } else { Write-Host "Phone $Serial is free." }
     exit 0
 }

@@ -8,6 +8,8 @@
     <TargetFramework>net11.0</TargetFramework>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <IsPackable>false</IsPackable>
+    <!-- Slice 404: the Debug-only full-shelf plan (plain .NET, linked below) is tested on the real file. -->
+    <DefineConstants>$(DefineConstants);DINO_TEST_BOOKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +27,12 @@
   <ItemGroup>
     <!-- The app's string holder is plain .NET (no MAUI), so the culture rule is tested on the real file (Slice 159). -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.cs" Link="Linked\AppResources.cs" />
+    <!-- Slice 399: the Settings "Books and buying" lines, plain .NET, tested on the real file. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\SettingsBuyingText.cs" Link="Linked\SettingsBuyingText.cs" />
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\FullShelfPlan.cs" Link="Linked\FullShelfPlan.cs" />
+    <!-- Slice 433 item 6: the scroll-shelf and turn-page hooks' argument parsing and frame steps, plain .NET. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Testing\ShelfScrollPlan.cs" Link="Linked\ShelfScrollPlan.cs" />
+    <EmbeddedResource Include="..\..\..\src\Dino\DinoReader.App\Resources\Strings\AppResources.resx" Link="Linked\AppResources.resx" LogicalName="DinoReader.Resources.Strings.AppResources.resources" />
     <!-- The own-books cleanup's decision and failure handling (Slice 278 A3): plain .NET, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\OwnBooksCleanupRun.cs" Link="Linked\OwnBooksCleanupRun.cs" />
     <Compile Include="..\..\..\src\Dino\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
@@ -33,6 +41,8 @@
     <Compile Include="..\..\..\src\Dino\DinoReader.App\DownloadCancelSlot.cs" Link="Linked\DownloadCancelSlot.cs" />
     <!-- The pure rules of the Debug-only forced book update (Slice 225 item 16). -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />
+    <!-- Slice 405: the back cover's lines in a reading language (names, "and", list), tested on the real file over the real strings files. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\BackCoverText.cs" Link="Linked\BackCoverText.cs" />
     <!-- Slice 377: the connection-cancel scope is plain .NET behind a seam, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ConnectionCancelScope.cs" Link="Linked\ConnectionCancelScope.cs" />
     <!-- The usage session (Slice 250): plain .NET, so its id, sequence and roll are tested on the real file. -->

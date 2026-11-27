@@ -1,0 +1,22 @@
+# Slice 433: the shelf set-up of the preview clips job (store-screenshots.yml, media=clips). The clips' setup flows need the full shelf ("Jack and the Beanstalk" last), which shot 1 builds in the shots job; the clips run in a job of their own on a fresh simulator, so this flow builds the same shelf and takes no shot (no takeScreenshot, so it is not one of the store-shot-ios-<n>-*.yaml shots).
+# The same two steps as the start of store-shot-ios-1-picture.yaml: the full-shelf hook goes as a relaunch with launch arguments (an openLink would bring iOS's "Open in" prompt too late), and no clearState because the script has just copied the paid books' packages into the app's full-shelf folder.
+appId: uk.sirous.dinoreader.dbg
+name: Store preview clips, shelf set-up, Dino Reader, iOS
+---
+- launchApp:
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# launchApp-restart: iOS reads launch arguments only at a process start, so the full-shelf hook needs a new process (same as shot 1).
+- launchApp:
+    arguments:
+      cmd: full-shelf
+- extendedWaitUntil:
+    visible: ".*Jack and the Beanstalk.*"
+    timeout: 600000

@@ -139,6 +139,338 @@ public sealed class StallGuardedReadTests
         Assert.Equal(PackDownloadResult.Failed, PackErrorClassifier.Classify(new TimeoutException()));
     }
 
+    [Fact]
+    public async Task BodyNotReadToItsEndIsClosedOffTheCallingThread()
+    {
+        var source = new ThreadRecordingStream(new byte[100]);
+        Stream guarded = StallGuardedRead.Wrap(source, LongWait);
+        Assert.True(await guarded.ReadAsync(new byte[10], TestContext.Current.CancellationToken) > 0);
+        source.HoldDispose = true; // a close that drains a socket takes time: run inline it would block here until released (5 s) and be finished when DisposeAsync returns
+
+        await guarded.DisposeAsync();
+
+        Assert.False(source.Disposed); // Slice 400: deterministic, no timing threshold: the close is still pending on the pool
+        source.ReleaseDispose();
+        await source.WaitForDisposeAsync();
+    }
+
+    [Fact]
+    public async Task ReadWithAnEmptyBufferDoesNotCountAsTheEndOfTheBody()
+    {
+        var source = new ThreadRecordingStream(new byte[100]);
+        Stream guarded = StallGuardedRead.Wrap(source, LongWait);
+        Assert.Equal(0, await guarded.ReadAsync(Memory<byte>.Empty, TestContext.Current.CancellationToken));
+        source.HoldDispose = true;
+
+        await guarded.DisposeAsync();
+
+        Assert.False(source.Disposed);
+        source.ReleaseDispose();
+        await source.WaitForDisposeAsync();
+    }
+
+    [Fact]
+    public async Task UnfinishedBodyAndItsResponseAreClosedByOneOffThreadTaskInOrder()
+    {
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[100], order);
+        using GuardedResponse response = new(new HttpResponseMessage { Content = new OrderedContent(source, order) });
+        var lines = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using IDisposable capture = PackDownloadLog.CaptureScope(lines.Enqueue);
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        Assert.True(await body.ReadAsync(new byte[10], TestContext.Current.CancellationToken) > 0);
+        source.HoldDispose = true;
+
+        await body.DisposeAsync(); // the stream leaves the close to its response
+        response.Dispose();
+
+        Assert.False(source.Disposed); // still pending on the pool, not run on this thread
+        source.ReleaseDispose();
+        await order.WaitForCountAsync(2);
+        Assert.Equal(["body", "response"], order.Items);
+        Assert.Equal(order.ThreadIds[0], order.ThreadIds[1]); // one task, never two closing the same stream
+        Assert.Single(lines, l => l.Contains($"{PackDownloadLog.CloseOffThreadEvent} what={PackDownloadLog.ResponsePart}", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task FinishedBodyAndItsResponseAreClosedInlineInOrder()
+    {
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[100], order);
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(source, order) });
+        var lines = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using IDisposable capture = PackDownloadLog.CaptureScope(lines.Enqueue);
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        byte[] buffer = new byte[64];
+        while (await body.ReadAsync(buffer, TestContext.Current.CancellationToken) > 0)
+        {
+        }
+
+        await body.DisposeAsync();
+        response.Dispose();
+
+        Assert.Equal(["body", "response"], order.Items); // already finished when Dispose returned: inline
+        Assert.DoesNotContain(lines, l => l.Contains(PackDownloadLog.CloseOffThreadEvent, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ResponseWhoseBodyWasNeverOpenedIsClosedOffThreadWithoutALogLine()
+    {
+        var order = new CloseOrder();
+        using var gate = new ManualResetEventSlim();
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(new MemoryStream(), order) { Gate = gate } });
+        var lines = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using IDisposable capture = PackDownloadLog.CaptureScope(lines.Enqueue);
+
+        response.Dispose(); // e.g. a refusal whose body is never read: the live stream may drain on close
+
+        Assert.Empty(order.Items); // still pending on the pool, not run on this thread
+        gate.Set();
+        await order.WaitForCountAsync(1);
+        Assert.Equal(["response"], order.Items);
+        Assert.Empty(lines); // no body was opened: no close-off-thread line
+    }
+
+    [Fact]
+    public async Task ErrorBodyReadOnlyToItsCapIsClosedOffThreadWithItsResponse()
+    {
+        // The StoreClient 400-message path: the body is opened through the guard, read up to a cap (not to its end) and the stream disposed, then the response.
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[5000], order);
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(source, order) });
+        await using (Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken))
+        {
+            Assert.True(await body.ReadAsync(new byte[2048], TestContext.Current.CancellationToken) > 0);
+        }
+
+        source.HoldDispose = true;
+        response.Dispose();
+
+        Assert.False(source.Disposed); // pending on the pool, not run on this thread
+        source.ReleaseDispose();
+        await order.WaitForCountAsync(2);
+        Assert.Equal(["body", "response"], order.Items);
+    }
+
+    [Fact]
+    public async Task SecondOpenBodyIsRefusedAndTheFirstStreamIsStillClosedWithTheResponse()
+    {
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[100], order);
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(source, order) });
+        Stream first = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken));
+        Assert.True(await first.ReadAsync(new byte[10], TestContext.Current.CancellationToken) > 0); // the first stream still works
+        response.Dispose();
+
+        await order.WaitForCountAsync(2);
+        Assert.Equal(["body", "response"], order.Items);
+    }
+
+    [Fact]
+    public async Task BodyReadToItsContentLengthWithoutAFinalZeroReadIsClosedInline()
+    {
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new ByteArrayContent(new byte[100]) });
+        var lines = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using IDisposable capture = PackDownloadLog.CaptureScope(lines.Enqueue);
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        Assert.Equal(100, await body.ReadAsync(new byte[100], TestContext.Current.CancellationToken));
+
+        await body.DisposeAsync();
+        response.Dispose();
+
+        Assert.DoesNotContain(lines, l => l.Contains(PackDownloadLog.CloseOffThreadEvent, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task BodyShortOfItsContentLengthIsClosedOffThread()
+    {
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new ByteArrayContent(new byte[100]) });
+        var lines = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using IDisposable capture = PackDownloadLog.CaptureScope(lines.Enqueue);
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        Assert.Equal(10, await body.ReadAsync(new byte[10], TestContext.Current.CancellationToken));
+
+        await body.DisposeAsync();
+        response.Dispose();
+
+        Assert.Single(lines, l => l.Contains($"{PackDownloadLog.CloseOffThreadEvent} what={PackDownloadLog.ResponsePart}", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task DisposeAfterAStallAbandonDoesNothingMoreAndClosesOnce()
+    {
+        var order = new CloseOrder();
+        var hung = new HungStream();
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(hung, order) });
+        Stream body = await response.OpenBodyAsync(ShortStall, TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<TimeoutException>(async () => await body.ReadAsync(new byte[10], TestContext.Current.CancellationToken));
+
+        await body.DisposeAsync();
+        response.Dispose();
+        response.Dispose();
+
+        await hung.WaitForDisposeAsync(); // the abandon task closed the stuck body
+        await order.WaitForCountAsync(1);
+        Assert.Equal(["response"], order.Items); // and then the response, once
+    }
+
+    private sealed class CloseOrder
+    {
+        private readonly object _gate = new();
+        private readonly List<string> _items = [];
+        private readonly List<int> _threadIds = [];
+        public IReadOnlyList<string> Items { get { lock (_gate) { return [.. _items]; } } }
+        public IReadOnlyList<int> ThreadIds { get { lock (_gate) { return [.. _threadIds]; } } }
+
+        public void Add(string what)
+        {
+            lock (_gate)
+            {
+                _items.Add(what);
+                _threadIds.Add(Environment.CurrentManagedThreadId);
+            }
+        }
+
+        public async Task WaitForCountAsync(int count)
+        {
+            DateTime stop = DateTime.UtcNow + LongWait;
+            while (Items.Count < count && DateTime.UtcNow < stop)
+            {
+                await Task.Delay(10);
+            }
+        }
+    }
+
+    // Hands out the recording stream as its body and records when the response content is closed.
+    private sealed class OrderedContent : HttpContent
+    {
+        private readonly Stream _body;
+        private readonly CloseOrder _order;
+        private readonly long? _length;
+
+        /// <summary>When set, the close waits here: a close that is still pending proves it did not run on the calling thread.</summary>
+        public ManualResetEventSlim? Gate { get; set; }
+
+        // No length: only a 0 read ends the body.
+        public OrderedContent(Stream body, CloseOrder order, long? length = null, string? encoding = null)
+        {
+            _body = body;
+            _order = order;
+            _length = length;
+            if (encoding is not null)
+            {
+                Headers.ContentEncoding.Add(encoding);
+            }
+        }
+
+        protected override Task<Stream> CreateContentReadStreamAsync() => Task.FromResult(_body);
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context) => Task.CompletedTask;
+        protected override bool TryComputeLength(out long length) { length = _length ?? 0; return _length is not null; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Gate?.Wait(LongWait);
+            _order.Add("response");
+            base.Dispose(disposing);
+        }
+    }
+
+    [Fact]
+    public async Task UnopenedResponseWithNoContentIsClosedInline()
+    {
+        var order = new CloseOrder();
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(new MemoryStream(), order, 0) });
+
+        response.Dispose();
+
+        Assert.Equal(["response"], order.Items); // already closed, no wait
+        Assert.Equal(Environment.CurrentManagedThreadId, order.ThreadIds[0]);
+        await Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task ContentLengthOfAnEncodedBodyDoesNotEndIt()
+    {
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[100], order);
+        var content = new OrderedContent(source, order, 40, "gzip"); // 40 wire bytes, more decoded bytes follow
+        var response = new GuardedResponse(new HttpResponseMessage { Content = content });
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        Assert.Equal(40, await body.ReadAsync(new byte[40], TestContext.Current.CancellationToken));
+        source.HoldDispose = true;
+
+        response.Dispose();
+
+        Assert.False(source.Disposed); // still pending on the pool: the encoded Content-Length did not mark the end
+        source.ReleaseDispose();
+        await source.WaitForDisposeAsync();
+    }
+
+    [Fact]
+    public async Task ContentLengthOfAnUnencodedBodyEndsItWithoutAFinalZeroRead()
+    {
+        var order = new CloseOrder();
+        var source = new ThreadRecordingStream(new byte[100], order);
+        var response = new GuardedResponse(new HttpResponseMessage { Content = new OrderedContent(source, order, 40) });
+        Stream body = await response.OpenBodyAsync(LongWait, TestContext.Current.CancellationToken);
+        Assert.Equal(40, await body.ReadAsync(new byte[40], TestContext.Current.CancellationToken));
+        int caller = Environment.CurrentManagedThreadId;
+
+        response.Dispose();
+
+        Assert.Equal(caller, source.DisposeThreadId);
+        await Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task BodyReadToItsEndIsClosedOnTheCallingThread()
+    {
+        var source = new ThreadRecordingStream(new byte[100]);
+        Stream guarded = StallGuardedRead.Wrap(source, LongWait);
+        byte[] buffer = new byte[64];
+        while (await guarded.ReadAsync(buffer, TestContext.Current.CancellationToken) > 0)
+        {
+        }
+
+        int caller = Environment.CurrentManagedThreadId;
+        await guarded.DisposeAsync();
+
+        Assert.True(source.Disposed);
+        Assert.Equal(caller, source.DisposeThreadId);
+    }
+
+    private sealed class ThreadRecordingStream(byte[] data, CloseOrder? order = null) : MemoryStream(data)
+    {
+        private readonly TaskCompletionSource _disposed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly ManualResetEventSlim _release = new();
+        public bool Disposed { get; private set; }
+        public bool HoldDispose { get; set; }
+        public int DisposeThreadId { get; private set; }
+        public void ReleaseDispose() => _release.Set();
+        public Task WaitForDisposeAsync() => _disposed.Task.WaitAsync(LongWait);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (Disposed)
+            {
+                return; // HttpContent closes the read stream it handed out as well: only the first close counts
+            }
+
+            if (HoldDispose)
+            {
+                _release.Wait(TimeSpan.FromSeconds(5));
+            }
+
+            Disposed = true;
+            DisposeThreadId = Environment.CurrentManagedThreadId;
+            order?.Add("body");
+            base.Dispose(disposing);
+            _disposed.TrySetResult();
+        }
+    }
+
     private sealed class TrackingMemoryStream(byte[] data) : MemoryStream(data)
     {
         public bool Disposed { get; private set; }

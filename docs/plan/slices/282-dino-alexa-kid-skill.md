@@ -1,6 +1,8 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 **Product:** Dino
 
+**Plan-cleanup check 2026-11-25:** code merged (#935); live `ALEXA_SKILL_ID` is still empty in both wrangler configs and `POST https://dinoreader.sirous.uk/alexa` returns 400. Skill creation is the owner step (user, 2026-11-19: "I have problems with amazon developer. park until tomorrow"; nothing since). The observability/privacy line is not this slice's work (moved to Outstanding work); privacy.html on main has no Sonos or Alexa paragraph about server logs.
+
 *Built 2026-11-07 (night 2026-11-07-1412 wave 6), merged as PR #935 (e1d0a461); not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
@@ -77,7 +79,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 
 - English first (en-GB and en-US models), playing the English track. Other book languages that Alexa has a locale for
   (de, fr, es, ja, pt, ...) are a follow-up line, not this slice.
-- Voice flow: "Alexa, open Dino Book Reader" lists a few books; "read <book>" plays it; built-in pause, resume, next
+- Voice flow: "Alexa, open Dino Bedtime Stories" lists a few books; "read <book>" plays it; built-in pause, resume, next
   (next book), previous, start over, stop. The book list and titles come from `/api/stories`, so new store books appear
   with no skill change.
 - **No server state.** Resume uses the token and offset Alexa sends with each request. Nothing about the household is
@@ -109,10 +111,19 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 - [x] `skill-package/`: manifest marked child-directed, category `CHILDRENS_EDUCATION_AND_REFERENCE` (`KIDS` is not a value; a child-directed skill must use one of four CHILDRENS_ categories, per Amazon's skill-manifest reference), privacy policy URL, en-GB and en-US models, and the four PNG icons (108x108 and 512x512, from `site/dino/icon.png`) under `alexa/skill-package/assets/`.
 - [x] Privacy text (`PRIVACY.md` and `site/dino/privacy.html`; `site/privacy.html` is the RTST page and has no Sonos paragraph either): one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: a count
       of each book played and for how long, nothing about the home).
-- [ ] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
+- [x] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
       endpoint, enable testing; later, submit for certification. Steps Claude can do with a token (ASK CLI) it does.
+      *Done 2026-11-25:* the user created the Amazon developer account and signed the ASK CLI in once (profile `default`,
+      vendor `M2F7IO7I4G7Y5U`, no AWS link). Claude ran `ask deploy` from `alexa/` (new `alexa/ask-resources.json`; the
+      CLI's `alexa/.ask/` state is git-ignored): skill `amzn1.ask.skill.32f02175-4e96-4a88-98c1-b858c48c048d` created
+      from `skill-package/` with the endpoint `https://dinoreader.sirous.uk/alexa`, both models built, enabled for
+      testing (development stage). `ALEXA_SKILL_ID` set in both wrangler configs by this PR.
+- [x] **Fixed 2026-11-26: the certificate type.** `ask smapi invoke-skill-end-point` gave the real error: "Certificate for host 'dinoreader.sirous.uk' contains wildcard '*.dinoreader.sirous.uk'". Cloudflare's edge certificate lists `*.dinoreader.sirous.uk`, and Alexa's `Trusted` type refuses any certificate with a wildcard name (Cloudflare security events and edge request logs showed no block; read with the new read-only token `CF_READ_ALL_TOKEN`). `skill.json` now says `"sslCertificateType": "Wildcard"`, redeployed with `ask deploy`. Simulation after the fix: "open dino bedtime stories" lists the five books; "read the little red hen" answers "Here is The Little Red Hen." with an `AudioPlayer.Play` of `/api/stories/<id>/listen/en`. Not yet heard on a real Echo.
+- [x] **First real-Echo test, 2026-11-26 (owner):** it opens and lists five books, but bare names and misspellings ("goldylock") are not found, and four of the five listed books are paid: their tracks answer 402, so the Play above for The Little Red Hen could never have played (I did not fetch the track when I called it working). Only The Lion and the Mouse played. Fixes and favourites: Slice 457 ([457-dino-alexa-find-list-favourites.md](457-dino-alexa-find-list-favourites.md)).
+- [x] ~~**First live test fails (2026-11-25, after PR #1372 deployed version 8577735a with the skill id):** `ask smapi simulate-skill` "open dino bedtime stories" (en-GB, development) three times returns "Request to skill endpoint resulted in an error." with no response body (45 ms). `wrangler tail` (POST) during the simulation shows no `/alexa` request reaching the Worker, while a test POST from this PC with an Amazon-like user agent does reach it (400, as designed). So Amazon's call stops before the Worker: likely at Cloudflare's edge (Bot Fight Mode or a security rule against AWS addresses) or the TLS handshake (certificate Google Trust Services WE1, SAN covers `dinoreader.sirous.uk`). Not proven: no tool here can read the zone's security events (`CF_ANALYTICS_READ_TOKEN` sees no zones; reading zone security settings with the wrangler login was refused by the permission check). Next: read Security > Events for `/alexa` on the `sirous.uk` zone, then allow Amazon's requests to `/alexa` only (skip rule), and rerun the simulation.~~ (wrong guess; the cause is the line above)
+- [ ] Submit for certification (Claude, ASK CLI `ask smapi submit-skill-for-certification`) after the first test on the live endpoint passes.
 
-**Waiting on the user** (blocks the skill going live, not the merge): create the Amazon developer account and the skill from `alexa/skill-package/`, set the endpoint `https://dinoreader.sirous.uk/alexa`, then the skill id goes into `ALEXA_SKILL_ID` in both wrangler configs by a PR (until then every request gets 400); enable testing; later submit for certification.
+**Skill console:** https://developer.amazon.com/alexa/console/ask/test/amzn1.ask.skill.32f02175-4e96-4a88-98c1-b858c48c048d/development/en_GB/
 
 ## Verification
 
@@ -128,7 +139,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 *From review:* files `reviews/pr-935-high.md`, `reviews/pr-935-medium.md`, `reviews/pr-935-check1.md`, `reviews/pr-935-check2.md`, `reviews/pr-935-check3.md` read in full; findings not listed as skipped were applied (check 3 itself says "no new failure path" for its own skips).
 - Skipped #8 (`reviews/pr-935-high.md`): "Verify and reword the privacy text, or exclude /alexa from logging." (pre-existing issue, see Outstanding below)
 - Skipped #1 (`reviews/pr-935-medium.md`): "redeployed over a dashboard-set id" (the user sets the id in the configs by PR)
-- Skipped #7 (`reviews/pr-935-medium.md`): "restarts a book when the offset is at or past catalogue seconds" (by design since high #5: a finished or stale resume starts over)
+- Skipped #7 (`reviews/pr-935-medium.md`): "worker/alexa.ts:273, low: resumeOffset restarts a book when the offset is at or past catalogue seconds": the fix for high #5 made a finished or stale resume start the book over, so this restart is the intended behaviour.
 - Skipped #5 (`reviews/pr-935-check1.md`): "returns end:true with no directive" for next on the last book (a voice Next past the end speaks and ends the session; a PlaybackController button answer may not carry speech per Amazon's PlaybackController docs, and the current book keeps playing)
 - Skipped #7 (`reviews/pr-935-check1.md`): "replayed signed PlaybackStopped/Finished accepted within 150 s window" (the design keeps no server state, so no dedup store; a replay needs a captured signed request and only adds one anonymous count)
 - Skipped #8 (`reviews/pr-935-check1.md`): "ignores pathLenConstraint, keyUsage, EKU, name constraints" (the roots are pinned to Amazon Root CA 1 and Starfield Services G2, both Amazon-owned, and the leaf must name echo-api.amazon.com)

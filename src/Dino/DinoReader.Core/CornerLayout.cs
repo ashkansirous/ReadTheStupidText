@@ -60,7 +60,7 @@ public static class CornerLayout
     public const double PhoneLandscapeRail = 250;
     public const double TabletPortraitRail = 260;
     public const double TabletLandscapeRail = 290;
-    public const double WindowsRail = 280;
+    public const double WindowsRail = 270; // mock WL1/WL2 (One Shelf with a Lock) draws the rail 270 wide
 
     private const double CompactBelow = 380;
     private const double RegularBelow = 400;
@@ -103,6 +103,26 @@ public static class CornerLayout
             _ => new ChromeShape(ChromeKind.Rail, ChromeFamily.PhoneLandscape, phone, PhoneLandscapeRail),
         };
     }
+
+    /// <summary>The chrome on a foldable's screen (Slice 403): the inner screen is a rail (the tablet-landscape family) of 230; every other screen and device keeps <see cref="ChromeOf(double, double, bool)"/>.</summary>
+    public static ChromeShape ChromeOf(double width, double height, bool windows, FoldScreen screen) =>
+        FoldLayout.EffectiveScreen(screen, width).IsInner ? new ChromeShape(ChromeKind.Rail, ChromeFamily.TabletLandscape, PhoneWidthOf(width), FoldLayout.InnerCornerRail) : ChromeOf(width, height, windows);
+
+    /// <summary>The sizes of <paramref name="shape"/> on a foldable's screen: the inner screen's tabs are 44 high and its Books gap is the mock's (14 Duo, 12 Folds); else <see cref="SizesOf(ChromeShape)"/>.</summary>
+    public static CornerSizes SizesOf(ChromeShape shape, double width, FoldScreen screen)
+    {
+        FoldScreen effective = FoldLayout.EffectiveScreen(screen, width);
+        if (!effective.IsInner)
+        {
+            return SizesOf(shape);
+        }
+
+        return SizesOf(shape) with { RailWidth = FoldLayout.InnerCornerRail, TabHeight = FoldLayout.InnerCornerTabHeight, GapX = FoldLayout.CornerBookGap(effective) ?? 0 };
+    }
+
+    /// <summary>The Books columns on a foldable's screen (outer 4, Ultra 3; inner 5, Ultra 4); else <see cref="BookColumns(ChromeShape, double)"/>.</summary>
+    public static int BookColumns(ChromeShape shape, double width, FoldScreen screen) =>
+        FoldLayout.CornerBookColumns(FoldLayout.EffectiveScreen(screen, width)) ?? BookColumns(shape, width);
 
     public static PhoneWidth PhoneWidthOf(double width) => width switch
     {
@@ -207,7 +227,7 @@ public static class CornerLayout
         Content = content, ContentTitle = 28, ContentGap = 20, GapX = gapX, GapY = gapY, CoverRadius = 14, TileTitle = 15, TileGap = 7, DotSize = 36, DotInset = 6,
     };
 
-    // Frame W1: the 280 rail with the shortcut hints, 26 pt title.
+    // Frame W1 (WL1): the 270 rail with the shortcut hints, 26 pt title.
     private static CornerSizes WindowsSizes() => new()
     {
         RailWidth = WindowsRail, RailPadding = new Edges(28, 14, 20, 24), RailGap = 10, NameIcon = 24, NameSize = 21, NamePadding = new Edges(4, 0, 4, 6),

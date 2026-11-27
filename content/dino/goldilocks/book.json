@@ -4,7 +4,7 @@
   "title": "Goldilocks and the Three Bears",
   "version": 11,
   "ageMin": 3,
-  "ageMax": 6,
+  "ageMax": 5,
   "author": "Traditional",
   "credits": "Retold traditional tale · free to share",
   "colour": 3,
@@ -80,5 +80,21 @@
     "zh": "传统故事新编 · 可自由分享"
   },
   "storyBy": "Robert Southey",
-  "retold": true
+  "retold": true,
+  "namesByLanguage": {
+    "ar": { "Robert Southey": "روبرت ساوثي", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Robert Southey": "رابرت ساوتی", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Robert Southey": "ロバート・サウジー", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Robert Southey": "Роберт Саути", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Robert Southey": "Robert Southey", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Robert Southey": "罗伯特·骚塞", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
 }

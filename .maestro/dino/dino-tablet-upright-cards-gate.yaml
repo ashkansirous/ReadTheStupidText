@@ -22,13 +22,13 @@ onFlowComplete:
       id: StoryTile
     timeout: 60000
 - tapOn:
-    id: GalleryGrownUps
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible: Press and hold for 3 seconds
     timeout: 15000
 - assertVisible: FOR GROWN-UPS
-- assertVisible: Back to my child.s shelf
+- assertVisible: Cancel
 # Sideways: still the card on the hold step; upright again: the same.
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
@@ -40,8 +40,8 @@ onFlowComplete:
     visible: Press and hold for 3 seconds
     timeout: 15000
 - assertVisible: FOR GROWN-UPS
-# Back to my child's shelf closes the gate and leaves the kids' shelf.
-- tapOn: Back to my child.s shelf
+# Cancel closes the gate and leaves the shelf locked.
+- tapOn: Cancel
 - extendedWaitUntil:
     visible:
       id: StoryTile

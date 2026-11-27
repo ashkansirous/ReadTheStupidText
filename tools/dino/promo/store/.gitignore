@@ -1,0 +1,10 @@
+# Slice 433: the footage (simulator recordings from store-screenshots.yml), the renders and HyperFrames caches stay local; only the project files are committed.
+assets/footage/
+renders/
+snapshots/
+.hyperframes/
+node_modules/
+.thumbnails/
+.transcode-cache/
+.waveform-cache/
+.media/

@@ -124,6 +124,13 @@ internal static class UiUsage
 	/// <summary>Counts a press of <paramref name="control"/> (a <see cref="UiControls"/> name) on the current screen.</summary>
 	public static void Tap(string control)
 	{
+		NoteGrownUpTap(UiScreen.Current, control);
+		TapQuiet(control);
+	}
+
+	/// <summary>Counts a press like <see cref="Tap"/> but never puts the lock's time back: the reading-language list (button, rows, scrim) is the child's, even when it is open on Store or Settings (Slice 418 decision 13).</summary>
+	public static void TapQuiet(string control)
+	{
 		string screen = UiScreen.Current;
 		if (screen != UiScreens.None)
 		{
@@ -131,9 +138,39 @@ internal static class UiUsage
 		}
 	}
 
+	// Slice 418 item 5: every counted press goes through here (SilentButtonGuardTests), so this is where a grown-up tap puts the shelf's 30 seconds back to full; reading and page turns never do.
+	private static void NoteGrownUpTap(string screen, string control)
+	{
+		if (LockTapRules.IsGrownUpTap(screen, control))
+		{
+			GrownUpTapNow();
+		}
+	}
+
+	/// <summary>An uncounted press, toggle, drag or key inside a grown-up place (Store, Settings, a ••• sheet, their sub-pages): the lock's time starts again. Does nothing on the shelf, in the story or in onboarding.</summary>
+	public static void NoteGrownUp()
+	{
+		if (LockTapRules.IsGrownUpScreen(UiScreen.Current))
+		{
+			GrownUpTapNow();
+		}
+	}
+
+	/// <summary>A key press: puts the lock's time back only inside Store, Settings, their sub-pages, a ••• sheet or the reorder mode; keys on the Books list or in the reader never do (<see cref="LockTapRules.IsGrownUpKey"/>).</summary>
+	public static void NoteGrownUpKey(bool sheetOrReorderOpen)
+	{
+		if (LockTapRules.IsGrownUpKey(UiScreen.Current, sheetOrReorderOpen))
+		{
+			GrownUpTapNow();
+		}
+	}
+
+	private static void GrownUpTapNow() => IPlatformApplication.Current?.Services.GetService<GrownUpMode>()?.GrownUpTap();
+
 	/// <summary>Counts that <paramref name="setting"/> now has <paramref name="value"/> (both from <see cref="UiSettings.Values"/>); anything else is dropped here, before it is queued.</summary>
 	public static void Setting(string setting, string value)
 	{
+		NoteGrownUp(); // a switch or choice in Settings is a grown-up tap even when no counted press came with it (Slice 418 decision 13)
 		if (UiSettings.Values.TryGetValue(setting, out IReadOnlyList<string>? allowed) && allowed.Contains(value))
 		{
 			Record(UsageEventName.SettingChanged, UiUsageDetail.Setting(setting, value));
@@ -153,13 +190,6 @@ internal static class UiUsage
 
 	/// <summary><see cref="Press{T}(T, string, Action)"/> for a <see cref="CoralButton"/> (the app's own pill button, which is not a <see cref="Button"/>).</summary>
 	public static CoralButton Press(CoralButton button, string control, Action handler)
-	{
-		button.Clicked += (_, _) => CountThenRun(button, control, handler);
-		return button;
-	}
-
-	/// <summary><see cref="Press{T}(T, string, Action)"/> for a <see cref="PillButton"/>.</summary>
-	public static PillButton Press(PillButton button, string control, Action handler)
 	{
 		button.Clicked += (_, _) => CountThenRun(button, control, handler);
 		return button;

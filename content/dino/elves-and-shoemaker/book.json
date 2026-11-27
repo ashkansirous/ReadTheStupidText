@@ -3,7 +3,7 @@
   "id": "34efea95400343ac998e9ed99158d370",
   "title": "The Elves and the Shoemaker",
   "version": 10,
-  "ageMin": 4,
+  "ageMin": 6,
   "ageMax": 8,
   "author": "Brothers Grimm",
   "credits": "Retold from the Brothers Grimm · free to share",
@@ -79,5 +79,21 @@
     "zh": "改编自格林兄弟 · 可自由分享"
   },
   "storyBy": "Brothers Grimm",
-  "retold": true
+  "retold": true,
+  "namesByLanguage": {
+    "ar": { "Brothers Grimm": "الأخوان غريم", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Brothers Grimm": "brødrene Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Brothers Grimm": "den Brüdern Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Brothers Grimm": "los hermanos Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Brothers Grimm": "برادران گریم", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Brothers Grimm": "Grimmin veljekset", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Brothers Grimm": "Jacob et Wilhelm Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Brothers Grimm": "グリム兄弟", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Brothers Grimm": "brødrene Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Brothers Grimm": "de gebroeders Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Brothers Grimm": "Jacob e Wilhelm Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Brothers Grimm": "братья Гримм", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Brothers Grimm": "bröderna Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Brothers Grimm": "格林兄弟", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
 }

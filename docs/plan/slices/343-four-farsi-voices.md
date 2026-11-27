@@ -5,6 +5,8 @@
 
 > **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
+*Park note (night 2026-11-17-2105, wave 1):* **parked: needs an interactive session.** The open build items (a comma at text-prep time for the extra-ezafe clips ganji-2, gyro-2, gyro-3; gyro-1 intermittent «است») need a design the 2026-11-16 answers leave open (whether it can be applied at text-prep time without changing how the app reads other sentences is not decided), and any fix needs a fresh listen on an Artifact listening page, which a headless wave cannot publish.
+
 *Third listen done 2026-11-16 (answers below); 3 extra-ezafe items and `gyro-1` open as build work.* *Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
 *Park note (night 2026-11-14-0726):* parked again by housekeeping 1 for the same reason (the second listen needs an Artifact page; headless wave sessions have no Artifact tool). Moved back to `planned` by the 2026-11-14-0726 feedback loop per the user's 2026-11-01 rule; a night run can only re-park it, so it needs an interactive session.
@@ -12,6 +14,8 @@
 *Park note (night 2026-11-13-1149):* parked by wave 5 because the 3 extra-ezafe items have no text fix (the piper-fa VITS model adds the ezafe itself) and the second listen needs an interactive session (Artifact page; WAVs in `reviews/s342-ezafe/`). Moved back to `planned` by the 2026-11-13-1149 feedback loop so the next night retries it.
 
 *Park note (2026-11-14, night 2026-11-14-1547 housekeeping 2):* parked: the second listen is an Artifact listening page, which needs an interactive session (headless waves have no Artifact tool).
+
+*Plan-cleanup check 2026-11-25 (verdict: keep open, unparked).* Read at origin/main 1a8bf725: `FarsiEzafe.cs` still has only the force pair «حال شما» (kasra) and no comma or suppress pairs, so the extra-ezafe build is not started (`git grep ezafe origin/main -- src`); `user-says` finds nothing new after 2026-11-16. The park reason ("needs an interactive session, a fix needs a fresh listen") is not a wait: the third listen already chose the candidate (the comma fixed all three clips), and a re-listen is a check of the built fix, not a precondition to build it. Own work left: the extra-ezafe build below. The `gyro-1` item is answered by evidence already in this file (the model, not the renderer; intermittent) and is closed as the model's limit. The re-listen of the built fix moves to `unverified.md` as an `[owner]` ear check, not a wait inside this slice.
 
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
@@ -104,8 +108,8 @@ What this decides (by the fix item above: cheapest model-side options first, oth
 
 The user's listening is done; no further listen is asked for unless a build item says so. The two fix items above stay unticked: they are build work (Claude's) and not started.
 
-- [ ] Fix: `gyro-1` (Gyro, «... خیلی خوب است.»): the final «است» ("ast") is not spoken (second listen, 2026-11-14). Find whether the sentence-final word is cut by the renderer (trailing audio trimmed, end-of-sentence handling) or by the model; fix through the review gate; re-render for a third listen.
-- [ ] Fix: the extra-ezafe items (`ganji-2`, `gyro-2` now on «روز» too, `gyro-3`): no text mark stops them (espeak's phonemes are already right). Try the cheapest model-side options first and render each on one page for a third listen: a short break between the two words (comma or zero-width non-joiner at render time), a different noise/length scale for these two voices, or the same sentence on the other pack voices. If none works, record it as the model's limit for Ganji and Gyro (the default voice, Ganji Adabi, and Mana are right).
+- [x] (closed 2026-11-25 as the model's limit: the app returns the samples untrimmed and the phonemes hold the word, see the evidence above; one take bad, one ok, slower pace ok; no build work) Fix: `gyro-1` (Gyro, «... خیلی خوب است.»): the final «است» ("ast") is not spoken (second listen, 2026-11-14). Find whether the sentence-final word is cut by the renderer (trailing audio trimmed, end-of-sentence handling) or by the model; fix through the review gate; re-render for a third listen.
+- [ ] **Own work left, build it (no listen first):** in `FarsiEzafe.Apply` insert a comma at text-prep time for exactly the pairs the user heard fixed by it: «صبح یک» (ganji-2), «روز صبح» (gyro-2, comma after «روز»), «دفتر خرید» (gyro-3), as a pair table like `ForcePairs`, so no other sentence changes; tests in `FarsiEzafeTests`; review gate. (Decided 2026-11-25 from the third-listen answers.) Original wording follows. Fix: the extra-ezafe items (`ganji-2`, `gyro-2` now on «روز» too, `gyro-3`): no text mark stops them (espeak's phonemes are already right). Try the cheapest model-side options first and render each on one page for a third listen: a short break between the two words (comma or zero-width non-joiner at render time), a different noise/length scale for these two voices, or the same sentence on the other pack voices. If none works, record it as the model's limit for Ganji and Gyro (the default voice, Ganji Adabi, and Mana are right).
 
 ## Verification
 

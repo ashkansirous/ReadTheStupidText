@@ -6,22 +6,14 @@ namespace DinoReader.Tests;
 public class IosUpdateTargetTests
 {
     [Theory]
+    [InlineData(InstallChannel.Store)]
     [InlineData(InstallChannel.TestFlight)]
     [InlineData(InstallChannel.Dev)]
-    public void AnythingButAnAppStoreInstallOpensTestFlight(InstallChannel channel)
+    public void EveryChannelOpensTheAppStore(InstallChannel channel)
     {
         (string url, string key) = IosUpdateTarget.For(channel);
 
-        Assert.Equal(IosUpdateTarget.TestFlightPage, url);
-        Assert.Equal(nameof(AppResources.Update_OpenTestFlight), key);
-    }
-
-    [Fact]
-    public void AppStoreInstallOpensTheAppStore()
-    {
-        (string url, string key) = IosUpdateTarget.For(InstallChannel.Store);
-
-        Assert.Equal(IosUpdateTarget.AppStorePage, url);
+        Assert.Equal("https://apps.apple.com/app/id6825053435", url);
         Assert.Equal(nameof(AppResources.Update_OpenAppStore), key);
     }
 }

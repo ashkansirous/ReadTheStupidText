@@ -177,6 +177,9 @@ public static class BookAccess
     public static ShelfAccess ShelfAccessOf(bool paidBooksOn, BookUnlock? recorded, bool subscriptionGrants) =>
         paidBooksOn && recorded == BookUnlock.Subscription && !subscriptionGrants ? ShelfAccess.LockedByLapse : ShelfAccess.Readable;
 
+    /// <summary>Slice 398 (mock SB6): how many of the shelf's books are locked; the Books tab's "why" banner says it once for all of them and shows only when this is above zero.</summary>
+    public static int LockedCount(IEnumerable<ShelfAccess> shelf) => shelf.Count(access => access == ShelfAccess.LockedByLapse);
+
     /// <summary>Whether a request for the book's files must carry a purchase proof.</summary>
     public static bool NeedsProof(bool paidBooksOn, StoreItem item) => IsSold(paidBooksOn, item);
 

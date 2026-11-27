@@ -1,6 +1,6 @@
 ---
 name: create-dino-story
-description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a quality check of every picture on its small copy, then build, test and upload. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
+description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a quality check of every picture on its small copy, then build, test, upload and set up its sale product in every store. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
 ---
 
 # Create or illustrate a Dino Reader story
@@ -28,6 +28,14 @@ context free of screenshots, pictures and 14 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
+   **Voices start right after this text review passes, not after the pictures** (the user, 2026-11-18: Love from Seagull
+   Island stopped for hours mid-morning because the voice page went out only after every picture was drawn, while the user was
+   away). In the same turn that the English goes to the user for their read, dispatch the `voice-pick` agent for every speaker
+   and the narrator, and send the user both together: "read the English, and pick the voices". The cast rarely changes with a
+   text edit, and clips of unchanged lines are reused. Once the user accepts the text, compare its speakers and tagged lines
+   (a new speaker, a chorus line such as "they said together", a renamed character) with the picks, and ask about every new
+   voice decision at once, in that same turn, never later. With the picks in, render the English audio while the pictures are
+   drawn, and each translation's audio as soon as it is written, so nothing waits on the user at the end.
 3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Two at once across the machine, on separate books or on page groups of one book** (the user's choice,
    2026-11-17, after two of four tabs got stuck on Love from Seagull Island; it was four from 2026-10-26; page groups 2026-11-01; the user may raise it again). **Each illustrator opens its own tab with `tabs_create_mcp` and uses only that `tabId`**: never a tab `tabs_context_mcp` lists or hands it (other illustrators' chats are there; 2026-11-17 one was handed two foreign tabs), and it never closes a tab or tab group it didn't open (one closed another's tab group the same day). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
    `javascript_tool` (`execCommand('insertText')`) and Send is only `await window.__sendChecked(<prompt>, <pictures>)`
@@ -35,16 +43,16 @@ context free of screenshots, pictures and 14 translation files.
    without the prompt; that chat is spoiled: new chat, never patch it), never keyboard typing or
    Enter (keystrokes land in whichever tab has focus); `gemini-lock.ps1` is held only around the line-up paste and
    the save; each illustrator closes its own tab when done (reset tab groups left ~20 orphans). Four in parallel
-   drew about 39 accepted pictures an hour against 15-25 for one. If Gemini answers 1095 or shows a CAPTCHA, report
+   drew about 39 accepted pictures an hour against 15-25 for one, but the limit is two (user, 2026-11-17, confirmed 2026-11-25). If Gemini answers 1095 or shows a CAPTCHA, report
    it; at most 3 reloads to look for a model or menu item that isn't there, then report it missing; never reduce the number of illustrators without asking the user. It ends with `contact-sheet.jpg`, every picture on one sheet.
-   **One book is drawn by 3-4 illustrators at once whenever the machine has room** (the user, 2026-11-01: pages
-   hardly depend on each other; each chat only needs the line-up and its page descriptions). The cap of four
-   counts across the machine, so with two books in flight they share it (2 + 2). Three phases:
+   **One book is drawn by 2 illustrators at once whenever the machine has room** (the user, 2026-11-01: pages
+   hardly depend on each other; each chat only needs the line-up and its page descriptions). The cap of two
+   counts across the machine, so with two books in flight they share it (1 + 1). Three phases:
    - **Setup, one illustrator (`setup` mode, SKILL.md step 3's character chat, step 2 in the agent file):** the character sheets and line-up, plus one **place sheet** per
      setting used on several pages (kitchen, garden, bedroom...), drawn in the same chat right after the line-up, saved as
      `characters/place-<slug>.jpg` and listed in `art.md` with the pages that use each. Place sheets keep the
      same room or garden across parallel chats (Freddy and the Slipper drew three different gardens in three chats).
-   - **Pages, 3-4 illustrators (`pages` mode), each with its own page group** (cover + pages 1-3, 4-7, 8-11, 12-14 ...):
+   - **Pages, 2 illustrators (`pages` mode), each with its own page group** (cover + pages 1-7, 8-14 ...):
      each pastes the line-up and the place sheet its pages use (two pictures: `Put` the line-up and paste, wait for the thumbnail,
      then `Put` the place sheet and paste, all inside one lock hold), works in its own tab with the lock owner
      `<stem>-<group>`, the group label a simple word without commas (`g1`..`g4`; the brief lists each group's pages), saves candidates to its own sub-folder of the working folder and writes its check rows to
@@ -71,7 +79,8 @@ or app files (its titles are `content/dino/<stem>/titles.json`, no row in `Shipp
 PR check, only the store upload. No book is bundled in the app any more (Slices 261, 265), so every book change, audio clips included, runs only the store upload. Deleting a store book's folder delists it on the next merge (packages stay).
 **A book reaches the store only with complete audio (Slice 277):** `dotnet run --project tools/dino/DinoReader.BookBuilder -- check-audio <stem>` must print no gap (after `git lfs pull --include "content/dino/<stem>/audio/*/manifest.json" --exclude ""`):
 a pack in every one of the 15 languages, a clip for every sentence the app reads, no clip for text that changed, no missing or empty clip file. The app has no device-voice fallback, so after any text
-change regenerate the clips with `tools/dino/premade-audio` before the PR. `publish-store` and `tools/dino/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
+change regenerate the clips with `tools/dino/premade-audio` before the PR (a whole book renders three languages at a time, each with its own `--out`: the premade-audio README, *Batch mode*). `publish-store` and `tools/dino/upload-store-story.ps1` refuse a book with a gap (`-CheckOnly` runs just the check); `check-audio --live` checks what the live store serves.
+**The listening track is built on this PC and committed (Slice 409):** after the clips (or any change to them), pull them (`git lfs pull --include "content/dino/<stem>/audio/**" --exclude ""`) and run `dotnet run --project tools/dino/DinoReader.BookBuilder -- build-listen-all <stem>` (build-audio, then the `listen-<lang>-v<n>.m4a` track of every language, ffmpeg from the PATH); commit the tracks and `audio-cast.json`. `check-audio` fails a book whose track is missing or older than its clips, and CI installs no ffmpeg. **The work that makes existing books' store files stale (a new track, a pack format, a picture size) rebuilds, commits and uploads every affected book in its own PR and release run; a later unrelated upload never carries its backfill.**
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
@@ -89,6 +98,10 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   `"traditional"` for a tale nobody owns) and `retold: true` for every book that is not the user's own. Own books: `storyBy` is the user's name (plus a co-author) and no `retold`.
   A classic needs its real original author, checked, never guessed (Potter, Aesop, Andersen, the Brothers Grimm...). The illustrator is Ashkan Sirous unless `illustration` says otherwise,
   and the month is the book's `added` date. Nobody types the page into `story.md`; `check` fails a book without `storyBy`. It shows as the last page in every reading mode (an older app reads it aloud).
+  **Slice 405: every name on it is written in the reading language.** `book.json` gets `namesByLanguage`: `{ "<lang>": { "<name as written in storyBy / the maker / illustration>": "<spelling>" } }` for
+  each of the 14 non-English languages and every name the back cover shows (each `storyBy` name, `Ashkan Sirous` for a retold book and the illustration, nothing for `"traditional"`). Take a name from the
+  same book's `creditsByLanguage` first, else the usual form in that language (de "Äsop", fr "Ésope", fa «ازوپ»); write it so it fits the app's label ("Story by {0}", so "den Brüdern Grimm", not "Brüder Grimm" after "von").
+  A Latin-script language keeps a personal name as written unless it has its own form. The builder (`Books.ReadInfo`) refuses a book that misses a name or language; `stamp` a starter after.
   **Slice 359: every book also gets a drawn back-cover picture** (one per book, no words in it, the middle left calm because the reader lays the credit lines over it): `content/dino/<stem>/back-cover.jpg`
   (app size) and `content/dino/<stem>/high-res/back-cover.jpg` (the untouched Gemini file, LFS). `check` fails a book without `back-cover.jpg` (Good Enough alone until it is redrawn). Draw it with the
   `prompts.md` *Back cover* prompt in the style that fits the book; compare it with the book's story and its own pictures, not only its look (see the illustrator and reviewer rules).
@@ -162,7 +175,7 @@ Prompt templates: [prompts.md](prompts.md).
 - In a fresh chat the first `ctrl+v` after clicking the prompt box often pastes nothing: click the box
   twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
 - The free-tier image limit is shared with every other session drawing in this Chrome profile, and so are
-  the clipboard and the `Downloads` folder. Check the open tabs first; another illustrator drawing in its own tab, on another book or another page group of this book, is normal (at most four): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
+  the clipboard and the `Downloads` folder. Check the open tabs first; another illustrator drawing in its own tab, on another book or another page group of this book, is normal (at most two): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
 - **Keep the display on while drawing** (2026-10-26): with the screen merely off (not locked) Chrome stops rendering, so Gemini
   never finishes loading, pastes do nothing and screenshots time out. The caller starts
   `pwsh gemini-keep-awake.ps1 -Hours <n>` in the background before any illustrator runs (a temporary Windows request, no
@@ -340,6 +353,29 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
 - After merge, `dino-store.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/dino/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
+
+## 7b. Set up the book's sale product (the last step; the book is not delivered without it)
+
+The user, 2026-11-18: Love from Seagull Island went live in the store but showed "cannot be bought right now", because
+nothing creates a new paid book's in-app product. The session that makes a book does not end, or hand the book over as
+done, until the book is in the live store **and** its product exists in every store. Right after `publish-store` uploads it:
+
+- Confirm the book is live: `https://dinoreader.sirous.uk/api/stories` lists its id with `access` and `productId`. A book
+  with `access: "free"` needs no product; stop here.
+- For a paid book, run one command: `node .github/scripts/store-products-local.mjs --apply --book <stem>` (Slice 411). It loads the
+  keys from `D:/secrets` itself without printing them, and creates the book's product in Play (one-time product, activated),
+  App Store Connect (non-consumable, listing, price) and Partner Center (add-on with price `Tier1012` = USD 0.99, en-us listing,
+  committed). `--book` never touches the subscription products. Existing products are left alone, a half-made one is completed.
+  Its id is `uk.sirous.dinoreader.book.<stem>` unless `book.json` names one. A Microsoft `409` on the PUT means someone edited the
+  pending submission in Partner Center: delete it there, rerun.
+- Read it back: the run prints each store's outcome and, for Microsoft, the add-on's Store id and its displaycatalog address;
+  Play's `oneTimeProducts` list shows the product with an `ACTIVE` buy option.
+- App Store: add the review screenshot and submit the product with the next app version
+  ([App Store Connect, Dino](https://appstoreconnect.apple.com/apps/6825053435)); the only step left by hand.
+- Microsoft certification takes hours: the next day run `node .github/scripts/store-products-local.mjs --check-prices`, which reads
+  every book's live price from the public catalog and fails on anything but USD 0.99
+  ([Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview) if it reports a problem).
+- Report each store's state for the product in the final message. A step that only the user can do gets its direct link there.
 
 ## 8. Check in the app
 

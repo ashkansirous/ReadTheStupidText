@@ -24,6 +24,9 @@ public enum DinoKey
 	/// <summary>The vertical arrows: Settings (Slice 235 part C) and the reorder mode (Slice 264) use them.</summary>
 	Up,
 	Down,
+
+	/// <summary>The context-menu keys, the Menu key and Shift+F10 (Slice 420): on the shelf they open the focused book's options sheet.</summary>
+	ContextMenu,
 }
 
 /// <summary>Which kind of screen has the keyboard: the shelf, a book being read (or its silent back cover), the grown-up gate, a book's options sheet, or any other page.</summary>
@@ -87,13 +90,20 @@ public enum DinoKeyAction
 	CornerStore,
 	CornerSettings,
 
-	/// <summary>Esc on the kids' shelf: "Close Dino Book Reader?", as Android's Back (Slice 325 part C).</summary>
+	/// <summary>Esc on the kids' shelf: "Close Dino: Kids Books &amp; Stories?", as Android's Back (Slice 325 part C).</summary>
 	AskToClose,
+
+	/// <summary>The Menu key or Shift+F10 on the shelf: open the options sheet of the book that has the keyboard (Slice 420; Enter reads the book since Slice 418).</summary>
+	OpenBookMenu,
+
+	/// <summary>The Up and Down arrows on the corner (Slice 420): the Settings tab moves the focus one row up or down itself; every other tab lets the arrow through to the native shelf navigation.</summary>
+	FocusRowUp,
+	FocusRowDown,
 }
 
 /// <summary>
 /// The keyboard map of Dino Reader's Windows window (mock Batch 46 frame 160): Space plays or pauses (on the back cover it reads again), Left and Right go to the previous and next page, Esc goes back or
-/// closes a sheet (on the shelf it asks "Close Dino Book Reader?", in the corner it returns to the shelf). On the gate Space held starts and ends the 3 second hold, digits type the sum, Backspace erases and Enter checks. Space and the arrows do nothing while a text field
+/// closes a sheet (on the shelf it asks "Close Dino: Kids Books &amp; Stories?", in the corner it returns to the shelf). On the gate Space held starts and ends the 3 second hold, digits type the sum, Backspace erases and Enter checks. Space and the arrows do nothing while a text field
 /// has focus. Keys never mirror, in any language: Left is always previous (Slice 96).
 /// </summary>
 public static class DinoKeyMap
@@ -122,13 +132,23 @@ public static class DinoKeyMap
 			DinoScreen.ReadingBackCover => OnReading(key, backCover: true),
 			DinoScreen.Gate => OnGate(key),
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
-			DinoScreen.Settings or DinoScreen.Corner => key == DinoKey.Right ? DinoKeyAction.OpenRow : DinoKeyAction.None, // Slice 325 part B: the Settings tab is part of the corner, so Right opens its focused row there
+			DinoScreen.Settings or DinoScreen.Corner => OnCorner(key, screen), // Slice 325 part B: the Settings tab is part of the corner, so Right opens its focused row there
 			DinoScreen.Reorder => OnReorder(key),
 			DinoScreen.FirstBooks => OnFirstBooks(key),
 			DinoScreen.Intro => OnIntro(key),
 			_ => DinoKeyAction.None,
 		};
 	}
+
+	// Right opens the focused Settings row; the context-menu keys open the focused book's sheet (Slice 420), on the corner only (the page decides whether a book has the keyboard).
+	private static DinoKeyAction OnCorner(DinoKey key, DinoScreen screen) => key switch
+	{
+		DinoKey.Right => DinoKeyAction.OpenRow,
+		DinoKey.ContextMenu when screen == DinoScreen.Corner => DinoKeyAction.OpenBookMenu,
+		DinoKey.Up when screen == DinoScreen.Corner => DinoKeyAction.FocusRowUp,
+		DinoKey.Down when screen == DinoScreen.Corner => DinoKeyAction.FocusRowDown,
+		_ => DinoKeyAction.None,
+	};
 
 	// Slice 325 part D (frame OW2): Space ticks the focused cover and Enter is Continue (the page ignores it until two are picked).
 	private static DinoKeyAction OnFirstBooks(DinoKey key) => key switch

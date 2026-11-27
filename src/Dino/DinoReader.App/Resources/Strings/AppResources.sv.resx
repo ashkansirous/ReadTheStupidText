@@ -22,7 +22,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Spara</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Klar</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Fortsätt</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Stänga Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Stänga Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Stanna</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Stäng</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Ta bort</value></data>
@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populär</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Rekommenderad</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sidor · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis och utan konto. Inget om dig eller ditt barn skickas.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du är offline</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Butiken kräver internet. Sagor som redan finns på hyllan går att läsa utan.</value></data>
@@ -95,13 +95,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Fanns redan, hoppades över</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Gick inte att läsa</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Se mina sagor</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Den här säkerhetskopian kommer från en nyare version av Dino Book Reader. Uppdatera appen och försök igen.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen är inte en säkerhetskopia från Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Den här säkerhetskopian kommer från en nyare version av Dino: Kids Books &amp; Stories. Uppdatera appen och försök igen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen är inte en säkerhetskopia från Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Säkerhetskopian fungerade inte. Försök igen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>För stor för att återställas</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunde inte läggas till i säkerhetskopian.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hej! Vilket språk ska Dino använda?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>För appens knappar och ord. Du kan ändra det senare i Vuxenhörnan.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>För appens knappar och ord. Du kan ändra det senare i Inställningar.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsätt</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Välj dina första böcker</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Välj minst två. Du kan hämta fler i butiken när som helst.</value><comment>Machine draft: needs native review</comment></data>
@@ -119,18 +119,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Lyssna</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Vilka språk läser din familj på?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} är alltid på. Lägg till andra språk som ditt barn hör.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} är alltid på.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Varför fler än ett?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Många barn hör ett språk hemma och ett annat i skolan eller hos mor- och farföräldrar. Varje bok läses upp på varje språk du väljer, och ditt barn kan byta på varje sida. Välj upp till tre.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Appens språk · alltid på</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Hämta de här böckerna</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Lyssna när Dino läser</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>Varje figur har sin egen röst, och Dino läser med känsla.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Det var {0}. Hör nu samma sida på ditt andra språk.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Tryck nu på {0} för att höra samma sida.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Samma röster, nu på {0}. Ditt barn kan byta språk på varje sida.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Varje figur har sin egen röst, och Dino läser med känsla. Det var {0}; nu läser samma röster den på {1}. Ditt barn kan byta språk på varje sida.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Hoppa över det här steget</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Var rösten till en figur</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Spela in {0}s repliker på den här sidan och hör sedan sidan med **dig** som {0}.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Spela in {0}s repliker på den här sidan och hör sedan sidan med **dig** som {0}. Du kan hoppa över det här.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Din röst stannar på den här telefonen</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Din röst stannar på den här surfplattan</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Din röst stannar på den här datorn</value></data>
@@ -142,33 +140,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Fortsätt utan inspelning</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0}s repliker</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Det är du!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Det är {0} med din röst. Det här var bara ett försök, så det raderas när inställningen är klar. Du kan spela in en figur senare i Vuxenhörnan.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Det är {0} med din röst. Det här var bara ett försök, så det raderas när inställningen är klar. Du kan spela in en figur senare från bokens •••-meny.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · din röst</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Spela igen</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Det här är Vuxenhörnan</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Bara vuxna kommer hit. Här kan du:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Hämta böcker i butiken</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Gratis och betalda berättelser på alla din familjs språk.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Hantera dina böcker</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Ändra ordningen på hyllan, ta bort en bok eller spela in din röst för vilken figur som helst.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Ändra inställningarna</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Språk, lästakt, ljud och säkerhetskopia för hela appen.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Visa mig runt</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Dina böcker. Tryck på ••• vid en bok för att spela in din röst eller ta bort den. Med ändra ordning ändrar du ordningen på hyllan.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Butiken</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Nya berättelser, gratis och betalda. Varje bok finns på alla din familjs språk. Köpt förut? Återställ dina böcker här.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Språk, lästakt, ljud och säkerhetskopia för hela appen.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Se ditt barns hylla</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Tryck på **Barnets hylla** för att se vad ditt barn ser.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Sista steget</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Visa mig</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Det här är ditt barns hylla</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Det här ser ditt barn varje gång det öppnar Dino: bara sina böcker, utan något som kan ändras av misstag.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>För att komma tillbaka till Vuxenhörnan trycker du på **Vuxna** och håller in i 3 sekunder.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Börja läsa</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino behöver två böcker innan du börjar. Slå på wifi eller mobildata och försök igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} av {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klart för mitt barn</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Vuxenläge</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino läser och översätter till det här språket</value></data>
@@ -180,23 +157,28 @@
   <data name="Settings_About" xml:space="preserve"><value>Om och uppdateringar</value></data>
   <data name="Settings_On" xml:space="preserve"><value>På</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Av</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Böcker och köp</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Abonnemang</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Årligt · förnyas {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Månadsvis · förnyas {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Gratis provperiod till {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Inget abonnemang</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Problem med betalningen</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Böcker och ett abonnemang köpta med det här Google-kontot</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Böcker och ett abonnemang köpta med det här Apple-ID:t</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Böcker och ett abonnemang köpta med det här Microsoft-kontot</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>En present- eller kampanjkod från Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>En present- eller kampanjkod från App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>En present- eller kampanjkod från Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Inställningar, butiken och hyllan</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Vuxna</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lägg till och redigera böcker</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>För vuxna</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Vuxna</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Vuxenhörnan, låst</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Vuxenhörnan</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett tryck bort.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tillbaka till barnets hylla</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Böcker</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Barnets hylla</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Bara vuxna ser det här.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Sagor</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Ändra ordning</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Dra en bok till en ny plats. Ditt barns hylla visar samma ordning.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Dra en bok till en ny plats på hyllan.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Väntar på omslagsbilden</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara den nya ordningen</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Något använder fortfarande filen. Tryck på Klar för att försöka igen, eller Avbryt för att behålla den gamla ordningen.</value></data>
@@ -213,9 +195,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>En saga på ett annat språk läses fortfarande på sitt eget språk, om inte Översätt till mitt språk är på för den sagan.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Tryck och håll i 3 sekunder.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Tryck och håll i 3 sekunder</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Vuxenhörnan</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Låst</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Upplåst</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Låst. Tryck för att låsa upp.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Upplåst. Tryck för att låsa.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Upplåst · {0} s</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Butik och Inställningar är för vuxna. Tryck på låset för att låsa upp.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Låst igen: inget tryck från en vuxen på 30 sekunder.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Låst.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Tryck för att låsa. Låser sig självt om {0} s utan tryck från en vuxen.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Fortsätt hålla…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Fortsätt till frågan</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Tillbaka till sagan</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Hur mycket är</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Radera</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Med musen, eller håll ned mellanslag.</value></data>
@@ -228,7 +219,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Långsammare är lättare för de små - ändra med vänster- och högerpil</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Läs igen</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett klick bort.</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Slut</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hur mycket är {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Sagans språk</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · identifierat</value></data>
@@ -254,7 +245,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Läs med min röst</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} av {1} sidor inspelade. De andra sidorna använder Dinos röster.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen är av</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino Book Reader i enhetens inställningar och försök igen.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino: Kids Books &amp; Stories i enhetens inställningar och försök igen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Inspelningen fungerade inte. Försök igen.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -392,6 +383,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} och {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>och</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>Köp {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Köp {0} för {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Anslut till internet för att köpa</value></data>
@@ -402,15 +395,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>För många försök. Vänta en minut och försök igen.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Den här boken finns inte kvar i butiken.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Gratis</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Har du köpt böcker förut?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Böcker som köpts med det här Google-kontot kommer också tillbaka på den här telefonen.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Böcker som köpts med det här Google-kontot kommer också tillbaka på den här surfplattan.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Böcker som köpts med det här Apple-ID:t kommer också tillbaka på den här telefonen.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Böcker som köpts med det här Apple-ID:t kommer också tillbaka på den här surfplattan.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Böcker som köpts med det här Microsoft-kontot kommer också tillbaka på den här datorn.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Återställer …</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Inget har köpts med det här Google-kontot än.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Inget har köpts med det här Apple-ID:t än.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Inget har köpts med det här Microsoft-kontot än.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Redan köpt? Återställ köp</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 bok återställd. Den står på hyllan.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} böcker återställda. De står på hyllan.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Inga köpta böcker hittades på det här kontot.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Butiken har ett problem</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Återställ köp</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lös in en kod</value></data>
@@ -431,6 +422,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>Prenumerera igen</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Köp den här boken</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Låst: abonnemanget har tagit slut</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Spara {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} per år</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} per månad</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Förnyas automatiskt varje månad eller varje år till priset som visas, tills du säger upp i ditt butikskonto. Du kan säga upp när som helst.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Gratis provperiod till {0}. Därefter {1} per år, om du inte säger upp innan.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Gratis provperiod till {0}. Därefter {1} per månad, om du inte säger upp innan.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Årsabonnemang · förnyas {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Månadsabonnemang · förnyas {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Ingår</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Din betalning gick inte igenom</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan Google Play försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan App Store försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Alla böcker förblir öppna till {0} medan Microsoft Store försöker igen. Kontrollera ditt betalningssätt för att behålla dem.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Rätta till betalningen</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 bok på din hylla är låst och dold för ditt barn. Prenumerera igen, eller köp den du vill behålla.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} böcker på din hylla är låsta och dolda för ditt barn. Prenumerera igen, eller köp dem du vill behålla.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} böcker är låsta. Ditt barn ser dem inte. Prenumerera igen, eller köp de du vill behålla.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bok är låst. Ditt barn ser den inte. Prenumerera igen, eller köp den du vill behålla.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnemang i butiken</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Köp · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan inte kontrollera ditt abonnemang</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Inget internet. Abonnemangets böcker förblir öppna till {0}, 3 dagar efter det sista datumet butiken gav. Anslut för att hålla dem öppna.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>

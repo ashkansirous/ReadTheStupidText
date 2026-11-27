@@ -26,6 +26,9 @@ internal sealed class FakePurchases : IBookPurchases
 
     public bool Offline { get; set; }
 
+    /// <summary>Slice 397: whether the pretend store allows the free trial (false = the account used it: the plain-price card). The <c>trial=used</c> hook switches it off.</summary>
+    public bool TrialAvailable { get; set; } = true;
+
     public string StoreName => PurchaseProofs.AndroidStore;
 
     public static string ProductOf(string bookId) => ProductPrefix + bookId;
@@ -53,12 +56,25 @@ internal sealed class FakePurchases : IBookPurchases
         return Task.FromResult(true);
     }
 
-    public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
+    public Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel) => BuyAsync(productId, withTrial: true, cancel);
+
+    // Slice 397 item 7: like Android, withTrial false buys the plain plan (no trial), and the marker says which one ran, so a flow catches an Ended card that starts a trial.
+    public async Task<BuyOutcome> BuyAsync(string productId, bool withTrial, CancellationToken cancel)
     {
         await Task.Delay(800, cancel); // long enough for the wait overlay (it appears after 500 ms)
         if (NextBuy == BuyOutcome.Bought && SubscriptionProducts.Is(productId))
         {
-            Subscription = new SubscriptionStatus(SubscriptionState.Trial, DateTimeOffset.UtcNow.AddDays(7), productId);
+            Subscription = withTrial
+                ? new SubscriptionStatus(SubscriptionState.Trial, DateTimeOffset.UtcNow.AddDays(7), productId)
+                : new SubscriptionStatus(SubscriptionState.Active, DateTimeOffset.UtcNow.AddDays(productId == SubscriptionProducts.Yearly ? 365 : 30), productId);
+            if (withTrial)
+            {
+                // Side effect: the account has used its trial now, so the pretend store reports TrialAvailable=false and
+                // the card shows TrialUsed (not Offer) until fake-subscription trial= resets it; a flow that expects an Offer card with trial=True after a trial buy must re-run that hook first.
+                TrialAvailable = false;
+            }
+
+            WriteMarker($"{Marker} subscribe product={productId} withTrial={withTrial}");
         }
         else if (NextBuy == BuyOutcome.Bought)
         {
@@ -110,7 +126,7 @@ internal sealed class FakePurchases : IBookPurchases
             proofs[plan] = "fake-sub-token-" + plan;
         }
 
-        return new PurchaseSnapshot(prices, owned, new HashSet<string>(PendingProducts), proofs, true, Subscription: status);
+        return new PurchaseSnapshot(prices, owned, new HashSet<string>(PendingProducts), proofs, true, Subscription: status, TrialAvailable: productIds.Any(SubscriptionProducts.Is) ? TrialAvailable : null);
     }
 }
 #endif

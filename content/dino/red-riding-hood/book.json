@@ -3,8 +3,8 @@
   "id": "1f0f0cb207b244368b7aef26028f4ac5",
   "title": "Little Red Riding Hood",
   "version": 10,
-  "ageMin": 4,
-  "ageMax": 7,
+  "ageMin": 6,
+  "ageMax": 8,
   "author": "Traditional",
   "credits": "Retold traditional tale · free to share",
   "colour": 3,
@@ -91,5 +91,21 @@
     "zh": "传统故事新编 · 可自由分享"
   },
   "storyBy": "Charles Perrault; Brothers Grimm",
-  "retold": true
+  "retold": true,
+  "namesByLanguage": {
+    "ar": { "Charles Perrault": "شارل بيرو", "Brothers Grimm": "الأخوان غريم", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "brødrene Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "den Brüdern Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "los hermanos Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Charles Perrault": "شارل پرو", "Brothers Grimm": "برادران گریم", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "Grimmin veljekset", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "Jacob et Wilhelm Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Charles Perrault": "シャルル・ペロー", "Brothers Grimm": "グリム兄弟", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "brødrene Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "de gebroeders Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "Jacob e Wilhelm Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Charles Perrault": "Шарль Перро", "Brothers Grimm": "братья Гримм", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Charles Perrault": "Charles Perrault", "Brothers Grimm": "bröderna Grimm", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Charles Perrault": "夏尔·佩罗", "Brothers Grimm": "格林兄弟", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
 }

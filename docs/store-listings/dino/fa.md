@@ -1,18 +1,20 @@
-# Store listing: Farsi (`fa`), Dino Book Reader
+# Store listing: Farsi (`fa`), Dino: Kids Books & Stories
+
+**Slice 413 (2026-11-18): new name, subtitle, keywords, Play short description and Microsoft search terms below, in this language's own search words (machine draft, native read in `docs/plan/unverified.md`; the description text only swaps the old name for "Dino"). Written to the repo; App Store and Microsoft pushed per the slice file, Google Play NOT pushed (hold until Dino's first production release).**
 
 **Machine draft by Claude (Slice 374, 2026-11-13). Native read open (`docs/plan/unverified.md`). Live on Google Play (read back equal 2026-11-15; new What/Why/Who text, Slice 291 items 7 and 10); App Store and Microsoft Store not pushed yet.** Persian, right to left. Locales: Play `fa` (Play's list names fa, fa-AE, fa-AF, fa-IR); Microsoft Store `fa` (to be confirmed at push). **App Store: not supported.** Apple's App Store localization list (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) has 50 languages and Persian is not one; so there is no Farsi App Store text, it is not mapped to another language. Layout as in `fr.md` (Microsoft description = Description with "Google Play" replaced by "Microsoft Store").
 
-Title (<= 30): Dino Book Reader
-Play short description (<= 80): هر شخصیت صدای خودش را دارد و مادربزرگ می‌تواند صدایش را برای گرگ ضبط کند
+Title (<= 30): Dino: کتاب و قصه کودکان
+Play short description (<= 80): قصه‌های شب و کتاب‌های تصویری برای کودکان، با صدای خودتان هم
 Play search phrases used in the text: قصه شب, قصه کودکان, کتاب تصویری, کتاب‌خوانی
 App Store: none (Persian is not an App Store locale)
-Microsoft search terms (7): قصه کودکان; قصه شب; کتاب تصویری; داستان صوتی; کتاب کودک; صدای شخصیت‌ها; قصه‌خوانی
+Microsoft search terms (7): قصه شب; کتاب کودک; قصه کودکان; کتاب تصویری; داستان صوتی; قصه‌خوانی; کتاب‌خوانی
 
 ## Google Play full description (<= 4,000), live 2026-11-15
 
 Machine draft from the English `play.md` (live-payment version); Play only, the Description below stays the App Store and Microsoft Store text. Play search phrases listed above apply to the Description below.
 
-در دینو بوک ریدر (Dino Book Reader) هر شخصیت صدای خودش را دارد. راوی داستان را تعریف می‌کند، گرگ و بچه‌خوک‌ها هر کدام صدای خودشان را دارند، و پدر، مادر یا پدربزرگ و مادربزرگ می‌توانند صدای خودشان را برای هر شخصیتی ضبط کنند: مادربزرگ می‌تواند گرگ باشد.
+در دینو (Dino) هر شخصیت صدای خودش را دارد. راوی داستان را تعریف می‌کند، گرگ و بچه‌خوک‌ها هر کدام صدای خودشان را دارند، و پدر، مادر یا پدربزرگ و مادربزرگ می‌توانند صدای خودشان را برای هر شخصیتی ضبط کنند: مادربزرگ می‌تواند گرگ باشد.
 
 هر داستان به ۱۵ زبان است، برای خانواده‌هایی که کنار زبان مدرسه زبان خانه را هم نگه می‌دارند: فارسی، عربی، سوئدی، نروژی، دانمارکی، فنلاندی و بیشتر. یک بزرگسال دو یا سه زبان داستان را انتخاب می‌کند و کودک می‌تواند هنگام خواندن بین آن‌ها جابه‌جا شود، همان داستان را بشنود و واژه‌ها را به هر دو زبان یاد بگیرد.
 
@@ -34,7 +36,7 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 - هر شخصیت، در هر صفحه و به هر زبان داستان ضبط می‌شود؛ ضبط‌ها پشتیبان‌گیری و بازیابی می‌شوند.
 
 زبان‌ها
-انگلیسی، عربی، چینی، دانمارکی، هلندی، فارسی، فنلاندی، فرانسوی، آلمانی، ژاپنی، نروژی، پرتغالی، روسی، اسپانیایی و سوئدی: برنامه، داستان‌ها و صداها.
+انگلیسی، چینی، اسپانیایی، عربی، فرانسوی، پرتغالی، روسی، آلمانی، ژاپنی، فارسی، هلندی، سوئدی، دانمارکی، فنلاندی و نروژی: برنامه، داستان‌ها و صداها.
 
 امن و خصوصی
 - بدون تبلیغ و بدون حساب کاربری. ما چیزی درباره‌ی شما یا خریدتان نگه نمی‌داریم؛ گواه فروشگاه بررسی و فراموش می‌شود.
@@ -43,7 +45,7 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 
 ## Description
 
-دینو بوک ریدر (Dino Book Reader) داستان‌های کتاب‌های تصویری را برای کودکان ۳ تا ۹ سال بلند می‌خواند، با صدایی متفاوت برای هر شخصیت. راوی داستان را تعریف می‌کند و گرگ، بچه‌خوک‌ها و آدمک زنجبیلی هر کدام با صدای خودشان حرف می‌زنند.
+دینو (Dino) داستان‌های کتاب‌های تصویری را برای کودکان ۳ تا ۹ سال بلند می‌خواند، با صدایی متفاوت برای هر شخصیت. راوی داستان را تعریف می‌کند و گرگ، بچه‌خوک‌ها و آدمک زنجبیلی هر کدام با صدای خودشان حرف می‌زنند.
 
 داستان‌هایتان را انتخاب کنید
 یک بزرگسال از قفسه‌ی داستان‌ها کتاب انتخاب می‌کند: قصه‌های کلاسیک که ملایم بازگو شده‌اند و در هر صفحه تصویری دارند. چهار داستان رایگان است. هر کتاب صداهای آماده‌ی خودش را دارد، به زبانی که انتخاب می‌کنید.
@@ -61,7 +63,7 @@ Machine draft from the English `play.md` (live-payment version); Play only, the 
 چهار داستان تصویری رایگان است: شیر و موش، آدمک زنجبیلی، سه بچه‌خوک و ایکس جای گنج را نشان می‌دهد. هر داستان دیگر در قفسه ۰٫۹۹ دلار است (Google Play قیمت را به ارز شما نشان می‌دهد). یک بزرگسال هر داستان را یک بار، پشت قفل بزرگسالان، از طریق Google Play می‌خرد و می‌تواند خریدهای قبلی را هر زمان بازیابی کند. داستان‌هایی که از قبل دارید روی دستگاه شما می‌مانند.
 
 پانزده زبان
-برنامه، داستان‌ها و صداها به انگلیسی، عربی، چینی، دانمارکی، هلندی، فارسی، فنلاندی، فرانسوی، آلمانی، ژاپنی، نروژی، پرتغالی، روسی، اسپانیایی و سوئدی در دسترس هستند.
+برنامه، داستان‌ها و صداها به انگلیسی، چینی، اسپانیایی، عربی، فرانسوی، پرتغالی، روسی، آلمانی، ژاپنی، فارسی، هلندی، سوئدی، دانمارکی، فنلاندی و نروژی در دسترس هستند.
 
 ساخته‌شده برای کودکان
 - بدون تبلیغ.

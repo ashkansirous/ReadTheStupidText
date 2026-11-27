@@ -41,7 +41,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    and one that is a person, or an animal that should be cast like one, in its `notAnimals`. Anything left over is stored as none.
    List each character with its animal in your report; a wrong one is silent or sounds wrong.
    Back cover (Slice 237): set `storyBy` in the book's `book.json` (the original author's name, checked; `"traditional"` for a tale nobody owns; the user's own books: the user's name,
-   plus a co-author if there is one) and `retold: true` when the book retells someone else's story. The builder makes the silent credits page from them; never write it into `story.md`. Every book also needs a drawn back-cover picture (Slice 359): put a "Back cover" line in the art record's picture plan
+   plus a co-author if there is one) and `retold: true` when the book retells someone else's story. Also write `namesByLanguage` (Slice 405) with every back-cover name spelled in all 14 non-English languages, from the book's own `creditsByLanguage` first (format and rules: `create-dino-story`, *Back cover*); the builder refuses a book without it. The builder makes the silent credits page from them; never write it into `story.md`. Every book also needs a drawn back-cover picture (Slice 359): put a "Back cover" line in the art record's picture plan
    (the style from `prompts.md` that fits the story's end, the scene made of the book's own characters, place and props, the middle left open for the credit lines); the illustrator draws it.
    Store-card `credits` and `creditsByLanguage`: "free to share" (in any language) is only for retold public-domain tales; the user's own
    books are not free to share and never carry it (user, 2026-11-01).

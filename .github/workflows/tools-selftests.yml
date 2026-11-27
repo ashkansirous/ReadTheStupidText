@@ -58,6 +58,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Slice 409: file names only (no LFS pull). A pack whose clips changed needs its listening track and the book's audio-cast.json record in the same pull request, else dino-store.yml holds the book back as `<book>/record`.
+      - name: Check that changed audio clips come with their listening track and record
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node .github/scripts/check-audio-record.mjs "$BASE" "$GITHUB_SHA"
 
       - name: Set up .NET 11
         uses: actions/setup-dotnet@v6
@@ -185,6 +193,13 @@ jobs:
 
       - name: Phone duplicate function name self-test (${{ matrix.shell }})
         run: ./tools/phone/test-duplicate-functions.ps1
+
+      # Slice 393 items 14 and 15: the store-shot status bar demo mode and the Dino in-app language reset.
+      - name: Store screenshots self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-store-screenshots.ps1
+
+      - name: Dino language reset self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-reset-dino-language.ps1
 
       - name: CI-form runner self-test (${{ matrix.shell }})
         run: ./tools/test-run-selftests-ci-form.ps1

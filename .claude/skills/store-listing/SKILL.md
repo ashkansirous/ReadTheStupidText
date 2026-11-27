@@ -63,7 +63,12 @@ the differentiators first, in that language's own words: record, family voice, g
 bilingual, the language name itself ("Farsi stories", "arabiska sagor"), bedtime; generic words (kids,
 books) only if bytes are left. Never repeat a word already in the app name.
 
-### Dino Book Reader (ages 3-9)
+### Dino: Kids Books & Stories (ages 3-9)
+
+The public name is `publicName` in `tools/dino/public-name.json` (Slice 412); the old names "Dino Book Reader" and "Dino Reader"
+never appear in a listing. The opening words of the description are the phrases parents search for ("bedtime stories for kids",
+"picture books", "read aloud", "children's stories"), used naturally and never stuffed (Play suspends for stuffing); the
+differentiators below follow at once.
 
 The first screen of text says, in this order:
 
@@ -96,9 +101,13 @@ call to action ("Download now"); details in `stores.md` (*Captions*). The paymen
 text, not in a caption.
 
 **Screen language (user, 2026-11-16, every store and every device size):** the global listing and every
-European listing show the app in **English**. The shot that proves "other languages" shows **German or
-French**, never Farsi, Arabic or Chinese. A Farsi, Arabic or Chinese screen appears only in that language's
-own local listing (`fa`, `ar`, `zh-*`). Other listings use the English shots with translated captions.
+European listing show the app in **English**. The shot that proves "other languages" shows **English,
+Spanish and Japanese** pages (the user's decision of 2026-11-23, Slice 433, replacing "German or French"),
+never Farsi, Arabic or Chinese. A Farsi, Arabic or Chinese screen appears only in that language's
+own local listing (`fa`, `ar`, `zh-*`). Other listings use the English shots with translated captions
+(`docs/store-listings/screenshots/captions.json`, every listing language; `tools/emulator/store-captions.ps1`
+draws them in the app's own colour and font, edge to edge, at the exact store size, and
+`tools/emulator/store-size-check.ps1` must pass on every file before an upload).
 
 **A full shelf in every shot (user, 2026-11-16):** a shot of the child's shelf or the grown-ups' pages
 (Books, Store) shows enough books to fill the screen, never four lonely covers. The old shots showed four
@@ -111,12 +120,14 @@ or book shot: no empty rows, no "no stories" state, only the last row may be par
 
 | # | Screen | Caption (English) |
 |---|---|---|
-| 1 | Reading page, a character's line lit | A voice for every character |
-| 2 | Record screen, "Who will you record?" | Record your voice as any character |
-| 3 | The same story page in another language | 15 languages |
-| 4 | Grown-ups page (books), no prices | Grown-ups choose the books, behind a gate |
-| 5 | Kids' shelf of illustrated books | Classic tales, retold gently |
+| 1 | A full-page picture (Three Little Pigs) | Picture books, read aloud |
+| 2 | Reading page, a character's line lit | A different voice for every character |
+| 3 | Record screen, "Who will you record?" | Record your voice. Be the wolf. |
+| 4 | The same story page in Spanish (Japanese as an extra file) | Stories in 15 languages |
+| 5 | Kids' shelf, 12 books | New books on the shelf |
+| 6 | Grown-ups page (books), no prices | For ages 3 to 9. No ads. |
 
+(Slice 433, the note `docs/plan/notes/2026-11-23-dino-store-screenshots-and-video.md`; the Play tablet set has no captions.)
 Flows: `.maestro/dino/needs-file/store-shot-{phone,tablet}.yaml`, names `store-dino-<form>-<n>-<screen>`,
 collected by `tools/emulator/store-screenshots.ps1` into `docs/store-listings/screenshots/dino/<form>/`.
 `permissions: all: allow` at launch; the record shot is the intro page, taken before tapping Start. A Debug build sends
@@ -129,9 +140,10 @@ from the VM. Same rules.
 
 ### Per store
 
-- **Play:** phone set (2-8) required; tablet sets (4-8) once the tablet flow has run; feature graphic
-  1024x500 stays unless the user asks for a new one.
-- **App Store:** iPhone 6.9" and iPad 13" from `store-screenshots.yml` (macOS simulator); same screens.
+- **Play:** phone set (2-8) at 1080x1920, tablet set (4-8) at 1440x2560 without captions; feature graphic
+  1024x500 (the user asked for a new one on 2026-11-23, Slice 433: Dino plus one book picture, name centred,
+  no alpha, `tools/dino/promo/store/`); otherwise it stays unless the user asks for a new one.
+- **App Store:** iPhone 6.9" (1320x2868) and iPad 13" in landscape (2752x2064) from `store-screenshots.yml` (macOS simulator); same screens, plus the app preview videos (iPhone 886x1920, iPad 1600x1200).
 - **Microsoft Store:** desktop shots from the Hyper-V VM (`tools/desktop-vm`).
 - **Amazon Appstore / Alexa:** not live for either app; sizes in `stores.md` for when one is added.
 

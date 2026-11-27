@@ -31,6 +31,8 @@ param(
     [switch] $SkipPreflight,
     # Slice 215: copy a host copy of this voice pack (the packs release asset, cached once under <worktrees>\_builds\packs) into the guest app's LocalCache\packs after the install.
     [string] $WithPack,
+    # Slice 434: host folder made by .github/scripts/fetch-shelf-packages.mjs (<id>\story-v<n>.dino per book; run it with --include-free, the VM is offline); each package is copied into the guest app's LocalState\full-shelf\<id>.dino after the install, for the dino-store-shots full shelf.
+    [string] $WithShelfPackages,
     # Slice 225 item 20: the VM start needs this much free physical memory (GB); below it the script stops at once with a plain message, before the build and before Start-VM.
     # (Two starts failed late with 0x8007000E and 0x800705AA at about 6.9 GB free on 2026-10-31.)
     [double] $MinFreeMemoryGB = 8
@@ -45,6 +47,7 @@ if ($App -eq 'auto') {
     if ($Package) { throw '-Package names one MSIX; it cannot be combined with -App auto.' }
     if ($Check -or $CopyOut) { throw '-Check and -CopyOut belong to one app; name it with -App rtst or -App dino, not -App auto.' }
     if ($WithPack) { throw '-WithPack belongs to one app (a pack id is per app); name it with -App rtst or -App dino, not -App auto.' }
+    if ($WithShelfPackages) { throw '-WithShelfPackages belongs to the dino app; name it with -App dino, not -App auto.' }
     $touched = @(& "$PSScriptRoot\..\test-targets.ps1" -Platform windows -Raw)
     if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
@@ -118,13 +121,72 @@ function Install-InGuest {
     }
 }
 
+function Get-LatestShelfPackages {
+    # The highest story-v<n>.dino of each <id> folder under $HostDir (fetch-shelf-packages.mjs writes <id>\story-v<n>.dino); throws when none is found or a package sits directly in $HostDir (its folder name is no book id).
+    param([string] $HostDir)
+    $root = (Resolve-Path $HostDir -ErrorAction Stop).Path.TrimEnd('\')
+    $files = @(Get-ChildItem $root -Recurse -Filter *.dino -File)
+    if (-not $files.Count) { throw "-WithShelfPackages ${HostDir}: no .dino package in it (run .github/scripts/fetch-shelf-packages.mjs first)." }
+    $loose = @($files | Where-Object { $_.Directory.FullName.TrimEnd('\') -eq $root })
+    if ($loose.Count) { throw "-WithShelfPackages ${HostDir}: $($loose[0].Name) sits directly in the folder; each package must be in its own <book id> folder." }
+    $version = { if ($_.BaseName -match '-v(\d+)$') { [int]$Matches[1] } else { 0 } }
+    return @($files | Group-Object { $_.Directory.FullName } | ForEach-Object { $_.Group | Sort-Object $version -Descending | Select-Object -First 1 })
+}
+
+function Copy-ShelfPackagesToGuest {
+    # Slice 434: all eight books' packages for the full-shelf hook (it imports them from <app data>\full-shelf\<id>.dino; the VM has no network, so no book is downloaded). Never builds a package.
+    param($Session, [string] $PackageName, [string] $HostDir)
+    $files = @(Get-LatestShelfPackages $HostDir)
+    $stage = "$($script:GuestWorkDir)\shelf-packages"
+    Invoke-Command -Session $Session -ArgumentList $stage -ScriptBlock { param($dir) Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Force -Path $dir | Out-Null }   # no leftover of an earlier run
+    foreach ($f in $files) { Copy-Item -ToSession $Session -Path $f.FullName -Destination "$stage\$($f.Directory.Name).dino" -Force }
+    $listing = Join-Path $HostDir 'shelf-listing.json'   # id -> ages and sale fields from the live list (fetch-shelf-packages.mjs); the guest's test store reads it for the Store tab's "Ages x-y" and each card's price or Free
+    if (Test-Path $listing) { Copy-Item -ToSession $Session -Path $listing -Destination "$stage\shelf-listing.json" -Force }
+    Invoke-Command -Session $Session -ArgumentList $PackageName, $stage -ScriptBlock {
+        param($name, $stage)
+        $pkgDir = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Filter "${name}_*" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $pkgDir) { throw "no Packages\${name}_* folder in the guest: the package is not installed for this user" }
+        $target = Join-Path $pkgDir.FullName 'LocalState\full-shelf'
+        New-Item -ItemType Directory -Force -Path $target | Out-Null
+        Move-Item "$stage\*" $target -Force
+    }
+    Write-Host "Copied $($files.Count) shelf packages into the VM."
+}
+
 function Copy-ResultFiles {
     # Slice 194: pulls the PNGs the checks left in the guest's results folder out to a host folder (before the reset to clean).
     param($Session, [string] $HostDir)
     New-Item -ItemType Directory -Force -Path $HostDir | Out-Null
     $files = @(Invoke-Command -Session $Session -ArgumentList $script:GuestWorkDir -ScriptBlock { param($dir) Get-ChildItem "$dir\results" -Filter *.png -ErrorAction SilentlyContinue | ForEach-Object FullName })
-    foreach ($f in $files) { Copy-Item -FromSession $Session -Path $f -Destination $HostDir -Force; Write-Host "Copied $f to $HostDir" }
+    $frames = @($files | Where-Object { (Split-Path $_ -Leaf) -match $script:FootageFramePattern })   # Slice 434: footage frames become one mp4 per clip, never all on the host disk at once
+    foreach ($f in @($files | Where-Object { $frames -notcontains $_ })) { Copy-Item -FromSession $Session -Path $f -Destination $HostDir -Force; Write-Host "Copied $f to $HostDir" }
+    $failedClips = @()
+    foreach ($clip in @($frames | ForEach-Object { ((Split-Path $_ -Leaf) -replace $script:FootageFramePattern, '$1') } | Select-Object -Unique)) {
+        try { Copy-FootageClipToMp4 -Session $Session -HostDir $HostDir -Clip $clip -Frames @($frames | Where-Object { (Split-Path $_ -Leaf) -like "footage-$clip-*" }) }
+        catch { $failedClips += "$clip ($($_.Exception.Message))" }   # one failed clip must not drop the others before the reset to clean
+    }
     if (-not $files.Count) { Write-Warning 'CopyOut: the checks left no PNG in the guest results folder.' }
+    if ($failedClips.Count -gt 0) { throw "CopyOut: $($failedClips.Count) footage clip(s) were not encoded: $($failedClips -join '; ')" }
+}
+
+$script:FootageFramePattern = '^footage-([a-z]+)-\d{4}\.png$'
+$script:FootageFps = 10   # the check's frame rate (dino-store-shots.ps1 $FootageFps)
+$script:FootageOutputFps = 30
+
+function Copy-FootageClipToMp4 {
+    # Slice 434: copies one clip's frames to a scratch folder, encodes <clip>.mp4 (H.264, 1920 x 1080, yuv420p, 30 fps from the 10 fps frames) with the host's ffmpeg and deletes the frames, so the host
+    # never holds more than one clip of PNGs. Throws when ffmpeg is missing or fails (the frames are then left in the scratch folder for a look).
+    param($Session, [string] $HostDir, [string] $Clip, [string[]] $Frames)
+    $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+    if (-not $ffmpeg) { throw 'CopyOut: ffmpeg is not on the host PATH, so the footage frames cannot be encoded (winget install Gyan.FFmpeg).' }
+    $scratch = Join-Path $HostDir "frames-$Clip"
+    New-Item -ItemType Directory -Force -Path $scratch | Out-Null
+    foreach ($f in $Frames) { Copy-Item -FromSession $Session -Path $f -Destination $scratch -Force }
+    $out = Join-Path $HostDir "$Clip.mp4"
+    & $ffmpeg.Source -y -loglevel error -framerate $script:FootageFps -i (Join-Path $scratch "footage-$Clip-%04d.png") -vf "fps=$script:FootageOutputFps,format=yuv420p" -c:v libx264 -crf 18 $out
+    if ($LASTEXITCODE -ne 0) { throw "CopyOut: ffmpeg failed for the $Clip clip (exit $LASTEXITCODE); frames kept in $scratch" }
+    Remove-Item $scratch -Recurse -Force
+    Write-Host "Encoded $($Frames.Count) frames of $Clip to $out"
 }
 
 function Assert-GuestPreflight {
@@ -187,6 +249,8 @@ if (Test-VmRunning) { Write-Host 'Free-memory guard skipped: the test VM is alre
 else { $memoryProblem = Get-MemoryProblem (Get-FreeMemoryGB) $MinFreeMemoryGB }
 if ($memoryProblem) { Write-Host "$($script:PreflightNoGo): $memoryProblem"; exit $script:PreflightExitCode }
 $msix = Find-Package
+# Slice 434: the footage clips are encoded on the host at CopyOut, after a run of 10+ minutes; a missing ffmpeg is found now, before the VM starts, not when the results are about to be lost.
+if ($CopyOut -and @($AppProfile.Checks) -contains 'dino-store-shots' -and -not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { throw 'dino-store-shots with -CopyOut needs ffmpeg on the host PATH to encode the footage clips (winget install Gyan.FFmpeg); the VM was not started.' }
 # Slice 253 item 3: the selected checks are read against the guest screen and the built package before the VM is touched; a FAIL stops here (exit 1), a WARN is printed.
 . "$PSScriptRoot\_dryrun.ps1"
 if ((Invoke-CheckDryRun @($AppProfile.Checks) "$PSScriptRoot\checks" $msix) -gt 0) { Write-Host 'DRYRUN stopped the run: fix the check(s) above; the VM was not started.'; exit 1 }
@@ -255,6 +319,7 @@ try {
     $version = Install-InGuest -Session $session -Name $AppProfile.Name
     Write-Host "Installed $($AppProfile.Name) $version in the VM from $msix"
     if ($WithPack) { Copy-PackToGuest -Session $session -PackageName $AppProfile.Name -PackId $WithPack }  # Slice 215: after the install, before the pack probe
+    if ($WithShelfPackages) { Copy-ShelfPackagesToGuest -Session $session -PackageName $AppProfile.Name -HostDir $WithShelfPackages }   # Slice 434
     Assert-GuestPreflight -Session $session -Only @('voice-pack') -Final
     foreach ($check in $AppProfile.Checks) {
         if ($Sabotage -eq 'KillApp' -and $check -ne $AppProfile.Checks[0]) {

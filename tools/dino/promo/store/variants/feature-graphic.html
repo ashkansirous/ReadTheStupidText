@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, height=500">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* Slice 433 item 7: the Google Play feature graphic, 1024 x 500, no alpha: Dino (the app icon) plus one book picture (Three Little Pigs, the app's own cover), the name centred and out of the edges. The still is rendered as a PNG sequence (npm run render:feature, lossless RGBA frames) and flattened to 24-bit by flatten-still.ps1; tools/emulator/store-size-check.ps1 -Target play-feature checks it. Palette and font are the app's own. */
+      @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+      :root { --brand: #5b57e8; --sand: #f3efe6; --ink: #2b2540; --body: #5a5470; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; background: var(--sand); }
+      #root { position: relative; width: 1024px; height: 500px; background: var(--sand); }
+      #bar { position: absolute; left: 0; top: 0; width: 1024px; height: 14px; background: var(--brand); }
+      #book { position: absolute; left: 86px; top: 112px; width: 210px; height: 281px; object-fit: cover; border-radius: 20px; box-shadow: 0 14px 34px rgba(43, 37, 64, 0.28); transform: rotate(-5deg); }
+      #icon { position: absolute; left: 738px; top: 150px; width: 200px; height: 200px; border-radius: 46px; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.2); }
+      #name { position: absolute; left: 312px; top: 170px; width: 400px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 130px; line-height: 1; color: var(--ink); }
+      #sub { position: absolute; left: 312px; top: 318px; width: 400px; text-align: center; font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 34px; color: var(--brand); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="1" data-width="1024" data-height="500">
+      <div id="bar"></div>
+      <img id="book" src="assets/images/book-cover.jpg" alt="Three Little Pigs cover" />
+      <div id="name">Dino</div>
+      <div id="sub">Kids Books &amp; Stories</div>
+      <img id="icon" src="assets/images/dino-icon.png" alt="Dino Reader app icon" />
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        tl.set("#root", { opacity: 1 }, 0);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

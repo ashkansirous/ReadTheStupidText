@@ -36,14 +36,14 @@ internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
     string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string? ContentHash, bool? TextInPictures = null,
     Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null,
-    string[]? Tags = null, string? Access = null, string? ProductId = null)
+    Dictionary<string, Dictionary<string, string>>? NamesByLanguage = null, string[]? Tags = null, string? Access = null, string? ProductId = null)
 {
     /// <summary>Slice 346: the closed set <c>access</c> may hold. A book with no <c>access</c> is paid; only <c>free</c> is free.</summary>
     public static readonly string[] AccessValues = ["free", "paid"];
 
     /// <summary>The book's silent back cover (Slice 237) from <c>storyBy</c>, <c>retold</c>, <c>illustration</c> and the month of <see cref="Added"/>; null when it cannot be made (<c>check</c> fails such a book).</summary>
     [JsonIgnore]
-    public BackCover? BackCover => DinoReader.Core.BackCover.TryCreate(StoryBy, Retold == true, Illustration, Added);
+    public BackCover? BackCover => DinoReader.Core.BackCover.TryCreate(StoryBy, Retold == true, Illustration, Added, null, NamesByLanguage);
 }
 
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
@@ -205,6 +205,7 @@ internal static class Books
             _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",
             _ when DinoReader.Core.BackCover.IsTraditional(info.StoryBy) && info.Retold != true => "a traditional tale must be retold: true",
             _ when info.Retold == true && string.Equals(info.StoryBy.Trim(), DinoReader.Core.BackCover.Maker, StringComparison.OrdinalIgnoreCase) => "a retold book must credit the original author in storyBy, not the maker",
+            _ when NamesByLanguageProblem(info) is { } names => names,
             _ when !File.Exists(Path.Combine(folder, BookFolder.StoryFile)) && !File.Exists(Path.Combine(folder, BookFolder.LinesFile)) => "needs story.md or lines.json",
             _ => null,
         };
@@ -249,6 +250,39 @@ internal static class Books
         string[] unknown = credits.Keys.Except(expected, StringComparer.Ordinal).ToArray();
         return absent.Length + unknown.Length == 0 ? null : $"creditsByLanguage needs exactly the {expected.Length} non-English languages (missing: {string.Join(",", absent)}; unknown: {string.Join(",", unknown)})";
     }
+
+    /// <summary>
+    /// Slice 405: <c>namesByLanguage</c> must spell every name the back cover shows (<see cref="DinoReader.Core.BackCover.ShownNames"/>) in each of the 14 non-English languages, so no book ships a Latin name in a Farsi or Japanese back cover.
+    /// </summary>
+    public static string? NamesByLanguageProblem(BookInfo info)
+    {
+        string[] languages = UiLanguage.Supported.Where(code => code != UiLanguage.English).ToArray();
+        string[] unknown = (info.NamesByLanguage?.Keys.AsEnumerable() ?? []).Except(languages, StringComparer.Ordinal).ToArray();
+        string[] gaps = languages.SelectMany(code => DinoReader.Core.BackCover.ShownNames(info.StoryBy ?? string.Empty, info.Retold == true, info.Illustration)
+            .Where(name => !HasSpelling(info.NamesByLanguage, code, name)).Select(name => $"{code}/{name}")).ToArray();
+        string[] latin = LatinSpellings(info);
+        return gaps.Length + unknown.Length + latin.Length == 0 ? null
+            : gaps.Length + unknown.Length == 0 ? $"namesByLanguage has a name still in Latin letters for a language with its own script (language/name: {string.Join(", ", latin)}); write it in that script"
+            : $"namesByLanguage must spell every back-cover name in the {languages.Length} non-English languages (missing: {string.Join(", ", gaps)}; unknown languages: {string.Join(",", unknown)})";
+    }
+
+    /// <summary>Slice 405: the languages whose own script is not Latin, with the letters that script uses; a spelling in these must hold at least one of them.</summary>
+    private static readonly Dictionary<string, System.Text.RegularExpressions.Regex> ScriptLetters = new()
+    {
+        ["ar"] = new(@"[؀-ۿݐ-ݿ]"),
+        ["fa"] = new(@"[؀-ۿݐ-ݿ]"),
+        ["ja"] = new(@"[぀-ヿ一-鿿]"),
+        ["zh"] = new(@"[一-鿿]"),
+        ["ru"] = new(@"[Ѐ-ӿ]"),
+    };
+
+    private static string[] LatinSpellings(BookInfo info) =>
+        ScriptLetters.SelectMany(script => DinoReader.Core.BackCover.ShownNames(info.StoryBy ?? string.Empty, info.Retold == true, info.Illustration)
+            .Where(name => HasSpelling(info.NamesByLanguage, script.Key, name) && !script.Value.IsMatch(info.NamesByLanguage![script.Key][name]))
+            .Select(name => $"{script.Key}/{name}")).ToArray();
+
+    private static bool HasSpelling(Dictionary<string, Dictionary<string, string>>? names, string language, string name) =>
+        names is not null && names.TryGetValue(language, out Dictionary<string, string>? forLanguage) && forLanguage.TryGetValue(name, out string? spelling) && !string.IsNullOrWhiteSpace(spelling);
 
     public static void WriteInfo(string folder, BookInfo info) =>
         File.WriteAllText(Path.Combine(folder, BookFolder.BookFile), JsonSerializer.Serialize(info, JsonOptions).ReplaceLineEndings("\n") + "\n");

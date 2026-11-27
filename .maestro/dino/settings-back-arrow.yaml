@@ -25,7 +25,7 @@ name: Settings, the back arrow goes up one level and there is no Done
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
     id: GallerySettings
@@ -40,7 +40,7 @@ name: Settings, the back arrow goes up one level and there is no Done
 - assertNotVisible:
     id: GrownUpDoneSettingsPage
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: CornerTabBooks
 - tapOn:
@@ -54,7 +54,7 @@ name: Settings, the back arrow goes up one level and there is no Done
 - assertNotVisible:
     id: GrownUpDoneReadingSpeedPage
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 - assertVisible:
     id: CornerTabBooks
 # The back arrow goes up one level: the Settings list, not the corner's Books and not the shelf.
@@ -65,12 +65,12 @@ name: Settings, the back arrow goes up one level and there is no Done
       id: SettingsReadingSpeedRow
     timeout: 10000
 - assertVisible:
-    id: GalleryDone
+    id: LockChip
 # The coral pill leaves the corner.
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     notVisible:
-      id: GalleryDone
+      id: LockChip
     timeout: 10000

@@ -10,7 +10,8 @@ param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 
 $TraceFileName = 'window-trace.log'
 $VkSpace = 0x20; $VkEnter = 0x0D; $VkEscape = 0x1B; $VkLeft = 0x25; $VkRight = 0x27
-$StepBarDot = [string][char]0x00B7   # "Step 2 of 6 <dot> Story languages"
+$StepBarDot = [string][char]0x00B7   # "Step 2 of 5 <dot> Story languages"
+$StepCount = 5   # OnboardingFlow.Count (Slice 418, Decision 3: five steps)
 $NoEffectWaitMs = 1500
 $script:Notes = [System.Collections.Generic.List[string]]::new()   # the harness collects only the string Invoke-Check's body returns (Write-Host goes nowhere), so notes ride on the pass message
 $RightNotUsed = "Dino keyboard: Right not used"   # DinoKeyboard.cs writes "Dino keyboard: {key} not used (page, screen)" for a key no page took
@@ -103,7 +104,7 @@ function Assert-CountLine {
 
 function Assert-StepBar {
     param([int] $Step, [string] $Name)
-    $text = "Step $Step of 6 $StepBarDot $Name"
+    $text = "Step $Step of $StepCount $StepBarDot $Name"
     Wait-Until { Find-UiaExact (Get-DinoWindow) $text } 20 "FAIL the step bar did not read '$text'" | Out-Null
 }
 

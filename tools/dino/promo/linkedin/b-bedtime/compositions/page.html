@@ -1,0 +1,140 @@
+<template>
+  <style>
+    @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+    @font-face { font-family: "Andika"; src: url("assets/fonts/Andika-Bold.ttf"); font-weight: 700; }
+    @font-face { font-family: "Vazirmatn"; src: url("assets/fonts/Vazirmatn.ttf"); font-weight: 100 900; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f3efe6; }
+    #pg-cam { position: absolute; inset: 0; transform-origin: 50% 45%; }
+    #pg-pic { position: absolute; left: 0; top: 0; width: 1080px; height: 1446px; object-fit: cover; }
+    #pg-chips { position: absolute; left: 108px; top: 135px; display: flex; gap: 14px; }
+    .pg-chip {
+      height: 64px; padding: 0 26px; border-radius: 32px; display: flex; align-items: center;
+      font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 32px; color: #2b2540;
+      background: #fff6e6; box-shadow: 0 6px 18px rgba(43, 37, 64, 0.16);
+    }
+    .pg-chip.fa { font-family: "Vazirmatn", sans-serif; font-weight: 700; font-size: 30px; }
+    .pg-chip-fill { position: absolute; inset: 0; border-radius: 32px; background: #5b57e8; opacity: 0; }
+    .pg-chip-label { position: relative; }
+    .pg-chip { position: relative; }
+    #pg-claim {
+      position: absolute; left: 108px; top: 222px; padding: 14px 26px; border-radius: 24px; background: #f3efe6;
+      font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 64px; letter-spacing: -0.01em; color: #2b2540;
+      box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18);
+    }
+    /* Opening caption: on paper over the bricks, below the chips and above the pigs' heads (they start near y 500). */
+    #pg-voice {
+      position: absolute; left: 108px; top: 222px; padding: 16px 28px 18px; border-radius: 24px; background: #f3efe6;
+      box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18);
+    }
+    #pg-voice-title {
+      font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 56px; line-height: 1.15; letter-spacing: -0.01em; color: #2b2540;
+    }
+    #pg-voice-sub { font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 34px; line-height: 1.3; color: #5a5470; }
+    #pg-card {
+      position: absolute; left: 108px; width: 864px; top: 905px; height: 310px; border-radius: 28px;
+      background: #fffdf8; box-shadow: 0 12px 32px rgba(43, 37, 64, 0.18);
+    }
+    .pg-text {
+      position: absolute; left: 40px; right: 40px; bottom: 34px;
+      font-family: "Andika", sans-serif; font-weight: 700; font-size: 44px; line-height: 1.5; color: #2b2540;
+    }
+    .pg-text.fa { direction: rtl; text-align: right; font-family: "Vazirmatn", sans-serif; font-size: 46px; line-height: 1.55; }
+    .pg-line { display: block; }
+    .pg-hl { border-radius: 6px; padding: 0 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  </style>
+  <div id="root" data-composition-id="page" data-width="1080" data-height="1350">
+    <div id="pg-cam">
+      <img id="pg-pic" src="assets/images/page13.jpg" alt="The Three Little Pigs, page 13: the pigs at the brick fireplace with a tub of bath water" />
+    </div>
+
+    <div id="pg-chips">
+      <div class="pg-chip" id="pg-chip-en"><div class="pg-chip-fill" id="pg-chip-en-fill"></div><span class="pg-chip-label" id="pg-chip-en-label">English</span></div>
+      <div class="pg-chip fa" id="pg-chip-fa"><div class="pg-chip-fill" id="pg-chip-fa-fill"></div><span class="pg-chip-label" id="pg-chip-fa-label">فارسی</span></div>
+      <div class="pg-chip" id="pg-chip-de"><div class="pg-chip-fill" id="pg-chip-de-fill"></div><span class="pg-chip-label" id="pg-chip-de-label">Deutsch</span></div>
+    </div>
+
+    <div id="pg-voice" class="clip" data-start="0" data-duration="5.2" data-track-index="2">
+      <div id="pg-voice-title">A voice for every character</div>
+      <div id="pg-voice-sub">made with Google's Gemini voices</div>
+    </div>
+
+    <div id="pg-claim" class="clip" data-start="16.4" data-duration="1.8" data-track-index="1">One page. Three languages.</div>
+
+    <div id="pg-card" data-layout-allow-overlap>
+      <div class="pg-text" id="pg-en" data-layout-allow-overlap>
+        <span class="pg-line"><span class="pg-hl" id="pg-en-h1">"Uh-oh! He's going to come down the chimney!"</span> said Pop.</span>
+        <span class="pg-line"><span class="pg-hl" id="pg-en-h2">"Don't worry,"</span> said Pim.</span>
+      </div>
+      <div class="pg-text fa" id="pg-fa" lang="fa" data-layout-allow-overlap>
+        <span class="pg-line">پاپ گفت: <span class="pg-hl" id="pg-fa-h1">«وای وای وای! می‌خواد از دودکش بیاد پایین!»</span></span>
+        <span class="pg-line">پیم گفت: <span class="pg-hl" id="pg-fa-h2">«نگران نباشین!»</span></span>
+      </div>
+      <div class="pg-text" id="pg-de" lang="de" data-layout-allow-overlap>
+        <span class="pg-line"><span class="pg-hl" id="pg-de-h1">„Oje! Er kommt durch den Schornstein runter!“</span> sagte Pop.</span>
+        <span class="pg-line"><span class="pg-hl" id="pg-de-h2">„Keine Sorge,“</span> sagte Pim.</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const HL = "#fbe38a";
+      const CLEAR = "rgba(251, 227, 138, 0)";
+      const tl = gsap.timeline({ paused: true });
+
+      // Camera: one slow push over the whole page scene; the picture never cuts.
+      tl.fromTo("#pg-cam", { scale: 1 }, { scale: 1.06, duration: 18.2, ease: "none" }, 0);
+
+      // Start states (fromTo keeps every frame seekable).
+      tl.set(["#pg-fa", "#pg-de"], { opacity: 0 }, 0);
+      tl.set(["#pg-chip-fa", "#pg-chip-de"], { opacity: 0, scale: 0.6 }, 0);
+      tl.set(".pg-hl", { backgroundColor: CLEAR }, 0);
+      tl.set("#pg-chip-en-fill", { opacity: 1 }, 0);
+      tl.set("#pg-chip-en-label", { color: "#ffffff" }, 0);
+
+      // A sentence lights up while its clip plays, as the app's reading highlight does.
+      function light(id, on, off) {
+        tl.fromTo(id, { backgroundColor: CLEAR }, { backgroundColor: HL, duration: 0.15, ease: "power1.out" }, on);
+        tl.to(id, { backgroundColor: CLEAR, duration: 0.2, ease: "power1.in" }, off);
+      }
+      // The chip of the language that speaks turns violet; the one before goes back to paper.
+      function chipOn(lang, prev, at) {
+        tl.fromTo("#pg-chip-" + lang, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, at);
+        tl.fromTo("#pg-chip-" + lang + "-fill", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.inOut" }, at + 0.1);
+        tl.fromTo("#pg-chip-" + lang + "-label", { color: "#2b2540" }, { color: "#ffffff", duration: 0.25 }, at + 0.1);
+        tl.to("#pg-chip-" + prev + "-fill", { opacity: 0, duration: 0.25, ease: "power2.inOut" }, at + 0.1);
+        tl.to("#pg-chip-" + prev + "-label", { color: "#2b2540", duration: 0.25 }, at + 0.1);
+      }
+      // Blur swap on one stage: the text card stays, its words change language.
+      function swap(from, to, at) {
+        tl.to(from, { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power3.in" }, at);
+        tl.fromTo(to, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.22, ease: "expo.out" }, at + 0.18);
+      }
+
+      // Opening caption: already on screen at frame 0 (the thumbnail), leaves just before the Farsi swap.
+      tl.set("#pg-voice", { opacity: 1, y: 0 }, 0);
+      tl.to("#pg-voice", { opacity: 0, y: -16, filter: "blur(6px)", duration: 0.25, ease: "power3.in" }, 4.85);
+
+      light("#pg-en-h1", 0.3, 3.31);
+      light("#pg-en-h2", 3.55, 4.55);
+
+      swap("#pg-en", "#pg-fa", 5.2);
+      chipOn("fa", "en", 5.2);
+      light("#pg-fa-h1", 5.7, 9.69);
+      light("#pg-fa-h2", 9.95, 11.32);
+
+      swap("#pg-fa", "#pg-de", 11.9);
+      chipOn("de", "fa", 11.9);
+      light("#pg-de-h1", 12.4, 15.33);
+      light("#pg-de-h2", 15.55, 16.6);
+
+      // The claim lands on paper and holds dead still; all three chips go violet with it.
+      tl.fromTo("#pg-claim", { opacity: 0, y: 24, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 16.4);
+      tl.to(["#pg-chip-en-fill", "#pg-chip-fa-fill"], { opacity: 1, duration: 0.25 }, 16.6);
+      tl.to(["#pg-chip-en-label", "#pg-chip-fa-label"], { color: "#ffffff", duration: 0.25 }, 16.6);
+      // Leave to paper, as every later scene does, so the cut into "15 languages" lands on the same ground.
+      tl.to("#root", { opacity: 0, duration: 0.25, ease: "power3.in" }, 17.95);
+
+      window.__timelines["page"] = tl;
+    })();
+  </script>
+</template>

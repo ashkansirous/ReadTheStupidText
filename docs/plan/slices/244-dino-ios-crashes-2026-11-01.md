@@ -1,6 +1,8 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 **Product:** Dino
 
+*Plan-cleanup check 2026-11-25: verdict close. Own work is built and merged (#722, #1136, #1138, #1147). Item 1: Android emulator and iOS simulator runs (43642530390, 43646782384) passed; the iPhone 8 run is moved out: nothing on this PC drives Maestro on a real iPhone (`tools/crashes/pull-iphone.ps1` only pulls logs), so it is a tooling gap, not this slice. Item 6 is written up (causes unproven); proof can only come from a symbolicated crash, now a Watch line. Live read 2026-11-25: `node tools/crashes/report.mjs -App dino -Since 2026-11-10` shows no NSDictionary and no 0xdead10cc crash; the only iOS entries are `unclean_exit` 1.131.0 (2026-11-15) and 1.118.0 (2026-11-21) with no Apple crash. User 2026-11-06: "IOS has been tested and seemed ok. no crashes." The 2026-11-15 background watchdog kill is owned by Slice 400 item 3. The park notes below are stale. Unverified lines stay in unverified.md.*
+
 *Wave 4 (2026-11-14) merged as PR #1147 (8f0b3962); open: the iPhone 8 run, item 6.* *Workflow built 2026-11-14 (wave 62), PR merged for the workflow; simulator run 2 passed the navigation flow 2026-11-14 (no audio pack); simulator run 3 (audio-backed) passed 2026-11-14.* *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
@@ -16,6 +18,10 @@ and works from the evidence below plus reproduction.
 `src/Shared/Sirous.Reading.Application/**/SpeechTextChunker.cs`, `tests/Dino/DinoReader.Tests/**`, `tests/Shared/Shared.Tests/**`,
 `src/Dino/DinoReader.App/CLAUDE.md`, `.maestro/dino/**`, `.maestro/README.md`, `.github/workflows/dinoreader-ios-sim.yml` (new),
 `.github/scripts/ios-sim-*.sh` (new), `.github/CLAUDE.md`, `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`; widened after review pass 2 (coordinator, 2026-11-14): `.github/workflows/release-rtst.yml` and `.github/workflows/release-dino.yml` (path exclusions for the new test-only files), `.github/scripts/ship-targets.test.mjs` (its `RTST_EXTRA_NEGATIONS` list names the two new exclusions)
+
+## Park note (night 2026-11-17-2105, wave 1)
+
+**parked: waits on the user's iPhone 8 run (item 1) and a proven cause (item 6).** No `Touches` line for further work; nothing a headless wave can do.
 
 ## Claim notes (night 2026-11-14-1547 wave 4: audio-backed simulator run)
 
@@ -92,7 +98,7 @@ Premise check on origin/main corrected the slice:
 
 ## Work
 
-- [ ] 1. (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); the audio-backed simulator run 3 passed 2026-11-14 (run 43646782384); only the iPhone 8 run is open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
+- [x] 1. (closed 2026-11-25 by plan-cleanup: the iPhone 8 run is moved out, see the note under the Product line) (Android emulator flow done 2026-11-02 and the new platform-neutral flow PASS 2026-11-14; iOS simulator workflow built 2026-11-14; run 2 passed the navigation flow without audio (no audio pack); the audio-backed simulator run 3 passed 2026-11-14 (run 43646782384); only the iPhone 8 run is open.) **Reproduce first.** Run the Farsi Three Little Pigs on the iOS simulator (CI macOS runner, scripted) and on
   the user's iPhone 8 when it is free: read, press Back mid-sentence, read again, change page while reading, background
   the app while reading. Same flows on the Android emulator (parity). Record what crashes.
 - [x] 2. **Layout crash:** find every iOS place that builds an attributes dictionary or attributed string (our code and
@@ -106,7 +112,7 @@ Premise check on origin/main corrected the slice:
 - [x] 5. **`0xdead10cc`** (investigated, not fixed, cause unproven): find files held open across suspension (rolling log writer, crash run marker, settings,
   any SQLite); close or flush them on background (`UIApplication.DidEnterBackground`) or wrap the write in a background
   task. Same review on Android for its equivalents.
-- [ ] 6. Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until the iPhone 8 run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243. With audio playing, 3 rounds on the simulator (run 3, 2026-11-14) showed no crash, no Jetsam and no .ips; the three causes stay unproven because the simulator is not memory-limited.)
+- [x] 6. (closed 2026-11-25: written up; causes stay unproven and are not a hold) Write what each crash turned out to be into this file, proven vs likely, with the flow that shows it fixed. (Written up 2026-11-14 under "What each crash is": all three causes stay unproven and not reproduced on the simulator; open until the iPhone 8 run or a symbolicated crash settles them, Slice 243 item 8; plan-not-needed: 243. With audio playing, 3 rounds on the simulator (run 3, 2026-11-14) showed no crash, no Jetsam and no .ips; the three causes stay unproven because the simulator is not memory-limited.)
 
 ## Verification
 
@@ -117,7 +123,7 @@ Premise check on origin/main corrected the slice:
 
 ## User answers before the night run (2026-11-01, evening)
 
-- "Allow the CI runs": iOS simulator runs on a CI macOS runner may be dispatched tonight for this slice (a few runs, not a loop). The iPhone 8 run still waits for the user.
+- "Allow the CI runs": iOS simulator runs on a CI macOS runner may be dispatched tonight for this slice (a few runs, not a loop). ~~The iPhone 8 run still waits for the user.~~ **Correction (feedback loop 2026-11-17-2105):** the user's part is done (iPhone 8 connected and trusted 2026-11-17, see below); nothing on this slice waits on the user. Item 1's flow run on the iPhone 8 needs a way to drive a real iPhone from this PC: `tools/` has only `tools/crashes/pull-iphone.ps1` (crash logs), no Maestro run on a real iPhone, so item 1 is Claude's tooling gap, not the user's step. The park reasons on line 22 and at the end of this file that say "waits on the user's iPhone 8 run" are out of date.
 - The S21 is always available for tests (user, same evening).
 
 ## Built night 2026-11-01, device-checked on the Android emulator 2026-11-02 (items 2-5)
@@ -231,3 +237,5 @@ Target: `src/DinoReader.App/CLAUDE.md` for the first; the second in `src/Sirous.
 - iOS: the Open in prompt for dino-test:// links on the simulator is tapped (prompt text, timing, locale) - first dinoreader-ios-sim run.
 
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: waits for the user's iPhone 8 run (item 1) and a proven cause (item 6) (item 1: iOS simulator workflow merged #1136, update-gate fix #1138; the audio-backed simulator run passed on the branch (#1147; two later runs on main failed for harness reasons, no app crash); left: the iPhone 8 run, and item 6 once a cause is proven)`.
+
+- Park note (moved back to `planned` by the night 2026-11-17-2105 feedback loop, so the next night retries it): parked: waits on the iPhone 8 flow run (item 1) and a proven cause (item 6); park note in the slice file

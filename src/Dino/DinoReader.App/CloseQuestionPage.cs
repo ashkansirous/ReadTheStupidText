@@ -5,7 +5,7 @@ using Microsoft.Maui.Controls.Shapes;
 namespace DinoReader;
 
 /// <summary>
-/// "Close Dino Book Reader?" (Slice 174, Decision 169, mock frame 94): what Android's back button asks on the kids' shelf. Stay is the big
+/// "Close Dino: Kids Books &amp; Stories?" (Slice 174, Decision 169, mock frame 94): what Android's back button asks on the kids' shelf. Stay is the big
 /// default; only Close exits. A tap outside the card, or a second back press, counts as Stay. No gate; the text is in the app language.
 /// <see cref="Result"/> completes true for Close.
 /// </summary>

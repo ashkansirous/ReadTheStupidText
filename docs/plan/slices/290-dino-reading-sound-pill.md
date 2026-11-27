@@ -1,6 +1,8 @@
 ### Slice 290 — Dino: the reading page's sound line as a pill (Batch 50 design)
 **Product:** Dino
 
+*2026-11-25 plan-cleanup: the pill is built and merged (#889, #895). The device-check test hook and Maestro flow ("Follow-up needed for the device check") and the four low Part B leftovers are not this slice's own work; moved to a proposed new slice (plan-cleanup `og5-new-2`). `SoundPillText.cs` still uses `IndexOf` (origin/main, line 12), so that leftover is still real. The device check itself stays in unverified.md. Verdict: close.*
+
 *Built 2026-11-07, merged as PR #889 (ca6b039f); part B merged as PR #895 (ed0bd9a6).*
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/SoundStatusPill*.cs`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/290-dino-reading-sound-pill.md`

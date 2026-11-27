@@ -11,15 +11,13 @@ public partial class LocalizedUiTests
         "Error_BookGone",
         "Store_ServerErrorTitle",
         "Store_Free",
-        "Store_BoughtBeforeTitle",
-        "Store_BoughtBefore_Google",
-        "Store_BoughtBefore_Google_Tablet",
-        "Store_BoughtBefore_Apple",
-        "Store_BoughtBefore_Apple_Tablet",
-        "Store_BoughtBefore_Microsoft",
+        "Store_Restoring",
+        "Store_NothingBought_Google",
+        "Store_NothingBought_Apple",
+        "Store_NothingBought_Microsoft",
+        "Store_BoughtItAlready",
         "Store_Restored_One",
         "Store_Restored_Other",
-        "Store_NothingToRestore",
     ];
 
     [Fact]
@@ -52,12 +50,18 @@ public partial class LocalizedUiTests
         Assert.Equal("Too many tries. Wait a minute, then try again.", neutral["Error_TooManyTries"]);
         Assert.Equal("This book isn’t in the Store any more.", neutral["Error_BookGone"]);
         Assert.Equal("{0} books restored. They’re on the shelf.", neutral["Store_Restored_Other"]);
+        Assert.Equal("Restoring…", neutral["Store_Restoring"]);
+        Assert.Equal("Nothing bought with this Google account yet.", neutral["Store_NothingBought_Google"]);
+        Assert.Equal("Nothing bought with this Apple ID yet.", neutral["Store_NothingBought_Apple"]);
+        Assert.Equal("Nothing bought with this Microsoft account yet.", neutral["Store_NothingBought_Microsoft"]);
+        Assert.Equal("Bought it already? Restore purchases", neutral["Store_BoughtItAlready"]);
     }
 
     [Fact]
     public void The_old_per_status_keys_and_the_restored_alert_are_gone_from_every_file()
     {
-        string[] gone = ["Store_Error_Unauthorized", "Store_Error_Forbidden", "Store_Error_NotFound", "Store_Error_PaymentRequired", "Store_Error_TooManyRequests", "Store_Error_Server", "Store_Restored"];
+        string[] gone = ["Store_Error_Unauthorized", "Store_Error_Forbidden", "Store_Error_NotFound", "Store_Error_PaymentRequired", "Store_Error_TooManyRequests", "Store_Error_Server", "Store_Restored",
+            "Store_NothingToRestore", "Store_BoughtBeforeTitle", "Store_BoughtBefore_Google", "Store_BoughtBefore_Google_Tablet", "Store_BoughtBefore_Apple", "Store_BoughtBefore_Apple_Tablet", "Store_BoughtBefore_Microsoft"]; // Slice 396: the card and its wording are gone
         foreach (string file in new[] { NeutralFile }.Concat(LanguageFiles()))
         {
             Dictionary<string, string> strings = Load(file);

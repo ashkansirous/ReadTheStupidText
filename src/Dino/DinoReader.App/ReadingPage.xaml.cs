@@ -1575,6 +1575,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 #endif
 	}
 
+#if DEBUG
+	/// <summary>Slice 433, the turn-page hook: turns one page the way a swipe does (the surface's own turn, so OnPageSwiped runs after it). Returns the 1-based page shown, or 0 at the first or last page.</summary>
+	internal int DebugTurnPage(bool next) => Surface.TurnPage(next) ? Surface.CurrentPage + 1 : 0;
+#endif
+
 	// After a finished read a swipe also means "from here": Play then starts at the shown page.
 	private void OnPageSwiped(object? sender, int page)
 	{

@@ -3,7 +3,7 @@
   "id": "6f592017f08446eeae7adafa22318660",
   "title": "The Ugly Duckling",
   "version": 10,
-  "ageMin": 5,
+  "ageMin": 6,
   "ageMax": 8,
   "author": "Hans Christian Andersen",
   "credits": "Retold from Andersen · free to share",
@@ -91,5 +91,21 @@
     "zh": "改编自安徒生 · 可自由分享"
   },
   "storyBy": "Hans Christian Andersen",
-  "retold": true
+  "retold": true,
+  "namesByLanguage": {
+    "ar": { "Hans Christian Andersen": "هانز كريستيان أندرسن", "Ashkan Sirous": "أشكان سيروس" },
+    "da": { "Hans Christian Andersen": "H.C. Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "de": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "es": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "fa": { "Hans Christian Andersen": "هانس کریستین آندرسن", "Ashkan Sirous": "اشکان سیروس" },
+    "fi": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "fr": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "ja": { "Hans Christian Andersen": "ハンス・クリスチャン・アンデルセン", "Ashkan Sirous": "アシュカン・シルース" },
+    "nb": { "Hans Christian Andersen": "H.C. Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "nl": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "pt": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "ru": { "Hans Christian Andersen": "Ганс Христиан Андерсен", "Ashkan Sirous": "Ашкан Сирус" },
+    "sv": { "Hans Christian Andersen": "Hans Christian Andersen", "Ashkan Sirous": "Ashkan Sirous" },
+    "zh": { "Hans Christian Andersen": "汉斯·克里斯蒂安·安徒生", "Ashkan Sirous": "阿什坎·西鲁斯" }
+  }
 }

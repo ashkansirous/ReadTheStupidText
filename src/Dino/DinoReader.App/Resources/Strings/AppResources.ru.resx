@@ -21,7 +21,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Сохранить</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Готово</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Продолжить</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Закрыть Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Закрыть Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Остаться</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Удалить</value></data>
@@ -55,7 +55,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Популярное</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Рекомендуем</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Новинка</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} мин</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Для магазина нужен интернет. Истории, которые уже на полке, читаются и без него.</value></data>
@@ -94,13 +94,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Уже были, пропущены</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Не удалось прочитать</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Мои истории</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Эта копия создана в более новой версии Dino Book Reader. Обновите приложение и повторите попытку.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Этот файл не является копией Dino Book Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Эта копия создана в более новой версии Dino: Kids Books &amp; Stories. Обновите приложение и повторите попытку.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Этот файл не является копией Dino: Kids Books &amp; Stories.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Не получилось сделать копию. Повторите попытку.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Слишком большие для восстановления</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Не удалось добавить в копию: {0}.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Привет! На каком языке должен говорить Дино?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Для кнопок и слов в приложении. Язык можно сменить позже в уголке для взрослых.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Для кнопок и слов в приложении. Язык можно сменить позже в настройках.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Продолжить</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Выберите первые книги</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Выберите не меньше двух. Другие книги всегда можно взять в магазине.</value><comment>Machine draft: needs native review</comment></data>
@@ -118,18 +118,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Слушаем</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>На каких языках читает ваша семья?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} включён всегда. Добавьте другие языки, которые слышит ваш ребёнок.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} включён всегда.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Зачем больше одного?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Многие дети слышат один язык дома, а другой — в школе или у бабушки с дедушкой. Каждая книга читается на каждом выбранном языке, и ребёнок может переключаться на любой странице. Выберите до трёх.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Язык приложения · всегда включён</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Получить эти книги</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Послушайте, как читает Дино</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>У каждого героя свой голос, и Дино читает с выражением.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Звучал язык: {0}. Теперь послушайте эту же страницу на другом вашем языке.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Теперь нажмите {0}, чтобы услышать ту же страницу.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Те же голоса, теперь на языке: {0}. Ребёнок может переключать язык на любой странице.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>У каждого героя свой голос, и Дино читает с выражением. Звучал язык: {0}; теперь те же голоса читают на языке: {1}. Ребёнок может переключать язык на любой странице.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Пропустить этот шаг</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Станьте голосом героя</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Запишите реплики героя {0} на этой странице, а потом послушайте страницу, где {0} говорит **вашим голосом**.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Запишите реплики героя {0} на этой странице, а потом послушайте страницу, где {0} говорит **вашим голосом**. Этот шаг можно пропустить.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Ваш голос остаётся на этом телефоне</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Ваш голос остаётся на этом планшете</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Ваш голос остаётся на этом компьютере</value></data>
@@ -141,33 +139,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Продолжить без записи</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Реплики: {0}</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Это вы!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Это {0} вашим голосом. Это была только проба, поэтому она удалится, когда настройка закончится. Любого героя можно записать позже в уголке для взрослых.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Это {0} вашим голосом. Это была только проба, поэтому она удалится, когда настройка закончится. Любого героя можно записать позже в меню ••• у книги.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · ваш голос</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Ещё раз</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Это уголок для взрослых</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Сюда заходят только взрослые. Здесь можно:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Получать книги в магазине</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Бесплатные и платные истории на всех языках вашей семьи.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Управлять книгами</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Менять порядок на полке, убирать книгу или записывать свой голос для любого героя.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Менять настройки</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Языки, скорость чтения, звуки и резервная копия для всего приложения.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Показать, что здесь</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Ваши книги. Нажмите ••• у книги, чтобы записать свой голос или убрать её. Кнопка порядка меняет порядок книг на полке.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Магазин</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Новые истории, бесплатные и платные. Каждая книга есть на всех языках вашей семьи. Покупали раньше? Восстановите книги здесь.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Языки, скорость чтения, звуки и резервная копия для всего приложения.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Посмотрите полку ребёнка</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Нажмите **Полка ребёнка**, чтобы увидеть то, что видит ваш ребёнок.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Последний шаг</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Показать</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Это полка вашего ребёнка</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Это ребёнок видит каждый раз, когда открывает Дино: только свои книги, и ничего нельзя изменить по ошибке.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Чтобы вернуться в уголок для взрослых, нажмите **Для взрослых** и удерживайте 3 секунды.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Начать читать</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino нужны две книги, прежде чем вы начнёте. Включите Wi-Fi или мобильные данные и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} из {1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Готово, отдаю ребёнку</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino читает и переводит на этот язык</value></data>
@@ -179,23 +156,28 @@
   <data name="Settings_About" xml:space="preserve"><value>О приложении и обновления</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Вкл.</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Выкл.</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Книги и покупки</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Подписка</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Годовая · продлится {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Месячная · продлится {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Бесплатный период до {0}</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Нет подписки</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Проблема с оплатой</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Книги и подписка, купленные с этим аккаунтом Google</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Книги и подписка, купленные с этим Apple ID</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Книги и подписка, купленные с этим аккаунтом Microsoft</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Подарочный или промокод из Google Play</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Подарочный или промокод из App Store</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Подарочный или промокод из Microsoft Store</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Настройки, магазин и полка</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Для взрослых</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Для взрослых</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Уголок для взрослых, закрыт</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Книги</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Полка ребёнка</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Это видят только взрослые.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Истории</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Перетащите книгу на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Перетащите книгу на новое место на полке.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Ожидание картинки обложки</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Файл всё ещё занят. Нажмите «Готово», чтобы повторить, или «Отмена», чтобы оставить прежний порядок.</value></data>
@@ -212,9 +194,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>История на другом языке по-прежнему читается на своём языке, если для неё не включён перевод на мой язык.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Закрыто</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Открыто</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Закрыто. Нажмите, чтобы открыть.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Открыто. Нажмите, чтобы закрыть.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Открыто · {0} с</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Магазин и настройки — для взрослых. Нажмите на замок, чтобы открыть.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Снова закрыто: 30 секунд не было нажатий взрослого.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Закрыто.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Нажмите, чтобы закрыть. Закроется само через {0} с без нажатия взрослого.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Перейти к вопросу</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Назад к истории</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Сколько будет</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Стереть</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Мышью или удерживайте клавишу «Пробел».</value></data>
@@ -227,7 +218,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Медленнее проще для малышей - меняйте стрелками влево и вправо</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Конец</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · определён</value></data>
@@ -253,7 +244,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Читать моим голосом</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>Записано страниц: {0} из {1}. Остальные читаются голосами Дино.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Микрофон выключен</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Разрешите доступ к микрофону для Dino Book Reader в настройках устройства и попробуйте снова.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Разрешите доступ к микрофону для Dino: Kids Books &amp; Stories в настройках устройства и попробуйте снова.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Запись не удалась. Попробуйте ещё раз.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -393,6 +384,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>Январь|Февраль|Март|Апрель|Май|Июнь|Июль|Август|Сентябрь|Октябрь|Ноябрь|Декабрь</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} и {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>и</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>Купить: {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Купить «{0}» за {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Подключитесь к интернету, чтобы купить</value></data>
@@ -403,15 +396,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>Слишком много попыток. Подождите минуту и попробуйте снова.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Этой книги больше нет в магазине.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Бесплатно</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Уже покупали книги?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Google, вернутся и на этот телефон.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Google, вернутся и на этот планшет.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Книги, купленные с этим Apple ID, вернутся и на этот телефон.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Книги, купленные с этим Apple ID, вернутся и на этот планшет.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Книги, купленные с этим аккаунтом Microsoft, вернутся и на этот компьютер.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Восстанавливаем…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>С этим аккаунтом Google пока ничего не куплено.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>С этим Apple ID пока ничего не куплено.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>С этим аккаунтом Microsoft пока ничего не куплено.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Уже купили? Восстановить покупки</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>Восстановлена 1 книга. Она на полке.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>Восстановлено книг: {0}. Они на полке.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>В этом аккаунте не найдено купленных книг.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>В магазине возникла проблема</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Восстановить покупки</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Ввести код</value></data>
@@ -432,6 +423,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>Подписаться снова</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Купить эту книгу</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Закрыто: подписка закончилась</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Скидка {0}%</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} в год</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} в месяц</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Продлевается автоматически каждый месяц или каждый год по указанной цене, пока вы не отмените подписку в аккаунте магазина. Отменить можно в любой момент.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Бесплатный пробный период до {0}. Затем {1} в год, если не отменить до этого.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Бесплатный пробный период до {0}. Затем {1} в месяц, если не отменить до этого.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Годовой план · продлится {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Месячный план · продлится {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Входит</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Платёж не прошёл</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока Google Play повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока App Store повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Все книги остаются открытыми до {0}, пока Microsoft Store повторяет попытку. Проверьте способ оплаты, чтобы сохранить их.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Исправить оплату</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 книга на вашей полке закрыта и скрыта от ребёнка. Оформите подписку снова или купите книгу, которую хотите оставить.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>Книг на вашей полке закрыто и скрыто от ребёнка: {0}. Оформите подписку снова или купите те, которые хотите оставить.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>Закрыто книг: {0}. Ребёнок их не видит. Оформите подписку снова или купите те, которые хотите сохранить.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 книга закрыта. Ребёнок её не видит. Оформите подписку снова или купите ту, которую хотите сохранить.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Смотреть тарифы в магазине</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Купить · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Не удаётся проверить подписку</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Нет интернета. Книги по подписке остаются открытыми до {0}, через 3 дня после последней даты, которую назвал магазин. Подключитесь к сети, чтобы они оставались открытыми.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Бесплатные книги, которые ещё есть в магазине, возвращаются сами. Книга, которую магазин больше не предлагает, не вернётся, но её записи останутся в файле копии. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>

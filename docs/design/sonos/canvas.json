@@ -1,0 +1,171 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-24T20:45:00Z"
+ },
+ "title": "Dino on Sonos: browse screens",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1600,
+   "h": 980,
+   "title": "Browse tree and rules"
+  },
+  "EN-Home.dc.html": {
+   "x": 0,
+   "y": 1330,
+   "w": 390,
+   "h": 844,
+   "title": "1 · First screen",
+   "is_interactive": true
+  },
+  "EN-Bedtime.dc.html": {
+   "x": 470,
+   "y": 1330,
+   "w": 390,
+   "h": 844,
+   "title": "2 · Bedtime shelf",
+   "is_interactive": true
+  },
+  "EN-Languages.dc.html": {
+   "x": 940,
+   "y": 1330,
+   "w": 390,
+   "h": 1100,
+   "title": "3 · Other languages",
+   "is_interactive": true
+  },
+  "EN-Search.dc.html": {
+   "x": 1410,
+   "y": 1330,
+   "w": 390,
+   "h": 844,
+   "title": "4 · Search",
+   "is_interactive": true
+  },
+  "FA-Home.dc.html": {
+   "x": 0,
+   "y": 2780,
+   "w": 390,
+   "h": 844,
+   "title": "1 · First screen (RTL)",
+   "is_interactive": true
+  },
+  "FA-Bedtime.dc.html": {
+   "x": 470,
+   "y": 2780,
+   "w": 390,
+   "h": 844,
+   "title": "2 · Bedtime shelf",
+   "is_interactive": true
+  },
+  "FA-All.dc.html": {
+   "x": 940,
+   "y": 2780,
+   "w": 390,
+   "h": 844,
+   "title": "3 · All stories, Persian A–Z",
+   "is_interactive": true
+  },
+  "FA-Languages.dc.html": {
+   "x": 1410,
+   "y": 2780,
+   "w": 390,
+   "h": 1100,
+   "title": "4 · Other languages",
+   "is_interactive": true
+  },
+  "Link.dc.html": {
+   "x": 0,
+   "y": 4230,
+   "w": 390,
+   "h": 844,
+   "title": "1 · Once: Sonos opens the Dino app"
+  },
+  "SET-Home.dc.html": {
+   "x": 470,
+   "y": 4230,
+   "w": 390,
+   "h": 844,
+   "title": "2 · First screen, English",
+   "is_interactive": true
+  },
+  "SET-Pick.dc.html": {
+   "x": 940,
+   "y": 4230,
+   "w": 390,
+   "h": 1220,
+   "title": "3 · Pick the story language",
+   "is_interactive": true
+  },
+  "SET-Saved.dc.html": {
+   "x": 1410,
+   "y": 4230,
+   "w": 390,
+   "h": 844,
+   "title": "4 · Saved: Bedtime now plays Farsi",
+   "is_interactive": true
+  },
+  "SET-FA-Home.dc.html": {
+   "x": 1880,
+   "y": 4230,
+   "w": 390,
+   "h": 844,
+   "title": "5 · Farsi phone: same row",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "EN-Home.dc.html",
+  "EN-Bedtime.dc.html",
+  "EN-Languages.dc.html",
+  "EN-Search.dc.html",
+  "FA-Home.dc.html",
+  "FA-Bedtime.dc.html",
+  "FA-All.dc.html",
+  "FA-Languages.dc.html",
+  "Link.dc.html",
+  "SET-Home.dc.html",
+  "SET-Pick.dc.html",
+  "SET-Saved.dc.html",
+  "SET-FA-Home.dc.html"
+ ],
+ "notes": {
+  "en": {
+   "x": 0,
+   "y": 1080,
+   "text": "English-speaking parent · phone sends en-GB",
+   "kind": "title1",
+   "maxW": 1840
+  },
+  "fa": {
+   "x": 0,
+   "y": 2530,
+   "text": "Farsi-speaking parent · phone sends fa-IR, en-GB",
+   "kind": "title1",
+   "maxW": 1840
+  },
+  "set": {
+   "x": 0,
+   "y": 3980,
+   "text": "Story language setting · English phone, Farsi stories",
+   "kind": "title1",
+   "maxW": 2300
+  },
+  "setnote": {
+   "x": 2400,
+   "y": 4230,
+   "w": 360,
+   "text": "How it is saved: the Sonos sign-in (step 1) gives Dino your Sonos home id with every request. The Worker keeps one row per home: story language + books owned. Tapping a language in step 3 saves it; the id of that folder (setlang:fa) does the save. Without sign-in Sonos sends no home id, so there is nowhere to save it.",
+   "fill": "orange"
+  }
+ },
+ "designSystems": []
+}

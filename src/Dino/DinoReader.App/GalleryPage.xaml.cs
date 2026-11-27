@@ -15,8 +15,8 @@ namespace DinoReader;
 
 public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusBar
 {
-	// Slice 325 A4: the corner's ink header sits under the status bar on a phone held upright (the rail has none), so the clock and battery are light there and dark again on the shelf.
-	bool IInkUnderStatusBar.InkUnderStatusBar => StatusBarIcons.InkUnderBar(_mode.IsGrownUp, CurrentChrome() is { IsRail: true });
+	// Slice 418: there is no ink corner header any more, so the status bar's clock and battery are always dark on the cream (Slice 325 A4 made them light over the corner's ink).
+	bool IInkUnderStatusBar.InkUnderStatusBar => false;
 
 	private const double LanguageMenuGap = 6;
 	private const string TileTitleHeightKey = "TileTitleHeight";
@@ -27,11 +27,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private const string TileCoverRadiusKey = "TileCoverRadius";
 	private const string TileShadowOpacityKey = "TileShadowOpacity";
 	private const string TileShadowOffsetKey = "TileShadowOffset";
-	private const double DefaultShadowOffset = 4;
 	private const string TileMoreSizeKey = "TileMoreSize";
 	private const string TileMoreRadiusKey = "TileMoreRadius";
 	private const string TileMoreInsetKey = "TileMoreInset";
-	private const double CornerCoverShadowOpacity = 0; // the corner's covers have none (grown-up mock P1)
 	private const double ShelfCoverShadowOpacity = 0.08;
 	private const double MoreDotRadiusShare = 0.5;
 	private const long TapSuppressMilliseconds = 800;
@@ -54,10 +52,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private string? _reopenSheetFor; // the book whose Record flow is open: the sheet opens again on it when the flow is left
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
-	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the grown-ups button, with two or three story languages
-	private readonly CornerShell _corner = new(); // Slice 325 part A: the grown-ups' corner's ink header or rail
-	private readonly CornerTabs _tabs = new(); // the corner's three tabs: the bottom bar under 600 dp wide, rows in the rail from 600
-	private readonly ShelfHeader _shelfHeader; // Slice 325 part C: the kids' shelf's header or rail
+	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the reading-language button, at the header's end (the title row's end beside a rail), with two or three story languages
+	private readonly CornerTabs _tabs = new(); // Slice 418: Books, Store, Settings and the lock: the bottom bar under 600 dp wide, rows in the rail from 600
+	private readonly ShelfHeader _shelfHeader; // the one header (a bar) or the rail's name row
+	private readonly UnlockChip _chip = new(); // "Unlocked · 24s" next to the title while unlocked (decision 15)
+	private readonly LockOverlay _lockOverlay = new(); // the dark hint and the dark "Locked again" message
 	private ChromeShape _chrome = CornerLayout.ChromeOf(393, 852, false); // the chrome the last layout pass built
 	private StorePage? _store; // Slice 325 part B: the Store tab's view, made the first time the tab shows and kept, so a download and the filters survive a switch to another tab
 	private SettingsTab? _settingsTab; // the Settings tab's view, kept the same way
@@ -89,8 +88,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		BookInfo.Dismissed += OnBookSheetDismissed;
 		BookInfo.ReorderRequested += OpenSheetReorderAsync;
 		_languageButton = new StoryLanguageButton(ShelfTitleRules.SizesOf(_chrome).FlagButton, OpenLanguageMenuAsync) { IsVisible = false, AutomationId = "GalleryLanguage" };
-		_shelfHeader = new ShelfHeader(_languageButton);
+		_shelfHeader = new ShelfHeader(_languageButton, _chip);
 		AddChrome();
+		AddLockOverlay();
 		AddReorderView();
 		WaitOverlay overlay = DinoWait.OverPage();
 		Grid.SetRowSpan(overlay, GalleryRoot.RowDefinitions.Count);
@@ -99,22 +99,27 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_wait = new WaitController(overlay);
 	}
 
-	// Slice 325: the two chromes sit in the root grid under everything else (the sheet, the reorder layer and the wait overlay are added after them). Only the one for the current mode is visible;
-	// ApplyShape places it (a header in row 0, or the rail in column 0) and moves the corner's tab strip between the page and the rail.
+	// Slice 325, Slice 418: the header and the menu sit in the root grid under everything else (the sheet, the reorder layer and the wait overlay are added after them). ApplyShape places the header (row 0, or
+	// the rail in column 0) and moves the menu between the page's bottom row and the rail.
 	private void AddChrome()
 	{
 		GalleryRoot.Children.Insert(0, _shelfHeader);
-		GalleryRoot.Children.Insert(0, _corner);
-		_corner.BackRequested += CompleteHandover;
-		_corner.TitleTapped += OnTitleTapped;
 		_shelfHeader.TitleTapped += OnTitleTapped;
-		_shelfHeader.GrownUpsRequested += OnGrownUpsRequested;
 		_shelfHeader.Fitted += LogShelf;
 		_tabs.TabRequested += OnTabRequested;
+		_tabs.LockRequested += OnLockRequested;
 		_tabs.HandlerChanged += (_, _) => { if (_tabs.Handler is not null) { Replay(); } }; // work that waited for the tabs' native side
-		_corner.IsVisible = false;
 		GalleryRoot.Children.Insert(0, _tabs);
 		_tabs.IsVisible = false;
+	}
+
+	// Slice 418: the hint and the "Locked again" message lie over the content's lower edge; they never take a touch.
+	private void AddLockOverlay()
+	{
+		Grid.SetRowSpan(_lockOverlay, 1);
+		Grid.SetRow(_lockOverlay, 1);
+		Grid.SetColumnSpan(_lockOverlay, GalleryRoot.ColumnDefinitions.Count);
+		GalleryRoot.Children.Add(_lockOverlay);
 	}
 
 	// Slice 264: the reorder mode is a layer over the whole page (its own ink bar, hint and grid), above the sheet's scrim so it never shows through, below the wait overlay added after it.
@@ -125,6 +130,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		GalleryRoot.Children.Add(_reorder);
 		_reorder.DoneRequested += DoneReorderAsync;
 		_reorder.CancelRequested += CancelReorder;
+		_reorder.Activity += _mode.GrownUpTap; // a drag or a key in the reorder mode keeps the shelf unlocked (Slice 418 decision 13)
 	}
 
 	// The same list as the reading page (88): one pick for all books, remembered. The tile titles follow it (Slice 323, Decision 173).
@@ -149,12 +155,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		});
 	}
 
-	// Shown in the kids' shelf only, and only when the parent set two or three story languages.
+	// Slice 418: shown locked or unlocked (the lock leaves the reading language alone), when two or three story languages are on offer. The shelf's rules take "grown-up mode" as false: there is one shelf now.
 	private void ApplyLanguageButton()
 	{
 		StoryLanguageSet set = StoryLanguages.Current();
 		IReadOnlyList<string> choosable = ChoosableLanguages(set);
-		_languageButton.IsVisible = LanguagePick.ShelfButtonShown(_mode.IsGrownUp, choosable);
+		_languageButton.IsVisible = LanguagePick.ShelfButtonShown(grownUp: false, choosable);
 		_languageButton.SetLanguage(LanguagePick.ShelfShown(choosable, StoryLanguages.Pick(), set.Main));
 		_shelfHeader.SetFlagShown(_languageButton.IsVisible); // the flag gives the title less room, so the header fits again
 	}
@@ -373,7 +379,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private string ShelfTitleLanguage()
 	{
 		StoryLanguageSet set = StoryLanguages.Current();
-		return LanguagePick.ShelfTitles(_mode.IsGrownUp, ChoosableLanguages(set), StoryLanguages.Pick(), set.Main);
+		return LanguagePick.ShelfTitles(grownUp: false, ChoosableLanguages(set), StoryLanguages.Pick(), set.Main); // Slice 418: one shelf, so the titles follow the reading language locked or unlocked
 	}
 
 	// The child can pick only a language whose audio is installed for a book on the shelf (Slice 173): a download starts from Settings or the intro, behind the gate. The one rule and the one
@@ -397,11 +403,22 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_reopenSheetFor = null;
 		_mode.PropertyChanged -= OnModeChanged;
 		_mode.PropertyChanged += OnModeChanged;
+		_mode.CountdownChanged -= OnCountdownChanged;
+		_mode.CountdownChanged += OnCountdownChanged;
+		_mode.Locked -= OnLocked;
+		_mode.Locked += OnLocked;
 		StoreClient store = _services.GetRequiredService<StoreClient>();
 		store.LibraryChanged -= OnLibraryChanged;
 		store.LibraryChanged += OnLibraryChanged;
 		store.Sales.Purchases.Changed -= OnPurchasesChanged; // Slice 384: a subscription that ended or came back locks or opens its books
 		store.Sales.Purchases.Changed += OnPurchasesChanged;
+		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged; // Slice 398: the offline notice follows the network
+		Connectivity.Current.ConnectivityChanged += OnNetworkChanged;
+		StartBannerTimer();
+#if DEBUG
+		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
+		NetworkProbe.OverrideChanged += OnNetworkOverrideChanged;
+#endif
 		ShelfAudioPacks shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
 		shelfAudio.Changed -= OnShelfAudioChanged;
 		shelfAudio.Changed += OnShelfAudioChanged;
@@ -421,7 +438,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			await _starters.InstallOnceAsync();
 			_pageAppeared = true; // only now may a check-only trigger build a first shelf
 			await RequestShelfRefresh(true); // forced on every appearing, so a stale shelf heals here
-			await ResumeTourAsync();
+			ShowPendingLockMessage(); // Slice 418: a lock that happened while another page was in front is told now
 			await ReopenSheetAfterRecordAsync(reopenSheetFor);
 		}
 		catch (Exception ex)
@@ -456,66 +473,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// Slice 362 (mock N8a to N10): the last step of the first run is the corner tour, a layer over this page. It starts when onboarding's saved step is the corner (after the voice step, or after a restart on the tour);
-	// the corner is open behind it (the grown-up is the one setting up). A tour that already shows is not started twice.
-	private async Task ResumeTourAsync()
-	{
-		if (OnboardingState.Step != OnboardingStep.Corner || _tour is not null || _tourStarting || _tourGateDeclined)
-		{
-			return;
-		}
-
-		_tourStarting = true; // a second appearing while the gate or the delay is open must not start a second tour
-		try
-		{
-			// A fresh start from the voice step has entered grown-up mode already. Kids' mode here means the app was left on the tour and relaunched, so a child may be holding it: the gate comes first.
-			if (!_mode.IsGrownUp && !await _gate.RequestAsync(Navigation))
-			{
-				_tourGateDeclined = true; // asked again when a grown-up enters through the pill
-				return;
-			}
-
-			_mode.Enter();
-			await Task.Delay(TourStartDelay); // the corner's chrome is laid out first: the tour reads where the tabs are
-			if (_tour is null)
-			{
-				BeginTour();
-			}
-		}
-		finally
-		{
-			_tourStarting = false;
-		}
-	}
-
-	private bool _tourStarting;
-	private bool _tourGateDeclined;
-
-	private void BeginTour()
-	{
-		var tour = new CornerTour(tab => _tabs.TabView(tab), () => _corner.Pill, () => _shelfHeader.GrownUps, tab => _mode.SelectTab(tab), () => _mode.Leave(), FinishTour);
-		Grid.SetRowSpan(tour, GalleryRoot.RowDefinitions.Count);
-		Grid.SetColumnSpan(tour, GalleryRoot.ColumnDefinitions.Count);
-		GalleryRoot.Children.Add(tour);
-		_tour = tour;
-		tour.Begin();
-	}
-
-	// Start reading: onboarding is over, every later launch opens on the shelf.
-	private void FinishTour()
-	{
-		if (_tour is { } tour)
-		{
-			GalleryRoot.Children.Remove(tour);
-			_tour = null;
-		}
-
-		OnboardingRoute.Finish(_services);
-	}
-
-	private CornerTour? _tour;
-	private static readonly TimeSpan TourStartDelay = TimeSpan.FromMilliseconds(400);
-
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
@@ -523,8 +480,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		SyncTabViews();
 		CancelSheetCount();
 		_mode.PropertyChanged -= OnModeChanged;
+		_mode.CountdownChanged -= OnCountdownChanged;
+		_mode.Locked -= OnLocked;
+		_lockOverlay.HideAll();
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 		_services.GetRequiredService<StoreClient>().Sales.Purchases.Changed -= OnPurchasesChanged;
+		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged;
+		StopBannerTimer();
+#if DEBUG
+		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
+#endif
 		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
 		_services.GetRequiredService<StagedBookUpdates>().Staged -= OnBookUpdateStaged;
 	}
@@ -595,6 +560,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		if (e.PropertyName == nameof(GrownUpMode.Tab))
 		{
 			_tabs.Selected = _mode.Tab;
+			_shelfHeader.SetTab(_mode.Tab);
 			RequestTab();
 			LogCorner();
 			ShowScreen();
@@ -603,11 +569,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		ApplyMode();
 		ShowScreen();
-		_ = RequestShelfRefresh(true); // Slice 384: the child's shelf leaves out the books a lapsed subscription locked; the parents' shows them greyed, so the tiles are built again for the new mode
+		_ = RequestShelfRefresh(true); // Slice 384: a locked shelf leaves out the books a lapsed subscription locked; an unlocked one shows them greyed, so the tiles are built again for the new state
 		if (!_mode.IsGrownUp)
 		{
-			_settingsTab?.Reset(); // the next visit to the corner starts at the Settings list
-			CloseReorder("left grown-up mode"); // Slice 264: leaving grown-up mode cancels the reorder mode; nothing was saved
+			_settingsTab?.Reset(); // Slice 418 decision 14: a sub-page closes, and the next unlock starts at the Settings list
+			CloseReorder("locked"); // Slice 264: locking cancels the reorder mode; nothing was saved
 			BookInfo.Dismiss(); // also refreshes the tiles when a switch was saved
 		}
 	});
@@ -619,6 +585,88 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ApplyTexts();
 
 		ApplyModeChrome(_mode.IsGrownUp);
+		ApplyLockState();
+	}
+
+	// Slice 418: what the lock changes in the chrome: Store and Settings fade, the lock is the open one, the chip shows with the seconds left.
+	private void ApplyLockState()
+	{
+		bool unlocked = _mode.IsGrownUp;
+		_tabs.Locked = !unlocked;
+		_chip.IsVisible = unlocked;
+		UpdateCountdown();
+		_shelfHeader.SetChipShown();
+		LockLog(unlocked ? "unlocked" : "locked");
+	}
+
+	// The seconds on the chip and on the rail's line; raised once a second while unlocked (GrownUpMode.CountdownChanged, from any thread).
+	private void OnCountdownChanged() => MainThread.BeginInvokeOnMainThread(UpdateCountdown);
+
+	private void UpdateCountdown()
+	{
+		int seconds = _mode.Clock.SecondsLeft;
+		_chip.SetSeconds(seconds);
+		_tabs.SetSeconds(seconds);
+	}
+
+	private void OnLocked(LockReason reason) => MainThread.BeginInvokeOnMainThread(ShowPendingLockMessage);
+
+	// "Locked again: no grown-up taps for 30 seconds." after the timer, "Locked." after a tap on the lock (mock L7). Told once; a lock that happened under another page is told when this page appears.
+	private void ShowPendingLockMessage()
+	{
+		if (_mode.TakePendingMessage() is not { } reason)
+		{
+			return;
+		}
+
+		_lockOverlay.ShowToast(reason == LockReason.Timer ? AppResources.Lock_LockedAgain : AppResources.Lock_LockedByHand);
+		LockLog($"message reason={reason}");
+	}
+
+	private static void LockLog(string line)
+	{
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Lock] {line}"); // the lock flow's expect-log markers (RTST-TEST tag)
+#endif
+		Debug.WriteLine($"Dino Reader lock {line}");
+	}
+
+	// The lock was tapped (Slice 418 decisions 11 and 12): locked opens the unlock popup (hold 3 seconds, then the sum); unlocked locks at once, with no question.
+	private async void OnLockRequested() => await _busy.RunAsync(ToggleLockAsync);
+
+	private async Task ToggleLockAsync()
+	{
+		if (_mode.IsGrownUp)
+		{
+			await CloseSettingsSubPageAsync(); // a language change made on a sub-page is saved through its own Back; a busy one is closed by the lock all the same
+			_mode.Lock(LockReason.ByHand);
+			return;
+		}
+
+		if (await _gate.RequestAsync(Navigation))
+		{
+			_mode.Enter();
+		}
+	}
+
+	// Windows Ctrl+L (Slice 418): the same as a tap on the lock; nothing while another action runs.
+	internal bool TryToggleLockFromKeyboard()
+	{
+		if (_busy.IsBusy || _reorder.IsVisible || BookInfo.IsVisible || StoryLanguageMenu.IsOpenIn(GalleryRoot))
+		{
+			return false;
+		}
+
+		OnLockRequested();
+		return true;
+	}
+
+	// A tap on a faded Store or Settings tab (decision 9): the dark hint over the lock and an amber pulse of 2 seconds (none with reduce motion).
+	private void ShowLockedHint()
+	{
+		_lockOverlay.ShowHint(AppResources.Lock_GrownUpsHint);
+		_tabs.PulseLock();
+		LockLog("hint");
 	}
 
 	private string? _textLanguage; // the app language the fixed labels were set in
@@ -634,7 +682,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		_textLanguage = language;
 		_shelfHeader.ApplyTexts();
-		_corner.ApplyTexts();
 		_tabs.ApplyTexts(); // only marks the tabs: the queue's next pass rebuilds them (TabBuild), never from here: this runs inside OnAppearing
 		_pending.Request(UiWork.TabBuild);
 		ApplyContentHeaderTexts();
@@ -708,14 +755,18 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #endif
 		_items.Clear();
 		BookSales sales = _services.GetRequiredService<BookSales>();
+		_lastShelfStories = stories;
+		_lockedShelfKey = LockedShelfKey(sales);
 		IReadOnlyList<Story> shown = _mode.IsGrownUp ? stories : [.. stories.Where(story => !sales.IsLapsed(story))]; // Slice 384: a lapsed subscription's books are removed from the child's shelf, greyed on the parents'; their files stay
 #if DEBUG
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf total={stories.Count} shown={shown.Count} lapsed={stories.Count(story => sales.IsLapsed(story))} grownUp={_mode.IsGrownUp}"); // the subscription flow's expect-log markers
 #endif
-		foreach (StoryTile item in GalleryItems.Build(shown, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage), story => sales.IsLapsed(story)))
+		foreach (StoryTile item in GalleryItems.Build(shown, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage), story => sales.IsLapsed(story), story => LockedBookPrice(sales, story)))
 		{
 			_items.Add(item);
 		}
+
+		ApplyShelfBanners();
 
 #if DEBUG
 		if (_shelfTitleLanguage is not null && _shelfTitleLanguage != titleLanguage)
@@ -730,29 +781,40 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		return true;
 	}
 
-	// Entering or leaving the corner swaps the whole chrome (ink header or rail with tabs, or the cream header or rail): the two places never look alike.
+	// Slice 398: the store's own price for a locked book's "Buy · price" pill; null for any other book or while the store has not given one (the pill then says "Buy this book").
+	private string? LockedBookPrice(BookSales sales, Story story)
+	{
+		if (!sales.IsLapsed(story) || story.SourceId is not { } sourceId || _services.GetRequiredService<StoreClient>().ListedItem(sourceId) is not { } item)
+		{
+			return null;
+		}
+
+		return BookAccess.PriceOf(item, sales.Purchases.Snapshot.Prices);
+	}
+
+	// Locking and unlocking restyle the one chrome (Store and Settings fade or open, the lock and the chip change) and rebuild the tiles; the chrome's shape follows the window size only, never the lock.
 	private void ApplyModeChrome(bool grownUp)
 	{
 		ApplyShelfRing();
 		ApplyLanguageButton();
-		ApplyShape(); // the key holds the mode, so another mode lays everything out again and the same mode does nothing (a shelf rebuild must not relayout the chrome)
-		ApplyBarColours(); // at once, even before the first window size: the chrome kind depends on the window size only, never on the mode
+		ApplyShape(); // the key holds the chrome and the open tab, so another shape lays everything out again and the same one does nothing (a shelf rebuild must not relayout the chrome)
+		ApplyBarColours(); // at once, even before the first window size: the chrome kind depends on the window size only, never on the lock
 	}
 
-	// Slice 349: the one place that sets what sits behind the system bars: the page colour, the content host's colour, the bar icons and (Windows) the title bar.
-	// Asked on every mode change, after every chrome pass and on first appearance, never behind ApplyShapeOnce's size gate.
-	// Under a bar the corner's page is ink (the mock: the header runs up behind the status bar) and the content host paints the sand below it; otherwise the page keeps its own colour and the host paints the same.
+	// The tab on show: Books while locked (a locked shelf has no other), else the open one.
+	private CornerTab ShownTab => _mode.IsGrownUp ? _mode.Tab : CornerTab.Books;
+
+	// Slice 349, Slice 418: the one place that sets what sits behind the system bars: the page colour, the content host's colour, the bar icons and (Windows) the title bar.
+	// Asked on every lock change, after every chrome pass and on first appearance, never behind ApplyShapeOnce's size gate. Books is cream (mock L1, L4), Store and Settings are the sand of their own pages (L5, L6).
 	private void ApplyBarColours()
 	{
-		if (CurrentChrome() is not { } chrome)
+		if (CurrentChrome() is null)
 		{
 			return; // no layout pass yet: the first SizeChanged / ApplyShapeOnce paints, with no guessed window size
 		}
 
-		bool grownUp = _mode.IsGrownUp;
-		bool ink = StatusBarIcons.InkUnderBar(grownUp, chrome.IsRail);
-		string content = grownUp ? DinoTokens.Sand : DinoTokens.Cream;
-		BackgroundColor = DinoTokens.Get(ink ? DinoTokens.Ink : content);
+		string content = ShownTab == CornerTab.Books ? DinoTokens.Cream : DinoTokens.Sand;
+		BackgroundColor = DinoTokens.Get(content);
 		ContentHost.BackgroundColor = DinoTokens.Get(content);
 		SystemBarIcons.ForPage(this);
 #if WINDOWS
@@ -805,14 +867,25 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		bool grownUp = _mode.IsGrownUp;
 		ChromeShape chrome = CornerLayout.ChromeOf(_windowSize.Width, _windowSize.Height, DesktopTips.IsWindows);
 		bool rail = chrome.IsRail;
-		int columns = grownUp ? CornerLayout.BookColumns(chrome, _windowSize.Width) : ShelfTitleRules.Columns(chrome, _windowSize.Width);
-		string key = $"{chrome}|{columns}|{grownUp}";
-		_shelfGeometry = grownUp ? CornerLayout.BooksGeometry(chrome, columns) : ShelfTitleRules.Geometry(chrome, columns);
+		int columns = ShelfTitleRules.Columns(chrome, _windowSize.Width); // Slice 418: one shelf, one grid, locked or unlocked (mock L1 and L4 draw the same covers)
+		string key = $"{chrome}|{columns}";
+		_shelfGeometry = ShelfTitleRules.Geometry(chrome, columns);
+		if (rail)
+		{
+			_shelfGeometry = _shelfGeometry with { Top = 0 }; // beside a rail the title row (ContentHeader) carries the space above the grid
+		}
+
 		WindowShapeSeam.ShelfGeometry shelfOnPage = rail ? _shelfGeometry.BesideRail(chrome.RailWidth) : _shelfGeometry; // the layer spans the whole page, so beside a rail it starts where the shelf list starts on the page
 		bool tablet = chrome.IsTabletPortrait; // the corner's and the shelf's classification are one now
 		bool useShelf = WindowShapeSeam.ReorderUsesShelfGeometry(tablet, _windowSize.Width, _windowSize.Height); // no mock frame for a tablet or a phone held sideways
 		_reorderGeometry = ReorderShape(tablet, useShelf, shelfOnPage);
 		_reorder.Reshape(_reorderGeometry); // a rotation or resize while the mode is open re-fits it
+		if (grownUp != _shapeGrownUp)
+		{
+			_anchorBookId = null; // the other state lists other tiles (a lapsed book is hidden while locked): its first book is not this one's
+			_shapeGrownUp = grownUp;
+		}
+
 		if (key == _shapeKey)
 		{
 			ApplyTabShape(); // the same chrome at another width: the Store tab's columns follow the content width
@@ -822,20 +895,14 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_shapeKey = key;
 		_chrome = chrome;
 		_chromeBuilt = true;
-		if (grownUp != _shapeGrownUp)
-		{
-			_anchorBookId = null; // the other mode lists other tiles: its first book is not this one's
-			_shapeGrownUp = grownUp;
-		}
-
 #if WINDOWS
 		WindowTrace.Write($"Dino shelf: columns={columns} sideways=False rail={rail} grownUp={grownUp} content={_windowSize.Width:0}x{_windowSize.Height:0}"); // the VM check reads the shelf's shape from this
 #endif
 		ApplyChrome(chrome, grownUp);
-		ApplyTileSizes(chrome, grownUp);
+		ApplyTileSizes(chrome);
 		ApplyShelfList(columns);
 		LogShape(chrome, columns, grownUp);
-		ApplyBarColours(); // a rotation moves the ink header under or away from the status bar
+		ApplyBarColours();
 	}
 
 	// Slice 325: the debug markers the redesign flows read, through TestHookLog (RTST-TEST tag). Compiled out of store builds.
@@ -901,56 +968,74 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	{
 		bool rail = chrome.IsRail;
 		GalleryRoot.ColumnDefinitions[0].Width = new GridLength(chrome.RailWidth);
-		_corner.IsVisible = grownUp;
-		_shelfHeader.IsVisible = !grownUp;
-		View active = grownUp ? _corner : _shelfHeader;
-		Grid.SetRow(active, 0);
-		Grid.SetColumn(active, 0);
-		Grid.SetRowSpan(active, rail ? GalleryRoot.RowDefinitions.Count : 1);
-		Grid.SetColumnSpan(active, rail ? 1 : GalleryRoot.ColumnDefinitions.Count);
+		_shelfHeader.IsVisible = true;
+		Grid.SetRow(_shelfHeader, 0);
+		Grid.SetColumn(_shelfHeader, 0);
+		Grid.SetRowSpan(_shelfHeader, rail ? GalleryRoot.RowDefinitions.Count : 1);
+		Grid.SetColumnSpan(_shelfHeader, rail ? 1 : GalleryRoot.ColumnDefinitions.Count);
 		Grid.SetRow(ContentHost, rail ? 0 : 1);
 		Grid.SetRowSpan(ContentHost, rail ? GalleryRoot.RowDefinitions.Count : 1);
 		Grid.SetColumn(ContentHost, rail ? 1 : 0);
 		Grid.SetColumnSpan(ContentHost, rail ? 1 : GalleryRoot.ColumnDefinitions.Count);
-		ContentHost.SafeAreaEdges = ContentSafeArea(rail, grownUp);
-		if (grownUp)
+		ContentHost.SafeAreaEdges = ContentSafeArea(rail);
+		PlaceLockOverlay(rail);
+		MoveFlagAndChip(rail);
+		_shelfHeader.Apply(chrome, ShelfTitleRules.SizesOf(chrome), _languageButton.IsVisible);
+		ApplyMenu(chrome);
+		if (rail)
 		{
-			ApplyCorner(chrome);
+			ApplyContentHeader(chrome);
 		}
 		else
 		{
-			CornerShell.DetachTabs(_tabs);
-			_tabs.IsVisible = false;
 			ContentHeader.IsVisible = false;
-			_shelfHeader.Apply(chrome, ShelfTitleRules.SizesOf(chrome), _languageButton.IsVisible);
 		}
 
 		ApplyTab(); // Slice 325 part B: after the chrome, so the hosted view takes this pass's sizes
 	}
 
-	// The content keeps clear of the notch on its sides; the corner's bottom bar or the shelf's covers (K2: they run under the home bar) decide the bottom.
-	private static SafeAreaEdges ContentSafeArea(bool rail, bool grownUp)
+	// The content keeps clear of the notch on its sides; beside a rail it keeps clear of the top too. A bar's covers run under the menu's own safe area.
+	private static SafeAreaEdges ContentSafeArea(bool rail) =>
+		new(SafeAreaRegions.Container, rail ? SafeAreaRegions.Container : SafeAreaRegions.None, SafeAreaRegions.Container, rail ? SafeAreaRegions.Container : SafeAreaRegions.None);
+
+	// The hint and the message sit over the content (a bar: the row between the header and the menu; a rail: the column right of it).
+	private void PlaceLockOverlay(bool rail)
 	{
-		SafeAreaRegions bottom = rail && grownUp ? SafeAreaRegions.Container : SafeAreaRegions.None;
-		return new SafeAreaEdges(SafeAreaRegions.Container, rail ? SafeAreaRegions.Container : SafeAreaRegions.None, SafeAreaRegions.Container, bottom);
+		Grid.SetRow(_lockOverlay, rail ? 0 : 1);
+		Grid.SetRowSpan(_lockOverlay, rail ? GalleryRoot.RowDefinitions.Count : 1);
+		Grid.SetColumn(_lockOverlay, rail ? 1 : 0);
+		Grid.SetColumnSpan(_lockOverlay, rail ? 1 : GalleryRoot.ColumnDefinitions.Count);
+		_lockOverlay.Place(rail);
 	}
 
-	private void ApplyCorner(ChromeShape chrome)
+	// A view has one parent: the flag and the chip leave the title row before the header takes them back (a bar), and are put in the title row after the header gave them up (a rail).
+	private void MoveFlagAndChip(bool rail)
+	{
+		ContentHeader.Remove(_languageButton);
+		ContentHeader.Remove(_chip);
+		if (rail)
+		{
+			_shelfHeader.ReleaseFlagAndChip();
+			ContentHeader.Add(_chip, 1, 0);
+			ContentHeader.Add(_languageButton, 3, 0);
+		}
+	}
+
+	// The menu is the bottom bar under 600 dp wide and the rail's rows from 600 (the lock a plain row at the rail's foot).
+	private void ApplyMenu(ChromeShape chrome)
 	{
 		CornerSizes sizes = CornerLayout.SizesOf(chrome);
-		bool handover = FirstRunState.HandoverPending;
-		string pill = handover ? AppResources.Gallery_ReadyForChild : chrome.FullWords ? AppResources.Gallery_BackToShelf : AppResources.Corner_ChildsShelf;
-		_corner.Apply(chrome, sizes, pill, handover ? AppResources.Gallery_ReadyForChild : AppResources.Gallery_BackToShelf);
 		_tabs.Apply(chrome.IsRail, sizes);
-		_tabs.Selected = _mode.Tab;
+		_tabs.Selected = ShownTab;
+		_tabs.Locked = !_mode.IsGrownUp;
 		if (chrome.IsRail)
 		{
 			_tabs.IsVisible = true;
-			_corner.AttachTabs(_tabs);
+			_shelfHeader.AttachTabs(_tabs);
 		}
 		else
 		{
-			CornerShell.DetachTabs(_tabs);
+			ShelfHeader.DetachTabs(_tabs);
 			Grid.SetRow(_tabs, 2);
 			Grid.SetColumn(_tabs, 0);
 			Grid.SetColumnSpan(_tabs, GalleryRoot.ColumnDefinitions.Count);
@@ -961,30 +1046,23 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 			_tabs.IsVisible = true;
 		}
-
-		ApplyContentHeader(chrome, sizes);
 	}
 
-	// Under a bar the one-line note ("Only grown-ups see this. Your child's shelf is one tap away.") sits above the books; in a rail the content has the tab's title, and a phone held sideways puts the short note beside it.
-	private void ApplyContentHeader(ChromeShape chrome, CornerSizes s)
+	// Mock WL1, WL2: beside a rail the title row holds the tab's name (26 bold), the chip and the flag; the shelf's own sides and top frame it.
+	private void ApplyContentHeader(ChromeShape chrome)
 	{
+		ShelfSizes s = ShelfTitleRules.SizesOf(chrome);
+		CornerSizes c = CornerLayout.SizesOf(chrome);
 		ContentHeader.IsVisible = true;
-		ContentTitle.IsVisible = chrome.IsRail;
-		ContentNote.IsVisible = !chrome.IsRail || !s.NoteInRail; // the tablet and Windows rails hold the note themselves
-		ContentTitle.FontSize = s.ContentTitle;
-		ContentNote.FontSize = s.NoteSize;
-		ContentNote.Text = chrome.IsRail ? AppResources.Gallery_CornerLineShort : AppResources.Gallery_CornerLine;
-		Grid.SetColumn(ContentNote, chrome.IsRail ? 1 : 0);
-		Grid.SetColumnSpan(ContentNote, chrome.IsRail ? 1 : 2);
-		ContentHeader.Padding = chrome.IsRail
-			? new Thickness(s.Content.Left, s.Content.Top, s.Content.Right, s.ContentGap)
-			: new Thickness(s.Note.Left, s.Note.Top, s.Note.Right, s.Note.Bottom);
+		ContentTitle.IsVisible = true;
+		ContentTitle.FontSize = c.ContentTitle;
+		ContentHeader.Padding = new Thickness(s.Content.Left, s.Content.Top, s.Content.Right, c.ContentGap + 4);
 	}
 
-	// The tab's name is the ink header's title (under a bar) and the content's title (in a rail); the Store tab has its sub-line under it (frame T2).
+	// The open tab's name is the header's title (under a bar, ShelfHeader.SetTab) and the content's title (beside a rail).
 	private void ApplyContentHeaderTexts()
 	{
-		CornerTab tab = _mode.IsGrownUp ? _mode.Tab : CornerTab.Books;
+		CornerTab tab = ShownTab;
 		string title = tab switch
 		{
 			CornerTab.Store => AppResources.Store_Title,
@@ -992,38 +1070,26 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			_ => AppResources.Corner_TabBooks,
 		};
 		ContentTitle.Text = title;
-		_corner.SetTitle(title);
-		ContentSub.IsVisible = tab == CornerTab.Store;
-		ContentSub.Text = AppResources.Store_Subtitle;
+		_shelfHeader.SetTab(tab);
 	}
 
 	// The cover, its title and the grown-ups' "⋯" dot follow the window's family; they are page resources the tiles bind to, written only when the value really changes.
-	private void ApplyTileSizes(ChromeShape chrome, bool grownUp)
+	// Slice 418: the covers are the shelf's (mock L1 and L4 draw the same cover locked and unlocked); the ••• badge is the mock's 32 dp white circle, 6 dp from the cover's top right.
+	private void ApplyTileSizes(ChromeShape chrome)
 	{
-		double radius;
-		double title;
-		double gap;
-		double shadowOpacity = grownUp ? CornerCoverShadowOpacity : ShelfCoverShadowOpacity;
-		if (grownUp)
-		{
-			CornerSizes s = CornerLayout.SizesOf(chrome);
-			(radius, title, gap) = (s.CoverRadius, s.TileTitle, s.TileGap);
-			SetResourceIfChanged(TileMoreSizeKey, s.DotSize);
-			SetResourceIfChanged(TileMoreRadiusKey, new CornerRadius(s.DotSize * MoreDotRadiusShare));
-			SetResourceIfChanged(TileMoreInsetKey, new Thickness(0, s.DotInset, s.DotInset, 0));
-		}
-		else
-		{
-			ShelfSizes s = ShelfTitleRules.SizesOf(chrome);
-			(radius, title, gap) = (s.CoverRadius, s.TileTitle, s.TileGap);
-		}
-
-		SetResourceIfChanged(TileCoverRadiusKey, new CornerRadius(radius));
-		SetResourceIfChanged(TileTitleSizeKey, title);
-		SetResourceIfChanged(TileSpacingKey, gap);
-		SetResourceIfChanged(TileShadowOpacityKey, shadowOpacity);
-		SetResourceIfChanged(TileShadowOffsetKey, grownUp ? DefaultShadowOffset : ShelfTitleRules.SizesOf(chrome).ShadowOffset); // 4 dp, and 5 on a tablet held upright (mock KT1); StoryCover.ShadowDepth carries it to Shadow.Offset
+		ShelfSizes s = ShelfTitleRules.SizesOf(chrome);
+		SetResourceIfChanged(TileMoreSizeKey, MoreBadgeSize);
+		SetResourceIfChanged(TileMoreRadiusKey, new CornerRadius(MoreBadgeSize * MoreDotRadiusShare));
+		SetResourceIfChanged(TileMoreInsetKey, new Thickness(0, MoreBadgeInset, MoreBadgeInset, 0));
+		SetResourceIfChanged(TileCoverRadiusKey, new CornerRadius(s.CoverRadius));
+		SetResourceIfChanged(TileTitleSizeKey, s.TileTitle);
+		SetResourceIfChanged(TileSpacingKey, s.TileGap);
+		SetResourceIfChanged(TileShadowOpacityKey, ShelfCoverShadowOpacity);
+		SetResourceIfChanged(TileShadowOffsetKey, s.ShadowOffset); // 4 dp, and 5 on a tablet held upright (mock KT1); StoryCover.ShadowDepth carries it to Shadow.Offset
 	}
+
+	private const double MoreBadgeSize = 32;
+	private const double MoreBadgeInset = 6;
 
 	// A grid of this many columns (the sideways row retired with the 2026-11-08 design). The first book on screen stays on screen.
 	private void ApplyShelfList(int columns)
@@ -1055,6 +1121,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			}
 		}
 
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf columns={columns} grownUp={_mode.IsGrownUp}"); // the subscription flow pins the mock's 3 columns on a phone held upright (SB6)
+#endif
 		SetResourceIfChanged(TileWidthKey, -1.0);
 		SetResourceIfChanged(TileTitleLinesKey, 2);
 		ApplyShelfMargin(_shelfGeometry);
@@ -1064,12 +1133,18 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	// The list's own sides and top: a pure function of the chrome (CornerLayout.BooksGeometry, ShelfTitleRules.Geometry), never of the list's measured size (a layout cycle on the VM, Slice 235 part C).
 	private void ApplyShelfMargin(WindowShapeSeam.ShelfGeometry geometry)
 	{
-		var margin = new Thickness(geometry.Left, geometry.Top, geometry.Right, 0);
+		var margin = new Thickness(geometry.Left, ShelfBanners.IsVisible ? ListTopUnderBanner : geometry.Top, geometry.Right, 0);
 		if (StoryList.Margin != margin)
 		{
 			StoryList.Margin = margin;
 		}
+
+		ShelfBanners.Margin = new Thickness(geometry.Left, BannerTop, geometry.Right, BannerBottom); // Slice 398 (mock SB6: 12 above, 8 below): the banners sit on the list's own sides
 	}
+
+	private const double BannerTop = 12;
+	private const double BannerBottom = 8;
+	private const double ListTopUnderBanner = 4; // the mock's list starts 4 dp under the banner's 8: the banner carries the gap above the grid, the list's own top is not added to it
 
 	// A resource write re-measures every tile bound to it, so it is made only when the value really changes.
 	private void SetResourceIfChanged(string key, object value)
@@ -1138,17 +1213,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	internal bool InCorner => _mode.IsGrownUp;
 
 	// Slice 235 part B: the shelf answers the Windows window's keyboard. Esc closes the book's options sheet while it is open; on the corner it goes back to the child's shelf (Slice 325 part A); on the shelf it asks
-	// "Close Dino Book Reader?" (part C4).
-	DinoScreen IDinoKeyTarget.Screen => _tour is { IsActive: true } ? DinoScreen.FirstBooks : _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : _mode.IsGrownUp ? DinoScreen.Corner : DinoScreen.Shelf;
+	// "Close Dino: Kids Books & Stories?" (part C4).
+	// Slice 418: the one shelf reports the corner's screen locked or unlocked, so Ctrl+1/2/3 always resolve (a locked Store or Settings key acts like a tap); Esc on it asks to close the app, as on the old kids' shelf.
+	DinoScreen IDinoKeyTarget.Screen => _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : DinoScreen.Corner;
 
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
 	{
-		if (_tour is { IsActive: true })
-		{
-			// Slice 362 (Windows): Enter is the card's main button; Esc and Space do nothing while the tour shows (it reports DinoScreen.FirstBooks, so Enter is PickContinue)
-			return action == DinoKeyAction.PickContinue ? _tour.Advance() : action is DinoKeyAction.Back or DinoKeyAction.PickToggle;
-		}
-
+		UiUsage.NoteGrownUpKey(_reorder.IsVisible || BookInfo.IsVisible); // a key inside Store, Settings, a sheet or reorder is a grown-up tap; a key on Books never is (Slice 418 decision 13)
 		if (_reorder.IsVisible)
 		{
 			return HandleReorderKey(action); // Slice 264: Esc cancels the reorder mode, Enter is Done (Space lifts and drops a book)
@@ -1157,6 +1228,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		if (action is DinoKeyAction.AskToClose or DinoKeyAction.LeaveCorner or DinoKeyAction.CornerBooks or DinoKeyAction.CornerStore or DinoKeyAction.CornerSettings or DinoKeyAction.OpenRow)
 		{
 			return HandleCornerKey(action);
+		}
+
+		if (action == DinoKeyAction.OpenBookMenu)
+		{
+			return OpenFocusedBookMenu(); // Slice 420: the Menu key or Shift+F10 on a focused book (Windows only: no other head sends the action)
+		}
+
+		if (action is DinoKeyAction.FocusRowUp or DinoKeyAction.FocusRowDown)
+		{
+			return _mode.IsGrownUp && _mode.Tab == CornerTab.Settings && MoveSettingsFocus(down: action == DinoKeyAction.FocusRowDown); // Slice 420: the Settings arrows; Books keeps the native grid navigation
 		}
 
 		if (action == DinoKeyAction.SheetActivate)
@@ -1183,19 +1264,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		switch (action)
 		{
-			case DinoKeyAction.LeaveCorner when _mode.IsGrownUp:
-				CompleteHandover();
+			case DinoKeyAction.LeaveCorner or DinoKeyAction.AskToClose: // Slice 418: Esc is Android's Back: a Settings sub-page goes up, Store or Settings goes to Books, and only on Books does it ask to close the app
+				return OnBackButtonPressed();
+			case DinoKeyAction.CornerBooks:
+				OnTabRequested(CornerTab.Books);
 				return true;
-			case DinoKeyAction.AskToClose when !_mode.IsGrownUp:
-				return AskToClose();
-			case DinoKeyAction.CornerBooks when _mode.IsGrownUp:
-				_ = SelectTabAsync(CornerTab.Books);
+			case DinoKeyAction.CornerStore:
+				OnTabRequested(CornerTab.Store); // locked: a tap's hint and pulse
 				return true;
-			case DinoKeyAction.CornerStore when _mode.IsGrownUp:
-				_ = SelectTabAsync(CornerTab.Store);
-				return true;
-			case DinoKeyAction.CornerSettings when _mode.IsGrownUp:
-				_ = SelectTabAsync(CornerTab.Settings);
+			case DinoKeyAction.CornerSettings:
+				OnTabRequested(CornerTab.Settings);
 				return true;
 			case DinoKeyAction.OpenRow when _mode.IsGrownUp && _mode.Tab == CornerTab.Settings: // the Right arrow opens the focused Settings row (frame 157), or moves the focus when none is
 				return _settingsTab?.OpenFocusedRow() == true;
@@ -1275,7 +1353,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		{
 			if (!await TrySaveOrderAsync(ids))
 			{
-				await DisplayAlertAsync(AppResources.Reorder_SaveFailedTitle, AppResources.Reorder_SaveFailedBody, AppResources.Common_Ok);
+				await LockHolds.WhileAsync("alert", () => DisplayAlertAsync(AppResources.Reorder_SaveFailedTitle, AppResources.Reorder_SaveFailedBody, AppResources.Common_Ok));
 				return; // the mode stays open with the edited order; Done tries again, Cancel leaves
 			}
 
@@ -1353,6 +1431,24 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	/// <summary>Debug-only hook (<c>enter-grown-up tab=</c>, Slice 325 A6): picks a tab of the corner the way a tap on it does.</summary>
 	internal Task DebugSelectTabAsync(CornerTab tab) => SelectTabAsync(tab);
 
+	/// <summary>Slice 433 item 6, the scroll-shelf hook: scrolls the books list down by <paramref name="fraction"/> of its visible height (up when negative) over <paramref name="milliseconds"/>, animated. Empty when it did, else why not.</summary>
+	internal async Task<string> DebugScrollShelfAsync(double fraction, int milliseconds)
+	{
+		if (!StoryList.IsVisible || _reorder.IsVisible || StoryList.Height <= 0 || Navigation.NavigationStack.Count > 1)
+		{
+			return "shelf not showing";
+		}
+
+		int pixels = (int)Math.Round(fraction * StoryList.Height);
+		if (pixels == 0)
+		{
+			return "scroll distance rounds to 0 pixels";
+		}
+
+		bool moved = await Testing.ShelfScroller.ScrollAsync(StoryList, pixels, milliseconds);
+		return moved ? string.Empty : "no native list";
+	}
+
 	/// <summary>Debug-only hook for the shelf-reorder flow: opens the mode if it is closed, then moves the book at 1-based position <paramref name="from"/> before the one at <paramref name="to"/>, as a drop does.</summary>
 	internal string DebugReorderMove(int from, int to)
 	{
@@ -1361,7 +1457,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	}
 #endif
 
-	private async void OnStoryTapped(object? sender, TappedEventArgs e)
+	private async void OnStoryTapped(object? sender, TappedEventArgs e) => await ReadTappedTileAsync(sender); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
+
+	// Slice 420: on the unlocked shelf the overlay's backdrop sits over the cover; a tap on it reads the book exactly like a tap on a bare cover (decision 6), and only the ••• opens the sheet.
+	private async void OnReadRequested(object? sender, EventArgs e) => await ReadTappedTileAsync(sender); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
+
+	// The one tap-to-read path of a bare cover and of the overlay's backdrop, so the hold-suppression guard cannot drift between the two.
+	private async Task ReadTappedTileAsync(object? sender)
 	{
 		if (_reorder.IsVisible || Environment.TickCount64 < _suppressTapUntil)
 		{
@@ -1375,16 +1477,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// A tap on a cover (kids' mode: read it; grown-up mode: its options sheet). The Windows keyboard (Enter or Space on a focused book) takes the same path.
+	// A tap on a cover: it reads the book, locked or unlocked (Slice 418 decision 6). The Windows keyboard (Enter or Space on a focused book) takes the same path.
 	private Task OpenTileAsync(StoryTile tile)
 	{
-		UiUsage.Tap(UiControls.Book); // Slice 352: on the shelf it starts the read, in the corner it opens the book's sheet; the screen in the count says which
+		UiUsage.Tap(UiControls.Book); // Slice 352: it starts the read; the screen in the count says whether the shelf was locked
 		if (tile.IsLapsed)
 		{
 			return Task.CompletedTask; // Slice 384: a greyed book opens nothing; its tile carries its two actions (Subscribe again, Buy this book)
 		}
 
-		return _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+		return _busy.RunAsync(() => _actions.ReadAsync(Navigation, tile.Story)); // Slice 418 decision 6: a tap on a cover reads, unlocked too; the ••• opens the options
 	}
 
 	// Slice 235 part C: Windows-only wiring on the native list (Enter, Space, right-click, focus return after a sheet), in Platforms/Windows/GalleryPage.Desktop.cs. No-ops elsewhere.
@@ -1396,7 +1498,27 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 	partial void RestoreTileFocus();
 
-	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111):
+	// Slice 420: opens the sheet of the book that has the keyboard (Windows); true when it did. Other heads have no such key, so false.
+	private bool OpenFocusedBookMenu()
+	{
+		bool opened = false;
+		OpenFocusedBookMenu(ref opened);
+		return opened;
+	}
+
+	partial void OpenFocusedBookMenu(ref bool opened);
+
+	// Slice 420: the Up and Down arrows on the Settings tab move the keyboard focus one row (Windows); true when the focus moved. Other heads have no arrow keys here, so false.
+	private bool MoveSettingsFocus(bool down)
+	{
+		bool moved = false;
+		MoveSettingsFocus(down, ref moved);
+		return moved;
+	}
+
+	partial void MoveSettingsFocus(bool down, ref bool moved);
+
+	// Grown-up mode: a book's "⋯" (never its bare cover, which reads) opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111):
 	// Read with my voice, Record, Cast, Edit pages (own books), Export (developer switch) and Remove from the shelf.
 	private async Task OpenBookSheetAsync(Story tapped)
 	{
@@ -1550,20 +1672,171 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	private async Task LeaveAndReadAsync(Story story)
 	{
 #if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now leaves the corner and opens {story.Id}"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now opens {story.Id} and stays unlocked"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
 #endif
 		if (_services.GetRequiredService<BookSales>().IsLapsed(story))
 		{
 			return; // Slice 384: a book the ended subscription locked is not opened; it offers Subscribe again and Buy this book
 		}
 
-		FirstRunState.HandoverPending = false;
-		_mode.Leave();
+		// Slice 418 decision 6: reading neither resets nor locks, as a cover tap; the shelf stays unlocked and says nothing when the grown-up comes back.
 		await _actions.ReadAsync(Navigation, story, ReadOrigins.Corner);
 	}
 
 	// Slice 384: the greyed book's two actions on the parents' shelf. Subscribe again opens the Store tab where the plans are; Buy this book opens the store's own sheet for the book (the wait overlay shows past 500 ms).
 	private void OnLapsedSubscribeClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet and the tab switch is counted as the Store screen
+
+	// Slice 398 (mock SB6, SB7): the Books tab's two banners. The "why" banner shows while any book is locked (it says it once for all of them); the calm sand notice shows only while offline, past the last end date the store
+	// gave and inside the 3 days (SubscriptionAccess.OfflineNotice). Both are the parents' Books tab only; the child's shelf never sees either.
+	private void ApplyShelfBanners()
+	{
+		BookSales sales = _services.GetRequiredService<BookSales>();
+		bool books = _mode.IsGrownUp && _mode.Tab == CornerTab.Books;
+		int locked = books ? BookAccess.LockedCount(_items.OfType<StoryTile>().Select(tile => tile.IsLapsed ? ShelfAccess.LockedByLapse : ShelfAccess.Readable)) : 0;
+		DateTimeOffset? locksOn = books && sales.SwitchKnownOn ? SubscriptionAccess.OfflineNotice(DateTimeOffset.UtcNow, sales.Purchases.Subscription.Record, NetworkProbe.IsOffline()) : null;
+		LockedBanner.IsVisible = locked > 0;
+		OfflineBanner.IsVisible = locksOn is not null;
+		ShelfBanners.IsVisible = LockedBanner.IsVisible || OfflineBanner.IsVisible;
+		ApplyShelfMargin(_shelfGeometry); // the list's own top follows whether a banner stands above it
+		if (locked > 0)
+		{
+			LockedBannerTitle.Text = AppResources.Sub_BannerTitle;
+			LockedBannerBody.Text = locked == 1 ? AppResources.Sub_BannerBody_One : AppResources.Format(AppResources.Sub_BannerBody_Other, locked);
+			LockedBannerPlans.Text = AppResources.Sub_BannerPlans;
+			LockedBannerRestore.Text = AppResources.Store_RestorePurchases;
+			SemanticProperties.SetDescription(LockedBannerPlans, AppResources.Sub_BannerPlans);
+			SemanticProperties.SetDescription(LockedBannerRestore, AppResources.Store_RestorePurchases);
+		}
+
+		if (locksOn is { } lockDate)
+		{
+			OfflineBannerTitle.Text = AppResources.Sub_OfflineTitle;
+			OfflineBannerBody.Text = AppResources.Format(AppResources.Sub_OfflineBody, SubscriptionAccess.FormatLockDate(lockDate, System.Globalization.CultureInfo.CurrentUICulture));
+		}
+
+#if DEBUG
+		LogBannerState($"[Subscription] banners locked={locked} offline={(locksOn is null ? "none" : "shown")}"); // the subscription flow's expect-log markers
+#endif
+	}
+
+#if DEBUG
+	private string _lastBannerLog = string.Empty;
+
+	// Written only when the state differs from the last line, so an expect-log can never match a stale earlier line of the same text.
+	private void LogBannerState(string line)
+	{
+		if (line != _lastBannerLog)
+		{
+			_lastBannerLog = line;
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+		}
+	}
+#endif
+
+	private const double LockBadgeTopShare = 0.22; // mock SB6: the badge's top edge is 22% of the cover's height down
+
+	// The grid this is raised on holds the cover alone (the title and pills are outside it), so its height is the cover's; the badge's margin follows it and the badge sits where the mock puts it at every tile size.
+	private void OnTileCoverSizeChanged(object? sender, EventArgs e)
+	{
+		if (sender is Grid tile && tile.Children.OfType<Border>().FirstOrDefault(child => child.AutomationId == "LapsedLockBadge") is { } badge && tile.Width > 0)
+		{
+			badge.Margin = new Thickness(0, tile.Height * LockBadgeTopShare, 0, 0);
+		}
+	}
+
+	// Slice 398: the banners and the locked tiles depend on the clock (the end date, the 3 days after it) and on the store's catalog, which can land after the shelf was built, so while the page shows a
+	// minute timer (and every tab change and appearing) works them out again; only a real difference in what is locked, or in a locked book's price, rebuilds the shelf.
+	private static readonly TimeSpan BannerCheckGap = TimeSpan.FromMinutes(1);
+	private IDispatcherTimer? _bannerTimer;
+	private string _lockedShelfKey = string.Empty;
+	private IReadOnlyList<Story> _lastShelfStories = [];
+
+	private void StartBannerTimer()
+	{
+		if (_bannerTimer is null)
+		{
+			_bannerTimer = Dispatcher.CreateTimer();
+			_bannerTimer.Interval = BannerCheckGap;
+		}
+
+		_bannerTimer.Tick -= OnBannerTick;
+		_bannerTimer.Tick += OnBannerTick;
+		_bannerTimer.Start();
+	}
+
+	private void StopBannerTimer()
+	{
+		if (_bannerTimer is not null)
+		{
+			_bannerTimer.Stop();
+			_bannerTimer.Tick -= OnBannerTick; // detached, so a stopped timer does not hold the page
+		}
+	}
+
+	private void OnBannerTick(object? sender, EventArgs e) => CheckLockedShelf();
+
+	private bool _lockedRebuildRunning;
+	private bool _lockedRebuildWanted;
+
+	private void CheckLockedShelf()
+	{
+		ApplyShelfBanners();
+		if (LockedShelfKey(_services.GetRequiredService<BookSales>()) != _lockedShelfKey)
+		{
+			// Not while a reorder, a book sheet or another page is open over the shelf: the key still differs, so the next minute tick or the next appearing is the wanted rebuild.
+			if (ShelfFreeForSwap())
+			{
+				_ = RebuildLockedShelfAsync();
+			}
+		}
+	}
+
+	// One rebuild at a time: a check that finds one running marks one more as wanted and returns; the running one repeats once when it ends if the key still differs.
+	private async Task RebuildLockedShelfAsync()
+	{
+		if (_lockedRebuildRunning)
+		{
+			_lockedRebuildWanted = true;
+			return;
+		}
+
+		_lockedRebuildRunning = true;
+		try
+		{
+			do
+			{
+				_lockedRebuildWanted = false;
+				await RefreshShelfAsync();
+			}
+			while (_lockedRebuildWanted && LockedShelfKey(_services.GetRequiredService<BookSales>()) != _lockedShelfKey);
+		}
+		finally
+		{
+			_lockedRebuildRunning = false;
+		}
+	}
+
+	// Which books are locked and what each one's Buy pill says, as one string: equal while nothing about them changed.
+	private string LockedShelfKey(BookSales sales) =>
+		string.Join('|', _lastShelfStories.Where(story => sales.IsLapsed(story)).Select(story => $"{story.Id}={LockedBookPrice(sales, story)}"));
+
+	// The banner's "See plans in the Store" is the same Store tab as Subscribe again.
+	private void OnBannerPlansClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: as OnLapsedSubscribeClicked
+
+	// The banner's "Restore purchases" leaves one request for the Store tab and shows that tab, as Settings' Restore row does: the Store owns the wait text and the result message.
+	private void OnBannerRestoreClicked(object? sender, EventArgs e)
+	{
+		// no-tap-count: the Store tab's own restore counts the Restore tap (UiControls.Restore)
+		StorePage.RequestRestore(); // before the tab switch, so the Store's Appearing finds the request however fast it runs
+		_mode.SelectTab(CornerTab.Store);
+	}
+
+	// The network came or went: the offline notice follows it (the store answer decides at once online).
+	private void OnNetworkChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);
+
+#if DEBUG
+	private void OnNetworkOverrideChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);
+#endif
 
 	private async void OnLapsedBuyClicked(object? sender, EventArgs e)
 	{
@@ -1586,7 +1859,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		});
 		if (outcome == BuyOutcome.Failed && _mode.IsGrownUp)
 		{
-			await DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_BuyFailed, AppResources.Common_Ok); // as the store page does: a purchase that did not go through says so
+			await LockHolds.WhileAsync("alert", () => DisplayAlertAsync(AppResources.Store_Title, AppResources.Store_BuyFailed, AppResources.Common_Ok)); // as the store page does: a purchase that did not go through says so
 		}
 	}
 
@@ -1703,7 +1976,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 	// A tab of the corner (Slice 325 parts A and B): Books is the grid on this page; the Store and Settings tabs are views shown in TabHost inside the corner's chrome (ApplyTab), so the bar or rail never goes
 	// away and nothing is pushed. Ctrl+1/2/3 and the debug hook come here too.
-	private async void OnTabRequested(CornerTab tab) => await SelectTabAsync(tab);
+	private async void OnTabRequested(CornerTab tab)
+	{
+		if (!_mode.IsGrownUp && tab != CornerTab.Books)
+		{
+			ShowLockedHint(); // Slice 418 decision 9: Store and Settings are faded while locked; a tap says why and pulses the lock
+			return;
+		}
+
+		await SelectTabAsync(tab);
+	}
 
 	private Task SelectTabAsync(CornerTab tab) => RunGrownUpAsync(async () =>
 	{
@@ -1762,6 +2044,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		ApplyContentHeaderTexts();
 		ApplyTabShape();
+		CheckLockedShelf();
 		SyncTabViews();
 	}
 
@@ -1811,7 +2094,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		TabHost.Margin = new Thickness(sizes.Content.Left, top, sizes.Content.Right, 0);
 		_store?.ApplyShape(SettingsLayout.ContentWidth(_windowSize.Width, _chrome.RailWidth));
 		_settingsTab?.ApplyShape(_windowSize.Width, _windowSize.Height);
-		ContentHeader.IsVisible = _mode.IsGrownUp && !subPage;
+		ContentHeader.IsVisible = _chrome.IsRail && !subPage; // Slice 418: beside a rail the title row (tab name, chip, flag) shows on every tab; under a bar the header above it does
 	}
 
 	private async void OnOpenRequested(object? sender, EventArgs e)
@@ -1853,27 +2136,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// The Grown-ups pill (Slice 228): the gate first, then grown-up mode. A failed gate leaves the shelf as it was.
-	private async void OnGrownUpsRequested() => await _busy.RunAsync(EnterGrownUpModeAsync);
-
-	private async Task EnterGrownUpModeAsync()
-	{
-		if (await _gate.RequestAsync(Navigation))
-		{
-			_mode.Enter();
-			_tourGateDeclined = false;
-			await ResumeTourAsync(); // a tour left unfinished by a relaunch opens now that a grown-up is here
-		}
-	}
-
-	// Back from grown-up mode lands on the kids' shelf, not out of the app (Slice 172, Decision 169, mock 94). Slice 325 part B: Back on a Settings sub-page goes up to the list first; on any tab it is the coral pill.
+	// Slice 418: Back closes the language list, the reorder layer, the sheet; on Settings a sub-page goes up to the list first; on Store or Settings it goes to Books; on Books it asks to close the app (Slice 174).
 	protected override bool OnBackButtonPressed()
 	{
-		if (_tour is { IsActive: true })
-		{
-			return true; // Slice 362: Back does nothing during the corner tour
-		}
-
 		if (StoryLanguageMenu.DismissOpen(GalleryRoot))
 		{
 			return true; // the open language list closes first
@@ -1891,22 +2156,22 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			return true;
 		}
 
-		if (!_mode.IsGrownUp)
-		{
-			return AskToClose();
-		}
-
-		if (_mode.Tab == CornerTab.Settings && _settingsTab is { SubPageOpen: true } settings)
+		if (_mode.IsGrownUp && _mode.Tab == CornerTab.Settings && _settingsTab is { SubPageOpen: true } settings)
 		{
 			_ = settings.GoBackAsync();
 			return true;
 		}
 
-		CompleteHandover();
-		return true;
+		if (_mode.IsGrownUp && _mode.Tab != CornerTab.Books)
+		{
+			_ = SelectTabAsync(CornerTab.Books);
+			return true;
+		}
+
+		return AskToClose();
 	}
 
-	// The kids' shelf is home (Slice 174, Decision 169, mock 94): Android back asks "Close Dino Book Reader?" instead of leaving, and so does Esc at the Windows window (Slice 325 part C4). iOS has no back
+	// The kids' shelf is home (Slice 174, Decision 169, mock 94): Android back asks "Close Dino: Kids Books & Stories?" instead of leaving, and so does Esc at the Windows window (Slice 325 part C4). iOS has no back
 	// button and no Esc, so nothing changes there.
 	private bool AskToClose()
 	{
@@ -1932,15 +2197,4 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 	}
 
-	// Leaves grown-up mode (the coral pill, Esc, Android Back on any tab); Back during the first hand-over counts as "Ready for my child", so the flag never outlives the mode.
-	private async void CompleteHandover()
-	{
-		if (!await CloseSettingsSubPageAsync())
-		{
-			return; // a busy sub-page keeps the corner open; a language change rebuilt the app in the corner
-		}
-
-		FirstRunState.HandoverPending = false;
-		_mode.Leave();
-	}
 }

@@ -22,7 +22,7 @@
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Valmis</value></data>
   <data name="Common_Continue" xml:space="preserve"><value>Jatka</value></data>
-  <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino Book Reader?</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino: Kids Books &amp; Stories?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Jää</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Sulje</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Poista</value></data>
@@ -56,7 +56,7 @@
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Suosittu</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Suositeltu</value></data>
   <data name="Store_Tag_New" xml:space="preserve"><value>Uusi</value></data>
-  <data name="Store_Length" xml:space="preserve"><value>{0} sivua · {1} min</value></data>
+  <data name="Store_LengthMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Ilmaiseksi ja ilman tiliä. Mitään sinusta tai lapsestasi ei lähetetä.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Olet offline-tilassa</value></data>
   <data name="Store_OfflineBody" xml:space="preserve"><value>Kauppa tarvitsee internetin. Hyllyssä jo olevat tarinat toimivat ilman sitä.</value></data>
@@ -95,13 +95,13 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Jo täällä, ohitettu</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Ei voitu lukea</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Näytä tarinani</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Tämä varmuuskopio on uudemmasta Dino Book Reader -sovelluksesta. Päivitä sovellus ja yritä uudelleen.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Tämä tiedosto ei ole Dino Book Reader -varmuuskopio.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Tämä varmuuskopio on uudemmasta Dino: Kids Books &amp; Stories -sovelluksesta. Päivitä sovellus ja yritä uudelleen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Tämä tiedosto ei ole Dino: Kids Books &amp; Stories -varmuuskopio.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Varmuuskopiointi ei onnistunut. Yritä uudelleen.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Liian suuri palautettavaksi</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Kohdetta {0} ei voitu lisätä varmuuskopioon.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Mitä kieltä Dinon pitää käyttää?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Sovelluksen painikkeille ja sanoille. Voit vaihtaa sen myöhemmin aikuisten nurkassa.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Sovelluksen painikkeille ja sanoille. Voit vaihtaa sen myöhemmin Asetuksissa.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Jatka</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Valitse ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Valitse vähintään kaksi. Lisää saat kaupasta milloin tahansa.</value><comment>Machine draft: needs native review</comment></data>
@@ -119,18 +119,16 @@
   <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Kuuntele</value></data>
   <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Millä kielillä perheesi lukee?</value></data>
   <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} on aina käytössä. Lisää muut kielet, joita lapsesi kuulee.</value></data>
+  <data name="Onboarding_LanguagesBodyShort" xml:space="preserve"><value>{0} on aina käytössä.</value></data>
   <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Miksi useampi kuin yksi?</value></data>
   <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Monet lapset kuulevat kotona yhtä kieltä ja koulussa tai isovanhempien luona toista. Jokainen kirja luetaan jokaisella valitsemallasi kielellä, ja lapsesi voi vaihtaa kieltä millä tahansa sivulla. Valitse enintään kolme.</value></data>
   <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>Sovelluksen kieli · aina käytössä</value></data>
   <data name="FirstBooks_GetThese" xml:space="preserve"><value>Hae nämä kirjat</value></data>
   <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Kuuntele, kun Dino lukee</value></data>
   <data name="Onboarding_ListenBody" xml:space="preserve"><value>Jokaisella hahmolla on oma äänensä, ja Dino lukee tunteella.</value></data>
-  <data name="Onboarding_ListenNext" xml:space="preserve"><value>Se oli {0}. Kuuntele nyt sama sivu toisella kielelläsi.</value></data>
-  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Napauta nyt {0}, niin kuulet saman sivun.</value></data>
-  <data name="Onboarding_ListenOther" xml:space="preserve"><value>Samat äänet, nyt kielellä {0}. Lapsesi voi vaihtaa kieltä millä tahansa sivulla.</value></data>
-  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Jokaisella hahmolla on oma äänensä, ja Dino lukee tunteella. Se oli {0}; nyt samat äänet lukevat sen kielellä {1}. Lapsesi voi vaihtaa kieltä millä tahansa sivulla.</value></data>
+  <data name="Onboarding_SkipStep" xml:space="preserve"><value>Ohita tämä vaihe</value></data>
   <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Ole hahmon ääni</value></data>
-  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Nauhoita hahmon {0} repliikit tältä sivulta ja kuuntele sitten sivu **omalla äänelläsi** hahmona {0}.</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Nauhoita hahmon {0} repliikit tältä sivulta ja kuuntele sitten sivu **omalla äänelläsi** hahmona {0}. Voit ohittaa tämän.</value></data>
   <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Äänesi pysyy tässä puhelimessa</value></data>
   <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Äänesi pysyy tässä tabletissa</value></data>
   <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Äänesi pysyy tässä tietokoneessa</value></data>
@@ -142,33 +140,12 @@
   <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Jatka ilman nauhoitusta</value></data>
   <data name="Onboarding_LinesTitle" xml:space="preserve"><value>Hahmon {0} repliikit</value></data>
   <data name="Onboarding_ThatsYou" xml:space="preserve"><value>Se olet sinä!</value></data>
-  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Tämä on {0} sinun äänelläsi. Tämä oli vain kokeilu, joten se poistetaan, kun käyttöönotto päättyy. Voit nauhoittaa minkä tahansa hahmon myöhemmin aikuisten nurkassa.</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>Tämä on {0} sinun äänelläsi. Tämä oli vain kokeilu, joten se poistetaan, kun käyttöönotto päättyy. Voit nauhoittaa minkä tahansa hahmon myöhemmin kirjan •••-valikosta.</value></data>
   <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · sinun äänesi</value></data>
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Toista uudelleen</value></data>
-  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>Tämä on aikuisten nurkka</value></data>
-  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Tänne tulevat vain aikuiset. Täällä voit:</value></data>
-  <data name="Tour_StoreTitle" xml:space="preserve"><value>Hakea kirjoja kaupasta</value></data>
-  <data name="Tour_StoreLine" xml:space="preserve"><value>Ilmaisia ja maksullisia tarinoita kaikilla perheesi kielillä.</value></data>
-  <data name="Tour_BooksTitle" xml:space="preserve"><value>Hallita kirjojasi</value></data>
-  <data name="Tour_BooksLine" xml:space="preserve"><value>Muuttaa hyllyn järjestystä, poistaa kirjan tai nauhoittaa oman äänesi mille tahansa hahmolle.</value></data>
-  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Muuttaa asetuksia</value></data>
-  <data name="Tour_SettingsLine" xml:space="preserve"><value>Kielet, lukunopeus, äänet ja varmuuskopio koko sovellukselle.</value></data>
-  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Näytä, mitä täällä on</value></data>
-  <data name="Tour_TipBooks" xml:space="preserve"><value>Kirjasi. Napauta kirjan kohdalla •••, niin voit nauhoittaa äänesi tai poistaa kirjan. Järjestä uudelleen muuttaa hyllyn järjestystä.</value></data>
-  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>Kauppa</value></data>
-  <data name="Tour_TipStore" xml:space="preserve"><value>Uusia tarinoita, ilmaisia ja maksullisia. Jokainen kirja on kaikilla perheesi kielillä. Ostitko aiemmin? Palauta kirjasi täältä.</value></data>
-  <data name="Tour_TipSettings" xml:space="preserve"><value>Kielet, lukunopeus, äänet ja varmuuskopio koko sovellukselle.</value></data>
-  <data name="Tour_ShelfTitle" xml:space="preserve"><value>Katso lapsesi hylly</value></data>
-  <data name="Tour_ShelfLine" xml:space="preserve"><value>Napauta **Lapsen hylly**, niin näet, mitä lapsesi näkee.</value></data>
-  <data name="Tour_LastStep" xml:space="preserve"><value>Viimeinen vaihe</value></data>
-  <data name="Tour_ShowMe" xml:space="preserve"><value>Näytä</value></data>
-  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>Tämä on lapsesi hylly</value></data>
-  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Tämän lapsesi näkee aina avatessaan Dinon: vain omat kirjansa, ilman mitään, mitä voisi vahingossa muuttaa.</value></data>
-  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>Päästäksesi takaisin aikuisten nurkkaan napauta **Aikuisille** ja pidä pohjassa 3 sekuntia.</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
-  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lukee ja kääntää tälle kielelle</value></data>
@@ -180,23 +157,28 @@
   <data name="Settings_About" xml:space="preserve"><value>Tietoja ja päivitykset</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Päällä</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Pois</value></data>
+  <data name="Settings_BooksAndBuying" xml:space="preserve"><value>Kirjat ja ostokset</value></data>
+  <data name="Settings_Subscription" xml:space="preserve"><value>Tilaus</value></data>
+  <data name="Settings_SubYearly" xml:space="preserve"><value>Vuosittain · uusiutuu {0}</value></data>
+  <data name="Settings_SubMonthly" xml:space="preserve"><value>Kuukausittain · uusiutuu {0}</value></data>
+  <data name="Settings_SubTrial" xml:space="preserve"><value>Ilmainen kokeilu {0} asti</value></data>
+  <data name="Settings_SubNone" xml:space="preserve"><value>Ei tilausta</value></data>
+  <data name="Settings_SubGrace" xml:space="preserve"><value>Maksuongelma</value></data>
+  <data name="Settings_RestoreLine_Google" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RestoreLine_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RestoreLine_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ostetut kirjat ja tilaus</value></data>
+  <data name="Settings_RedeemLine_Google" xml:space="preserve"><value>Lahja- tai tarjouskoodi Google Playsta</value></data>
+  <data name="Settings_RedeemLine_Apple" xml:space="preserve"><value>Lahja- tai tarjouskoodi App Storesta</value></data>
+  <data name="Settings_RedeemLine_Microsoft" xml:space="preserve"><value>Lahja- tai tarjouskoodi Microsoft Storesta</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Asetukset, kauppa ja hylly</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Aikuiset</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lisää ja muokkaa kirjoja</value></data>
-  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Aikuisille</value></data>
-  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Aikuisille</value></data>
-  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Aikuisten nurkka, lukittu</value></data>
-  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Aikuisten nurkka</value></data>
-  <data name="Gallery_CornerLine" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napautuksen päässä.</value></data>
-  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Takaisin lapseni hyllylle</value></data>
   <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
   <data name="Corner_TabBooks" xml:space="preserve"><value>Kirjat</value></data>
-  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Lapsen hylly</value></data>
-  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Vain aikuiset näkevät tämän.</value></data>
   <!-- Slice 325 part C: the kids' shelf's short title -->
   <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Tarinat</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Järjestä uudelleen</value></data>
-  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Vedä kirja uuteen paikkaan. Lapsesi hylly näyttää saman järjestyksen.</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Vedä kirja uuteen paikkaan hyllyllä.</value></data>
   <data name="Cover_Waiting" xml:space="preserve"><value>Odotetaan kansikuvaa</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Uutta järjestystä ei voitu tallentaa</value></data>
   <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Jokin käyttää vielä tiedostoa. Yritä uudelleen valitsemalla Valmis tai säilytä vanha järjestys valitsemalla Peruuta.</value></data>
@@ -213,9 +195,18 @@
   <data name="Language_Footer" xml:space="preserve"><value>Toisella kielellä oleva tarina luetaan edelleen omalla kielellään, ellei sen tarinan kohdalla ole valittu Käännä omalle kielelleni.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Paina ja pidä 3 sekuntia.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Paina ja pidä 3 sekuntia</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Aikuisten nurkka</value></data>
+  <data name="Lock_Locked" xml:space="preserve"><value>Lukittu</value></data>
+  <data name="Lock_Unlocked" xml:space="preserve"><value>Avattu</value></data>
+  <data name="Lock_LockedA11y" xml:space="preserve"><value>Lukittu. Avaa napauttamalla.</value></data>
+  <data name="Lock_UnlockedA11y" xml:space="preserve"><value>Avattu. Lukitse napauttamalla.</value></data>
+  <data name="Lock_Countdown" xml:space="preserve"><value>Avattu · {0} s</value></data>
+  <data name="Lock_GrownUpsHint" xml:space="preserve"><value>Kauppa ja Asetukset ovat aikuisille. Avaa napauttamalla lukkoa.</value></data>
+  <data name="Lock_LockedAgain" xml:space="preserve"><value>Lukittu uudelleen: aikuinen ei napauttanut 30 sekuntiin.</value></data>
+  <data name="Lock_LockedByHand" xml:space="preserve"><value>Lukittu.</value></data>
+  <data name="Lock_TapToLock" xml:space="preserve"><value>Lukitse napauttamalla. Lukittuu itsestään {0} s kuluttua, jos aikuinen ei napauta.</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Pidä painettuna…</value></data>
   <data name="Gate_Continue" xml:space="preserve"><value>Jatka kysymykseen</value></data>
-  <data name="Gate_BackToStory" xml:space="preserve"><value>Takaisin tarinaan</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Paljonko on</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Poista</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Hiirellä, tai pidä välilyöntiä painettuna.</value></data>
@@ -228,7 +219,7 @@
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
   <data name="Speed_SubWindows" xml:space="preserve"><value>Hitaampi on pienille helpompaa - vaihda vasemmalla ja oikealla nuolinäppäimellä</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Lue uudelleen</value></data>
-  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napsautuksen päässä.</value></data>
+  <data name="Reading_TheEnd" xml:space="preserve"><value>Loppu</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Paljonko on {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Tarinan kieli</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · tunnistettu</value></data>
@@ -254,7 +245,7 @@
   <data name="Rec_UseVoice" xml:space="preserve"><value>Lue minun äänelläni</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0}/{1} sivua nauhoitettu. Muut sivut käyttävät Dinon ääniä.</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofoni on pois päältä</value></data>
-  <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino Book Readerille laitteen asetuksissa ja yritä uudelleen.</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino: Kids Books &amp; Storiesille laitteen asetuksissa ja yritä uudelleen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Nauhoitus ei onnistunut. Yritä uudelleen.</value></data>
   <!-- /Slice 111 -->
   <!-- Slice 279 -->
@@ -392,6 +383,8 @@
   <data name="BackCover_Months" xml:space="preserve"><value>tammikuu|helmikuu|maaliskuu|huhtikuu|toukokuu|kesäkuu|heinäkuu|elokuu|syyskuu|lokakuu|marraskuu|joulukuu</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} ja {1}</value></data>
+  <data name="BackCover_AndWord" xml:space="preserve"><value>ja</value></data>
+  <data name="BackCover_List" xml:space="preserve"><value>{0}, {1}</value></data>
   <data name="Store_BuyFor" xml:space="preserve"><value>Osta {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Osta {0} hintaan {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Muodosta internetyhteys ostaaksesi</value></data>
@@ -402,15 +395,13 @@
   <data name="Error_TooManyTries" xml:space="preserve"><value>Liian monta yritystä. Odota minuutti ja yritä uudelleen.</value></data>
   <data name="Error_BookGone" xml:space="preserve"><value>Tämä kirja ei ole enää kaupassa.</value></data>
   <data name="Store_Free" xml:space="preserve"><value>Ilmainen</value></data>
-  <data name="Store_BoughtBeforeTitle" xml:space="preserve"><value>Oletko ostanut kirjoja aiemmin?</value></data>
-  <data name="Store_BoughtBefore_Google" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat palaavat myös tähän puhelimeen.</value></data>
-  <data name="Store_BoughtBefore_Google_Tablet" xml:space="preserve"><value>Tällä Google-tilillä ostetut kirjat palaavat myös tähän tablettiin.</value></data>
-  <data name="Store_BoughtBefore_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat palaavat myös tähän puhelimeen.</value></data>
-  <data name="Store_BoughtBefore_Apple_Tablet" xml:space="preserve"><value>Tällä Apple ID:llä ostetut kirjat palaavat myös tähän tablettiin.</value></data>
-  <data name="Store_BoughtBefore_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ostetut kirjat palaavat myös tähän tietokoneeseen.</value></data>
+  <data name="Store_Restoring" xml:space="preserve"><value>Palautetaan…</value></data>
+  <data name="Store_NothingBought_Google" xml:space="preserve"><value>Tällä Google-tilillä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_NothingBought_Apple" xml:space="preserve"><value>Tällä Apple ID:llä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_NothingBought_Microsoft" xml:space="preserve"><value>Tällä Microsoft-tilillä ei ole vielä ostettu mitään.</value></data>
+  <data name="Store_BoughtItAlready" xml:space="preserve"><value>Ostit sen jo? Palauta ostot</value></data>
   <data name="Store_Restored_One" xml:space="preserve"><value>1 kirja palautettu. Se on hyllyssä.</value></data>
   <data name="Store_Restored_Other" xml:space="preserve"><value>{0} kirjaa palautettu. Ne ovat hyllyssä.</value></data>
-  <data name="Store_NothingToRestore" xml:space="preserve"><value>Tililtä ei löytynyt ostettuja kirjoja.</value></data>
   <data name="Store_ServerErrorTitle" xml:space="preserve"><value>Kaupassa on ongelma</value></data>
   <data name="Store_RestorePurchases" xml:space="preserve"><value>Palauta ostot</value></data>
   <data name="Store_RedeemCode" xml:space="preserve"><value>Lunasta koodi</value></data>
@@ -431,6 +422,30 @@
   <data name="Sub_Again" xml:space="preserve"><value>Tilaa uudelleen</value></data>
   <data name="Sub_BuyThis" xml:space="preserve"><value>Osta tämä kirja</value></data>
   <data name="Sub_Locked" xml:space="preserve"><value>Lukittu: tilaus päättyi</value></data>
+  <data name="Sub_Save" xml:space="preserve"><value>Säästä {0} %</value></data>
+  <data name="Sub_YearlyPlain" xml:space="preserve"><value>{0} vuodessa</value></data>
+  <data name="Sub_MonthlyPlain" xml:space="preserve"><value>{0} kuukaudessa</value></data>
+  <data name="Sub_TermsNoTrial" xml:space="preserve"><value>Uusiutuu automaattisesti joka kuukausi tai joka vuosi näytettyyn hintaan, kunnes peruutat kauppasi tilillä. Peruuta milloin tahansa.</value></data>
+  <data name="Sub_StateTrialYearly" xml:space="preserve"><value>Ilmainen kokeilu {0} asti. Sen jälkeen {1} vuodessa, ellet peruuta ennen sitä.</value></data>
+  <data name="Sub_StateTrialMonthly" xml:space="preserve"><value>Ilmainen kokeilu {0} asti. Sen jälkeen {1} kuukaudessa, ellet peruuta ennen sitä.</value></data>
+  <data name="Sub_StateRenewsYearly" xml:space="preserve"><value>Vuositilaus · uusiutuu {0}.</value></data>
+  <data name="Sub_StateRenewsMonthly" xml:space="preserve"><value>Kuukausitilaus · uusiutuu {0}.</value></data>
+  <data name="Store_Included" xml:space="preserve"><value>Sisältyy</value></data>
+  <data name="Sub_GraceTitle" xml:space="preserve"><value>Maksusi ei mennyt läpi</value></data>
+  <data name="Sub_GraceBody_Google" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun Google Play yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_GraceBody_Apple" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun App Store yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_GraceBody_Microsoft" xml:space="preserve"><value>Kaikki kirjat pysyvät avoinna {0} asti, kun Microsoft Store yrittää uudelleen. Tarkista maksutapasi, niin ne säilyvät.</value></data>
+  <data name="Sub_FixPayment" xml:space="preserve"><value>Korjaa maksu</value></data>
+  <data name="Sub_EndedTitle" xml:space="preserve"><value>Tilauksesi päättyi</value></data>
+  <data name="Sub_EndedBody_One" xml:space="preserve"><value>1 kirja hyllylläsi on lukittu ja piilotettu lapseltasi. Tilaa uudelleen tai osta se, minkä haluat säilyttää.</value></data>
+  <data name="Sub_EndedBody_Other" xml:space="preserve"><value>{0} kirjaa hyllylläsi on lukittu ja piilotettu lapseltasi. Tilaa uudelleen tai osta ne, jotka haluat säilyttää.</value></data>
+  <data name="Sub_BannerTitle" xml:space="preserve"><value>Tilauksesi päättyi</value></data>
+  <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} kirjaa on lukittu. Lapsesi ei näe niitä. Tilaa uudelleen tai osta ne, jotka haluat säilyttää.</value></data>
+  <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 kirja on lukittu. Lapsesi ei näe sitä. Tilaa uudelleen tai osta se, minkä haluat säilyttää.</value></data>
+  <data name="Sub_BannerPlans" xml:space="preserve"><value>Katso tilaukset kaupasta</value></data>
+  <data name="Sub_BuyPrice" xml:space="preserve"><value>Osta · {0}</value></data>
+  <data name="Sub_OfflineTitle" xml:space="preserve"><value>Tilausta ei voi tarkistaa</value></data>
+  <data name="Sub_OfflineBody" xml:space="preserve"><value>Ei internetyhteyttä. Tilauksen kirjat pysyvät auki {0} asti, 3 päivää kaupan viimeksi antaman päivän jälkeen. Yhdistä verkkoon pitääksesi ne auki.</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Kaupasta noudettavat kirjat</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Ilmaiset kirjat palaavat itsestään. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>
   <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Ilmaiset kirjat, jotka ovat yhä kaupassa, palaavat itsestään. Kirja, jota kauppa ei enää tarjoa, ei palaa, mutta sen äänitykset pysyvät varmuuskopiotiedostossa. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>

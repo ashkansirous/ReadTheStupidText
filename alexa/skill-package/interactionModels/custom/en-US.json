@@ -1,11 +1,16 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "dino book reader",
+      "invocationName": "dino books",
       "intents": [
         {
           "name": "ReadBookIntent",
-          "slots": [{ "name": "book", "type": "AMAZON.SearchQuery" }],
+          "slots": [
+            {
+              "name": "book",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
           "samples": [
             "read {book}",
             "read me {book}",
@@ -17,18 +22,435 @@
             "I want to hear {book}"
           ]
         },
-        { "name": "AMAZON.PauseIntent", "samples": [] },
-        { "name": "AMAZON.ResumeIntent", "samples": [] },
-        { "name": "AMAZON.StopIntent", "samples": [] },
-        { "name": "AMAZON.CancelIntent", "samples": [] },
-        { "name": "AMAZON.NextIntent", "samples": [] },
-        { "name": "AMAZON.PreviousIntent", "samples": [] },
-        { "name": "AMAZON.StartOverIntent", "samples": [] },
-        { "name": "AMAZON.HelpIntent", "samples": [] },
-        { "name": "AMAZON.FallbackIntent", "samples": [] },
-        { "name": "AMAZON.NavigateHomeIntent", "samples": [] }
+        {
+          "name": "BookTitleIntent",
+          "slots": [
+            {
+              "name": "title",
+              "type": "DINO_BOOK_TITLE"
+            }
+          ],
+          "samples": [
+            "{title}",
+            "{title} please",
+            "the story {title}",
+            "I want {title}",
+            "let's hear {title}"
+          ]
+        },
+        {
+          "name": "SearchIntent",
+          "slots": [],
+          "samples": [
+            "search",
+            "find",
+            "find a book",
+            "find a story",
+            "search for a book",
+            "what books",
+            "what stories",
+            "other books",
+            "other stories"
+          ]
+        },
+        {
+          "name": "NextStoryIntent",
+          "slots": [],
+          "samples": [
+            "next story",
+            "another story",
+            "a new story"
+          ]
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": [
+            "yes",
+            "yeah",
+            "ok",
+            "okay",
+            "play it"
+          ]
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": [
+            "no",
+            "nope"
+          ]
+        },
+        {
+          "name": "ListBooksIntent",
+          "slots": [],
+          "samples": [
+            "what books do you have",
+            "what stories do you have",
+            "list the books",
+            "list the stories",
+            "which books can I hear",
+            "what can I listen to",
+            "what can you read"
+          ]
+        },
+        {
+          "name": "MoreBooksIntent",
+          "slots": [],
+          "samples": [
+            "more books",
+            "more stories",
+            "what else",
+            "what else do you have",
+            "tell me more books"
+          ]
+        },
+        {
+          "name": "AddFavouriteIntent",
+          "slots": [
+            {
+              "name": "title",
+              "type": "DINO_BOOK_TITLE"
+            }
+          ],
+          "samples": [
+            "add this to my favourites",
+            "add this to my favorites",
+            "save this story",
+            "save this book",
+            "save this to my favourites",
+            "save {title}",
+            "add {title} to my favourites",
+            "add {title} to my favorites",
+            "I like this story"
+          ]
+        },
+        {
+          "name": "PlayFavouritesIntent",
+          "slots": [],
+          "samples": [
+            "play my favourites",
+            "play my favorites",
+            "read my favourites",
+            "play favourites",
+            "play my favourite stories"
+          ]
+        },
+        {
+          "name": "PlayFavouriteIntent",
+          "slots": [],
+          "samples": [
+            "play a favourite",
+            "play a favorite",
+            "play me a favourite",
+            "play me a favorite",
+            "play one of my favourites",
+            "play one of my favorites",
+            "play a random favourite",
+            "for a favourite",
+            "for a favorite"
+          ]
+        },
+        {
+          "name": "ListFavouritesIntent",
+          "slots": [],
+          "samples": [
+            "what are my favourites",
+            "what are my favorites",
+            "list my favourites",
+            "what is in my favourites"
+          ]
+        },
+        {
+          "name": "RemoveFavouriteIntent",
+          "slots": [
+            {
+              "name": "title",
+              "type": "DINO_BOOK_TITLE"
+            }
+          ],
+          "samples": [
+            "remove {title} from my favourites",
+            "remove {title} from my favorites",
+            "take {title} out of my favourites",
+            "delete {title} from my favourites"
+          ]
+        },
+        {
+          "name": "AMAZON.PauseIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ResumeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StartOverIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        }
       ],
-      "types": []
+      "types": [
+        {
+          "name": "DINO_BOOK_TITLE",
+          "values": [
+            {
+              "id": "32d04b935a5649088293314cc648c825",
+              "name": {
+                "value": "The Three Billy Goats Gruff",
+                "synonyms": [
+                  "three billy goats gruff",
+                  "gruff",
+                  "billy goats gruff",
+                  "billy goat gruff",
+                  "three billy goats",
+                  "billy goats",
+                  "three goats"
+                ]
+              }
+            },
+            {
+              "id": "34efea95400343ac998e9ed99158d370",
+              "name": {
+                "value": "The Elves and the Shoemaker",
+                "synonyms": [
+                  "elves and the shoemaker",
+                  "elves",
+                  "shoemaker",
+                  "the elves",
+                  "the shoemaker",
+                  "elves and shoemaker",
+                  "elf and the shoemaker"
+                ]
+              }
+            },
+            {
+              "id": "af402c9974294fcb91a2c8a985c17558",
+              "name": {
+                "value": "Freddy and the Slipper",
+                "synonyms": [
+                  "freddy",
+                  "slipper",
+                  "the slipper",
+                  "freddie",
+                  "freddie and the slipper"
+                ]
+              }
+            },
+            {
+              "id": "bee62232085d4c1ab50cdf574530f473",
+              "name": {
+                "value": "The Gingerbread Man",
+                "synonyms": [
+                  "gingerbread man",
+                  "gingerbread",
+                  "ginger bread man",
+                  "ginger bread"
+                ]
+              }
+            },
+            {
+              "id": "67695905c10a46bd81aa498beab9609e",
+              "name": {
+                "value": "Goldilocks and the Three Bears",
+                "synonyms": [
+                  "goldilocks",
+                  "three bears",
+                  "the three bears",
+                  "bears",
+                  "goldy",
+                  "goldie",
+                  "goldylock",
+                  "goldylocks",
+                  "goldilock",
+                  "goldie locks",
+                  "goldy locks",
+                  "goldilocks and the 3 bears"
+                ]
+              }
+            },
+            {
+              "id": "61bb25b8f132413c82a4208827c7563b",
+              "name": {
+                "value": "Good Enough",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "e2fb7f5de4ab4c4eb8bd2bb97c91accc",
+              "name": {
+                "value": "Jack and the Beanstalk",
+                "synonyms": [
+                  "jack",
+                  "beanstalk",
+                  "the beanstalk"
+                ]
+              }
+            },
+            {
+              "id": "1ca50c6936cc44788b992726784e8132",
+              "name": {
+                "value": "The Lion and the Mouse",
+                "synonyms": [
+                  "lion and the mouse",
+                  "lion",
+                  "the lion"
+                ]
+              }
+            },
+            {
+              "id": "6eff8d779a9542fcafa76ae58ba1e96b",
+              "name": {
+                "value": "The Little Red Hen",
+                "synonyms": [
+                  "little red hen",
+                  "hen"
+                ]
+              }
+            },
+            {
+              "id": "9b77e4f2c83247fcbb16eef03d94ffd3",
+              "name": {
+                "value": "Love from Seagull Island",
+                "synonyms": [
+                  "seagull",
+                  "seagull island",
+                  "love from seagull"
+                ]
+              }
+            },
+            {
+              "id": "1f0f0cb207b244368b7aef26028f4ac5",
+              "name": {
+                "value": "Little Red Riding Hood",
+                "synonyms": [
+                  "hood",
+                  "red riding hood",
+                  "riding hood"
+                ]
+              }
+            },
+            {
+              "id": "966400017c494fb5b045786f53852c9e",
+              "name": {
+                "value": "The Three Little Pigs",
+                "synonyms": [
+                  "three little pigs",
+                  "pigs",
+                  "three pigs",
+                  "little pigs",
+                  "the 3 little pigs"
+                ]
+              }
+            },
+            {
+              "id": "0fa29ae0d09643a9a16a5e586e8c7119",
+              "name": {
+                "value": "The Tortoise and the Hare",
+                "synonyms": [
+                  "tortoise and the hare",
+                  "tortoise",
+                  "hare",
+                  "the tortoise",
+                  "the hare",
+                  "tortoise and hare"
+                ]
+              }
+            },
+            {
+              "id": "67dfb7db7c1c418c811cfed88876327f",
+              "name": {
+                "value": "The Town Mouse and the Country Mouse",
+                "synonyms": [
+                  "town mouse and the country mouse",
+                  "town mouse",
+                  "country mouse",
+                  "the town mouse",
+                  "the country mouse",
+                  "town and country mouse",
+                  "town mouse and country mouse"
+                ]
+              }
+            },
+            {
+              "id": "6f592017f08446eeae7adafa22318660",
+              "name": {
+                "value": "The Ugly Duckling",
+                "synonyms": [
+                  "ugly duckling",
+                  "duckling",
+                  "ugly duck"
+                ]
+              }
+            },
+            {
+              "id": "a02c0731b7ac475a896e9184f3575e7b",
+              "name": {
+                "value": "X Marks the Treasure",
+                "synonyms": [
+                  "treasure",
+                  "x marks",
+                  "marks the treasure",
+                  "treasure map"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "mouse",
+                "synonyms": [
+                  "the mouse"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }

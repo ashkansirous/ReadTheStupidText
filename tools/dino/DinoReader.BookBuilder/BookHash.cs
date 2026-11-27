@@ -5,8 +5,8 @@ using System.Text.Json;
 namespace DinoReader.BookBuilder;
 
 /// <summary>
-/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359), the complete <c>high-res/</c> set of a store book (Slice 375 B), translations, and the parts of <c>book.json</c>
-/// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals). The version is not in it: <c>check</c> compares the hash with the one stored
+/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359), the complete <c>high-res/</c> set of a book (Slice 375 B, Slice 422), translations, and the parts of <c>book.json</c>
+/// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals, names by language). The version is not in it: <c>check</c> compares the hash with the one stored
 /// beside the version, so changing a book without <c>stamp</c> (which raises the version and stores the new hash) fails the check. Text files are hashed with LF line
 /// endings, so a Windows checkout and a Linux one agree.
 /// </summary>
@@ -41,10 +41,10 @@ internal static class BookHash
         return files;
     }
 
-    // Slice 375 B: a store book's complete high-res set is packed into its high-res pack, so it is part of the hash (a high-res-only change bumps the version); an incomplete set or a starter
-    // (never packed with high-res) adds nothing, so every hash made before the slice stays the same.
+    // Slice 375 B, Slice 422: a book's complete high-res set (whatever its kind) is packed into its high-res pack, so it is part of the hash (a high-res-only change bumps the version); an
+    // incomplete set adds nothing, so the hash of a book without a set stays the same.
     private static IEnumerable<string> HighResOf(BookFolder book) =>
-        book.Info.Kind == BookKind.Store && HighResPack.Find(book) is { } files ? files.All : [];
+        HighResPack.Find(book) is { } files ? files.All : [];
 
     // Only the files the build reads: the page pictures (*.jpg) and the translation tables (<lang>.json, <lang>.speak.json), never pieces.json or a stray Thumbs.db.
     private static IEnumerable<string> FilesIn(string folder, string extension, string? excludedName) =>
@@ -57,11 +57,15 @@ internal static class BookHash
         var options = new JsonSerializerOptions(Books.JsonOptions) { WriteIndented = false };
         return JsonSerializer.Serialize(new
         {
-            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures, info.StoryBy, info.Retold, info.Illustration,
+            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures, info.StoryBy, info.Retold, info.Illustration, NamesByLanguage = SortedNames(info.NamesByLanguage),
             Animals = info.Animals?.OrderBy(a => a.Key, StringComparer.Ordinal).ToDictionary(a => a.Key, a => a.Value),
             NotAnimals = info.NotAnimals?.Order(StringComparer.Ordinal).ToArray(),
         }, options);
     }
+
+    // Slice 405: in a fixed order, so reordering the keys in book.json changes nothing.
+    private static SortedDictionary<string, SortedDictionary<string, string>>? SortedNames(Dictionary<string, Dictionary<string, string>>? names) =>
+        names is null ? null : new(names.ToDictionary(l => l.Key, l => new SortedDictionary<string, string>(l.Value, StringComparer.Ordinal)), StringComparer.Ordinal);
 
     private static void Add(IncrementalHash hash, string name, byte[] bytes)
     {

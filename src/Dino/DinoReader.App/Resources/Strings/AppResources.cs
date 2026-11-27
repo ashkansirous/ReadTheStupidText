@@ -46,10 +46,8 @@ public static class AppResources
 	private const string ClickSuffix = "Click";
 
 	// The strings that say "Tap" and have a "...Click" twin; <see cref="Get"/> swaps to the twin when <see cref="UseClickWording"/> is on.
-	private static readonly HashSet<string> ClickWorded =
-	[
-		nameof(Gallery_CornerLine),
-	];
+	// Slice 418: none now (the corner's note went with the corner; the mock's Windows frames keep "Tap to lock").
+	private static readonly HashSet<string> ClickWorded = [];
 
 	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
 	public static string For(string key, CultureInfo culture) => Manager.GetString(key, culture) ?? key;
@@ -201,7 +199,7 @@ public static class AppResources
 	public static string Store_Tag_Popular => Get();
 	public static string Store_Tag_Recommended => Get();
 	public static string Store_Tag_New => Get();
-	public static string Store_Length => Get();
+	public static string Store_LengthMinutes => Get();
 	public static string Store_Footer => Get();
 	public static string Store_OfflineTitle => Get();
 	public static string Store_OfflineBody => Get();
@@ -264,16 +262,14 @@ public static class AppResources
 	public static string Onboarding_Step_Listen => Get();
 	public static string Onboarding_LanguagesTitle => Get();
 	public static string Onboarding_LanguagesBody => Get();
+	public static string Onboarding_LanguagesBodyShort => Get();
 	public static string Onboarding_WhyMoreTitle => Get();
 	public static string Onboarding_WhyMoreBody => Get();
 	public static string StoryLanguages_AppLanguageAlwaysOn => Get();
 	public static string FirstBooks_GetThese => Get();
 	public static string Onboarding_ListenTitle => Get();
 	public static string Onboarding_ListenBody => Get();
-	public static string Onboarding_ListenNext => Get();
-	public static string Onboarding_TapLanguage => Get();
-	public static string Onboarding_ListenOther => Get();
-	public static string Onboarding_ListenWide => Get();
+	public static string Onboarding_SkipStep => Get();
 	public static string Onboarding_VoiceTitle => Get();
 	public static string Onboarding_VoiceBody => Get();
 	public static string Onboarding_StaysTitle_Phone => Get();
@@ -290,29 +286,8 @@ public static class AppResources
 	public static string Onboarding_ThatsYouBody => Get();
 	public static string Onboarding_YourVoiceChip => Get();
 	public static string Onboarding_PlayAgain => Get();
-	public static string Tour_WelcomeTitle => Get();
-	public static string Tour_WelcomeLine => Get();
-	public static string Tour_StoreTitle => Get();
-	public static string Tour_StoreLine => Get();
-	public static string Tour_BooksTitle => Get();
-	public static string Tour_BooksLine => Get();
-	public static string Tour_SettingsTitle => Get();
-	public static string Tour_SettingsLine => Get();
-	public static string Tour_ShowMeAround => Get();
-	public static string Tour_TipBooks => Get();
-	public static string Tour_TipStoreTitle => Get();
-	public static string Tour_TipStore => Get();
-	public static string Tour_TipSettings => Get();
-	public static string Tour_ShelfTitle => Get();
-	public static string Tour_ShelfLine => Get();
-	public static string Tour_LastStep => Get();
-	public static string Tour_ShowMe => Get();
-	public static string Tour_ChildShelfTitle => Get();
-	public static string Tour_ChildShelfLine => Get();
-	public static string Tour_ChildShelfBack => Get();
 	public static string Tour_StartReading => Get();
 	public static string Intro_Counter => Get();
-	public static string Gallery_ReadyForChild => Get();
 	public static string Gallery_GrownUpMode => Get();
 	public static string Language_Title => Get();
 	public static string Language_Subtitle => Get();
@@ -324,16 +299,22 @@ public static class AppResources
 	public static string Settings_About => Get();
 	public static string Settings_On => Get();
 	public static string Settings_Off => Get();
+	public static string Settings_BooksAndBuying => Get();
+	public static string Settings_Subscription => Get();
+	public static string Settings_SubYearly => Get();
+	public static string Settings_SubMonthly => Get();
+	public static string Settings_SubTrial => Get();
+	public static string Settings_SubNone => Get();
+	public static string Settings_SubGrace => Get();
+	public static string Settings_RestoreLine_Google => Get();
+	public static string Settings_RestoreLine_Apple => Get();
+	public static string Settings_RestoreLine_Microsoft => Get();
+	public static string Settings_RedeemLine_Google => Get();
+	public static string Settings_RedeemLine_Apple => Get();
+	public static string Settings_RedeemLine_Microsoft => Get();
 	public static string Language_PageSub => Get();
 	public static string Gallery_GrownUpsTitle => Get();
 	public static string Gallery_GrownUpsSub => Get();
-	public static string Gallery_GrownUpsButton => Get();
-	public static string Gallery_GrownUpsPill => Get();
-	public static string Gallery_GrownUpsButtonLocked => Get();
-	public static string Gallery_CornerTitle => Get();
-	public static string Gallery_CornerLine => Get();
-	public static string Gallery_CornerLineClick => Get();
-	public static string Gallery_BackToShelf => Get();
 	public static string Gallery_Reorder => Get();
 	public static string Gallery_ReorderHint => Get();
 	public static string Cover_Waiting => Get();
@@ -351,16 +332,23 @@ public static class AppResources
 	public static string Book_RemoveConfirm => Get();
 	// Slice 325 part A: the grown-ups' corner's tabs and rail
 	public static string Corner_TabBooks => Get();
-	public static string Corner_ChildsShelf => Get();
-	public static string Gallery_CornerLineShort => Get();
 	// Slice 325 part C: the kids' shelf's short title
 	public static string Gallery_ShelfTitleShort => Get();
 	public static string Language_Footer => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();
+	public static string Gallery_CornerTitle => Get();
+	public static string Lock_Locked => Get();
+	public static string Lock_Unlocked => Get();
+	public static string Lock_LockedA11y => Get();
+	public static string Lock_UnlockedA11y => Get();
+	public static string Lock_Countdown => Get();
+	public static string Lock_GrownUpsHint => Get();
+	public static string Lock_LockedAgain => Get();
+	public static string Lock_LockedByHand => Get();
+	public static string Lock_TapToLock => Get();
 	public static string Gate_KeepHolding => Get();
 	public static string Gate_Continue => Get();
-	public static string Gate_BackToStory => Get();
 	public static string Gate_WhatIs => Get();
 	public static string Gate_Backspace => Get();
 	public static string Gate_HoldCaptionWindows => Get();
@@ -373,6 +361,7 @@ public static class AppResources
 	public static string Key_Esc => Get();
 	public static string Speed_SubWindows => Get();
 	public static string Reading_ReadAgain => Get();
+	public static string Reading_TheEnd => Get();
 	public static string Gate_SumQuestion => Get();
 	public static string Story_Language => Get();
 	public static string Story_LanguageDetected => Get();
@@ -426,6 +415,8 @@ public static class AppResources
 	public static string BackCover_Months => Get();
 	public static string BackCover_Digits => Get();
 	public static string BackCover_And => Get();
+	public static string BackCover_AndWord => Get();
+	public static string BackCover_List => Get();
 
 	// Slice 346: paid books (the store card, Restore purchases, Redeem a code) and a backup that holds state instead of books.
 	public static string Store_BuyFor => Get();
@@ -443,15 +434,13 @@ public static class AppResources
 	public static string Error_TooManyTries => Get();
 	public static string Error_BookGone => Get();
 	public static string Store_Free => Get();
-	public static string Store_BoughtBeforeTitle => Get();
-	public static string Store_BoughtBefore_Google => Get();
-	public static string Store_BoughtBefore_Google_Tablet => Get();
-	public static string Store_BoughtBefore_Apple => Get();
-	public static string Store_BoughtBefore_Apple_Tablet => Get();
-	public static string Store_BoughtBefore_Microsoft => Get();
+	public static string Store_Restoring => Get();
+	public static string Store_NothingBought_Google => Get();
+	public static string Store_NothingBought_Apple => Get();
+	public static string Store_NothingBought_Microsoft => Get();
+	public static string Store_BoughtItAlready => Get();
 	public static string Store_Restored_One => Get();
 	public static string Store_Restored_Other => Get();
-	public static string Store_NothingToRestore => Get();
 	public static string Store_ServerErrorTitle => Get();
 	public static string Store_FooterPaid => Get();
 	public static string Wait_BuyingBook => Get();
@@ -469,6 +458,31 @@ public static class AppResources
 	public static string Sub_Again => Get();
 	public static string Sub_BuyThis => Get();
 	public static string Sub_Locked => Get();
+	public static string Sub_Save => Get();
+	public static string Sub_YearlyPlain => Get();
+	public static string Sub_MonthlyPlain => Get();
+	public static string Sub_TermsNoTrial => Get();
+	public static string Sub_StateTrialYearly => Get();
+	public static string Sub_StateTrialMonthly => Get();
+	public static string Sub_StateRenewsYearly => Get();
+	public static string Sub_StateRenewsMonthly => Get();
+	public static string Store_Included => Get();
+	public static string Sub_GraceTitle => Get();
+	public static string Sub_GraceBody_Google => Get();
+	public static string Sub_GraceBody_Apple => Get();
+	public static string Sub_GraceBody_Microsoft => Get();
+	public static string Sub_FixPayment => Get();
+	public static string Sub_EndedTitle => Get();
+	public static string Sub_EndedBody_One => Get();
+	public static string Sub_EndedBody_Other => Get();
+	// Slice 398: the Books tab's "why" banner, the locked tile's price pill and the offline notice.
+	public static string Sub_BannerTitle => Get();
+	public static string Sub_BannerBody_Other => Get();
+	public static string Sub_BannerBody_One => Get();
+	public static string Sub_BannerPlans => Get();
+	public static string Sub_BuyPrice => Get();
+	public static string Sub_OfflineTitle => Get();
+	public static string Sub_OfflineBody => Get();
 	public static string Backup_Missing => Get();
 	public static string Backup_MissingNote => Get();
 	public static string Backup_MissingNoteStore => Get();

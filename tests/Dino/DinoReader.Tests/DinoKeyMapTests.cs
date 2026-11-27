@@ -86,22 +86,44 @@ public class DinoKeyMapTests
         }
     }
 
+    // Slice 420: the Menu key and Shift+F10 open the focused book's sheet on the shelf (Enter reads since Slice 418); only the corner asks for it, and a text field keeps its keys.
+    [Fact]
+    public void The_context_key_opens_a_books_sheet_on_the_corner_only()
+    {
+        Assert.Equal(DinoKeyAction.OpenBookMenu, Down(DinoKey.ContextMenu, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.ContextMenu, DinoScreen.Corner, textField: true));
+        foreach (DinoScreen screen in new[] { DinoScreen.Settings, DinoScreen.Sheet, DinoScreen.Reorder, DinoScreen.Reading, DinoScreen.Gate, DinoScreen.Other })
+        {
+            Assert.Equal(DinoKeyAction.None, Down(DinoKey.ContextMenu, screen));
+        }
+    }
+
+    // Slice 420: the corner passes Up and Down to the page, which moves the focus one row on the Settings tab; a text field keeps its arrows and the reorder mode keeps its own.
+    [Fact]
+    public void Up_and_down_in_the_corner_ask_the_page_to_move_the_focus_one_row()
+    {
+        Assert.Equal(DinoKeyAction.FocusRowDown, Down(DinoKey.Down, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.FocusRowUp, Down(DinoKey.Up, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Down, DinoScreen.Corner, textField: true));
+        Assert.Equal(DinoKeyAction.ReorderDown, Down(DinoKey.Down, DinoScreen.Reorder));
+    }
+
     // Slice 325 part B: the Settings list is the corner's Settings tab now, so the corner answers the Right arrow the same way (the page passes it on to the focused row, or lets the arrow move the focus).
     [Fact]
     public void Right_in_the_corner_opens_the_focused_settings_row()
     {
         Assert.Equal(DinoKeyAction.OpenRow, Down(DinoKey.Right, DinoScreen.Corner));
         Assert.Equal(DinoKeyAction.None, Down(DinoKey.Right, DinoScreen.Corner, textField: true));
-        foreach (DinoKey key in new[] { DinoKey.Space, DinoKey.Left, DinoKey.Up, DinoKey.Down, DinoKey.Enter })
+        foreach (DinoKey key in new[] { DinoKey.Space, DinoKey.Left, DinoKey.Enter })
         {
             Assert.Equal(DinoKeyAction.None, Down(key, DinoScreen.Corner));
         }
     }
 
     [Fact]
-    public void Up_and_down_do_nothing_on_any_screen_but_the_reorder_mode()
+    public void Up_and_down_do_nothing_on_any_screen_but_the_reorder_mode_and_the_corner()
     {
-        foreach (DinoScreen screen in Enum.GetValues<DinoScreen>().Where(s => s != DinoScreen.Reorder))
+        foreach (DinoScreen screen in Enum.GetValues<DinoScreen>().Where(s => s is not (DinoScreen.Reorder or DinoScreen.Corner)))
         {
             Assert.Equal(DinoKeyAction.None, Down(DinoKey.Up, screen));
             Assert.Equal(DinoKeyAction.None, Down(DinoKey.Down, screen));

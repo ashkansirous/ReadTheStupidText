@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Fredoka"; src: url("assets/fonts/Fredoka.ttf"); font-weight: 300 700; }
+      :root { --ground: #f3efe6; --ink: #2b2540; --accent: #5b57e8; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { width: 100%; height: 100%; position: relative; background: var(--ground); }
+      .shot { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+      .cap {
+        position: absolute; left: 120px; bottom: 90px; padding: 14px 36px; border-radius: 40px;
+        font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 64px; color: #ffffff; background: var(--accent);
+      }
+      #end { position: absolute; inset: 0; background: var(--ground); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+      #end-name { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 140px; color: var(--ink); }
+      #end-sub { font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 56px; color: #5a5470; }
+    </style>
+  </head>
+  <body>
+    <!-- Footage: the Windows window captured at exactly 1920 x 1080 by tools/desktop-vm/checks/dino-store-shots.ps1; see README.md for turning its frames into assets/footage/*.mp4. Timeline: the note 2026-11-23-dino-store-screenshots-and-video.md. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1920" data-height="1080">
+      <video id="v-page" class="clip shot" src="assets/footage/page.mp4" muted playsinline data-start="0" data-duration="3" data-track-index="1"></video>
+      <video id="v-voices" class="clip shot" src="assets/footage/voices.mp4" muted playsinline data-start="3" data-duration="3" data-track-index="1"></video>
+      <video id="v-record" class="clip shot" src="assets/footage/record.mp4" muted playsinline data-start="6" data-duration="4" data-track-index="1"></video>
+      <video id="v-langs" class="clip shot" src="assets/footage/languages.mp4" muted playsinline data-start="10" data-duration="3" data-track-index="1"></video>
+      <video id="v-shelf" class="clip shot" src="assets/footage/shelf.mp4" muted playsinline data-start="13" data-duration="3" data-track-index="1"></video>
+
+      <div id="c-page" class="clip cap" data-start="0.3" data-duration="2.6" data-track-index="2">Stories read aloud</div>
+      <div id="c-voices" class="clip cap" data-start="3.3" data-duration="2.6" data-track-index="2">A voice for every character</div>
+      <div id="c-record" class="clip cap" data-start="6.3" data-duration="3.6" data-track-index="2">Record Grandma as the wolf</div>
+      <div id="c-langs" class="clip cap" data-start="10.3" data-duration="2.6" data-track-index="2">Stories in 15 languages</div>
+      <div id="c-shelf" class="clip cap" data-start="13.3" data-duration="2.6" data-track-index="2">New books on the shelf</div>
+
+      <div id="end" class="clip" data-start="16" data-duration="4" data-track-index="1">
+        <div id="end-name">Dino</div>
+        <div id="end-sub">Some books need a subscription</div>
+      </div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      for (const [id, at] of [["c-page", 0.3], ["c-voices", 3.3], ["c-record", 6.3], ["c-langs", 10.3], ["c-shelf", 13.3]]) {
+        tl.from("#" + id, { opacity: 0, y: 20, duration: 0.3 }, at);
+      }
+      tl.from("#end-name", { opacity: 0, scale: 0.9, duration: 0.5 }, 16.1);
+      tl.from("#end-sub", { opacity: 0, duration: 0.5 }, 16.6);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -40,6 +40,14 @@ internal static class TestStore
 	private const string UnknownTagStem = "good-enough"; // Slice 271: carries UnknownTag in TestStoreMode.UnknownTag
 	// The tags array a newer store serves for the book: a name this build has no case for, then one it has. It goes through the same StoreTags.FromJson the real listing uses.
 	private const string UnknownTagListing = """["FutureTag","Recommended"]""";
+	private const string TestCoverFolder = "test-store-covers";
+	private const string TestCoverExtension = ".jpg";
+	private const string ShelfListingFile = "shelf-listing.json";
+	private const string PaidAccess = "paid";
+	private const int MaxShelfProducts = 10;
+
+	/// <summary>Slice 434: what the live list says about one shelf book (ages and, for a paid book, the sale fields <see cref="StoreCatalog"/> reads), from shelf-listing.json.</summary>
+	private sealed record ShelfEntry(int? AgeMin, int? AgeMax, bool Paid, string? ProductId, IReadOnlyList<string>? UnlockedBy);
 	private const int SlowChunks = 8;
 	private const int SlowChunkMilliseconds = 350;
 	// Stall: a chunk takes far longer than any flow waits, so a download is still in flight when the flow taps Cancel (a cancel ends the delay at once).
@@ -64,7 +72,21 @@ internal static class TestStore
 
 	public static bool IsListing => Mode != TestStoreMode.Off;
 
-	public static bool Serves(string url) => url.StartsWith(UrlScheme, StringComparison.Ordinal);
+	/// <summary>Slice 404: the address of a package file on the device (the <c>full-shelf</c> hook's paid books, built by BookBuilder and copied onto the device); the store client reads it like a test book, never a network call.</summary>
+	public const string FileScheme = "testfile:";
+
+	public static bool Serves(string url) => url.StartsWith(UrlScheme, StringComparison.Ordinal) || url.StartsWith(FileScheme, StringComparison.Ordinal);
+
+	private static Task<Stream> OpenSourceAsync(string url)
+	{
+		if (url.StartsWith(FileScheme, StringComparison.Ordinal))
+		{
+			return Task.FromResult<Stream>(File.OpenRead(url[FileScheme.Length..]));
+		}
+
+		string assetName = url[UrlScheme.Length..];
+		return assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? Task.FromResult<Stream>(new MemoryStream(FixturePack, writable: false)) : FileSystem.OpenAppPackageFileAsync(assetName);
+	}
 
 	public static string AssetNameOf(string stem) => stem + AssetExtension;
 
@@ -82,6 +104,7 @@ internal static class TestStore
 			items.Add(await ItemOfAsync(stem));
 		}
 
+		await AddShelfItemsAsync(items);
 		return new StoreListing(StoreLoadStatus.Ok, StoreCatalog.Readable(items));
 	}
 
@@ -100,6 +123,107 @@ internal static class TestStore
 		return null;
 	}
 
+	/// <summary>Slice 434: the listing line of a book package on disk (the offline Windows VM's full shelf), downloaded through the <see cref="FileScheme"/> address, so no network and no receipt are involved.</summary>
+	public static async Task<StoreItem> ItemFromPackageAsync(string path, bool withSale = false)
+	{
+		await using FileStream file = File.OpenRead(path);
+		using var copy = new MemoryStream();
+		await file.CopyToAsync(copy);
+		StoryPackageManifest manifest = ManifestOf(copy);
+		copy.Position = 0;
+		Story story = await StoryPackageReader.ReadStoryOnlyAsync(copy);
+		ShelfEntry? entry = ShelfEntryOf(manifest.Id);
+		string? cover = await CoverUrlOfAsync(copy, story, manifest.Id);
+		var item = new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, cover, FileScheme + path, AgeMin: entry?.AgeMin, AgeMax: entry?.AgeMax, Bytes: copy.Length);
+		return withSale && entry is { Paid: true } ? item with { Sale = BookSale.Paid, ProductId = entry.ProductId, UnlockedBy = entry.UnlockedBy } : item;
+	}
+
+	// Slice 434: the staged shelf books (the offline VM's full-shelf folder) are listed too, after the four test books and never twice; Debug flows (no DINO_TEST_STORE_ON) list only the four.
+	private static async Task AddShelfItemsAsync(List<StoreItem> items)
+	{
+#if DINO_TEST_STORE_ON
+		string folder = Path.Combine(FileSystem.AppDataDirectory, FullShelfPlan.PackageFolder);
+		if (!Directory.Exists(folder))
+		{
+			return;
+		}
+
+		foreach (string path in Directory.EnumerateFiles(folder, "*" + AssetExtension).Order(StringComparer.OrdinalIgnoreCase))
+		{
+			StoreItem shelf = await ItemFromPackageAsync(path, withSale: true); // the Store tab shows the live list's sale state; the shelf import (PackageItemsAsync) keeps the books free so no receipt is asked
+			if (items.All(item => !string.Equals(item.Id, shelf.Id, StringComparison.OrdinalIgnoreCase)))
+			{
+				items.Add(shelf);
+			}
+		}
+#else
+		await Task.CompletedTask;
+#endif
+	}
+
+	// Slice 434: the Store card's thumbnail is the cover picture inside the package, written once to the cache and served as a <see cref="FileScheme"/> address that the store client's cover read opens (no network). Null for a colour cover.
+	private static async Task<string?> CoverUrlOfAsync(MemoryStream package, Story story, string id)
+	{
+#if DINO_TEST_STORE_ON
+		if (story.CoverImageFile is not { } name)
+		{
+			return null;
+		}
+
+		package.Position = 0;
+		using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
+		ZipArchiveEntry? entry = zip.Entries.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
+		if (entry is null)
+		{
+			return null;
+		}
+
+		string path = Path.Combine(FileSystem.CacheDirectory, TestCoverFolder, id + TestCoverExtension);
+		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+		await using Stream source = entry.Open();
+		await using FileStream target = File.Create(path);
+		await source.CopyToAsync(target);
+		return FileScheme + path;
+#else
+		await Task.CompletedTask;
+		return null;
+#endif
+	}
+
+	/// <summary>The cover file behind a <see cref="FileScheme"/> cover address, or null when it is not one or the file is gone.</summary>
+	public static string? CoverFileOf(string? coverUrl) =>
+		coverUrl is not null && coverUrl.StartsWith(FileScheme, StringComparison.Ordinal) && File.Exists(coverUrl[FileScheme.Length..]) ? coverUrl[FileScheme.Length..] : null;
+
+	// Slice 434: shelf-listing.json (id -> { min, max, access, productId, unlockedBy }) sits in the full-shelf folder, written by fetch-shelf-packages.mjs from the live list and copied in with the packages.
+	private static ShelfEntry? ShelfEntryOf(string id)
+	{
+#if DINO_TEST_STORE_ON
+		string file = Path.Combine(FileSystem.AppDataDirectory, FullShelfPlan.PackageFolder, ShelfListingFile);
+		if (!File.Exists(file))
+		{
+			return null;
+		}
+
+		using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(file));
+		return doc.RootElement.TryGetProperty(id, out JsonElement entry) && entry.ValueKind == JsonValueKind.Object ? ParseShelfEntry(entry) : null;
+#else
+		return null;
+#endif
+	}
+
+	private static ShelfEntry ParseShelfEntry(JsonElement entry)
+	{
+		int? low = entry.TryGetProperty("min", out JsonElement min) && min.TryGetInt32(out int lowValue) ? lowValue : null;
+		int? high = entry.TryGetProperty("max", out JsonElement max) && max.TryGetInt32(out int highValue) ? highValue : null;
+		bool complete = low is not null && high is not null;
+		bool paid = entry.TryGetProperty("access", out JsonElement access) && access.GetString() == PaidAccess;
+		string? product = entry.TryGetProperty("productId", out JsonElement productId) ? productId.GetString() : null;
+		string[]? unlockedBy = entry.TryGetProperty("unlockedBy", out JsonElement products) && products.ValueKind == JsonValueKind.Array
+			? [.. products.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!).Take(MaxShelfProducts)]
+			: null;
+		return new ShelfEntry(complete ? low : null, complete ? high : null, paid, product, unlockedBy);
+	}
+
 	private static async Task<StoreItem> ItemOfAsync(string stem)
 	{
 		await using Stream asset = await FileSystem.OpenAppPackageFileAsync(AssetNameOf(stem));
@@ -115,8 +239,21 @@ internal static class TestStore
 			tags = [.. StoreTags.FromJson(listed.RootElement)]; // Slice 271 (Slice 269): the real parse drops the name this build has no case for
 		}
 
-		var item = new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
+		(int? ageMin, int? ageMax) = AgesOf(stem);
+		string? cover = await CoverUrlOfAsync(copy, story, manifest.Id);
+		var item = new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, cover, UrlScheme + AssetNameOf(stem), AgeMin: ageMin, AgeMax: ageMax, Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
 		return FakePurchases.Marked(item, stem); // Slice 346: sold when the fake-purchases hook says so
+	}
+
+	// Slice 434: the offline Windows VM's Store tab (shot 06) shows each book's "Ages x-y", which only the live list carries; its test list gets the books' real ranges (content/dino/<stem>/book.json).
+	// Only the VM package (DINO_TEST_STORE_ON) has them: the Debug flows keep the list without ages, so no age chip appears in their store pages.
+	private static (int? Min, int? Max) AgesOf(string stem)
+	{
+#if DINO_TEST_STORE_ON
+		return stem == UnknownTagStem ? (6, 8) : (3, 5);
+#else
+		return (null, null);
+#endif
 	}
 
 	// Slice 262: one test book (gingerbread-man) lists a pre-made audio pack in AudioLanguage, so the side-language flow sees a pack arrive; the other books list none, so the quiet "has no audio yet" line shows.
@@ -172,8 +309,7 @@ internal static class TestStore
 			throw new HttpRequestException($"The test store refuses with {(int)refusal}.", null, refusal); // Slice 357: the Worker's answer for the status, with no body
 		}
 
-		string assetName = url[UrlScheme.Length..];
-		await using Stream asset = assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? new MemoryStream(FixturePack, writable: false) : await FileSystem.OpenAppPackageFileAsync(assetName);
+		await using Stream asset = await OpenSourceAsync(url);
 		using var all = new MemoryStream();
 		await asset.CopyToAsync(all, cancel);
 		Directory.CreateDirectory(Path.GetDirectoryName(toPath)!);

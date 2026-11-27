@@ -277,6 +277,20 @@ public sealed class BookBuilderTests : IDisposable
     private static Dictionary<string, string> AllCredits() =>
         UiLanguage.Supported.Where(l => l != UiLanguage.English).ToDictionary(l => l, l => "Mine " + l);
 
+    // Slice 405: every back-cover name spelled in every non-English language (the fixture's writer "Me" and the maker, who illustrates).
+    private static Dictionary<string, Dictionary<string, string>> AllNames() =>
+        UiLanguage.Supported.Where(l => l != UiLanguage.English).ToDictionary(l => l, l => new Dictionary<string, string> { ["Me"] = "Me " + l + OwnScript(l), [BackCover.Maker] = BackCover.Maker + " " + l + OwnScript(l) });
+
+    // A letter of the language's own script, for the languages that are not written in Latin letters (the builder refuses a name with none, Slice 405).
+    private static string OwnScript(string language) => language switch
+    {
+        "ar" or "fa" => "ا",
+        "ja" => "あ",
+        "zh" => "中",
+        "ru" => "я",
+        _ => string.Empty,
+    };
+
     [Fact]
     public void ABookJson_WithoutAllFourteenCreditLanguages_FailsWithTheFileNamed()
     {
@@ -372,7 +386,7 @@ public sealed class BookBuilderTests : IDisposable
         string dir = Path.Combine(_root, "tiny");
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, BookFolder.StoryFile), text);
-        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, null, null, AllCredits(), "Me");
+        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, null, null, AllCredits(), "Me", NamesByLanguage: AllNames());
         return new BookFolder("tiny", dir, info);
     }
 }

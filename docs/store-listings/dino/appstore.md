@@ -1,19 +1,21 @@
-# App Store listing: Dino Book Reader (ASC app 6825053435, bundle uk.sirous.dinoreader)
+# App Store listing: Dino: Kids Books & Stories (ASC app 6825053435, bundle uk.sirous.dinoreader)
 
-**Rewritten 2026-11-13 (Slice 291 work item 4) from the current app, and pushed the same day through the App Store Connect API (en-US and de-DE read back equal; the version is NOT submitted). Version 1.81.1 is `PREPARE_FOR_SUBMISSION`, not submitted.** The text pushed earlier the same day (read back from the ASC API 2026-11-13) was stale: it still sold "bring your own books" (scan, photos, PDF, typing), a cast screen, on-device voices with a voice download, on-device translation and "scans stay on your device". Slice 278 (store books only, pre-made clips, no scanning or translation) and Slice 305 (no ML Kit, no sherpa-onnx in the package) removed all of that. What the app does now: a fresh install picks a language, then at least two books from the story store; every character has a pre-made voice (downloaded audio, one pack per language); a family can record its own voice for any character (microphone only on the Record screen); three reading modes; reading speed 0.8x to 1.2x; animal sounds; backup and restore; four books free, the rest $0.99 behind the grown-ups gate; 15 books, 15 languages. German: `de.md`.
+**Slice 412 (2026-11-18): new name, subtitle, keywords and description opening below (English, text only, NOT pushed).** Name and subtitle go to App Store Connect with the next version submission (an app's name and subtitle change only with a version); the keyword field, promotional text and description can be pushed any time. The old name is in git history, the old subtitle was "A voice for every character", the old keywords `kids,bedtime,stories,picture books,children,fairy tales,storybook,tales,toddler,read aloud,record`.
+
+**Rewritten 2026-11-13 (Slice 291 work item 4) from the current app, and pushed the same day through the App Store Connect API (en-US and de-DE read back equal; the version is NOT submitted). Version 1.81.1 is `PREPARE_FOR_SUBMISSION`, not submitted.** The text pushed earlier the same day (read back from the ASC API 2026-11-13) was stale: it still sold "bring your own books" (scan, photos, PDF, typing), a cast screen, on-device voices with a voice download, on-device translation and "scans stay on your device". Slice 278 (store books only, pre-made clips, no scanning or translation) and Slice 305 (no ML Kit, no sherpa-onnx in the package) removed all of that. What the app does now: a fresh install picks a language, then at least two books from the story store; every character has a pre-made voice (downloaded audio, one pack per language); a family can record its own voice for any character (microphone only on the Record screen); three reading modes; reading speed 0.8x to 1.2x; animal sounds; backup and restore; four books free, a subscription or $0.99 per book behind the grown-ups gate; 15 books, 15 languages. German: `de.md`.
 
 ## 1. appInfoLocalization (en-US)
 
-Name (<= 30): Dino Book Reader (already set)
-Subtitle (<= 30, 27 chars): A voice for every character (already set, unchanged)
+Name (<= 30, 26 chars): Dino: Kids Books & Stories
+Subtitle (<= 30, 27 chars): Bedtime Tales in Your Voice
 
 ## 2. appStoreVersionLocalization (en-US)
 
-Promotional text (<= 170, 161 chars; editable any time):
-Stories read aloud to children aged 3 to 9, with a voice for every character and room for your own. No ads. Four stories free, the rest $0.99 each. 15 languages.
+Promotional text (<= 170, 164 chars; editable any time):
+Stories read aloud to children aged 3 to 9, with a voice for every character and room for your own. No ads. Subscribe for every book, or buy only the ones you like.
 
-Keywords (<= 100 bytes, 97 bytes, no spaces after commas):
-kids,bedtime,stories,picture books,children,fairy tales,storybook,tales,toddler,read aloud,record
+Keywords (<= 100 bytes, 100 bytes, no spaces after commas; no word repeated from the name or subtitle):
+storybook,storytime,read,aloud,audiobook,picture,narrated,toddler,preschool,children,fairy,bilingual
 
 Support URL: https://dinoreader.sirous.uk/
 Marketing URL: https://dinoreader.sirous.uk/
@@ -21,7 +23,7 @@ What's new: none for the first version.
 
 Description (<= 4,000):
 
-Dino Book Reader reads picture-book stories aloud to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
+Bedtime stories for kids, picture books read aloud: Dino reads children's stories to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
 
 PICK YOUR STORIES
 A grown-up chooses books from the story shelf: classic tales retold gently, with a picture on every page. Four stories are free. Every book comes with its own pre-made voices, in the language you pick.
@@ -36,18 +38,21 @@ READ TOGETHER
 - A night theme for bedtime stories.
 
 STORIES AND PRICES
-Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the story shelf is $0.99 each (the App Store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, with in-app purchase, and can restore past purchases at any time. Stories you already have stay on your device.
+Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Subscribe for every other story, or buy only the stories you want and keep them. The subscription is monthly or yearly, starts with a 7-day free trial for new subscribers (once per Apple ID), and renews automatically at the price shown in the app until you cancel it in your Apple ID settings at least 24 hours before the end of the period. It opens every paid story while it runs; when it ends, stories you only had through it leave the child's shelf, and subscribing again or buying one brings it straight back. Stories you buy are yours to keep, with or without a subscription. A grown-up subscribes or buys behind the grown-ups gate, and can restore purchases at any time. Stories you already have stay on your device.
 
 FIFTEEN LANGUAGES
-The app, the stories and the voices come in English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish.
+The app, the stories and the voices come in English, Chinese, Spanish, Arabic, French, Portuguese, Russian, German, Japanese, Farsi, Dutch, Swedish, Danish, Finnish and Norwegian.
 
 MADE FOR KIDS
 - No ads.
-- Stories are bought through the App Store, by a grown-up behind the grown-ups gate. There is no account to create, and we store nothing about you or your purchase; the store's proof is checked and forgotten.
+- Subscriptions and stories are bought through the App Store, by a grown-up behind the grown-ups gate. There is no account to create, and we store nothing about you or your purchase; the store's proof is checked and forgotten.
 - Settings, buying and deleting stories, recording and backups sit behind a grown-ups gate.
 - Once a story and its language are downloaded, it reads offline.
 - Your recordings stay on your device. Back them up and restore them from the grown-ups area.
 - Optional anonymous usage counts with no names or identifiers, switched off in Settings (behind the grown-ups gate).
+
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://dinoreader.sirous.uk/privacy.html
 
 (Basis: `site/dino/index.html` and `site/dino/privacy.html` as of 2026-11-13, and the app rules in `src/Dino/DinoReader.App/CLAUDE.md`. "Made for kids" is a heading only, not the App Store Kids Category.)
 
@@ -72,3 +77,13 @@ Notes: "A children's picture-book reader with no sign-in and no ads. First launc
 ## 6. Screenshots (not generated; applies to both apps)
 
 Missing for both: one 6.9"/6.7"/6.5" iPhone class and a 13" iPad (UIDeviceFamily is 1+2 in both Info.plists, hence iPad is required). Slice 291 work item 5 owns them (macOS CI simulator job `store-screenshots.yml`); pixel sizes to be confirmed from Apple's docs.
+
+## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
+
+From the release notes dino-v1.131.1 to dino-v1.133.1 (new book, sharper pictures in eight books, crash fixes, store tweaks, the new name).
+
+Dino is now called Dino: Kids Books & Stories.
+
+- New story: Love from Seagull Island.
+- Sharper pictures in eight stories.
+- Crash fixes and small improvements in the story store.

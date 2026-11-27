@@ -215,15 +215,88 @@ function Find-UiaVisibleById {
     return $null
 }
 
+function Find-FirstTileMore {
+    # Slice 420: the dots button (AutomationId TileMore) of the first visible book, in reading order. A tap on a cover reads the book (Slice 418 decision 6); a book's sheet opens from this button, shown only while the shelf is unlocked.
+    param([Parameter(Mandatory)] $Root)
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'TileMore')
+    $dots = foreach ($e in $Root.FindAll($script:TreeScope::Descendants, $cond)) { if (-not $e.Current.BoundingRectangle.IsEmpty) { $e } }
+    return @($dots | Sort-Object { [int]($_.Current.BoundingRectangle.Y / 20) }, { $_.Current.BoundingRectangle.X })[0]
+}
+
+function Test-LockedShelfShown {
+    # Slice 418: there is one shelf. The lock (AutomationId GalleryLock) is on it always; the countdown chip (LockChip) shows only while it is unlocked. Locked means the lock without the chip.
+    param([Parameter(Mandatory)] $Root)
+    return [bool]((Find-UiaVisibleById $Root 'GalleryLock') -and -not (Find-UiaVisibleById $Root 'LockChip'))
+}
+
 function Enter-KidsShelf {
-    # Slice 325: the first run (dino-onboarding-keys, "Skip all") ends in the grown-ups' corner with the "Ready for my child" hand-over (AutomationId GalleryDone, the coral pill); a check that starts from
-    # the kids' shelf taps it first. Does nothing when the corner is not showing.
-    $find = { $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1; if ($w) { Find-UiaVisibleById $w 'GalleryDone' } }
+    # Slice 418: a check that starts from the locked shelf taps the lock when the shelf is unlocked (the chip shows): a tap on the lock locks at once. Does nothing when it is locked already.
+    $find = { $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1; if ($w) { Find-UiaVisibleById $w 'LockChip' } }
     if (-not (Get-AppWindows 'DinoReader.App')) { throw 'FAIL Enter-KidsShelf: Dino Reader has no window (not running, or closed)' }
-    $done = & $find
-    if (-not $done) { return }
-    Invoke-Uia $done
-    $null = Wait-Until { -not (& $find) } 15 'FAIL the coral hand-over button did not take the app from the grown-ups corner to the kids shelf'   # Wait-Until throws when the time runs out, so a stuck corner fails the check here
+    if (-not (& $find)) { return }
+    $lock = Find-UiaVisibleById (Get-AppWindows 'DinoReader.App' | Select-Object -First 1) 'GalleryLock'
+    if (-not $lock) { throw 'FAIL Enter-KidsShelf: the shelf is unlocked but no lock (GalleryLock) is showing' }
+    Invoke-Uia $lock
+    $null = Wait-Until { -not (& $find) } 15 'FAIL a tap on the lock did not lock the shelf'   # Wait-Until throws when the time runs out, so a stuck unlocked shelf fails the check here
+}
+
+function Get-ConsentDialogAbove {
+    # The Shell_SystemDialog window above an element (RawViewWalker), or $null: the system microphone prompt is not under the UIA root, only reachable as the focused element (tools/desktop-vm/CLAUDE.md, dino-record).
+    param($Element)
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $node = $Element
+    for ($depth = 0; $node -and $depth -lt 12; $depth++) {
+        if ($node.Current.ClassName -eq 'Shell_SystemDialog') { return $node }
+        $node = $walker.GetParent($node)
+    }
+    return $null
+}
+
+function Find-ConsentButtonFocused {
+    # The focused Button of the microphone consent prompt (a Button outside the app's process under a Shell_SystemDialog), or $null while the focus is anywhere else.
+    param([Parameter(Mandatory)] [int] $AppProcessId)
+    try {
+        $focused = $script:AutomationElement::FocusedElement
+        if (-not $focused -or $focused.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) { return $null }
+        if ($focused.Current.ProcessId -eq $AppProcessId) { return $null }
+        if (Get-ConsentDialogAbove $focused) { return $focused }
+    } catch { $null = $_ }   # no-fallback: a focus read that fails this poll is "no prompt yet"; the caller polls again
+    return $null
+}
+
+function Get-ConsentDialogButtons {
+    # The dialog's buttons, walked with RawViewWalker (FindAll on the dialog returns nothing; at most 200 nodes).
+    param($Dialog)
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $buttons = @(); $queue = New-Object System.Collections.Queue; $queue.Enqueue($Dialog); $seen = 0
+    while ($queue.Count -gt 0 -and $seen -lt 200) {
+        $node = $queue.Dequeue(); $seen++
+        if ($node.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button) { $buttons += $node }
+        for ($child = $walker.GetFirstChild($node); $child; $child = $walker.GetNextSibling($child)) { $queue.Enqueue($child) }
+    }
+    return $buttons
+}
+
+function Answer-MicConsentPrompt {
+    # Answers the first-use Windows microphone prompt with its Allow ("Yes", "Allow") or Deny ("No", "Don't allow", "Deny", "Block") button (the VM runs in English). Polls up to $Seconds (short: the prompt opens right after the key press,
+    # and a run with no prompt must not wait long); returns a note naming the path taken, also when no prompt appeared (consent already decided). A prompt with no matching button throws with the buttons it saw.
+    param([Parameter(Mandatory)] [int] $AppProcessId, [Parameter(Mandatory)] [ValidateSet('Allow', 'Deny')] [string] $Choice, [int] $Seconds = 6, [scriptblock] $NoPromptNeeded)
+    # Only "No" is seen on a real run; the Allow names (Yes, Allow ...) are a guess no run has proven (a wrong guess throws naming the buttons seen).
+    $buttonPattern = if ($Choice -eq 'Allow') { '^(Yes|Allow|Allow once|Allow this time)$' } else { '^(No|Don.t allow|Deny|Block)$' }
+    $script:ConsentPrompt = $null
+    # $NoPromptNeeded (optional): a condition that shows the app got past the prompt (recording started); the wait ends at once when it is true, so a slow prompt is not missed and a run with no prompt does not wait the full time.
+    try { Wait-Until { $script:ConsentPrompt = Find-ConsentButtonFocused $AppProcessId; [bool]$script:ConsentPrompt -or ($NoPromptNeeded -and (& $NoPromptNeeded)) } $Seconds 'the microphone consent prompt' | Out-Null } catch { $null = $_ }
+    $prompt = $script:ConsentPrompt
+    if (-not $prompt) { return "no microphone consent prompt appeared in $Seconds s (consent already decided)" }
+    $dialog = Get-ConsentDialogAbove $prompt
+    $buttons = if ($dialog) { @(Get-ConsentDialogButtons $dialog) } else { @() }
+    $button = if ($prompt.Current.Name -match $buttonPattern) { $prompt } else { $buttons | Where-Object { $_.Current.Name -match $buttonPattern } | Select-Object -First 1 }
+    $names = @($buttons | ForEach-Object { $_.Current.Name } | Where-Object { $_ })
+    if (-not $button) { throw "FAIL the microphone consent prompt showed no $Choice button (Name matching $buttonPattern); focused: '$($prompt.Current.Name)'; buttons seen: $($names -join ' / ')" }
+    $clicked = $button.Current.Name
+    Invoke-Uia $button
+    Start-Sleep -Milliseconds 800   # fixed-wait: the prompt closes and focus returns to the app
+    return "microphone consent prompt answered $Choice through '$clicked' (buttons seen: $($names -join ' / '))"
 }
 
 function Get-VisibleNames {
@@ -325,6 +398,57 @@ function Set-ScreenResolution {
     $code = [NativeDisplay]::Set($Width, $Height)
     if ($code -ne 0) { throw "Windows refused ${Width}x${Height} (ChangeDisplaySettings returned $code)." }
     Start-Sleep -Seconds 2
+    return $code   # always 0 here (a non-zero code threw above); the caller prints it
+}
+
+function Initialize-NativeWindow {
+    # Slice 434: Win32 window sizing, compiled on first use only.
+    if ('NativeWindow' -as [type]) { return }
+    Add-Type -TypeDefinition @'
+using System; using System.Runtime.InteropServices;
+public static class NativeWindow {
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
+  [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X, Y; }
+  [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref POINT p);
+  [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+  [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+  [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr h);
+  public static uint Dpi(IntPtr h) { return GetDpiForWindow(h); }   // 96 = 100% scale
+  public static void Restore(IntPtr h) { ShowWindow(h, 9); }
+  // x, y, width, height of the client area, on the screen.
+  public static int[] Client(IntPtr h) {
+    RECT c; GetClientRect(h, out c); POINT p = new POINT(); ClientToScreen(h, ref p);
+    return new int[] { p.X, p.Y, c.R - c.L, c.B - c.T };
+  }
+  // Moves the window to (x, y) and gives its CLIENT area the size w x hgt (the frame is whatever Windows adds); returns the client area reached.
+  public static int[] SizeClient(IntPtr h, int x, int y, int w, int hgt) {
+    for (int i = 0; i < 4; i++) {
+      RECT win; GetWindowRect(h, out win); int[] cl = Client(h);
+      int frameW = (win.R - win.L) - cl[2], frameH = (win.B - win.T) - cl[3];
+      SetWindowPos(h, IntPtr.Zero, x, y, w + frameW, hgt + frameH, 0x4 | 0x10);   // SWP_NOZORDER | SWP_NOACTIVATE
+      System.Threading.Thread.Sleep(400);
+      int[] now = Client(h);
+      if (now[2] == w && now[3] == hgt) return now;
+    }
+    return Client(h);
+  }
+}
+'@
+}
+
+function Save-ClientScreenshot {
+    # Slice 434: only the window's client area (never the desktop) as a PNG; throws unless it is exactly $Width x $Height. The window must be on top and fully on screen. Returns "<w>x<h>".
+    param([Parameter(Mandatory)] $Window, [Parameter(Mandatory)] [string] $Path, [int] $Width = 1920, [int] $Height = 1080)
+    Initialize-NativeWindow
+    Add-Type -AssemblyName System.Drawing
+    $c = [NativeWindow]::Client([IntPtr]$Window.Current.NativeWindowHandle)
+    if ($c[2] -ne $Width -or $c[3] -ne $Height) { throw "FAIL the window client area is $($c[2])x$($c[3]), not ${Width}x${Height}" }
+    $bmp = New-Object System.Drawing.Bitmap $Width, $Height
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    try { $g.CopyFromScreen($c[0], $c[1], 0, 0, $bmp.Size); $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png) } finally { $g.Dispose(); $bmp.Dispose() }
+    return "$($bmp.Width)x$($bmp.Height)"
 }
 
 function Save-WindowScreenshot {

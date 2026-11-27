@@ -4,9 +4,9 @@
   "title": "X Marks the Treasure!",
   "version": 8,
   "ageMin": 3,
-  "ageMax": 6,
+  "ageMax": 5,
   "author": "Ashkan Sirous",
-  "credits": "A Dino Reader picture book",
+  "credits": "A picture book from Dino: Kids Books & Stories",
   "colour": 0,
   "added": "2026-10-26",
   "order": 10,
@@ -75,21 +75,65 @@
   ],
   "contentHash": "832639b69c9ec1c4253b4453c605fd97b9ba6c9457f4e884e0822f1bfddd8f14",
   "creditsByLanguage": {
-    "ar": "كتاب مصوّر من دينو ريدر",
-    "da": "En billedbog fra Dino Reader",
-    "de": "Ein Dino-Reader-Bilderbuch",
-    "es": "Un libro ilustrado de Dino Reader",
-    "fa": "یک کتاب تصویری از دینو ریدر",
-    "fi": "Dino Readerin kuvakirja",
-    "fr": "Un livre illustré Dino Reader",
-    "ja": "ディノ・リーダーの絵本",
-    "nb": "En bildebok fra Dino Reader",
-    "nl": "Een prentenboek van Dino Reader",
-    "pt": "Um livro ilustrado do Dino Reader",
-    "ru": "Книжка с картинками Dino Reader",
-    "sv": "En bilderbok från Dino Reader",
-    "zh": "恐龙阅读器绘本"
+    "ar": "كتاب مصوّر من Dino: Kids Books & Stories",
+    "da": "En billedbog fra Dino: Kids Books & Stories",
+    "de": "Ein Bilderbuch von Dino: Kids Books & Stories",
+    "es": "Un libro ilustrado de Dino: Kids Books & Stories",
+    "fa": "یک کتاب تصویری از Dino: Kids Books & Stories",
+    "fi": "Kuvakirja sovelluksesta Dino: Kids Books & Stories",
+    "fr": "Un livre illustré de Dino: Kids Books & Stories",
+    "ja": "Dino: Kids Books & Storiesの絵本",
+    "nb": "En bildebok fra Dino: Kids Books & Stories",
+    "nl": "Een prentenboek van Dino: Kids Books & Stories",
+    "pt": "Um livro ilustrado do Dino: Kids Books & Stories",
+    "ru": "Книжка с картинками Dino: Kids Books & Stories",
+    "sv": "En bilderbok från Dino: Kids Books & Stories",
+    "zh": "Dino: Kids Books & Stories绘本"
   },
   "storyBy": "Ashkan Sirous",
+  "namesByLanguage": {
+    "ar": {
+      "Ashkan Sirous": "أشكان سيروس"
+    },
+    "da": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "de": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "es": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fa": {
+      "Ashkan Sirous": "اشکان سیروس"
+    },
+    "fi": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "fr": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ja": {
+      "Ashkan Sirous": "アシュカン・シルース"
+    },
+    "nb": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "nl": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "pt": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "ru": {
+      "Ashkan Sirous": "Ашкан Сирус"
+    },
+    "sv": {
+      "Ashkan Sirous": "Ashkan Sirous"
+    },
+    "zh": {
+      "Ashkan Sirous": "阿什坎·西鲁斯"
+    }
+  },
   "access": "free"
 }

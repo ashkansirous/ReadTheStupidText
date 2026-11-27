@@ -25,10 +25,44 @@
         <Color x:Key="StripRedText">#A4462A</Color>
         <Color x:Key="StripSandFill">#F0E8D8</Color>
         <Color x:Key="StripSandText">#4a4460</Color>
-        <Color x:Key="ResultGreenFill">#DFF5E3</Color>
-        <Color x:Key="ResultGreenText">#1F5F23</Color>
-        <Color x:Key="CardButtonBorder">#d9d2c4</Color>
-        <Color x:Key="CardButtonText">#3a3450</Color>
+        <!-- Slice 396 (Subscription mock RR1-RR4): the Restore link, the dark message and the 402 strip's link. -->
+        <Color x:Key="RestoreLink">#4a46d6</Color>
+        <Color x:Key="MessageFill">#2b2540</Color>
+        <Color x:Key="MessageGreen">#7EE08A</Color>
+        <Color x:Key="MessageAmber">#FFC24D</Color>
+        <Color x:Key="MessageAction">#C9C3FF</Color>
+        <x:String x:Key="RestoreGlyph">M4 12a8 8 0 1 0 2.3-5.7M4 4.5V10h5.5</x:String>
+        <x:String x:Key="CheckGlyph">M4 12.5l5 5L20 6.5</x:String>
+        <!-- Slice 397 (Subscription mock SB1-SB5): the card's tile icons (layers, card) and the external-link glyph of Manage subscription and Fix payment. -->
+        <!-- Review 2: the card's transparent Buttons carry the words and the input; pressed and keyboard focus tint the face under them so a press and a focus ring show on every head. -->
+        <Style x:Key="CardPressButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="Transparent" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#33000000" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Focused">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#1F000000" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandEdge}" />
+                                <Setter Property="BorderWidth" Value="2" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        <x:String x:Key="LayersGlyph">M4 7l8-4 8 4-8 4zM4 12l8 4 8-4M4 17l8 4 8-4</x:String>
+        <x:String x:Key="PaymentGlyph">M5.5 5.5h13a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16V8a2.5 2.5 0 0 1 2.5-2.5zM3 10h18M7 15h4</x:String>
+        <x:String x:Key="ExternalGlyph">M14 4h6v6M20 4l-9 9M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V7.5A1.5 1.5 0 0 1 5.5 6H10</x:String>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
             <!-- Slice 364 (Missing States mock S1-S3): the card is 12 padding, 10 between the row and the message strip under it. -->
@@ -57,6 +91,13 @@
                                     <RoundRectangle CornerRadius="10" />
                                 </Border.StrokeShape>
                                 <Label Text="{x:Static res:AppResources.Store_Free}" FontSize="11.5" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}" VerticalOptions="Center" />
+                            </Border>
+                            <!-- Slice 397 (mock SB3, SB4): the tint Included tag of a paid book the running subscription opens. -->
+                            <Border AutomationId="StoreRowIncluded" IsVisible="{Binding IsIncluded}" HeightRequest="20" Padding="8,0" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label Text="{Binding IncludedLabel}" FontSize="11.5" FontAttributes="Bold" TextColor="{StaticResource BrandEdge}" VerticalOptions="Center" />
                             </Border>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
@@ -139,7 +180,20 @@
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <shapes:Path Data="{StaticResource AlertGlyph}" Stroke="{StaticResource StripRedText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
                                      WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
-                        <Label Grid.Column="1" Text="{Binding ErrorText}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" />
+                        <!-- Slice 396 (mock RR4): a 402 adds "Bought it already? Restore purchases" after the sentence, brand colour, 600, underlined; it runs the same restore as the Store's first line. -->
+                        <!-- The tap and the accessibility action sit on the whole label (a span has neither); the handler acts only on a strip that carries the link (a 402). -->
+                        <Label Grid.Column="1" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" MinimumHeightRequest="36"
+                               SemanticProperties.Hint="{Binding BoughtItAlreadyText}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding ErrorLead}" />
+                                    <Span Text="{Binding BoughtItAlreadyText}" FontAttributes="Bold" TextDecorations="Underline" TextColor="{StaticResource RestoreLink}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBoughtItAlreadyTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </Grid>
                 </Border>
                 <Border AutomationId="StoreRowErrorCalm" IsVisible="{Binding HasCalmError}" Padding="12,9" BackgroundColor="{StaticResource StripSandFill}" StrokeThickness="0">
@@ -179,14 +233,14 @@
         </DataTemplate>
     </ContentView.Resources>
 
-    <Grid x:Name="StoreRoot" RowDefinitions="*,Auto">
-        <ActivityIndicator x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
+    <Grid x:Name="StoreRoot" RowDefinitions="Auto,*">
+        <ActivityIndicator x:Name="LoadingView" Grid.Row="1" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
+        <Grid x:Name="ListPanel" Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
-            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
+            <ScrollView x:Name="AgeChipsScroll" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
             </ScrollView>
             <Border Grid.Row="1" x:Name="AuthorRow" HeightRequest="44" Padding="14,0" Margin="0,0,0,10" BackgroundColor="White" StrokeThickness="0"
@@ -223,65 +277,116 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="18" />
             </Border.StrokeShape>
-            <VerticalStackLayout Spacing="10">
-                <Label x:Name="SubscriptionTitle" Text="{x:Static res:AppResources.Sub_Title}" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
-                <Label x:Name="SubscriptionLine" AutomationId="StoreSubscriptionLine" Text="{x:Static res:AppResources.Sub_Line}" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
-                <VerticalStackLayout x:Name="SubscriptionPlans" Spacing="8">
-                    <Button x:Name="SubscribeMonthlyButton" AutomationId="StoreSubscribeMonthly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                            BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnSubscribeMonthlyClicked" />
-                    <Button x:Name="SubscribeYearlyButton" AutomationId="StoreSubscribeYearly" HeightRequest="48" CornerRadius="24" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnSubscribeYearlyClicked" />
-                    <Label x:Name="SubscriptionTerms" AutomationId="StoreSubscriptionTerms" Text="{x:Static res:AppResources.Sub_Terms}" FontSize="12" LineHeight="1.4" TextColor="{StaticResource Muted}" />
+            <!-- Slice 397 (Subscription mock SB1-SB5, SB10): header (tile, title, line), then the plans, then the terms and links. From 600 dp the page moves the plans into a 300-wide right column (SubscriptionCard.IsWide). The card's state picks the
+                 title, line, tile and which parts show (SubscriptionCard.Choose). -->
+            <Grid x:Name="SubscriptionGrid" ColumnDefinitions="*,0" RowDefinitions="Auto,Auto,Auto" RowSpacing="0" ColumnSpacing="0">
+                <VerticalStackLayout x:Name="SubscriptionHeader" Grid.Row="0" Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Border x:Name="SubscriptionTile" WidthRequest="40" HeightRequest="40" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <shapes:Path x:Name="SubscriptionTileIcon" Data="{StaticResource LayersGlyph}" Stroke="{StaticResource Brand}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                         WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Start">
+                            <Label x:Name="SubscriptionTitle" AutomationId="StoreSubscriptionTitle" Text="{x:Static res:AppResources.Sub_Title}" FontSize="17" FontAttributes="Bold" LineHeight="1.25" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
+                            <Label x:Name="SubscriptionLine" AutomationId="StoreSubscriptionLine" Text="{x:Static res:AppResources.Sub_Line}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    <!-- Manage subscription (SB3) and Fix payment (SB4): both open the store's own subscription page. -->
+                    <Grid x:Name="SubscriptionManageRow" IsVisible="False" HorizontalOptions="Start">
+                        <HorizontalStackLayout Spacing="6" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False">
+                            <shapes:Path Data="{StaticResource ExternalGlyph}" Stroke="{StaticResource RestoreLink}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+                            <Label Text="{x:Static res:AppResources.Sub_Manage}" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" VerticalOptions="Center" HeightRequest="36" VerticalTextAlignment="Center" />
+                        </HorizontalStackLayout>
+                        <Button AutomationId="StoreSubscriptionManage" Style="{StaticResource CardPressButton}" Clicked="OnSubscriptionManageTapped" SemanticProperties.Description="{x:Static res:AppResources.Sub_Manage}" />
+                    </Grid>
+                    <Grid x:Name="SubscriptionFixPayment" IsVisible="False" HorizontalOptions="Start">
+                    <Border InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" HeightRequest="44" Padding="16,0" BackgroundColor="{StaticResource Brand}" StrokeThickness="0" HorizontalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="22" />
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                            <shapes:Path Data="{StaticResource ExternalGlyph}" Stroke="White" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+                            <Label Text="{x:Static res:AppResources.Sub_FixPayment}" FontSize="15" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                    <Button AutomationId="StoreSubscriptionFixPayment" Style="{StaticResource CardPressButton}" CornerRadius="22" Clicked="OnSubscriptionManageTapped" SemanticProperties.Description="{x:Static res:AppResources.Sub_FixPayment}" />
+                    </Grid>
                 </VerticalStackLayout>
-                <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
-                    <Label x:Name="SubscriptionTermsLink" AutomationId="StoreSubscriptionTermsLink" Text="{x:Static res:AppResources.Sub_TermsLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionTermsTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="SubscriptionPrivacyLink" AutomationId="StoreSubscriptionPrivacyLink" Text="{x:Static res:AppResources.Sub_PrivacyLink}" FontSize="13" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,16,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionPrivacyTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="SubscriptionManageLink" AutomationId="StoreSubscriptionManage" Text="{x:Static res:AppResources.Sub_Manage}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Brand}" TextDecorations="Underline" Margin="0,0,0,4">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSubscriptionManageTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                </FlexLayout>
-            </VerticalStackLayout>
+
+                <!-- The plans: yearly first and primary with the Save tag, monthly second (Decisions 1 and 2). 52 high, radius 26; a plan with no store price is hidden. -->
+                <VerticalStackLayout x:Name="SubscriptionPlans" Grid.Row="1" Spacing="10">
+                    <!-- Review fix 5: each plan is a real Button (focus, Enter/Space, button role) laid transparent over the mock-styled face, which takes no input. -->
+                    <Grid x:Name="SubscribeYearlyButton">
+                    <Border x:Name="SubscribeYearlyFace" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" MinimumHeightRequest="52" Padding="18,0,10,0" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="26" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource BrandEdge}" Offset="0,3" Radius="0" Opacity="1" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Label x:Name="SubscribeYearlyLabel" TextColor="White" FontSize="15.5" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="WordWrap" Margin="0,8" />
+                            <Border x:Name="SubscribeSaveTag" AutomationId="StoreSubscribeSave" Grid.Column="1" IsVisible="False" HeightRequest="22" Padding="8,0" BackgroundColor="#FFC24D" StrokeThickness="0" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="11" />
+                                </Border.StrokeShape>
+                                <Label x:Name="SubscribeSaveLabel" FontSize="11.5" FontAttributes="Bold" TextColor="#3a2a00" VerticalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Button x:Name="SubscribeYearlyPress" AutomationId="StoreSubscribeYearly" Style="{StaticResource CardPressButton}" CornerRadius="26" Clicked="OnSubscribeYearlyClicked" />
+                    </Grid>
+                    <Grid x:Name="SubscribeMonthlyButton">
+                    <Border x:Name="SubscribeMonthlyFace" InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" MinimumHeightRequest="52" Padding="18,0,10,0" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="26" />
+                        </Border.StrokeShape>
+                        <Label x:Name="SubscribeMonthlyLabel" TextColor="#2f2b6b" FontSize="15.5" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="WordWrap" Margin="0,8" />
+                    </Border>
+                    <Button x:Name="SubscribeMonthlyPress" AutomationId="StoreSubscribeMonthly" Style="{StaticResource CardPressButton}" CornerRadius="26" Clicked="OnSubscribeMonthlyClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="SubscriptionTermsBlock" Grid.Row="2" Spacing="12" Margin="0,12,0,0">
+                    <Label x:Name="SubscriptionTerms" AutomationId="StoreSubscriptionTerms" Text="{x:Static res:AppResources.Sub_Terms}" FontSize="12" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                    <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+                        <Label x:Name="SubscriptionTermsLink" AutomationId="StoreSubscriptionTermsLink" Text="{x:Static res:AppResources.Sub_TermsLink}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" Margin="0,0,14,4">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSubscriptionTermsTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label x:Name="SubscriptionPrivacyLink" AutomationId="StoreSubscriptionPrivacyLink" Text="{x:Static res:AppResources.Sub_PrivacyLink}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}" Margin="0,0,0,4">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSubscriptionPrivacyTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Grid>
         </Border>
 
-        <!-- Slice 364 (mock S3): the "Bought books before?" card, shown only while books are sold (the remote switch). It is the foot of the list while the list has books (the page moves it into the CollectionView footer)
-             and sits at the bottom of the page when the list is empty, filtered to nothing or offline, so Restore and Redeem are always reachable. Both buttons open the store's own screens; the grown-up corner is already behind the gate.
-             The result line of a restore sits under the card: green when books came to the shelf, sand when there was nothing to bring. -->
-        <VerticalStackLayout x:Name="PurchaseArea" Grid.Row="1" Spacing="10" Margin="0,14,0,0" IsVisible="False">
-                        <Border x:Name="BoughtBeforeCard" IsVisible="False" BackgroundColor="White" StrokeThickness="0" Padding="16">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="18" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="12">
-                                <Label x:Name="BoughtBeforeTitle" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level2" />
-                                <Label x:Name="BoughtBeforeLine" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" />
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                    <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Store_RestorePurchases}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                                            BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource BrandEdge}" Clicked="OnRestorePurchasesClicked" />
-                                    <Button x:Name="RedeemButton" Grid.Column="1" Text="{x:Static res:AppResources.Store_RedeemCode}" HeightRequest="44" CornerRadius="22" Padding="14,0" FontSize="15" FontAttributes="Bold"
-                                            BackgroundColor="Transparent" TextColor="{StaticResource CardButtonText}" BorderColor="{StaticResource CardButtonBorder}" BorderWidth="2" Clicked="OnRedeemCodeClicked" />
-                                </Grid>
-                            </VerticalStackLayout>
-                        </Border>
-                        <Border x:Name="RestoreResultView" IsVisible="False" Padding="12,10" StrokeThickness="0" BackgroundColor="{StaticResource ResultGreenFill}">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="14" />
-                            </Border.StrokeShape>
-                            <Label x:Name="RestoreResultLabel" AutomationId="StoreRestoreResult" FontSize="13.5" FontAttributes="Bold" LineHeight="1.4" TextColor="{StaticResource ResultGreenText}" />
-                        </Border>
-        </VerticalStackLayout>
+        <!-- Slice 396 (Subscription mock RR1, RR2, RR3): the Store's first line is "Restore purchases" at the right (the corner's own title row says "Store" and "Picked and cast for Dino" above it), shown only while books are sold
+             (the remote switch). A running restore turns its icon into a spinner and its text into "Restoring…"; nothing blocks (no wait overlay). Redeem a code is not here on purpose: it is in Settings (Slice 399) and in the message
+             that says nothing was found. The result is the dark message pinned above the tab bar for 5 seconds (RestoreResultView, the last child of the page). -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="18,4,14,2">
+        <Label AutomationId="GalleryStoreSub" Text="{x:Static res:AppResources.Store_Subtitle}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource Body}" VerticalOptions="Center" />
+        <HorizontalStackLayout x:Name="RestoreLinkRow" Grid.Column="1" IsVisible="False" HorizontalOptions="End" Spacing="6">
+            <shapes:Path x:Name="RestoreLineIcon" Data="{StaticResource RestoreGlyph}" Stroke="{StaticResource RestoreLink}" StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                         WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+            <ActivityIndicator x:Name="RestoreSpinner" Color="{StaticResource RestoreLink}" IsRunning="False" IsVisible="False" WidthRequest="17" HeightRequest="17" VerticalOptions="Center" />
+            <Label x:Name="RestoreLineLabel" AutomationId="StoreRestorePurchases" Text="{x:Static res:AppResources.Store_RestorePurchases}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource RestoreLink}"
+                   VerticalOptions="Center" HeightRequest="36" VerticalTextAlignment="Center" />
+            <HorizontalStackLayout.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnRestorePurchasesClicked" />
+            </HorizontalStackLayout.GestureRecognizers>
+        </HorizontalStackLayout>
+        </Grid>
 
         <!-- Screen 22: offline, or the server cannot be reached. -->
-        <VerticalStackLayout x:Name="OfflineView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <VerticalStackLayout x:Name="OfflineView" Grid.Row="1" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="48" />
@@ -298,7 +403,7 @@
         </VerticalStackLayout>
 
         <!-- Screen 23: nothing new (an empty list, or every entry too new for this app). A normal state, not an error. The way back to the shelf is the corner's coral pill, so there is no button here. -->
-        <VerticalStackLayout x:Name="EmptyView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <VerticalStackLayout x:Name="EmptyView" Grid.Row="1" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" StrokeThickness="0" Opacity="0.9" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="26" />
@@ -310,5 +415,28 @@
             <Label Text="{x:Static res:AppResources.Store_EmptyBody}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
                    HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
+
+        <!-- Slice 396 (mock RR2, RR3): the result of a restore, a dark message pinned above the tab bar (14 in from each side, 10 up) for 5 seconds, never at the end of a list. Restored: a green check; nothing found: an amber
+             alert and the "Redeem a code" action inside the message. -->
+        <Border x:Name="RestoreResultView" Grid.Row="0" Grid.RowSpan="2" IsVisible="False" VerticalOptions="End" Margin="14,0,14,10" MinimumHeightRequest="48" Padding="14,10" StrokeThickness="0"
+                BackgroundColor="{StaticResource MessageFill}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="16" />
+            </Border.StrokeShape>
+            <Border.Shadow>
+                <Shadow Brush="#141028" Offset="0,10" Radius="24" Opacity="0.3" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <shapes:Path x:Name="RestoreResultIcon" Stroke="{StaticResource MessageGreen}" StrokeThickness="3" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                             WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                <Label x:Name="RestoreResultLabel" AutomationId="StoreRestoreResult" Grid.Column="1" FontSize="14" FontAttributes="Bold" LineHeight="1.35" TextColor="White" VerticalOptions="Center" />
+                <Label x:Name="RestoreRedeemAction" AutomationId="StoreRedeemCode" Grid.Column="2" IsVisible="False" Text="{x:Static res:AppResources.Store_RedeemCode}" FontSize="14" FontAttributes="Bold"
+                       TextColor="{StaticResource MessageAction}" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Store_RedeemCode}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRedeemCodeClicked" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
+        </Border>
     </Grid>
 </ContentView>

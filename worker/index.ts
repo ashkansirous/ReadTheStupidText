@@ -19,6 +19,8 @@ import { handleCrash, isCrashPath } from "./crashes";
 import type { CrashesEnv } from "./crashes";
 import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
 import type { EventsEnv, RtstEventsEnv } from "./events";
+import { ninjalogTee } from "./ninjalog";
+import type { NinjalogEnv } from "./ninjalog";
 import { handleStories, isStoryPath } from "./stories";
 import type { WindowsTicketSource } from "./stories";
 import { serviceTicket } from "./entitlements/microsoft";
@@ -27,6 +29,7 @@ import type { PaidGate, StoreCallLimit } from "./entitlements/gate";
 import { createSubscriptionSource } from "./entitlements/subscription";
 import type { SubscriptionSource } from "./entitlements/subscription";
 import type { EntitlementEnv } from "./entitlements/types";
+import { handleBookLink, isBookLinkPath } from "./book-links";
 import { handleSonos, isSonosPath } from "./sonos";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
@@ -101,20 +104,26 @@ function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite):
 
 // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
 // Slice 289: each play is counted in `dino_usage` under the apps' own telemetry switch (declared further down: function declarations are hoisted).
-function serveSonos(request: Request, url: URL, env: Env & EventsEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
+function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   // ctx.waitUntil is called as a method (destructuring it throws "Illegal invocation"); the play is counted after the answer is sent.
-  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
-  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
+  const defer = (work: Promise<unknown>) => ctx.waitUntil(work);
+  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer, tee: ninjalogTee(env, defer) };
+  // Slice 283 F1/F2: the catalogue rebuild runs after the answer and its list is kept in the colo's Cache API.
+  const catalogue = { defer: usage.defer, shared: caches.default };
+  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, catalogue);
 }
 
 // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.
-function serveAlexa(request: Request, url: URL, env: Env & EventsEnv & AlexaEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
+function serveAlexa(request: Request, url: URL, env: Env & EventsEnv & AlexaEnv & NinjalogEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
-  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
-  return handleAlexa(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
+  const defer = (work: Promise<unknown>) => ctx.waitUntil(work);
+  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer, tee: ninjalogTee(env, defer) };
+  // Slice 457: paid books are locked on Alexa only while the Slice 346 paid-books switch is on.
+  const paidBooksEnabled = configCheck(env, APP_CONFIG_KEY, "paidBooks", (config) => config.paidBooks.enabled);
+  return handleAlexa(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, {}, { paidBooksEnabled });
 }
 
 // Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
@@ -165,9 +174,11 @@ function serveCrash(request: Request, env: Env & CrashesEnv, site: ResolvedSite)
 
 // Slice 137: Read The Stupid Text's phone counts take the same road with their own config object and dataset (RTST_USAGE, dataset
 // rtst_usage).
-function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv, site: ResolvedSite): Promise<Response> | Response {
+// Slice 419: Dino's production counts are also forwarded to Ninjalog after the answer (off unless NINJALOG_ENABLED and NINJALOG_TOKEN are set).
+function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv & NinjalogEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
   const check = telemetryCheck(env, configKeyFor(site));
-  return site.product === Product.DinoReader ? handleEvents(request, env, check) : handleRtstEvents(request, env, check);
+  if (site.product !== Product.DinoReader) return handleRtstEvents(request, env, check);
+  return handleEvents(request, env, check, ninjalogTee(env, (work) => ctx.waitUntil(work)));
 }
 
 // Slice 287: the public Dino usage dashboard: the page (site/dino/stats.html, served by the page mapping) and its read-only data from D1 (worker/stats.ts).
@@ -177,12 +188,14 @@ function serveStats(request: Request, url: URL, env: StatsEnv, site: ResolvedSit
   return isStatsApiPath(site.path) ? handleStats(withPath(request, url, site.path), env) : null;
 }
 
-async function serveAsset(request: Request, env: Env & StatsEnv, ctx: ExecutionContext): Promise<Response> {
+async function serveAsset(request: Request, env: Env & StatsEnv & NinjalogEnv, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   if (isHiddenDinoPath(url.hostname, url.pathname)) return new Response("Not found", { status: 404 });
   const redirect = canonicalRedirect(url.hostname, url.pathname, url.search);
   if (redirect !== null) return Response.redirect(new URL(redirect, url).toString(), 302);
   const site = resolveSite(url.hostname, url.pathname);
+  // Slice 423: printed-book short links, Dino host only (the RTST host has no /book/ and falls through to the assets).
+  if (site.product === Product.DinoReader && isBookLinkPath(site.path)) return handleBookLink(site.path, env.BOOK_LINK_TARGET, url.origin);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
   if (isAlexaPath(site.path)) return serveAlexa(request, url, env, site, ctx);
@@ -191,7 +204,7 @@ async function serveAsset(request: Request, env: Env & StatsEnv, ctx: ExecutionC
     if (answer !== null) return answer;
   }
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
-  if (isEventsPath(site.path)) return serveEvents(request, env, site);
+  if (isEventsPath(site.path)) return serveEvents(request, env, site, ctx);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);
   if (isDownloadPath(site.path)) {
     return handleDownload(withPath(request, url, site.path), site.home);
@@ -201,11 +214,11 @@ async function serveAsset(request: Request, env: Env & StatsEnv, ctx: ExecutionC
 }
 
 export default {
-  async fetch(request: Request, env: Env & StatsEnv, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env & StatsEnv & NinjalogEnv, ctx: ExecutionContext): Promise<Response> {
     return withSecurityHeaders(await serveAsset(request, env, ctx));
   },
   // Slice 287: the hourly cron (wrangler "triggers") rolls Analytics Engine into D1; it logs and returns when the STATS binding or token is absent.
   async scheduled(_controller: ScheduledController, env: Env & StatsEnv, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(runRollup(env));
   },
-} satisfies ExportedHandler<Env & StatsEnv>;
+} satisfies ExportedHandler<Env & StatsEnv & NinjalogEnv>;

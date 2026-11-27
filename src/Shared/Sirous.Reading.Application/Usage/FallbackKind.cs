@@ -243,6 +243,9 @@ public static class FallbackReason
     /// <summary>Slice 275 (area "ui"): a page of the story could not be laid out, so the reading card shows the error text instead.</summary>
     public const string LayoutFailed = "layout_failed";
 
+    /// <summary>Slice 420 (area "input"): moving the keyboard focus one row on the Windows Settings tab threw; the arrow key is left unhandled.</summary>
+    public const string FocusMoveFailed = "focus_move_failed";
+
     /// <summary>Slice 351 (area "premade_audio"): the pack has an entry for this piece but its file is not on disk.</summary>
     public const string FileMissing = "file_missing";
 
@@ -294,7 +297,7 @@ public static class FallbackReason
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
-        OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
+        OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed, FocusMoveFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
         BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, DownloadRefused, PurchaseNotValid, OnboardingTryNotDeleted,
     ];
