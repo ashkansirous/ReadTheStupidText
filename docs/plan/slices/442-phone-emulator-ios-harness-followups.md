@@ -4,7 +4,7 @@
 
 *Planned 2026-11-25 (plan-cleanup of that day).*
 
-*Built (wave 2026-11-27), PR #1439, not merged. Device run 2026-11-27 17:19Z passed; the iOS CI Mac changes have not run yet.*
+*Built (wave 2026-11-27), merged as PR #1439 (ce7fd0fc). Device run 2026-11-27 17:19Z passed; the iOS CI Mac changes have not run yet.*
 
 Small, low findings left open by the Slice 393 reviews, all in this repo's tooling (full text in the Slice 393 file under *From review*, *Follow-ups from PR #1071* and *Follow-ups from the check pass after the CI fix*):
 

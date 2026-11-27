@@ -76,6 +76,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 424: Dino: the Android 1.136.0 unclean exit ([slice](slices/424-dino-android-1136-unclean-exit.md))
+- [phone] Item 1: the walk on the S21 with the Play release build (first-run pack downloads, then Settings); the flow `first-run-to-settings` itself was written and run on the emulator, but the real pack downloads are not scripted.
+- [cloud] Item 3 iOS: the MetricKit exit-count path and the iOS simulator kill check on the CI Mac (`dinoreader-ios-sim.yml`); both heads compile, nothing ran on iOS.
+- [phone] Item 6: a second distinct death on the same tail gets its own report.
+- [session] After release: read a real `unclean_exit` with `tools/crashes/report.mjs -App dino` (the exit reason, session and last page on a real report).
+
 ### Slice 460: Dino Windows: the store works at first run, or recovers on its own ([slice](slices/460-dino-windows-first-run-store-recovery.md))
 - [session] Item 1, the Windows VM `AppTrace` read at first run: not run, the VM needs 8 GB free and this wave had 6.8, 4.5 and 7.9 GB. Compare the cached origin/main package `8bbbca166301` with the new one `9fc20fa691d1`, and write down which call fails, its error and whether the window or Store-context ordering is the trigger.
 - [session] Windows VM fresh-install first run with the network cut for 5 s and restored: first run finishes with no manual Try again.
@@ -754,6 +760,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 442: Phone, emulator and iOS harness follow-ups ([slice](slices/442-phone-emulator-ios-harness-followups.md))
+- [cloud] The `ios-sim-*.sh` and `dinoreader-ios-sim.yml` changes (budget guard, `kill_driver`, settle seconds, 1080 s step budget) run on the CI Mac: check the next iOS simulator workflow run.
+- [session] `reset-dino-language.ps1` exit 2 path (Dino dev app not installed) has not been run.
+- [session] `store-screenshots.ps1` demo-mode early stop and exit 8 on an emulator that will not start have not been run.
 
 ### Slice 448: tools/phone runs the .maestro/dino flows on a real phone ([slice](slices/448-tools-phone-runs-maestro-dino-flows.md))
 - [phone] The three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after Slice 465 (S21 run 4: 1 of 4 passed). (live check 2026-11-27: failed, follow-up in Slice 448)
