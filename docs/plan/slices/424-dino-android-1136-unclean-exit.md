@@ -1,7 +1,7 @@
 # Slice 424 — Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings) and the gaps that hide its cause
 **Product:** Dino
 
-*Built 2026-11-27 (wave 2026-11-27), PR #1438, not merged. Emulator-verified for items 3-6 (run 2); item 1's S21 walk on the Play release build and the iOS MetricKit path are not yet run.*
+*Built 2026-11-27 (wave 2026-11-27), merged as PR #1438 (d0a3b7f5). Emulator-verified for items 3-6 (run 2); item 1's S21 walk on the Play release build and the iOS MetricKit path are not yet run.*
 
 *Plan-cleanup check 2026-11-25: keep open, nothing started. Checked on origin/main 1a8bf725: no `first-run-to-settings.yaml`; no PR for this slice's work (only planning PR #1323); `RollingLogFile` has no 5 s timer; the Crashes folder has no session id or last-page field (git grep). `AndroidCrashHooks` already reads `GetHistoricalProcessExitReasons` (Slice 227) but only for native, ANR and low-memory kinds, so item 3 (reason on `unclean_exit`) is still open. No outside waits; all 8 items are this slice's own work.*
 
@@ -61,7 +61,7 @@ The first crash report on a 1.136.0 build (Slice 418's one shelf with a lock):
 
 Emulator results, run 1 (2026-11-27 17:33Z): walk PASS, session/last page/state PASS, one report per death PASS, exit reason printed as a number FAIL (fixed). Run 2 (build key bdd59593c9bb): `exit reason ExitSelf, status 137, importance 100`, matching the system record `reason=1 (EXIT_SELF) status=137`, one report after relaunch: PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - An `unclean_exit` report's message is built only in `CrashReportBuilder.cs` within a 200-character budget; the exit reason is never the part cut. The Android reason comes from the newest main-process `ApplicationExitInfo` not older than the dead launch's start; iOS MetricKit counts are last-day context, never this death's cause, and nothing is stored while reporting is off. (Slice 424: docs/plan/slices/424-dino-android-1136-unclean-exit.md)
 - A repeat of one death is skipped by a key of the dead launch's start plus its log tail (`PendingCrashStore.IsUncleanReported`); the log tail is flushed at most 5 s behind. (Slice 424: docs/plan/slices/424-dino-android-1136-unclean-exit.md)

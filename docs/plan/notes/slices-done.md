@@ -318,6 +318,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 397 | Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens) | built (device and compile checks in unverified.md) | #1239, #1255, #1420 | | [397-dino-subscription-card-states.md](../slices/397-dino-subscription-card-states.md) |
 | 440 | Dino: search on Sonos, "Stories" and "All languages" | built (Sonos sandbox checks in unverified.md) | #1427 | | [440-dino-sonos-search.md](../slices/440-dino-sonos-search.md) |
 | 460 | Dino Windows: the store works at first run, or recovers on its own | built (items 2-4; item 1 open; 11 follow-ups in the slice; checks in unverified.md) | #1428 | | [460-dino-windows-first-run-store-recovery.md](../slices/460-dino-windows-first-run-store-recovery.md) |
+| 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20: the exit reason, session, last page and a current log tail in every unclean-exit report | built (item 1's S21 walk and the iOS path in unverified.md) | #1438 | — | [424-dino-android-1136-unclean-exit.md](../slices/424-dino-android-1136-unclean-exit.md) |
 
 ## Shared
 
@@ -455,6 +456,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 374 | Store listings in the other 13 app languages for both apps on Play, App Store and Microsoft Store (machine-translated, pushed at once; native reads go to unverified) | done 2026-11-25 (Play and App Store pushed #1110, Dino Microsoft Store 13 languages read back, RTST Microsoft listings built into the release submission #1115; RTST read-back is a Watch line) | #1096, #1110 | | [374-store-listings-13-languages.md](../slices/374-store-listings-13-languages.md) |
 | 393 | Feedback loop 2026-11-14-1547 leftovers (review-skip checker, skips and follow-ups only in PR bodies, phone lease quirks, low-memory snapshot, listening-page precheck, brief guard prompt, store_unreachable on the emulator, VM first-run chain, 291 shot retake, 384 and 291 deep links) | done 2026-11-25 (own work built in #1242, #1248 and ClaudeSkills #323; device proofs of items 13, 14, 15, 23 stay in unverified.md; ClaudeSkills items moved out; harness follow-ups are Slice 442) | #1184, #1242, #1248 | | [393-feedback-loop-2026-11-14-1547-leftovers.md](../slices/393-feedback-loop-2026-11-14-1547-leftovers.md) |
 | 448 | tools/phone runs the .maestro/dino flows on a real phone | built | #1415 | — | [448-tools-phone-runs-maestro-dino-flows.md](../slices/448-tools-phone-runs-maestro-dino-flows.md) |
+| 442 | Phone, emulator and iOS harness follow-ups from Slice 393 | built (checks in unverified.md) | #1439 | — | [442-phone-emulator-ios-harness-followups.md](../slices/442-phone-emulator-ios-harness-followups.md) |
 | 343 | Listening page: four Farsi voices | built (owner re-listen in unverified.md) | #1098, #1422 | | [343-four-farsi-voices.md](../slices/343-four-farsi-voices.md) |
 
 ## Batch ordering notes
