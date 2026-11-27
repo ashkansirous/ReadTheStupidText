@@ -2,6 +2,8 @@
 **Product:** Dino
 **Touches:** `.claude/skills/create-dino-story/**`
 
+*In progress (wave 2026-11-27), draft PR.*
+
 *Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 350; not built).*
 
 **Why.** Two tooling items left open in Slice 350 (moved out 2026-11-25), both for `.claude/skills/create-dino-story/`.
