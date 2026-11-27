@@ -14,6 +14,8 @@
 #       -Bytes is REQUIRED (positive; the sizes `__drawPicture`/`__grab` printed). Lock Take, gemini-take-download.ps1 -Untouched (only a
 #       download of exactly that size from the last 120 s; file moved byte for byte, 896x1200 small copy made beside it), lock Release,
 #       line70.ps1 on it; prints ONE line: SAVED <path> <WxH> <bytes> | small <path> | line70 <overlay png>
+#       Both save and collect take -UserAskedRedo (only when the user named that page; an accepted page is refused without it) and
+#       -BackupFolder <working folder>/previous (where a replaced picture is copied first).
 #   pwsh gemini-step.ps1 collect -Owner <owner> -Path <out folder>/<prefix> -Bytes <n>,<n>,...
 #       recovery: -Bytes is ONE size per picture, oldest first (what `await __recoverChat()` printed; 0 = Gemini gave no blob). Saves
 #       each as <prefix>-1, <prefix>-2 ... untouched (+ small copies), skips a name already saved (ALREADY SAVED, not MISSING), and
@@ -24,7 +26,9 @@ param(
   [string]$Owner,
   [string]$Picture,   # one file, or two joined by a comma (pwsh -File passes a comma list as one string)
   [string]$Path,
-  [string]$Bytes = ''   # sizes joined by a comma, parsed here (pwsh -File would read "123,456" as the number 123456)
+  [string]$Bytes = '',   # sizes joined by a comma, parsed here (pwsh -File would read "123,456" as the number 123456)
+  [switch]$UserAskedRedo,   # save/collect only, Slice 447: pass only when the user named this page (an accepted page is refused without it)
+  [string]$BackupFolder = ''   # save/collect only: where a replaced picture is copied, normally <working folder>/previous
 )
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
@@ -55,6 +59,8 @@ function Invoke-Script([string]$script, [string[]]$arguments, [switch]$Sta) {
 function Invoke-Take([string]$target, [long[]]$wanted, [int]$fresh) {
   $arguments = @{ Path = $target; Untouched = $true; FreshSeconds = $fresh }
   if ($wanted.Count) { $arguments.Bytes = $wanted }
+  if ($UserAskedRedo) { $arguments.UserAskedRedo = $true }
+  if ($BackupFolder) { $arguments.BackupFolder = $BackupFolder }
   $global:LASTEXITCODE = 0
   $output = try { & (Join-Path $here 'gemini-take-download.ps1') @arguments 6>&1 2>&1 } catch { "ERROR: $($_.Exception.Message)" }
   [pscustomobject]@{ Code = $global:LASTEXITCODE; Text = (($output | ForEach-Object { "$_" }) -join "`n") }
@@ -150,7 +156,7 @@ function Invoke-Collect {
   try {
     for ($i = 0; $i -lt $sizes.Count; $i++) {
       $target = "$Path-$($i + 1).jpg"
-      $existing = Find-SavedPicture "$Path-$($i + 1)"
+      $existing = if ($UserAskedRedo) { $null } else { Find-SavedPicture "$Path-$($i + 1)" }   # a named redo replaces the page, so it is never "already saved"
       if ($existing) { Write-Host "$($i + 1): ALREADY SAVED $existing"; continue }
       if ($sizes[$i] -le 0) { $missing++; Write-Host "$($i + 1): MISSING (Gemini gave no blob for this picture)"; continue }
       $take = Invoke-Take $target @($sizes[$i]) $collectFreshSeconds

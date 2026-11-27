@@ -13,7 +13,7 @@ The brief gives only that page's lines (its prompt, the cast lines it uses, the 
 are documented in SKILL.md step 6) and never the whole slice file or the whole art record: read only what the brief names, plus SKILL.md's *Gemini rules*
 and step 6's *short per-picture sequence*. A picture is these steps, about 7 turns, with the exact commands in SKILL.md step 6: (1) the new-chat navigate + loader line + `__geminiHealth()` + `__modelLabel()` (no lock yet),
 and compare the label with the model the brief names (3.1 Pro shows as `Pro`; Flash-Lite or anything else, or `NO PICKER`: stop, set the picker, check again, no prompt before it matches); (2) `gemini-step.ps1 prepare` (takes the lock; if more than 2 minutes pass before the paste, run `gemini-step.ps1 touch -Owner <owner>`, never `put`); (3) paste + `__waitAttached`; (4) `gemini-step.ps1 release` together with
-`await window.__drawPicture(<prompt>, <n>)`; (5) `gemini-step.ps1 save -Bytes <n>` (the size is required); (6) Read the small copy and the line70 overlay together, then
+`await window.__drawPicture(<prompt>, <n>)`; (5) `gemini-step.ps1 save -Bytes <n> -BackupFolder <working folder>/previous` (the size is required; `-UserAskedRedo` only for a page the user asked to redo); (6) Read the small copy and the line70 overlay together, then
 rename or delete; (7) the report. **Release the lock on every path out of steps 2-3 (a failed paste, a stop, a report), then stop.** Take no screenshots after an `ok` line. The longer text below is the fallback when a step reports a problem,
 and every safety rule in it still holds: the model check, one prompt per chat, at most 3 tries, small copies only, the lock only
 around the paste and the save (never while Gemini draws), never solve a CAPTCHA.
@@ -114,7 +114,7 @@ the contact sheet live only in the working folder. Touch nothing else.
      load; a new chat that keeps the page loaded needs no new injection, only `window.__geminiHealth()`, and if
      `window.__setupPicture` is undefined the page was reloaded: inject again), then `await window.__grab(1)`
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
-   - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed; add `-Untouched` for
+   - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n> -BackupFolder <working folder>/previous` (`<n>` = the size `__grab` printed; always pass `-BackupFolder`, a save into a book folder is refused without it; add `-UserAskedRedo` only for a page the user asked to redo (a target listed under `## Accepted by the user` is refused without it); add `-Untouched` for
      Slice 350 high-res pictures, which keeps the file byte for byte, and use the path it prints) waits for that download, moves it out of
      `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it; exit 2 with `SAVED <path>; small copy failed: <reason>` means the picture IS saved: never retry the download, run `pwsh tools/dino/picture-review-copy.ps1 <path>`). No clipboard and no real click,
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
