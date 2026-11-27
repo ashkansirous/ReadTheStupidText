@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `src/Dino/DinoReader.App/**` (`ReadingSession`), `src/Dino/DinoReader.Core/**` (`RecordSplitBook.cs`, `StarterUpdate.cs`, `PartTakes.cs`, `PartClipAdoption`, `ClipMove`, `FileStoryLibrary.cs`, `StoryRecordings.cs`, `CLAUDE.md`), `tests/Dino/DinoReader.Tests/**`, `.maestro/dino/**`
 
-*Built 2026-11-27 (wave 2, PR #1397), not merged; not yet verified on the phone, iOS simulator or Windows VM (see *Not yet verified* below).* Premise check at claim (2026-11-27): `RecordSplitBook.cs`, `StarterUpdate.cs` and `PartTakes.cs` are in `DinoReader.Core`, not App (Touches corrected); the line numbers `StarterUpdate.cs:944` and `RecordSplitBook.cs:658` in item 4 are from the old draft branch `fix/395-record-parts`, so item 4 re-finds those spots on main.
+*Built 2026-11-27 (wave 2), merged as PR #1397 (7fcb4828); not yet verified on the phone, iOS simulator or Windows VM (see *Not yet verified* below).* Premise check at claim (2026-11-27): `RecordSplitBook.cs`, `StarterUpdate.cs` and `PartTakes.cs` are in `DinoReader.Core`, not App (Touches corrected); the line numbers `StarterUpdate.cs:944` and `RecordSplitBook.cs:658` in item 4 are from the old draft branch `fix/395-record-parts`, so item 4 re-finds those spots on main.
 
 *Planned 2026-11-25 (plan-cleanup of that day; not built).*
 
@@ -91,7 +91,7 @@ Files read to the last finding: `reviews/pr-1397-high.md` (9/9), `reviews/pr-139
 - Finding 7 (`reviews/pr-1397-high.md`): no saved-at stamp is stored; the reader and the Record screen already pick the earlier take by the same order, and the reader now logs the hidden take (`[RecordedClip] part take ... hidden by the earlier take ...`).
 - Finding 8 (`reviews/pr-1397-high.md`): a take is not counted as the first clip of the read's voice (it is not the book's voice); the count is taken on the words the plan plays from the book's own audio, at the first book clip.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - `tools/CLAUDE.md`: an `# expect-log:` marker in a Maestro flow must end at a word boundary. `Test-LogMarker` (`tools/emulator/common.ps1:436`) refuses a match followed by a word character, so a prefix such as `rec-en-2-p1-1-` never matches; `lint-flows` does not catch it yet. (Slice 443: docs/plan/slices/443-dino-parent-part-take-plays-its-words-only.md)
 - `tools/CLAUDE.md` (flows): a record flow runs on a bundled test book (Three Little Pigs); Freddy is not bundled, so a flow naming it can never pass. (Slice 443: docs/plan/slices/443-dino-parent-part-take-plays-its-words-only.md)

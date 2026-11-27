@@ -3,7 +3,7 @@
 
 *Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
 
-**Starts after:** [Slice 459](459-dino-first-book-playable-in-seconds.md) (it edits the same first-books download path).
+**Starts after:** [Slice 459](459-dino-first-book-playable-in-seconds.md) (merged as PR #1395; it edits the same first-books download path).
 
 **Touches:** `tools/dino/prepare-story-pictures.ps1`, `tools/dino/premade-audio/encode.py`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `worker/stories.ts`, `worker/**` tests, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/HighResUpgradeRunner.cs`, `src/Dino/DinoReader.Core/PictureSizeChoice.cs`, `tests/Dino/DinoReader.Tests/PictureSizeChoiceTests.cs`, `tests/Dino/DinoReader.Tests/**` (first books), `src/Dino/DinoReader.App/FirstBooksPage.cs`
 

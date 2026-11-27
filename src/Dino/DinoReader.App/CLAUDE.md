@@ -54,6 +54,8 @@ index is that folder's README): read visual values (colours, sizes, copy, layout
 - The Farsi default voice is `mana` (`VoiceChoices.PersianDefaultVoiceId`); `ganji_adabi` is retired; Farsi flavours are roster-only; keep every voice+flavour pair unique. (Slice 144: docs/plan/slices/144-farsi-default-female-voice.md)
 - Dino Reader builds for Android, iOS (`-p:IncludeIos=true` on Windows, compile only) and Windows (`dotnet publish -f net11.0-windows10.0.19041.0 -p:IncludeAndroid=false -p:Platform=x64`; with only maui-android pass `-p:IncludeWindows=false`). Platform code lives once in `Mobile.Shared/Platforms/<OS>`. `store-submit-dino` runs only when `DINOREADER_STORE_APP_ID` is set. (Slice 67: docs/plan/slices/67-dino-reader-ios-windows.md)
 
+- First-book prefetch and the background queue live in the `FirstBookPrefetch` singleton (`FirstBookPrefetch.cs`); the page never hands it its own token. `StoreClient.DownloadAsync` keeps `origin/main`'s join behaviour (only an ended entry is removed before a lookup): install packs as their own step (`EnsurePackAsync`), never by joining. (Slice 459: docs/plan/slices/459-dino-first-book-playable-in-seconds.md)
+
 ## Screens, navigation, layout
 
 - Safe areas: `SafeAreaEdges` `None` on page/root, `Container` on header/sheet/body, `Container, SoftInput` on text-entry pages. Bar icon colour comes from `SystemBarIcons`. (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)

@@ -1,7 +1,7 @@
 # Slice 459 — Dino first books: the first book is playable within seconds of Continue
 **Product:** Dino
 
-*Built 2026-11-27 (night wave 2), PR #1395, not merged; not yet verified on the S21 throttled, the iOS simulator or the Windows VM (see Not yet verified).*
+*Built 2026-11-27 (night wave 2), merged as PR #1395 (c368f3d2); not yet verified on the S21 throttled, the iOS simulator or the Windows VM (see Not yet verified).*
 
 *Planned 2026-11-27 from the 2026-11-26 usage analysis (Ninjalog `ashkan-sirous/dino-book-reader`, index `dino_usage`, 19-26 Nov).*
 
@@ -95,7 +95,7 @@
 - Follow-up #4 (`reviews/pr-1395-check5-medium.md`): "A removal not yet finished shows the full getting page at once, no 500 ms delay" - low; show it only after about 500 ms.
 - Follow-up: a native-speaker read of the 14 machine-written translations of `FirstBooks_Queue_One/Other/Audio/Failed`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - First-book prefetch and the background queue live in the `FirstBookPrefetch` singleton (`src/Dino/DinoReader.App/FirstBookPrefetch.cs`); the page never hands it its own token. `StoreClient.DownloadAsync` keeps `origin/main`'s join behaviour (only an ended entry is removed before a lookup): install packs as their own step (`EnsurePackAsync`), never by joining. (Slice 459: docs/plan/slices/459-dino-first-book-playable-in-seconds.md)
 
