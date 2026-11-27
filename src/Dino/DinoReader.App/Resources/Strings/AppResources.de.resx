@@ -448,6 +448,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Dein Abo ist abgelaufen</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} Bücher sind gesperrt. Dein Kind sieht sie nicht. Abonniere erneut oder kaufe die Bücher, die du behalten möchtest.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 Buch ist gesperrt. Dein Kind sieht es nicht. Abonniere erneut oder kaufe das Buch, das du behalten möchtest.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>1 weiteres Buch ist unterwegs</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} weitere Bücher sind unterwegs</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Der Ton für deine Bücher wird geladen</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Einige Bücher konnten nicht geladen werden</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Tarife im Store ansehen</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Kaufen · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Abo kann nicht geprüft werden</value></data>

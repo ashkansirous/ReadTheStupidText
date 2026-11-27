@@ -74,6 +74,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_starters = starters;
 		_services = services;
 		StoryList.ItemsSource = _items;
+		BuildQueueBanner();
 		WireDesktopShelf();
 		StoryList.Scrolled += (_, e) =>
 		{
@@ -415,6 +416,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged; // Slice 398: the offline notice follows the network
 		Connectivity.Current.ConnectivityChanged += OnNetworkChanged;
 		StartBannerTimer();
+		store.Background.Changed -= OnBackgroundBooksChanged; // Slice 459: the first run's background queue shows on the shelf while it runs
+		store.Background.Changed += OnBackgroundBooksChanged;
+		_ = store.Background.ResumeAsync(); // Slice 459 (kill recovery): once per launch, the first run's saved jobs go on; it never throws
 #if DEBUG
 		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
 		NetworkProbe.OverrideChanged += OnNetworkOverrideChanged;
@@ -487,6 +491,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		_services.GetRequiredService<StoreClient>().Sales.Purchases.Changed -= OnPurchasesChanged;
 		Connectivity.Current.ConnectivityChanged -= OnNetworkChanged;
 		StopBannerTimer();
+		_services.GetRequiredService<StoreClient>().Background.Changed -= OnBackgroundBooksChanged;
 #if DEBUG
 		NetworkProbe.OverrideChanged -= OnNetworkOverrideChanged;
 #endif
@@ -1686,6 +1691,62 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	// Slice 384: the greyed book's two actions on the parents' shelf. Subscribe again opens the Store tab where the plans are; Buy this book opens the store's own sheet for the book (the wait overlay shows past 500 ms).
 	private void OnLapsedSubscribeClicked(object? sender, EventArgs e) => _mode.SelectTab(CornerTab.Store); // no-tap-count: the closed UiControls list (shared with the Worker's CONTROLS) has no subscription control yet and the tab switch is counted as the Store screen
 
+	private Border _queueBanner = null!;
+	private Label _queueLine = null!;
+	private Button _queueCancel = null!;
+	private Button _queueRetry = null!;
+
+	// Slice 459 (Decision 3: progress on the shelf): the first run's background queue (the other ticked books, then the other languages' audio) shows while it runs, in the same sand strip as the two banners, with the
+	// shelf's own Cancel. Built in code beside the XAML banners; hidden with no queue. Parents' Books tab only, like them.
+	private void BuildQueueBanner()
+	{
+		_queueLine = new Label { AutomationId = "QueueBannerLine", FontSize = 14.5, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#3f3a52"), VerticalOptions = LayoutOptions.Center };
+		_queueCancel = new Button { AutomationId = "QueueBannerCancel", Text = AppResources.Common_Cancel, Style = (Style)Resources["BannerLink"], HorizontalOptions = LayoutOptions.Start };
+		UiUsage.Press(_queueCancel, UiControls.Cancel, () => _services.GetRequiredService<StoreClient>().Background.Cancel());
+		_queueRetry = new Button { AutomationId = "QueueBannerRetry", Text = AppResources.Store_TryAgain, Style = (Style)Resources["BannerLink"], HorizontalOptions = LayoutOptions.Start, IsVisible = false };
+		UiUsage.Press(_queueRetry, UiControls.Retry, () => _services.GetRequiredService<StoreClient>().Background.Retry());
+		var icon = new IconView { Kind = IconKind.Download, Color = Color.FromArgb("#3f3a52"), Size = 20, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Start };
+		var links = new HorizontalStackLayout { Spacing = 16, Children = { _queueRetry, _queueCancel } };
+		var column = new VerticalStackLayout { Spacing = 2, Children = { _queueLine, links } };
+		var row = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)], ColumnSpacing = 10 };
+		row.Add(icon, 0);
+		row.Add(column, 1);
+		_queueBanner = new Border { AutomationId = "QueueBanner", IsVisible = false, Padding = new Thickness(14, 12), BackgroundColor = Color.FromArgb("#F0E8D8"), StrokeThickness = 0, StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 }, Content = row };
+		ShelfBanners.Children.Add(_queueBanner);
+	}
+
+	private void OnBackgroundBooksChanged() => MainThread.BeginInvokeOnMainThread(ApplyShelfBanners);
+
+	private void ApplyQueueBanner(bool books)
+	{
+		BackgroundBooks queue = _services.GetRequiredService<StoreClient>().Background;
+		QueueLine line = books ? FirstBooks.LineFor(queue.Remaining, queue.BooksRemaining, queue.Failed) : QueueLine.Hidden;
+		_queueBanner.IsVisible = line != QueueLine.Hidden;
+		_queueRetry.IsVisible = line == QueueLine.Failed;
+		_queueRetry.Text = AppResources.Store_TryAgain;
+		_queueLine.Text = line switch
+		{
+			QueueLine.Failed => AppResources.FirstBooks_Queue_Failed,
+			QueueLine.OneBook => AppResources.FirstBooks_Queue_One,
+			QueueLine.ManyBooks => AppResources.Format(AppResources.FirstBooks_Queue_Other, queue.BooksRemaining),
+			QueueLine.Audio => AppResources.FirstBooks_Queue_Audio,
+			_ => string.Empty,
+		};
+		_queueCancel.Text = AppResources.Common_Cancel;
+		SemanticProperties.SetDescription(_queueCancel, AppResources.Common_Cancel);
+#if DEBUG
+		if (line != _lastQueueLine)
+		{
+			_lastQueueLine = line;
+			Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[FirstBackground] banner {line}");
+		}
+#endif
+	}
+
+#if DEBUG
+	private QueueLine _lastQueueLine = QueueLine.Hidden;
+#endif
+
 	// Slice 398 (mock SB6, SB7): the Books tab's two banners. The "why" banner shows while any book is locked (it says it once for all of them); the calm sand notice shows only while offline, past the last end date the store
 	// gave and inside the 3 days (SubscriptionAccess.OfflineNotice). Both are the parents' Books tab only; the child's shelf never sees either.
 	private void ApplyShelfBanners()
@@ -1696,7 +1757,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		DateTimeOffset? locksOn = books && sales.SwitchKnownOn ? SubscriptionAccess.OfflineNotice(DateTimeOffset.UtcNow, sales.Purchases.Subscription.Record, NetworkProbe.IsOffline()) : null;
 		LockedBanner.IsVisible = locked > 0;
 		OfflineBanner.IsVisible = locksOn is not null;
-		ShelfBanners.IsVisible = LockedBanner.IsVisible || OfflineBanner.IsVisible;
+		ApplyQueueBanner(books);
+		ShelfBanners.IsVisible = LockedBanner.IsVisible || OfflineBanner.IsVisible || _queueBanner.IsVisible;
 		ApplyShelfMargin(_shelfGeometry); // the list's own top follows whether a banner stands above it
 		if (locked > 0)
 		{

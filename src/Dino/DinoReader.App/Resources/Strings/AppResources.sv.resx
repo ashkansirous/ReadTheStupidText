@@ -446,6 +446,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Ditt abonnemang har tagit slut</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} böcker är låsta. Ditt barn ser dem inte. Prenumerera igen, eller köp de du vill behålla.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bok är låst. Ditt barn ser den inte. Prenumerera igen, eller köp den du vill behålla.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>1 bok till är på väg</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} böcker till är på väg</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Hämtar ljudet till dina böcker</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Några böcker gick inte att hämta</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnemang i butiken</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Köp · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan inte kontrollera ditt abonnemang</value></data>

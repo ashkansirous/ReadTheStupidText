@@ -153,6 +153,11 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 	});
 
+	/// <summary>Slice 459: the first run's background queue (the other ticked books, then the other languages' packs); the store client owns it so it outlives the picker.</summary>
+	public BackgroundBooks Background => LazyInitializer.EnsureInitialized(ref _background, () => new BackgroundBooks(this));
+
+	private BackgroundBooks? _background;
+
 	/// <summary>What the app sells and what the store account owns (Slice 346).</summary>
 	public BookSales Sales => sales;
 
@@ -332,15 +337,22 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// <summary>
 	/// Downloads the story's package, reporting 0..1 progress, and imports it. A story already on the shelf is not fetched again, and a
 	/// second call for a story still downloading joins the first. On any failure nothing is left on the shelf.
+	/// Slice 459: an entry whose task already ended (finished, failed or cancelled) is removed before the lookup, so it is never joined. A caller that joins a run does not install packs: after a book lands, the caller installs
+	/// the packs it needs itself (<see cref="EnsurePackAsync"/>). <paramref name="packLanguages"/> narrows the packs a fresh run fetches (the first book asks for its main language only).
 	/// </summary>
-	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore = null)
+	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore = null, IReadOnlyList<string>? packLanguages = null)
 	{
 		Task<DownloadOutcome> task;
 		lock (_inFlight)
 		{
+			if (_inFlight.TryGetValue(item.Id, out task!) && task.IsCompleted)
+			{
+				_inFlight.Remove(item.Id);
+			}
+
 			if (!_inFlight.TryGetValue(item.Id, out task!))
 			{
-				task = RunDownloadAsync(item, progress, cancel, waitingForStore);
+				task = RunDownloadAsync(item, progress, cancel, waitingForStore, packLanguages);
 				_inFlight[item.Id] = task;
 			}
 		}
@@ -386,7 +398,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		Debug.WriteLine($"Dino Reader store download error kind for {itemId}: {known}");
 	}
 
-	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore)
+	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore, IReadOnlyList<string>? packLanguages)
 	{
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"{item.Id}-{Guid.NewGuid():N}{PartExtension}");
 		_downloadErrors.TryRemove(item.Id, out _);
@@ -400,7 +412,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 			await SettlePurchasesAsync(cancel);
 
-			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, StoryLanguages.Current().All);
+			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, packLanguages ?? StoryLanguages.Current().All); // Slice 459: the first book asks for its main-language pack only; the rest follow in the background queue
 			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
 			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
 			PictureSize size = await FetchBookPackageRetryingLagAsync(item, part, summed, waitingForStore, cancel);
@@ -633,6 +645,55 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 
 		return allOk;
+	}
+
+	/// <summary>Slice 459: installs the pack of <paramref name="language"/> for a book already on the shelf; <see cref="PackInstall.NotFound"/> when the listing offers none (the first book then opens without it).</summary>
+	public Task<PackInstall> EnsurePackAsync(StoreItem item, string language, CancellationToken cancel) =>
+		WantedPacks(item, [language]).FirstOrDefault() is { Pack: not null } wanted
+			? InstallPackAsync(item, wanted.Language, wanted.Pack, cancel)
+			: Task.FromResult(PackInstall.NotFound);
+
+	/// <summary>Slice 459 (kill recovery): of <paramref name="bookIds"/>, those on the shelf whose <paramref name="language"/> pack is not installed although the listing offers one.</summary>
+	public async Task<IReadOnlyList<string>> BooksMissingPackAsync(IEnumerable<string> bookIds, string language)
+	{
+		HashSet<string> onShelf = await InstalledIdsAsync();
+		return bookIds.Where(id => onShelf.Contains(id) && packs.InstalledVersion(id, language) is null && ListedItem(id) is { } item && WantedPacks(item, [language]).Count > 0).ToList();
+	}
+
+	/// <summary>Slice 459: after a kill, a leftover <c>.part</c> of <paramref name="bookId"/> is deleted before its prefetch starts from zero; nothing is touched while that book's download is in flight.</summary>
+	public void DeleteLeftoverParts(string bookId)
+	{
+		lock (_inFlight)
+		{
+			if (_inFlight.ContainsKey(bookId))
+			{
+				return;
+			}
+		}
+
+		string folder = Path.Combine(FileSystem.CacheDirectory, DownloadFolder);
+		if (!Directory.Exists(folder))
+		{
+			return;
+		}
+
+		foreach (string leftover in Directory.EnumerateFiles(folder, $"{bookId}-*{PartExtension}").Where(path => LeftoverParts.IsPartOf(Path.GetFileName(path), bookId)))
+		{
+			TryDelete(leftover);
+		}
+	}
+
+	/// <summary>Slice 459 (Decision 1: untick of the prefetched book "cancels and deletes it"): removes a book this run put on the shelf, with its packs.</summary>
+	public async Task RemoveFromShelfAsync(string bookId)
+	{
+		IReadOnlyList<Story> shelf = await library.ListAsync();
+		foreach (Story story in shelf.Where(s => string.Equals(s.SourceId, bookId, StringComparison.OrdinalIgnoreCase)))
+		{
+			await library.DeleteAsync(story.Id);
+		}
+
+		await packs.DeleteBookAsync(bookId);
+		LibraryChanged?.Invoke(this, EventArgs.Empty);
 	}
 
 	/// <summary>Installs one pack of a shelf book and says exactly what happened (Slice 262: the shelf audio run maps NotFound and Failed differently).</summary>

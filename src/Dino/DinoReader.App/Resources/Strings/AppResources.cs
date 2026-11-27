@@ -483,6 +483,10 @@ public static class AppResources
 	public static string Sub_BannerTitle => Get();
 	public static string Sub_BannerBody_Other => Get();
 	public static string Sub_BannerBody_One => Get();
+	public static string FirstBooks_Queue_One => Get();
+	public static string FirstBooks_Queue_Other => Get();
+	public static string FirstBooks_Queue_Audio => Get();
+	public static string FirstBooks_Queue_Failed => Get();
 	public static string Sub_BannerPlans => Get();
 	public static string Sub_BuyPrice => Get();
 	public static string Sub_OfflineTitle => Get();

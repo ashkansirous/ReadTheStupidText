@@ -65,6 +65,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	private readonly StoreClient _store;
 	private readonly IStoryLibrary _library;
 	private readonly UsageCounter _usage;
+	private readonly FirstBookPrefetch _prefetch; // Slice 459: the first book may already be on its way (started in the intro)
 	private readonly BusyGuard _busy = new();
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
@@ -84,11 +85,12 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	private Size _windowSize;
 	private OnboardingShape? _shape;
 
-	public FirstBooksPage(StoreClient store, IStoryLibrary library, UsageCounter usage)
+	public FirstBooksPage(StoreClient store, IStoryLibrary library, UsageCounter usage, FirstBookPrefetch prefetch)
 	{
 		_store = store;
 		_library = library;
 		_usage = usage;
+		_prefetch = prefetch;
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Cream);
@@ -222,7 +224,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 				return;
 			}
 
-			StoreListing listing = await ListWithWaitAsync();
+			StoreListing listing = _prefetch.Listing is { } cached ? new StoreListing(StoreLoadStatus.Ok, cached) : await ListWithWaitAsync(); // Slice 459: the prefetch already read the list
 			if (listing.Status == StoreLoadStatus.Offline)
 			{
 				ShowLoadCopy(FirstBooksLoadCopy.ForOfflineListing(listing.Error?.Kind)); // Slice 453: a server error or bad body is a failed load, not "offline"
@@ -357,6 +359,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		{
 			_ticked.Remove(id);
 			_tickOrder.Remove(id);
+			_untickDone = ChainUntickAsync(_untickDone, id); // Slice 459 (Decision 1): the prefetched book is cancelled and deleted; untick removals run one at a time and Continue waits for them (check pass #2)
 		}
 
 		card.SetPicked(picked);
@@ -364,6 +367,32 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		LogState("picked");
 	}
 
+	private Task _untickDone = Task.CompletedTask; // the last untick removal in flight; it never faults (UntickPrefetchAsync catches)
+
+	private async Task ChainUntickAsync(Task previous, string id)
+	{
+		await previous;
+		await UntickPrefetchAsync(id);
+	}
+
+	private async Task UntickPrefetchAsync(string id)
+	{
+		try
+		{
+			await _prefetch.OnUntickAsync(id);
+			if (string.Equals(id, FirstBookPrefetch.BookId, StringComparison.OrdinalIgnoreCase))
+			{
+				await ReadShelfAsync(); // a landed prefetch was removed from the shelf: the page's shelf view follows
+			}
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: removing an unticked prefetch is best effort; a copy left on the shelf is just a book the family has
+			Debug.WriteLine($"Dino Reader could not remove the unticked first book: {ex.Message}");
+		}
+	}
+
+	// Slice 459: the wait covers only the first book (the prefetched one, else the first ticked) and its main-language pack; once it is on the shelf the shelf opens with it playable and the rest goes on in the background queue.
 	private async Task ContinueAsync()
 	{
 		if (!FirstBooks.CanContinue(_ticked.Count))
@@ -371,23 +400,29 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		IReadOnlyList<StoreItem> toFetch = FirstBooks.ToDownload(_items, _ticked, _onShelf);
 		try
 		{
-			if (await DownloadAsync(toFetch))
-			{
-				await ReadShelfAsync();
-			}
-			else
+			if (!await AwaitUntickRemovalAsync())
 			{
 				return;
 			}
 
-			if (FirstBooks.IsSatisfied(_shelfCount))
+			FirstBookPlan plan = FirstBooks.PlanContinue(_tickOrder, _onShelf, FirstBookPrefetch.BookId, _prefetch.State, StoryLanguages.Current().All, _prefetch.Language);
+			if (plan.First?.Source != FirstBookSource.JoinPrefetch)
 			{
-				FirstBooksGate.FirstPick = _tickOrder.FirstOrDefault(); // set only once the books are on the shelf: the first book still ticked, in tick order, is the intro's "Try it"
-				await FinishAsync();
+				_prefetch.CancelRun(); // a prefetch for another main language (or one not joined) is stopped; the normal path below fetches what this Continue needs
 			}
+
+			if (plan.First is not { } first || !await GetFirstBookAsync(first))
+			{
+				return;
+			}
+
+			await ReadShelfAsync();
+			FirstBooksGate.FirstPick = _tickOrder.FirstOrDefault(); // set only once the first book is on the shelf: the first book still ticked, in tick order, is the intro's "Try it"
+			_store.Background.Start(plan.Background, first.MainLanguage);
+			_prefetch.HandOver(); // Slice 459 (check pass #7): the first book is the parent's now; an untick in a later run of this picker never deletes it
+			await FinishAsync();
 		}
 		finally
 		{
@@ -399,31 +434,115 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	// False when the grown-up cancelled or a book failed: the ticks stay, a book that landed stays on the shelf (and ticked), and Continue fetches what is missing.
-	private async Task<bool> DownloadAsync(IReadOnlyList<StoreItem> toFetch)
+	// Slice 459 (check pass #2): an untick removal in flight finishes (and the shelf view follows) before the plan reads the shelf and the prefetch; a slow one shows the getting page, so Continue never looks dead.
+	// Slice 459 (check 3 #1, #2): Cancel and Back cancel the wait through _downloadCancel, as the download wait does; the removal keeps running in the background. False when cancelled (the picker returns).
+	private async Task<bool> AwaitUntickRemovalAsync()
 	{
-		_waitCovers = new FirstBooksWaitCovers(toFetch.Select(CoverOf));
+		if (_untickDone.IsCompleted)
+		{
+			return true;
+		}
+
+		string? firstId = _tickOrder.FirstOrDefault();
+		StoreItem? firstItem = _items.FirstOrDefault(i => string.Equals(i.Id, firstId, StringComparison.OrdinalIgnoreCase));
+		_waitCovers = new FirstBooksWaitCovers(firstItem is null ? [] : [CoverOf(firstItem)]);
+		using CancellationTokenSource linked = new();
+		_downloadCancel = linked;
+		ShowGetting(_waitCovers);
+		try
+		{
+			await _untickDone.WaitAsync(linked.Token);
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the grown-up pressed Cancel; the picker shows again, nothing failed
+			return false; // the grown-up cancelled; the removal goes on without the wait
+		}
+		finally
+		{
+			_downloadCancel = null;
+		}
+	}
+
+	// False when the grown-up cancelled or the book failed: the ticks stay, a book that landed stays on the shelf (and ticked), and Continue fetches what is missing.
+	private async Task<bool> GetFirstBookAsync(FirstBookStep first)
+	{
+		StoreItem? item = _items.FirstOrDefault(i => string.Equals(i.Id, first.BookId, StringComparison.OrdinalIgnoreCase));
+		if (item is null)
+		{
+			ShowLoadCopy(FirstBooksLoadCopy.ForFailure()); // Slice 459 (check pass #2): listing and cache disagree; the load-failed copy with Try again, never a silent return
+			return false;
+		}
+
+		_waitCovers = new FirstBooksWaitCovers([CoverOf(item)]);
 		using CancellationTokenSource linked = new();
 		_downloadCancel = linked; // set before the page shows, so a connectivity event at once re-words it; Back and the page's Cancel both cancel through this
 		long started = Stopwatch.GetTimestamp();
 		ShowGetting(_waitCovers);
 		try
 		{
-			for (int i = 0; i < toFetch.Count; i++)
-			{
-				if (!await FetchOneAsync(toFetch, i, linked.Token))
-				{
-					return false;
-				}
-			}
-
-			return true;
+			bool packEnded = await FetchFirstAsync(item, first, linked.Token);
+			return FirstBooks.IsFirstBookReady(_onShelf.Contains(item.Id), packEnded); // the pack's end is part of every branch: a failed pack keeps the book (as today), a failed book is not ready
 		}
 		finally
 		{
 			_downloadCancel = null;
 			CountGettingWait(Stopwatch.GetElapsedTime(started), linked.IsCancellationRequested);
 		}
+	}
+
+	private async Task<bool> FetchFirstAsync(StoreItem item, FirstBookStep first, CancellationToken cancel)
+	{
+		if (first.Source == FirstBookSource.JoinPrefetch && await JoinPrefetchAsync(cancel))
+		{
+			LandedFirst(item);
+			return true;
+		}
+
+		if (cancel.IsCancellationRequested)
+		{
+			return false;
+		}
+
+		if (first.Source == FirstBookSource.OnShelf)
+		{
+			await _store.EnsurePackAsync(item, first.MainLanguage, cancel); // a pack failure keeps the book: it opens without that sound and the pack repair retries it
+			return !cancel.IsCancellationRequested;
+		}
+
+		return await FetchOneAsync(item, first.MainLanguage, cancel);
+	}
+
+	// Waits for the prefetch with the page's own wait and the prefetch's progress; false when it did not land (failed, cancelled, or this wait was cancelled): the normal path then runs, never a join of a dead one.
+	private async Task<bool> JoinPrefetchAsync(CancellationToken cancel)
+	{
+		Action<double> onProgress = fraction => MainThread.BeginInvokeOnMainThread(() => ShowProgress(0, 1, fraction));
+		_prefetch.ProgressChanged += onProgress;
+		try
+		{
+			ShowProgress(0, 1, _prefetch.Progress);
+			return await _prefetch.WaitAsync(cancel) == PrefetchState.Landed;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the grown-up's Cancel or Back on the first-book wait stops the prefetch too (landed books stay)
+			_prefetch.CancelRun();
+			LogState("cancelled");
+			return false;
+		}
+		finally
+		{
+			_prefetch.ProgressChanged -= onProgress;
+		}
+	}
+
+	private void LandedFirst(StoreItem item)
+	{
+		_onShelf.Add(item.Id);
+		_waitCovers?.SetLanded(1);
+		_usage.RecordStoreDownload(item, ageFilterSet: false, authorFilterSet: false);
+		LogState("landed");
 	}
 
 	// Slice 148 counted every wait that showed and every Cancel on one; the getting page is a page, not the shared overlay, so it reports the same two counts itself (only when it stayed 500 ms or more).
@@ -442,17 +561,15 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	private async Task<bool> FetchOneAsync(IReadOnlyList<StoreItem> toFetch, int index, CancellationToken cancel)
+	private async Task<bool> FetchOneAsync(StoreItem item, string mainLanguage, CancellationToken cancel)
 	{
-		ShowProgress(index, toFetch.Count, 0);
-		DownloadOutcome outcome = await _store.DownloadAsync(toFetch[index], new Progress<double>(p => ShowProgress(index, toFetch.Count, p)), cancel);
+		ShowProgress(0, 1, 0);
+		DownloadOutcome outcome = await _store.DownloadAsync(item, new Progress<double>(p => ShowProgress(0, 1, p)), cancel, packLanguages: [mainLanguage]);
 		if (outcome == DownloadOutcome.Done)
 		{
-			_onShelf.Add(toFetch[index].Id);
-			_waitCovers?.SetLanded(index + 1);
-			_usage.RecordStoreDownload(toFetch[index], ageFilterSet: false, authorFilterSet: false);
-			LogState("landed");
-			return true;
+			LandedFirst(item);
+			await _store.EnsurePackAsync(item, mainLanguage, cancel); // Slice 459 (check pass #1): a joined run may not have fetched the main pack; a failed pack keeps the book, as today
+			return !cancel.IsCancellationRequested;
 		}
 
 		LogState(outcome == DownloadOutcome.Cancelled ? "cancelled" : "failed");

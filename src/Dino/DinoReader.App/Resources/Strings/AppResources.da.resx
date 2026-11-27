@@ -446,6 +446,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Dit abonnement er udløbet</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} bøger er låst. Dit barn kan ikke se dem. Abonnér igen, eller køb dem, du vil beholde.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 bog er låst. Dit barn kan ikke se den. Abonnér igen, eller køb den, du vil beholde.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>1 bog mere er på vej</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} bøger mere er på vej</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Henter lyden til dine bøger</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Nogle bøger kunne ikke hentes</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Se abonnementer i butikken</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Køb · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Kan ikke tjekke dit abonnement</value></data>

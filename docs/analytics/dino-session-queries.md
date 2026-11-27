@@ -97,3 +97,7 @@ ORDER BY double6
 ```
 
 The timeline of one launch, with the screen and the button presses in time order: `tools/usage-sessions/usage-sessions.mjs session <32 hex>`; a day's summary (launches, where they stopped in the wizard, how many reached a read, how many listened 30 s): `tools/usage-sessions/usage-sessions.mjs day <yyyy-mm-dd>`. Both read the token from `D:\secrets` at run time and print nothing secret.
+
+## First-book wait before and after Slice 459
+
+The first-run `first_books` screen waits only for the first book (prefetched during the intro) since Slice 459; `wait_shown` keeps its `getting_file:<bucket>` details (`>20`, `10-20`, `5-10`...), so the 19-26 Nov counts compare directly. Ninjalog (`dino_usage`): `index=dino_usage event=wait_shown screen=first_books detail=getting_file:* | stats dc(session) by detail, version`. Real first launches with `getting_file:>20` should be rare after the release (14 in 19-26 Nov) and `10-20` should shrink with them.

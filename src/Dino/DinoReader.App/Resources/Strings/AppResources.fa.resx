@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>اشتراک شما تمام شد</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} کتاب قفل است. فرزندت آن‌ها را نمی‌بیند. دوباره مشترک شو، یا کتاب‌هایی را که می‌خواهی نگه داری بخر.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>۱ کتاب قفل است. فرزندت آن را نمی‌بیند. دوباره مشترک شو، یا کتابی را که می‌خواهی نگه داری بخر.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>۱ کتاب دیگر در راه است</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} کتاب دیگر در راه است</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>صدای کتاب‌هایت در حال گرفتن است</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>گرفتن بعضی از کتاب‌ها شدنی نبود</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>دیدن طرح‌ها در فروشگاه</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>خرید · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>اشتراکت را نمی‌شود بررسی کرد</value></data>

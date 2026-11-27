@@ -3,13 +3,17 @@
 # (Slice 362; "Ready to read" before it; Slice 278 part B: there is no voice download). Slice 362: The Three Little Pigs (card 0) is ticked at the start, so one more tick is the second and unticking it brings the count back to one.
 # Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
 # expect-log: HOOK test-store ok slow
-# expect-log: [FirstBooks] list listed=4 ticked=1 onShelf=0
+# Slice 459: the pre-ticked first book starts downloading when the story languages step is saved, so the list may already show it on the shelf (onShelf=0 or 1: the markers stop before it); Continue then
+# waits for the first book only and the rest of the ticked books come in the background queue (done onShelf=1; the second book lands after the shelf opens). Against the old behaviour no [Prefetch] line prints.
+# expect-log: [Prefetch] start Begin
+# expect-log: [FirstBackground] queue add jobs=1
+# expect-log: [FirstBackground] job Package Done
+# expect-log: [FirstBooks] list listed=4 ticked=1
 # expect-log: [FirstBooks] picked listed=4 ticked=0
 # expect-log: [FirstBooks] picked listed=4 ticked=1
 # expect-log: [FirstBooks] picked listed=4 ticked=2
 # expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=1
-# expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=2
-# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=2
+# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=1
 appId: uk.sirous.dinoreader.dbg
 name: First run asks for two books from the store
 ---

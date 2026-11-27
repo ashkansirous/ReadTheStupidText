@@ -70,7 +70,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IBookPurchases>(services => services.GetRequiredService<SwitchablePurchases>());
 		builder.Services.AddSingleton<BookPurchases>();
 		builder.Services.AddSingleton<BookSales>(); // the one place that knows whether books are sold (remote switch) and holds the store's proofs
-		builder.Services.AddSingleton<StoreClient>();
+		builder.Services.AddSingleton<StoreClient>(services =>
+		{
+			StoreClient client = ActivatorUtilities.CreateInstance<StoreClient>(services);
+			client.Background.BookLanded += item => services.GetRequiredService<UsageCounter>().RecordStoreDownload(item, ageFilterSet: false, authorFilterSet: false); // Slice 459: a book the background queue lands counts as a store download, like the ones the picker fetched
+			return client;
+		});
+		builder.Services.AddSingleton<FirstBookPrefetch>(); // Slice 459: the one owner of the first book's prefetch (started when the intro's story language is saved)
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
 		builder.Services.AddSingleton<Sirous.Reading.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the reading session and the app's own code report fallbacks through it

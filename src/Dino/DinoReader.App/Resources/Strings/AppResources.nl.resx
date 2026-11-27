@@ -446,6 +446,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Je abonnement is afgelopen</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} boeken zijn vergrendeld. Je kind ziet ze niet. Neem opnieuw een abonnement of koop de boeken die je wilt houden.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 boek is vergrendeld. Je kind ziet het niet. Neem opnieuw een abonnement of koop het boek dat je wilt houden.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>Nog 1 boek onderweg</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>Nog {0} boeken onderweg</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Het geluid van je boeken wordt opgehaald</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Sommige boeken konden niet worden opgehaald</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Bekijk de abonnementen in de winkel</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Kopen · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Je abonnement kan niet worden gecontroleerd</value></data>
