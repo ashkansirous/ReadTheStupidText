@@ -17,7 +17,7 @@
 
 **Touches:** `src/Dino/DinoReader.App/StorePage.xaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs` (`ApplySubscriptionCard`), `src/Dino/DinoReader.Core/SubscriptionAccess.cs`, `src/Dino/DinoReader.Core/SubscriptionCard.cs` (new, pure), `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/Purchases/**`, `src/Dino/DinoReader.App/Platforms/iOS/StoreKit2/**` (`DinoStoreKit.swift`, item 3), `src/Dino/DinoReader.App/Platforms/Windows/Purchases/**`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/Testing/**` (`FakePurchases`), `.maestro/dino/subscription.yaml`, `tests/Dino/DinoReader.Tests/**`, `docs/plan/slices/397-dino-subscription-card-states.md`
 
-*Built 2026-11-27, PR #1420 (merge pending): item 3 (iOS per-account trial eligibility) built; items 1, 2, 4, 5, 5b, 6, 7 were built earlier. Not compiled on a Mac (see Not yet verified).*
+*Built 2026-11-27, merged as PR #1420 (7f251b74): item 3 (iOS per-account trial eligibility) built; items 1, 2, 4, 5, 5b, 6, 7 were built earlier. Not compiled on a Mac (see Not yet verified).*
 
 ## Why
 

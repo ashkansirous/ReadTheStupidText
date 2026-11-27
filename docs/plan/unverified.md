@@ -249,6 +249,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] **Device:** other direct `ReadAsStreamAsync` calls bypass the guard (`RemoteConfigClient.cs:287`, `SubscriptionEndClient:48`; small bodies, same hazard class, outside the slice's Touches): not routed through `OpenBodyAsync`. (live check 2026-11-27: failed, follow-up in Slice 400)
 
 ### Slice 397: Dino: the Store's subscription card in every state ([slice](slices/397-dino-subscription-card-states.md))
+- [cloud] **Device:** item 3's uncompiled Swift (`DinoStoreKit.swift` `eligible` via `isEligibleForIntroOffer`) and iOS C# (`IosPurchases.cs`): compile them on the macOS CI simulator, `.github/workflows/dinoreader-ios-sim.yml`; nothing in that workflow exercises the `eligible` field yet.
 - [session] **Device:** iOS compile of the Slice 397 changes: no Mac this run.
 - [phone] **Device:** Windows head build of the Slice 397 changes (wide layout, Ctrl+R hint).
 - [phone] **Device:** layout of the card states on the emulator: no Maestro flow carries a `# layout-check` header, so only titles and log lines were checked.
