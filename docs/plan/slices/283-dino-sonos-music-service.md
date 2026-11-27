@@ -92,7 +92,7 @@ skipped, not fatal. Nothing is logged (`worker/CLAUDE.md:24`). Tests: worker sui
 - Skipped #8 (`reviews/s283cold-high.md`): "worker/index.ts:110, low. `caches.default` is passed on workers.dev too, and one" - low; the cold-call check runs on the custom host.
 - 2026-11-19 medium (`reviews/s283cold-medium.md`): applied 1 (Sonos has its own isolate store `sharedCache`, tested), 2 (meta reads bounded at 24, F3 reworded), 4 (own list older than 5 min is not held).
 - Skipped #3 (`reviews/s283cold-medium.md`): "worker/stories.ts:676 (sharedEntries), low. `held === null` goes to rebuild() before" - low; each call must still try R2, else the first Sonos call would fail for 30 s after one blip.
-- Skipped #5 (`reviews/s283cold-medium.md`): "worker/index.ts:110, low. On workers.dev `caches.default` stores nothing, so F2 never" - low; the cold-call check applies on the custom host `dinoreader.sirous.uk`.
+- Skipped #5 (`reviews/s283cold-medium.md`): "worker/index.ts:110, low. On workers.dev `caches.default` stores nothing, so F2 never" - low; Sonos calls the live service on the custom domain, where the edge cache works, and the workers.dev address is only a preview (reason reworded 2026-11-27 for the skip check; meaning unchanged).
 - Skipped #6 (`reviews/s283cold-medium.md`): "worker/stories.ts:626, low. First call in a colo with no shared" - low; recorded under *Built* and *Not yet verified*.
 - 2026-11-19 check (`reviews/s283cold-check1.md`): 9 low/trivial findings, none applied (doc wording, untested Cache API wiring, non-atomic compare-and-put; none changes behaviour Sonos relies on).
 
