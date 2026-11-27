@@ -450,6 +450,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Your subscription ended</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} books are locked. Your child doesn’t see them. Subscribe again, or buy the ones you want to keep.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 book is locked. Your child doesn’t see it. Subscribe again, or buy the one you want to keep.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>1 more book is on its way</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} more books are on their way</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Getting the audio for your books</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Some books could not be downloaded</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>See plans in the Store</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Buy · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Can’t check your subscription</value></data>

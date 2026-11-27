@@ -446,6 +446,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Tilauksesi päättyi</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} kirjaa on lukittu. Lapsesi ei näe niitä. Tilaa uudelleen tai osta ne, jotka haluat säilyttää.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 kirja on lukittu. Lapsesi ei näe sitä. Tilaa uudelleen tai osta se, minkä haluat säilyttää.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>1 kirja on vielä tulossa</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} kirjaa on vielä tulossa</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Haetaan kirjojesi ääntä</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Joitakin kirjoja ei voitu ladata</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Katso tilaukset kaupasta</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Osta · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Tilausta ei voi tarkistaa</value></data>

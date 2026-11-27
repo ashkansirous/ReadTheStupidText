@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>انتهى اشتراكك</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} كتب مقفلة. طفلك لا يراها. اشترك مرة أخرى، أو اشترِ الكتب التي تريد الاحتفاظ بها.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>كتاب واحد مقفل. طفلك لا يراه. اشترك مرة أخرى، أو اشترِ الكتاب الذي تريد الاحتفاظ به.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>كتاب واحد آخر في الطريق</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>{0} كتب أخرى في الطريق</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>جارٍ تحميل الصوت لكتبك</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>تعذّر تنزيل بعض الكتب</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>عرض الخطط في المتجر</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>شراء · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>تعذّر التحقق من اشتراكك</value></data>

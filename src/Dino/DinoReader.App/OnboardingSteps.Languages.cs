@@ -138,6 +138,7 @@ public sealed class OnboardingLanguagesPage : ContentPage, IDinoKeyTarget
 		}
 
 		FirstBooksGate.StoryLanguagesPending = false; // the pick is saved first; a kill from here reopens on the book picker
+		_services.GetRequiredService<FirstBookPrefetch>().Start(set.Main); // Slice 459: the pre-ticked first book starts downloading while the grown-up is still on the intro steps
 		OnboardingUsage.StepDone(_usage, OnboardingStep.StoryLanguages, tried: set.Sides.Count > 0);
 		await ShowBooksAsync();
 	}

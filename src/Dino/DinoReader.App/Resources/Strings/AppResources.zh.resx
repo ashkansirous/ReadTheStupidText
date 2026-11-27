@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>你的订阅已结束</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>有 {0} 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的书。</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>有 1 本书已锁定，孩子看不到。请重新订阅，或购买你想保留的那本。</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>还有 1 本书正在路上</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>还有 {0} 本书正在路上</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>正在获取你的书的语音</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>有些书没能下载</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>在商店查看方案</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>购买 · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>无法检查你的订阅</value></data>

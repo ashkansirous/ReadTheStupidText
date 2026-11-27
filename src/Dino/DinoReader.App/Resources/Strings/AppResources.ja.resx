@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>定期購入が終了しました</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0}冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1冊の本がロックされています。お子さまには表示されません。もう一度定期購入するか、残したい本を購入してください。</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>あと1冊の本が届きます</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>あと{0}冊の本が届きます</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>本の音声を取得しています</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>取得できなかった本があります</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>ストアでプランを見る</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>購入 · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>定期購入を確認できません</value></data>

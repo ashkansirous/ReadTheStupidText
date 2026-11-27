@@ -1,0 +1,59 @@
+# Slice 459: the pre-ticked first book (The Three Little Pigs) starts downloading when the story languages step is saved; on the picker Continue waits for that one book only (joining the prefetch), the shelf side of the
+# first run opens, and the second ticked book comes in the background queue. Pigs is left ticked here (first-books-picker.yaml unticks it), so Continue joins the prefetch instead of starting a download. Against the old
+# behaviour (nothing downloads before Continue, every ticked book is waited for) none of the [Prefetch] or [FirstBackground] lines print and "done" shows onShelf=2.
+# Not run here: the 1 Mbit/s throttled runs on the S21, iOS and the Windows VM that the slice's Verification names are the device stage's.
+# expect-log: HOOK test-store ok slow
+# expect-log: [Prefetch] start Begin
+# expect-log: [Prefetch] downloading
+# expect-log: [Prefetch] ended Landed
+# expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=1
+# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=1
+# expect-log: [FirstBackground] queue add jobs=1
+# expect-log: [FirstBackground] job Package Done
+appId: uk.sirous.dinoreader.dbg
+name: The first book opens before the other ticked books arrive
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: slow
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+# The Slice 183 "keep downloading when locked?" sheet shows on a fresh install on some devices; dismissed when it is there.
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+# Continue saves the story languages: the prefetch of the pre-ticked first book starts here.
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+# Pigs (card 0) stays ticked; card 1 is the second pick.
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+# The first run goes on to the listen step as soon as the first book is in, without waiting for card 1's book.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- assertNotVisible:
+    id: FirstBooksPicker

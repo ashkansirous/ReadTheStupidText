@@ -7,8 +7,8 @@
 # expect-log: HOOK test-store ok ok
 # expect-log: [Redesign] onboarding page=language shape=stack
 # expect-log: [Redesign] onboarding page=languages shape=stack
-# expect-log: [FirstBooks] list listed=4 ticked=1 onShelf=0
-# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=2
+# expect-log: [FirstBooks] list listed=4 ticked=1
+# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=1
 # expect-log: [Onboarding] listen enter kind=Listen page=13
 # expect-log: [Onboarding] listen page-ended continue=True
 # expect-log: [Onboarding] voice record opened lines=1

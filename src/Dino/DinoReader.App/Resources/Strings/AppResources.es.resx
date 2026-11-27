@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Tu suscripción terminó</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>{0} libros están bloqueados. Tu hijo no los ve. Suscríbete de nuevo o compra los que quieras conservar.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 libro está bloqueado. Tu hijo no lo ve. Suscríbete de nuevo o compra el que quieras conservar.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>Viene 1 libro más</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>Vienen {0} libros más</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Descargando el audio de tus libros</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>No se pudieron descargar algunos libros</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Ver planes en la tienda</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Comprar · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>No se puede comprobar tu suscripción</value></data>

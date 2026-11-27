@@ -447,6 +447,10 @@
   <data name="Sub_BannerTitle" xml:space="preserve"><value>Подписка закончилась</value></data>
   <data name="Sub_BannerBody_Other" xml:space="preserve"><value>Закрыто книг: {0}. Ребёнок их не видит. Оформите подписку снова или купите те, которые хотите сохранить.</value></data>
   <data name="Sub_BannerBody_One" xml:space="preserve"><value>1 книга закрыта. Ребёнок её не видит. Оформите подписку снова или купите ту, которую хотите сохранить.</value></data>
+  <data name="FirstBooks_Queue_One" xml:space="preserve"><value>Ещё одна книга в пути</value></data>
+  <data name="FirstBooks_Queue_Other" xml:space="preserve"><value>Книг в пути: {0}</value></data>
+  <data name="FirstBooks_Queue_Audio" xml:space="preserve"><value>Загружается звук для твоих книг</value></data>
+  <data name="FirstBooks_Queue_Failed" xml:space="preserve"><value>Некоторые книги не удалось загрузить</value></data>
   <data name="Sub_BannerPlans" xml:space="preserve"><value>Смотреть тарифы в магазине</value></data>
   <data name="Sub_BuyPrice" xml:space="preserve"><value>Купить · {0}</value></data>
   <data name="Sub_OfflineTitle" xml:space="preserve"><value>Не удаётся проверить подписку</value></data>
