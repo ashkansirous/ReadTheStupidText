@@ -314,6 +314,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 452 | Dino: sound pill device check hook and Part B leftovers | built (iOS simulator run and mock comparison in unverified.md) | #1407 | | [452-dino-sound-pill-device-check-hook.md](../slices/452-dino-sound-pill-device-check-hook.md) |
 | 447 | Dino story skill: true-size line-up script and accepted-page save guard | built (one real Gemini save in unverified.md) | #1414 | | [447-dino-story-skill-lineup-script-and-save-guard.md](../slices/447-dino-story-skill-lineup-script-and-save-guard.md) |
 | 455 | Dino: buy, restore and subscription outcome events | built (device and log checks in unverified.md) | #1408 | | [455-dino-purchase-outcome-events.md](../slices/455-dino-purchase-outcome-events.md) |
+| 438 | Dino: every Sonos home links once through the Dino app and saves its story language | built | #1416 | — | [438-dino-sonos-link-story-language.md](../slices/438-dino-sonos-link-story-language.md) |
 
 ## Shared
 
@@ -450,6 +451,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 354 | Feedback loop 2026-11-12-1337 leftovers (TestFlight upload check, Mac runner wait, flow and package checks, Slice 346 switch-on fixes, Gemini helper residuals) | built and closed 2026-11-25 (merged #1129 d913e91e; items 3, 6, 8, 12, 13, 17 built in Slice 376, Slice 346 and ClaudeSkills #323/#212/#221; item 9 is a [phone] line in unverified.md) | #1129 | | [354-feedback-loop-2026-11-12-1337-leftovers.md](../slices/354-feedback-loop-2026-11-12-1337-leftovers.md) |
 | 374 | Store listings in the other 13 app languages for both apps on Play, App Store and Microsoft Store (machine-translated, pushed at once; native reads go to unverified) | done 2026-11-25 (Play and App Store pushed #1110, Dino Microsoft Store 13 languages read back, RTST Microsoft listings built into the release submission #1115; RTST read-back is a Watch line) | #1096, #1110 | | [374-store-listings-13-languages.md](../slices/374-store-listings-13-languages.md) |
 | 393 | Feedback loop 2026-11-14-1547 leftovers (review-skip checker, skips and follow-ups only in PR bodies, phone lease quirks, low-memory snapshot, listening-page precheck, brief guard prompt, store_unreachable on the emulator, VM first-run chain, 291 shot retake, 384 and 291 deep links) | done 2026-11-25 (own work built in #1242, #1248 and ClaudeSkills #323; device proofs of items 13, 14, 15, 23 stay in unverified.md; ClaudeSkills items moved out; harness follow-ups are Slice 442) | #1184, #1242, #1248 | | [393-feedback-loop-2026-11-14-1547-leftovers.md](../slices/393-feedback-loop-2026-11-14-1547-leftovers.md) |
+| 448 | tools/phone runs the .maestro/dino flows on a real phone | built | #1415 | — | [448-tools-phone-runs-maestro-dino-flows.md](../slices/448-tools-phone-runs-maestro-dino-flows.md) |
 
 ## Batch ordering notes
 

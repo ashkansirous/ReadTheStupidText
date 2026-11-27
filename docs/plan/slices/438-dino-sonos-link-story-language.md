@@ -24,7 +24,7 @@ file. Widened at claim (wave 2026-11-27, premise check): `src/Dino/DinoReader.Ap
 after the build: the typed string keys and the scripted device flow),
 `docs/DEPLOYING.md` (the hand-applied D1 schema).
 
-*Built 2026-11-27 (wave 2026-11-27, PR #1416), not merged; Worker D1 table, iOS simulator and the S21 not yet verified (see Not yet verified).*
+*Built 2026-11-27 (wave 2026-11-27), merged as PR #1416 (e67b674a); Worker D1 table, iOS simulator and the S21 not yet verified (see Not yet verified).*
 
 ## Why
 
@@ -147,7 +147,7 @@ Also built: every Sonos call needs a linked home (fails closed; `Server.ServiceU
 - Skipped #3 (`reviews/pr-1416-check2.md`): "worker/sonos-link.ts:117, nit. getDeviceAuthToken upserts over a confirmed home, so anyone holding a household id plus the link code from getAppLink can replace the live token (victim's speaker gets AuthTokenExpired)." - a confirmed, unexpired code is the only way to replace a home's tokens; that is the relink the check-pass fix kept and tested in `worker/sonos-link.test.mjs`.
 - Third check (`reviews/pr-1416-check3.md`, 3 findings, none a crash or data loss) left open as low follow-ups, none fixed: `src/Dino/DinoReader.App/SonosLinkPage.xaml.cs:123` `_done` is set before `Launcher.OpenAsync`, so later Connect presses do nothing if the open failed; `SonosLinkPage.xaml.cs:137` a failed `Navigation.PopAsync` shows the failed line and leaves Connect dead; `SonosLinkPage.xaml.cs:38` `Load` drops a newer code that arrives mid-request. Also a low follow-up: a verified https app link instead of the custom scheme (high #10).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - Every Sonos SMAPI call needs a linked home (`worker/sonos-link.ts`, fails closed); the D1 schema `worker/schema/sonos-homes.sql` is applied by hand (`docs/DEPLOYING.md`). Already written in `worker/CLAUDE.md` by the builder (Slice 438: docs/plan/slices/438-dino-sonos-link-story-language.md); nothing more to lift.
 
