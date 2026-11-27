@@ -11,7 +11,10 @@
 
 **Touches:** `worker/sonos.ts`, `worker/sonos.test.mjs`, `worker/sonos-link.ts`, `worker/sonos-link.test.mjs`,
 `worker/entitlements/gate.ts`, `worker/sonos-labels.ts`, `src/Dino/DinoReader.App/SonosLinkPage.xaml.cs`, `PRIVACY.md`,
-`site/dino/privacy.html`, this file.
+`site/dino/privacy.html`, `src/Dino/DinoReader.App/Purchases/**`, `src/Dino/DinoReader.App/Platforms/Android/Purchases/**`,
+`src/Dino/DinoReader.App/Platforms/iOS/Purchases/**` (C4: re-send on renew or change), `tests/Dino/DinoReader.Tests/**`, this file.
+
+*In progress (wave 2026-11-27), draft PR.*
 
 ## Why
 
