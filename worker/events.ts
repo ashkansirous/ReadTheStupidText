@@ -253,6 +253,8 @@ interface EventRule {
   readonly seconds?: boolean;
   /** Slice 455: when set, the source the event's detail demands (a `purchase` about a book is a shelf count, every other one is about no book). */
   readonly sourceOf?: (detail: string) => string;
+  /** Slice 458: true for an event only the Worker writes (from a store's signed notification); `parseEvent` refuses it from an app's batch, `isStoreCount` is the check the Worker's own row passes. */
+  readonly serverOnly?: boolean;
 }
 
 const emptyDetail = (value: unknown): boolean => value === undefined || value === NO_DETAIL;
@@ -293,6 +295,25 @@ const fallbackDetail = (value: unknown): boolean => {
   const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
   return parts.length === 2 && oneOf(FALLBACK_AREAS, parts[0]) && oneOf(FALLBACK_REASONS, parts[1]);
 };
+
+// Slice 458: a store notification's detail is "<platform>.<kind>.<offer>", like "ios.trial_started.trial" or "android.book_bought.paid". Only the Worker writes it (EventRule.serverOnly), from a signed store notification.
+// The source says what the row is about: a book (shelf, with its id), a subscription plan, or none (a plan the Worker could not tell).
+const STORE_SEPARATOR = ".";
+export const STORE_PLATFORMS = ["android", "ios"] as const;
+export const STORE_SUBSCRIPTION_KINDS = ["trial_started", "subscribed", "converted", "renewed", "cancelled", "expired", "refunded", "grace", "billing_retry", "code_redeemed"] as const;
+export const STORE_BOOK_KINDS = ["book_bought", "book_refunded"] as const;
+export const STORE_OFFERS = ["trial", "paid", "code"] as const;
+export const STORE_BOOK_OFFER = "paid";
+export const PLAN_MONTHLY_SOURCE = "sub_monthly";
+export const PLAN_YEARLY_SOURCE = "sub_yearly";
+const STORE_PLAN_SOURCES = [PLAN_MONTHLY_SOURCE, PLAN_YEARLY_SOURCE] as const;
+const storeDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(STORE_SEPARATOR) : [];
+  if (parts.length !== 3 || !oneOf(STORE_PLATFORMS, parts[0])) return false;
+  if (oneOf(STORE_BOOK_KINDS, parts[1])) return parts[2] === STORE_BOOK_OFFER;
+  return oneOf(STORE_SUBSCRIPTION_KINDS, parts[1]) && oneOf(STORE_OFFERS, parts[2]);
+};
+const storeSource = (detail: string): string => (oneOf(STORE_BOOK_KINDS, detail.split(STORE_SEPARATOR)[1]) ? SHELF_SOURCE : NO_BOOK);
 
 // Slice 455: a purchase count's detail is "<what>.<outcome>" or, for a subscription, "<what>.<outcome>.<offer>", like "book.bought" or "sub_monthly.shown.trial". Every part comes from a closed list.
 const PURCHASE_SEPARATOR = ".";
@@ -361,6 +382,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   fallback: { sources: [...BOOK_SOURCES, NO_BOOK], detail: fallbackDetail, counts: true },
   // Slice 455: a buy, restore or code outcome (what.outcome[.offer]); a book's count names the book (shelf), every other one names none.
   purchase: { sources: [SHELF_SOURCE, NO_BOOK], detail: purchaseDetail, sourceOf: purchaseSource },
+  // Slice 458: a store's own notification (trial started, renewed, refunded...); written by the Worker only. A subscription row's source is its plan (or none), a book row's is shelf.
+  store: { sources: [SHELF_SOURCE, NO_BOOK, ...STORE_PLAN_SOURCES], detail: storeDetail, serverOnly: true },
   // Slice 352: where the app was and what was pressed; all about no book, closed lists only.
   screen: { sources: [NO_BOOK], detail: pairDetail(SCREENS, SCREEN_ACTIONS) },
   tap: { sources: [NO_BOOK], detail: pairDetail(SCREENS, CONTROLS) },
@@ -481,7 +504,7 @@ function isRealDay(value: unknown): value is string {
 // A shelf book is named by its package id; an own book never carries one, and a count about no book names none, so the source and the book must agree.
 function bookMatchesSource(book: unknown, source: unknown): book is string {
   if (source === OWN_BOOK) return book === OWN_BOOK;
-  if (source === NO_BOOK) return book === NO_BOOK;
+  if (source === NO_BOOK || oneOf(STORE_PLAN_SOURCES, source)) return book === NO_BOOK;
   return matches(STORY_ID_PATTERN, book);
 }
 
@@ -494,7 +517,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   if (!isRecord(raw)) return null;
   const { name, book, language, source, hasRecording, version, platform, day, sampleRate } = raw;
   const rule = ruleFor(name);
-  if (rule === null || !rule.detail(raw["detail"])) return null;
+  if (rule === null || rule.serverOnly === true || !rule.detail(raw["detail"])) return null;
   const detail = typeof raw["detail"] === "string" ? raw["detail"] : NO_DETAIL;
   const valid =
     typeof name === "string" &&
@@ -515,6 +538,13 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   const session = matches(SESSION_PATTERN, raw["session"]) ? raw["session"] : NO_SESSION;
   const seq = session !== NO_SESSION && isSeq(raw["seq"]) ? raw["seq"] : NO_SEQ;
   return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts && rule.deviceCount !== false ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT, ...contextOf(raw) };
+}
+
+/** Slice 458: true when the Worker's own `store` count is well formed: a closed detail, the source that detail demands (a book kind names a shelf book, a subscription kind a plan or none) and a book that matches its source. */
+export function isStoreCount(event: Pick<UsageEvent, "name" | "detail" | "source" | "book">): boolean {
+  const rule = ruleFor(event.name);
+  if (rule === null || rule.serverOnly !== true || !rule.detail(event.detail) || !oneOf(rule.sources, event.source) || !bookMatchesSource(event.book, event.source)) return false;
+  return oneOf(STORE_BOOK_KINDS, event.detail.split(STORE_SEPARATOR)[1]) ? event.source === storeSource(event.detail) : event.source !== SHELF_SOURCE;
 }
 
 /** Slice 351: the who-and-when fields of a count, each on its closed list or whole-number range, else "none" / -1 (never drops the event). */

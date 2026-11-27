@@ -76,6 +76,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 458: Dino: store server notifications ([slice](slices/458-dino-store-server-notifications.md))
+- [cloud] Apple trial-to-paid detection (`isTrialConversion`: previous period at most 8 days) and the Google trial/conversion heuristic were built on synthetic fixtures; confirm on the first real notifications after item 4 (console wiring).
+
 ### Slice 424: Dino: the Android 1.136.0 unclean exit ([slice](slices/424-dino-android-1136-unclean-exit.md))
 - [phone] Item 1: the walk on the S21 with the Play release build (first-run pack downloads, then Settings); the flow `first-run-to-settings` itself was written and run on the emulator, but the real pack downloads are not scripted.
 - [cloud] Item 3 iOS: the MetricKit exit-count path and the iOS simulator kill check on the CI Mac (`dinoreader-ios-sim.yml`); both heads compile, nothing ran on iOS.
