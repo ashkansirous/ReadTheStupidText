@@ -1,9 +1,11 @@
 # Slice 462 — Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog
 **Product:** Dino
 
+*In progress (wave 2026-11-27), draft PR.*
+
 *Planned 2026-11-27 from the 2026-11-26 usage analysis (Ninjalog `ashkan-sirous/dino-book-reader`, index `dino_usage`, 19-26 Nov).*
 
-**Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/ninjalog.ts`, `worker/ninjalog.test.mjs`, `src/Shared/Sirous.Reading.Application/Usage/UsageEligibility.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Usage/UsageGate.cs`, `tests/Shared/Shared.Tests/**`, `worker/CLAUDE.md`, `docs/analytics/ninjalog-queries.md`, `site/dino/privacy.html`
+**Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/ninjalog.ts`, `worker/ninjalog.test.mjs`, `src/Shared/Sirous.Reading.Application/Usage/UsageEligibility.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Usage/UsageGate.cs`, `src/Shared/Sirous.Reading.Infrastructure/Usage/WindowsUsage.cs`, `tests/Shared/Shared.Tests/**`, `worker/CLAUDE.md`, `docs/analytics/ninjalog-queries.md`, `site/dino/privacy.html`
 
 **Why:**
 - About 20 of 53 first launches in 19-26 Nov were test or review traffic. They had US region, non-production builds, 1-second sessions, and Play pre-launch-style crawlers with 11-12 cancelled downloads. They make the raw funnel look far worse than it is: 21 of 27 real new users finish the intro on 1.136.0.
