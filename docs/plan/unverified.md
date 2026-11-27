@@ -179,6 +179,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** set the presentation map URL and version once 440 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
 ### Slice 438: Dino: every Sonos home links once through the Dino app and saves its story language ([slice](slices/438-dino-sonos-link-story-language.md))
+- [session] Apply `worker/schema/sonos-homes.sql` to the live D1 `STATS` per `docs/DEPLOYING.md` before the Worker deploy serves Sonos; until then every Sonos call answers `Server.ServiceUnavailable` (sandbox only).
+- [session] iOS simulator: the link opens `SonosLinkPage` and the Debug test-hook plist merge keeps the `dinoreader` scheme (review high #8).
+- [phone] The S21 opens the link from the Sonos page and hands back.
 - [owner] **You:** switch the Sonos integration's auth to AppLink once 438 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
 ### Slice 436: Dino: Sonos counts only real plays and shows new books quickly ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
@@ -743,6 +746,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** Emulator in Farsi (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader.
 
 ## Shared
+
+### Slice 448: tools/phone runs the .maestro/dino flows on a real phone ([slice](slices/448-tools-phone-runs-maestro-dino-flows.md))
+- [phone] The three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after Slice 465 (S21 run 4: 1 of 4 passed).
 
 ### Slice 343: Listening page: four Farsi voices ([slice](slices/343-four-farsi-voices.md))
 - [owner] **You:** ear check of the built comma fix (ganji-2, gyro-2, gyro-3) on a listening page after it ships.

@@ -2,7 +2,7 @@
 **Product:** Shared
 **Touches:** `tools/phone/**`, `tools/CLAUDE.md`, `tools/emulator/common.ps1` (widened at claim, wave 2026-11-27: only if `Set-ProcessJavaHome` or the flow runner needs a change), `.github/workflows/tools-selftests.yml` (widened by the coordinator after the build: one step runs `tools/phone/test-run-flows.ps1`), `tools/emulator/build-cache.ps1` and `tools/emulator/test-build-key.ps1` (widened by the coordinator after the S21 run 3: an empty-by-default extra key-input hook, so the phone key carries the phone's build arguments)
 
-*Built 2026-11-27 (wave 2026-11-27, PR #1415, not merged). Planned 2026-11-25 (moved out of Slice 396). The runner works on the S21; 1 of Slice 396's 4 flows passes, 3 fail in the app's store flows (item 3), for a follow-up slice.*
+*Built 2026-11-27 (wave 2026-11-27), merged as PR #1415 (77e615bb). Planned 2026-11-25 (moved out of Slice 396). The runner works on the S21; 1 of Slice 396's 4 flows passes, 3 fail in the app's store flows (item 3), for a follow-up slice.*
 
 ## Why
 `tools/phone` has only scripted checks (`checks/*.ps1`, `run-checks.ps1`) and no runner for the Maestro UI flows in `.maestro/dino`. Slice 396's S21 run was 0/4: all four flows stopped at FirstRunLanguage (evidence `reviews/s396-device/`, night 2026-11-17-2105). Phone runs therefore cannot check any flow-based "Not yet verified" line. Moved out of Slice 396 (its own work, items 1-7, is built).
@@ -29,7 +29,7 @@
 - Skipped #1 (`reviews/pr-1415-check5.md`): "The network-cut patterns still miss forms: `cmd -w wifi ...` (flag between words), `cmd connectivity` subcommands other than airplane-mode, `su -c svc` with extra flags, `ip link ... down`, `ifconfig`, `ndc`, `iptables`, `pm disable-user` of phone/wifi packages." - no repo flow uses those commands (`grep -rlE "cmd -w wifi|cmd connectivity|ip link|iptables|pm disable-user" .maestro/` hits only a comment "Skip link" in onboarding-skip.yaml); a low follow-up.
 - Skipped #3 (`reviews/pr-1415-check5.md`): "Forward cleanup removes every forward missing from the before-list, including one another process opened during the flow (and leaves identical stale ones)." - under the device lease only this run's Maestro adds forwards during a flow.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 `tools/CLAUDE.md` already carries the `run-flows.ps1` line (added by the builder in this slice, line 19: usage, the 10-minute budget, refusals, exit codes). Nothing more to lift. (Slice 448: docs/plan/slices/448-tools-phone-runs-maestro-dino-flows.md)
 
 #### Not yet verified
