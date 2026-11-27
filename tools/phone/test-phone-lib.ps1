@@ -196,7 +196,9 @@ Assert-Equal 'restore resets the compat flag' $true ($restore -like '*am compat 
 Assert-Equal 'paused check never calls svc' $false ((Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw) -match "'svc'")
 
 # ---- Slice 308: run-checks.ps1 -Serial emulator-NNNN. The emulator is accepted only with -AllowEmulator (run-checks passes it) and only when named; every other script never takes an emulator.
-$savedKnown = $env:RTST_PHONE_SERIAL; $env:RTST_PHONE_SERIAL = $null   # the known phone is the S21 constant in every block below
+$savedKnown = $env:RTST_PHONE_SERIAL
+try {   # Slice 442: the variable is put back by the finally below even when a call in between throws
+$env:RTST_PHONE_SERIAL = $null   # the known phone is the S21 constant in every block below
 $emu = [pscustomobject]@{ Serial = 'emulator-5554'; State = 'device' }
 $wifi = [pscustomobject]@{ Serial = '192.168.1.20:41234'; State = 'device' }
 $usb = [pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'device' }   # the known S21 over USB
@@ -247,11 +249,18 @@ Assert-Equal 'the known serial is the USB kind' 'Usb' (Get-DeviceKind 'R3CR30FQT
 $env:RTST_PHONE_SERIAL = 'R9TABLET001'
 Assert-Equal 'RTST_PHONE_SERIAL overrides the known phone' 'R9TABLET001' (Select-ReadyPhoneSerial @($s21, $tablet))
 Assert-Equal 'with the override the S21 is no longer the USB kind' 'Phone' (Get-DeviceKind 'R3CR30FQT0V')
-$env:RTST_PHONE_SERIAL = $savedKnown
+} finally { $env:RTST_PHONE_SERIAL = $savedKnown }
 $mdnsName = 'adb-R3CR30FQT0V-xYz._adb-tls-connect._tcp'
 Assert-Equal 'connect.ps1: the address itself when listed' '192.168.1.20:41234' (Select-ConnectedAddress @($wifi) '192.168.1.20:41234')
 Assert-Equal 'connect.ps1: the mDNS name when adb lists the phone that way' $mdnsName (Select-ConnectedAddress @($s21, [pscustomobject]@{ Serial = $mdnsName; State = 'device' }) '192.168.1.20:41234')
 Assert-Equal 'connect.ps1: never the USB phone' $null (Select-ConnectedAddress @($s21) '192.168.1.20:41234')
+# Slice 442: with -Serial the mDNS fallback counts only for that phone; the shape check refuses loopback, localhost and free text.
+$otherMdns = [pscustomobject]@{ Serial = 'adb-R9OTHER0001-abc._adb-tls-connect._tcp'; State = 'device' }
+Assert-Equal 'connect.ps1 -Serial: another phone''s mDNS name is not this phone' $null (Select-ConnectedAddress @($otherMdns) '192.168.1.20:41234' 'R3CR30FQT0V')
+Assert-Equal 'connect.ps1 -Serial ip:port: the filter is off, any mDNS name counts' @($otherMdns)[0].Serial (Select-ConnectedAddress @($otherMdns) '192.168.1.20:41234' '192.168.1.20:41234')
+Assert-Equal 'connect.ps1 -Serial: this phone''s mDNS name is' $mdnsName (Select-ConnectedAddress @($otherMdns, [pscustomobject]@{ Serial = $mdnsName; State = 'device' }) '192.168.1.20:41234' 'R3CR30FQT0V')
+foreach ($good in 'R3CR30FQT0V', 'ZY-22A3', 'ab_12', 'my-phone.local:5555','192.168.1.20:41234', 'emulator-5554', $mdnsName) { Assert-Equal "shape: '$good' is a phone serial" $true (Test-PhoneSerialShape $good) }
+foreach ($bad in '127.0.0.1:5555', 'localhost:5555', 'not a serial', '192.168.1.20', '127.0.0.1') { Assert-Equal "shape: '$bad' is not a phone serial" $false (Test-PhoneSerialShape $bad) }
 $stuckUsb = [pscustomobject]@{ Serial = 'R3CR30FQT0V'; State = 'unauthorized' }
 Assert-Equal 'an unauthorized USB phone says unlock and accept' $true ((Get-UsbNotReadyText @($stuckUsb)) -match 'unauthorized: unlock it and accept the USB debugging prompt')
 Assert-Equal 'no stuck USB phone: no text' $null (Get-UsbNotReadyText @($wifi, $s21))

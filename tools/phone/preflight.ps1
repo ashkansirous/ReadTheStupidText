@@ -141,6 +141,7 @@ function Invoke-RestoreMode([string]$Phone) {
     return 1
 }
 
+if ($Serial -and -not (Test-PhoneSerialShape $Serial)) { Write-Host (Get-PhoneSerialShapeText $Serial); exit 2 }
 $phone = $null
 try { $phone = Find-Phone $Serial -AllowEmulator:$AllowEmulator } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
 if (-not $phone) { Write-PairingAsk $Serial; exit 2 }

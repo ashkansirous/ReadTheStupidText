@@ -139,6 +139,18 @@ Assert-Equal 'an installed debug app is no problem' '' (Get-AppNotInstalledProbl
 Assert-Equal 'a missing app is named before pm clear or run-as run' $true ((Get-AppNotInstalledProblem 'uk.example.app' { param($a) '' }) -like '*not installed*')
 Assert-Equal 'a longer package name is not the app' $true ((Get-AppNotInstalledProblem 'uk.example.app' { param($a) 'package:uk.example.app.dbg' }) -like '*not installed*')
 
+# Slice 442: Confirm-EmulatorForDemo returns start-warm's exit code; Invoke-EmulatorAdbChecked turns a non-zero adb exit into a throw.
+Assert-Equal 'an emulator that is up needs no start' 0 (Confirm-EmulatorForDemo 1 { $true } { param($n) throw 'must not start' })
+Assert-Equal 'a start that works returns 0' 0 (Confirm-EmulatorForDemo 1 { $false } { param($n) 0 })
+Assert-Equal 'a failed start returns start-warm exit code' 6 (Confirm-EmulatorForDemo 1 { $false } { param($n) 6 })
+Assert-Equal 'a start that throws returns 1' 1 (Confirm-EmulatorForDemo 1 { $false } { param($n) throw 'no avd' })
+$checkedThrew = $false
+function Invoke-EmulatorAdbText([string[]]$AdbArgs) { $null = & pwsh -NoProfile -Command 'exit 3' 2>&1; return 'adb: device offline' }
+try { $null = Invoke-EmulatorAdbChecked @('shell', 'true') } catch { $checkedThrew = $_.Exception.Message -like '*exited 3*device offline*' }
+Assert-Equal 'a non-zero adb exit throws with the exit code and text' $true $checkedThrew
+function Invoke-EmulatorAdbText([string[]]$AdbArgs) { $null = & pwsh -NoProfile -Command 'exit 0' 2>&1; return 'ok' }
+Assert-Equal 'a zero adb exit returns the text' 'ok' (Invoke-EmulatorAdbChecked @('shell', 'true'))
+
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-store-screenshots: all passed.'
 exit 0

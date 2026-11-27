@@ -41,13 +41,13 @@ function Invoke-LeaseFileOnly {
     if (-not $mine.Count) { Write-Host "No phone is connected and no lease file is held by '$Owner'. Nothing to $(if ($Release) { 'release' } else { 'renew' })."; return $(if ($Release) { 0 } else { $script:ExitLeaseHeld }) }
     $failed = $false
     foreach ($key in $mine) {
-        if ($Release) { if (Remove-Lease $key $Owner) { Write-Host "No phone connected: lease file for $key released by '$Owner' (the screen timeout was not written back; no adb)." } else { Write-Host "No phone connected: lease file for $key is now held by someone else, not by '$Owner'. Not releasing it."; $failed = $true } }
+        if ($Release) { if (Remove-Lease $key $Owner) { Write-Host "No phone connected: lease file for $key released by '$Owner' (the screen timeout was not written back; no adb).$(if (Read-StayOnOriginal $key) { ' Its stay-on record is kept: the next lease take or -Release with the phone connected writes it back, unless the record is over 24 h old, which discards it.' })" } else { Write-Host "No phone connected: lease file for $key is now held by someone else, not by '$Owner'. Not releasing it."; $failed = $true } }
         elseif ((Update-Lease $key $Owner $Minutes) -eq 'Renewed') { Write-Host "No phone connected: lease of '$Owner' on $key renewed for $Minutes min." }
         else { Write-Host "No phone connected: lease of '$Owner' on $key expired or was taken by someone else. Nothing renewed."; $failed = $true }
     }
     return $(if ($failed) { $script:ExitLeaseHeld } else { 0 })
 }
-if (-not $Serial) { $Serial = Find-Phone '' }
+if ($Serial -and -not (Test-PhoneSerialShape $Serial)) { Write-Host (Get-PhoneSerialShapeText $Serial); exit 2 }   # Slice 442: a serial that cannot be a phone is refused before anything is leased
 if ($Clear) {
     # A corrupt file can be removed with or without a phone connected: check every phone lease file
     # (a corrupt lease left under another or an earlier phone's key would otherwise stay up to 24 h).
@@ -59,6 +59,11 @@ if ($Clear) {
     if (-not $cleared.Count -and -not $unreadable.Count) { Write-Host 'No corrupt phone lease file found.' }
     exit $(if ($unreadable.Count) { 1 } else { 0 })
 }
+if (-not $Serial) {
+    if ($Release -or $Renew) { try { $Serial = Find-Phone '' } catch { $Serial = $null } }   # review pass 2 item 6: a missing adb or a failed adb server means no phone, so -Release/-Renew still reach the lease-file path
+    else { $Serial = Find-Phone '' }   # PR #1439 check 1 item 1: -Take and -Show surface the adb error instead of asking to pair a phone
+}
+# Slice 442: below the -Clear block, which needs no phone (a stalled adb must not delay or break that cleanup)
 if (-not $Serial -and ($Release -or $Renew)) { exit (Invoke-LeaseFileOnly) }   # Slice 393 review 5: the lease file needs no phone, so an unplugged phone never keeps it held
 if (-not $Serial) { Write-PairingAsk $Serial; exit 2 }
 $adbSerial = $Serial
@@ -67,16 +72,6 @@ $held = Read-Lease $Serial
 if ($Show -or $PSCmdlet.ParameterSetName -eq 'Show') {
     if ($held) { Write-Host "Phone $Serial is leased by $(Format-LeaseHolder $held)." } else { Write-Host "Phone $Serial is free." }
     exit 0
-}
-if ($Clear) {
-    $result = Clear-CorruptLease $Serial
-    $message = switch ($result) {
-        'Cleared' { "Phone ${Serial}: the corrupt lease file was removed." }
-        'Unreadable' { "Phone ${Serial}: the lease file cannot be read, so it is not proven corrupt. Not removing it." }
-        default { "Phone ${Serial}: the lease file is not corrupt (a valid lease or none). Not removing it." }
-    }
-    Write-Host $message
-    exit $(if ($result -eq 'Unreadable') { 1 } else { 0 })
 }
 if ($Take) {
     $wasMine = [bool]($held -and $held.Owner -ceq $Owner)

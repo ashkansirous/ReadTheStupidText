@@ -466,6 +466,37 @@ try {
     } finally { $env:RTST_PHONE_OWNER = $savedOwner }
     # Review 3: a live lease held by another session ends preflight with its own `PREFLIGHT WARN` line (exit 3): not GO, not NO-GO, and never added to the NO-GO reasons.
     $preflightScript = Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw
+    # Slice 442: the same verdict by RUNNING preflight.ps1 as a child from a temp copy whose only change is the line that loads common.ps1: after the real common.ps1 it pins the phone (no adb: every adb read is empty, so the
+    # device checks FAIL inside their own try/catch), its lease key and the lease folder. A foreign live lease must end with `PREFLIGHT WARN` (exit 3); this session's own lease must not.
+    $preflightKey = 'stub-preflight-442'
+    $preflightStub = Join-Path $script:LeaseDir 'preflight-stubbed.ps1'
+    $preflightLoad = ". '$((Join-Path $PSScriptRoot 'common.ps1'))'; function Find-Phone { 'stub-serial' }; function Get-PhoneLeaseKey { '$preflightKey' }; function Invoke-Adb { @() }; function Get-PowerState { throw 'no phone' }; `$script:LeaseDir = '$($script:LeaseDir)'"
+    $preflightStubText = $preflightScript.Replace('. (Join-Path $PSScriptRoot ''common.ps1'')', $preflightLoad)
+    Assert-Equal 'slice 442: the preflight stub replaced the common.ps1 load line' $true ($preflightStubText -ne $preflightScript)
+    Set-Content -Path $preflightStub -Value $preflightStubText
+    function Invoke-StubbedPreflight {
+        $saved = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $lines = @(& $self -NoProfile -File $preflightStub 2>&1 | ForEach-Object { "$_" }); return [pscustomobject]@{ Text = $lines -join "`n"; Last = $lines[-1]; Exit = $LASTEXITCODE } }
+        finally { $ErrorActionPreference = $saved }
+    }
+    $savedPreflightOwner = $env:RTST_PHONE_OWNER
+    try {
+        $env:RTST_PHONE_OWNER = 'agent-me'
+        Assert-Equal 'slice 442: a foreign live lease is held by someone else' $true (Request-Lease $preflightKey 'agent-other' 60)
+        $foreign = Invoke-StubbedPreflight
+        Assert-Equal 'slice 442: preflight run with a foreign lease ends with PREFLIGHT WARN, exit 3' $true (($foreign.Exit -eq 3) -and ($foreign.Last -like 'PREFLIGHT WARN*'))
+        Assert-Equal 'slice 442: the foreign lease is named in the lease line' $true ($foreign.Text -match 'held by .*agent-other')
+        Assert-Equal 'slice 442: a case-different owner is still another session (-ceq)' $true (Remove-Lease $preflightKey 'agent-other')
+        Assert-Equal 'slice 442: the other owner differs only by case' $true (Request-Lease $preflightKey 'Agent-Me' 60)
+        $env:RTST_PHONE_OWNER = 'agent-me'
+        $caseDiff = Invoke-StubbedPreflight
+        Assert-Equal 'slice 442: an owner that differs only by case is a foreign lease (exit 3)' 3 $caseDiff.Exit
+        Assert-Equal 'slice 442: tidy the preflight lease' $true (Remove-Lease $preflightKey 'Agent-Me')
+        Assert-Equal 'slice 442: this session takes the phone' $true (Request-Lease $preflightKey 'agent-me' 60)
+        $own = Invoke-StubbedPreflight
+        Assert-Equal 'slice 442: this session''s own lease is no WARN verdict' $true (($own.Exit -ne 3) -and ($own.Last -notlike 'PREFLIGHT WARN*'))
+        Assert-Equal 'slice 442: tidy the own lease' $true (Remove-Lease $preflightKey 'agent-me')
+    } finally { $env:RTST_PHONE_OWNER = $savedPreflightOwner }
     Assert-Equal 'review 3: a foreign lease is a WARN check that sets the ForeignLease flag' $true ($preflightScript -match "(?s)ForeignLease = \`$true.*?Write-Check \`$name 'WARN' ""held by")
     Assert-Equal 'review 3 / review 1: preflight decides the foreign lease (WARN, exit 3) before the NO-GO test, and GO comes last' $true ($preflightScript -match "(?s)if \(\`$script:ForeignLease\) \{.*?Write-Host 'PREFLIGHT WARN[^\r\n]*exit 3\s*\}.*?Reasons\.Count -gt 0\).*?exit 1 \}.*?Write-Host 'PREFLIGHT GO'")
     Assert-Equal 'second pass 3: the NO-GO reasons are printed above the WARN line, not dropped' $true ($preflightScript -match "(?s)if \(\`$script:ForeignLease\) \{\s*if \(\`$script:Reasons\.Count -gt 0\) \{ Write-Host ""PREFLIGHT NO-GO[^\r\n]*\}\s*Write-Host 'PREFLIGHT WARN")
