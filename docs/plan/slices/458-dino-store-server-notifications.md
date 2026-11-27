@@ -1,9 +1,9 @@
 # Slice 458 — Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications
 **Product:** Dino
 
-*Planned 2026-11-26.*
+*In progress (wave 2026-11-27), draft PR. Items 1, 2, 3, 5 (code) this wave; item 4 (consoles) and item 6 (research) stay open.*
 
-**Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/wrangler.jsonc`, `STORE.md`, `site/dino/privacy.html`
+**Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/events.test.mjs`, `wrangler.jsonc` (repo root; there is no `worker/wrangler.jsonc`), `STORE.md`, `site/dino/privacy.html`
 
 **Why:** a free trial turning paid, a renewal, a cancellation or a refund happens on the store's side, usually while the app is closed, so the app's own events ([Slice 455](455-dino-purchase-outcome-events.md)) can't see it. The Worker has no App Store Server Notifications v2 endpoint and no Play Real-time Developer Notifications (RTDN) endpoint today. It only verifies an Apple JWS proof on request (`worker/entitlements/apple-jws.ts:229`). On 2026-11-26 the owner asked how many people opted into the trial. App Store Connect could answer only through daily reports, and Play couldn't answer at all with the current key. The owner's words: "add this to the plan so we collect these events".
 
