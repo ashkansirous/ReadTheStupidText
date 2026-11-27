@@ -1,7 +1,9 @@
 # Slice 466 — Dino: Sonos subscription follow-ups from Slice 439's review
 **Product:** Dino
 
-*Planned 2026-11-27 in the docs index pass, from [Slice 439](439-dino-sonos-owned-books.md)'s *Low follow-ups* list and its *From review* follow-ups. Not started.*
+*Planned 2026-11-27 in the docs index pass, from [Slice 439](439-dino-sonos-owned-books.md)'s *Low follow-ups* list and its *From review* follow-ups.*
+
+*In progress (wave 2026-11-27), draft PR.*
 
 **Depends on:** Slice 439 (merged as PR #1421). Its C3 clips are not part of this slice.
 
