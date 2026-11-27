@@ -35,6 +35,9 @@ public interface IStoryLibrary
     /// </summary>
     string? TryResolveFile(string storyId, string? fileName);
 
+    /// <summary>Slice 464: the part-take file names in the story's folder, listed the way a read adopts them (under the library's gate, a file marked deleted left out). Empty when the part-take switch is off or the folder cannot be listed.</summary>
+    Task<IReadOnlyList<string>> PartFileNamesAsync(string storyId) => Task.FromResult<IReadOnlyList<string>>([]); // a library that does not keep files on disk lists none
+
     /// <summary>Creates a new file in the story's folder named <c>&lt;prefix&gt;-&lt;short id&gt;&lt;extension&gt;</c>: <paramref name="write"/> fills a temp file
     /// (given its path) which is then renamed into place, so a failed write leaves nothing behind. Returns the new file name.
     /// Only cover files (<see cref="Story.CoverFilePrefix"/>, <see cref="Story.CoverFileExtension"/>) are accepted, the same ones <see cref="DeleteFileAsync"/> removes. A fresh name each time means a replaced picture is never served from an image cache (Slice 77).</summary>

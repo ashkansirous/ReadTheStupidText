@@ -594,6 +594,25 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> PartFileNamesAsync(string storyId)
+    {
+        if (!PartTakes.Enabled)
+        {
+            return [];
+        }
+
+        try
+        {
+            return [.. await PartFileNamesUnderGateAsync(storyId)];
+        }
+        catch (Exception)
+        {
+            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 464: the listing is optional cleanup; nothing is listed now and an older overlapping file is left for the next save
+            return [];
+        }
+    }
+
     // Slice 443 review: listed under the gate, so a writer's marker clear and File.Move (MoveIntoPlaceAsync) never fall between the marker check and the listing.
     private async Task<IEnumerable<string>> PartFileNamesUnderGateAsync(string id)
     {
