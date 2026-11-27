@@ -101,7 +101,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	private sealed record Take(RecordPiece Piece, string Path, TimeSpan Length);
 
 	/// <summary>What one committed take changed in the story: the story as saved, the files of the clips it replaced, and whether it was the first recording of those sentences.</summary>
-	private sealed record Committed(Story Story, IReadOnlyList<string> ReplacedFiles, bool First);
+	private sealed record Committed(Story Story, IReadOnlyList<string> ReplacedFiles, bool First, bool ReplacesBeyond);
 
 	/// <summary>A clip the grown-up gave back to Dino's voice: the model no longer has it, the file goes when the 4 second window ends (Undo puts the entry back).</summary>
 	private sealed record Undo(StoryClipKey Key, PageRecording Recording, RecordPiece Piece, int Index, CancellationTokenSource Window);
@@ -893,7 +893,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		_story = committed.Story; // the story is saved: from here on nothing below can make this recording "fail"
 		TryDelete(take.Path);
 		await DeleteReplacedFilesAsync(storyId, committed.ReplacedFiles);
-		Log($"[Record] saved key={key} file={fileName} seconds={StoryRecordings.WholeSeconds(take.Length)} clips={StoryRecordings.Count(committed.Story)}");
+		Log($"[Record] saved key={key} file={fileName} seconds={StoryRecordings.WholeSeconds(take.Length)} clips={StoryRecordings.Count(committed.Story)} replacedFiles={committed.ReplacedFiles.Count} replacesBeyond={committed.ReplacesBeyond}"); // the card's warning is from the page's earlier story; this is the commit-time answer, so a late orphan reaching past the key is on record
 		CountFirstRecording(committed.First, committed.Story, key.Language);
 	}
 
@@ -907,22 +907,10 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	private async Task<Committed> SaveWithClipAsync(string storyId, Take take, string fileName)
 	{
 		StoryClipKey key = take.Piece.Key;
-		try
-		{
-			Story latest = StoryRecordings.WithoutFile(await _library.GetAsync(storyId) ?? _story!, fileName); // Slice 443: the read adopts the part file just placed as a clip; it is the take being saved, not an earlier one
-			SentenceCover? cover = take.Piece.Cover;
-			bool first = StoryRecordings.ReplacedClips(latest, key, cover).Count == 0; // the same set that drives the card's warning and the files deleted below
-			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key, cover); // Slice 443 review: a sentence clip over the take's words goes too, so the new take is the one that plays
-			Story updated = StoryRecordings.WithSavedTake(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName, cover));
-			await _library.UpdateAsync(updated);
-			return new Committed(updated, replaced, first);
-		}
-		catch
-		{
-			// no-fallback: the story did not take the clip, so the new file goes (it is the only one this commit made) and the failure is rethrown
-			await _library.DeleteFileAsync(storyId, fileName);
-			throw;
-		}
+		SentenceCover? cover = take.Piece.Cover;
+		var recording = new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName, cover);
+		PartTakeSaved saved = await PartTakeCommit.SaveAsync(_library, storyId, _story!, key, recording, cover); // Slice 464: the step lives in Core so a test runs it; it also lists an older overlapping part file the read never adopted
+		return new Committed(saved.Story, saved.ReplacedFiles, saved.First, saved.ReplacesBeyond);
 	}
 
 	// Best effort: the story already names the new clip, so a replaced file that cannot be deleted is only disk space, never a failed recording.
@@ -936,8 +924,8 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
-				// no-fallback: the recording is saved; a replaced file left on disk is never read
-				Debug.WriteLine($"Dino Reader could not delete a replaced recording file: {ex.Message}");
+				// no-fallback: the recording is saved; a replaced file left on disk is only disk space, except an orphan that a later read can adopt again once the new take is removed, so its name is logged
+				Debug.WriteLine($"Dino Reader could not delete a replaced recording file {name}: {ex.Message}");
 			}
 		}
 	}

@@ -20,6 +20,23 @@ public static class PartClipAdoption
     /// <summary>Slice 443 review pass 2: whether <paramref name="fileName"/> is a part take's file name, the only kind of file a <see cref="DeletedSuffix"/> marker is written for.</summary>
     public static bool IsPartFileName(string fileName) => PartFileName.IsMatch(fileName);
 
+    /// <summary>Slice 464: <paramref name="story"/> with each orphan of <see cref="OverlappingOrphans"/> put in as a part clip, as a read would have adopted it had the take's file not sorted first. The commit then treats an orphan
+    /// exactly as an adopted clip (<see cref="StoryRecordings.ReplacedClips"/>, <see cref="StoryRecordings.ReplacedFiles"/>): one that lies inside the key goes silently, one that reaches past it goes with the card's
+    /// <see cref="StoryRecordings.ReplacesBeyond"/> warning, as Slice 443 does for an adopted clip.</summary>
+    public static Story WithOrphansAdopted(Story story, StoryClipKey key, string keepFile, IEnumerable<string> fileNames) =>
+        OverlappingOrphans(story, key, keepFile, fileNames).Aggregate(story, (s, name) => KeyOf(name, story.Pages.Count) is { } k
+            ? StoryRecordings.WithClip(s, k, new PageRecording(k.Language, 0, name), keepOverlappingParts: true) with { UseRecordings = s.UseRecordings }
+            : s);
+
+    /// <summary>Slice 464: the part files among <paramref name="fileNames"/> that stand for a take overlapping <paramref name="key"/> (inside it, past it or around it), are not <paramref name="keepFile"/> (the take being saved) and are
+    /// named by no clip of <paramref name="story"/>: files <see cref="Adopt"/> skipped because an overlapping one sorted first. Slice 443 replaces an overlapping clip whatever its range, so a save replaces them too and none resurfaces
+    /// when the take is later removed; only a file that does not overlap the key is kept.</summary>
+    public static IReadOnlyList<string> OverlappingOrphans(Story story, StoryClipKey key, string keepFile, IEnumerable<string> fileNames)
+    {
+        HashSet<string> named = StoryRecordings.Files(story).ToHashSet(StringComparer.Ordinal);
+        return fileNames.Where(n => n != keepFile && !named.Contains(n) && KeyOf(n, story.Pages.Count) is { } k && k.Overlaps(key)).Order(StringComparer.Ordinal).ToList();
+    }
+
     /// <summary><paramref name="story"/> with a part clip for each of <paramref name="fileNames"/> that is a part file name, names a page of the story, is named by no clip, and whose range no part clip of the story already
     /// covers or shares a part with (the clips the story has are the newer takes). The clip's length is unknown (0). Several such files that overlap keep the first by name.</summary>
     public static Story Adopt(Story story, IEnumerable<string> fileNames)
