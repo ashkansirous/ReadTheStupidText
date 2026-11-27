@@ -53,6 +53,81 @@ public static class UsageEventName
     public const string SettingChanged = "setting_changed";
     public const string AppBackgrounded = "app_backgrounded";
     public const string AppResumed = "app_resumed";
+
+    // Slice 455: a buy, restore or code outcome (detail: PurchaseDetail.Of, "<what>.<outcome>[.<offer>]"); a book's count names the book, every other one names none.
+    public const string Purchase = "purchase";
+}
+
+/// <summary>
+/// Slice 455: the closed detail of a <c>purchase</c> count, <c>&lt;what&gt;.&lt;outcome&gt;</c> or, for a subscription, <c>&lt;what&gt;.&lt;outcome&gt;.&lt;offer&gt;</c>.
+/// <c>worker/events.ts</c> holds the same three lists; <c>PurchaseUsageTests</c> compares them. No price, account, transaction or receipt is ever carried.
+/// </summary>
+public static class PurchaseDetail
+{
+    public const string Book = "book";
+    public const string SubMonthly = "sub_monthly";
+    public const string SubYearly = "sub_yearly";
+    public const string Restore = "restore";
+    public const string Code = "code";
+
+    public const string Shown = "shown";
+    public const string Started = "started";
+    public const string Bought = "bought";
+    public const string Pending = "pending";
+    public const string Cancelled = "cancelled";
+    public const string Failed = "failed";
+    public const string AlreadyOwned = "already_owned";
+    public const string Restored = "restored";
+    public const string NothingToRestore = "nothing_to_restore";
+
+    public const string OfferTrial = "trial";
+    public const string OfferPaid = "paid";
+    public const string OfferCode = "code";
+
+    private const char Separator = '.';
+
+    public static IReadOnlyList<string> Whats { get; } = [Book, SubMonthly, SubYearly, Restore, Code];
+
+    public static IReadOnlyList<string> Outcomes { get; } = [Shown, Started, Bought, Pending, Cancelled, Failed, AlreadyOwned, Restored, NothingToRestore];
+
+    public static IReadOnlyList<string> Offers { get; } = [OfferTrial, OfferPaid, OfferCode];
+
+    /// <summary>Whether <paramref name="what"/> is one of the two subscription plans, which alone carry an offer.</summary>
+    public static bool IsSubscription(string what) => what is SubMonthly or SubYearly;
+
+    /// <summary>The detail of a count; the offer is kept for a subscription (paid when none is given) and left out for everything else.</summary>
+    public static string Of(string what, string outcome, string? offer = null) =>
+        IsSubscription(what) ? string.Concat(what, Separator, outcome, Separator, offer ?? OfferPaid) : string.Concat(what, Separator, outcome);
+
+    /// <summary>What a store product is: a subscription plan by its product id, anything else a book.</summary>
+    public static string WhatOf(string productId) => productId switch
+    {
+        SubscriptionProducts.Monthly => SubMonthly,
+        SubscriptionProducts.Yearly => SubYearly,
+        _ => Book,
+    };
+
+    /// <summary>The ids in <paramref name="read"/> that are not in <paramref name="logged"/>, each once: the redemptions the app has not counted yet.</summary>
+    public static IReadOnlyList<string> NotYetLogged(IEnumerable<string> logged, IEnumerable<string> read)
+    {
+        var seen = new HashSet<string>(logged);
+        return [.. read.Where(id => id.Length > 0 && !seen.Contains(id)).Distinct()];
+    }
+
+    /// <summary>The offer a plan was bought on: the free trial when the card promised it, else paid.</summary>
+    public static string OfferOf(bool withTrial) => withTrial ? OfferTrial : OfferPaid;
+
+    /// <summary>The offer a subscription buy is counted under once the store was read again: Trial is the free trial, Active is paid, and any other answer (none, unknown, grace, expired: store data that may lag) keeps what the card asked for.</summary>
+    public static string OfferAfterBuy(SubscriptionState? stateAfter, string askedOffer) => stateAfter switch
+    {
+        SubscriptionState.Trial => OfferTrial,
+        SubscriptionState.Active => OfferPaid,
+        _ => askedOffer,
+    };
+
+    /// <summary>The outcome of one Restore purchases press, judged from that press's own fresh read alone: a read that failed or had no internet is failed; a read that holds an owned paid book or an entitled subscription is restored; else nothing to restore.</summary>
+    public static string RestoreOutcome(bool readSucceeded, bool hadInternet, bool holdsAnyBook, bool holdsEntitledSubscription) =>
+        !readSucceeded || !hadInternet ? Failed : holdsAnyBook || holdsEntitledSubscription ? Restored : NothingToRestore;
 }
 
 /// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>

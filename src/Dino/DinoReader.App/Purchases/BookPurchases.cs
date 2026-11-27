@@ -9,8 +9,11 @@ namespace DinoReader;
 /// listeners when it changed. Nothing here is saved: on launch and whenever the store page opens the app asks the store again, so a book bought or redeemed outside the app shows as owned
 /// without pressing Restore. A store that cannot be reached leaves the last snapshot in place.
 /// </summary>
-public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null) : IDisposable
+public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbacks, SubscriptionStore? subscriptionStore = null, ISubscriptionEnd? subscriptionEnd = null, UsageCounter? counter = null, IPurchaseUsage? purchaseUsage = null) : IDisposable
 {
+    // Slice 455: the purchase outcome counts (the host gives the counter; a test gives its own recorder); none when neither is given.
+    private readonly IPurchaseUsage? _usage = purchaseUsage ?? (counter is null ? null : new PurchaseUsage(counter));
+
     // Slice 384: the Worker that asks Apple or Google for the subscription's real end date (iOS and Android; Windows keeps its own end date). The host registers none, so the app uses the real client.
     private readonly ISubscriptionEnd _end = subscriptionEnd ?? new SubscriptionEndClient();
     private readonly SemaphoreSlim _endGate = new(1, 1);
@@ -102,27 +105,76 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     }
 
     /// <summary>The Restore purchases button: as <see cref="RefreshAsync"/>, with the platform's own restore where it has one.</summary>
-    public Task<PurchaseSnapshot> RestoreAsync(IEnumerable<StoreItem> items, CancellationToken cancel) => ReadAsync(items, restore: true, interactive: true, cancel);
+    public async Task<PurchaseSnapshot> RestoreAsync(IEnumerable<StoreItem> items, CancellationToken cancel, bool countAsRestore = true)
+    {
+        ReadResult read = await ReadCoreAsync(items, restore: true, interactive: true, cancel);
+        if (countAsRestore) // Slice 455: the backup restore runs this itself; the person never pressed Restore purchases there
+        {
+            RecordRestore(read);
+        }
+
+        return read.Snapshot;
+    }
 
     /// <summary>Buys the product, then re-reads the store; returns how it ended. Never throws.</summary>
     public async Task<BuyOutcome> BuyAsync(string productId, IEnumerable<StoreItem> items, CancellationToken cancel, bool withTrial = true)
     {
+        StoreItem[] listed = [.. items];
+        string askedOffer = PurchaseDetail.OfferOf(withTrial);
+        RecordBuy(productId, listed, PurchaseDetail.Started, askedOffer); // Slice 455: before the store call, so a sheet the person walks away from still shows as started
         BuyOutcome outcome;
         try
         {
-            using IDisposable hold = LockHolds.Begin("purchase"); // Slice 418 decision 16: the store's own buying sheet pauses the 30-second lock, on every platform (every buy goes through here)
-            outcome = await platform.BuyAsync(productId, withTrial, cancel);
+            outcome = await PlatformBuyAsync(productId, withTrial, cancel);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Debug.WriteLine($"Dino Reader purchase failed: {ex}");
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // the grown-up sees a plain "didn't work" message; nothing changes
+            RecordBuy(productId, listed, PurchaseDetail.Failed, askedOffer);
             return BuyOutcome.Failed;
         }
 
         Debug.WriteLine($"Dino Reader purchase of {productId} ended: {outcome}");
-        await ReadAsync(items, restore: false, interactive: false, cancel);
+        await CountAndReadAfterBuyAsync(productId, listed, outcome, askedOffer, cancel);
         return outcome;
+    }
+
+    private async Task<BuyOutcome> PlatformBuyAsync(string productId, bool withTrial, CancellationToken cancel)
+    {
+        using IDisposable hold = LockHolds.Begin("purchase"); // Slice 418 decision 16: the store's own buying sheet pauses the 30-second lock, on every platform (every buy goes through here)
+        return await platform.BuyAsync(productId, withTrial, cancel);
+    }
+
+    // Slice 455: counts the buy's outcome, then re-reads the store. Only a real new subscription on a store that names no offer (Windows) waits for the read before counting (it says whether the plan is a trial);
+    // an "already owned" answer is the old subscription, so it is counted with the offer the card asked for and no extra read.
+    private async Task CountAndReadAfterBuyAsync(string productId, StoreItem[] listed, BuyOutcome outcome, string askedOffer, CancellationToken cancel)
+    {
+        BuyNote note = platform.LastBuyNote;
+        string detail = BuyOutcomeDetail(outcome, note);
+        if (detail == PurchaseDetail.Bought && note.Offer is null && SubscriptionProducts.Is(productId))
+        {
+            await ReadThenCountBoughtAsync(productId, listed, detail, askedOffer, cancel);
+            return;
+        }
+
+        RecordBuy(productId, listed, detail, note.Offer ?? askedOffer);
+        await ReadAsync(listed, restore: false, interactive: false, cancel);
+    }
+
+    // A read cut short by Cancel still counts the buy, with the offer the card asked for; the cancellation then goes on to the caller as it always did.
+    private async Task ReadThenCountBoughtAsync(string productId, StoreItem[] listed, string detail, string askedOffer, CancellationToken cancel)
+    {
+        string offer = askedOffer;
+        try
+        {
+            PurchaseSnapshot after = await ReadAsync(listed, restore: false, interactive: false, cancel);
+            offer = PurchaseDetail.OfferAfterBuy(after.Subscription?.State, askedOffer);
+        }
+        finally
+        {
+            RecordBuy(productId, listed, detail, offer);
+        }
     }
 
     /// <summary>Opens the store's redeem screen; false when there is none.</summary>
@@ -130,13 +182,81 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     {
         try
         {
-            return await platform.RedeemCodeAsync();
+            bool opened = await platform.RedeemCodeAsync();
+            _usage?.Record(new PurchaseCount(PurchaseDetail.Code, opened ? PurchaseDetail.Started : PurchaseDetail.Failed)); // Slice 455: the store's redeem screen returns no result; iOS counts code.bought when a later read finds the redemption
+            return opened;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Debug.WriteLine($"Dino Reader could not open the redeem screen: {ex.Message}");
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+            _usage?.Record(new PurchaseCount(PurchaseDetail.Code, PurchaseDetail.Failed));
             return false;
+        }
+    }
+
+    /// <summary>Slice 455: counts that the buy offer for <paramref name="productId"/> (a plan card on the Store, or a paid book's buy prompt) was shown; the caller says it once per opening, never per redraw.</summary>
+    public void RecordShown(string productId, IEnumerable<StoreItem> items, bool withTrial = false) =>
+        RecordBuy(productId, [.. items], PurchaseDetail.Shown, PurchaseDetail.OfferOf(withTrial));
+
+    // Slice 455: the closed outcome a Buy's answer counts as; a store that said "already owned" wins over the plain Bought it is mapped to.
+    private static string BuyOutcomeDetail(BuyOutcome outcome, BuyNote note) => note.AlreadyOwned ? PurchaseDetail.AlreadyOwned : outcome switch
+    {
+        BuyOutcome.Bought => PurchaseDetail.Bought,
+        BuyOutcome.Pending => PurchaseDetail.Pending,
+        BuyOutcome.Cancelled => PurchaseDetail.Cancelled,
+        _ => PurchaseDetail.Failed,
+    };
+
+    // A book count names the store book (its package id) the product unlocks, and nothing else; a book the listing does not know is not counted (the Worker would drop a book count with no id).
+    private void RecordBuy(string productId, StoreItem[] listed, string outcome, string offer)
+    {
+        string what = PurchaseDetail.WhatOf(productId);
+        if (what != PurchaseDetail.Book)
+        {
+            _usage?.Record(new PurchaseCount(what, outcome, offer));
+            return;
+        }
+
+        StoreItem? book = listed.FirstOrDefault(i => i.ProductId == productId) ?? listed.FirstOrDefault(i => i.Products.Contains(productId));
+        if (book is not null)
+        {
+            _usage?.Record(new PurchaseCount(what, outcome, BookId: book.Id, Language: book.Language));
+        }
+    }
+
+    // Slice 455: classified from this press's own fresh read alone, never compared with the kept snapshot (the Store tab and launch have already refreshed it): restored when the read holds an owned paid book or an entitled subscription.
+    private void RecordRestore(ReadResult read)
+    {
+        PurchaseSnapshot? fresh = read.Fresh;
+        bool succeeded = fresh is { Reachable: true };
+        bool anyBook = fresh is not null && fresh.Owned.Any(product => !SubscriptionProducts.Is(product));
+        bool entitled = fresh?.Subscription is { } status && SubscriptionAccess.IsEntitled(status.State);
+        _usage?.Record(new PurchaseCount(PurchaseDetail.Restore, PurchaseDetail.RestoreOutcome(succeeded, read.HadInternet, anyBook, entitled)));
+    }
+
+    // Slice 455: Apple's redeem sheet answers nothing, so an offer-code subscription is counted (code.bought) when a read finds it, once per subscription on this device. The first good read of this build only
+    // notes the redemptions already there (a code redeemed long ago, or on another device or install, is not a purchase of today); a redemption is claimed only after its count was queued, so a count lost to
+    // "counting off" or "no config yet" is tried again by the next read.
+    private void RecordCodeRedemptions(PurchaseSnapshot read)
+    {
+        if (_usage is not { } usage || !read.Reachable || read.Incomplete) // an incomplete read (a transaction that did not verify was left out) would seed too few and later count the missing one as new
+        {
+            return;
+        }
+
+        if (!usage.HasCodeBaseline)
+        {
+            usage.SeedCodeBaseline(platform.CodeRedemptions);
+            return;
+        }
+
+        foreach (string id in platform.CodeRedemptions.Where(id => !usage.IsCodeRedemptionClaimed(id)))
+        {
+            if (usage.Record(new PurchaseCount(PurchaseDetail.Code, PurchaseDetail.Bought)))
+            {
+                usage.ClaimCodeRedemption(id);
+            }
         }
     }
 
@@ -193,7 +313,13 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
-    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel, bool subscriptionOnly = false)
+    private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel, bool subscriptionOnly = false) =>
+        (await ReadCoreAsync(items, restore, interactive, cancel, subscriptionOnly)).Snapshot;
+
+    // Slice 455: what one read did, for the restore count: the kept snapshot, what the store answered this time (null when the read threw) and whether the device had internet for it.
+    private sealed record ReadResult(PurchaseSnapshot Snapshot, PurchaseSnapshot? Fresh, bool HadInternet);
+
+    private async Task<ReadResult> ReadCoreAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel, bool subscriptionOnly = false)
     {
         StoreItem[] listed = [.. items];
         if (!subscriptionOnly) // an empty listing is never remembered: the Store's first listing stays the first
@@ -214,6 +340,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             ReportReadProblems(listed, read, hasInternet);
             bool subscriptionChanged = KeepSubscription(read, hasInternet);
             bool snapshotChanged = !subscriptionOnly && Keep(read, hasInternet); // nothing listed: the read says nothing about books, so Owned and Prices stand
+            RecordCodeRedemptions(read); // Slice 455
             RecordBought(listed); // before Changed: the shelf the event rebuilds must see the book as bought, not as opened by the subscription
             if (subscriptionChanged || snapshotChanged)
             {
@@ -221,7 +348,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
             }
 
             StartEndCheck(read, hasInternet);
-            return _snapshot;
+            return new ReadResult(_snapshot, read, hasInternet);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -232,7 +359,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
                 Changed?.Invoke(this, EventArgs.Empty);
             }
 
-            return _snapshot;
+            return new ReadResult(_snapshot, null, HasInternet());
         }
         finally
         {
