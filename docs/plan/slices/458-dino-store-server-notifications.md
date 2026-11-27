@@ -1,9 +1,9 @@
 # Slice 458 — Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications
 **Product:** Dino
 
-*In progress (wave 2026-11-27), draft PR. Items 1, 2, 3, 5 (code) this wave; item 4 (consoles) and item 6 (research) stay open.*
+*Built items 1, 2, 3, 5 (wave 2026-11-27), PR #1449, not yet merged; items 4 (console wiring) and 6 (Partner Center research) are open. Code written by a cloud session at 33f44bc9 (run cse_012UYzYUZFozXBxTHrqxPhPQ) and fixed locally.*
 
-**Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/events.test.mjs`, `wrangler.jsonc` (repo root; there is no `worker/wrangler.jsonc`), `STORE.md`, `site/dino/privacy.html`
+**Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/events.test.mjs`, `wrangler.jsonc` (repo root; there is no `worker/wrangler.jsonc`), `wrangler.workers-dev.jsonc` (kept level with `wrangler.jsonc` by `check-configs.mjs`; widened by the coordinator after the cloud build), `STORE.md`, `site/dino/privacy.html`
 
 **Why:** a free trial turning paid, a renewal, a cancellation or a refund happens on the store's side, usually while the app is closed, so the app's own events ([Slice 455](455-dino-purchase-outcome-events.md)) can't see it. The Worker has no App Store Server Notifications v2 endpoint and no Play Real-time Developer Notifications (RTDN) endpoint today. It only verifies an Apple JWS proof on request (`worker/entitlements/apple-jws.ts:229`). On 2026-11-26 the owner asked how many people opted into the trial. App Store Connect could answer only through daily reports, and Play couldn't answer at all with the current key. The owner's words: "add this to the plan so we collect these events".
 
@@ -32,8 +32,38 @@
 - Apple's test notification and Play's test notification each land as one `store` row in `dino_usage_beta`, read back with `analytics-query`.
 - After release, *Watch* (plan.md *Outstanding work*): the next real trial start shows up as `ios.trial_started.trial` or `android.trial_started.trial` in `dino_usage`, and Apple's SUBSCRIPTION_EVENT report agrees for that day.
 
-**Not yet verified:**
-- `wrangler.workers-dev.jsonc` still lacks `"/api/store/*"` and `"/dino/api/store/*"` in `assets.run_worker_first` (not on this slice's Touches line), so `npm run typecheck` fails in `check-configs` until both are added there; `tsc` passes with them.
-- The KV namespace for the dedup key (`STORE_DEDUP`) and the vars `STORE_GOOGLE_AUDIENCE` and `STORE_GOOGLE_PUSH_EMAIL` are not in the wrangler configs (item 4 creates them); without the namespace every delivery counts, without the vars every Google push is refused (401).
-- Fixtures are synthetic: Apple payloads are signed with the throwaway chain, Play answers are hand-written to the documented shapes, not recorded from Play or Apple's sample payloads. The trial-to-paid detection (Apple: first period shorter than the paid one; Play: first `..0` order on a subscription with an offer id) and `offerPhase.freeTrial` are assumptions to confirm on the first real notification.
-- A voided one-time Play purchase names no sku, so a refunded book on Android is not counted.
+**Changed while building:**
+- Built by a cloud session (33f44bc9, run cse_012UYzYUZFozXBxTHrqxPhPQ), then fixed locally after review. context7's quota was out, so vendor facts come from the vendors' pages: Apple's retry horizon of about 157 h (https://developer.apple.com/documentation/appstoreservernotifications/responding-to-app-store-server-notifications) sets the 7-day dedup and freshness window (one constant, `DEDUP_WINDOW_MS` in `worker/store-notifications/dedup.ts`); Google's OIDC keys are read from https://www.googleapis.com/oauth2/v3/certs.
+- Apple: `POST /api/store/apple` verifies the ASSN v2 JWS through `worker/entitlements/apple-jws.ts`. Google: `POST /api/store/google` verifies the Pub/Sub OIDC token, then reads `subscriptionsv2.get` / `purchases.products.get`.
+- One `store` row per decided notification goes to `dino_usage`; anything not Production (Apple sandbox, Xcode, LocalTesting, missing `environment`) and any Play test purchase goes to `dino_usage_beta`. The app's `/api/events` cannot write `store` (server-only in `worker/events.ts`).
+- Duplicates are dropped by notification id for 7 days (matches Apple's retry horizon).
+- `STORE.md` and `site/dino/privacy.html` carry the two lines of item 5.
+- Touches widened by the coordinator after the cloud build: `wrangler.workers-dev.jsonc` (needed `/api/store/*` and `/dino/api/store/*` in `assets.run_worker_first` for `check-configs`) and `worker/events.test.mjs`.
+- Inactive until item 4: the dedup KV namespace (`STORE_DEDUP`) and the vars `STORE_GOOGLE_AUDIENCE` and `STORE_GOOGLE_PUSH_EMAIL` are in no wrangler config. Until then every repeat delivery is counted and every Google push gets 401.
+- Android refund of a one-time book is not counted: Play's voided-purchase notification names no sku.
+
+**Not yet verified:** (also in `docs/plan/unverified.md`)
+- [cloud] Apple trial-to-paid detection (`isTrialConversion`: renewal carries no offer and the previous period is at most 8 days, since Apple's renewal has no "came from a trial" field) and the Google trial/conversion heuristic (first `..0` order with an offer id, `offerPhase.freeTrial`) were built on synthetic fixtures (Apple signed with a throwaway chain, Play answers hand-written to the documented shapes). Confirm on the first real notifications after item 4.
+- Items 4 and 6 are still open (see Work), so no real or test notification has reached the Worker yet.
+
+#### From review
+- High review file (findings 10): all 10 fixed (including #4, the `wrangler.workers-dev.jsonc` entries, and #6, the one 7-day constant).
+- Medium review file (findings 8): #1-#4 fixed; #5-#8 are the four lines below.
+- `reviews/pr-1449-check-1.md`: 5 follow-ups, none reopened code. Left as they are, to settle against real notifications after item 4:
+  - Follow-up 1 (`worker/store-notifications/apple.ts:101`): EXPIRED, GRACE_PERIOD_EXPIRED, DID_FAIL_TO_RENEW, REFUND and REVOKE always count offer `paid`, so a cancelled trial that expires lands as `ios.expired.paid` and trial drop-off hides in paid churn.
+  - Follow-up 2 (`apple.ts:22`): `isTrialConversion` assumes a 7-day trial plus a day of slack, so a 14-day trial is counted `renewed` and a 7-day free offer code is counted `converted`.
+  - Follow-up 3 (`handler.ts:90`): dedup is check-then-act, so two near-simultaneous deliveries can both write a row (KV reads can be about 60 s stale).
+  - Follow-up 4 (`apple.ts:53`): a payload with no `environment` is routed to `dino_usage_beta` with no log line.
+  - Follow-up 5 (`apple.ts:150`): a missing or non-string `notificationUUID` gives the key `apple:`, which dedup treats as never seen, so replays inside the 7 days each write a row.
+- Skipped #5 (`reviews/pr-1449-medium.md`): "`converted` is decided from `latestOrderId` read from Play now, not from the order the notification was about; a delayed or retried RENEWED push read after the next renewal sees `..1` and counts `renewed.paid`, losing the conversion." - follow-up: the Google trial/conversion heuristic is in Not yet verified (synthetic fixtures); settle it against real pushes after item 4's wiring, not by another guess.
+- Skipped #6 (`reviews/pr-1449-medium.md`): "For cancelled, expired, grace, billing-retry and refunded kinds the offer is read from the current state (`inFreeTrial(item)`), so a trial that has ended is counted as `paid` (`android.expired.paid` instead of `.trial`)." - same follow-up as #5.
+- Skipped #7 (`reviews/pr-1449-medium.md`): "An unknown product id forces a full R2 list plus one get per book on every delivery, with no negative cooldown." - unknown products are rare and the one refetch is already rate-bounded by the catalogue cache window.
+- Skipped #8 (`reviews/pr-1449-medium.md`): "A failed JWKS fetch returns the cached keys but does not refresh `cachedKeys.at`, so after expiry the 60 s cooldown blocks any new fetch and legitimate pushes get 401 for at least a minute." - a 60 s window of 401s makes Pub/Sub retry, so no push is lost.
+
+#### For CLAUDE.md
+- `store` rows come only from `worker/store-notifications/` (Apple and Google handlers); `worker/events.ts` marks `store` server-only, so the app's `/api/events` must never be able to write it. Anything not Production (Apple Sandbox, Xcode, LocalTesting, missing `environment`; Play `testPurchase`) goes to `dino_usage_beta`, never `dino_usage`. (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
+- The store-notification dedup and freshness window is one constant, `DEDUP_WINDOW_MS` in `worker/store-notifications/dedup.ts`, and must stay above Apple's retry horizon of about 157 h. No account id, transaction id or token is stored. (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
+- A new `/api/store/*` style route needs its `assets.run_worker_first` entries in both `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (`check-configs.mjs` fails otherwise). (Slice 458: docs/plan/slices/458-dino-store-server-notifications.md)
+
+#### For README.md
+Nothing: server-side only; the user-facing line is in `site/dino/privacy.html`.

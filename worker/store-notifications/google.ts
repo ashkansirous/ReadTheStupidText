@@ -20,9 +20,12 @@ const ISSUERS = ["accounts.google.com", "https://accounts.google.com"];
 const JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 const CLOCK_SKEW_S = 60;
 const KEYS_REUSE_MS = 60 * 60_000;
+const KEYS_REFETCH_COOLDOWN_MS = 60_000;
 const TOKEN_REUSE_MS = 50 * 60_000;
 const REGION_PATTERN = /^[A-Z]{2}$/;
 const FIRST_RENEWAL_SUFFIX = "..0";
+const FREE_TRIAL_PHASE = "freeTrial";
+const INTRO_PRICE_PHASE = "introductoryPrice";
 
 /** What the Worker needs to verify the push and ask Play: the push's audience and service account (wrangler vars, set by item 4) and the Play service account that reads purchases (a secret, already on the Worker). */
 export interface GoogleStoreEnv {
@@ -33,22 +36,42 @@ export interface GoogleStoreEnv {
 
 // ---- 1. the push's OIDC token ----------------------------------------------------------------------------------------------
 
-let cachedKeys: { readonly keys: readonly JsonWebKey[]; readonly at: number } | null = null;
+let cachedKeys: { readonly keys: readonly JsonWebKey[]; readonly at: number; readonly reuseMs: number } | null = null;
+let lastKeyFetchAt = 0; // every attempt, failed or not: the cooldown that bounds outbound fetches to Google
 
-async function googleKeys(fetcher: Fetcher): Promise<readonly JsonWebKey[]> {
-  if (cachedKeys !== null && Date.now() - cachedKeys.at < KEYS_REUSE_MS) return cachedKeys.keys;
+/** The cache lifetime the JWKS response asks for (`Cache-Control: max-age`), clamped; the default when it names none. */
+function reuseMsOf(response: Response): number {
+  const match = /max-age=(\d+)/.exec(response.headers.get("Cache-Control") ?? "");
+  const asked = match === null ? KEYS_REUSE_MS : Number(match[1]) * 1000;
+  return Math.min(Math.max(asked, KEYS_REFETCH_COOLDOWN_MS), KEYS_REUSE_MS);
+}
+
+async function fetchKeys(fetcher: Fetcher): Promise<readonly JsonWebKey[]> {
+  lastKeyFetchAt = Date.now();
   const response = await fetcher(JWKS_URL);
-  if (!response.ok) return [];
+  if (!response.ok) return cachedKeys?.keys ?? [];
   const body = (await response.json()) as { keys?: JsonWebKey[] };
   const keys = Array.isArray(body.keys) ? body.keys : [];
-  cachedKeys = { keys, at: Date.now() };
+  cachedKeys = { keys, at: Date.now(), reuseMs: reuseMsOf(response) };
   return keys;
+}
+
+const keyWithId = (keys: readonly JsonWebKey[], kid: unknown): JsonWebKey | undefined => keys.find((candidate) => (candidate as { kid?: string }).kid === kid);
+
+/** The signing key named by `kid`: from the cache while it is fresh; on a miss (Google rotated its keys) one refetch, at most once per cooldown. */
+async function googleKey(fetcher: Fetcher, kid: unknown): Promise<JsonWebKey | undefined> {
+  const fresh = cachedKeys !== null && Date.now() - cachedKeys.at < cachedKeys.reuseMs;
+  const held = fresh ? keyWithId(cachedKeys!.keys, kid) : undefined;
+  if (held !== undefined) return held;
+  if (Date.now() - lastKeyFetchAt < KEYS_REFETCH_COOLDOWN_MS) return undefined;
+  return keyWithId(await fetchKeys(fetcher), kid);
 }
 
 /** Test seam: forgets the cached Google keys and access token. */
 export function resetGoogleStoreCaches(): void {
   cachedKeys = null;
   cachedAccess = null;
+  lastKeyFetchAt = 0;
 }
 
 function decodeObject(part: string): Record<string, unknown> | null {
@@ -80,7 +103,7 @@ export async function verifyPushToken(authorization: string | null, env: GoogleS
     const header = decodeObject(parts[0]!);
     const claims = decodeObject(parts[1]!);
     if (header === null || claims === null || header["alg"] !== "RS256" || !claimsHold(claims, env, nowS)) return false;
-    const key = (await googleKeys(fetcher)).find((candidate) => (candidate as { kid?: string }).kid === header["kid"]);
+    const key = await googleKey(fetcher, header["kid"]);
     return key !== undefined && (await signatureHolds(parts, key));
   } catch {
     return false; // no-fallback: a token we cannot read or verify is refused, never believed
@@ -106,13 +129,23 @@ async function accessToken(env: GoogleStoreEnv, fetcher: Fetcher): Promise<strin
 
 type PlayRead = { readonly status: "ok"; readonly body: Record<string, unknown> } | { readonly status: "gone" } | { readonly status: "retry" };
 
+const PLAY_NOT_ALLOWED = [401, 403];
+const PLAY_GONE = [400, 404, 410];
+
+/** A 401 or 403 from Play is a configuration fault (the service account has no access to the app): retrying cannot fix it, so it is logged and the delivery is dropped. 5xx and 429 stay retryable. */
+function playRefused(status: number): PlayRead {
+  console.error(`store-notifications: Play answered ${status}; the Play service account needs access to the app in the Play Console`);
+  return { status: "gone" };
+}
+
 async function playGet(url: string, env: GoogleStoreEnv, fetcher: Fetcher): Promise<PlayRead> {
   try {
     const token = await accessToken(env, fetcher);
     if (token === null) return { status: "retry" };
     const response = await fetcher(url, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } });
     if (response.status === 200) return { status: "ok", body: (await response.json()) as Record<string, unknown> };
-    return response.status === 400 || response.status === 404 || response.status === 410 ? { status: "gone" } : { status: "retry" };
+    if (PLAY_NOT_ALLOWED.includes(response.status)) return playRefused(response.status);
+    return PLAY_GONE.includes(response.status) ? { status: "gone" } : { status: "retry" };
   } catch {
     return { status: "retry" }; // no-fallback: Play could not be asked; Pub/Sub redelivers
   }
@@ -138,21 +171,35 @@ const RENEWED = 2;
 const RECOVERED = 1;
 const RESTARTED = 7;
 
-function inFreeTrial(item: Record<string, unknown> | null): boolean {
-  return asRecord(item?.["offerPhase"])?.["freeTrial"] !== undefined;
+function inPhase(item: Record<string, unknown> | null, phase: string): boolean {
+  return asRecord(item?.["offerPhase"])?.[phase] !== undefined;
 }
 
-/** A renewal that is the first paid order after a free-trial offer: Play numbers renewal orders `GPA.xxxx..0`, `..1`, and only a subscription that began on an offer has an offer id. */
+const hasOffer = (item: Record<string, unknown> | null): boolean => asText(asRecord(item?.["offerDetails"])?.["offerId"]) !== "";
+const orderNumberedRenewal = (body: Record<string, unknown>): boolean => /\.\.\d+$/.test(asText(body["latestOrderId"]));
+
+/** Only a free trial is not paid. A paid introductory-price offer also has an offer id, so it is told apart by its own phase. */
+function inFreeTrial(item: Record<string, unknown> | null): boolean {
+  return inPhase(item, FREE_TRIAL_PHASE);
+}
+
+/**
+ * Whether the notified purchase began as a free trial. A push that arrives (or is retried) after the trial ended reads a line item that is already in its paid phase,
+ * so a subscription on an offer (not an introductory-price one) that has already been renewed began as a trial.
+ */
+export function beganAsFreeTrial(body: Record<string, unknown>, item: Record<string, unknown> | null): boolean {
+  return inFreeTrial(item) || (orderNumberedRenewal(body) && hasOffer(item) && !inPhase(item, INTRO_PRICE_PHASE));
+}
+
+/** A renewal that is the first paid order after a free-trial offer: Play numbers renewal orders `GPA.xxxx..0`, `..1`, and a paid introductory-price offer is not a trial to convert. */
 export function isFirstPaidOrderAfterTrial(body: Record<string, unknown>, item: Record<string, unknown> | null): boolean {
-  const orderId = asText(body["latestOrderId"]);
-  const offerId = asText(asRecord(item?.["offerDetails"])?.["offerId"]);
-  return orderId.endsWith(FIRST_RENEWAL_SUFFIX) && offerId !== "" && !inFreeTrial(item);
+  return asText(body["latestOrderId"]).endsWith(FIRST_RENEWAL_SUFFIX) && hasOffer(item) && !inFreeTrial(item) && !inPhase(item, INTRO_PRICE_PHASE);
 }
 
 function subscriptionKind(type: number, body: Record<string, unknown>, item: Record<string, unknown> | null): { kind: string; offer: string } | null {
-  if (type === PURCHASED) return inFreeTrial(item) ? { kind: "trial_started", offer: "trial" } : { kind: "subscribed", offer: "paid" };
+  if (type === PURCHASED) return beganAsFreeTrial(body, item) ? { kind: "trial_started", offer: "trial" } : { kind: "subscribed", offer: "paid" };
   if (type === RENEWED) return { kind: isFirstPaidOrderAfterTrial(body, item) ? "converted" : "renewed", offer: "paid" };
-  if (type === RECOVERED || type === RESTARTED) return { kind: "renewed", offer: "paid" };
+  if (type === RECOVERED || type === RESTARTED) return null; // not a billing renewal (the RENEWED push that follows is the one counted), and the closed list has no kind for them
   const kind = SUBSCRIPTION_KINDS[type];
   return kind === undefined ? null : { kind, offer: inFreeTrial(item) ? "trial" : "paid" };
 }

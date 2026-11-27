@@ -7,16 +7,20 @@ import type { AppleJwsOptions } from "../entitlements/apple-jws.ts";
 import { APP_PACKAGE_ID, isSubscriptionProduct, SUBSCRIPTION_MONTHLY_PRODUCT, SUBSCRIPTION_YEARLY_PRODUCT } from "../products.ts";
 import { PLAN_MONTHLY_SOURCE, PLAN_YEARLY_SOURCE } from "../events.ts";
 import { countryOfStorefront } from "./countries.ts";
+import { DEDUP_WINDOW_MS } from "./dedup.ts";
 import { IGNORE, NO_PLAN, REFUSE } from "./types.ts";
 import type { BookResolver, Outcome, StoreCount } from "./types.ts";
 
 const PLATFORM = "ios";
-const SANDBOX = "Sandbox";
+const PRODUCTION = "Production";
 const OFFER_INTRO = 1;
 const OFFER_CODE = 3;
 const FREE_TRIAL = "FREE_TRIAL";
 const NO_BOOK = "none";
 const TRIAL_GAP_SHARE = 0.9;
+const FUTURE_SKEW_MS = 5 * 60_000;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MAX_TRIAL_MS = (7 + 1) * MS_PER_DAY; // the free trial is 7 days, plus a day of slack for the renewal's timing
 
 /** Apple's notification types this slice counts, and the subtype that changes the kind. A type that is not here (CONSUMPTION_REQUEST, PRICE_INCREASE, RENEWAL_EXTENDED...) is dropped. */
 export const APPLE_TYPES = ["SUBSCRIBED", "DID_RENEW", "DID_CHANGE_RENEWAL_STATUS", "EXPIRED", "DID_FAIL_TO_RENEW", "GRACE_PERIOD_EXPIRED", "REFUND", "REVOKE", "OFFER_REDEEMED", "ONE_TIME_CHARGE"] as const;
@@ -47,7 +51,7 @@ function transactionOf(payload: Record<string, unknown>, environment: string): T
     originalPurchaseDate: asNumber(payload["originalPurchaseDate"]),
     expiresDate: asNumber(payload["expiresDate"]),
     storefront: asText(payload["storefront"]),
-    sandbox: environment === SANDBOX || asText(payload["environment"]) === SANDBOX,
+    sandbox: environment !== PRODUCTION || asText(payload["environment"]) !== PRODUCTION, // default-deny: only an exact `Production` on both counts as production (Xcode, LocalTesting, a missing field are tests)
   };
 }
 
@@ -58,13 +62,16 @@ export function planOf(productId: string): string {
 }
 
 /**
- * A renewal is a trial turning paid when the period just left was shorter than the one just bought: the first period (original purchase to this purchase) was the trial.
- * Apple sends no flag for it, so this is read from the dates; a plain renewal's gap equals its paid period.
+ * A renewal is a trial turning paid when the period just left was a free trial: the renewal itself carries no offer (a transaction under an offer is not the first full price)
+ * and the period from the original purchase to this purchase is no longer than the trial (7 days, one day of slack) and shorter than the paid period just bought.
+ * Apple puts no "came from a trial" flag on the renewal (its offer fields describe only its own period), so the previous period is read from the dates; a plan change
+ * such as monthly to yearly leaves a previous period of weeks or months, never trial-length, so it is a plain renewal.
  */
-export function isTrialConversion(transaction: Pick<Transaction, "purchaseDate" | "originalPurchaseDate" | "expiresDate">): boolean {
+export function isTrialConversion(transaction: Pick<Transaction, "purchaseDate" | "originalPurchaseDate" | "expiresDate" | "offerType">): boolean {
   const paidPeriod = transaction.expiresDate - transaction.purchaseDate;
   const firstPeriod = transaction.purchaseDate - transaction.originalPurchaseDate;
-  return paidPeriod > 0 && firstPeriod > 0 && firstPeriod < paidPeriod * TRIAL_GAP_SHARE;
+  const trialShaped = firstPeriod > 0 && firstPeriod <= MAX_TRIAL_MS;
+  return (transaction.offerType ?? null) === null && trialShaped && paidPeriod > 0 && firstPeriod < paidPeriod * TRIAL_GAP_SHARE;
 }
 
 function isTrial(transaction: Transaction): boolean {
@@ -115,13 +122,20 @@ async function verifiedTransaction(data: Record<string, unknown>, options: Apple
   return payload === null ? null : transactionOf(payload, asText(data["environment"]));
 }
 
-/** Decides what one App Store notification is worth: a row, nothing (a type we do not count, a test ping, another app's), or a refusal (not Apple's). */
-export async function decideApple(body: unknown, books: BookResolver, options: AppleJwsOptions = {}): Promise<Outcome> {
+/** True when the payload was signed within the dedup window (7 days, Apple's retries last about 157 hours) before `now` (and not in the future): an older or future-dated one is a replay or a clock fault and is never counted. */
+export function isFreshPayload(payload: Record<string, unknown>, now: Date): boolean {
+  const signedAt = asNumber(payload["signedDate"]);
+  return signedAt > 0 && signedAt <= now.getTime() + FUTURE_SKEW_MS && now.getTime() - signedAt <= DEDUP_WINDOW_MS; // older than the key's life could be counted twice
+}
+
+/** Decides what one App Store notification is worth: a row, nothing (a type we do not count, a test ping, another app's, a stale or future-dated one), or a refusal (not Apple's). */
+export async function decideApple(body: unknown, books: BookResolver, options: AppleJwsOptions = {}, now: Date = new Date()): Promise<Outcome> {
   const signed = typeof body === "object" && body !== null ? (body as Record<string, unknown>)["signedPayload"] : null;
   if (typeof signed !== "string") return REFUSE;
   const payload = await verifyAppleSignedPayload(signed, options);
-  const data = payload === null ? null : payload["data"];
   if (payload === null) return REFUSE;
+  if (!isFreshPayload(payload, now)) return IGNORE; // 204: Apple must not redeliver a replay
+  const data = payload["data"];
   const type = asText(payload["notificationType"]);
   if (typeof data !== "object" || data === null || !(APPLE_TYPES as readonly string[]).includes(type)) return IGNORE;
   const transaction = await verifiedTransaction(data as Record<string, unknown>, options);

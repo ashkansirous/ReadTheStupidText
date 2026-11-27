@@ -9,9 +9,9 @@ import { isStoreCount, parseEvent, toDataPoint } from "./events.ts";
 import { APP_PACKAGE_ID, SUBSCRIPTION_MONTHLY_PRODUCT, SUBSCRIPTION_YEARLY_PRODUCT } from "./products.ts";
 import { decideApple, isTrialConversion, subscriptionKindOf } from "./store-notifications/apple.ts";
 import { countryOfStorefront } from "./store-notifications/countries.ts";
-import { alreadySeen } from "./store-notifications/dedup.ts";
+import { alreadySeen, markSeen } from "./store-notifications/dedup.ts";
 import { resetGoogleStoreCaches, verifyPushToken } from "./store-notifications/google.ts";
-import { bookIdOfMetaKey } from "./store-notifications/books.ts";
+import { bookIdOfMetaKey, bookResolverFor } from "./store-notifications/books.ts";
 import { handleStoreNotification, storeEvent } from "./store-notifications/handler.ts";
 
 const DAY = 86_400_000;
@@ -41,7 +41,8 @@ function appleBody(type, subtype, tx, { environment = "Production", uuid = "1111
   return { signedPayload: jws(notification) };
 }
 
-const countOf = async (body) => (await decideApple(body, books, APPLE));
+const NOW = new Date(SIGNED_AT + 3_600_000); // an hour after the payloads were signed: inside the freshness window
+const countOf = async (body) => (await decideApple(body, books, APPLE, NOW));
 const detailOf = (outcome) => `${outcome.count.platform}.${outcome.count.kind}.${outcome.count.offer}`;
 
 test("Apple: the mapping table turns type and subtype into a kind", async () => {
@@ -136,8 +137,10 @@ test("dedup drops a second delivery, never remembers a key with no id and counts
   const kept = new Map();
   const kv = { get: async (key) => kept.get(key) ?? null, put: async (key, value, options) => { kept.set(key, value); assert.ok(options.expirationTtl > 0); } };
   assert.equal(await alreadySeen(kv, "apple:abc"), false);
+  assert.equal(await alreadySeen(kv, "apple:abc"), false, "looking does not remember");
+  await markSeen(kv, "apple:abc");
   assert.equal(await alreadySeen(kv, "apple:abc"), true);
-  assert.equal(await alreadySeen(kv, "apple:"), false);
+  await markSeen(kv, "apple:");
   assert.equal(await alreadySeen(kv, "apple:"), false);
   assert.equal(await alreadySeen(undefined, "apple:abc"), false);
 });
@@ -156,7 +159,6 @@ function env(extra = {}) {
   return { prod, beta, DINO_USAGE: { writeDataPoint: (p) => prod.push(p) }, DINO_USAGE_BETA: { writeDataPoint: (p) => beta.push(p) }, ...extra };
 }
 const post = (path, body, headers = {}) => new Request(`https://dinoreader.sirous.uk${path}`, { method: "POST", headers, body: JSON.stringify(body) });
-const NOW = new Date("2026-11-27T10:00:00Z");
 
 test("POST /api/store/apple writes one production row; a sandbox one goes to the beta dataset only", async () => {
   const e = env();
@@ -180,13 +182,13 @@ test("a repeated Apple delivery writes one row", async () => {
   assert.equal(e.prod.length, 1);
 });
 
-test("the endpoints answer 405 to a GET, 400 to a body that is not a notification, and 503 without the dataset", async () => {
+test("the endpoints answer 405 to a GET, 400 to a body that is not a notification, and 204 (logged, not retried) without the dataset", async () => {
   const e = env();
   assert.equal((await handleStoreNotification(new Request("https://dinoreader.sirous.uk/api/store/apple"), e)).status, 405);
   assert.equal((await handleStoreNotification(post("/api/store/apple", { nope: 1 }), e)).status, 400);
   assert.equal((await handleStoreNotification(new Request("https://dinoreader.sirous.uk/api/store/apple", { method: "POST", body: "not json" }), e)).status, 400);
   const none = await handleStoreNotification(post("/api/store/apple", appleBody("DID_RENEW", undefined, transaction())), {}, { apple: APPLE, books, now: NOW });
-  assert.equal(none.status, 503);
+  assert.equal(none.status, 204);
 });
 
 // ---- Google ------------------------------------------------------------------------------------------------------------------
@@ -317,4 +319,148 @@ test("the Dino-only run_worker_first entries exist in wrangler.jsonc", async () 
   const text = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
   assert.match(text, /"\/api\/store\/\*"/);
   assert.match(text, /"\/dino\/api\/store\/\*"/);
+});
+
+// ---- Pass 1 review fixes ----------------------------------------------------------------------------------------------------
+
+test("a row that could not be written (dataset unbound) is a 204 and is not remembered, so a later delivery with the dataset bound still counts", async () => {
+  const kept = new Map();
+  const STORE_DEDUP = { get: async (k) => kept.get(k) ?? null, put: async (k, v) => void kept.set(k, v) };
+  const body = appleBody("DID_RENEW", undefined, transaction());
+  const deps = { apple: APPLE, books, now: NOW };
+  assert.equal((await handleStoreNotification(post("/api/store/apple", body), { STORE_DEDUP }, deps)).status, 204);
+  const sandboxOnly = appleBody("DID_RENEW", undefined, transaction(), { environment: "Sandbox" });
+  assert.equal((await handleStoreNotification(post("/api/store/apple", sandboxOnly), { STORE_DEDUP, DINO_USAGE: { writeDataPoint: () => {} } }, deps)).status, 204); // no beta binding
+  assert.equal(kept.size, 0);
+  const e = env({ STORE_DEDUP });
+  assert.equal((await handleStoreNotification(post("/api/store/apple", body), e, deps)).status, 204);
+  assert.equal(e.prod.length, 1);
+});
+
+test("Apple: a payload signed more than seven days ago, or in the future, is dropped with 204 and counts nothing", async () => {
+  const body = appleBody("DID_RENEW", undefined, transaction());
+  for (const now of [new Date(SIGNED_AT + 7 * 24 * 3_600_000 + 60_000), new Date(SIGNED_AT - 3_600_000)]) {
+    const e = env();
+    assert.equal((await handleStoreNotification(post("/api/store/apple", body), e, { apple: APPLE, books, now })).status, 204);
+    assert.equal(e.prod.length, 0);
+  }
+});
+
+const metaKey = (id) => `dinoreader/stories/${id}/meta.json`;
+const NEW_ID = "fedcba9876543210fedcba9876543210";
+function fakeBucket(files, { failList = false } = {}) {
+  return {
+    list: async () => { if (failList) throw new Error("r2 down"); return { objects: Object.keys(files).map((key) => ({ key })), truncated: false }; },
+    get: async (key) => ({ json: async () => { const v = files[key]; if (v === "not json") throw new SyntaxError("bad"); return v; } }),
+  };
+}
+
+test("books: a missing product refetches the catalogue once, and one bad meta.json skips only that book", async () => {
+  const files = { [metaKey(BOOK_ID)]: { productId: BOOK_PRODUCT }, [metaKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]: "not json" };
+  const resolve = bookResolverFor(fakeBucket(files));
+  assert.equal(await resolve(BOOK_PRODUCT), BOOK_ID, "a bad neighbour does not blank the catalogue");
+  files[metaKey(NEW_ID)] = { productId: `${APP_PACKAGE_ID}.book.newest` };
+  assert.equal(await resolve(`${APP_PACKAGE_ID}.book.newest`), NEW_ID, "a book published after the load is found by the refetch");
+  assert.equal(await resolve(`${APP_PACKAGE_ID}.book.nope`), null);
+});
+
+test("books: a bucket that cannot be read is a 503 so the store redelivers, not a dropped purchase", async () => {
+  const resolve = bookResolverFor(fakeBucket({}, { failList: true }));
+  const e = env();
+  const body = appleBody("ONE_TIME_CHARGE", undefined, transaction({ productId: BOOK_PRODUCT }));
+  assert.equal((await handleStoreNotification(post("/api/store/apple", body), e, { apple: APPLE, books: resolve, now: NOW })).status, 503);
+  assert.equal(e.prod.length, 0);
+});
+
+test("Google: a token signed by a key published after the cache was filled is accepted after one refetch, at most once a minute", async () => {
+  const rotated = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const NEW_JWK = { ...rotated.publicKey.export({ format: "jwk" }), kid: "rotated-key", alg: "RS256", use: "sig" };
+  let published = [JWK];
+  let fetches = 0;
+  const fetcher = async () => { fetches += 1; return json({ keys: published }); };
+  const withKid = (kid, key) => {
+    const input = `${encode({ alg: "RS256", kid, typ: "JWT" })}.${encode({ iss: "https://accounts.google.com", aud: AUDIENCE, email: PUSH_EMAIL, email_verified: true, exp: nowS + 600 })}`;
+    return `Bearer ${input}.${base64UrlEncode(sign("RSA-SHA256", Buffer.from(input), key))}`;
+  };
+  resetGoogleStoreCaches();
+  const realNow = Date.now;
+  let clock = realNow();
+  Date.now = () => clock;
+  try {
+    assert.equal(await verifyPushToken(oidc(), GOOGLE_ENV, fetcher, nowS), true);
+    published = [JWK, NEW_JWK];
+    clock += 30 * 60_000;
+    assert.equal(await verifyPushToken(withKid("rotated-key", rotated.privateKey), GOOGLE_ENV, fetcher, nowS), true);
+    const before = fetches;
+    assert.equal(await verifyPushToken(withKid("bogus", rotated.privateKey), GOOGLE_ENV, fetcher, nowS), false);
+    assert.equal(fetches, before, "inside the cooldown a bogus kid costs no fetch");
+    clock += 61_000;
+    assert.equal(await verifyPushToken(withKid("bogus", rotated.privateKey), GOOGLE_ENV, fetcher, nowS), false);
+    assert.equal(await verifyPushToken(withKid("bogus", rotated.privateKey), GOOGLE_ENV, fetcher, nowS), false);
+    assert.equal(fetches - before, 1, "after the cooldown a bogus kid costs one refetch, not one per request");
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("Google: a 401 or 403 from Play is a configuration fault answered 204; 5xx and 429 stay retryable", async () => {
+  for (const status of [401, 403]) assert.equal((await push(subNote(4), { subscription: {}, status })).response.status, 204);
+  for (const status of [429, 500, 503]) assert.equal((await push(subNote(4), { subscription: {}, status })).response.status, 503);
+});
+
+test("Google: a trial push retried after the trial ended is still a trial start; an intro-price renewal is not a conversion; recovered and restarted count nothing", async () => {
+  const detail = async (type, play) => (await push(subNote(type), { subscription: play })).e.prod[0]?.blobs[8] ?? null;
+  const afterTrial = playSub({ latestOrderId: "GPA.1111-2222-3333-44444..0" }, { offerDetails: { basePlanId: "monthly", offerId: "freetrial" }, offerPhase: { basePrice: {} } });
+  assert.equal(await detail(4, afterTrial), "android.trial_started.trial");
+  assert.equal(await detail(2, afterTrial), "android.converted.paid");
+  const intro = playSub({ latestOrderId: "GPA.1111-2222-3333-44444..0" }, { offerDetails: { basePlanId: "monthly", offerId: "intro" }, offerPhase: { introductoryPrice: {} } });
+  assert.equal(await detail(2, intro), "android.renewed.paid");
+  assert.equal(await detail(4, intro), "android.subscribed.paid");
+  assert.equal(await detail(1, playSub()), null);
+  assert.equal(await detail(7, playSub()), null);
+});
+
+test("the Dino run_worker_first entries are also in wrangler.workers-dev.jsonc", async () => {
+  const { readFileSync } = await import("node:fs");
+  const text = readFileSync(new URL("../wrangler.workers-dev.jsonc", import.meta.url), "utf8");
+  assert.match(text, /"\/api\/store\/\*"/);
+  assert.match(text, /"\/dino\/api\/store\/\*"/);
+});
+
+// ---- Pass 2 review fixes ----------------------------------------------------------------------------------------------------
+
+test("Apple: only an exact Production on both the notification and the transaction is production; Xcode, LocalTesting or a missing field are tests", async () => {
+  for (const environment of ["Xcode", "LocalTesting", "", "production"]) {
+    assert.equal((await countOf(appleBody("DID_RENEW", undefined, transaction(), { environment }))).count.test, true, `outer ${environment}`);
+    assert.equal((await countOf(appleBody("DID_RENEW", undefined, transaction({ environment })))).count.test, true, `transaction ${environment}`);
+  }
+  const noEnvironment = transaction();
+  delete noEnvironment.environment;
+  assert.equal((await countOf(appleBody("DID_RENEW", undefined, noEnvironment))).count.test, true);
+});
+
+test("a dedup store that throws never turns a written row into an error", async () => {
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const body = appleBody("DID_RENEW", undefined, transaction());
+    const deps = { apple: APPLE, books, now: NOW };
+    const failingPut = env({ STORE_DEDUP: { get: async () => null, put: async () => { throw new Error("kv down"); } } });
+    assert.equal((await handleStoreNotification(post("/api/store/apple", body), failingPut, deps)).status, 204);
+    assert.equal(failingPut.prod.length, 1);
+    const failingGet = env({ STORE_DEDUP: { get: async () => { throw new Error("kv down"); }, put: async () => {} } });
+    assert.equal((await handleStoreNotification(post("/api/store/apple", body), failingGet, deps)).status, 204);
+    assert.equal(failingGet.prod.length, 1);
+  } finally {
+    console.warn = warn;
+  }
+});
+
+test("Apple: a plan change from monthly to yearly, or a renewal under an offer, is not a trial conversion", async () => {
+  const upgrade = transaction({ productId: SUBSCRIPTION_YEARLY_PRODUCT, originalPurchaseDate: SIGNED_AT - 60 * DAY, expiresDate: SIGNED_AT + 365 * DAY });
+  assert.equal(isTrialConversion(upgrade), false);
+  assert.equal(detailOf(await countOf(appleBody("DID_RENEW", undefined, upgrade))), "ios.renewed.paid");
+  assert.equal(isTrialConversion(transaction({ originalPurchaseDate: SIGNED_AT - 7 * DAY, offerType: 2 })), false);
+  const yearlyAfterTrial = transaction({ productId: SUBSCRIPTION_YEARLY_PRODUCT, originalPurchaseDate: SIGNED_AT - 7 * DAY, expiresDate: SIGNED_AT + 365 * DAY });
+  assert.equal(isTrialConversion(yearlyAfterTrial), true);
 });

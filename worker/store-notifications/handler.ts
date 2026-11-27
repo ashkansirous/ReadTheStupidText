@@ -1,11 +1,12 @@
 // Slice 458: the two store-notification endpoints, `POST /api/store/apple` and `POST /api/store/google` (and their `/dino` twins on workers.dev).
 // Each delivery is verified, decided (apple.ts, google.ts), deduplicated and written as one `store` row. Answers carry no body: 204 taken or deliberately dropped, 400 not a
-// store's notification, 401 a Pub/Sub push with no valid token, 405 not a POST, 503 for a notification we could not decide (the store redelivers) or without its dataset.
+// store's notification, 401 a Pub/Sub push with no valid token, 405 not a POST, 503 for a notification we could not decide (the store redelivers). A row that cannot be written (dataset unbound, invalid row) is a logged 204: a redelivery cannot fix it.
 import { NO_CONTEXT, NO_EXTRA_FIELDS, isStoreCount, readCappedText, reply, toDataPoint } from "../events.ts";
 import type { UsageEvent } from "../events.ts";
 import type { Fetcher } from "../entitlements/types.ts";
 import { decideApple } from "./apple.ts";
-import { alreadySeen } from "./dedup.ts";
+import { alreadySeen, markSeen } from "./dedup.ts";
+import { RETRY } from "./types.ts";
 import type { DedupStore } from "./dedup.ts";
 import { decideGoogle, verifyPushToken } from "./google.ts";
 import type { GoogleStoreEnv } from "./google.ts";
@@ -27,7 +28,7 @@ export interface StoreNotificationsEnv extends GoogleStoreEnv {
   readonly DINO_USAGE?: AnalyticsEngineDataset;
   readonly DINO_USAGE_BETA?: AnalyticsEngineDataset;
   readonly DOWNLOADS?: R2Bucket;
-  /** The KV namespace that holds notification ids for a day (item 4 creates it). */
+  /** The KV namespace that holds notification ids for seven days (item 4 creates it). */
   readonly STORE_DEDUP?: DedupStore;
 }
 
@@ -52,20 +53,57 @@ export function storeEvent(count: StoreCount, now: Date): UsageEvent {
   };
 }
 
-function writeCount(count: StoreCount, env: StoreNotificationsEnv, now: Date): boolean {
+/** Why a count was not written: no dataset is bound for it (a config fault) or the row is not a valid `store` row. Neither is fixed by a redelivery. */
+function writeCount(count: StoreCount, env: StoreNotificationsEnv, now: Date): "written" | "unbound" | "invalid" {
   const dataset = count.test ? env.DINO_USAGE_BETA : env.DINO_USAGE; // production-only analytics: a sandbox or test purchase never reaches dino_usage
   const event = storeEvent(count, now);
-  if (dataset === undefined || !isStoreCount(event)) return false;
+  if (dataset === undefined) return "unbound";
+  if (!isStoreCount(event)) return "invalid";
   dataset.writeDataPoint(toDataPoint(event, { ...NO_CONTEXT, country: count.country }));
-  return true;
+  return "written";
+}
+
+const noBody = (): Response => new Response(null, { status: NO_BODY_STATUS });
+
+/** The dedup read: a KV that throws counts as unseen (a double count beats a lost one). */
+async function seenBefore(env: StoreNotificationsEnv, key: string): Promise<boolean> {
+  try {
+    return await alreadySeen(env.STORE_DEDUP, key);
+  } catch {
+    console.warn("store-notifications dedup read failed"); // no-fallback: unseen, so the row is counted
+    return false;
+  }
+}
+
+/** The dedup write after the row exists: a failure is logged and the delivery still succeeds, so the store does not redeliver and count the row again. */
+async function remember(env: StoreNotificationsEnv, key: string): Promise<void> {
+  try {
+    await markSeen(env.STORE_DEDUP, key);
+  } catch {
+    console.warn("store-notifications dedup write failed"); // no-fallback: the row exists; answering an error would make the store redeliver it
+  }
 }
 
 async function finish(outcome: Outcome, env: StoreNotificationsEnv, now: Date): Promise<Response> {
   if (outcome.type === "refuse") return reply(400);
   if (outcome.type === "retry") return reply(503);
-  if (outcome.type === "ignore") return new Response(null, { status: NO_BODY_STATUS });
-  if (await alreadySeen(env.STORE_DEDUP, outcome.dedupKey)) return new Response(null, { status: NO_BODY_STATUS });
-  return writeCount(outcome.count, env, now) ? new Response(null, { status: NO_BODY_STATUS }) : reply(503);
+  if (outcome.type === "ignore") return noBody();
+  if (await seenBefore(env, outcome.dedupKey)) return noBody();
+  const written = writeCount(outcome.count, env, now);
+  if (written !== "written") {
+    console.warn(`store-notifications row dropped reason=${written} test=${outcome.count.test}`); // a config fault: 204, since the store's redelivery would fail the same way for days
+    return noBody();
+  }
+  await remember(env, outcome.dedupKey);
+  return noBody();
+}
+
+async function decide(google: boolean, body: unknown, env: StoreNotificationsEnv, fetcher: Fetcher, books: BookResolver, deps: StoreNotificationsDeps, now: Date): Promise<Outcome> {
+  try {
+    return google ? await decideGoogle(body, env, fetcher, books) : await decideApple(body, books, deps.apple, now);
+  } catch {
+    return RETRY; // no-fallback: something we could not read (the catalogue bucket) is not a reason to lose the count; the store redelivers
+  }
 }
 
 async function jsonBody(request: Request): Promise<unknown> {
@@ -89,6 +127,6 @@ export async function handleStoreNotification(request: Request, env: StoreNotifi
   const body = await jsonBody(request);
   if (body === undefined) return reply(400);
   const books = deps.books ?? (env.DOWNLOADS === undefined ? async () => null : bookResolverFor(env.DOWNLOADS));
-  const outcome = google ? await decideGoogle(body, env, fetcher, books) : await decideApple(body, books, deps.apple);
+  const outcome = await decide(google, body, env, fetcher, books, deps, now);
   return finish(outcome, env, now);
 }

@@ -1,5 +1,5 @@
 // Slice 458: a store names a book by its product id (`uk.sirous.dinoreader.book.<stem>`), the row by its book id. The link is the `productId` in each store book's meta.json (Slice 346).
-// Read from the downloads bucket and kept in the isolate for ten minutes; a product with no match is not counted (no row is better than a row for the wrong book).
+// Read from the downloads bucket and kept in the isolate for ten minutes; a product with no match, after one refetch, is not counted (no row is better than a row for the wrong book).
 import { STORY_ID_PATTERN } from "../download-keys.mjs";
 import type { BookResolver } from "./types.ts";
 
@@ -24,17 +24,21 @@ async function metaKeys(bucket: R2Bucket): Promise<string[]> {
   for (let page = 0; page < MAX_PAGES; page += 1) {
     const result = await bucket.list({ prefix: STORIES_PREFIX, cursor, limit: LIST_LIMIT });
     keys.push(...result.objects.map((object) => object.key).filter((key) => bookIdOfMetaKey(key) !== null));
-    if (!result.truncated) break;
+    if (!result.truncated) return keys;
     cursor = result.cursor;
   }
-  return keys;
+  throw new Error("the book listing is longer than the pages read"); // a partial catalogue would drop the books past it; the caller answers with a retry
 }
 
 async function productOf(bucket: R2Bucket, key: string): Promise<[string, string] | null> {
-  const object = await bucket.get(key);
-  const meta = object === null ? null : ((await object.json()) as { productId?: unknown });
-  const id = bookIdOfMetaKey(key);
-  return id !== null && meta !== null && typeof meta.productId === "string" && meta.productId !== "" ? [meta.productId, id] : null;
+  try {
+    const object = await bucket.get(key);
+    const meta = object === null ? null : ((await object.json()) as { productId?: unknown } | null);
+    const id = bookIdOfMetaKey(key);
+    return id !== null && meta !== null && typeof meta.productId === "string" && meta.productId !== "" ? [meta.productId, id] : null;
+  } catch {
+    return null; // no-fallback: one unreadable or non-JSON meta.json skips that book only; the rest of the catalogue still resolves
+  }
 }
 
 async function loadProducts(bucket: R2Bucket): Promise<ReadonlyMap<string, string>> {
@@ -42,17 +46,21 @@ async function loadProducts(bucket: R2Bucket): Promise<ReadonlyMap<string, strin
   return new Map(pairs.filter((pair): pair is [string, string] => pair !== null));
 }
 
-/** The resolver over the downloads bucket. A bucket that cannot be read answers null (the row is dropped, the delivery is not retried). */
+async function refreshed(bucket: R2Bucket): Promise<ReadonlyMap<string, string>> {
+  const byProduct = await loadProducts(bucket);
+  cache.set(bucket, { at: Date.now(), byProduct });
+  return byProduct;
+}
+
+/**
+ * The resolver over the downloads bucket. A product missing from the catalogue refetches it once (a book published since the last load), so a new book's first purchase is not dropped.
+ * A bucket that cannot be read rejects: the caller answers 503 and the store redelivers.
+ */
 export function bookResolverFor(bucket: R2Bucket): BookResolver {
   return async (productId) => {
-    try {
-      const held = cache.get(bucket);
-      if (held !== undefined && Date.now() - held.at < REUSE_MS) return held.byProduct.get(productId) ?? null;
-      const byProduct = await loadProducts(bucket);
-      cache.set(bucket, { at: Date.now(), byProduct });
-      return byProduct.get(productId) ?? null;
-    } catch {
-      return null; // no-fallback: the catalogue could not be read, so the book cannot be named and no row is written
-    }
+    const held = cache.get(bucket);
+    const known = held !== undefined && Date.now() - held.at < REUSE_MS ? held.byProduct.get(productId) : undefined;
+    if (known !== undefined) return known;
+    return (await refreshed(bucket)).get(productId) ?? null;
   };
 }

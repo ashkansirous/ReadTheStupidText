@@ -19,6 +19,8 @@
       "/api/stories", "/api/stories/*",
       // Slice 132: Dino Reader's remote config (worker/appconfig.ts).
       "/api/app-config",
+      // Slice 458: the stores' server notifications, /api/store/apple and /api/store/google (worker/store-notifications/).
+      "/api/store/*",
       // Slice 133: Dino Reader's anonymous usage counts (worker/events.ts).
       "/api/events", "/api/events/beta",
       // Slice 227: crash and error reports from the phone apps (worker/crashes.ts).
@@ -40,6 +42,7 @@
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
       "/dino/api/app-config",
+      "/dino/api/store/*",
       "/dino/api/events", "/dino/api/events/beta",
       "/dino/api/crash",
       "/dino/sonos",
