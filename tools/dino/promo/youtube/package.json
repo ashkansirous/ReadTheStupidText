@@ -1,0 +1,14 @@
+{
+  "name": "dino-youtube-renderer",
+  "private": true,
+  "type": "module",
+  "description": "Slice 435: renders the free Dino books as read-aloud videos and uploads them to YouTube",
+  "scripts": {
+    "test": "node --test \"*.test.mjs\"",
+    "render": "node render.mjs",
+    "upload": "node upload.mjs"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4"
+  }
+}
