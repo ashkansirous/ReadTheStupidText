@@ -48,6 +48,32 @@ public sealed class SoundPillTextTests
 	}
 
 	[Fact]
+	public void A_name_inside_another_word_is_not_marked_when_the_whole_word_comes_later()
+	{
+		IReadOnlyList<SoundPillRun> inside = SoundPillText.Split("Getting Svenskan and Svensk sound", "Svensk");
+		Assert.Equal(["Getting Svenskan and ", "Svensk", " sound"], inside.Select(r => r.Text));
+	}
+
+	[Fact]
+	public void A_combining_mark_after_the_name_makes_it_part_of_a_longer_word()
+	{
+		const string name = "فارس";
+		string text = $"Getting {name}َ and {name} sound"; // the first has a vowel sign after it, the second stands alone
+
+		IReadOnlyList<SoundPillRun> runs = SoundPillText.Split(text, name);
+
+		Assert.Equal([$"Getting {name}َ and ", name, " sound"], runs.Select(r => r.Text));
+	}
+
+	[Fact]
+	public void With_no_whole_word_the_first_occurrence_is_marked()
+	{
+		IReadOnlyList<SoundPillRun> runs = SoundPillText.Split("xفارسیx", "فارسی");
+
+		Assert.Equal([false, true, false], runs.Select(r => r.IsName));
+	}
+
+	[Fact]
 	public void The_runs_join_back_to_the_text()
 	{
 		const string text = "Hole فارسی-Audio für deine Bücher";

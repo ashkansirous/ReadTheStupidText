@@ -1,0 +1,100 @@
+# Slice 452 (Slice 290 part B): the reading page's sound pill in each state, held on screen so it can be compared with Batch 50 frames 197-199. Nothing else shows the pill while a flow can screenshot it, so the
+# Debug sound-pill hook (DinoTestCommands.SoundPill.cs) holds it: getting (brand tint, ring, the Farsi name in its own font, the percent), wifi, preparing and nosound (sand pills), then off.
+# Run it on a cold emulator: restart the emulator first (the Maestro driver crashes right after boot). The screenshots land in the Maestro output folder as sound-pill-<state>.
+# The flow fails against the old behaviour: without the hook no pill is on screen with a book open and idle, so the "[Reading] sound-pill held" markers and the ReadingAudioStatus text never appear.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK sound-pill ok wifi
+# expect-log: [Reading] sound-pill held kind=WaitingForInternet
+# expect-log: HOOK sound-pill ok preparing
+# expect-log: [Reading] sound-pill held kind=Preparing
+# expect-log: HOOK sound-pill ok nosound
+# expect-log: [Reading] sound-pill held kind=NoSound
+# expect-log: HOOK sound-pill ok getting
+# expect-log: [Reading] sound-pill held kind=Getting
+# expect-log: HOOK sound-pill ok off
+# expect-log: [Reading] sound-pill released
+appId: uk.sirous.dinoreader.dbg
+name: The sound pill shows Getting with a count, Wi-Fi, Preparing and no sound
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the flow needs no pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: gingerbread-man
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# Let the page's picture finish loading before the first shot (the first run's first screenshot was taken with the picture area blank); Getting goes last for the same reason.
+- waitForAnimationToEnd:
+    timeout: 5000
+# Wi-Fi: the quiet sand pill with the Wi-Fi icon.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: sound-pill
+      state: wifi
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+      text: "Waiting for the internet…"
+    timeout: 10000
+- takeScreenshot: sound-pill-wifi
+# Preparing: a sand pill with no icon.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: sound-pill
+      state: preparing
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+      text: "Getting ready…"
+    timeout: 10000
+- takeScreenshot: sound-pill-preparing
+# No sound: the sand pill with the muted speaker.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: sound-pill
+      state: nosound
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+      text: "This part has no sound"
+    timeout: 10000
+- takeScreenshot: sound-pill-nosound
+# Getting with a count: the brand pill with the ring, the language's own name (Farsi, frame 197) and the percent.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: sound-pill
+      state: getting
+      percent: "40"
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: ReadingAudioStatus
+      text: "Getting .* sound for this book · 40%"
+    timeout: 10000
+- takeScreenshot: sound-pill-getting
+# Off: the hold is released and the pill goes away (the page shows it only while a piece lacks sound).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: sound-pill
+      state: "off"
+- extendedWaitUntil:
+    notVisible:
+      id: ReadingAudioStatus
+    timeout: 10000
