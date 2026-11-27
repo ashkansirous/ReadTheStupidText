@@ -312,6 +312,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 431 | Dino: the story skill reports its steps to the agent board, with process keys | built (item C, one real book run, in unverified.md) | #1409 | | [431-dino-story-board-steps.md](../slices/431-dino-story-board-steps.md) |
 | 441 | Dino: iPad reading page hides Back and the view switch from VoiceOver | built (iPad, VoiceOver, TalkBack, Narrator checks in unverified.md) | #1405 | | [441-dino-ipad-reading-header-voiceover.md](../slices/441-dino-ipad-reading-header-voiceover.md) |
 | 452 | Dino: sound pill device check hook and Part B leftovers | built (iOS simulator run and mock comparison in unverified.md) | #1407 | | [452-dino-sound-pill-device-check-hook.md](../slices/452-dino-sound-pill-device-check-hook.md) |
+| 447 | Dino story skill: true-size line-up script and accepted-page save guard | built (one real Gemini save in unverified.md) | #1414 | | [447-dino-story-skill-lineup-script-and-save-guard.md](../slices/447-dino-story-skill-lineup-script-and-save-guard.md) |
 | 455 | Dino: buy, restore and subscription outcome events | built (device and log checks in unverified.md) | #1408 | | [455-dino-purchase-outcome-events.md](../slices/455-dino-purchase-outcome-events.md) |
 
 ## Shared

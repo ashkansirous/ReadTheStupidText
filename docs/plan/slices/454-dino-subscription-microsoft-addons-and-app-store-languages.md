@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `docs/store-listings/dino/subscription-listings.md`, this file
 
-*Built (wave 2026-11-27, PR #1417, not merged). Items 1 and 3 built in code; item 2 built and unit-tested but its live App Store apply has not run, so item 2 stays open. Planned 2026-11-25 (moved out of Slice 384).*
+*Built (wave 2026-11-27), merged as PR #1417 (fdb2114c). Items 1 and 3 built in code; item 2 built and unit-tested but its live App Store apply has not run, so item 2 stays open. Planned 2026-11-25 (moved out of Slice 384).*
 
 Moved out of Slice 384 (built, #1174) by the plan cleanup of 2026-11-25. Read live that day: App Store Connect group 22582310 has both subscriptions (`uk.sirous.dinoreader.sub.monthly`, `.sub.yearly`) APPROVED, but their group and subscription localizations hold en-US only; Partner Center product 9N9VHRLCZXN5 lists 12 add-ons, all `Durable` books (`uk.sirous.dinoreader.book.*`), no subscription add-on. Links: [App Store Connect subscriptions](https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions), [Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview).
 
@@ -30,7 +30,7 @@ Moved out of Slice 384 (built, #1174) by the plan cleanup of 2026-11-25. Read li
 - Skipped #2 (`reviews/pr-1417-check.md`): "rerun after failed submit prints" - a nit about a log note only; no store write changes (low follow-up above).
 - Skipped #3 (`reviews/pr-1417-check.md`): "--submit without --apply, and --locales/--submit with --check-prices, silently ignored" - a nit: nothing is written in those cases (low follow-up above).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 None.
 
