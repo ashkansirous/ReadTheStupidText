@@ -1,9 +1,13 @@
 # Slice 464 — Dino: an older part-take file never plays after a new take is saved
 **Product:** Dino
 
-**Touches:** `src/Dino/DinoReader.App/RecordPage.cs`, `src/Dino/DinoReader.Core/StoryRecordings.cs`, `src/Dino/DinoReader.Core/PartClipAdoption.cs`, `tests/Dino/DinoReader.Tests/**`
+**Touches:** `src/Dino/DinoReader.App/RecordPage.cs`, `src/Dino/DinoReader.Core/StoryRecordings.cs`, `src/Dino/DinoReader.Core/PartClipAdoption.cs`, `src/Dino/DinoReader.Core/FileStoryLibrary.cs`, `src/Dino/DinoReader.Core/PartTakeCommit.cs`, `tests/Dino/DinoReader.Tests/**`
 
-*Planned 2026-11-27 (index pass of night wave 2) from `reviews/pr-1397-check3-medium.md` finding #1 (Slice 443's third check pass). Not built.*
+*In progress (wave 2026-11-27), draft PR.*
+
+*Planned 2026-11-27 (index pass of night wave 2) from `reviews/pr-1397-check3-medium.md` finding #1 (Slice 443's third check pass).*
+
+**Claim note (coordinator, 2026-11-27):** the commit step (`CommitAsync` / `SaveWithClipAsync`) is private in `RecordPage.cs` (about lines 880-925) and `tests/Dino/DinoReader.Tests/PartTakeCommitTests.cs` copies it by hand. Item 1 first moves that step into Core (`src/Dino/DinoReader.Core/PartTakeCommit.cs`, a pure step the page calls), so the test runs the real code. The adopting read is `FileStoryLibrary.cs` (about line 579; delete and marker code about 434-475), hence the wider Touches. The fix keeps Slice 443's rule: a save never deletes a recording of words the new take does not cover.
 
 **Why:** a parent would hear an old recording after re-recording. The old file stays on disk as an orphan and is adopted again when the new take is later removed, or played in its place.
 
