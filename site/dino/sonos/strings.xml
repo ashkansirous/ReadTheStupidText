@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Slice 440 D1: legacy Sonos string table shape (stringtables > stringtable xml:lang > string stringId), only the locales
+     docs.sonos.com/docs/localization lists. ar, fa, fi and ru are not Sonos locales: the Worker still names the categories in them
+     for desktop apps (getMetadata), and Sonos shows the English table for them. -->
+<stringtables xmlns="http://sonos.com/sonosapi">
+  <stringtable rev="1" xml:lang="da-DK">
+    <string stringId="Stories">Historier</string>
+    <string stringId="AllLanguages">Alle sprog</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="de-DE">
+    <string stringId="Stories">Geschichten</string>
+    <string stringId="AllLanguages">Alle Sprachen</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="en-US">
+    <string stringId="Stories">Stories</string>
+    <string stringId="AllLanguages">All languages</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="es-ES">
+    <string stringId="Stories">Cuentos</string>
+    <string stringId="AllLanguages">Todos los idiomas</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="fr-FR">
+    <string stringId="Stories">Histoires</string>
+    <string stringId="AllLanguages">Toutes les langues</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="ja-JP">
+    <string stringId="Stories">お話</string>
+    <string stringId="AllLanguages">すべての言語</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="nb-NO">
+    <string stringId="Stories">Historier</string>
+    <string stringId="AllLanguages">Alle språk</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="nl-NL">
+    <string stringId="Stories">Verhalen</string>
+    <string stringId="AllLanguages">Alle talen</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="pt-BR">
+    <string stringId="Stories">Histórias</string>
+    <string stringId="AllLanguages">Todos os idiomas</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="sv-SE">
+    <string stringId="Stories">Berättelser</string>
+    <string stringId="AllLanguages">Alla språk</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="zh-CN">
+    <string stringId="Stories">故事</string>
+    <string stringId="AllLanguages">所有语言</string>
+  </stringtable>
+</stringtables>

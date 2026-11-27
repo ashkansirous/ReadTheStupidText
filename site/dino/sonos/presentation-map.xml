@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Presentation xmlns="http://sonos.com/sonosapi">
+  <PresentationMap type="Search">
+    <Match>
+      <SearchCategories>
+        <CustomCategory stringId="Stories" mappedId="stories"/>
+        <CustomCategory stringId="AllLanguages" mappedId="all-languages"/>
+      </SearchCategories>
+    </Match>
+  </PresentationMap>
+</Presentation>

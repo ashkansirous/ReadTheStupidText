@@ -13,6 +13,8 @@ import { LABEL_LANGUAGES, Shelf, bookSubtitle, languageNameIn, languageSubtitle,
 import type { ShelfName } from "./sonos-labels.ts";
 import { languageFolderId, otherLanguages, parseShelfId, shelfId, shelfTracks, shelvesOf } from "./sonos-shelves.ts";
 import type { ShelfTarget } from "./sonos-shelves.ts";
+import { SEARCH_ID, isSearchCategory, searchCategories, searchTracks } from "./sonos-search.ts";
+import type { CategoryRow, SearchHit } from "./sonos-search.ts";
 import type { ServedFile } from "./downloads.ts";
 import { STORY_LANGUAGES, answerLinkAction, currentWord, guarded, handleLinkApi, homeForToken, homeKeyOf, isJsonRequest, isLinkAction, languageNameFor, requireHome, saveStoryLanguage, storyLanguageTap, storyLanguageTitle, subscriptionActive, subscriptionForPlayback, subscriptionKnown } from "./sonos-link.ts";
 import type { Home, SonosLinks } from "./sonos-link.ts";
@@ -49,6 +51,7 @@ const SAFE_PART = /^[A-Za-z0-9_-]{1,64}$/;
 const TRACK_MIME = "audio/mp4";
 const ITEM_TRACK = "track";
 const ITEM_CONTAINER = "container";
+const ITEM_SEARCH = "search";
 const ARTIST_FALLBACK = "Dino: Kids Books & Stories";
 const ALBUM_NAME = "Dino: Kids Books & Stories";
 const ACCEPT_LANGUAGE_HEADER = "Accept-Language";
@@ -267,8 +270,8 @@ function bookLine(track: Track, label: string): string {
   return `${title}${PART_SEPARATOR}${bookSubtitle({ ...track, ageMin: null, ageMax: null }, label)}`;
 }
 
-function trackFields(track: Track, label: string = track.language): string {
-  const subtitle = bookLine(track, label);
+function trackFields(track: Track, label: string = track.language, subtitleOverride?: string): string {
+  const subtitle = subtitleOverride ?? bookLine(track, label);
   const art = track.squareCoverUrl ?? track.coverUrl;
   const meta = [
     tag("artist", clip(track.author ?? ARTIST_FALLBACK, MAX_TITLE)),
@@ -281,8 +284,8 @@ function trackFields(track: Track, label: string = track.language): string {
   return [tag("id", trackId(track)), tag("itemType", ITEM_TRACK), tag("title", clip(track.title, MAX_TITLE)), tag("mimeType", TRACK_MIME), `<trackMetadata>${meta}</trackMetadata>`].join("");
 }
 
-function trackItem(track: Track, label: string = track.language): string {
-  return `<${MEDIA_METADATA}>${trackFields(track, label)}</${MEDIA_METADATA}>`;
+function trackItem(track: Track, label: string = track.language, subtitleOverride?: string): string {
+  return `<${MEDIA_METADATA}>${trackFields(track, label, subtitleOverride)}</${MEDIA_METADATA}>`;
 }
 
 /** A folder row: title, the line under it (as `artist`), its square picture, and whether Play queues all of it. */
@@ -429,10 +432,36 @@ function labelledTarget(id: string | null): { readonly target: ShelfTarget; read
 
 function browseOf(browse: Browse, id: string, recursive: boolean): Page {
   if (id === ROOT_ID) return browseRoot(browse, recursive);
+  if (id === SEARCH_ID) return searchContainer(browse);
   if (id.startsWith(PICK_PREFIX) && browse.home !== null) return browsePick(browse, browse.home, id.slice(PICK_PREFIX.length));
   const named = labelledTarget(id);
   if (named === null) throw noSuchItem();
   return browseTarget(browse, named.target, named.label, recursive);
+}
+
+/** Slice 440: the search container a desktop app browses: one `search` item per category (the same ids as the presentation map's). */
+function searchContainer(browse: Browse): Page {
+  const row = (category: CategoryRow): string => `<${MEDIA_COLLECTION}>${tag("id", category.id)}${tag("title", category.name)}${tag("itemType", ITEM_SEARCH)}</${MEDIA_COLLECTION}>`;
+  return pageOfItems(searchCategories(labelOfRequest(browse)).map(row));
+}
+
+/** The story language a search's Stories category looks in: a linked home's saved one, else the phone's first language with books, else the catalogue's first. */
+function searchLanguageOf(browse: Browse): string {
+  if (browse.home !== null) return storyLanguageOf(browse, browse.home);
+  return browse.languages.find((code) => tracksOfLanguage(browse.tracks, code).length > 0) ?? languageIds(browse.tracks)[0] ?? FALLBACK_LABEL;
+}
+
+function searchRow(hit: SearchHit, label: string): string {
+  const subtitle = hit.withLanguage ? `${languageNameIn(hit.track.language, label)}${PART_SEPARATOR}${bookSubtitle(hit.track, label)}` : undefined;
+  return trackItem(hit.track, label, subtitle);
+}
+
+/** Slice 440: `search` (id = category, term, index, count); an unknown category is an unknown item, an empty term an empty page. */
+function search(browse: Browse, request: SonosRequest): Response {
+  if (!isSearchCategory(request.id)) throw noSuchItem();
+  const label = labelOfRequest(browse);
+  const hits = searchTracks(browse.tracks, request.id, request.term, searchLanguageOf(browse));
+  return resultResponse(SonosAction.Search, pageOf(pageOfItems(hits.map((hit) => searchRow(hit, label))), request));
 }
 
 function pageOf(source: Page, request: SonosRequest): string {
@@ -656,6 +685,8 @@ async function answer(browse: Browse, request: SonosRequest, usage: SpeakerUsage
       return getMediaUri(browse, request, usage, httpRequest);
     case SonosAction.GetLastUpdate:
       return getLastUpdate(browse);
+    case SonosAction.Search:
+      return search(browse, request);
     default:
       throw new SoapFault(FaultCode.Unknown, FaultMessage.Unsupported);
   }

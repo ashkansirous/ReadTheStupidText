@@ -16,7 +16,7 @@ const WHOLE_NUMBER = /^\d{1,9}$/;
 const XML_ILLEGAL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 /** The request parameters' element names. */
-const Param = { Id: "id", Index: "index", Count: "count", Recursive: "recursive", HouseholdId: "householdId", LinkCode: "linkCode", CallbackPath: "callbackPath", Token: "token", Key: "key" } as const;
+const Param = { Id: "id", Index: "index", Count: "count", Recursive: "recursive", HouseholdId: "householdId", LinkCode: "linkCode", CallbackPath: "callbackPath", Token: "token", Key: "key", Term: "term" } as const;
 const LOGIN_TOKEN = "loginToken";
 
 /** The faultstring texts the service gives (no ids or titles in any of them). */
@@ -51,6 +51,7 @@ export const SonosAction = {
   GetMediaURI: "getMediaURI",
   GetMediaMetadata: "getMediaMetadata",
   GetLastUpdate: "getLastUpdate",
+  Search: "search",
   GetAppLink: "getAppLink",
   GetDeviceAuthToken: "getDeviceAuthToken",
   RefreshAuthToken: "refreshAuthToken",
@@ -70,6 +71,8 @@ export interface SonosRequest {
   readonly index: number | null;
   readonly count: number | null;
   readonly recursive: boolean;
+  /** Slice 440: the `search` call's term (null when the Body has none). */
+  readonly term: string | null;
   /** Slice 438: the Body's `householdId` (getAppLink, getDeviceAuthToken), `linkCode` and `callbackPath`. */
   readonly householdId: string | null;
   readonly linkCode: string | null;
@@ -155,6 +158,7 @@ export function parseSonosRequest(xml: string): SonosRequest | null {
     index: wholeNumberParam(inner, Param.Index),
     count: wholeNumberParam(inner, Param.Count),
     recursive: elementText(inner, Param.Recursive) === TRUE_TEXT,
+    term: elementText(inner, Param.Term),
     householdId: elementText(inner, Param.HouseholdId),
     linkCode: elementText(inner, Param.LinkCode),
     callbackPath: elementText(inner, Param.CallbackPath),

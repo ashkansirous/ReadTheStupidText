@@ -67,7 +67,7 @@ async function call(action, inner = "", { headers = true, bucket = env() } = {})
 
 test("the request reader finds the action and the parameters in the body", () => {
   const xml = envelope("getMetadata", "<ns:id>lang:fa</ns:id><ns:index>2</ns:index><ns:count>5</ns:count><ns:recursive>true</ns:recursive>");
-  assert.deepEqual(parseSonosRequest(xml), { action: "getMetadata", id: "lang:fa", index: 2, count: 5, recursive: true, householdId: null, linkCode: null, callbackPath: null, login: null });
+  assert.deepEqual(parseSonosRequest(xml), { action: "getMetadata", id: "lang:fa", index: 2, count: 5, recursive: true, term: null, householdId: null, linkCode: null, callbackPath: null, login: null });
   assert.equal(parseSonosRequest("not xml"), null);
   assert.equal(unescapeXml(escapeXml(`a<&>"'b`)), `a<&>"'b`);
 });
