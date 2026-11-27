@@ -15,3 +15,7 @@ Verification: the live Microsoft Store page shows the set and trailer; the Play 
 - [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back, after Slice 433 merges (its storyboard in `tools/dino/promo/store/`) (moved from Slice 434's block).
 - [session] The YouTube upload and the Play video URL wait for Slice 435's upload script (moved from Slice 434's block).
 - [session] Run `store-size-check.ps1` on the eight Windows PNGs once Slice 433 merges (moved from Slice 434's block).
+
+#### Follow-ups
+
+- Live check 2026-11-27 (after wave 4): item 1 cannot run as written: `tools/emulator/store-size-check.ps1` on origin/main 8ec0cb56 knows only the Play, App Store and preview targets (`play-phone` ... `preview-ipad`), no Microsoft Store / Windows target, so the eight PNGs in `docs/store-listings/screenshots/dino/windows/` have no size row to check against. Item 1 needs a Windows target (Microsoft Store screenshot size, read from Microsoft's own help page) added to the script and its Sizes note, through this slice's reviewed build, before the check runs.

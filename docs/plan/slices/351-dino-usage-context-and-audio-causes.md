@@ -178,5 +178,8 @@ Evidence: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s351/` and `.../rer
 - `premade_audio:no_pack` with a book id on a device (a book whose pack is not downloaded).
 - iOS simulator run of the context fields and the new fallback reasons.
 - Windows head on the VM, including the animal clip copy failure reason.
-- After release: a weighted query shows blobs 17-19 and double6 filled on rows from the new version.
 - `.maestro/dino/usage-context.yaml` should set English first (the flow assumes an English UI).
+
+#### Live check 2026-11-27 (after wave 4)
+
+- Passed: weighted `dino_usage` query, last 14 days, versions 1.124.1 to 1.136.5 (the slice shipped in dino-v1.124.0, PR #1014): blob17, blob18 and blob19 filled on 100% of rows on android (~3,600), ios (~5,500) and windows (~520); double6 >= 0 on 100%, > 0 on about 96-100%. Pre-slice 1.123.x rows (53) have all four empty.

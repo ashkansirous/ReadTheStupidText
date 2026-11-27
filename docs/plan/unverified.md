@@ -126,9 +126,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] **Device:** does Sonos cache the root per household? If so, two phones with different languages could see the same first screen.
 - [session] **Device:** can a service's folder (not just a track) be saved to My Sonos?
 
-### Slice 430: Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform ([slice](slices/430-ninjalog-forced-update-dashboard.md))
-- [session] Once someone below `minVersion` opens the app, the "Saw the please update page" chart shows them (on 2026-11-22 no `screen=update` event existed yet in 30 days).
-
 ### Slice 417: Dino: both web pages point at the live stores, show the new name and current screenshots; testing closed ([slice](slices/417-dino-sites-after-launch.md))
 - [chrome] Both live pages after deploy: store buttons open the right store pages, no tester link left.
 
@@ -153,7 +150,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] A record-and-save flow (record-per-character) on the emulator.
 
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
-- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again, and the device log carries the `cancelled-load` marker (not `failed-load`).
+- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again, and the device log carries the `cancelled-load` marker (not `failed-load`). (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
 - [phone] With the network back after a failed load (offline or a server error), the first-books list reloads by itself.
 - [phone] The same two checks on the iPhone (shared page, no iOS-only code).
 
@@ -182,12 +179,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** grant YouTube upload to the Dino channel | sign in as the channel owner at https://console.cloud.google.com/auth/overview?project=dino-reader, then run the uploader's one-time sign-in the slice's script prints
 
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
-- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again.
+- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again. (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
 
 ### Slice 445: Dino: Microsoft Store trailer, Partner Center push and Play video link ([slice](slices/445-dino-microsoft-store-trailer-and-play-video-link.md))
 - [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back (Slice 433 is closed; its storyboard in `tools/dino/promo/store/`).
 - [session] The YouTube upload and the Play video URL wait for Slice 435's upload script.
-- [session] Run `store-size-check.ps1` on the eight Windows PNGs (Slice 433 is closed).
+- [session] Run `store-size-check.ps1` on the eight Windows PNGs (Slice 433 is closed). (live check 2026-11-27: unreachable: store-size-check.ps1 has no Windows target, follow-up in Slice 445)
 
 ### Slice 433: Dino: new-look store screenshots, App Store previews, Play feature graphic ([slice](slices/433-dino-store-screenshots-video-play-appstore.md))
 - [owner] **You:** a native read of the machine-drafted screenshot captions (14 languages other than English, `docs/store-listings/screenshots/captions.json`), live on Play since 2026-11-25.
@@ -211,9 +208,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 413: Dino store name, subtitle and keywords in 14 languages ([slice](slices/413-dino-store-name-13-languages.md))
 - [owner] **You:** native read of the new Dino name, subtitle, keyword field, Play short description and Microsoft search terms in `docs/store-listings/dino/<lang>.md`, one language at a time: ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh (all machine drafts; Farsi has no App Store entry). The same texts are on the editable App Store version 1.133.1 (not submitted); Microsoft and Play are repo-only.
-
-### Slice 411: one command sets up a new book's sale product ([slice](slices/411-dino-book-product-every-store.md))
-- [session] **Device:** once Microsoft certifies add-on `9N6J9F50FM6G`, `node .github/scripts/store-products-local.mjs --check-prices` reads USD 0.99 for every book, Love from Seagull Island included (the first add-on priced through the API with `Tier1012`).
 
 ### Slice 403: Dino: foldable layouts ([slice](slices/403-dino-foldable-layouts.md))
 - [owner] **Device:** the iPhone Duo on a simulator or device (no Duo in Xcode yet; Apple has published no pixel sizes, points or safe areas, 2026-11-16). The Fold8 and Ultra on a real device.
@@ -240,8 +234,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 400: Dino: the crashes first reported 2026-11-14/15 ([slice](slices/400-dino-crashes-2026-11-14.md))
 - [phone] **Device:** iOS compile of the shared `StallGuardedRead.cs` change, and a Cancel during a first-book download on an iOS device or TestFlight build (same flow as `.maestro/dino/first-books-cancel-real-store.yaml`; only an Android flow exists): no Mac here.
-- [session] **Device:** the crash store shows no new stream-close report (`NetworkOnMainThreadException` in `FixedLengthSource.close`) on the fixed version.
-- [session] **Device:** other direct `ReadAsStreamAsync` calls bypass the guard (`RemoteConfigClient.cs:287`, `SubscriptionEndClient:48`; small bodies, same hazard class, outside the slice's Touches): not routed through `OpenBodyAsync`.
+- [session] **Device:** other direct `ReadAsStreamAsync` calls bypass the guard (`RemoteConfigClient.cs:287`, `SubscriptionEndClient:48`; small bodies, same hazard class, outside the slice's Touches): not routed through `OpenBodyAsync`. (live check 2026-11-27: failed, follow-up in Slice 400)
 
 ### Slice 397: Dino: the Store's subscription card in every state ([slice](slices/397-dino-subscription-card-states.md))
 - [session] **Device:** iOS compile of the Slice 397 changes: no Mac this run.
@@ -349,7 +342,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** iOS compile after the last fixes, and a TestFlight run of the cellular pack download and the reading-page states.
 - [phone] **Device:** real airplane mode on a phone (the flows force offline by a Debug hook).
 - [phone] **Device:** add a language on mobile data only: every shelf book's pack for it downloads with no question.
-- [session] **Device:** after release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
 - [chrome] **Device:** Worker serving one version behind, live, after the batched release deploys.
 
 ### Slice 364: Slice 357 design pass ([slice](slices/364-server-errors-design-pass.md))
@@ -406,7 +398,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** `premade_audio:no_pack` with a book id, on a book whose pack is not downloaded.
 - [owner] **You:** the iOS run of the context fields and the new fallback reasons (iPhone or TestFlight).
 - [phone] **Device:** Windows head on the VM, including the animal clip copy failure reason.
-- [session] **Device:** after release, a weighted query shows blobs 17-19 and double6 filled on rows from the new version.
 - [phone] **Device:** `.maestro/dino/usage-context.yaml` should set English first (the flow assumes an English UI).
 
 ### Slice 350: Dino: high-resolution pictures for a printed Amazon book ([slice](slices/350-dino-high-res-pictures.md))
@@ -488,7 +479,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** TestFlight look of Dino.
 
 ### Slice 299: Slice 261 leftovers ([slice](slices/299-slice-261-leftovers.md))
-- [phone] **Device:** First-run picker and Cancel during the list load on emulator and iOS (item 2 follow-up: a cancelled load shows the "Connect to the internet" copy; a distinct copy needs new strings in every language).
+- [phone] **Device:** First-run picker and Cancel during the list load on emulator and iOS (item 2 follow-up: a cancelled load shows the "Connect to the internet" copy; a distinct copy needs new strings in every language). (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
 
 ### Slice 298: Slice 264 gallery reorder follow-ups ([slice](slices/298-slice-264-gallery-reorder-follow-ups.md))
 - [phone] **Device:** Real drag in both drop event orders (Drop then DropCompleted, and the reverse) on Android, iOS and the Windows head.
@@ -566,9 +557,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** Kill-and-resume and offline mid-download on a device.
 - [owner] **You:** The mobile-data rule ("Download now" only) on a real phone.
 - [phone] **Device:** The intro languages step path on a device.
-
-### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
-- [session] **Device:** `git lfs pull --include` of one clip from a fresh clone of main downloads the real file (only pointers were read back, 2026-11-04). Keep `s246-audio` until it does.
 
 ### Slice 261: Dino: no starter books in the app; a first-run book picker ([slice](slices/261-dino-no-starters-first-run-book-picker.md))
 - [phone] **Device:** Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
