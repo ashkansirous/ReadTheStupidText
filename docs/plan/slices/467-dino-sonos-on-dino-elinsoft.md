@@ -1,11 +1,11 @@
 # Slice 467 — Dino: Sonos on dino.elinsoft.co.uk, and a Reporting Endpoint the portal can reach
 **Product:** Dino
 
-*Planned 2026-11-27 from the owner's answers in the starter session of night 2026-11-27-0154. Not started.*
+*In progress (wave 2026-11-27), draft PR.*
 
 **Depends on:** nothing (Slice 436's reporting endpoint and Slice 283's Sonos service are merged).
 
-**Touches:** `wrangler.jsonc` (a `dino.elinsoft.co.uk` custom domain), the Worker's Host handling (wherever `dinoreader.sirous.uk` is chosen by Host, `worker/index.ts` and its helpers), `worker/sonos-reporting.ts`, `worker/sonos-reporting.test.mjs`, the Sonos paths in `run_worker_first` of `wrangler.jsonc`, `worker/CLAUDE.md`, `docs/DEPLOYING.md`, this file.
+**Touches:** `wrangler.jsonc` (a `dino.elinsoft.co.uk` custom domain), the Worker's Host handling (wherever `dinoreader.sirous.uk` is chosen by Host, `worker/index.ts` and its helpers), `worker/sonos-reporting.ts`, `worker/sonos-reporting.test.mjs`, the Sonos paths in `run_worker_first` of `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `worker/downloads.ts`, `worker/download-keys.mjs`, `worker/download-keys.d.mts`, `worker/check-configs.mjs`, `worker/downloads.test.mjs`, `worker/stats.test.mjs`, `worker/CLAUDE.md`, `docs/DEPLOYING.md`, `docs/plan/unverified.md`, this file.
 
 ## Why
 
