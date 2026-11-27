@@ -298,7 +298,7 @@ public sealed class FirstBookPrefetch(StoreClient store)
 			return (PrefetchState.Landed, false); // it was on the shelf before this run: an untick keeps it
 		}
 
-		DownloadOutcome outcome = await store.DownloadAsync(item, progress, cancel, packLanguages: [language]);
+		DownloadOutcome outcome = await store.DownloadAsync(item, progress, cancel, packLanguages: [language], allowQuick: true); // Slice 463: this is the first book; a slow link switches to the quick package
 		if (outcome == DownloadOutcome.Done)
 		{
 			await store.EnsurePackAsync(item, language, cancel); // Slice 459 (check pass #1): a joined run or an earlier language may not have fetched this pack; a failed pack keeps the book

@@ -62,7 +62,10 @@ public static class UiScreenActions
     public const string Skip = "skip";
     public const string Close = "close";
 
-    public static readonly IReadOnlyList<string> All = [Shown, Next, Back, Skip, Close];
+    /// <summary>Slice 463: a quick first book was replaced by its standard package in the background (counted on the shelf, where the swap is applied).</summary>
+    public const string QuickUpgraded = "quick_upgraded";
+
+    public static readonly IReadOnlyList<string> All = [Shown, Next, Back, Skip, Close, QuickUpgraded];
 }
 
 /// <summary>Slice 352: the controls a <c>tap</c> count names (closed list, equal to the Worker's <c>CONTROLS</c>). One flat list: the screen in the count says where it was.</summary>

@@ -44,7 +44,7 @@ internal static class BookHash
     // Slice 375 B, Slice 422: a book's complete high-res set (whatever its kind) is packed into its high-res pack, so it is part of the hash (a high-res-only change bumps the version); an
     // incomplete set adds nothing, so the hash of a book without a set stays the same.
     private static IEnumerable<string> HighResOf(BookFolder book) =>
-        HighResPack.Find(book) is { } files ? files.All : [];
+        (HighResPack.Find(book) is { } files ? files.All : []).Concat(QuickPack.FindSet(book) is { } quick ? quick.All : []); // Slice 463: a complete quick set (real files) is hashed too, so a change to it raises the version
 
     // Only the files the build reads: the page pictures (*.jpg) and the translation tables (<lang>.json, <lang>.speak.json), never pieces.json or a stray Thumbs.db.
     private static IEnumerable<string> FilesIn(string folder, string extension, string? excludedName) =>

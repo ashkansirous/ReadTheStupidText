@@ -6,7 +6,8 @@
 //   GET /api/stories/<id>/download    the newest package; add ?v=<n> for that version, which is cached for a day
 //                                     Slice 375 B: add &size=hd for the high-res package (story-v<n>.hd.dino, behind the same entitlement gate); `standard` is the default, any other size is a 400,
 //                                     and a book whose folder holds no high-res file at that version is a 404
-//   GET /api/stories/<id>/audio/<lang>?v=<n>   Slice 246 B2: the audio pack of that book language (audio-<lang>-v<n>.zip), only when meta.json's `audio` lists exactly
+//                                     Slice 463: add &size=quick for the small first-book package (story-v<n>.quick.dino), same rules as hd
+//   GET /api/stories/<id>/audio/<lang>?v=<n>[&size=quick]   (Slice 463: the quick copy audio-<lang>-v<n>.quick.zip, only for the listed version and when the folder holds it)   Slice 246 B2: the audio pack of that book language (audio-<lang>-v<n>.zip), only when meta.json's `audio` lists exactly
 //                                     that language and version and the zip is in the folder; a missing or different ?v= is a 404. Immutable per version, cached for a day
 //   GET /api/stories/<id>/listen/<lang>?v=<n>   Slice 281: the one listening track of that book language (listen-<lang>-v<n>.m4a, audio/mp4, inline, Range for smart speakers), only when meta.json's
 //                                     `audio` lists that language at that version WITH `listenSeconds` and the .m4a is in the folder; same 404 rules as the audio route
@@ -55,7 +56,8 @@ const VERSION_PARAM = "v";
 const SIZE_PARAM = "size";
 
 /** Slice 375 B: the package sizes `?size=` may name. Standard is the default (no parameter). */
-export const PACKAGE_SIZES = ["standard", "hd"] as const;
+/** Slice 463: `quick` is the small first-book package (448x600 pictures, AAC 24 kb/s), `story-v<n>.quick.dino`; an audio pack's is `audio-<lang>-v<n>.quick.zip`. */
+export const PACKAGE_SIZES = ["standard", "hd", "quick"] as const;
 type PackageSize = (typeof PACKAGE_SIZES)[number];
 
 /** The list response format; the app reads `stories` and ignores fields it does not know. */
@@ -88,7 +90,9 @@ const LANGUAGE_CODE = /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
 const HD_PACKAGE_FILE = /^story-v(\d+)\.hd\.dino$/;
+const QUICK_PACKAGE_FILE = /^story-v(\d+)\.quick\.dino$/;
 const AUDIO_FILE = /^audio-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.zip$/;
+const QUICK_AUDIO_FILE = /^audio-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.quick\.zip$/;
 const LISTEN_FILE = /^listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
 const MAX_AUDIO_LANGUAGES = 40;
 const MAX_LISTEN_SECONDS = 86_400;
@@ -146,6 +150,8 @@ export interface StoryMeta {
   readonly bytes: number | null;
   /** Slice 375 B: the size of the `story-v<n>.hd.dino` high-res package in bytes; null when meta does not list one. */
   readonly hdBytes: number | null;
+  /** Slice 463: the size of the `story-v<n>.quick.dino` first-book package in bytes; null when meta does not list one. */
+  readonly quickBytes: number | null;
   /** Slice 346: free or paid, and the store product id of a paid book (null when it has none). */
   readonly access: BookAccess;
   readonly productId: string | null;
@@ -157,6 +163,8 @@ export interface AudioPackInfo {
   readonly bytes: number | null;
   /** Slice 281: the length in whole seconds of the book's `listen-<lang>-v<version>.m4a` track; the key is absent when the book has no track (or, on an offered entry, when the track is not in the folder). */
   readonly listenSeconds?: number;
+  /** Slice 463: the size of the pack's `audio-<lang>-v<version>.quick.zip` (AAC 24 kb/s); the key is absent when the pack has no quick copy (or, on an offered entry, when the zip is not in the folder). */
+  readonly quickBytes?: number;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -171,6 +179,8 @@ export interface StoryEntry {
   readonly heldAudio?: Readonly<Record<string, readonly number[]>>;
   /** Slice 375 B: the versions of `story-v<n>.hd.dino` the folder holds; absent = none known. The list offers the high-res package only for the listed version when meta lists `hdBytes` too. */
   readonly heldHd?: readonly number[];
+  /** Slice 463: the versions of `story-v<n>.quick.dino` the folder holds; absent = none known. */
+  readonly heldQuick?: readonly number[];
 }
 
 interface Folder {
@@ -179,7 +189,11 @@ interface Folder {
   versions: number[];
   /** Slice 375 B: the versions of `story-v<n>.hd.dino` in the folder. */
   hdVersions: number[];
+  /** Slice 463: the versions of `story-v<n>.quick.dino` in the folder. */
+  quickVersions: number[];
   audio: Record<string, number[]>;
+  /** Slice 463: the versions of each language's `audio-<lang>-v<n>.quick.zip` in the folder. */
+  audioQuick: Record<string, number[]>;
   /** Slice 281: the versions of each language's `listen-<lang>-v<n>.m4a` track in the folder. */
   listen: Record<string, number[]>;
 }
@@ -223,8 +237,22 @@ export function hdPackageVersionOf(file: string): number | null {
   return POSITIVE_INTEGER.test(digits) ? Number(digits) : null;
 }
 
+/** Slice 463: the version a `story-v<n>.quick.dino` file name carries, or null for any other name. */
+export function quickPackageVersionOf(file: string): number | null {
+  const digits = QUICK_PACKAGE_FILE.exec(file)?.[1] ?? "";
+  return POSITIVE_INTEGER.test(digits) ? Number(digits) : null;
+}
+
+/** Slice 463: the language and version an `audio-<lang>-v<n>.quick.zip` file name carries, or null for any other name. */
+export function quickAudioPackOf(file: string): { language: string; version: number } | null {
+  const match = QUICK_AUDIO_FILE.exec(file);
+  const language = match?.[1] ?? "";
+  const digits = match?.[2] ?? "";
+  return language !== "" && POSITIVE_INTEGER.test(digits) ? { language, version: Number(digits) } : null;
+}
+
 function emptyFolder(): Folder {
-  return { hasMeta: false, hasCover: false, versions: [], hdVersions: [], audio: {}, listen: {} };
+  return { hasMeta: false, hasCover: false, versions: [], hdVersions: [], quickVersions: [], audio: {}, audioQuick: {}, listen: {} };
 }
 
 /** Groups listed keys by story id; keys that are not a story file are ignored. */
@@ -237,6 +265,10 @@ export function groupFolders(keys: readonly string[]): Map<string, Folder> {
     const version = packageVersionOf(parsed.file);
     const hdVersion = hdPackageVersionOf(parsed.file);
     if (hdVersion !== null) folder.hdVersions.push(hdVersion);
+    const quickVersion = quickPackageVersionOf(parsed.file);
+    if (quickVersion !== null) folder.quickVersions.push(quickVersion);
+    const quickAudio = quickAudioPackOf(parsed.file);
+    if (quickAudio !== null) (folder.audioQuick[quickAudio.language] ??= []).push(quickAudio.version);
     const audio = audioPackOf(parsed.file);
     if (audio !== null) (folder.audio[audio.language] ??= []).push(audio.version);
     const listen = listenTrackOf(parsed.file);
@@ -283,7 +315,9 @@ export function parseAudio(raw: unknown): Record<string, AudioPackInfo> | null {
     const sized = bytes !== null && bytes <= MAX_AUDIO_BYTES ? bytes : null;
     const seconds = positiveIntegerOrNull(pack["listenSeconds"]);
     const listen = seconds !== null && seconds <= MAX_LISTEN_SECONDS ? { listenSeconds: seconds } : {};
-    if (isAudioLanguage(code) && version !== null && Object.keys(kept).length < MAX_AUDIO_LANGUAGES) kept[code] = { version, bytes: sized, ...listen };
+    const quick = positiveIntegerOrNull(pack["quickBytes"]);
+    const quickSized = quick !== null && quick <= MAX_AUDIO_BYTES ? { quickBytes: quick } : {};
+    if (isAudioLanguage(code) && version !== null && Object.keys(kept).length < MAX_AUDIO_LANGUAGES) kept[code] = { version, bytes: sized, ...listen, ...quickSized };
   }
   return Object.keys(kept).length > 0 ? kept : null;
 }
@@ -291,14 +325,22 @@ export function parseAudio(raw: unknown): Record<string, AudioPackInfo> | null {
 /** Slice 281: a listed pack as offered: the listening track is kept only when its .m4a is in the folder at the pack's version. */
 function withHeldTrack(language: string, pack: AudioPackInfo, folder: Folder): AudioPackInfo {
   if (pack.listenSeconds === undefined || folder.listen[language]?.includes(pack.version) === true) return pack;
-  return { version: pack.version, bytes: pack.bytes };
+  const { listenSeconds: _track, ...rest } = pack;
+  return rest;
+}
+
+/** Slice 463: a listed pack as offered: the quick copy is kept only when its `.quick.zip` is in the folder at the pack's version. */
+function withHeldQuick(language: string, pack: AudioPackInfo, folder: Folder): AudioPackInfo {
+  if (pack.quickBytes === undefined || folder.audioQuick[language]?.includes(pack.version) === true) return pack;
+  const { quickBytes: _quick, ...rest } = pack;
+  return rest;
 }
 
 /** The packs meta.json lists that the folder really holds; null when none. */
 export function offeredAudio(meta: StoryMeta, folder: Folder): Record<string, AudioPackInfo> | null {
   const listed = Object.entries(meta.audio ?? {})
     .filter(([language, pack]) => folder.audio[language]?.includes(pack.version) === true)
-    .map(([language, pack]) => [language, withHeldTrack(language, pack, folder)] as const);
+    .map(([language, pack]) => [language, withHeldQuick(language, withHeldTrack(language, pack, folder), folder)] as const);
   return listed.length > 0 ? Object.fromEntries(listed) : null;
 }
 
@@ -362,6 +404,7 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     tags: parseTags(raw["tags"]),
     bytes: positiveIntegerOrNull(raw["bytes"]),
     hdBytes: positiveIntegerOrNull(raw["hdBytes"]),
+    quickBytes: positiveIntegerOrNull(raw["quickBytes"]),
     access: parseAccess(raw["access"]),
     productId: parseProductId(raw["productId"]),
   };
@@ -408,7 +451,7 @@ export interface ListItem {
   readonly titles: Readonly<Record<string, string>> | null;
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   /** Slice 246 B2: the packs on offer per language (version, size, link); null when the book has none. */
-  readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string; readonly listenUrl?: string }>> | null;
+  readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string; readonly listenUrl?: string; readonly quickUrl?: string }>> | null;
   /** Slice 260: the store tags in list order (empty when none) and the package size in bytes (null when unknown). */
   readonly tags: readonly StoreTag[];
   readonly bytes: number | null;
@@ -421,6 +464,9 @@ export interface ListItem {
   /** Slice 375 B: the high-res package's link and size; the keys are absent unless meta lists `hdBytes` and the folder holds `story-v<version>.hd.dino`. Old apps ignore them. */
   readonly hdDownloadUrl?: string;
   readonly hdBytes?: number;
+  /** Slice 463: the quick first-book package's link and size; absent unless meta lists `quickBytes` and the folder holds `story-v<version>.quick.dino`. Old apps ignore them. */
+  readonly quickDownloadUrl?: string;
+  readonly quickBytes?: number;
 }
 
 /** Slice 375 B: whether the list offers the high-res package: meta lists its size AND the folder holds the file at the listed version (a listed pack nobody uploaded is not offered). */
@@ -433,13 +479,26 @@ function hdItem(entry: StoryEntry, base: string): { hdDownloadUrl: string; hdByt
   return { hdDownloadUrl: `${base}${DOWNLOAD_SEGMENT}?${VERSION_PARAM}=${entry.version}&${SIZE_PARAM}=hd`, hdBytes: entry.meta.hdBytes };
 }
 
-function audioItem(base: string, language: string, pack: AudioPackInfo): AudioPackInfo & { url: string; listenUrl?: string } {
-  const query = `/${language}?${VERSION_PARAM}=${pack.version}`;
-  const item = { ...pack, url: `${base}${AUDIO_SEGMENT}${query}` };
-  return pack.listenSeconds === undefined ? item : { ...item, listenUrl: `${base}${LISTEN_SEGMENT}${query}` };
+/** Slice 463: whether the list offers the quick package: meta lists its size AND the folder holds the file at the listed version. */
+export function offersQuick(entry: StoryEntry): boolean {
+  return entry.meta.quickBytes !== null && entry.heldQuick?.includes(entry.version) === true;
 }
 
-function audioItems(entry: StoryEntry, base: string): Record<string, AudioPackInfo & { url: string; listenUrl?: string }> | null {
+function quickItem(entry: StoryEntry, base: string): { quickDownloadUrl: string; quickBytes: number } | Record<string, never> {
+  if (!offersQuick(entry) || entry.meta.quickBytes === null) return {};
+  return { quickDownloadUrl: `${base}${DOWNLOAD_SEGMENT}?${VERSION_PARAM}=${entry.version}&${SIZE_PARAM}=quick`, quickBytes: entry.meta.quickBytes };
+}
+
+type AudioItem = AudioPackInfo & { url: string; listenUrl?: string; quickUrl?: string };
+
+function audioItem(base: string, language: string, pack: AudioPackInfo): AudioItem {
+  const query = `/${language}?${VERSION_PARAM}=${pack.version}`;
+  const item: AudioItem = { ...pack, url: `${base}${AUDIO_SEGMENT}${query}` };
+  const withQuick = pack.quickBytes === undefined ? item : { ...item, quickUrl: `${base}${AUDIO_SEGMENT}${query}&${SIZE_PARAM}=quick` };
+  return pack.listenSeconds === undefined ? withQuick : { ...withQuick, listenUrl: `${base}${LISTEN_SEGMENT}${query}` };
+}
+
+function audioItems(entry: StoryEntry, base: string): Record<string, AudioItem> | null {
   const packs = Object.entries(entry.audio ?? {});
   if (packs.length === 0) return null;
   return Object.fromEntries(packs.map(([language, pack]) => [language, audioItem(base, language, pack)]));
@@ -473,6 +532,7 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
     ...hdItem(entry, base),
+    ...quickItem(entry, base),
   };
 }
 
@@ -513,7 +573,7 @@ async function readMeta(bucket: R2Bucket, id: string): Promise<StoryMeta | null>
 async function entryFor(bucket: R2Bucket, id: string, folder: Folder): Promise<StoryEntry | null> {
   const meta = await readMeta(bucket, id);
   const version = meta === null ? null : offeredVersion(meta, folder.versions);
-  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder), heldAudio: folder.audio, heldHd: folder.hdVersions };
+  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder), heldAudio: folder.audio, heldHd: folder.hdVersions, heldQuick: folder.quickVersions };
 }
 
 async function buildEntries(bucket: R2Bucket): Promise<StoryEntry[]> {
@@ -793,6 +853,18 @@ function hdPackageFile(id: string, version: number): ServedFile {
   };
 }
 
+function quickPackageFile(id: string, version: number): ServedFile {
+  const fileName = `story-v${version}.quick.dino`;
+  return { key: `${storyFolder(id)}${fileName}`, contentType: PACKAGE_CONTENT_TYPE, fileName, disposition: "attachment", unavailable: ErrorCode.StoryUnavailable };
+}
+
+// Slice 463: the quick package of one version, only when the folder holds that file (a missing one is a 404, never a fall back to the standard pack: the app asked for these pictures).
+function serveQuickDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, version: number | null, serve: ObjectServer): Promise<Response> {
+  const wanted = version ?? entry.version;
+  if (entry.heldQuick?.includes(wanted) !== true) return Promise.resolve(statusOnly(404));
+  return serve(request, bucket, quickPackageFile(entry.id, wanted), version === null ? NO_CACHE : VERSIONED_CACHE);
+}
+
 /** Slice 375 B: the `?size=` of a download request: standard when absent, `invalid` for any name outside PACKAGE_SIZES. */
 function requestedSize(url: URL): PackageSize | "invalid" {
   const text = url.searchParams.get(SIZE_PARAM);
@@ -813,7 +885,18 @@ function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, langu
   const version = requestedVersion(new URL(request.url));
   const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
   if (version === null || version === "invalid" || offered === undefined || !servesAudioVersion(entry, language, offered.version, version)) return Promise.resolve(statusOnly(404));
+  const size = requestedSize(new URL(request.url));
+  if (size === "invalid") return Promise.resolve(badRequest(`Unknown pack size. Use ${PACKAGE_SIZES.join(" or ")}.`));
+  if (size === "quick") return serveQuickAudio(request, bucket, entry, language, offered, version, serve);
   return serve(request, bucket, audioFile(entry.id, language, version), VERSIONED_CACHE);
+}
+
+// Slice 463: the quick copy of the pack, only for the listed version and only when meta lists its size and the folder holds the zip (offeredAudio keeps `quickBytes` only then); otherwise a 404.
+function serveQuickAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, offered: AudioPackInfo, version: number, serve: ObjectServer): Promise<Response> {
+  if (offered.quickBytes === undefined || offered.version !== version) return Promise.resolve(statusOnly(404));
+  const fileName = `audio-${language}-v${version}.quick.zip`;
+  const file: ServedFile = { key: `${storyFolder(entry.id)}${fileName}`, contentType: AUDIO_CONTENT_TYPE, fileName, disposition: "attachment", unavailable: ErrorCode.StoryUnavailable };
+  return serve(request, bucket, file, VERSIONED_CACHE);
 }
 
 /** Slice 360: the listed version, or the highest older one the folder holds. */
@@ -852,6 +935,7 @@ function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, s
   if (segment === COVER_SEGMENT) return serveCover(request, bucket, entry, serve);
   const size = requestedSize(new URL(request.url));
   if (size === "invalid") return Promise.resolve(badRequest(`Unknown picture size. Use ${PACKAGE_SIZES.join(" or ")}.`));
+  if (size === "quick") return serveQuickDownload(request, bucket, entry, version, serve);
   return size === "hd" ? serveHdDownload(request, bucket, entry, version, serve) : serveDownload(request, bucket, entry, version, serve);
 }
 

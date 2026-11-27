@@ -162,6 +162,45 @@ public sealed class AudioPackTests : IDisposable
         Assert.All(Books.Starters, b => Assert.Equal(DinoReader.Core.UiLanguage.Supported.Order(StringComparer.Ordinal), AudioPacks.RecordsIn(b.Dir).Keys.Order(StringComparer.Ordinal)));
     }
 
+    [Fact]
+    public void Build_WithQuickClips_AlsoWritesTheQuickZip_WithTheSameManifestAndTheQuickClips_AndRecordsItsSize()
+    {
+        (BookFolder book, string clips, string store) = Arrange(["a.m4a", "b.m4a"]);
+        string quick = Path.Combine(clips, AudioPacks.QuickClipsFolderName);
+        Directory.CreateDirectory(quick);
+        File.WriteAllText(Path.Combine(quick, "a.m4a"), "q-a");
+        File.WriteAllText(Path.Combine(quick, "b.m4a"), "q-b");
+
+        AudioPackRecord record = AudioPacks.Build(book, Language, clips, store);
+
+        string zip = Path.Combine(store, BookId, "audio-fa-v1.quick.zip");
+        using ZipArchive archive = ZipFile.OpenRead(zip);
+        Assert.Equal(["a.m4a", "b.m4a", "manifest.json"], archive.Entries.Select(e => e.FullName).Order(StringComparer.Ordinal));
+        Assert.Equal("q-a", new StreamReader(archive.GetEntry("a.m4a")!.Open()).ReadToEnd());
+        Assert.Equal(File.ReadAllText(Path.Combine(clips, "manifest.json")), new StreamReader(archive.GetEntry("manifest.json")!.Open()).ReadToEnd());
+        Assert.Equal(new FileInfo(zip).Length, record.QuickBytes);
+        Assert.True(new FileInfo(zip).Length > 0 && File.Exists(Path.Combine(store, BookId, "audio-fa-v1.zip")));
+        using JsonDocument meta = JsonDocument.Parse(JsonSerializer.Serialize(AudioPacks.MetaOf(book)));
+        Assert.Equal(record.QuickBytes, meta.RootElement.GetProperty(Language).GetProperty("quickBytes").GetInt64());
+    }
+
+    [Fact]
+    public void Build_WithAQuickFolderThatLacksAClip_OrHoldsAPointer_WritesNoQuickZip_AndMetaListsNoQuickBytes()
+    {
+        (BookFolder book, string clips, string store) = Arrange(["a.m4a", "b.m4a"]);
+        string quick = Path.Combine(clips, AudioPacks.QuickClipsFolderName);
+        Directory.CreateDirectory(quick);
+        File.WriteAllText(Path.Combine(quick, "a.m4a"), "q-a"); // b is missing
+
+        AudioPackRecord missing = AudioPacks.Build(book, Language, clips, store);
+        Assert.Null(missing.QuickBytes);
+        Assert.False(File.Exists(Path.Combine(store, BookId, "audio-fa-v1.quick.zip")));
+
+        File.WriteAllText(Path.Combine(quick, "b.m4a"), "version https://git-lfs.github.com/spec/v1\noid sha256:00\nsize 1\n");
+        Assert.Null(AudioPacks.Build(book, Language, clips, store).QuickBytes);
+        Assert.DoesNotContain("quickBytes", JsonSerializer.Serialize(AudioPacks.MetaOf(book)));
+    }
+
     private (BookFolder Book, string Clips, string Store) Arrange(string[] clipNames, string[]? extra = null)
     {
         string bookDir = Path.Combine(_root, "book");

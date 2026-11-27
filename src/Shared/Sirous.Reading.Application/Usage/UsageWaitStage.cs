@@ -12,10 +12,11 @@ public static class UsageWaitStage
     public const string ReadingPictures = "reading_pictures";
     public const string Saving = "saving";
     public const string GettingFile = "getting_file";
+    public const string GettingQuickFile = "getting_quick_file";
 
     /// <summary>Every name a count may carry.</summary>
     public static IReadOnlyList<string> All { get; } =
-        [PreparingVoice, Stalled, DownloadingModel, Translating, ReadingPictures, Saving, GettingFile];
+        [PreparingVoice, Stalled, DownloadingModel, Translating, ReadingPictures, Saving, GettingFile, GettingQuickFile];
 
     /// <summary>The wire name of <paramref name="stage"/>.</summary>
     public static string Of(WaitStage stage) => stage switch
@@ -27,6 +28,7 @@ public static class UsageWaitStage
         WaitStage.ReadingPictures => ReadingPictures,
         WaitStage.Saving => Saving,
         WaitStage.GettingFile => GettingFile,
+        WaitStage.GettingQuickFile => GettingQuickFile,
         _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, "Add the wait stage's wire name here and to the Worker's stage list."),
     };
 }

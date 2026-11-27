@@ -16,6 +16,8 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	private const string FilePrefix = "v";
 	private const string FileExtension = ".dino";
 	private const string HighResMarker = ".hd"; // Slice 375 D: v<n>.hd.dino is the high-res package of the version already installed as standard
+	private const string StandardMarker = ".std"; // Slice 463: v<n>.std.dino is the standard package of the version already installed as quick
+	private const string StandardDeferPrefix = "std:"; // keeps a deferred standard-over-quick swap apart from a deferred high-res swap of the same book and version
 	private const string PartExtension = ".part";
 
 	private readonly object _lock = new();
@@ -24,7 +26,11 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 #endif
 	private Task? _applyTask;
 
-	private sealed record Entry(string Id, int Version, string Path, bool HighRes = false, string Stamp = "");
+	private sealed record Entry(string Id, int Version, string Path, bool HighRes = false, string Stamp = "", bool Standard = false)
+	{
+		/// <summary>A package of the version already installed, replacing its copy (high-res over standard, or Slice 463's standard over quick), not an update to a newer version.</summary>
+		public bool SameVersion => HighRes || Standard;
+	}
 
 	// Review round 6 #7: the identity of the staged file when it was listed (size and write time); a file staged afresh over the same name has another one, and a finished apply leaves it alone.
 	private static string StampOf(string path)
@@ -51,33 +57,36 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	}
 
 	/// <summary>The newest version already staged for the book (null when none).</summary>
-	public int? StagedVersion(string id) => ListEntries().Where(e => !e.HighRes && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)).Select(e => (int?)e.Version).Max();
+	public int? StagedVersion(string id) => ListEntries().Where(e => !e.SameVersion && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)).Select(e => (int?)e.Version).Max();
 
 	/// <summary>Slice 375 D: the version whose high-res package is staged for the book (null when none).</summary>
 	public int? StagedHighResVersion(string id) => ListEntries().Where(e => e.HighRes && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)).Select(e => (int?)e.Version).Max();
 
 	/// <summary>Keeps a downloaded package for the next cold start (copied under a temporary name and renamed, so a half-copied file is never taken for a whole one); the caller deletes <paramref name="file"/>.
 	/// A <paramref name="highRes"/> package (Slice 375 D) is the same version as the installed standard copy; staging one never removes a staged update, and the other way round.</summary>
-	public void Stage(string id, int version, string file, bool highRes = false)
+	public void Stage(string id, int version, string file, bool highRes = false, bool standard = false)
 	{
 		string folder = FolderOf(id);
 		Directory.CreateDirectory(folder);
-		string target = System.IO.Path.Combine(folder, StagedFileName(version, highRes));
+		string target = System.IO.Path.Combine(folder, StagedFileName(version, highRes, standard));
 		string part = target + PartExtension;
 		File.Copy(file, part, overwrite: true);
 		File.Move(part, target, overwrite: true);
-		if (highRes)
+		if (highRes || standard)
 		{
-			Undefer(id, version); // a package staged afresh, even of the same version, is tried again
+			Undefer(standard ? StandardDeferPrefix + id : id, version); // a package staged afresh, even of the same version, is tried again
 		}
 
-		foreach (string older in Directory.GetFiles(folder).Where(f => f != target && ParseName(f) is { } other && other.HighRes == highRes)) // only named packages of the same kind: a .part may be another staging in flight (DiscardPartialFiles clears leftovers at start)
+		foreach (string older in Directory.GetFiles(folder).Where(f => f != target && ParseName(f) is { } other && other.HighRes == highRes && other.Standard == standard)) // only named packages of the same kind: a .part may be another staging in flight (DiscardPartialFiles clears leftovers at start)
 		{
 			File.Delete(older);
 		}
 	}
 
-	private static string StagedFileName(int version, bool highRes) => $"{FilePrefix}{version}{(highRes ? HighResMarker : string.Empty)}{FileExtension}";
+	/// <summary>Slice 463: the version whose standard package is staged to replace the book's quick copy (null when none).</summary>
+	public int? StagedStandardVersion(string id) => ListEntries().Where(e => e.Standard && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)).Select(e => (int?)e.Version).Max();
+
+	private static string StagedFileName(int version, bool highRes, bool standard = false) => $"{FilePrefix}{version}{(highRes ? HighResMarker : standard ? StandardMarker : string.Empty)}{FileExtension}";
 
 	/// <summary>
 	/// Applies every staged package once per process: the first call starts the one shared task, every later call (the gallery's refreshes, whoever asks first) gets the same task, so
@@ -129,7 +138,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	// A high-res swap that ended Transient this process is not retried (nor does it hold the "Updating your books" overlay) until the next start or until a package is staged afresh; keyed by (book, version) so a newly staged version is always tried.
 	private readonly HashSet<string> _deferredHighRes = new(StringComparer.OrdinalIgnoreCase);
 
-	private static string DeferKey(Entry e) => DeferKey(e.Id, e.Version);
+	private static string DeferKey(Entry e) => DeferKey(e.Standard ? StandardDeferPrefix + e.Id : e.Id, e.Version);
 
 	private static string DeferKey(string id, int version) => $"{id}|{version}";
 
@@ -145,7 +154,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	{
 		lock (_deferredHighRes)
 		{
-			return e.HighRes && _deferredHighRes.Contains(DeferKey(e));
+			return e.SameVersion && _deferredHighRes.Contains(DeferKey(e));
 		}
 	}
 
@@ -227,12 +236,17 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			StarterStories.RecordVersionForTest(forced.Id, BookUpdatePlan.ForcedRecordedVersion(forced.Version));
 		}
 #endif
-		List<Entry> updates = entries.Where(e => !e.HighRes).ToList();
+		List<Entry> updates = entries.Where(e => !e.SameVersion).ToList();
 		IReadOnlyList<BookUpdateDecision> decisions = updates.Count == 0 ? [] : await PlanAsync(updates.Select(e => new StoreBookVersion(e.Id, e.Version)).ToList());
 		foreach (Entry entry in updates)
 		{
 			BookUpdateDecision? decision = decisions.FirstOrDefault(d => string.Equals(d.Id, entry.Id, StringComparison.OrdinalIgnoreCase));
 			await ApplyOneAsync(entry, decision);
+		}
+
+		foreach (Entry entry in entries.Where(e => e.Standard && !IsDeferred(e))) // Slice 463: a standard package replaces a quick copy before any high-res one (which only follows a standard copy)
+		{
+			await ApplyQuickUpgradeAsync(entry);
 		}
 
 		foreach (Entry entry in entries.Where(e => e.HighRes && !IsDeferred(e))) // after the updates: a newer version staged for the same book has replaced the entry's version by now
@@ -300,11 +314,73 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		}
 	}
 
+	// Slice 463: swaps the standard package in for the quick copy of the SAME version, the mirror of ApplyHighResAsync. The reading position and progress are never touched (only the picture and audio files change:
+	// the same journaled swap). A package that fails verification keeps the quick copy and counts one failure (given up after MaxFailures); a storage fault keeps the file for the next apply.
+	private async Task ApplyQuickUpgradeAsync(Entry entry)
+	{
+		if (upgrades is null)
+		{
+			DeleteEntry(entry);
+			return;
+		}
+
+		bool onShelf = (await library.ListAsync()).Any(s => string.Equals(s.SourceId, entry.Id, StringComparison.OrdinalIgnoreCase));
+		HighResOutcome? before = QuickUpgradePlan.OutcomeBeforeSwap(
+			StarterStories.RecordedVersion(entry.Id), entry.Version, StagedVersion(entry.Id), onShelf, upgrades.InstalledIsQuick(entry.Id, entry.Version));
+		HighResOutcome outcome = before ?? await SwapQuickUpgradeAsync(entry);
+		HighResLog.Write($"{entry.Id}: staged standard v{entry.Version} over the quick copy ended as {outcome}");
+		if (before is null or HighResOutcome.Done)
+		{
+			upgrades.RecordQuickUpgrade(entry.Id, entry.Version, outcome);
+		}
+
+		if (before is null && outcome == HighResOutcome.Done)
+		{
+			UiUsage.ScreenOf(UiScreens.Shelf, UiScreenActions.QuickUpgraded); // Slice 463: the success side of the upgrade (the failure side is the fallback store:quick_upgrade_failed)
+		}
+
+		if (outcome != HighResOutcome.Transient)
+		{
+			DeleteEntry(entry);
+		}
+		else
+		{
+			Defer(entry);
+		}
+	}
+
+	private async Task<HighResOutcome> SwapQuickUpgradeAsync(Entry entry)
+	{
+		try
+		{
+			bool swapped = await SwapAsync(entry);
+			HighResLog.Write(swapped ? $"{entry.Id}: swapped to the standard package of v{entry.Version}" : $"{entry.Id}: edited, keeps its quick copy");
+			if (swapped)
+			{
+				_swappedInRun = true; // the shelf and the audio packs are told, like after any swap; the pack upgrade runs from that
+			}
+
+			return swapped ? HighResOutcome.Done : HighResOutcome.Gone;
+		}
+		catch (Exception ex) when (QuickUpgradePlan.IsBadStagedPackage(ex)) // check pass 2 #5 (rule 4): classified by cause; any other fault falls to the transient catch below and counts nothing
+		{
+			HighResLog.Write($"{entry.Id}: bad staged standard package, the quick copy stays: {ex.Message}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.QuickUpgradeFailed);
+			return HighResOutcome.BadPackage;
+		}
+		catch (Exception ex)
+		{
+			HighResLog.Write($"{entry.Id}: standard swap failed, the quick copy stays and the swap is tried again at the next apply: {ex.Message}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.QuickUpgradeFailed);
+			return HighResOutcome.Transient;
+		}
+	}
+
 	/// <summary>Slice 375 D: a deleted book forgets its high-res size records and failure ledger and removes its staged high-res file.</summary>
 	public void DiscardHighRes(string id)
 	{
 		upgrades?.Remove(id);
-		foreach (Entry entry in ListEntries().Where(e => e.HighRes && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
+		foreach (Entry entry in ListEntries().Where(e => e.SameVersion && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
 		{
 			DeleteEntry(entry);
 		}
@@ -312,9 +388,9 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 
 	private void DropOlderHighRes(string id, int installedVersion)
 	{
-		foreach (Entry old in ListEntries().Where(e => e.HighRes && e.Version < installedVersion && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
+		foreach (Entry old in ListEntries().Where(e => e.SameVersion && e.Version < installedVersion && string.Equals(e.Id, id, StringComparison.OrdinalIgnoreCase)))
 		{
-			Undefer(old.Id, old.Version);
+			Undefer(old.Standard ? StandardDeferPrefix + old.Id : old.Id, old.Version); // review #7: a standard entry is deferred under its own key
 			DeleteEntry(old);
 		}
 	}
@@ -427,19 +503,20 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			string id = System.IO.Path.GetFileName(folder);
 			entries.AddRange(Directory.GetFiles(folder, $"{FilePrefix}*{FileExtension}")
 				.Select(f => (File: f, Name: ParseName(f))).Where(x => x.Name is not null)
-				.Select(x => new Entry(id, x.Name!.Value.Version, x.File, x.Name.Value.HighRes, StampOf(x.File))));
+				.Select(x => new Entry(id, x.Name!.Value.Version, x.File, x.Name.Value.HighRes, StampOf(x.File), x.Name.Value.Standard)));
 		}
 
 		return entries;
 	}
 
 	// v<n>.dino is a staged update, v<n>.hd.dino (Slice 375 D) a staged high-res package; any other name (a .part, a stray file) is not an entry.
-	private static (int Version, bool HighRes)? ParseName(string file)
+	private static (int Version, bool HighRes, bool Standard)? ParseName(string file)
 	{
 		string name = System.IO.Path.GetFileNameWithoutExtension(file);
 		bool highRes = name.EndsWith(HighResMarker, StringComparison.Ordinal);
-		string digits = highRes ? name[..^HighResMarker.Length] : name;
-		return digits.StartsWith(FilePrefix, StringComparison.Ordinal) && int.TryParse(digits.AsSpan(FilePrefix.Length), out int version) && string.Equals(System.IO.Path.GetExtension(file), FileExtension, StringComparison.Ordinal) ? (version, highRes) : null;
+		bool standard = name.EndsWith(StandardMarker, StringComparison.Ordinal); // Slice 463: v<n>.std.dino
+		string digits = highRes ? name[..^HighResMarker.Length] : standard ? name[..^StandardMarker.Length] : name;
+		return digits.StartsWith(FilePrefix, StringComparison.Ordinal) && int.TryParse(digits.AsSpan(FilePrefix.Length), out int version) && string.Equals(System.IO.Path.GetExtension(file), FileExtension, StringComparison.Ordinal) ? (version, highRes, standard) : null;
 	}
 
 	private static void DeleteEntry(Entry entry)

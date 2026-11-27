@@ -381,6 +381,121 @@ public sealed class BookBuilderTests : IDisposable
         Assert.False(plain.RootElement.TryGetProperty("bytes", out _));
     }
 
+    private static readonly byte[] StandardPicture = [1, 2, 3];
+    private static readonly byte[] QuickPicture = [5, 5];
+
+    private BookFolder TwoPageBook()
+    {
+        BookFolder book = TinyBook("One.\n---\nTwo.");
+        Directory.CreateDirectory(book.PicturesPath);
+        File.WriteAllBytes(Path.Combine(book.PicturesPath, "1.jpg"), StandardPicture);
+        File.WriteAllBytes(Path.Combine(book.PicturesPath, "2.jpg"), StandardPicture);
+        return book;
+    }
+
+    private static void WriteQuick(BookFolder book, params string[] names)
+    {
+        Directory.CreateDirectory(QuickPack.FolderOf(book));
+        foreach (string name in names)
+        {
+            File.WriteAllBytes(Path.Combine(QuickPack.FolderOf(book), name), QuickPicture);
+        }
+    }
+
+    [Fact]
+    public void Slice463_AQuickSetIsAPackOnlyWhenEveryPageIsThereAsARealFile()
+    {
+        BookFolder book = TwoPageBook();
+        Assert.Null(QuickPack.Find(book));
+
+        WriteQuick(book, "1.jpg");
+        Assert.Null(QuickPack.Find(book)); // page 2 missing
+
+        WriteQuick(book, "2.jpg");
+        Assert.Equal(2, QuickPack.Find(book)!.Pages.Count);
+
+        File.WriteAllText(Path.Combine(QuickPack.FolderOf(book), "2.jpg"), "version https://git-lfs.github.com/spec/v1\noid sha256:ab\nsize 2\n");
+        Assert.Null(QuickPack.Find(book)); // never built from a pointer: the book ships standard only
+        Assert.NotNull(QuickPack.FindSet(book)); // but the hash still sees the set
+    }
+
+    [Fact]
+    public void Slice463_TheHashCoversACompleteQuickSet_AndIsTheSameWithPointersOrRealFiles()
+    {
+        BookFolder book = TwoPageBook();
+        string plain = BookHash.Of(book);
+        WriteQuick(book, "1.jpg");
+        Assert.Equal(plain, BookHash.Of(book)); // incomplete: not part of it
+
+        WriteQuick(book, "2.jpg");
+        string with = BookHash.Of(book);
+        Assert.NotEqual(plain, with);
+
+        foreach (string name in new[] { "1.jpg", "2.jpg" })
+        {
+            File.WriteAllText(Path.Combine(QuickPack.FolderOf(book), name), $"version https://git-lfs.github.com/spec/v1\noid sha256:{HighResPack.Oid(Path.Combine(book.PicturesPath, name))}\nsize 2\n");
+        }
+
+        File.WriteAllBytes(Path.Combine(QuickPack.FolderOf(book), "x.tmp"), [1]);
+        Assert.NotEqual(with, BookHash.Of(book)); // a pointer to another object is another hash
+        WriteQuick(book, "1.jpg", "2.jpg");
+        File.WriteAllBytes(Path.Combine(QuickPack.FolderOf(book), "2.jpg"), [7]);
+        Assert.NotEqual(with, BookHash.Of(book)); // a quick-only change raises the version
+    }
+
+    [Fact]
+    public async Task Slice463_TheQuickPackCarriesTheSameStoryWithTheQuickPictures_AndMetaListsItsSize()
+    {
+        BookFolder book = TwoPageBook();
+        WriteQuick(book, "1.jpg", "2.jpg");
+        string folder = Path.Combine(_root, "out");
+        Directory.CreateDirectory(folder);
+        long quickBytes = 0;
+        Story built = StarterBuilder.WithPictures(StarterBuilder.Build(book.Info.Id, book.Info.Title, book.Text!, book.Info.Colour), StarterBuilder.PictureFilesIn(book.PicturesPath));
+
+        await StarterBuilder.InScratchAsync(async library =>
+        {
+            await library.AddAsync(built);
+            StarterBuilder.CopyPictures(built, StarterBuilder.PictureFilesIn(book.PicturesPath), library);
+            await using (FileStream standard = File.Create(Path.Combine(folder, StoreBuilder.PackageFileName(3))))
+            {
+                await StoryPackageWriter.WriteAsync(built, library, standard, includeRecordings: false, version: 3);
+            }
+
+            quickBytes = await QuickPack.WriteAsync(built, library, QuickPack.Find(book)!, folder, 3);
+        });
+
+        string quickPath = Path.Combine(folder, QuickPack.QuickPackageFileName(3));
+        Assert.Equal("story-v3.quick.dino", Path.GetFileName(quickPath));
+        Assert.Equal(new FileInfo(quickPath).Length, quickBytes);
+        Assert.Null(HighResPack.SameTextAndNames(Path.Combine(folder, StoreBuilder.PackageFileName(3)), quickPath));
+        using System.IO.Compression.ZipArchive zip = System.IO.Compression.ZipFile.OpenRead(quickPath);
+        Assert.Equal(QuickPicture, HighResPack.BytesOf(zip, "page-1.jpg"));
+        Assert.Equal(QuickPicture, HighResPack.BytesOf(zip, "page-2.jpg"));
+
+        using JsonDocument with = JsonDocument.Parse(StoreBuilder.MetaJson(book.ToSpec(), built, 1000, null, quickBytes));
+        using JsonDocument without = JsonDocument.Parse(StoreBuilder.MetaJson(book.ToSpec(), built, 1000));
+        Assert.Equal(quickBytes, with.RootElement.GetProperty("quickBytes").GetInt64());
+        Assert.False(without.RootElement.TryGetProperty("quickBytes", out _));
+    }
+
+    [Fact]
+    public async Task Slice463_AQuickSetWithAnotherPageCountThanTheStoryIsANamedProblem()
+    {
+        BookFolder book = TwoPageBook();
+        string folder = Path.Combine(_root, "out");
+        Directory.CreateDirectory(folder);
+        HighResFiles files = new(["1.jpg", "2.jpg", "3.jpg"], null, null);
+        Story built = StarterBuilder.WithPictures(StarterBuilder.Build(book.Info.Id, book.Info.Title, book.Text!, book.Info.Colour), StarterBuilder.PictureFilesIn(book.PicturesPath));
+
+        await StarterBuilder.InScratchAsync(async library =>
+        {
+            await library.AddAsync(built);
+            InvalidOperationException e = await Assert.ThrowsAsync<InvalidOperationException>(() => QuickPack.WriteAsync(built, library, files, folder, 3));
+            Assert.Contains("quick page count differs", e.Message);
+        });
+    }
+
     private BookFolder TinyBook(string text)
     {
         string dir = Path.Combine(_root, "tiny");

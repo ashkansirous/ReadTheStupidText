@@ -26,6 +26,9 @@ public enum WaitStage
 
     /// <summary>A file (a backup, a book) is being read or written.</summary>
     GettingFile,
+
+    /// <summary>Slice 463: the first book's wait after the slow-link switch fired (the small quick package was fetched instead). Counted only: the overlay words for it are those of <see cref="GettingFile"/>.</summary>
+    GettingQuickFile,
 }
 
 /// <summary>

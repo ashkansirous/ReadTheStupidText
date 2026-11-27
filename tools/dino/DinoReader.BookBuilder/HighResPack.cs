@@ -175,7 +175,7 @@ internal static class HighResPack
         return new FileInfo(path).Length;
     }
 
-    private static string PageFileName(Story story, int index) => story.Pages[index].ImageFile ?? StarterBuilder.PictureName(index);
+    internal static string PageFileName(Story story, int index) => story.Pages[index].ImageFile ?? StarterBuilder.PictureName(index);
 
     /// <summary>Null when every page, cover and back-cover entry of the high-res pack is byte-identical to its <c>high-res/</c> file and differs from the standard pack's entry; else the first picture that is not.</summary>
     public static string? PictureBytesProblem(Story story, HighResFiles files, string standardPath, string hdPath)
@@ -214,7 +214,7 @@ internal static class HighResPack
         return null;
     }
 
-    private static void Overwrite(FileStoryLibrary library, Story story, string name, string source) =>
+    internal static void Overwrite(FileStoryLibrary library, Story story, string name, string source) =>
         File.Copy(source, library.TryResolveFile(story.Id, name)!, overwrite: true);
 
     /// <summary>Null when the two packages carry the same entries and the same manifest (version included) and story.json (text, cast, page order); else the first difference.</summary>
@@ -239,7 +239,7 @@ internal static class HighResPack
         return null;
     }
 
-    private static byte[] BytesOf(ZipArchive zip, string name)
+    internal static byte[] BytesOf(ZipArchive zip, string name)
     {
         using Stream stream = (zip.GetEntry(name) ?? throw new InvalidOperationException($"{name} is missing")).Open();
         using var copy = new MemoryStream();
