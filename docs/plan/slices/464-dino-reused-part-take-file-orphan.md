@@ -3,7 +3,7 @@
 
 **Touches:** `src/Dino/DinoReader.App/RecordPage.cs`, `src/Dino/DinoReader.Core/StoryRecordings.cs`, `src/Dino/DinoReader.Core/PartClipAdoption.cs`, `src/Dino/DinoReader.Core/FileStoryLibrary.cs`, `src/Dino/DinoReader.Core/PartTakeCommit.cs`, `src/Dino/DinoReader.Core/IStoryLibrary.cs`, `tests/Dino/DinoReader.Tests/**`
 
-*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), PR #1402; not merged.*
+*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), merged as PR #1402 (946bd171).*
 
 *Planned 2026-11-27 (index pass of night wave 2) from `reviews/pr-1397-check3-medium.md` finding #1 (Slice 443's third check pass).*
 

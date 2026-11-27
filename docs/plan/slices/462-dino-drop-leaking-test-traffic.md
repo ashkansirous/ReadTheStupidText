@@ -1,7 +1,7 @@
 # Slice 462 — Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog
 **Product:** Dino
 
-*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), PR #1404. Android Test Harness Mode is skipped as TestLab; groups A, C, D stay (owner Decision 2026-11-27). Shared tests 1745 pass, Worker tests 592 pass, Mobile.Shared builds for net11.0-android.*
+*Built 2026-11-27 (wave 3 of night 2026-11-27-0154); merged as PR #1404 (e7151af5). Android Test Harness Mode is skipped as TestLab; groups A, C, D stay (owner Decision 2026-11-27). Shared tests 1745 pass, Worker tests 592 pass, Mobile.Shared builds for net11.0-android.*
 
 *Planned 2026-11-27 from the 2026-11-26 usage analysis (Ninjalog `ashkan-sirous/dino-book-reader`, index `dino_usage`, 19-26 Nov).*
 
