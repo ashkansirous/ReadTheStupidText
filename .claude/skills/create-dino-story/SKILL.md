@@ -86,6 +86,36 @@ Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6,
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
 illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (screen on while drawing) and `contact-sheet.ps1`.
 
+## Board card and steps (Slice 431)
+
+The coordinator opens **one card per book** before any work and keeps its steps current, so the agent board's process
+optimiser can see the book's flow. **Reports fail open: a board error, a missing token or an unknown flag is skipped and
+never stops, delays or fails a book; never wait on a report.**
+
+- Card: `report_progress` (the `agent-board` tool) with key `readthestupidtext/task-<id>` (`<id>` a short random id, the same for the whole book), type `unplanned`, agent `session`, status `in_progress`, title "Dino book <stem>", outcome "Book <stem> shipped", why "A new Dino Reader book in every store", and `steps` as below. Resend the whole list at every step change.
+- Steps (id = the process key with `-` for `/`; one `process` key each, the same key for the same kind of step in every book):
+
+  | Step id | Process key | Who reports it |
+  |---|---|---|
+  | `story-write` | `story/write` | writer |
+  | `story-text-review` | `story/text-review` | reviewer (text) |
+  | `story-voices` | `story/voices` | voice-pick (starts with the owner read, in parallel) |
+  | `story-owner-read` | `story/owner-read` | coordinator (active at the same time as `story-voices`) |
+  | `story-translate` | `story/translate` | writer (translations; only after the owner read is done) |
+  | `book-illustrate-setup` | `book/illustrate-setup` | illustrator (`setup`) |
+  | `book-illustrate-group-g1`, `-g2`, ... | `book/illustrate-group` | illustrator (`pages`, one step id per group, created by the coordinator and named in that illustrator's brief) |
+  | `book-illustrate-finish` | `book/illustrate-finish` | illustrator (`finish`, or `all`) |
+  | `book-review`, `book-review-r2`, ... | `book/review` | reviewer (full; **a rerun after a FAIL gets a new step id and label** such as `book-review-r2` / "Review 2", so the first run's `findings` count is kept; the same for `story-text-review-r2`, and any redo of a step) |
+  | `book-build` | `book/build` | coordinator |
+  | `book-store-product` | `book/store-product` | coordinator (step 7b) |
+  | `book-farsi-review` | `book/farsi-review` | farsi-review (a later, separate flow, Slice 154; the coordinator adds the step when it starts the review and names it in that brief) |
+
+- **`story/owner-read` is sent as a `blocked` step with `waits_on: "owner"`** and a note naming what it waits on, from the moment the English goes to the user until they approve it; put the question in the card's `needs_you` ("Read the English of <stem> and pick the voices", with the link) and its `after_answer`. **While the question is open the coordinator resends the same `needs_you` and `after_answer` in every `report_progress` (a report without them clears the question), keeps the step `blocked` with its note, and reports at least every 5 minutes.** The turn the user approves it sends `needs_you: null` and sets the step `done`.
+- **`story/translate` starts only after `story/owner-read` is done** (rule of 2026-11-17, step 1 below): never mark it active, and never dispatch the writer's translation round, before that. The optimiser's "work before approval" check reads this order; this flow is its negative case.
+- Each agent reports its own step with `--under-step <step id>` as a child of the card (the brief names the card key and the step id), through `node ~/.claude/skills/run-wave/board.mjs report-progress --key "<card key>" --under-step "<step id>" --steps "<label>" --step-active|--step-done "<label>" --step-process "<label>|<process key>" [--counts "findings=N"]` (run in the Bash tool, where `~` expands; the done report repeats `--steps` and `--step-process`; the plugin sends nothing for `--under-step` without a step list). The coordinator puts `Board parent: <card key>` and `Board step: <step id>` in every agent brief; with none in the brief the agent reports nothing.
+- Counts: the reviewer sends `findings` (the number of failed pages) on its done step; `farsi-review` sends `findings` and `fixed`.
+- At the end (book live and product set up) mark the card done (`mark_done`).
+
 ## 1. Text
 
 - The text is `content/dino/<stem>/story.md`; `book.json`'s `kind` says whether the book is a former starter (`"Starter"`: served by the store like the rest, also kept as a Debug-only test book in the app, and still stamped) or a store book.
