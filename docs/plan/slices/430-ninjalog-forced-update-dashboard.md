@@ -34,7 +34,6 @@ version, group it by platform". Live config read the same day: `minVersion` andr
 - [x] 4. Review pass 2 (medium, `reviews/s430-medium.md`): 1 fixed (presses count only `detail="update:update"`), 5
       done (re-uploaded after the fixes); 2 is pass 1's item 1; 3 and 4 nits left.
 
-## Not yet verified
+## Verified live
 
-- [session] Once someone below `minVersion` opens the app, the "Saw the please update page" chart shows them (on
-  2026-11-22 no `screen=update` event existed yet in 30 days).
+- Live check 2026-11-27 (after wave 4): the Ninjalog dashboard `forced-update` widget "Saw the \"please update\" page (sessions), by platform" (`index=dino_usage screen=update ... | timechart dc(session) by platform`), run 2026-10-28 to 2026-11-27, shows iOS sessions: 2 in the week from 11-19, 2 in the week from 11-26 (dino_usage: 19 weighted `screen update:shown` on 1.128.1, 1.131.1, 1.131.3, 15 `tap update:update`; no Android rows). Passed (the "Saw the please update page" chart shows them).

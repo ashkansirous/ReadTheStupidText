@@ -71,6 +71,7 @@ script only makes an empty add-on, and the first 11 books were priced and submit
 - `node --test .github/scripts/store-products.test.mjs` green.
 - The live run above: `created`/`completed` for Microsoft, the status poll ends without `CommitFailed`, and `--check-prices` reads
   USD 0.99 for every book once Microsoft has certified it.
+- Live check 2026-11-27 (after wave 4): `node .github/scripts/store-products-local.mjs --check-prices` exit 0, all 12 books `ok: ... USD 0.99`, `love_from_seagull_island (9N6J9F50FM6G)` included. Passed.
 
 #### From review
 

@@ -203,7 +203,6 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
 - iOS compile after the last fixes, and a TestFlight run of the cellular pack download and the reading-page states.
 - Real airplane mode on a phone (the flows force offline by a Debug hook).
 - Add a language on mobile data only: every shelf book's pack for it downloads with no question.
-- After release: `premade_audio:waiting_wifi` (no emitter now, expect zero) and `pack_missing_on_play` counts in dino_usage.
 - Worker serving one version behind, live, after a Workers Builds deployment of main.
 
 #### For CLAUDE.md (lifted 2026-11-13)
@@ -215,3 +214,7 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
 #### For README.md (lifted 2026-11-13)
 
 Nothing user-facing to add.
+
+#### Live check 2026-11-27 (after wave 4)
+
+- Passed: weighted `dino_usage` fallback rows, last 14 days, versions 1.124.1 and later (the slice shipped in dino-v1.124.1, PR #1063): `premade_audio:waiting_wifi` 0; `premade_audio:pack_missing_on_play` 0 (the writer at `ReadingPage.xaml.cs:1281` and `worker/events.ts:90` spell it right, so the case did not occur); the only `premade_audio:*` rows were text_mismatch 17 and no_pack 14.
