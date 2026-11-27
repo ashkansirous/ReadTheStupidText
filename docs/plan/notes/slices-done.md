@@ -457,6 +457,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 393 | Feedback loop 2026-11-14-1547 leftovers (review-skip checker, skips and follow-ups only in PR bodies, phone lease quirks, low-memory snapshot, listening-page precheck, brief guard prompt, store_unreachable on the emulator, VM first-run chain, 291 shot retake, 384 and 291 deep links) | done 2026-11-25 (own work built in #1242, #1248 and ClaudeSkills #323; device proofs of items 13, 14, 15, 23 stay in unverified.md; ClaudeSkills items moved out; harness follow-ups are Slice 442) | #1184, #1242, #1248 | | [393-feedback-loop-2026-11-14-1547-leftovers.md](../slices/393-feedback-loop-2026-11-14-1547-leftovers.md) |
 | 448 | tools/phone runs the .maestro/dino flows on a real phone | built | #1415 | — | [448-tools-phone-runs-maestro-dino-flows.md](../slices/448-tools-phone-runs-maestro-dino-flows.md) |
 | 442 | Phone, emulator and iOS harness follow-ups from Slice 393 | built (checks in unverified.md) | #1439 | — | [442-phone-emulator-ios-harness-followups.md](../slices/442-phone-emulator-ios-harness-followups.md) |
+| 451 | A Debug hook that makes the user-report endpoint refuse | built | #1450 | | [451-debug-hook-user-report-endpoint-refuses.md](../slices/451-debug-hook-user-report-endpoint-refuses.md) |
 | 343 | Listening page: four Farsi voices | built (owner re-listen in unverified.md) | #1098, #1422 | | [343-four-farsi-voices.md](../slices/343-four-farsi-voices.md) |
 
 ## Batch ordering notes
