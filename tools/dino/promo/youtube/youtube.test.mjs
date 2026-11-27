@@ -9,6 +9,7 @@ import { LANGUAGES, STRINGS, fill } from './lib/strings.mjs';
 import { FPS, PAGE_GAP_SEC, SENTENCE_GAP_SEC, buildTimeline, sceneFrames } from './lib/timeline.mjs';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { concatFileLine, materialise } from './lib/tools.mjs';
+import { checkedList, parseArgs as parseVoiceArgs, voiceLines } from './voice-lines.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CHECK_FILE } from './lib/render-video.mjs';
@@ -414,6 +415,23 @@ test('a re-rendered picture or clip is copied again, never served from the old c
   assert.notEqual(first, second);
   assert.equal(readFileSync(second, 'utf8'), 'new picture');
   assert.equal(materialise(source, join(dir, 'pictures', 'page.jpg')), second);
+});
+
+test('voice lines: one grown-ups line per language and one title line per book and language', () => {
+  const stories = [{ stem: 'lion-and-mouse', title: 'The Lion and the Mouse', titles: {} }];
+  const lines = voiceLines(stories, ['en']);
+  assert.deepEqual(lines.map((l) => l.key), ['grown-ups', 'title-lion-and-mouse']);
+  assert.equal(lines[0].text, STRINGS.en.grownUps);
+  assert.equal(lines[1].text, 'The Lion and the Mouse');
+  const warnings = [];
+  const faLines = voiceLines(stories, ['fa'], (message) => warnings.push(message));
+  assert.deepEqual(faLines.map((l) => l.key), ['grown-ups']);
+  assert.match(warnings[0], /title-lion-and-mouse in fa.*no title in fa/);
+  assert.throws(() => parseVoiceArgs(['--x', '1']), /Unknown argument/);
+  assert.throws(() => checkedList('', ['a'], 'book'), /lists nothing/);
+  assert.throws(() => checkedList(',', LANGUAGES, 'lang'), /lists nothing/);
+  assert.throws(() => checkedList('en,zz', LANGUAGES, 'lang'), /unknown code\(s\): zz/);
+  assert.deepEqual(checkedList('all', ['a', 'b'], 'book'), ['a', 'b']);
 });
 
 test('an apostrophe in an ffconcat path is escaped the ffmpeg way', () => {

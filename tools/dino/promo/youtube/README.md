@@ -32,6 +32,15 @@ The highlight is the spoken piece (one manifest entry = one clip), the app's own
 The opening card says the title and the closing card says the grown-ups line when `voice/<lang>/title-<stem>.m4a` and `voice/<lang>/grown-ups.m4a` exist (made with the same Gemini TTS voice as the book's narration;
 the texts are the book's title in that language and `STRINGS[lang].grownUps`). Without them the card is silent and the run line says `no spoken card lines`.
 
+Make them (needs the Gemini key; `D:/secrets/readthestupidtext/secrets.env` or the environment, and ffmpeg):
+
+    node voice-lines.mjs --book all --lang all > ../../../../tmp/lines.json
+    python make_voice.py --lines ../../../../tmp/lines.json [--dry-run]
+
+`voice-lines.mjs` lists the lines; `make_voice.py` speaks each with the book's narrator voice (every grown-ups line with the Lion and the Mouse narrator) through premade-audio's Gemini adapter.
+An existing clip is kept, never a second paid request (delete it to remake). With no key it stops at once, and a 401/402/403/429 (daily cap) stops the run and prints how many lines are left; rerun later.
+Tests (offline): `node --test` and `python -I -m unittest discover -s . -p "test_*.py"` in this folder.
+
 ## Upload
 
 `upload.mjs` is a dry run unless `--yes`. `--authorize` is the owner's one-time sign-in as the channel's Google account (client in `D:\secrets\dinoreader\youtube-oauth-client.json`);
