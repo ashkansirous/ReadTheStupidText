@@ -19,7 +19,7 @@ support case link in Slice 283), so the builder must look it up before writing t
 `worker/sonos-search.test.mjs` (new), `site/dino/sonos/presentation-map.xml` (new),
 `site/dino/sonos/strings.xml` (new), `worker/index.ts`, `worker/sonos-labels.ts`, `worker/sonos-shelves.ts` (both widened 2026-11-27), `docs/plan/slices/283-dino-sonos-music-service.md`, this file.
 
-*Built 2026-11-27, PR #1427; not yet verified in the Sonos sandbox (owner). Code by cloud run `cse_012UYzYVV36EAj79kYDMG9hQ` (commit 3e068192); D1 (docs read) and the review fixes were done locally. Worker only, no device run.*
+*Built 2026-11-27, merged as PR #1427 (15e95c82); not yet verified in the Sonos sandbox (owner). Code by cloud run `cse_012UYzYVV36EAj79kYDMG9hQ` (commit 3e068192); D1 (docs read) and the review fixes were done locally. Worker only, no device run.*
 
 ## Why
 
@@ -64,7 +64,7 @@ are book rows as in Slice 437 ("The Three Billy Goats Gruff" / "Ages 3–5 · 6 
 - `[owner]` The sandbox check ("goat" in the S21 Sonos app: two English rows under Stories, the own-language matches under All languages).
 - `[session]` After deploy, `curl` that https://dinoreader.sirous.uk/dino/sonos/presentation-map.xml and https://dinoreader.sirous.uk/dino/sonos/strings.xml both load (HTTP 200, the XML bodies).
 
-## For CLAUDE.md
+## For CLAUDE.md (lifted 2026-11-27)
 
 - `worker/CLAUDE.md`, in the Slice 437 paragraph "Sonos ids carry the language; only `root` reads Accept-Language", after "never read the header below `root`.": **The one exception is search (Slice 440):** the `search` action and the `search` container use the fixed ids `stories` and `all-languages` (the presentation map's, so no language can ride in them), so they read Accept-Language for the words (`labelOfRequest`, English with no header) and, for an unlinked caller, the Stories language (the first accepted language with books, else the catalogue's first); a linked home's Stories language is its saved one. Tests: `worker/sonos-search.test.mjs`.
 

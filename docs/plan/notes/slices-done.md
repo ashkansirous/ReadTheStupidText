@@ -316,6 +316,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 455 | Dino: buy, restore and subscription outcome events | built (device and log checks in unverified.md) | #1408 | | [455-dino-purchase-outcome-events.md](../slices/455-dino-purchase-outcome-events.md) |
 | 438 | Dino: every Sonos home links once through the Dino app and saves its story language | built | #1416 | — | [438-dino-sonos-link-story-language.md](../slices/438-dino-sonos-link-story-language.md) |
 | 397 | Dino: the Store's subscription card in every state the store can be in (Save tag, trial used, trial running, payment problem, ended, wide screens) | built (device and compile checks in unverified.md) | #1239, #1255, #1420 | | [397-dino-subscription-card-states.md](../slices/397-dino-subscription-card-states.md) |
+| 440 | Dino: search on Sonos, "Stories" and "All languages" | built (Sonos sandbox checks in unverified.md) | #1427 | | [440-dino-sonos-search.md](../slices/440-dino-sonos-search.md) |
 
 ## Shared
 
