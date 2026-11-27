@@ -42,6 +42,7 @@ Open slices only. Finished slices (425 rows) are in [slices-done](docs/plan/note
 | 461 | Dino: after onboarding a new parent sees a book to play, and the store doesn't look empty | planned | | | [461-dino-after-onboarding-next-book-and-store.md](docs/plan/slices/461-dino-after-onboarding-next-book-and-store.md) |
 | 463 | Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background | planned (Slice 459 merged as PR #1395; owner picks quality) | | | [463-dino-quick-first-book-package-for-slow-internet.md](docs/plan/slices/463-dino-quick-first-book-package-for-slow-internet.md) |
 | 465 | Dino: the store-restore, paid-books and subscription flows pass on a real phone | planned | | | [465-dino-store-flows-pass-on-a-real-phone.md](docs/plan/slices/465-dino-store-flows-pass-on-a-real-phone.md) |
+| 467 | Dino: Sonos on dino.elinsoft.co.uk, a Reporting Endpoint the portal can reach | planned | | | [467-dino-sonos-on-dino-elinsoft.md](docs/plan/slices/467-dino-sonos-on-dino-elinsoft.md) |
 | 466 | Dino: Sonos subscription follow-ups from Slice 439's review (relink-free proof, token refresh, SecureStorage, low items) | planned | | | [466-dino-sonos-subscription-follow-ups.md](docs/plan/slices/466-dino-sonos-subscription-follow-ups.md) |
 
 ### Shared
