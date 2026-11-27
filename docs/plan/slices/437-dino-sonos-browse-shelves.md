@@ -1,6 +1,8 @@
 # Slice 437 — Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z)
 **Product:** Dino
 
+*In progress (wave 2026-11-27), draft PR.* Premise check at claim: `Track`/`trackOf` (`worker/sonos.ts:51-93`) drop tags, ages and access, so they are extended here; no `Accept-Language` read exists yet, the request reaches `answer(..., httpRequest)` (`sonos.ts:234, 262`); Slice 436's `worker/sonos-reporting.ts` is on main; line numbers below are approximate.
+
 *Plan-cleanup check 2026-11-25 (origin/main 1a8bf725): verdict keep open, nothing built. `worker/` has only sonos.ts, sonos-soap.ts, sonos.test.mjs (no sonos-shelves, sonos-labels, sonos-art, no Accept-Language read); no PR for 437 (only the plan PR #1349). No waits found: A1 is own research, and the paid-track decision is already given in the mock ("In the Dino app", not playable). Known today: the audio route answers 402 for paid books (Slice 436 note) and the user reported "it works for the free books, but not the paid ones" (2026-11-24). A1 still needs the Sonos docs/sandbox result for a non-playable track. The Not yet verified lines stay in unverified.md and do not hold the slice.*
 
 *Planned 2026-11-24. Ships first of 437-440, no sign-in: these are the screens until Slice 438 makes every home link
