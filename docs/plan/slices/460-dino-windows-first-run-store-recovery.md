@@ -7,7 +7,7 @@
 
 **Touches:** `src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/Dino/DinoReader.App/Purchases/BookPurchases.cs`, `src/Dino/DinoReader.App/Purchases/PurchaseTrace.cs`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `worker/events.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `docs/analytics/ninjalog-queries.md`, `src/Dino/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/Shared/Sirous.Reading.Application/Usage/**`, `tools/desktop-vm/checks/**`, `tests/Shared/Shared.Tests/**` (last four widened 2026-11-27: the window wait, a new cause enum, item 1's VM check, the fallback list-sync test), `src/Dino/DinoReader.App/FirstBookPrefetch.cs` (widened 2026-11-27, review 1 #2), `src/Dino/DinoReader.App/Purchases/IBookPurchases.cs` (widened 2026-11-27, review 1 #1/#6: the snapshot carries the failure cause per read)
 
-*Built 2026-11-27 (items 2, 3 and 4), PR #1428, not merged. Item 1 is open, and the Windows, iOS and S21 checks are in *Not yet verified*.*
+*Built 2026-11-27 (items 2, 3 and 4), merged as PR #1428 (06339e27). Item 1 is open, and the Windows, iOS and S21 checks are in *Not yet verified*.*
 
 **Why:**
 - All 3 real Windows first launches that left during onboarding left on `first_run`. Two of them had fallback `store:store_unreachable` or `store:store_failed` (Russia 1.136.5.0, Oman 1.136.3.0). The Oman user retried in a new session and finished.
