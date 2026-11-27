@@ -96,6 +96,21 @@ The Bought-books card is gone. "Restore purchases" is a link on the Store's firs
 - Native read of the 14 machine-translated strings.
 - Screen reader announcement of the restore result (TalkBack, VoiceOver, Narrator).
 
+#### Open follow-ups (Slice 406 item 10; the findings above hold the detail)
+
+- [ ] F1. check1 #7: the 402 "Restore purchases" strip is a gesture on a Span with no button semantics, so TalkBack/VoiceOver cannot find the recovery action. Give it button semantics.
+- [ ] F2. check2 #1 and #6 (`reviews/pr-1234-check2-medium.md`): Redeem is reachable only through a 5 s message a screen reader cannot activate (Slice 399's Settings row is the other route; confirm it, or make the message persistent).
+- [ ] F3. check1 #2: the book-download wait of Restore runs outside `_busy`; Buy/Subscribe/Redeem can replace `_allRows` meanwhile.
+- [ ] F4. check1 #5 and check2 #3: `ownsBooks` has a dead `_allRows.Any(BoughtProduct...)` branch and is true for any non-empty `ownedNow` (a subscription-only account sees "On the shelf").
+- [ ] F5. check1 #6 and check3 #1: `HideRestoreMessageLaterAsync` hides after its delay with no newer-message check.
+- [ ] F6. check1 #8: `ContentSub`/`Store_Subtitle` remain in `GalleryPage.xaml` while the subtitle is duplicated in `StorePage`.
+- [ ] F7. check1 #9: `ShowRestoreMessage` re-parses geometry and casts resource strings per call; a mistyped key throws `InvalidCastException`.
+- [ ] F8. check1 #10 and check3 #3: `StoreRowRestore.LineFor`'s optional flags default false; make them required.
+- [ ] F9. check3 #2: with an empty catalog a restore ends with no message.
+- [ ] F10. check2 #4: `_restoring` stays true until a cancelled run unwinds, so a tap right after returning is ignored.
+- [ ] F11. check2 #5: a cancel after `RunWhenFreeAsync` takes the gate does not stop the work, and `_busy` is held for the whole store round-trip.
+- [ ] F12. check4 #1 and #2 (`.maestro/dino/store-restore.yaml`): the result assert can race the 5 s hide, and `scrollUntilVisible "On the shelf"` does not prove the two restored books are on the shelf.
+
 #### Follow-ups (not this slice)
 
 - `tools/phone`: add a runner for the UI-flow files; the S21 run of this slice was 0/4 because none exists (all four stopped at FirstRunLanguage; evidence in `reviews/s396-device/`).

@@ -93,6 +93,14 @@ The 2026-11-15 Subscription mock (section 4) removes the "Bought books before?" 
 - Fixed the review's findings 2 (chip row margin gap), 3 (stale author when the author row hides) and 5 (flow scrolls to rows; the `[AgeChips]` marker prints the band count and the selected band's number, so no enum names).
 - Follow-ups from the last check pass (`reviews/pr-1249-check3-medium.md`, all low, after the device run added `store-age-chips-all-taps.yaml`): #1 `StorePage.xaml.cs:770` the reload path keeps the requested author (same as the check2 follow-up above); #2 `:868` `OnAuthorTapped` sets `_author` after its await without re-resolving; #3 `:1251` download flags read the resolved `_state` while `_band` is the requested value (likely benign); #4 `:780` the empty-result `NoMatchLabel` path is still unexercised.
 
+## Open follow-ups (Slice 406 item 10; the prose in *Built* and *From review* above holds the detail)
+
+- [ ] F1. Author reload keeps the requested author: `RenderFilter` does not write the resolved author back to `_author`, so on a reload or Appearing an author whose band emptied can come back when that band returns (`StorePage.xaml.cs:770-773`; check2 and check3 #1). The wave-3 close's "an author filter is dropped" was wrong for this path: a chip tap drops it for good (`:858`), a reload does not. Make the reload path drop it too, or record the decision.
+- [ ] F2. check3 #2 (`StorePage.xaml.cs:868`): `OnAuthorTapped` sets `_author` after its await without re-resolving.
+- [ ] F3. check3 #3 (`StorePage.xaml.cs:1251`): download flags read the resolved `_state` while `_band` is the requested value (likely benign).
+- [ ] F4. check3 #4 (`StorePage.xaml.cs:780`): the empty-result `NoMatchLabel` path is still unexercised; add a flow or test.
+- [ ] F5. check2 (`.maestro/dino/store-age-chips.yaml:6`, `content/dino/tortoise-and-hare/book.json:5`): the flow depends on the live `meta.json` ranges, and the live `/api/stories` meta needs the same age bump (publish-store, item 6); confirm after the batch release.
+
 ## Out of scope
 
 - Changing the bands themselves (Google Play's 5 & under, 6-8, 9-12; Decision 116).

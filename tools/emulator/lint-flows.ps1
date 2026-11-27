@@ -18,12 +18,19 @@
    - a flow file may not hold a doubled CR (CR CR LF) or mixed line endings (CRLF and LF lines): a fixer left doubled CRs in two flows on 2026-10-30.
    - Slice 376 item 4 (Slice 354 item 3): every `- takeScreenshot: <name>` of a flow (not under an `rtst` folder: RTST has no mock frames) is listed in
      screenshot-frames.json (the contact-sheet manifest, -Manifest), so a shot nobody lays out fails here and not first in CI's test-contact-sheet.ps1.
+   - Slice 406 item 3: every fixed word of every `# expect-log:` marker (the words up to its first run-time value: digit, `{`, `<`, `(`, or what follows an `=`) appears somewhere in the C#, Swift, Kotlin or Java
+     source under src (each word is checked against the source as a whole, not on one line; same-line is open item 3b) (-SourceRoot, Testing/ included), so a reworded log line fails here and not in an 8-minute emulator run. It runs when linting a folder, or one flow with -CheckSource (one-flow calls
+     from run-flows.ps1 skip it: reading the source costs seconds). A marker that starts with a value is printed as a warning (unchecked); a missing source folder is a warning too.
   Used by run-flows.ps1 (before any build). Its self-test, test-lint-flows.ps1, runs in CI (tools-selftests.yml, Slice 212) and by hand.
 #>
 param(
     [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro'),
     # The contact-sheet manifest every takeScreenshot name must appear in (Slice 376 item 4); a missing file switches the rule off.
-    [string]$Manifest = (Join-Path $PSScriptRoot 'screenshot-frames.json')
+    [string]$Manifest = (Join-Path $PSScriptRoot 'screenshot-frames.json'),
+    # The app source every `# expect-log:` marker must appear in (Slice 406 item 3); a missing folder switches the rule off.
+    [string]$SourceRoot = (Join-Path $PSScriptRoot '..\..\src'),
+    # Check the markers of a single flow too (a whole folder is always checked); run-flows.ps1's one-flow calls leave it off so they stay fast.
+    [switch]$CheckSource
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')   # Test-LogMarkerCanMatch: the matcher's own rule (Slice 315 item 9)
@@ -174,8 +181,63 @@ function Test-ExpectLogMarkers([string]$File, [string[]]$Lines) {
         if ($Lines[$i] -notmatch '^#\s*expect-log:(.*)$') { continue }
         $marker = $Matches[1].Trim()
         if (-not (Test-LogMarkerCanMatch $marker)) { Add-Problem $File ($i + 1) "'# expect-log:' marker '$marker' is empty: it can never match"; continue }
-        if ($marker -match '^[:,;.)\]!?]') { Add-Problem $File ($i + 1) "'# expect-log:' marker '$marker' must start a token: in the app log closing punctuation (: , ; . ) ] ! ?) follows a tag with no space, so it never matches" }
+        if ($marker -match '^[:,;.)\]!?]') { Add-Problem $File ($i + 1) "'# expect-log:' marker '$marker' must start a token: in the app log closing punctuation (: , ; . ) ] ! ?) follows a tag with no space, so it never matches"; continue }
+        Test-MarkerInSource $File $i $marker
     }
+}
+
+# Slice 406 item 3: all source text under -SourceRoot (C#, Swift, Kotlin, Java; app code and Testing/) joined once, obj/bin pruned while walking; $null when the rule is off.
+# The rule runs for a whole folder, or for one flow with -CheckSource: run-flows.ps1 lints each flow in its own process and must not read ~940 files every time.
+function Get-SourceFiles([string]$Dir) {
+    $entries = try { @([IO.Directory]::EnumerateFileSystemEntries($Dir)) } catch [UnauthorizedAccessException] { @() }   # an unreadable folder holds no source we can lint
+    foreach ($item in $entries) {
+        $name = [IO.Path]::GetFileName($item)
+        if ([IO.Directory]::Exists($item)) { if ($name -ne 'obj' -and $name -ne 'bin' -and -not ([IO.File]::GetAttributes($item) -band [IO.FileAttributes]::ReparsePoint)) { Get-SourceFiles $item } }   # a junction or symlink could loop
+        elseif ($name -match '\.(cs|swift|kt|java)$') { $item }
+    }
+}
+
+# One source file's text, or nothing plus a warning line when it is locked or unreadable: one bad file must not abort the whole lint.
+function Read-SourceFile([string]$FilePath) {
+    try { return [IO.File]::ReadAllText($FilePath, [Text.Encoding]::UTF8) }
+    catch { Write-Host "lint-flows: warning: source file '$FilePath' could not be read ($($_.Exception.Message)), so it is skipped for the '# expect-log:' check."; return $null }
+}
+
+function Get-SourceText {
+    if (-not $script:CheckSourceRule) { return $null }
+    $off = "lint-flows: warning: source folder '$SourceRoot' does not exist or holds no source files, so '# expect-log:' markers are not checked against the source."
+    if (-not (Test-Path -LiteralPath $SourceRoot -PathType Container)) { Write-Host $off; return $null }
+    $raw = ((Get-SourceFiles (Resolve-Path -LiteralPath $SourceRoot).Path | ForEach-Object { Read-SourceFile $_ }) -join "`n")
+    if (-not $raw) { Write-Host $off; return $null }
+    # A log line in C# source is written escaped (`\"`, `\\`, `{{`, `}}`), the marker is the text the app prints: search both forms.
+    return ($raw + "`n" + $raw.Replace('\"', '"').Replace('\\', '\').Replace('{{', '{').Replace('}}', '}'))
+}
+
+# The fixed words of a marker: the text up to its first run-time value. A log line is built from parts (`$"HOOK {name} ok paid={n}"`, a constant for the hook name, an enum
+# for `area:reason`), so the whole text is rarely one literal, but each fixed word is. A run-time value starts at a word with a digit, `{`, `<` or `(`, at the value after an `=` or an
+# inner `:` (`fallback ocr:page_read_failed` keeps `ocr`), and after `unknown` (the log line echoes the name the flow passed in). A trailing `:` on a word is punctuation.
+function Get-MarkerWords([string]$Marker) {
+    $words = New-Object Collections.Generic.List[string]
+    foreach ($token in ($Marker -split '\s+' | Where-Object { $_ })) {
+        $cut = $token.IndexOfAny([char[]]'=:')
+        if ($cut -ge 0 -and $cut -lt $token.Length - 1 -and $token[$cut] -eq ':') { if ($cut -gt 0) { $words.Add($token.Substring(0, $cut)) }; break }
+        if ($cut -ge 0 -and $token[$cut] -eq '=') { $words.Add($token.Substring(0, $cut + 1)); break }
+        if ($token -match '[\d{<(]') { break }
+        if ($token -cmatch '^unknown.' ) { break }   # `unknowntag`: a name the flow passed in
+        $words.Add($token.TrimEnd(':'))
+        if ($token -ceq 'unknown') { break }
+    }
+    return @($words | Where-Object { $_ })
+}
+
+# A marker with a fixed word that appears nowhere in the source can never match: a reworded log line left the flow expecting the old text (Slice 406 item 3).
+# Every fixed word is checked (not the first two), but each only against the source as a whole, so a changed word order is not caught.
+function Test-MarkerInSource([string]$File, [int]$Index, [string]$Marker) {
+    if ($null -eq $script:SourceText) { return }
+    $words = @(Get-MarkerWords $Marker)
+    if ($words.Count -eq 0) { $script:Unchecked.Add(('{0}:{1}' -f $File, ($Index + 1))); return }
+    $missing = @($words | Where-Object { -not $script:SourceText.Contains($_) })
+    if ($missing.Count) { Add-Problem $File ($Index + 1) "'# expect-log:' marker '$Marker' has text that appears nowhere in the app source or Testing/ under $(Split-Path $SourceRoot -Leaf) ($($missing -join ', ')): the log line was reworded or removed" }
 }
 
 # The `- ` item line that holds the key on line $Index (the line itself when it is the item), or -1.
@@ -359,8 +421,12 @@ if (-not (Test-Path $Path)) { Write-Host "lint-flows: $Path does not exist."; ex
 $script:ManifestShots = Get-ManifestShots
 $files = @(Get-ChildItem $Path -Include '*.yaml', '*.yml' -Recurse -File)
 if ((Get-Item $Path).PSIsContainer -eq $false) { $files = @(Get-Item $Path) }
+$script:CheckSourceRule = $CheckSource -or (Get-Item $Path).PSIsContainer
+$script:Unchecked = New-Object Collections.Generic.List[string]
+$script:SourceText = Get-SourceText
 foreach ($file in $files) { Test-FlowFile $file }
 foreach ($problem in $script:Problems) { Write-Host $problem }
+if ($script:Unchecked.Count) { Write-Host ("lint-flows: warning: {0} '# expect-log:' marker(s) start with a run-time value and are not checked against the source (unchecked marker), the first at {1}" -f $script:Unchecked.Count, $script:Unchecked[0]) }
 Write-Host ("lint-flows: {0} flow(s) checked, {1} finding(s)." -f $files.Count, $script:Problems.Count)
 if ($script:Problems.Count -gt 0) { exit 1 }
 exit 0

@@ -59,6 +59,20 @@ Emulator run (2026-11-18, build 8e99c8ce811d, Android): `subscription` PASS, `on
 - Skipped #8 (`reviews/pr-1250-high.md`): "Hand-rolled icon drawing duplicates `IconView` grid-path machinery" - `IconView.cs` is outside Touches and the drawn icons match the mock; a later refactor can merge them.
 - Skipped #10 (`reviews/pr-1250-high.md`): "`OnPurchasesChanged` rebuilds the whole Settings list on every purchase-snapshot change" - the list is rebuilt only when a purchase state changes, which is rare, and no data is lost.
 
+#### Open follow-ups (Slice 406 item 10; the prose in *From review* above holds the detail)
+
+- [ ] F1. check2 #1 (`reviews/pr-1250-check2-medium.md`, `StorePage.xaml.cs:645`): `_restoring` is unset until the shelf refresh ends (same as Slice 396 check #5).
+- [ ] F2. check2 #2 (`StorePage.xaml.cs:1041`): a second `Appearing` while `_loading` leaves the restore request up to 30 s.
+- [ ] F3. check2 #3 (`SettingsPage.cs:316`): Restore and the not-subscribed row call `SelectTab(Store)` without checking the tab appears.
+- [ ] F4. check2 #4 (`SettingsPage.cs:240`): `OnPurchasesChanged` rebuilds the whole list (same as high #10).
+- [ ] F5. check2 #5 (`BookPurchases.cs:92`): a subscription-only read could overwrite the stored subscription; checked on Android only, iOS and Windows not checked.
+- [ ] F6. check2 #6 (`SettingsPage.cs:355`): `RedeemAsync` refreshes right after the redeem screen opens.
+- [ ] F7. check2 #7 (`BuyingRowIcons.cs:12`): hand-drawn icons duplicate `IconView` (same as high #8).
+- [ ] F8. check2 #8 (`DinoReader.Tests.csproj:28`): only the neutral resx is embedded, so translated `{0}` placeholders in `Settings_Sub*` are untested.
+- [ ] F9. check3 #1 (`reviews/pr-1250-check3-medium.md`, `.maestro/dino/settings-books-and-buying.yaml:102`): the subscribed-row tap is checked only by the row still being visible; only the expect-log header catches a dead tap.
+- [ ] F10. check3 #2 (`.maestro/dino/settings-books-and-buying.yaml:142`): after Redeem the check is that `SettingsRedeemRow` is still visible, which cannot fail; only the `redeem finished` log line proves it.
+- [ ] F11. check3 #3 (`.maestro/dino/settings-books-and-buying.yaml:59`): the first-state "Not subscribed" and either-store-name asserts can pass before the store snapshot loads (flake risk).
+
 #### For CLAUDE.md (lifted 2026-11-18)
 
 - Restore from Settings never runs a restore of its own: `SettingsPage.cs` calls `StorePage.RequestRestore()` (one pending flag, main thread, expires after 30 s) and selects the Store tab; the Store owns the wait text and the message, and a failed load or unmet grown-up gate shows its restore notice. The "Books and buying" group always shows, whether or not books are sold. (Slice 399: docs/plan/slices/399-dino-settings-books-and-buying.md)

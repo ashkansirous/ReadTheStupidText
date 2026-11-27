@@ -1,0 +1,2 @@
+// Fixture source for test-lint-flows.ps1 (Slice 406 item 3): the log text the fixture flows expect.
+class Fixture { void Log() { Write("[Reading] animal clip Pig plays"); Write($"HOOK install-audio-pack ok"); Write("hit"); Write($"HOOK install-audio-pack ok paid={n}"); Write("[Reading] fine marker"); Write("say \"hi\" now"); } }
