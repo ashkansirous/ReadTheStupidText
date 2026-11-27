@@ -7,7 +7,7 @@
   The emulator is the one run-flows.ps1 drives: -Serial emulator-5554 is instance 1 (a phone AVD), emulator-5558 is instance 3 (the tablet AVD RTST_Tablet); without -Serial the form picks it
   (phone -> 1, tablet -> 3). The debug app must be installed already (run-flows.ps1 -NoBuild exits 6 on a build cache miss, and so does this script). Runs headless: it starts no window and takes
   over nothing. Maestro writes each PNG under the Java user.home that run-flows.ps1 sets; this script copies the newest one written after the start of the run (contact-sheet.ps1's finder).
-  -DryRun prints the plan (flow file, emulator instance, shot names, output folder) and runs nothing. Exit 0 when every shot was written, 1 when the flow failed or a shot is missing, 6 on a build cache miss.
+  -DryRun prints the plan (flow file, emulator instance, shot names, output folder) and runs nothing. Exit 0 when every shot was written, 1 when the flow failed or a shot is missing, 6 on a build cache miss, 7 when no usable JDK is installed (Slice 449).
 .EXAMPLE
   .\store-screenshots.ps1 -App dino -Form phone
   .\store-screenshots.ps1 -App rtst -Form tablet -Serial emulator-5558
@@ -272,6 +272,7 @@ if ($DryRun) {
 
 $toolsDir = Get-MaestroToolsDir $repoRoot $env:MAESTRO_HOME
 $roots = @((Join-Path $toolsDir "maestro-home\i$instance"), (Join-Path $toolsDir "maestro-out\i$instance"))   # this emulator's folders only: another instance's run of the same flow must not be picked up
+if (-not (Set-ProcessJavaHome)) { exit $script:ExitJdkNotFound }   # Slice 449: a dead JAVA_HOME is replaced for this process before the emulator is touched (run-flows.ps1 repeats it); no JDK stops here with one line (exit 7)
 Remove-OldStoreShots $names $roots
 Set-EmulatorInstance $instance
 try { Confirm-EmulatorForDemo ([int]$instance) } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)" }
@@ -313,7 +314,7 @@ try {
     $null = Invoke-StatusBarDemo (Get-WmSizeExitCommands)          # the emulator is never left at the store size
     $null = Invoke-StatusBarDemo (Get-StatusBarDemoExitCommands)   # a flow that failed or was stopped must not leave the emulator in demo mode
 }
-if ($runExit -ne 0) { Write-Host "STORE SHOTS: run-flows.ps1 exited $runExit; no shot was copied."; exit $(if ($runExit -eq 6) { 6 } else { 1 }) }
+if ($runExit -ne 0) { Write-Host "STORE SHOTS: run-flows.ps1 exited $runExit; no shot was copied."; exit $(if ($runExit -eq 6 -or $runExit -eq $script:ExitJdkNotFound) { $runExit } else { 1 }) }
 $missing = @(Copy-StoreShots $names $roots $outDir)
 if ($missing.Count -gt 0) { Write-Host "STORE SHOTS: missing $($missing -join ', ') (searched $($roots -join ', '))."; exit 1 }
 $sizeProblems = @(Get-RawShotSizeProblems $names $outDir $wmSize)
