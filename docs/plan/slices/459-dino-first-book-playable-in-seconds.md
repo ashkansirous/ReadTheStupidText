@@ -1,11 +1,13 @@
 # Slice 459 — Dino first books: the first book is playable within seconds of Continue
 **Product:** Dino
 
+*In progress (wave 2026-11-27), draft PR.*
+
 *Planned 2026-11-27 from the 2026-11-26 usage analysis (Ninjalog `ashkan-sirous/dino-book-reader`, index `dino_usage`, 19-26 Nov).*
 
 **Starts after:** [Slice 453](453-dino-first-books-cancelled-load-copy.md) (both edit `FirstBooksPage.cs`). The small "quick" package is [Slice 463](463-dino-quick-first-book-package-for-slow-internet.md).
 
-**Touches:** `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/FirstBooksPage.Views.cs`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/OnboardingSteps.cs`, `src/Dino/DinoReader.App/OnboardingSteps.Languages.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`, `tests/Dino/DinoReader.Tests/FirstBooksTests.cs`, `docs/analytics/dino-session-queries.md`
+**Touches:** `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/FirstBooksPage.Views.cs`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/OnboardingSteps.cs`, `src/Dino/DinoReader.App/OnboardingSteps.Languages.cs`, `src/Dino/DinoReader.App/FirstRunPage.xaml.cs`, `tests/Dino/DinoReader.Tests/FirstBooksTests.cs`, `docs/analytics/dino-session-queries.md`, `src/Dino/DinoReader.App/FirstBookPrefetch.cs` (new), `src/Dino/DinoReader.App/OnboardingSteps.Route.cs`, `src/Dino/DinoReader.App/AudioPackStore.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `src/Dino/DinoReader.App/MauiProgram.cs`, `src/Dino/DinoReader.Core/FirstBooks.cs`, `tests/Dino/DinoReader.Tests/FirstBookPrefetchTests.cs` (new), `.maestro/dino/**` (widened at claim, 2026-11-27, from the premise check: `FirstBooks.Order/ToDownload/EndOfContinue`, pack install and the onboarding route live there)
 
 **Why:**
 - On the `first_books` screen, 14 first-launch sessions showed `wait_shown getting_file:>20` (over 20 s), plus more at 5-10 s and 10-20 s. Most still finished.
@@ -25,6 +27,21 @@
 - The other ticked books and the other languages' packs carry on in the background, with progress on the shelf. Nothing blocks the parent.
 
 **Open for the owner:** none (the slow-internet package is Slice 463).
+
+**Design (coordinator, at claim 2026-11-27; the builder builds this, it does not invent another):**
+- Today (origin/main 47dbf9ee): nothing is persisted; `FirstBooksPage` holds `_ticked`, `_onShelf`, `_tickOrder`, `_downloadCancel` (`FirstBooksPage.cs:71-74`); `StoreClient._inFlight` (`StoreClient.cs:177, 341`) hands a second caller the FIRST caller's task, cancel token and progress; `WantedPacks` reads `StoryLanguages.Current()` at download time (`StoreClient.cs:403`); the store list is fetched only in `FirstBooksPage.LoadAsync`.
+- **One owner of the prefetch state:** a new singleton `FirstBookPrefetch` (App, registered in `MauiProgram.cs`). It owns its own `CancellationTokenSource`, one task for one (book id, main language), and a progress value the page can subscribe to and unsubscribe from. The page never passes its own token into it, and it never calls `StoreClient.DownloadAsync` while a page download of the same id is in flight (it is started first, and the page joins it, never the reverse).
+- **States:** `Idle` -> `Listing` (fetches the store list once; the result is cached and `FirstBooksPage.LoadAsync` reuses it when present, else fetches as today) -> `Downloading` (package, then the main-language pack only) -> `Landed` | `Failed` | `Cancelled`.
+- **Start:** right after the story language is saved (`OnboardingSteps.Languages.cs:134`), for the pre-ticked first book from `FirstBooks.Order`, only if it is not on the shelf already. Telemetry on/off changes nothing.
+- **Continue:** the page's queue is: the prefetched book first (await the prefetch task through the page's own wait, with the prefetch's progress shown), else the first ticked book plus its main pack; once that one book is on the shelf with its main pack, the wait ends and the shelf opens with it playable (item 2). The other ticked books, then the other languages' packs of every book, run in a background queue owned by `StoreClient` (not by the page, which is gone), with the existing shelf progress and Cancel.
+- **Interrupts:**
+  - Untick of the prefetched book: cancel the prefetch; delete its `.part`; if it already landed, remove it from the shelf (Decision 1: "cancel and delete it").
+  - Page Cancel / Back during the first-book wait: cancels the prefetch and the queue, exactly as today's `_downloadCancel` (landed books stay); `OnDisappearing` stays as is.
+  - Offline or failed prefetch: silent (no UI, `Failed`); Continue then runs the normal first-book path, which shows today's error and Retry.
+  - Retry after a failure: a fresh attempt from zero; a `Failed`/`Cancelled` prefetch is never joined.
+  - App killed: no resume (as today). On next launch, a leftover `.part` of the prefetched id is deleted before the prefetch starts again from zero; a book on the shelf without its main pack gets that pack queued by the same background queue.
+  - Language changed in the intro after the prefetch started: cancel and restart with the new main language.
+- **Pure function:** the queue order and the early-open point are one pure, unit-tested function in `src/Dino/DinoReader.Core/FirstBooks.cs` (input: ticked ids in order, on-shelf ids, prefetched id and its state, story languages; output: the first-book step and the background list).
 
 **Work:**
 - [ ] 1. Prefetch: once the story language is known in the intro, start the pre-ticked book's package and main-language pack in the background. If the parent unticks it, cancel and delete it. Telemetry off or offline changes nothing about what is shown.
