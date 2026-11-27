@@ -286,6 +286,34 @@ public static class FallbackReason
     /// <summary>Slice 362 (area "library"): the grown-up's recorded try of the onboarding could not be deleted from a book; the next start retries.</summary>
     public const string OnboardingTryNotDeleted = "onboarding_try_not_deleted";
 
+    // Slice 460: why a store call failed (area "store"), the closed list of causes. store_unreachable and store_failed stay accepted for older builds and for "other".
+    /// <summary>Slice 460 (area "store"): the call ran out of time (the list's 20 s, a stalled body).</summary>
+    public const string StoreTimeout = "store_timeout";
+
+    /// <summary>Slice 460 (area "store"): the device had no route to the server (connection refused or reset, network down).</summary>
+    public const string StoreNoNetwork = "store_no_network";
+
+    /// <summary>Slice 460 (area "store"): the server's name could not be resolved.</summary>
+    public const string StoreDns = "store_dns";
+
+    /// <summary>Slice 460 (area "store"): the secure connection could not be set up (certificate, clock, protocol).</summary>
+    public const string StoreTls = "store_tls";
+
+    /// <summary>Slice 460 (area "store"): the server answered 5xx.</summary>
+    public const string StoreHttp5xx = "store_http_5xx";
+
+    /// <summary>Slice 460 (area "store"): the server answered 4xx that is not one of the Worker's own refusals.</summary>
+    public const string StoreHttp4xx = "store_http_4xx";
+
+    /// <summary>Slice 460 (area "store", Windows): the Microsoft Store says the app is not associated with the Store (0x803F6107), so it cannot be asked.</summary>
+    public const string StoreNotAssociated = "store_not_associated";
+
+    /// <summary>Slice 460 (area "store", Windows): the app's window did not exist yet when the Store context was needed.</summary>
+    public const string StoreNoWindow = "store_no_window";
+
+    /// <summary>Slice 460 (area "store"): the purchase read did not finish inside the settle budget, so the files were asked for without it.</summary>
+    public const string StoreSettleTimeout = "store_settle_timeout";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -300,6 +328,7 @@ public static class FallbackReason
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed, FocusMoveFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
         BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, DownloadRefused, PurchaseNotValid, OnboardingTryNotDeleted,
+        StoreTimeout, StoreNoNetwork, StoreDns, StoreTls, StoreHttp5xx, StoreHttp4xx, StoreNotAssociated, StoreNoWindow, StoreSettleTimeout,
     ];
 }
 

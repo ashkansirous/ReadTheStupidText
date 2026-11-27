@@ -254,7 +254,8 @@ public sealed class FirstBookPrefetch(StoreClient store)
 			store.DeleteLeftoverParts(BookId); // after a kill: a leftover .part of this book goes before the fresh start
 		}
 
-		StoreListing listing = await store.ListAsync(cancel);
+		// Slice 460: the same retried list as the picker's (1 s, 3 s, 7 s), behind no UI. It never reports: a failure here is silent, and the picker's own sequence reports the failure the grown-up sees (device run 1, finding 2).
+		StoreListing listing = await store.ListWithRetryAsync(cancel, FirstRunListSource.Prefetch);
 		if (listing.Status != StoreLoadStatus.Ok)
 		{
 			return (PrefetchState.Failed, false);

@@ -18,6 +18,8 @@ public sealed class SwitchablePurchases(IBookPurchases real) : IBookPurchases, I
 
     public Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel) => Current.RefreshAsync(productIds, interactive, cancel);
 
+    public Task PrepareAsync(CancellationToken cancel) => Current.PrepareAsync(cancel);
+
     public Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel) => Current.BuyAsync(productId, cancel);
 
     public Task<BuyOutcome> BuyAsync(string productId, bool withTrial, CancellationToken cancel) => Current.BuyAsync(productId, withTrial, cancel);
