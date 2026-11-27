@@ -1,0 +1,110 @@
+# Slice 424 item 1: the walk of the 2026-11-20 unclean exit (fresh install, first read, back to the shelf, the grown-ups' corner: Books, Store, Settings, Books again), then the kill check of
+# items 3-5: the process is killed in front and the next launch reports an unclean exit that carries the dead launch's last page, app state and (Android) the system's exit record.
+# The first run's real pack downloads (fa v3, en v1, fa v2) are not scripted here: the skip-first-run hook hands over to the shelf, as in first-run.yaml, so the flow needs no network; the
+# download part of the owner's walk is still a manual pass on the S21 (release 1.136.0 from Play) and is listed in the slice's Not yet verified.
+# needs: crash-stub
+# Precondition (run-flows.ps1 sets it up from the line above): `node tools/crashes/stub-server.mjs` is listening on port 8787; the emulator reaches it as http://10.0.2.2:8787.
+# Watch while it runs (the coordinator's device run): `adb logcat` for FATAL, ANR and native signals, and after it `adb shell dumpsys activity exit-info uk.sirous.dinoreader.dbg` (ApplicationExitInfo).
+# The log markers below fail against a build from before this slice: no `unclean exit:` note line, no `last page` in it.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=1
+# expect-log: HOOK enter-grown-up ok
+# expect-log: HOOK crash-stub ok
+# expect-log: HOOK crash-test started
+# expect-log: CRASH_REPORT unclean exit: session
+# expect-log: CRASH_REPORT unclean_exit report saved
+appId: uk.sirous.dinoreader.dbg
+name: A walk to Settings, then a kill, reports an unclean exit with its last page (Dino)
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books, pending crash reports, the crash log and launch facts); fine here: the flow is a fresh install on the starter shelf and needs an empty crash folder so the one unclean exit it makes is the only one.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: crash-stub
+      url: http://10.0.2.2:8787
+# Read one first book to a stop, then back to the shelf.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
+# The grown-ups' corner: Books, Store, Settings, the Books tab again (the gate's hold and sum are not scriptable, the hook stands in for it).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+- extendedWaitUntil:
+    visible:
+      id: LockChip
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: settings
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: books
+- extendedWaitUntil:
+    visible:
+      id: LockChip
+    timeout: 30000
+# Kill the process while it is in front (the run marker stays behind), let it die, start again: the report is made at that start and posted about a second later.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: crash-test
+      kind: kill
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp:
+    # launchApp-restart: the kill ended the process, so this starts the app again; the unclean-exit report is made at this start.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000

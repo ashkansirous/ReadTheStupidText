@@ -71,9 +71,17 @@ function Get-StatusBarDemoExitCommands {
     )
 }
 
+# Slice 442: Invoke-EmulatorAdbText folds stderr into the text and never throws, so a failed adb call looked like a good one and the demo-mode early stop could not fire. This reads $LASTEXITCODE per call and throws on a non-zero one (adb exits non-zero when it cannot reach the device or the command).
+function Invoke-EmulatorAdbChecked([string[]]$AdbArgs) {
+    $global:LASTEXITCODE = 0   # review pass 2 item 1: a stale non-zero code from an earlier native call must not fail a call that went through
+    $text = Invoke-EmulatorAdbText $AdbArgs
+    if ($LASTEXITCODE -ne 0) { throw "adb exited $LASTEXITCODE`: $($text.Trim())" }
+    return $text
+}
+
 # Runs the commands through the emulator's adb (the serial common.ps1 holds for the chosen instance). Never throws (each call is caught); returns the failed commands' messages (an empty list when every call went through).
 # No setting read-back proves the demo mode (sysui_demo_allowed is persistent and reads 1 whether or not the broadcasts took): the proof is the first screenshot's status bar, checked in the device run.
-function Invoke-StatusBarDemo([object[]]$Commands, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+function Invoke-StatusBarDemo([object[]]$Commands, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbChecked $a }) {
     $failures = @()
     foreach ($command in $Commands) {
         try { $null = & $AdbCall $command } catch { $failures += "'$($command -join ' ')' failed: $($_.Exception.Message)" }
@@ -134,11 +142,17 @@ function Get-RawShotSizeProblems([string[]]$Names, [string]$Dir, [int[]]$Size) {
     return @($problems)
 }
 
+# Slice 442 review 6: the one exit code for an emulator that would not start (6 = no emulator, 7 = no JDK keep their meaning).
+$script:ExitEmulatorStartFailed = 8
+
 # A snapshot or cold boot (run-flows.ps1 does one on a cache miss or a failed preflight) drops the demo mode, so it is applied only once the emulator is up: starts it first when it is not.
-function Confirm-EmulatorForDemo([int]$InstanceNumber) {
-    if (Test-EmulatorOnline) { return }
+# Slice 442: returns start-warm's exit code (0 when the emulator was already up or started), so the caller can stop with it; a start-warm that throws counts as 1.
+function Confirm-EmulatorForDemo([int]$InstanceNumber, [scriptblock]$IsOnline = { Test-EmulatorOnline }, [scriptblock]$Start = { param($n) $global:LASTEXITCODE = 0; & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $n | Out-Null; $LASTEXITCODE }) {
+    if (& $IsOnline) { return 0 }
     Write-Host "STORE SHOTS: $script:Serial is not up; starting it before the status bar demo mode."
-    & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $InstanceNumber | Out-Null
+    try { $code = & $Start $InstanceNumber } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)"; return 1 }
+    if ($null -eq $code) { return 0 }
+    return [int]@($code)[-1]
 }
 
 # Slice 404: the Dino full-shelf hook imports a PAID book from a package file, because the store refuses a paid download without a real receipt (no fake receipt, no live config). Decision 5: a package is never built here;
@@ -275,7 +289,8 @@ $roots = @((Join-Path $toolsDir "maestro-home\i$instance"), (Join-Path $toolsDir
 if (-not (Set-ProcessJavaHome)) { exit $script:ExitJdkNotFound }   # Slice 449: a dead JAVA_HOME is replaced for this process before the emulator is touched (run-flows.ps1 repeats it); no JDK stops here with one line (exit 7)
 Remove-OldStoreShots $names $roots
 Set-EmulatorInstance $instance
-try { Confirm-EmulatorForDemo ([int]$instance) } catch { Write-Host "STORE SHOTS: could not start $script:Serial first: $($_.Exception.Message)" }
+$startExit = Confirm-EmulatorForDemo ([int]$instance)
+if ($startExit -ne 0) { Write-Host "STORE SHOTS: $script:Serial could not be started (start-warm exit $startExit), no flow was run."; exit $script:ExitEmulatorStartFailed }
 if ((Get-Content $flowFile -Raw) -match '(?m)^\s*cmd:\s*full-shelf\s*$') {
     $shelfFolder = Join-Path $repoRoot 'artifacts\full-shelf'
     $fetchFailure = Invoke-FetchShelfPackages $repoRoot $shelfFolder

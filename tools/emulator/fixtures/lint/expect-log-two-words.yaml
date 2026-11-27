@@ -1,0 +1,4 @@
+appId: uk.sirous.dinoreader.dbg
+# expect-log: [Reading] animal zebra clip Pig plays
+---
+- back

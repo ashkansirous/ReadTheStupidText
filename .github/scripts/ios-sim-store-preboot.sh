@@ -31,7 +31,7 @@ bundle="$(sed -n 's:.*<ApplicationId>\(.*\)</ApplicationId>.*:\1:p' "$PROJECT" |
 [ -n "$bundle" ] || { finish "failed=no ApplicationId in $PROJECT"; exit 1; }
 echo "pre-boot of $LABEL ($patterns) for $bundle started"
 started=$SECONDS
-udid="$(STORE_BUNDLE_ID="$bundle" SIM_BEFORE_BOOT_SCRIPT="$HERE/ios-sim-store-prefs.sh" SIM_DEVICE_NAME="shots-$LABEL" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' \
+udid="$(SIM_SETTLE_SECONDS=20 STORE_BUNDLE_ID="$bundle" SIM_BEFORE_BOOT_SCRIPT="$HERE/ios-sim-store-prefs.sh" SIM_DEVICE_NAME="shots-$LABEL" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' \
   bash "$HERE/ios-sim-boot.sh" | tail -n 1 | sed -n 's/^udid=//p')"
 if [ -z "$udid" ]; then
   finish "failed=ios-sim-boot.sh booted no simulator ($patterns)"

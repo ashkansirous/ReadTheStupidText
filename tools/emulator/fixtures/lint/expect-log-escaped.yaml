@@ -1,0 +1,4 @@
+# expect-log: say "hi" now
+appId: uk.sirous.dinoreader.dbg
+---
+- back

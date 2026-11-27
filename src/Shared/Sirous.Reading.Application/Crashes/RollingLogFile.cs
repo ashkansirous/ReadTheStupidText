@@ -7,7 +7,7 @@ namespace Sirous.Reading.Application.Crashes;
 /// so the newest 128 to 256 KB of log lines are always on disk. One line per call; the writer is flushed on Warning and Error, and by
 /// <see cref="Flush"/> from the crash handler. Never throws: a log that cannot be written must not break the app. The tail goes out with a crash report.
 /// </summary>
-public sealed class RollingLogFile
+public sealed class RollingLogFile : IDisposable
 {
     public const int DefaultFileBytes = 128 * 1024;
     public const int DefaultTailLines = 300;
@@ -17,15 +17,31 @@ public sealed class RollingLogFile
     private readonly object _gate = new();
     private readonly string[] _paths;
     private readonly int _maxFileBytes;
+    private readonly bool _useTimer;
+    private readonly long _flushEveryMilliseconds;
+    private readonly Func<long> _nowMilliseconds;
+    private Timer? _flushTimer;
     private StreamWriter? _writer;
     private int _current = -1;
     private long _currentBytes;
+    private long _flushedAt;
+    private bool _dirty;
 
-    public RollingLogFile(string folder, int maxFileBytes = DefaultFileBytes)
+    /// <param name="folder">The folder of the two log files.</param>
+    /// <param name="maxFileBytes">The size at which the current file is swapped.</param>
+    /// <param name="flushEvery">Slice 424 item 5: buffered lines reach the disk at least this often (default <see cref="DefaultFlushEvery"/>), so a death loses at most this much; zero or less turns the timed flush off.</param>
+    /// <param name="nowMilliseconds">A clock in milliseconds; a test passes its own and then no timer runs (the flush happens on the next <see cref="Append"/>).</param>
+    public RollingLogFile(string folder, int maxFileBytes = DefaultFileBytes, TimeSpan? flushEvery = null, Func<long>? nowMilliseconds = null)
     {
         _paths = [Path.Combine(folder, FirstName), Path.Combine(folder, SecondName)];
         _maxFileBytes = maxFileBytes;
+        _flushEveryMilliseconds = (long)(flushEvery ?? DefaultFlushEvery).TotalMilliseconds;
+        _useTimer = nowMilliseconds is null;
+        _nowMilliseconds = nowMilliseconds ?? (() => Environment.TickCount64);
     }
+
+    /// <summary>How long a line may wait in the buffer before it is written to disk.</summary>
+    public static readonly TimeSpan DefaultFlushEvery = TimeSpan.FromSeconds(5);
 
     /// <summary>Appends one line (no line break inside); <paramref name="flush"/> pushes it to disk at once.</summary>
     public void Append(string line, bool flush)
@@ -37,9 +53,10 @@ public sealed class RollingLogFile
                 StreamWriter writer = Writer();
                 writer.WriteLine(line);
                 _currentBytes += Encoding.UTF8.GetByteCount(line) + Environment.NewLine.Length;
-                if (flush)
+                _dirty = true;
+                if (flush || FlushDue())
                 {
-                    writer.Flush();
+                    FlushLocked();
                 }
 
                 if (_currentBytes >= _maxFileBytes)
@@ -62,12 +79,42 @@ public sealed class RollingLogFile
         {
             lock (_gate)
             {
-                _writer?.Flush();
+                FlushLocked();
             }
         }
         catch (Exception)
         {
             // no-fallback: nothing more can be done in a crash handler.
+        }
+    }
+
+    // Call with _gate held.
+    private void FlushLocked()
+    {
+        _writer?.Flush();
+        _dirty = false;
+        _flushedAt = _nowMilliseconds();
+    }
+
+    // Call with _gate held: the last flush is at least the flush interval ago (a zero interval means never on a clock).
+    private bool FlushDue() => _flushEveryMilliseconds > 0 && _nowMilliseconds() - _flushedAt >= _flushEveryMilliseconds;
+
+    // The timer's tick: writes what is buffered when something is, so a quiet app's last lines are still on disk within the interval.
+    internal void FlushIfDirty()
+    {
+        try
+        {
+            lock (_gate)
+            {
+                if (_dirty)
+                {
+                    FlushLocked();
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // no-fallback: a broken log must not break the app; the next tick tries again.
         }
     }
 
@@ -78,6 +125,7 @@ public sealed class RollingLogFile
         {
             lock (_gate)
             {
+                StopTimer();
                 CloseQuietly();
                 foreach (string path in _paths)
                 {
@@ -217,7 +265,43 @@ public sealed class RollingLogFile
         _current = NewestIndex();
         var stream = new FileStream(_paths[_current], FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         _currentBytes = stream.Length;
+        _flushedAt = _nowMilliseconds();
+        StartTimer();
         return _writer = new StreamWriter(stream, new UTF8Encoding(false));
+    }
+
+    // Call with _gate held: one timer for the life of the log, started with the first write.
+    private void StartTimer()
+    {
+        if (_flushTimer is null && _useTimer && _flushEveryMilliseconds > 0)
+        {
+            _flushTimer = new Timer(_ => FlushIfDirty(), null, _flushEveryMilliseconds, _flushEveryMilliseconds);
+        }
+    }
+
+    /// <summary>Writes what is buffered, stops the flush timer and closes the files (they stay on disk). A later line starts the timer and the writer again. Never throws.</summary>
+    public void Dispose()
+    {
+        try
+        {
+            lock (_gate)
+            {
+                FlushLocked();
+                StopTimer();
+                CloseQuietly();
+            }
+        }
+        catch (Exception)
+        {
+            // no-fallback: closing a broken log can fail; it is dropped either way.
+        }
+    }
+
+    // Call with _gate held.
+    private void StopTimer()
+    {
+        _flushTimer?.Dispose();
+        _flushTimer = null;
     }
 
     // Call with _gate held: close the full file, start the other one empty.

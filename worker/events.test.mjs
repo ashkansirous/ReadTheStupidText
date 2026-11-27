@@ -914,7 +914,7 @@ test("seconds is dropped from every other event", async () => {
 
 test("no fallback area or reason ever equals an RTST timing stage or outcome, so the shared blobs stay unambiguous", () => {
   const source = readFileSync(new URL("./events.ts", import.meta.url), "utf8");
-  const listOf = (name) => [...source.match(new RegExp(`${name} = \\[([^\\]]*)\\]`))[1].matchAll(/"([a-z_:]+)"/g)].map((m) => m[1]);
+  const listOf = (name) => [...source.match(new RegExp(`${name} = \\[([^\\]]*)\\]`))[1].matchAll(/"([a-z0-9_:]+)"/g)].map((m) => m[1]);
   const timing = [...listOf("RTST_STAGES"), ...listOf("RTST_OUTCOMES")];
   assert.ok(timing.length >= 6);
   for (const value of [...FALLBACK_AREAS, ...FALLBACK_REASONS]) {
@@ -953,6 +953,17 @@ test("the part D fallbacks (windows, fonts, library, swallowed catches) are acce
   for (const [area, reason] of partD) {
     assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `${area}:${reason}` })?.detail, `${area}:${reason}`, `${area}:${reason}`);
     assert.ok(parseRtstEvent(rtst("fallback", { fallbackArea: area, fallbackReason: reason, count: 1 })), `${area}:${reason} rtst`);
+  }
+});
+
+test("Slice 460: the store failure causes are accepted, the old store reasons stay accepted, and a cause with a sub-field or free text is not", () => {
+  const causes = ["store_timeout", "store_no_network", "store_dns", "store_tls", "store_http_5xx", "store_http_4xx", "store_not_associated", "store_no_window", "store_settle_timeout"];
+  for (const reason of [...causes, "store_unreachable", "store_failed"]) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `store:${reason}` })?.detail, `store:${reason}`, reason);
+    assert.ok(parseRtstEvent(rtst("fallback", { fallbackArea: "store", fallbackReason: reason, count: 1 })), `${reason} rtst`);
+  }
+  for (const detail of ["store:store_timeout:0x803F6107", "store:store_http_500", "store:HRESULT 0x803F6107", "store:store_other", "store:store_not_associated:window"]) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail })?.detail, undefined, detail);
   }
 });
 

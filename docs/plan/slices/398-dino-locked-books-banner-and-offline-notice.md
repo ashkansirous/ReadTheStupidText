@@ -52,6 +52,17 @@
 - Follow-up (no code change) #2 (`reviews/pr-1247-check2-medium.md`): "NetworkProbe.PlatformOffline treats Unknown/ConstrainedInternet (captive portal) as online, so no offline notice there." - `StoryTile.cs:107`; the decision of high #6, see the skipped medium #6 above.
 - Follow-up (no code change) #3 (`reviews/pr-1247-check2-medium.md`): "Locked-cover veil is a flat colour fill, not the mock's grayscale; check against the mock." - `GalleryPage.xaml:54`; same as the greyscale follow-up above.
 - Applied #1 and #3 (`reviews/pr-1247-check-medium.md`): `CheckLockedShelf` without a `ShelfFreeForSwap()` guard, and `FakeOffline` logging "ok on" after a faulted move.
+- Deviation from check #1 (`reviews/pr-1247-check-medium.md`, recorded by Slice 406 item 22): the fixer added no "rebuild wanted" flag; a lock change found while the shelf is busy is picked up by the next 1-minute tick or by `OnAppearing`, so the shelf can lag the lock boundary by up to a minute.
+
+#### Open follow-ups (Slice 406 item 10; the prose in *From review* above holds the detail)
+
+- [ ] F1. check-medium #2 (`reviews/pr-1247-check-medium.md`): banner and offline notice follow visible tiles, not store state, so they can disagree briefly with the shelf at the lock boundary (`GalleryPage.xaml.cs:1620`). Includes the check #1 deviation above (no "rebuild wanted" flag).
+- [ ] F2. check-medium #4: `FormatLockDate` uses `CurrentUICulture` "d" (fa/ar may render a Persian or Umm al-Qura date); the resx says "3 days" while the code uses `OfflineGrace`, and no test ties them.
+- [ ] F3. check-medium #5: `ApplyShelfMargin` runs before `_shelfGeometry` is set on first appearing, so the banner has no side margin until the next layout (`GalleryPage.xaml.cs:1104`).
+- [ ] F4. check-medium #6: `OnTileCoverSizeChanged` searches `Children` on every size change for non-locked tiles; lapsed tile pills are 32 dp (mock-specified), below the 44 dp touch target.
+- [ ] F5. check2 #1 (`reviews/pr-1247-check2-medium.md`): `fake-offline mode=off` ignores ended-hours and leaves the subscription end in the past after an earlier "on" (`Testing/DinoTestCommands.Offline.cs:26`, Debug hook).
+- [ ] F6. check2 #2: `NetworkProbe.PlatformOffline` treats Unknown/ConstrainedInternet (captive portal) as online, so no offline notice there (a recorded decision of high #6; reopen only if the user wants it).
+- [ ] F7. check2 #3: the locked-cover veil is a flat colour fill, not the mock's grayscale; a true greyscale needs a per-platform image handler (its own slice).
 
 #### For CLAUDE.md (lifted 2026-11-18)
 

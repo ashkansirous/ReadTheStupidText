@@ -116,3 +116,7 @@ Check pass 2 (`reviews/s378-check2.md`, after the Release-only CS1574 fix): six 
 - Tests: xUnit2029 (`LifecycleSubscriptionTests.cs:82`), xUnit2000 (`ListenTrackTests.cs:30`, `RecordingLanguageTests.cs:270`), xUnit1026 (`TabletCardLayoutTests.cs:25`), CA2022 (`StallGuardedReadTests`, `PackDownloadLogTests:77`: inexact `ReadAsync`), xUnit1031 (`ReadAloudServiceGeneratingTests.cs:843`).
 - Builds: MSB3277 (30, Windows head: `Microsoft.ML.OnnxRuntime` 0.0.0.0 vs 1.28.0.0 conflict in Dino Windows), MSB4011 (`SherpaOnnxVersion.props` imported twice, every head), NU1608 (20, `Xamarin.AndroidX.Lifecycle.LiveData.Core` 2.11.0.1 vs a `< 2.9.3` constraint, both Android heads), XA4301 (4, RTST Android), CS0108 (Dino, Windows and iOS), CS1734 (6, Dino Android), CS0414 and CS9113 (Dino iOS), CS0618 (2, RTST iOS).
 - Move Dino iOS purchases off StoreKit 1 (the `IosPurchases` obsoletion and the one pragma).
+
+## Follow-ups (live check 2026-11-27)
+
+- [ ] **setup-node v7 caching is not shown.** First release runs 45968693273 / 45968689462: no Node 20 warning, `r0adkll/upload-google-play@v1.1.5` accepted `tracks: internal` and committed the edit, GitTools (now v4.7.2) accepted `configFilePath: GitVersion.yml` (also `windows.yml` in PR run 46023060843); but `package-manager-cache: true` printed no cache restore or save line. Make the cache visible (or confirm a cache key in `gh cache list`) and close the line. Also seen: warning CA2022 at `tests/Shared/Shared.Tests/PackDownloadLogTests.cs(69,74)`.

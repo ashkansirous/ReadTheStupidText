@@ -22,7 +22,12 @@ public static class CrashLog
     public static void Use(RollingLogFile file, Func<bool> gate)
     {
         mayWrite = gate;
+        RollingLogFile? previous = current;
         current = file;
+        if (!ReferenceEquals(previous, file))
+        {
+            previous?.Dispose(); // a replaced file's flush timer and handles are released; in production the one file lives until the process ends, which stops its timer
+        }
     }
 }
 

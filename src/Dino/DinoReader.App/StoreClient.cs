@@ -17,6 +17,13 @@ public enum StoreLoadStatus
 /// <summary>The listing; <see cref="Error"/> (Slice 357) says what the server answered when the list could not be had (offline is <see cref="HttpErrorKind.Offline"/>), null when it was not an HTTP failure.</summary>
 public sealed record StoreListing(StoreLoadStatus Status, IReadOnlyList<StoreItem> Items, HttpError? Error = null);
 
+/// <summary>Slice 460: which first-run sequence runs the retried list. Only the picker's failure is the one the grown-up sees, so only it reports a row; the prefetch is silent.</summary>
+public enum FirstRunListSource
+{
+	Picker,
+	Prefetch,
+}
+
 public enum DownloadOutcome
 {
 	Done,
@@ -238,16 +245,90 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	private readonly SettleGate _settle = new();
 
 	private void ReportSettleTimeout() =>
-		Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the store's purchase read did not finish in time: the files are asked for without waiting longer
+		Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreSettleTimeout); // Slice 460: the store's purchase read did not finish in time (a slow store, not an unreachable one): the files are asked for without waiting longer
+
+	/// <summary>
+	/// Slice 460: the listing with the automatic retry (1 s, 3 s, 7 s gaps, <see cref="StoreRetry"/>) on every platform; only the last failed attempt reports a fallback, so a call that recovered leaves no row. Callers put it behind
+	/// their wait screen with its Cancel (Cancel throws <see cref="OperationCanceledException"/> out of the wait). The first-run picker and the first-book prefetch (behind no UI) both use it; only the picker's failure is reported, once per session (<see cref="FirstRunFailureOnce"/>), the prefetch's is silent,
+	/// and a later store page keeps its own Try again. Only a transient failure (<see cref="StoreCauses.IsTransient"/>) is tried again; a 4xx or a bad body ends the wait at once and reports.
+	/// </summary>
+	public async Task<StoreListing> ListWithRetryAsync(CancellationToken cancel, FirstRunListSource source = FirstRunListSource.Picker)
+	{
+		Exception? failure = null; // this call's own: each attempt sets it, so two calls never share one
+		Func<TimeSpan> elapsed = StoreRetry.StartClock();
+		int attempts = 0;
+		StoreListing listing = await StoreRetry.RunAsync(
+			async _ =>
+			{
+				failure = null;
+				TimeSpan timeout = StoreRetry.AttemptTimeout(attempts++, ListTimeout, elapsed()); // the retries wait less than the first try: the whole sequence is capped (Slice 460, review 2 #5)
+				StoreListing attempt = await ListAttemptAsync(cancel, ex => failure = ex, timeout);
+				LogAttempt(attempts, source, attempt, failure, elapsed());
+				return attempt;
+			},
+			result => result.Status == StoreLoadStatus.Offline && failure is { } failed && IsTransientFailure(failed),
+			cancel,
+			onRetry: attempt => Debug.WriteLine($"Dino Reader store list retry: attempt {attempt} of {StoreRetry.Backoff.Count + 1}"),
+			elapsed: elapsed);
+		if (failure is { } last)
+		{
+			ReportFirstRunFailure(source, last);
+		}
+
+		return listing;
+	}
+
+	// Slice 460 (device run 1, finding 2): the picker's sequence is the failure the grown-up sees (its offline page), so only it reports. The prefetch runs behind no UI and a failure of it is silent: if the picker's own
+	// sequence then succeeds, nobody saw a fault and no row is left; if it fails too, the picker reports. FirstRunFailureOnce keeps a later Try again from adding a second row in the same session.
+	private void ReportFirstRunFailure(FirstRunListSource source, Exception failure)
+	{
+		string outcome = "silent";
+		if (source == FirstRunListSource.Picker)
+		{
+			outcome = _firstRunFailure.TryReport(() => ReportFallback(failure)) ? "reported" : "suppressed";
+		}
+
+		DebugLog(StoreRetry.OutcomeLine(SourceName(source), outcome));
+	}
+
+	private static string SourceName(FirstRunListSource source) => source.ToString().ToLowerInvariant();
+
+	private static void LogAttempt(int attempt, FirstRunListSource source, StoreListing listing, Exception? failure, TimeSpan elapsed)
+	{
+		string cause = failure is null ? (listing.Status == StoreLoadStatus.Ok ? "ok" : "none") : StoreCauses.Of(failure).ToString();
+		TimeSpan next = failure is not null && IsTransientFailure(failure) ? StoreRetry.NextWait(attempt, elapsed) : TimeSpan.Zero;
+		DebugLog(StoreRetry.AttemptLine(attempt, SourceName(source), cause, next));
+	}
+
+	private static void DebugLog(string line)
+	{
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write(line);
+#endif
+	}
+
+	// Only a failure that can pass by itself is waited through: a timeout, no network, DNS, TLS or a 5xx. A 4xx, a refusal or a body that is not the listing would fail the same way every time.
+	private static bool IsTransientFailure(Exception ex) => !IsWorkerRefusal(ex) && IsUnreachable(ex) && StoreCauses.IsRetryable(ex);
+	// Slice 460, check 4 #1: the cause is StoreCauses.Of (a transport failure with no status and no named error stays Other = store_failed, but StoreCauses.IsRetryable still retries it; a bad body is neither).
 
 	/// <summary>The readable stories the server lists, or <see cref="StoreLoadStatus.Offline"/> when it cannot be reached.</summary>
-	public async Task<StoreListing> ListAsync(CancellationToken cancel)
+	public Task<StoreListing> ListAsync(CancellationToken cancel) =>
+		ListAttemptAsync(cancel, ReportFallback, ListTimeout);
+
+	// Slice 460 (second strike, decided by the wave coordinator): one session flag; only the picker's list sequence reports (the prefetch is silent), and only its first failure in the session; a later Try again reports nothing.
+	private readonly FirstRunFailureOnce _firstRunFailure = new();
+
+	private async Task<StoreListing> ListAttemptAsync(CancellationToken cancel, Action<Exception> onFailure, TimeSpan attemptTimeout)
 	{
 		sales.RefreshConfigInBackground(); // never awaited: the listing uses the last known switch (default off) and this only fills it in for the next read
 #if DINO_TEST_BOOKS
 		if (Testing.TestStore.IsListing)
 		{
 			StoreListing fixture = await Testing.TestStore.ListAsync(); // Slice 261: the Debug test store (a scripted flow's fixture list), switched on by the test-store hook
+			if (fixture.Status == StoreLoadStatus.Offline)
+			{
+				onFailure(new HttpRequestException(System.Net.Http.HttpRequestError.ConnectionError, "test-store offline")); // Slice 460: the fixture's "offline" fails like a dropped connection, so the 1/3/7 s sequence and its one row run as on a real offline device
+			}
 			foreach (StoreItem item in fixture.Items)
 			{
 				_listed[item.Id] = item;
@@ -265,7 +346,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		try
 		{
 			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-			timeout.CancelAfter(ListTimeout);
+			timeout.CancelAfter(attemptTimeout);
 			using GuardedResponse response = await GetGuardedAsync(ListPath, timeout.Token);
 			response.Message.EnsureSuccessStatusCode();
 			string json = await ReadCappedTextAsync(response, timeout.Token);
@@ -292,8 +373,10 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 		catch (Exception ex) when (IsNetworkFailure(ex) && !cancel.IsCancellationRequested)
 		{
-			Debug.WriteLine($"Dino Reader could not load the free stories: {ex.Message}");
-			ReportFallback(ex);
+			// no-fallback: onFailure reports it (ListAsync: now; ListWithRetryAsync: only the last or a non-transient failure, Slice 460)
+			Debug.WriteLine($"Dino Reader could not load the free stories ({StoreCauses.Of(ex)}): {ex.Message}");
+			onFailure(ex);
+
 			HttpErrorKind? kind = StoreListError.KindOf(ex); // Slice 453: a listing body that does not parse is a server answer, not "no connection"; a JsonException from a local purchase or saved-listing read is not
 			Debug.WriteLine($"Dino Reader store list error kind: {kind?.ToString() ?? "none"}"); // Slice 357: which text the page shows
 			return new StoreListing(StoreLoadStatus.Offline, [], kind is { } k ? new HttpError(k, null) : null);
@@ -436,7 +519,11 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		catch (Exception ex) when (IsNetworkFailure(ex) || ex is StoreStorageException or StoryPackageException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException)
 		{
 			Debug.WriteLine($"Dino Reader could not get the story {item.Id}: {ex}");
-			ReportFallback(ex);
+			if (!cancel.IsCancellationRequested)
+			{
+				ReportFallback(ex); // Slice 460: a grown-up's Cancel that surfaced as another exception (a stream cut mid-read) is not a store failure
+			}
+
 			RecordDownloadError(item.Id, ex);
 			return DownloadOutcome.Failed;
 		}
@@ -556,7 +643,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			// Slice 346 (check7 #7): only the store's own "this purchase is not valid" skips this book for good (the copy on the shelf stays). Anything else (no proof yet, a purchase the store has not synced,
 			// an unreadable code, "cannot verify" when the store or the Worker's keys are down) is not permanent: the run stops and the next scheduled check tries again.
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, definitive={ex.IsDefinitive}): {downloadUrl}");
-			ReportFallback(ex); // a refusal (400/402/403) is the store answering (Slice 346 E2: its own reasons); a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_unreachable
+			ReportFallback(ex); // a refusal (400/402/403) is the store answering (Slice 346 E2: its own reasons); a 5xx never reaches here: it is a plain HttpRequestException, caught by the generic network catch below, whose ReportFallback gives store_http_5xx (Slice 460)
 			TryDelete(part);
 			return new PackageFetch(null, ex.IsDefinitive, Refused: ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden);
 		}
@@ -977,10 +1064,10 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 	}
 
-	// Slice 273 part C: the store could not be reached, so the shelf shows what it had (one row per session; the sink never throws). Only a network failure is store_unreachable:
-	// a full disk, a bad package or a malformed listing means the store answered, so it is store_failed (Slice 275).
+	// Slice 273 part C: the store could not be reached, so the shelf shows what it had (one row per session; the sink never throws). Slice 460: a network failure carries its cause (timeout, no network, DNS, TLS, HTTP 5xx or 4xx);
+	// a full disk, a bad package or a malformed listing means the store answered, so it is store_failed ("other", Slice 275). store_unreachable is no longer sent by this path; old builds and rows still use it.
 	private void ReportFallback(Exception ex) =>
-		Fallbacks.Report(FallbackArea.Store, IsWorkerRefusal(ex) ? RefusalReason(ex) : IsUnreachable(ex) ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
+		Fallbacks.Report(FallbackArea.Store, IsWorkerRefusal(ex) ? RefusalReason(ex) : IsUnreachable(ex) ? StoreCauses.Reason(StoreCauses.Of(ex)) : FallbackReason.StoreFailed);
 
 	// Slice 346 review #6: only the statuses the Worker answers as a refusal (400, 402, 403) are refusals; any other status on a StoreRefusedException is classed like every other failure.
 	private static bool IsWorkerRefusal(Exception ex) =>

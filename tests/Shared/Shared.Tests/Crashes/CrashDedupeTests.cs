@@ -95,7 +95,7 @@ public sealed class CrashDedupeTests : IDisposable
     [Fact]
     public void The_log_is_written_only_while_the_gate_allows_and_deleting_it_leaves_a_fresh_start()
     {
-        var file = new RollingLogFile(_folder);
+        using var file = new RollingLogFile(_folder);
         bool allowed = true;
         CrashLog.Use(file, () => allowed);
         var log = RollingFileSystemLog.ToCurrent();

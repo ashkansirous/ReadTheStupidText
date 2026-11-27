@@ -64,6 +64,12 @@ Fallbacks by reason:
 index=dino_usage name=fallback | stats count by detail | sort -count
 ```
 
+Store failures at first run (Slice 460, not run yet: written 2026-11-27 before the release). Builds before Slice 460 send only `store:store_unreachable` or `store:store_failed`; from the Slice 460 build a network failure is one of `store_timeout`, `store_no_network`, `store_dns`, `store_tls`, `store_http_5xx`, `store_http_4xx`, and the others are `store_not_associated`, `store_no_window`, `store_settle_timeout` (`store_failed` stays "other"; from this build a purchase read that fails with no named cause, on Windows, Android and iOS alike, is also `store_failed` where older builds sent `store_unreachable`). So a drop in `store_unreachable` alone proves nothing: count every `store:` detail, and split by version:
+
+```
+index=dino_usage name=fallback detail=store:* screen=first_run | stats dc(session) by platform, version, detail
+```
+
 ## Play testers (versions kept apart)
 
 Play's open and closed testing tracks post to `dino_usage` like production (only TestFlight has its own dataset). List the versions, read the testing-track ones from the Play Console tracks (1.129.0 on 2026-11-19), and add `version!=1.129.*` to the funnel to leave them out:

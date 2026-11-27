@@ -90,7 +90,7 @@ public sealed class UsageFallbackTests
     {
         Match list = Regex.Match(source, name + @" = \[(?<names>[^\]]*)\]");
         Assert.True(list.Success, name);
-        return Regex.Matches(list.Groups["names"].Value, "\"(?<name>[a-z_:]+)\"").Select(m => m.Groups["name"].Value).ToArray();
+        return Regex.Matches(list.Groups["names"].Value, "\"(?<name>[a-z0-9_:]+)\"").Select(m => m.Groups["name"].Value).ToArray();
     }
 
     private static string RepoRoot()

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
 using DinoReader.Core;
+using Sirous.Reading.Application.Usage;
 using Windows.Services.Store;
 
 namespace DinoReader;
@@ -26,10 +27,11 @@ public sealed class WindowsPurchases : IBookPurchases
 
     public async Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel)
     {
-        StoreContext? context = Context();
+        // Slice 460: the launch read waits for the window in PrepareAsync, before it takes the read gate; here (and for a press: Restore, the Store tab) the window is asked for once and the answer is final.
+        (StoreContext? context, StoreCause? failure) = OpenContext();
         if (context is null)
         {
-            return PurchaseSnapshot.Empty;
+            return PurchaseSnapshot.Empty with { Failure = failure }; // the cause travels with this read, never in a field another read could overwrite (Slice 460)
         }
 
         (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(context);
@@ -48,7 +50,7 @@ public sealed class WindowsPurchases : IBookPurchases
     public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
     {
         LastBuyNote = BuyNote.None;
-        StoreContext? context = Context();
+        StoreContext? context = OpenContext().Context; // a purchase is a press: no waiting for the window
         if (context is null)
         {
             return BuyOutcome.Failed;
@@ -76,30 +78,95 @@ public sealed class WindowsPurchases : IBookPurchases
 
     public async Task<bool> RedeemCodeAsync() => await Launcher.Default.OpenAsync(new Uri(RedeemAddress));
 
-    // The Store context needs the window it will show its purchase sheet over.
-    private StoreContext? Context()
+    // Slice 460: the first read after launch may come before the app's window exists. The context is asked for again after 1 s, 3 s and 7 s (the one retry schedule) only while the window is missing; any other failure
+    // (not associated with the Store, an unpackaged run) is final for that read and not waited through. The cause is returned with the result, never kept in a field. The read's Cancel ends the wait.
+    // Review 2 #6: concurrent launch reads share one window wait (one cached Task), and each caller's Cancel ends only its own await. The wait is cleared when it ends, so a later read can wait again.
+    public Task PrepareAsync(CancellationToken cancel)
     {
         if (_context is not null)
         {
-            return _context;
+            return Task.CompletedTask;
+        }
+
+        Task wait;
+        lock (_windowWaitLock)
+        {
+            wait = _windowWait ??= Task.Run(WaitForWindowAsync);
+        }
+
+        return wait.WaitAsync(cancel);
+    }
+
+    private readonly object _windowWaitLock = new();
+    private Task? _windowWait;
+
+    private async Task WaitForWindowAsync()
+    {
+        try
+        {
+            await ContextWithRetryAsync(); // sets _context when the window shows up; a miss is answered by the read's own OpenContext
+        }
+        finally
+        {
+            lock (_windowWaitLock)
+            {
+                _windowWait = null;
+            }
+        }
+    }
+
+    // The wait is cut at WindowWaitBudget, so it plus the price, owned and proof queries stays well inside the 25 s the downloads wait for this read (review 2 #2). The window is polled evenly (review 2 #5), so one that
+    // appears at any moment inside the cap is found within WindowPoll of showing up.
+    private static readonly TimeSpan WindowWaitBudget = TimeSpan.FromSeconds(6);
+    private static readonly TimeSpan WindowPoll = TimeSpan.FromMilliseconds(500);
+
+    private async Task ContextWithRetryAsync()
+    {
+        using CancellationTokenSource limit = new(WindowWaitBudget);
+        (StoreContext? Context, StoreCause? Failure) opened = OpenContext();
+        try
+        {
+            for (int polls = 1; opened.Context is null && opened.Failure == StoreCause.NoWindow; polls++)
+            {
+                await Task.Delay(WindowPoll, limit.Token);
+                PurchaseTrace.Line($"store context retry: poll {polls} after {StoreCause.NoWindow}");
+                opened = OpenContext();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // no-fallback: the window wait ran out; the read's own OpenContext then answers NoWindow and BookPurchases reports it
+            PurchaseTrace.Line("store context: the window wait ran out");
+        }
+
+        PurchaseTrace.Line($"store context: {(opened.Context is null ? $"none ({opened.Failure?.ToString() ?? "other"})" : "ready")}");
+    }
+
+    // The window is looked for first: the Store context is not made before the window handler exists, and it needs that window to show its purchase sheet over (Slice 460).
+    private (StoreContext? Context, StoreCause? Failure) OpenContext()
+    {
+        if (_context is not null)
+        {
+            return (_context, null);
         }
 
         try
         {
-            StoreContext context = StoreContext.GetDefault();
             if (Application.Current?.Windows.FirstOrDefault()?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window window)
             {
-                return null;
+                return (null, StoreCause.NoWindow);
             }
 
+            StoreContext context = StoreContext.GetDefault();
             WinRT.Interop.InitializeWithWindow.Initialize(context, WinRT.Interop.WindowNative.GetWindowHandle(window));
-            return _context = context;
+            return (_context = context, null);
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
         {
-            // no-fallback: the caller returns the empty (unreachable) snapshot, which BookPurchases reports as store_unreachable; an unpackaged run has no Store to ask
+            // no-fallback: the caller returns the empty (unreachable) snapshot, which BookPurchases reports with the cause carried in it (not_associated, else store_failed); an unpackaged run has no Store to ask
             Debug.WriteLine($"Dino Reader could not open the Microsoft Store context: {ex.Message}");
-            return null;
+            PurchaseTrace.Line($"store context failed: hresult=0x{ex.HResult:X8} {ex.GetType().Name}"); // the HRESULT only, never the message; the retry is unchanged (Slice 460 review)
+            return (null, StoreCauses.OfStoreHResult(ex.HResult) is StoreCause.NotAssociated ? StoreCause.NotAssociated : null);
         }
     }
 
