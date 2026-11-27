@@ -19,7 +19,9 @@
 
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
-**Touches:** `docs/plan/slices/343-four-farsi-voices.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
+*In progress (wave 2026-11-27), draft PR.* The extra-ezafe comma fix only; the re-listen stays an `[owner]` ear check.
+
+**Touches:** `src/Shared/Sirous.Reading.Application/Reading/FarsiEzafe.cs`, `tests/Shared/Shared.Tests/FarsiEzafeTests.cs`, `docs/plan/slices/343-four-farsi-voices.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
 
 ## Items
 
