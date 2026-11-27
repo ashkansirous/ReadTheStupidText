@@ -77,6 +77,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 460: Dino Windows: the store works at first run, or recovers on its own ([slice](slices/460-dino-windows-first-run-store-recovery.md))
+- [session] Item 1, the Windows VM `AppTrace` read at first run: not run, the VM needs 8 GB free and this wave had 6.8, 4.5 and 7.9 GB. Compare the cached origin/main package `8bbbca166301` with the new one `9fc20fa691d1`, and write down which call fails, its error and whether the window or Store-context ordering is the trigger.
+- [session] Windows VM fresh-install first run with the network cut for 5 s and restored: first run finishes with no manual Try again.
+- [cloud] iOS simulator run of the same first-run and offline checks in `dinoreader-ios-sim.yml`.
+- [phone] On the S21 a first run shows no `store_failed` row from the purchase read (`BookPurchases.ReportReadProblems`); the emulator's rows came from having no Play Billing, which is likely but not proven.
+- [session] Windows VM run: `OpenContext` is now reached from a `Task.Run` pool thread (`WaitForWindowAsync` -> `ContextWithRetryAsync`) and touches `Application.Current.Windows`, `Handler.PlatformView`, `InitializeWithWindow` and writes `_context` unlocked; a wrong-thread COMException would be caught as Failure=null, end the poll early and report `store_failed` with no recovery (`src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs:149`; `reviews/s460/pr-1428-check5.md` #3, unconfirmed, not run on a device).
+
 ### Slice 439: Dino: a linked Sonos home with an active Dino subscription plays the paid books ([slice](slices/439-dino-sonos-owned-books.md))
 - [session] C3 clips (a render run with the narrator voices, then an upload to R2 `dinoreader/sonos/subscribe-<lang>.m4a`; nothing was rendered or uploaded; C3 stays open on this wait): the 15 texts are `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`; steps in `docs/DEPLOYING.md`, *The subscription proof column and the spoken message*. The render script is outside Slice 439's Touches and is not written (planned row: C3 in Slice 439).
 - [session] D1: apply the `ALTER TABLE ... ADD COLUMN proof TEXT` lines and the index lines in `docs/DEPLOYING.md` to the live STATS database before the batched release serves Sonos (not applied yet; this adds to the `sonos-homes.sql` step from Slice 438).
