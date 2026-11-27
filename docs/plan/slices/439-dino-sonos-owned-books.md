@@ -18,7 +18,7 @@
 `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`
 (the Link screen's busy and Try again strings; widened by the wave 2026-11-27 coordinator after the check passes, no other open PR), this file.
 
-*Built in part 2026-11-27, PR #1421 (merge pending). Left: the C3 render and upload, and the live checks.*
+*Built in part 2026-11-27, merged as PR #1421 (150e676b). Left: the C3 render and upload, and the live checks.*
 
 ## Why
 
