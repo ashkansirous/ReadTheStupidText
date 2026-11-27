@@ -4,7 +4,8 @@
  * `changes` job and its dorny/paths-filter block).
  *
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
- *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
+ *   - core (Domain/Application/solution/pipeline)                 -> windows + android + ios
+ *   - Documents (Slice 432: PDF/Word; Dino's phone apps no longer reference it) -> windows + android + ios + dinowin
  *   - tests/Rtst/ReadTheStupidText.Tests, tests/Shared/Shared.Tests           -> nothing (tests.yml runs them on PRs; `--local --tests` / testSuites() says which suite a change needs, Slice 368)
  *   - App / Windows.Tray / Infrastructure / store-submit.yml / windows.yml -> windows + windowsstore (the Store submission)
  *   - Windows.Tray (Slice 128, tray-only code) maps to no dino* target: only App references it
@@ -104,7 +105,6 @@ export const CONTENT_MARKDOWN = ['content/dino/*/story.md'];
 export const CORE_PATHS = [
     'src/Shared/Sirous.Reading.Domain/',
     'src/Shared/Sirous.Reading.Application/',
-    'src/Shared/Sirous.Reading.Documents/',
     'global.json',
     'Directory.Build.props',
     'src/Shared/SherpaOnnxVersion.props',
@@ -132,6 +132,8 @@ export const GROUPS = {
     sherpapins: { include: ['.github/scripts/check-sherpa-pins.mjs', '.github/workflows/packs.yml', 'tools/dino/sound-words-test/requirements.txt'] },
     // Infrastructure is in `windows` too (RTST's suite builds on it); on its own it is shared code (Dino Reader on Windows reads with it).
     infrastructure: { include: ['src/Shared/Sirous.Reading.Infrastructure/'] },
+    // Slice 432: PDF and Word reading. RTST on every platform reads with it; Dino's phone apps do not reference it (only Dino Windows, through Infrastructure, so `dinowin` lists it too).
+    documents: { include: ['src/Shared/Sirous.Reading.Documents/'] },
     windows: {
         include: [
             'src/Rtst/ReadTheStupidText.App/',
@@ -193,6 +195,7 @@ export const GROUPS = {
             'src/Dino/DinoReader.Core/',
             `${SHARED}Platforms/Windows/`,
             'src/Shared/Sirous.Reading.Infrastructure/',
+            'src/Shared/Sirous.Reading.Documents/', // Slice 432: Infrastructure needs it on Windows
             '.github/workflows/store-submit.yml',
             '.github/workflows/dinoreader-windows.yml',
         ],
@@ -268,9 +271,9 @@ function touchedGroups(changedFiles) {
 export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const everything = forceAll || bump === MAJOR_BUMP || changedFiles === null;
     const g = everything ? null : touchedGroups(changedFiles);
-    const windows = everything || g.core || g.windows || g.rtstrelease;
-    const android = everything || g.core || g.android || g.mobileshared || g.sharedroot || g.rtstrelease;
-    const ios = everything || g.core || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease;
+    const windows = everything || g.core || g.documents || g.windows || g.rtstrelease;
+    const android = everything || g.core || g.documents || g.android || g.mobileshared || g.sharedroot || g.rtstrelease;
+    const ios = everything || g.core || g.documents || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease;
     const dinoreader = everything || g.dinoreader;
     const dinoapp = everything || g.core || g.dinoapp || g.sharedroot || g.dinorelease;
     const dinoios = everything || g.core || g.dinoios || g.sharedroot || g.dinorelease;
@@ -301,10 +304,10 @@ export function testSuites(changedFiles) {
     if (changedFiles === null) return { shared: true, rtst: true };
     const g = touchedGroups(changedFiles);
     // FallbackGuardTests and SherpaVersionPinTests (in Shared.Tests) scan all of src/, so every code group selects the shared suite too.
-    const code = g.core || g.infrastructure || g.sharedroot || g.windows || g.android || g.ios || g.mobileshared || g.dinoapp || g.dinoios || g.dinowin || g.rtstrelease || g.dinorelease;
+    const code = g.core || g.documents || g.infrastructure || g.sharedroot || g.windows || g.android || g.ios || g.mobileshared || g.dinoapp || g.dinoios || g.dinowin || g.rtstrelease || g.dinorelease;
     const linked = changedFiles.some((file) => LINKED_TEST_FILES.includes(file));
     const shared = code || g.sharedtests || g.sherpapins || linked;
-    const rtst = g.core || g.unittests || g.windows || g.android || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease || linked;
+    const rtst = g.core || g.documents || g.unittests || g.windows || g.android || g.ios || g.mobileshared || g.sharedroot || g.rtstrelease || linked;
     return { shared, rtst };
 }
 

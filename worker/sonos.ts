@@ -7,7 +7,7 @@ import { handleStories } from "./stories.ts";
 import type { CatalogueRuntime, ListItem, ObjectServer } from "./stories.ts";
 import { FaultCode, FaultMessage, SoapFault, SonosAction, escapeXml, faultResponse, parseSonosRequest, readBoundedText, resultResponse, tag } from "./sonos-soap.ts";
 import type { SonosActionName, SonosRequest } from "./sonos-soap.ts";
-import { SPEAKER_PLATFORM_SONOS, recordSpeakerPlay } from "./speaker-usage.ts";
+import { SPEAKER_PLATFORM_SONOS, recordSpeakerFault } from "./speaker-usage.ts";
 import type { SpeakerUsage } from "./speaker-usage.ts";
 
 export const SONOS_PATH = "/sonos";
@@ -52,7 +52,7 @@ const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
   zh: "中文",
 };
 
-interface Track {
+export interface Track {
   readonly language: string;
   readonly storyId: string;
   readonly title: string;
@@ -106,7 +106,7 @@ function tracksOf(items: readonly ListItem[], origin: string): Track[] {
 // The catalogue is this Worker's own list, asked for through the same handler the apps use, so the rules for what is offered live in one place.
 // That handler caches the built list per bucket for 60 s and shares one rebuild between concurrent callers (stories.ts currentEntries), so a SOAP call does not re-list R2 or re-read meta.json.
 // Slice 283 F1/F2: `catalogue` lets that handler serve the last good list while it rebuilds and keep the list in the colo's Cache API, so a cold isolate does not rebuild before answering Sonos.
-async function loadTracks(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, catalogue?: CatalogueRuntime): Promise<Track[]> {
+export async function loadTracks(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, catalogue?: CatalogueRuntime): Promise<Track[]> {
   const origin = new URL(request.url).origin;
   const listRequest = new Request(`${origin}${pathPrefix}${STORIES_PATH}`, { method: "GET" });
   const response = await handleStories(listRequest, env, pathPrefix, serve, undefined, undefined, undefined, catalogue);
@@ -127,7 +127,7 @@ export function trackId(track: Track): string {
   return `${TRACK_PREFIX}${track.language}${ID_SEPARATOR}${track.storyId}`;
 }
 
-function findTrack(tracks: readonly Track[], id: string | null): Track | null {
+export function findTrack(tracks: readonly Track[], id: string | null): Track | null {
   if (id === null || !id.startsWith(TRACK_PREFIX)) return null;
   const [language, storyId, extra] = id.slice(TRACK_PREFIX.length).split(ID_SEPARATOR);
   if (extra !== undefined) return null;
@@ -214,12 +214,15 @@ function getMediaMetadata(tracks: readonly Track[], request: SonosRequest): Resp
   return resultResponse(SonosAction.GetMediaMetadata, trackFields(requireTrack(tracks, request.id)));
 }
 
-// Slice 289: the one place a Sonos play is counted. Sonos asks for a track's URI once per play, while the audio route sees one fetch per Range request, so counting there would over-count.
+// Slice 436: getMediaURI is not a play count (Sonos sends it for a queued next track as well); plays are counted from the player's own report at /timePlayed (sonos-reporting.ts). An unplayable request is a fault row (A3).
 async function getMediaUri(tracks: readonly Track[], request: SonosRequest, usage: SpeakerUsage | undefined, httpRequest: Request): Promise<Response> {
-  const track = requireTrack(tracks, request.id);
-  const counting = recordSpeakerPlay(usage, { platform: SPEAKER_PLATFORM_SONOS, book: track.storyId, language: track.language, seconds: track.seconds }, httpRequest).catch(() => false);
-  if (usage?.defer === undefined) await counting;
-  else usage.defer(counting); // the answer never waits for the telemetry read or the row write
+  const track = findTrack(tracks, request.id);
+  if (track === null) {
+    const faulting = recordSpeakerFault(usage, SPEAKER_PLATFORM_SONOS, httpRequest).catch(() => false);
+    if (usage?.defer === undefined) await faulting;
+    else usage.defer(faulting);
+    throw new SoapFault(FaultCode.ItemNotFound, FaultMessage.NoSuchItem);
+  }
   return resultResponse(SonosAction.GetMediaURI, escapeXml(track.listenUrl));
 }
 
@@ -259,7 +262,7 @@ async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPref
   return answer(await loadTracks(request, env, pathPrefix, serve, catalogue), parsed, usage, request);
 }
 
-/** The Sonos SMAPI endpoint: POST only, every failure a SOAP fault with HTTP 500. `pathPrefix` is "" on the Dino host and "/dino" under workers.dev. `usage` (Slice 289) counts each getMediaURI as one play; without it nothing is counted. */
+/** The Sonos SMAPI endpoint: POST only, every failure a SOAP fault with HTTP 500. `pathPrefix` is "" on the Dino host and "/dino" under workers.dev. `usage` (Slice 436) records an unplayable getMediaURI as a fault row; plays are counted at /timePlayed, not here. */
 export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage, catalogue?: CatalogueRuntime): Promise<Response> {
   if (request.method !== "POST") return new Response(null, { status: NOT_ALLOWED_STATUS, headers: { Allow: ALLOWED_METHODS } });
   try {

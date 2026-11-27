@@ -77,6 +77,23 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 436: Dino: Sonos counts only real plays and shows new books within 5 minutes ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
+- [owner] **You:** Sonos Reporting Endpoint (item A4) | Sonos Dev Portal > Dashboard > Dino Book Reader integration (a6BPs000000qWNBMA2) > Sonos Music API > Reporting Endpoint = `https://dinoreader.sirous.uk/sonos/v2.0`, Save. Link: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos (the integration's case; the Dashboard link is not recorded).
+- [owner] Whether Sonos sends `/timePlayed` reports to an anonymous (no-login) service: the docs are silent. After A4, a real play should show a `reported` row (`analytics-query`); if none arrive, Sonos plays show 0 rather than invented hours, and that result goes back to the owner as one question.
+- [cloud] After the release, a new store book shows in the Sonos browse within 5 minutes.
+- [session] Whether the 5-then-8 count came from the hour-long cache (not reproduced 2026-11-24).
+
+### Slice 432: Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps ([slice](slices/432-dino-drop-pdf-word-libraries.md))
+- [cloud] Item 3: the IPA `Payload/` listing, sizes (`Payload/`, `DinoReader.App.r2r`) and which of the three System DLLs disappeared, from the next Dino release.
+- [phone] The Dino TestFlight build launches and opens a book.
+- [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up).
+- [session] A record-and-save flow (record-per-character) on the emulator.
+
+### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
+- [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again, and the device log carries the `cancelled-load` marker (not `failed-load`).
+- [phone] With the network back after a failed load (offline or a server error), the first-books list reloads by itself.
+- [phone] The same two checks on the iPhone (shared page, no iOS-only code).
+
 ### Slice 431: Dino: the story skill reports its steps to the agent board, with process keys ([slice](slices/431-dino-story-board-steps.md))
 - [session] Item C: one real book run, read back with `get_item` on the board (steps, process keys, the owner-read wait).
 

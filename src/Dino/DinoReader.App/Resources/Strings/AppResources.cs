@@ -256,6 +256,10 @@ public static class AppResources
 	public static string FirstBooks_BookOf => Get();
 	public static string FirstBooks_OfflineTitle => Get();
 	public static string FirstBooks_OfflineBody => Get();
+	public static string FirstBooks_CancelledTitle => Get(); // Slice 453: the list load was cancelled or failed, not offline
+	public static string FirstBooks_CancelledBody => Get();
+	public static string FirstBooks_FailedTitle => Get();
+	public static string FirstBooks_FailedBody => Get();
 	public static string Onboarding_StepOf => Get(); // Slice 362 onboarding block: Onboarding_*, Tour_*, FirstBooks_GetThese, StoryLanguages_AppLanguageAlwaysOn
 	public static string Onboarding_Step_Language => Get();
 	public static string Onboarding_Step_Books => Get();

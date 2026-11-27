@@ -19,7 +19,6 @@ on:
     paths:
       - 'src/Shared/Sirous.Reading.Domain/**'
       - 'src/Shared/Sirous.Reading.Application/**'
-      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'GitVersion.yml'
       - 'GitVersion.dino.yml'

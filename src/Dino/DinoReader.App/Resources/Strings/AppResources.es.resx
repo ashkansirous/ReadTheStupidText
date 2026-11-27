@@ -144,6 +144,10 @@
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Reproducir otra vez</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Empezar a leer</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino necesita dos libros antes de empezar. Activa el Wi-Fi o los datos móviles e inténtalo de nuevo.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>Los libros no terminaron de cargarse</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>Detuviste la lista antes de que estuviera lista. Toca Reintentar para elegir tus primeros libros.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>No pudimos cargar los libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>Algo falló de nuestro lado, no en tu conexión. Espera un momento e inténtalo de nuevo.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} de {1}</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Modo adultos</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Idioma</value></data>

@@ -18,6 +18,9 @@ export const DETAIL_ESTIMATED = "estimated";
 /** Slice 282: the seconds are a played time the speaker reported (Alexa's AudioPlayer offsets). */
 export const DETAIL_REPORTED = "reported";
 const NO_VERSION = "";
+const FALLBACK_EVENT = "fallback";
+const NO_BOOK_SOURCE = "none";
+const SPEAKER_FAULT_DETAIL = "library:story_unreadable";
 const FULL_WEIGHT = 1;
 const ISO_DAY_LENGTH = 10;
 
@@ -71,9 +74,23 @@ export function speakerEvent(play: SpeakerPlay, now: Date): UsageEvent | null {
  * it before answering. Returns whether a row was written (tests use it).
  */
 export async function recordSpeakerPlay(usage: SpeakerUsage | undefined, play: SpeakerPlay, request: Request, now: Date = new Date()): Promise<boolean> {
+  return writeSpeakerEvent(usage, (at) => speakerEvent(play, at), request, now);
+}
+
+/** Slice 436 A3: a speaker asked for something that cannot play (an unknown item, a book it is not offered). One `fallback` row, area `library`, reason `story_unreadable` (both on the apps' closed lists), the speaker's name as platform; no book, since the id is not a store id. */
+export function speakerFaultEvent(platform: string, now: Date): UsageEvent {
+  return { ...NO_EXTRA_FIELDS, name: FALLBACK_EVENT, book: "", language: "", source: NO_BOOK_SOURCE, hasRecording: false, version: NO_VERSION, platform, day: now.toISOString().slice(0, ISO_DAY_LENGTH), sampleRate: FULL_WEIGHT, detail: SPEAKER_FAULT_DETAIL };
+}
+
+/** Writes the fault row under the same switch and never-throw rule as a play. */
+export async function recordSpeakerFault(usage: SpeakerUsage | undefined, platform: string, request: Request, now: Date = new Date()): Promise<boolean> {
+  return writeSpeakerEvent(usage, (at) => speakerFaultEvent(platform, at), request, now);
+}
+
+async function writeSpeakerEvent(usage: SpeakerUsage | undefined, build: (now: Date) => UsageEvent | null, request: Request, now: Date): Promise<boolean> {
   if (usage === undefined || usage.dataset === undefined) return false;
   const enabled = await usage.telemetryEnabled().catch(() => false);
-  const event = enabled ? speakerEvent(play, now) : null;
+  const event = enabled ? build(now) : null;
   if (event === null) return false;
   try {
     const context = { ...NO_CONTEXT, country: countryOf(requestCountry(request)) };

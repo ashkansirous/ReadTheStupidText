@@ -144,6 +144,10 @@
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>دوباره پخش کن</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>شروع خواندن</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino پیش از شروع به دو کتاب نیاز دارد. وای‌فای یا داده همراه را روشن کنید و دوباره تلاش کنید.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>بارگیری کتاب‌ها کامل نشد</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>فهرست را پیش از آماده شدن متوقف کردید. برای انتخاب نخستین کتاب‌هایتان «دوباره تلاش کن» را بزنید.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>نتوانستیم کتاب‌ها را بارگیری کنیم</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>مشکل از سمت ما بود، نه از اتصال شما. کمی صبر کنید و دوباره تلاش کنید.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} از {1}</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
   <data name="Language_Title" xml:space="preserve"><value>زبان</value></data>
