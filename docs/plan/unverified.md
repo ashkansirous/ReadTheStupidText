@@ -85,12 +85,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You (native read):** the 15 subscribe texts (`SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`).
 
 ### Slice 435: Dino: YouTube channel with the four free books as read-aloud videos in 15 languages ([slice](slices/435-dino-youtube-read-aloud-channel.md))
-- [owner] **You:** one-time YouTube grant (item 4). Run `node tools/dino/promo/youtube/upload.mjs --authorize` in this folder, open the address it prints, sign in as `elinsoftuk@gmail.com` and pick the channel "Dino: Kids Books & Stories" (the consent screen shows an "unverified app" warning: Advanced, continue). Link for the account and channel check: https://studio.youtube.com/ . The token is then committed with `manage-secrets`.
 - [owner] **You:** after the first unlisted video is up, watch it on a TV and say yes or what to change: https://studio.youtube.com/ (Content, the video's unlisted link). Items 6-7 wait on that yes.
 - [owner] **You (native read):** the 14 non-English card lines, titles and descriptions in `lib/strings.mjs` were written by Claude, not a native speaker; read the first non-English video you open.
 - [session] Claude, needs the Gemini key and quota: make the spoken title and grown-ups clips (`voice/<lang>/title-<stem>.m4a`, `voice/<lang>/grown-ups.m4a`) with the book narrator's voice, then rerun the render; until then item 5's spoken half is open.
 - [session] Private-lock check (answered 2026-11-27, no step for you): YouTube's revision history says videos from unverified API projects "are no longer restricted" to private (entry dated 2 November 2026); `upload.mjs` reads each video back and fails loudly if the privacy differs from the one requested, so the first real upload proves it.
-- [session] Claude, after the grant: the real first upload and the API read-back of title, language, made-for-kids flag and playlist.
+- [session] Claude (the owner's grant is done 2026-11-27): the real first upload and the API read-back of title, language, made-for-kids flag and playlist.
 
 ### Slice 454: Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps ([slice](slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md))
 - [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`.
@@ -202,15 +201,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 436: Dino: Sonos counts only real plays and shows new books quickly ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
 - [owner] **You:** set the Sonos Reporting Endpoint to the A2 URL (item A4) | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (the integration page link is not recorded yet; the open case is https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
-### Slice 435: Dino: a YouTube channel with the four free books as read-aloud videos in 15 languages ([slice](slices/435-dino-youtube-read-aloud-channel.md))
-- [owner] **You:** grant YouTube upload to the Dino channel | sign in as the channel owner at https://console.cloud.google.com/auth/overview?project=dino-reader, then run the uploader's one-time sign-in the slice's script prints
-
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
 - [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again. (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
 
 ### Slice 445: Dino: Microsoft Store trailer, Partner Center push and Play video link ([slice](slices/445-dino-microsoft-store-trailer-and-play-video-link.md))
 - [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back (Slice 433 is closed; its storyboard in `tools/dino/promo/store/`).
-- [session] The YouTube upload and the Play video URL wait for Slice 435's upload script.
+- [session] The upload script now exists (`tools/dino/promo/youtube/upload.mjs`, merged in #1423); the Play video URL waits for the first real upload in Slice 435.
 - [session] Run `store-size-check.ps1` on the eight Windows PNGs (Slice 433 is closed). (live check 2026-11-27: unreachable: store-size-check.ps1 has no Windows target, follow-up in Slice 445)
 
 ### Slice 433: Dino: new-look store screenshots, App Store previews, Play feature graphic ([slice](slices/433-dino-store-screenshots-video-play-appstore.md))
