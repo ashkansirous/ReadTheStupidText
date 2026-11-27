@@ -19,6 +19,14 @@ export const Host = {
   DinoReader: "dinoreader.sirous.uk",
 };
 
+// Slice 467: the Dino site is also served on the Elinsoft domain (the Sonos integration's host); every Host check that
+// means "the Dino host" goes through isDinoHost so the two stay one behaviour.
+export const DINO_HOSTS = [Host.DinoReader, "dino.elinsoft.co.uk"];
+
+export function isDinoHost(hostname) {
+  return DINO_HOSTS.includes(hostname);
+}
+
 export const DINO_PATH_PREFIX = "/dino";
 
 // Slice 92: the free Dino story store, uploaded by hand. A folder counts only when its

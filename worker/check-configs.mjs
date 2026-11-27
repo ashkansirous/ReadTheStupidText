@@ -2,7 +2,7 @@
 // The only allowed difference is the `routes` entry (see docs/DEPLOYING.md).
 import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
-import { DINO_PATH_PREFIX, Host } from "./download-keys.mjs";
+import { DINO_HOSTS, DINO_PATH_PREFIX } from "./download-keys.mjs";
 import { redundantPaths, runFirst, stripJsonc } from "./jsonc-run-first.mjs";
 
 const MAIN = new URL("../wrangler.jsonc", import.meta.url);
@@ -25,9 +25,9 @@ const isDinoPath = (path) => path === DINO_PATH_PREFIX || path.startsWith(`${DIN
 const dinoTwins = (path) => (path === "/" ? [DINO_PATH_PREFIX, `${DINO_PATH_PREFIX}/`] : [`${DINO_PATH_PREFIX}${path}`]);
 const expectedDinoPaths = runFirst(main).filter((path) => !isDinoPath(path)).flatMap(dinoTwins);
 const lacksDinoPaths = (config) => expectedDinoPaths.filter((path) => !runFirst(config).includes(path));
-const hasDinoDomain = routes.some((route) => route.pattern === Host.DinoReader && route.custom_domain === true);
+const hasDinoDomain = DINO_HOSTS.every((host) => routes.some((route) => route.pattern === host && route.custom_domain === true));
 if (!hasDinoDomain || lacksDinoPaths(main).length > 0 || lacksDinoPaths(dev).length > 0) {
-  console.error(`Both configs need ${expectedDinoPaths.join(", ")} in assets.run_worker_first, and wrangler.jsonc needs the ${Host.DinoReader} custom domain.`);
+  console.error(`Both configs need ${expectedDinoPaths.join(", ")} in assets.run_worker_first, and wrangler.jsonc needs the ${DINO_HOSTS.join(", ")} custom domains.`);
   process.exit(1);
 }
 

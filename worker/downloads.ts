@@ -4,7 +4,7 @@
 // free story store uses. Keep this file free of enums and parameter properties:
 // worker/downloads.test.mjs runs it under node's type stripping.
 
-import { DINO_PATH_PREFIX, Host, JSON_CONTENT_TYPE, NO_CACHE, Product } from "./download-keys.mjs";
+import { DINO_PATH_PREFIX, Host, JSON_CONTENT_TYPE, NO_CACHE, Product, isDinoHost } from "./download-keys.mjs";
 
 export { DINO_PATH_PREFIX, Host, Product };
 
@@ -277,7 +277,7 @@ function isDinoPrefixed(pathname: string): boolean {
 
 /** Picks the site for a request: by host, plus the `/dino/` prefix on workers.dev only. */
 export function resolveSite(hostname: string, pathname: string): ResolvedSite {
-  if (hostname === Host.DinoReader) return { product: Product.DinoReader, path: pathname, home: ROOT_PATH };
+  if (isDinoHost(hostname)) return { product: Product.DinoReader, path: pathname, home: ROOT_PATH };
   if (hostname.endsWith(WORKERS_DEV_SUFFIX) && isDinoPrefixed(pathname)) {
     return { product: Product.DinoReader, path: pathname.slice(DINO_PATH_PREFIX.length) || ROOT_PATH, home: `${DINO_PATH_PREFIX}/` };
   }
@@ -302,7 +302,7 @@ const BOOKS_HTML = "/books.html";
 const TRAILING_SLASH = /\/+$/;
 
 function isWorkersDev(hostname: string): boolean {
-  return hostname.endsWith(WORKERS_DEV_SUFFIX) && hostname !== Host.DinoReader;
+  return hostname.endsWith(WORKERS_DEV_SUFFIX) && !isDinoHost(hostname);
 }
 
 /**
@@ -310,7 +310,7 @@ function isWorkersDev(hostname: string): boolean {
  * prefix: only workers.dev does (the Dino host serves it at its root).
  */
 export function isHiddenDinoPath(hostname: string, pathname: string): boolean {
-  return hostname !== Host.DinoReader && !isWorkersDev(hostname) && isDinoPrefixed(pathname);
+  return !isDinoHost(hostname) && !isWorkersDev(hostname) && isDinoPrefixed(pathname);
 }
 
 function withoutTrailingSlash(pathname: string): string {
@@ -329,7 +329,7 @@ function dinoHostCanonical(pathname: string): string | null {
 }
 
 function canonicalPath(hostname: string, pathname: string): string | null {
-  if (hostname === Host.DinoReader) {
+  if (isDinoHost(hostname)) {
     if (isDinoPrefixed(pathname)) return dinoHostCanonical(pathname);
     if (pathname === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
     if (pathname === `${STATS_PATH}/` || pathname === STATS_HTML) return STATS_PATH;

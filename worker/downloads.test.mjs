@@ -122,6 +122,16 @@ test("the host picks the site; an unknown host gets Read The Stupid Text", () =>
   assert.equal(resolveSite("evil.example", "/dino/").product, Product.ReadTheStupidText);
 });
 
+test("Slice 467: dino.elinsoft.co.uk is the Dino host exactly like dinoreader.sirous.uk", () => {
+  const elinsoft = "dino.elinsoft.co.uk";
+  assert.deepEqual(resolveSite(elinsoft, "/privacy"), resolveSite(Host.DinoReader, "/privacy"));
+  assert.deepEqual(resolveSite(elinsoft, "/sonos/v2"), { product: DINO, path: "/sonos/v2", home: "/" });
+  assert.equal(isHiddenDinoPath(elinsoft, "/dino/privacy"), false);
+  assert.equal(canonicalRedirect(elinsoft, "/dino/stats", "?x=1"), "/stats?x=1");
+  assert.equal(canonicalRedirect(elinsoft, "/stats/"), "/stats");
+  assert.equal(resolveSite("elinsoft.co.uk", "/").product, Product.ReadTheStupidText);
+});
+
 test("workers.dev reaches the Dino site under /dino/, and only there", () => {
   const host = "readthestupidtext.acct.workers.dev";
   assert.deepEqual(resolveSite(host, "/dino"), { product: DINO, path: "/", home: "/dino/" });

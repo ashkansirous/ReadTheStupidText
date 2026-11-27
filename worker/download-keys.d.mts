@@ -1,6 +1,8 @@
 export const Product: { readonly ReadTheStupidText: "readthestupidtext"; readonly DinoReader: "dinoreader" };
 export type Product = (typeof Product)[keyof typeof Product];
 export const Host: { readonly ReadTheStupidText: "readthestupidtext.sirous.uk"; readonly DinoReader: "dinoreader.sirous.uk" };
+export const DINO_HOSTS: readonly string[];
+export function isDinoHost(hostname: string): boolean;
 export const DINO_PATH_PREFIX: "/dino";
 export const STORIES_PREFIX: "dinoreader/stories/";
 export const STORY_META_FILE: "meta.json";
