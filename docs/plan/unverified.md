@@ -85,11 +85,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You (native read):** the 15 subscribe texts (`SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`).
 
 ### Slice 435: Dino: YouTube channel with the four free books as read-aloud videos in 15 languages ([slice](slices/435-dino-youtube-read-aloud-channel.md))
-- [owner] **You:** after the first unlisted video is up, watch it on a TV and say yes or what to change: https://studio.youtube.com/ (Content, the video's unlisted link). Items 6-7 wait on that yes.
+- [owner] **You:** watch the first unlisted video on a TV and say yes or what to change: https://www.youtube.com/watch?v=Fjo-TUF3EoU . Items 6-7 wait on that yes.
+- [owner] **You:** verify the YouTube channel's phone number at https://www.youtube.com/verify so the thumbnail and playlist can be set (see the first-upload line below).
 - [owner] **You (native read):** the 14 non-English card lines, titles and descriptions in `lib/strings.mjs` were written by Claude, not a native speaker; read the first non-English video you open.
-- [session] Claude, needs the Gemini key and quota: make the spoken title and grown-ups clips (`voice/<lang>/title-<stem>.m4a`, `voice/<lang>/grown-ups.m4a`) with the book narrator's voice, then rerun the render; until then item 5's spoken half is open.
+- [session] First upload DONE 2026-11-27 (item 4), video `Fjo-TUF3EoU` (unlisted; API read-back: title, language en, madeForKids true, privacy unlisted). Not done: the custom thumbnail (`thumbnails.set` answered 403, likely an unverified channel; not confirmed) and the playlist "Dino Reader stories in English". After the owner's phone verification, rerun `upload.mjs`: it resumes from `uploaded.json` and finishes both; the check is the read-back of the playlist membership. Item 4 stays unticked until then.
+- [session] Item 5 spoken clips: 2 of 75 exist (`voice/en/grown-ups.m4a`, `voice/en/title-lion-and-mouse.m4a`); the other 73 wait on the Gemini daily cap. Render them with `make_voice.py` (`node voice-lines.mjs --book all --lang all > ../../../../tmp/lines.json && python make_voice.py --lines ../../../../tmp/lines.json`, about 75 requests, may take two days), then rerun the render; item 5's spoken half stays open until then.
 - [session] Private-lock check (answered 2026-11-27, no step for you): YouTube's revision history says videos from unverified API projects "are no longer restricted" to private (entry dated 2 November 2026); `upload.mjs` reads each video back and fails loudly if the privacy differs from the one requested, so the first real upload proves it.
-- [session] Claude (the owner's grant is done 2026-11-27): the real first upload and the API read-back of title, language, made-for-kids flag and playlist.
 
 ### Slice 454: Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps ([slice](slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md))
 - [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`.
@@ -190,7 +191,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** on your Echo: "Alexa, repeat" and "Alexa, next" (a random other story, decision 17) during and after the clip; whether "Alexa, next story" without the skill name reaches the skill while audio plays (Amazon routes it, not the model) | no link (a real Echo)
 
 ### Slice 440: Dino: search on Sonos, "Stories" and "All languages" ([slice](slices/440-dino-sonos-search.md))
-- [owner] **You:** set the presentation map URL and version once 440 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
+- [owner] Portal versus hosted presentation map: the current docs.sonos.com add-search page sets the search categories and their strings in the portal (Search Capabilities, Localization Resources) and does not mention a hosted presentation map, so `site/dino/sonos/presentation-map.xml` may be unused. The owner does the portal steps in D2 and says whether mobile search shows both categories; if it does not, the hosted map is not enough on its own.
+- [owner] **You:** the owner step in D2 (Search Capabilities categories "Stories" `stories` and "All languages" `all-languages`, Localization Resources and, if the portal has the field, the presentation map URL and version) in the Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos).
+- [owner] The sandbox check ("goat" in the S21 Sonos app: two English rows under Stories, the own-language matches under All languages).
+- [session] After deploy, `curl` that https://dinoreader.sirous.uk/dino/sonos/presentation-map.xml and https://dinoreader.sirous.uk/dino/sonos/strings.xml both load (HTTP 200, the XML bodies).
 
 ### Slice 438: Dino: every Sonos home links once through the Dino app and saves its story language ([slice](slices/438-dino-sonos-link-story-language.md))
 - [session] Apply `worker/schema/sonos-homes.sql` to the live D1 `STATS` per `docs/DEPLOYING.md` before the Worker deploy serves Sonos; until then every Sonos call answers `Server.ServiceUnavailable` (sandbox only).
@@ -206,7 +210,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 445: Dino: Microsoft Store trailer, Partner Center push and Play video link ([slice](slices/445-dino-microsoft-store-trailer-and-play-video-link.md))
 - [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back (Slice 433 is closed; its storyboard in `tools/dino/promo/store/`).
-- [session] The upload script now exists (`tools/dino/promo/youtube/upload.mjs`, merged in #1423); the Play video URL waits for the first real upload in Slice 435.
+- [session] The first real upload in Slice 435 is done (unlisted, video `Fjo-TUF3EoU`, 2026-11-27; script `tools/dino/promo/youtube/upload.mjs`); the Play video URL and the YouTube upload of the landscape cut can go ahead.
 - [session] Run `store-size-check.ps1` on the eight Windows PNGs (Slice 433 is closed). (live check 2026-11-27: unreachable: store-size-check.ps1 has no Windows target, follow-up in Slice 445)
 
 ### Slice 433: Dino: new-look store screenshots, App Store previews, Play feature graphic ([slice](slices/433-dino-store-screenshots-video-play-appstore.md))
