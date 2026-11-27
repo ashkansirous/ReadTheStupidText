@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `src/Dino/DinoReader.Core/**`, `tests/Dino/DinoReader.Tests/**`
 
-*Built 2026-11-27 (wave 2), PR #1396, not merged. Pure Core change, nothing to check on a device.* Premise check at claim: the parser is `src/Dino/DinoReader.Core/SpeakerTagParser.cs:48` (verb then name pattern from `NameExtractor.cs`; "the" is a non-name word, `NameExtractor.cs:155`), likely why `says the Referee` fails.
+*Built 2026-11-27 (wave 2), merged as PR #1396 (835e889d). Pure Core change, nothing to check on a device.* Premise check at claim: the parser is `src/Dino/DinoReader.Core/SpeakerTagParser.cs:48` (verb then name pattern from `NameExtractor.cs`; "the" is a non-name word, `NameExtractor.cs:155`), likely why `says the Referee` fails.
 
 *Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 350; not built).*
 
