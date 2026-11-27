@@ -461,4 +461,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Inspelningarna och inställningarna för din berättelse i en fil. Själva boken kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Inspelningarna och inställningarna för alla {0} berättelser i en fil. Själva böckerna kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Hämtar tillbaka inspelningar och inställningar från en fil och hämtar böckerna igen från butiken. Köpta böcker behöver först Återställ köp.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Dino-appen · öppnad av Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>Spela Dino-berättelser på din Sonos</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos bad om att få ansluta till Dino. Välj språket berättelserna spelas på. Du kan ändra det senare i Sonos eller här.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dino sparar två saker för ditt Sonos-hem: det här berättelsespråket och din prenumeration. Inget om ditt barn.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Anslut till Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Ansluter till Sonos …</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dino nådde inte sin server. Kontrollera internet och försök igen.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>Länken har gått ut. Börja om från Sonos-appen.</value></data>
 </root>

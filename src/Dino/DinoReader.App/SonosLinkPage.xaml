@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.SonosLinkPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
+
+    <!-- Slice 438: the screen Sonos opens when a home adds Dino (design "Setting 1 · Once: Sonos opens the Dino app", docs/design/sonos/Link.dc.html).
+         Connect only: the mock's "Not now" is not built (owner: every Sonos home links, Slice 415). -->
+    <Grid x:Name="LinkRoot">
+        <ScrollView>
+            <VerticalStackLayout Padding="22,28" Spacing="16" MaximumWidthRequest="520">
+                <Label Text="{x:Static res:AppResources.SonosLink_Opened}" FontSize="13" TextColor="{StaticResource Body}" />
+                <Label x:Name="TitleLabel" AutomationId="SonosLinkTitle" Text="{x:Static res:AppResources.SonosLink_Title}" FontSize="26" FontAttributes="Bold"
+                       TextColor="{StaticResource Ink}" SemanticProperties.HeadingLevel="Level1" />
+                <Label x:Name="BodyLabel" AutomationId="SonosLinkBody" Text="{x:Static res:AppResources.SonosLink_Body}" FontSize="15" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="18">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{x:Static res:AppResources.Story_Language}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Body}" />
+                        <Picker x:Name="LanguagePicker" AutomationId="SonosLinkLanguage" Title="{x:Static res:AppResources.Story_Language}" FontSize="17" TextColor="{StaticResource Ink}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Label Text="{x:Static res:AppResources.SonosLink_Note}" FontSize="13" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                <Label x:Name="ErrorLabel" AutomationId="SonosLinkError" IsVisible="False" FontSize="14" LineHeight="1.4" TextColor="#B3261E" />
+                <!-- no-tap-count: the Link screen is opened by Sonos for a grown-up and has no usage-count name yet (a new UiControls name needs the Worker's lists, outside Slice 438) -->
+                <Button x:Name="ConnectButton" AutomationId="SonosLinkConnect" Text="{x:Static res:AppResources.SonosLink_Connect}" HeightRequest="52" CornerRadius="26"
+                        FontSize="16" FontAttributes="Bold" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnConnectClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -105,7 +105,8 @@ function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite):
 
 // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
 // Slice 289: each play is counted in `dino_usage` under the apps' own telemetry switch (declared further down: function declarations are hoisted).
-function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
+// Slice 438: every home links through the Dino app, so the SMAPI calls need a login token checked against the STATS D1 (worker/sonos-link.ts); without the binding every call faults (fail closed).
+function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogEnv & StatsEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   // ctx.waitUntil is called as a method (destructuring it throws "Illegal invocation"); the play is counted after the answer is sent.
@@ -113,8 +114,9 @@ function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogE
   const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer, tee: ninjalogTee(env, defer) };
   // Slice 283 F1/F2: the catalogue rebuild runs after the answer and its list is kept in the colo's Cache API.
   const catalogue = { defer: usage.defer, shared: caches.default };
-  const forward = isSonosReportingPath(site.path) ? handleSonosReporting : handleSonos; // Slice 436: the players' play reports are the only place a Sonos play is counted
-  return forward(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, catalogue);
+  const forwarded = withPath(request, url, site.path);
+  if (isSonosReportingPath(site.path)) return handleSonosReporting(forwarded, env, pathPrefix, serveObject, usage, catalogue); // Slice 436: the players' play reports are the only place a Sonos play is counted
+  return handleSonos(forwarded, env, pathPrefix, serveObject, usage, catalogue, { db: env.STATS });
 }
 
 // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.

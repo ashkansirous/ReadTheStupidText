@@ -1,5 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+#if IOS
+using Microsoft.Maui.LifecycleEvents;
+#endif
 using DinoReader.Core;
 using Sirous.Reading.Application.Reading;
 using Sirous.Reading.Application.Crashes;
@@ -83,6 +86,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IBookTextSync, BookUpdater>(); // Slice 313: every store listing the shelf audio fetches first brings a behind book's text up to date, so a pack is never installed ahead of its text
 		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddPages(builder.Services);
+#if IOS
+		AddSonosLinkHandlers(builder);
+#endif
 
 #if DEBUG
 		builder.Logging.AddDebug();
@@ -149,10 +155,29 @@ public static class MauiProgram
 	private static void BeginCrashReports(AppConfigClient config) =>
 		CrashReporter.BeginSending(new CrashSendOptions(StoreClient.BaseAddress, () => config.Current.CrashReportsEnabled, () => config.HasCopy, () => config.RefreshAsync()));
 
+#if IOS
+	// Slice 438: under the UIKit scene lifecycle a link that opens the running app arrives in SceneOpenUrl, one that launches it in the connection options of SceneWillConnect (MAUI does not replay it).
+	private static void AddSonosLinkHandlers(MauiAppBuilder builder) =>
+		builder.ConfigureLifecycleEvents(events => events.AddiOS(ios => ios
+			.SceneOpenUrl((_, contexts) => ReceiveSonosLinks(contexts))
+			.SceneWillConnect((_, _, options) => ReceiveSonosLinks(options.UrlContexts))));
+
+	private static bool ReceiveSonosLinks(Foundation.NSSet<UIKit.UIOpenUrlContext>? contexts)
+	{
+		foreach (UIKit.UIOpenUrlContext context in contexts?.ToArray() ?? [])
+		{
+			SonosLinkRouter.Receive(context.Url?.AbsoluteString);
+		}
+
+		return false; // never claims the URL: the Debug test hooks' own handler sees it too
+	}
+#endif
+
 	// Pages are transient: each is opened with an explicit Load(story), never a one-shot
 	// Shell hand-off to a cached page.
 	private static void AddPages(IServiceCollection services)
 	{
+		services.AddTransient<SonosLinkPage>(); // Slice 438: opened by SonosLinkRouter with the link code
 		services.AddTransient<GalleryPage>();
 		services.AddTransient<StorePage>();
 		services.AddTransient<UpdatePage>();

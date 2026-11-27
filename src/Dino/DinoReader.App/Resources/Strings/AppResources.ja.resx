@@ -462,4 +462,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>お話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>{0}冊すべてのお話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>ファイルから録音と設定を戻し、本をストアからもう一度取得します。購入した本は、先に「購入を復元」が必要です。</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Dinoアプリ · Sonosから開かれました</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>SonosでDinoのお話を再生</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>SonosがDinoとの接続を求めています。お話を再生する言語を選んでください。あとからSonosまたはここで変更できます。</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dinoがお使いのSonosホームについて保存するのは、このお話の言語とサブスクリプションの2つだけです。お子さまの情報は保存しません。</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Sonosに接続</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Sonosに接続しています…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dinoのサーバーに接続できませんでした。インターネットを確認して、もう一度お試しください。</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>このリンクは期限切れです。Sonosアプリからやり直してください。</value></data>
 </root>

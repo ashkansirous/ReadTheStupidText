@@ -462,4 +462,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Les enregistrements et les réglages de votre histoire dans un seul fichier. Le livre lui-même revient de la boutique. Enregistrez-le dans Drive ou Fichiers, ou envoyez-le-vous.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Les enregistrements et les réglages des {0} histoires dans un seul fichier. Les livres eux-mêmes reviennent de la boutique. Enregistrez-le dans Drive ou Fichiers, ou envoyez-le-vous.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Rapporte les enregistrements et les réglages depuis un fichier et télécharge de nouveau les livres depuis la boutique. Les livres achetés demandent d’abord Restaurer les achats.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Appli Dino · ouverte par Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>Écoutez les histoires de Dino sur votre Sonos</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos demande à se connecter à Dino. Choisissez la langue dans laquelle les histoires sont lues. Vous pourrez la changer plus tard dans Sonos ou ici.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dino conserve deux choses pour votre foyer Sonos : cette langue des histoires et votre abonnement. Rien sur votre enfant.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Se connecter à Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Connexion à Sonos…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dino n’a pas pu joindre son serveur. Vérifiez Internet et réessayez.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>Ce lien a expiré. Recommencez depuis l’appli Sonos.</value></data>
 </root>

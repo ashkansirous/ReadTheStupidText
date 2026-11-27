@@ -197,6 +197,20 @@ once, from the desk (`wrangler login` needs `d1 (write)` and `workers_scripts (w
 6. Deploy (`npm run deploy`, or merge: Workers Builds). The first cron run (minute 7 of the hour) backfills every day Analytics Engine still holds; wait for it (`wrangler dev --test-scheduled` runs against a local, empty D1 with no token, so it does not fill the live table).
 7. Check: `https://dinoreader.sirous.uk/api/stats?from=2026-11-01&to=2026-11-08` answers 200 with `updatedAt` set, and `/stats` shows the page.
 
+## The Sonos home link (Slice 438)
+
+Every Sonos home links once through the Dino app (`worker/sonos-link.ts`); the homes live in the `STATS` D1 database, tables `sonos_homes` and `sonos_pending_links`
+(`worker/schema/sonos-homes.sql`, applied by hand like `stats.sql`). With no `STATS` binding, or while the tables are missing, every Sonos call faults (`Server.ServiceUnavailable`): the service
+fails closed. In this order, once:
+
+1. **Before the merge deploys the Worker:** run `npx wrangler d1 execute dino-stats --remote --file worker/schema/sonos-homes.sql` (safe to run twice; `wrangler login` needs `d1 (write)`).
+2. Merge (Workers Builds deploys). From then on the anonymous Slice 283 calls (no login token) fault with `Client.AuthTokenExpired`, so the sandbox integration must be switched at once.
+3. In the Sonos developer portal, set the sandbox integration's authentication to **AppLink** (same SMAPI endpoint `https://dinoreader.sirous.uk/sonos`; no extra URL fields: the Worker answers `getAppLink` with the Dino link page and the `dinoreader://sonos-link` app link). Then rerun the Sonos Self Test.
+4. Ship the Dino app build that carries the Link screen (the app link `dinoreader://sonos-link?code=...` is handled from that build on); a phone without it is sent to its store page.
+5. Check from the S21: add the service in the Sonos app, the Dino app opens on the Link screen, Connect, back in Sonos the root shows "Story language: ...".
+
+The page Sonos opens is `https://dinoreader.sirous.uk/dino/sonos-link.html` (a static file; no Worker route and no `run_worker_first` entry). No secret and no new binding are needed.
+
 ## Deploying from Windows
 
 A Windows checkout with `core.autocrlf=true` writes `site/` with CRLF line endings, which would upload different bytes than git (and than Workers Builds on Linux). `npm run deploy` runs `worker/check-site-eol.mjs` first and refuses; fix with `git -c core.autocrlf=false checkout -- site/`.

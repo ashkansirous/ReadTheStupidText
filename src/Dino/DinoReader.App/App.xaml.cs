@@ -68,6 +68,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		var navigation = _navigation = BuildNavigation(RootPage());
 		var window = new Window(navigation);
+		Action<string> openLink = OpenSonosLink;
+		window.Created += (_, _) => SonosLinkRouter.Attach(openLink); // Slice 438: a link that started the app waits for the window
+		window.Destroying += (_, _) => SonosLinkRouter.Detach(openLink); // a link arriving while the window is gone waits for the next one
 		StartLock(window); // Slice 418: the 30-second lock ticks for the whole life of the window
 #if WINDOWS
 		DinoWindowFrame.Attach(window); // Slice 235: size, minimum, remembered place and title bar of the desktop window
@@ -94,6 +97,25 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		// Resumed does not fire on a cold start, so the launch fetch is made here; the client joins an overlapping call.
 		_ = CountLaunchAsync();
 		return window;
+	}
+
+	// Slice 438: Sonos opened the app with a link code; the Link screen goes over whatever is showing. A second link while the screen is open gives it the new code.
+	private void OpenSonosLink(string code)
+	{
+		if (_navigation is not { } navigation)
+		{
+			return;
+		}
+
+		if (navigation.CurrentPage is SonosLinkPage open)
+		{
+			open.Load(code);
+			return;
+		}
+
+		var page = _services.GetRequiredService<SonosLinkPage>();
+		page.Load(code);
+		_ = ObserveAsync(navigation.PushAsync(page));
 	}
 
 	// Slice 418 item 5: one tick for the app's life. When the 30 seconds run out the shelf locks and every grown-up page over the gallery closes (a Settings sub-page, the Record intro, ...), the way leaving the app does;

@@ -16,7 +16,8 @@ const WHOLE_NUMBER = /^\d{1,9}$/;
 const XML_ILLEGAL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 /** The request parameters' element names. */
-const Param = { Id: "id", Index: "index", Count: "count", Recursive: "recursive" } as const;
+const Param = { Id: "id", Index: "index", Count: "count", Recursive: "recursive", HouseholdId: "householdId", LinkCode: "linkCode", CallbackPath: "callbackPath", Token: "token", Key: "key" } as const;
+const LOGIN_TOKEN = "loginToken";
 
 /** The faultstring texts the service gives (no ids or titles in any of them). */
 export const FaultMessage = {
@@ -27,13 +28,19 @@ export const FaultMessage = {
   Unavailable: "Service unavailable",
   NoCatalogue: "The catalogue is not available",
   NotPlayable: "This story is in the Dino app",
+  NotLinked: "Link Code not found retry...",
+  NotLoggedIn: "Link this Sonos home through the Dino app",
+  BadLink: "The link request is not valid",
 } as const;
 
-/** The faultcode values the service raises (https://docs.sonos.com/docs/error-handling). */
+/** The faultcode values the service raises (https://docs.sonos.com/docs/error-handling; the two NOT_LINKED codes: https://docs.sonos.com/docs/getdeviceauthtoken, Slice 438 B1). */
 export const FaultCode = {
   ItemNotFound: "Client.ItemNotFound",
   Unavailable: "Server.ServiceUnavailable",
   Unknown: "Server.ServiceUnknownError",
+  NotLinkedRetry: "Client.NOT_LINKED_RETRY",
+  NotLinkedFailure: "Client.NOT_LINKED_FAILURE",
+  AuthTokenExpired: "Client.AuthTokenExpired",
 } as const;
 export type FaultCodeName = (typeof FaultCode)[keyof typeof FaultCode];
 
@@ -44,8 +51,18 @@ export const SonosAction = {
   GetMediaURI: "getMediaURI",
   GetMediaMetadata: "getMediaMetadata",
   GetLastUpdate: "getLastUpdate",
+  GetAppLink: "getAppLink",
+  GetDeviceAuthToken: "getDeviceAuthToken",
+  RefreshAuthToken: "refreshAuthToken",
 } as const;
 export type SonosActionName = (typeof SonosAction)[keyof typeof SonosAction];
+
+/** What Sonos puts in the SOAP header after linking: `credentials/loginToken` (https://docs.sonos.com/docs/use-authentication-tokens). */
+export interface LoginToken {
+  readonly token: string;
+  readonly key: string;
+  readonly householdId: string;
+}
 
 export interface SonosRequest {
   readonly action: string;
@@ -53,14 +70,23 @@ export interface SonosRequest {
   readonly index: number | null;
   readonly count: number | null;
   readonly recursive: boolean;
+  /** Slice 438: the Body's `householdId` (getAppLink, getDeviceAuthToken), `linkCode` and `callbackPath`. */
+  readonly householdId: string | null;
+  readonly linkCode: string | null;
+  readonly callbackPath: string | null;
+  /** Slice 438: the header's loginToken, null when the header has none or a part of it is missing. */
+  readonly login: LoginToken | null;
 }
 
 export class SoapFault extends Error {
   readonly code: FaultCodeName;
+  /** Raw XML for the fault's `<detail>` (the NOT_LINKED faults carry ExceptionInfo and SonosError), or null. */
+  readonly detail: string | null;
 
-  constructor(code: FaultCodeName, message: string) {
+  constructor(code: FaultCodeName, message: string, detail: string | null = null) {
     super(message);
     this.code = code;
+    this.detail = detail;
   }
 }
 
@@ -105,6 +131,19 @@ function wholeNumberParam(xml: string, name: string): number | null {
   return text !== null && WHOLE_NUMBER.test(text) ? Number(text) : null;
 }
 
+// Slice 438: the login token is read from the part of the envelope before the Body only, so a Body parameter can never pass for it.
+function loginTokenOf(xml: string): LoginToken | null {
+  const bodyAt = xml.search(/<(?:[\w.-]+:)?Body\b/);
+  const header = bodyAt < 0 ? "" : xml.slice(0, bodyAt);
+  const found = new RegExp(`<(?:[\\w.-]+:)?${LOGIN_TOKEN}\\b[^>]*>([\\s\\S]*?)</(?:[\\w.-]+:)?${LOGIN_TOKEN}\\s*>`).exec(header);
+  if (found === null) return null;
+  const inner = found[1] ?? "";
+  const token = elementText(inner, Param.Token);
+  const key = elementText(inner, Param.Key);
+  const householdId = elementText(inner, Param.HouseholdId);
+  return token === null || key === null || householdId === null || token === "" || householdId === "" ? null : { token, key, householdId };
+}
+
 /** Reads the action and parameters from the Body's action element only; the SOAPAction header is never used. Null when the Body has no action. */
 export function parseSonosRequest(xml: string): SonosRequest | null {
   const body = bodyActionOf(xml);
@@ -116,6 +155,10 @@ export function parseSonosRequest(xml: string): SonosRequest | null {
     index: wholeNumberParam(inner, Param.Index),
     count: wholeNumberParam(inner, Param.Count),
     recursive: elementText(inner, Param.Recursive) === TRUE_TEXT,
+    householdId: elementText(inner, Param.HouseholdId),
+    linkCode: elementText(inner, Param.LinkCode),
+    callbackPath: elementText(inner, Param.CallbackPath),
+    login: loginTokenOf(xml),
   };
 }
 
@@ -184,7 +227,8 @@ export function resultResponse(action: SonosActionName, inner: string): Response
 
 /** A SOAP fault: HTTP 500 for every failure, only the Fault in the Body (https://docs.sonos.com/docs/error-handling). */
 export function faultResponse(fault: SoapFault): Response {
-  return xmlResponse(FAULT_STATUS, `<soap:Fault><faultcode>${fault.code}</faultcode><faultstring>${escapeXml(fault.message)}</faultstring></soap:Fault>`);
+  const detail = fault.detail === null ? "" : `<detail>${fault.detail}</detail>`;
+  return xmlResponse(FAULT_STATUS, `<soap:Fault><faultcode>${fault.code}</faultcode><faultstring>${escapeXml(fault.message)}</faultstring>${detail}</soap:Fault>`);
 }
 
 /** One element with escaped text. */

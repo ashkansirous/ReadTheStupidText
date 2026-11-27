@@ -1,4 +1,5 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.Content.Res;
 using Android.OS;
@@ -9,6 +10,8 @@ using Sirous.Reading.Mobile.Shared;
 namespace DinoReader;
 
 [Activity(WindowSoftInputMode = SoftInput.AdjustResize, Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+// Slice 438: Sonos opens dinoreader://sonos-link?code=... (from the link page's intent: URL) to link a home; SonosLinkRouter shows the Link screen.
+[IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable], DataScheme = "dinoreader", DataHost = "sonos-link")]
 public class MainActivity : MauiAppCompatActivity
 {
 	// MAUI sets the bar icons from the system night mode, but only the reading screen follows it.
@@ -18,6 +21,18 @@ public class MainActivity : MauiAppCompatActivity
 	{
 		base.OnCreate(savedInstanceState);
 		SystemBarIcons.Applier = ApplyDarkIcons;
+		// Opened from Recents, Android hands back the original intent: its link was used already.
+		if (savedInstanceState is null && Intent?.Flags.HasFlag(ActivityFlags.LaunchedFromHistory) != true)
+		{
+			SonosLinkRouter.Receive(Intent?.DataString); // a cold start by the link; a recreated activity (rotation) must not open the screen again
+		}
+	}
+
+	// The activity is SingleTop, so a link arriving while the app runs comes here instead of creating a second activity.
+	protected override void OnNewIntent(Intent? intent)
+	{
+		base.OnNewIntent(intent);
+		SonosLinkRouter.Receive(intent?.DataString);
 	}
 
 	protected override void OnDestroy()

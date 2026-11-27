@@ -461,4 +461,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Din historie – optagelser og indstillinger – i én fil. Selve bogen kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Optagelser og indstillinger for alle {0} historier i én fil. Selve bøgerne kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Henter optagelser og indstillinger tilbage fra en fil og henter bøgerne igen fra butikken. Købte bøger kræver først Gendan køb.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Dino-appen · åbnet af Sonos</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>Spil Dino-historier på din Sonos</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos bad om at oprette forbindelse til Dino. Vælg det sprog, dine historier afspilles på. Du kan ændre det senere i Sonos eller her.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dino gemmer to ting for dit Sonos-hjem: dette historiesprog og dit abonnement. Intet om dit barn.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Forbind til Sonos</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Forbinder til Sonos…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dino kunne ikke nå sin server. Tjek internettet, og prøv igen.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>Linket er udløbet. Start forfra fra Sonos-appen.</value></data>
 </root>

@@ -461,4 +461,13 @@
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Tarinasi äänitykset ja asetukset yhdessä tiedostossa. Itse kirja palaa kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Kaikkien {0} tarinan äänitykset ja asetukset yhdessä tiedostossa. Itse kirjat palaavat kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Palauttaa äänitykset ja asetukset tiedostosta ja hakee kirjat uudelleen kaupasta. Ostetut kirjat tarvitsevat ensin Palauta ostot.</value></data>
+  <!-- Slice 438: machine draft, for native review -->
+  <data name="SonosLink_Opened" xml:space="preserve"><value>Dino-sovellus · Sonos avasi</value></data>
+  <data name="SonosLink_Title" xml:space="preserve"><value>Soita Dino-tarinoita Sonosilla</value></data>
+  <data name="SonosLink_Body" xml:space="preserve"><value>Sonos pyysi yhteyttä Dinoon. Valitse kieli, jolla tarinat soitetaan. Voit vaihtaa sen myöhemmin Sonosissa tai täällä.</value></data>
+  <data name="SonosLink_Note" xml:space="preserve"><value>Dino säilyttää Sonos-kotisi kaksi asiaa: tämän tarinoiden kielen ja tilauksesi. Ei mitään lapsestasi.</value></data>
+  <data name="SonosLink_Connect" xml:space="preserve"><value>Yhdistä Sonosiin</value></data>
+  <data name="SonosLink_Connecting" xml:space="preserve"><value>Yhdistetään Sonosiin…</value></data>
+  <data name="SonosLink_Failed" xml:space="preserve"><value>Dino ei tavoittanut palvelintaan. Tarkista verkkoyhteys ja yritä uudelleen.</value></data>
+  <data name="SonosLink_Expired" xml:space="preserve"><value>Tämä linkki on vanhentunut. Aloita alusta Sonos-sovelluksesta.</value></data>
 </root>
