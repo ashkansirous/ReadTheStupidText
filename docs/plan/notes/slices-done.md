@@ -302,6 +302,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 422 | Dino: a high-res package for every store book, the four old "starter" books too | built | #1316 | — | [422-dino-high-res-for-every-book.md](../slices/422-dino-high-res-for-every-book.md) |
 | 429 | Dino: Ninjalog dashboards get device and app data, one dashboard per platform, charts split by version | built | #1335 | — | [429-ninjalog-dashboards-per-platform.md](../slices/429-ninjalog-dashboards-per-platform.md) |
 | 430 | Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform | built | #1336 | — | [430-ninjalog-forced-update-dashboard.md](../slices/430-ninjalog-forced-update-dashboard.md) |
+| 446 | Dino: "says the <name>" gives the line to the right speaker | built | #1396 | — | [446-dino-says-the-name-speaker.md](../slices/446-dino-says-the-name-speaker.md) |
+| 437 | Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) | built (Sonos sandbox run and IMAGES binding open; checks in unverified.md) | #1398 | — | [437-dino-sonos-browse-shelves.md](../slices/437-dino-sonos-browse-shelves.md) |
 
 ## Shared
 

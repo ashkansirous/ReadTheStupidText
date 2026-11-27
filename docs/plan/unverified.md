@@ -77,6 +77,18 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 437: Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) ([slice](slices/437-dino-sonos-browse-shelves.md))
+- [owner] **You:** Sonos sandbox run in your Sonos app: the root opens in the phone's language, the shelf order, the paid row ("In the Dino app"), where the subtitle shows, and the element order.
+- [owner] **You:** A1 on your sandbox (S21 Sonos app): what a tap on a paid book, adding it to the queue and pressing Play on a shelf that holds one do with `canPlay` false and `Client.ItemNotFound`; whether the app's wording for it reads well.
+- [session] **Device:** the Sonos app accepts the new element order: a folder row `id, itemType, title, artist, albumArtURI, canPlay, canEnumerate` and a book's subtitle in `album`, and shows each where the mock shows its subtitle.
+- [owner] **You:** the square cover crop needs `"images": { "binding": "IMAGES" }` in `wrangler.jsonc` and `wrangler.workers-dev.jsonc` and the Cloudflare Images binding on the account (until then covers are served uncropped).
+- [session] **Device:** the seven folder PNGs and the 15 language tiles on a real Sonos screen (`site/dino/sonos-art/`).
+- [owner] **You:** the 13 translated label sets (`worker/sonos-labels.ts`; English and Farsi are the mock's words).
+- [session] **Device:** Sonos sends `Accept-Language` on SOAP calls (no live call read).
+- [session] **Device:** does the Sonos app lay out Farsi right to left? (S21 Sonos app, phone in Farsi.)
+- [session] **Device:** does Sonos cache the root per household? If so, two phones with different languages could see the same first screen.
+- [session] **Device:** can a service's folder (not just a track) be saved to My Sonos?
+
 ### Slice 430: Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform ([slice](slices/430-ninjalog-forced-update-dashboard.md))
 - [session] Once someone below `minVersion` opens the app, the "Saw the please update page" chart shows them (on 2026-11-22 no `screen=update` event existed yet in 30 days).
 
