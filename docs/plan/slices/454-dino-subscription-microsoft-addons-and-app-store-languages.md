@@ -1,6 +1,8 @@
 # Slice 454 — Dino subscription: Microsoft Store subscription add-ons, the 14 other App Store languages, script gaps
 **Product:** Dino
-**Touches:** `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `docs/store-listings/dino/subscription-listings.md`
+**Touches:** `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `docs/store-listings/dino/subscription-listings.md`, `.github/scripts/store-products-local.mjs` (widened at claim, wave 2026-11-27), this file
+
+*In progress (wave 2026-11-27), draft PR.*
 
 *Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 384; not built).*
 
