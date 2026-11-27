@@ -48,7 +48,10 @@
  "good-enough": {
   "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
   "characters": {
-   "Hazelnut": "a young, bright, warm voice for young children, standard Tehrani accent"
+   "Carrot": "a young, bright, bouncy little boy's voice for young children, standard Tehrani accent",
+   "Hazelnut": "a young, bright, warm voice for young children, standard Tehrani accent",
+   "Referee": "a big, deep, warm grown-up voice, gentle and kind, for young children, standard Tehrani accent",
+   "Crowd": "a big, loud, happy stadium crowd of football fans shouting together, warm and friendly for young children, standard Tehrani accent"
   }
  },
  "jack-and-the-beanstalk": {

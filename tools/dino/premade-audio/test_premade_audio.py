@@ -368,12 +368,26 @@ class AccentTests(unittest.TestCase):
         pinned = json.loads(FARSI_STYLES.read_text(encoding="utf8"))  # the style of every voice entry as the casts held it before A8
         casts = sorted((REPO / "content" / "dino").glob("*/audio-cast.json"))
         self.assertEqual(sorted(pinned), [c.parent.name for c in casts])
+        mismatches = []  # every book is checked; one stale entry must not hide the others
         with unittest.mock.patch.dict(audio_cast.ACCENTS, REAL_ACCENTS):
             for path in casts:
                 cast = audio_cast.load(str(path))
                 cast.language = "fa"
-                self.assertEqual(pinned[path.parent.name]["narrator"], cast.styled(cast.narrator["style"]), path.parent.name)
-                self.assertEqual(pinned[path.parent.name]["characters"], {n: cast.styled(e["style"]) for n, e in cast.characters.items()}, path.parent.name)
+                book = path.parent.name
+                entry = pinned[book]
+                actual_narrator = cast.styled(cast.narrator["style"])
+                if entry.get("narrator") != actual_narrator:
+                    mismatches.append(f"{book}: narrator pinned={entry.get('narrator')!r} actual={actual_narrator!r}")
+                actual_characters = {n: cast.styled(e["style"]) for n, e in cast.characters.items()}
+                pinned_characters = entry.get("characters")
+                if pinned_characters != actual_characters:
+                    for name in sorted(set(actual_characters) | set(pinned_characters or {})):
+                        pinned_style = (pinned_characters or {}).get(name)
+                        if pinned_style != actual_characters.get(name):
+                            mismatches.append(f"{book}: character {name} pinned={pinned_style!r} actual={actual_characters.get(name)!r}")
+                    if pinned_characters is None:
+                        mismatches.append(f"{book}: characters missing from the pinned entry")
+        self.assertEqual([], mismatches, "books whose Farsi delivery differs from the pinned one")
 
     def test_no_cast_style_carries_an_accent_any_more(self):
         for path in (REPO / "content" / "dino").glob("*/audio-cast.json"):
