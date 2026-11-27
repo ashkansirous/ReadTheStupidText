@@ -1,7 +1,7 @@
 # Slice 463 — Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background
 **Product:** Dino
 
-*Built 2026-11-27 (night wave 9) in PR #1444, not merged. Open: item 2 (the owner's side-by-side page, an Artifact, needs an interactive session). No quick packages exist yet (no `content/dino/*/quick` folders), so nothing ships a quick copy until the quick pictures and clips are made after the owner's pick. The slow-link switch was not reached on a device (see Not yet verified).*
+*Items 1, 3, 4, 5 built 2026-11-27 (night wave 9), merged as PR #1444 (844603a9). Open: item 2 (the owner's side-by-side page, an Artifact, needs an interactive session). No quick packages exist yet (no `content/dino/*/quick` folders), so nothing ships a quick copy until the quick pictures and clips are made after the owner's pick. The slow-link switch was not reached on a device (see Not yet verified).*
 
 *Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
 
@@ -105,7 +105,7 @@ Findings files read to the last finding: high 9 of 9, medium 7 of 7, check 1 9 o
 - [ ] F8 (device run): the first-books store list timed out twice under an `umts` slow link, so the switch was never judged. Check whether the list timeout is too short for a slow link; plan a slice if confirmed.
 - [ ] F9: commit the draft flow `reviews/s463-device/s463-quick-wait.yaml` as `.maestro/dino/first-book-slow-link.yaml`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - Every write to an audio pack's final folder (`AudioPackStore.cs`: the swap, the plain publish, the interrupted-swap recovery) takes the store's `_swapLock`; the `.old` copy is deleted only after the new manifest is confirmed in `final`. Never run recovery outside that lock. (Slice 463: docs/plan/slices/463-dino-quick-first-book-package-for-slow-internet.md)
 - A quick record (book or pack, `quick-installed.json` via `HighResUpgrades`) is written before the import, names its launch, and goes only when a verified standard copy is swapped in or the book leaves the shelf; the orphan drop skips records of the current launch. The failure ledger counts only a confirmed bad file (wrong size, hash, broken zip, 404), never a network, timeout, disk or IO error. (Slice 463: docs/plan/slices/463-dino-quick-first-book-package-for-slow-internet.md)
