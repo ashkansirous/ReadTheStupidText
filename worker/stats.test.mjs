@@ -125,6 +125,10 @@ test("each metric has its own SQL on the production dataset", () => {
   assert.match(seconds, /read_paused', 'read_stopped'/);
   assert.match(seconds, /SUM\(_sample_interval \* double1 \* double5\)/);
   assert.match(metricSql(Metric.SecondsEstimated, ["2026-11-07"]), /blob9 = 'estimated'/);
+  // Slice 436 A5: the owner's Sonos tests (estimated rows before the cutover) are left out of listens and estimated hours.
+  for (const metric of [Metric.Listens, Metric.SecondsEstimated]) {
+    assert.match(metricSql(metric, ["2026-11-07"]), /NOT \(blob7 = 'sonos' AND blob9 = 'estimated' AND timestamp < toDateTime\('2026-11-28 00:00:00'\)\)/);
+  }
   assert.match(downloads, /IN \('2026-11-07', '2026-11-09'\)/, "exactly the run's days, so 2026-11-08 is not read");
   assert.doesNotMatch(downloads, /timestamp >=/);
 });

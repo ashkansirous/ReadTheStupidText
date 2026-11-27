@@ -31,6 +31,7 @@ import type { SubscriptionSource } from "./entitlements/subscription";
 import type { EntitlementEnv } from "./entitlements/types";
 import { handleBookLink, isBookLinkPath } from "./book-links";
 import { handleSonos, isSonosPath } from "./sonos";
+import { handleSonosReporting, isSonosReportingPath } from "./sonos-reporting";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
 import { handleStats, isStatsApiPath, isStatsPath } from "./stats";
@@ -112,7 +113,8 @@ function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogE
   const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer, tee: ninjalogTee(env, defer) };
   // Slice 283 F1/F2: the catalogue rebuild runs after the answer and its list is kept in the colo's Cache API.
   const catalogue = { defer: usage.defer, shared: caches.default };
-  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, catalogue);
+  const forward = isSonosReportingPath(site.path) ? handleSonosReporting : handleSonos; // Slice 436: the players' play reports are the only place a Sonos play is counted
+  return forward(withPath(request, url, site.path), env, pathPrefix, serveObject, usage, catalogue);
 }
 
 // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.
@@ -197,7 +199,7 @@ async function serveAsset(request: Request, env: Env & StatsEnv & NinjalogEnv, c
   // Slice 423: printed-book short links, Dino host only (the RTST host has no /book/ and falls through to the assets).
   if (site.product === Product.DinoReader && isBookLinkPath(site.path)) return handleBookLink(site.path, env.BOOK_LINK_TARGET, url.origin);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
-  if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
+  if (isSonosPath(site.path) || isSonosReportingPath(site.path)) return serveSonos(request, url, env, site, ctx);
   if (isAlexaPath(site.path)) return serveAlexa(request, url, env, site, ctx);
   if (isStatsPath(site.path)) {
     const answer = serveStats(request, url, env, site);

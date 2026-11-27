@@ -70,24 +70,24 @@ Sonos documentation read 2026-11-24 (web-research):
 ## Work
 
 ### A. Count only real plays
-- [ ] A1. `getMediaURI` stops writing a usage row (`worker/sonos.ts`); tests prove no row on getMediaURI.
-- [ ] A2. New `worker/sonos-reporting.ts`: `POST /api/sonos/timePlayed` (path final at build, under the Worker's Sonos
+- [x] A1. `getMediaURI` stops writing a usage row (`worker/sonos.ts`); tests prove no row on getMediaURI.
+- [x] A2. New `worker/sonos-reporting.ts`: `POST /api/sonos/timePlayed` (path final at build, under the Worker's Sonos
       routes in `worker/index.ts`) reads each report of type `final`, maps the item id to book and language, and writes one
       `book_listened` row through `recordSpeakerPlay` when `duration` is 30 s or more, seconds = min(duration, book length).
       `update` reports are ignored. Payload shape checked against https://docs.sonos.com/docs/add-reporting and its
       `timePlayed` reference before coding (`library-docs`/`web-research`), validated, unknown items rejected with 400.
       Telemetry switch honoured. No household id, IP or account stored (same as Slice 289).
-- [ ] A3. Sonos fault visibility: an unplayable request (unknown item, paid book reached by id) writes a fallback event
+- [x] A3. Sonos fault visibility: an unplayable request (unknown item, paid book reached by id) writes a fallback event
       (`FallbackArea.` pattern of Slice 273 on the Worker side, or the Worker's existing fallback row), so a failure shows
       up in `dino_usage`.
 - [ ] A4. Owner step: fill the **Reporting Endpoint** field of the Dino sandbox integration (463879) with the A2 URL in the
       Sonos Dev Portal. The direct page id of that integration is not in the repo yet; find it (the case page
       https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos
       links the integration) and write the deep link here before handing the step over.
-- [ ] A5. `worker/stats-rollup.ts`: leave out `sonos` `book_listened` rows whose detail is `estimated` and that were
+- [x] A5. `worker/stats-rollup.ts`: leave out `sonos` `book_listened` rows whose detail is `estimated` and that were
       written before A1 shipped (cutover timestamp constant), so the dashboard drops the 4.4 h test hours; test in
       `worker/stats.test.mjs`. Re-run the rollup for the affected days.
-- [ ] A6. `PRIVACY.md` and `site/dino/privacy.html`: speaker plays are counted from the speaker's play report (book,
+- [x] A6. `PRIVACY.md` and `site/dino/privacy.html`: speaker plays are counted from the speaker's play report (book,
       language, seconds played; nothing about the home). `worker/CLAUDE.md`: Sonos plays are counted at `/timePlayed`,
       never at `getMediaURI` or the audio route.
 
@@ -95,9 +95,9 @@ Sonos documentation read 2026-11-24 (web-research):
 Paid books stay listed with "In the Dino app" and don't play (owner's mock, 2026-11-24); built in Slice 437.
 
 ### C. New books show up quickly
-- [ ] C1. Cut the Sonos list's colo Cache API lifetime (`worker/stories.ts:69-71`) from about 1 hour to 5 minutes, and keep
+- [x] C1. Cut the Sonos list's colo Cache API lifetime (`worker/stories.ts:69-71`) from about 1 hour to 5 minutes, and keep
       the stale-while-rebuild path; test in `worker/stories-catalogue.test.mjs`.
-- [ ] C2. Return the same order every call (Slice 437's shelf order once it ships) and a stable `total`, so a
+- [x] C2. Return the same order every call (Slice 437's shelf order once it ships) and a stable `total`, so a
       reload never shows a different count for the same catalogue.
 
 ### D. Moved to Slices 437-440
@@ -113,7 +113,17 @@ Slice 438, the subscription on Sonos Slice 439, search Slice 440. The brief writ
   report. The dashboard's Sonos hours for 18-24 Nov drop to 0.
 - Live: a new listening track published appears within about 5 minutes.
 
+## Build notes (2026-11-27)
+
+- A2 payload: docs.sonos.com could not be fetched from the build session (host not allowed). Shape taken from search results of https://docs.sonos.com/docs/add-reporting, https://docs.sonos.com/reference/timeplayed and https://docs.sonos.com/reference/v10-item-attributes: an `items` array, each with `objectId`, `type` (`final`/`update`) and `durationPlayedMillis`. The parser also accepts `reports`, `id`, `durationMillis`, `duration`.
+- A5: the cutover constant is `SONOS_COUNT_CUTOVER = 2026-11-28 00:00:00` (`worker/stats-rollup.ts`); change it to the merge day if the merge is later. "Re-run the rollup for the affected days" stays to do after deploy.
+- A6: `site/dino/privacy.html` has no Sonos paragraph, so only `PRIVACY.md` and `worker/CLAUDE.md` changed.
+- Needs a file outside **Touches:** `wrangler.jsonc` and `wrangler.workers-dev.jsonc`: `/sonos/timePlayed` and `/dino/sonos/timePlayed` must be added to `run_worker_first`, or Sonos's report never reaches the Worker. Not done here.
+- C1: the Cache API hold is now 5 min (`SHARED_HOLD_SECONDS`); C2: order is unchanged (list order), Slice 437's shelf order comes later; a test checks two reads match.
+
 ## Not yet verified
+
+- [session] The exact `/timePlayed` JSON field names (live docs page could not be read in the build session).
 
 - [session] Whether Sonos sends `/timePlayed` reports to an anonymous (no-login) service: the docs are silent. If none
   arrive, Sonos plays show 0 rather than invented hours; that result goes back to the owner as one question.

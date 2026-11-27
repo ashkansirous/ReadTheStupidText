@@ -109,7 +109,7 @@ test("F1: a failed rebuild serves the last good list and says why (F4)", async (
   const bucket = catalogueBucket(3);
   const runtime = { defer: deferred().defer, shared: fakeShared() };
   const first = await (await list(bucket, runtime)).json();
-  advance(10 * MINUTE);
+  advance(4 * MINUTE);
   bucket.state.fail = true;
   const response = await list(bucket, runtime);
   assert.equal(response.status, 200);
@@ -123,7 +123,7 @@ test("F5: after a failed rebuild R2 is left alone for 30 s, then tried again", a
   const bucket = catalogueBucket(2);
   const runtime = { defer: deferred().defer, shared: fakeShared() };
   await list(bucket, runtime);
-  advance(10 * MINUTE);
+  advance(4 * MINUTE);
   bucket.state.fail = true;
   await list(bucket, runtime);
   const afterFailure = bucket.state.lists;
@@ -181,15 +181,15 @@ test("F3: a slower, older build never replaces a newer shared copy", async (t) =
   assert.equal(after.entries.length, 3);
 });
 
-test("F9: a shared copy older than an hour is not used", async (t) => {
+test("F9: a shared copy older than 5 minutes is not used (Slice 436 C1)", async (t) => {
   const advance = moveClock(t, Date.now());
   const shared = fakeShared();
   const first = deferred();
   await list(catalogueBucket(2), { defer: first.defer, shared });
   await Promise.all(first.work);
-  advance(61 * MINUTE);
+  advance(6 * MINUTE);
   const body = await (await list(catalogueBucket(3), { defer: deferred().defer, shared })).json();
-  assert.equal(body.stories.length, 3, "rebuilt from R2, not the hour-old copy");
+  assert.equal(body.stories.length, 3, "rebuilt from R2, not the 6-minute-old copy");
 });
 
 test("F4: with no list ever read a failed rebuild is a 503 that names its cause in the log", async (t) => {
@@ -208,7 +208,7 @@ test("F1: a rebuild past the budget answers with the last good list while it fin
   const later = deferred();
   const runtime = { defer: later.defer, rebuildBudgetMs: 20, shared: fakeShared() };
   const first = await (await list(bucket, runtime)).json();
-  advance(10 * MINUTE);
+  advance(4 * MINUTE);
   bucket.state.delayMs = 300;
   const started = performance.now();
   const body = await (await list(bucket, runtime)).json();

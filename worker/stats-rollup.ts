@@ -73,11 +73,15 @@ export function statsPlatform(platform: unknown, formFactor: unknown): string | 
   return typeof platform === "string" && PLATFORM_IDS.includes(platform) ? platform : null;
 }
 
+// Slice 436 A5: the `sonos` `book_listened` rows written before plays were counted from Sonos's play report hold the owner's tests (every getMediaURI wrote the whole book's length), so the rollup leaves them out. Rows cannot be deleted from the dataset.
+export const SONOS_COUNT_CUTOVER = "2026-11-28 00:00:00";
+const NOT_SONOS_ESTIMATE = `NOT (blob7 = 'sonos' AND blob9 = 'estimated' AND timestamp < toDateTime('${SONOS_COUNT_CUTOVER}'))`;
+
 const WHERE_BY_METRIC: Readonly<Record<MetricName, string>> = {
   [Metric.Downloads]: "blob1 = 'store_download'",
-  [Metric.Listens]: "blob1 = 'book_listened'",
+  [Metric.Listens]: `(blob1 = 'book_listened' AND ${NOT_SONOS_ESTIMATE})`,
   [Metric.Seconds]: "((blob1 IN ('read_paused', 'read_stopped') AND double5 >= 0) OR (blob1 = 'book_listened' AND blob9 = 'reported' AND double5 >= 0))",
-  [Metric.SecondsEstimated]: "(blob1 = 'book_listened' AND blob9 = 'estimated' AND double5 >= 0)",
+  [Metric.SecondsEstimated]: `(blob1 = 'book_listened' AND blob9 = 'estimated' AND double5 >= 0 AND ${NOT_SONOS_ESTIMATE})`,
 };
 
 const VALUE_BY_METRIC: Readonly<Record<MetricName, string>> = {
