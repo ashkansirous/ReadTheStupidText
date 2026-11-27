@@ -77,6 +77,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 454: Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps ([slice](slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md))
+- [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`.
+- [owner] **You:** create the two subscription add-ons in Partner Center: monthly `uk.sirous.dinoreader.sub.monthly` 1.99 GBP and yearly `uk.sirous.dinoreader.sub.yearly` 14.99 GBP, 7-day trial, listing texts from `docs/store-listings/dino/subscription-listings.md`, at https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/addons
+- [session] The Windows app's subscription card reads the two add-ons, after that owner step.
+- [owner] Native read of the machine-written subscription texts (already in unverified.md under Slice 384).
+
+### Slice 447: Dino story skill: true-size line-up script and accepted-page save guard ([slice](slices/447-dino-story-skill-lineup-script-and-save-guard.md))
+- [session] One real Gemini save of an accepted page is refused, and a `-UserAskedRedo` save backs up to the working folder's `previous/`, in the next illustrator run.
+
 ### Slice 455: Dino: buy, restore and subscription outcome events ([slice](slices/455-dino-purchase-outcome-events.md))
 - [phone] S21: the Store card shows `sub_monthly.shown.trial`, and a cancelled buy sends `book.started` then `book.cancelled` with the book GUID (read in `dino_usage_beta` via `analytics-query`).
 - [owner] A real buy, restore and code redemption on iOS TestFlight.

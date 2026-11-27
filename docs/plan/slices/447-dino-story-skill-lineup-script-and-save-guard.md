@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `.claude/skills/create-dino-story/**`, `.claude/agents/dino-story-illustrator.md` (widened by the coordinator after review 2: its save steps pass `-BackupFolder`)
 
-*Built (wave 2026-11-27, PR #1414), not merged; the real Gemini save is not yet verified (see Not yet verified). Planned 2026-11-25, moved out of Slice 350.*
+*Built (wave 2026-11-27), merged as PR #1414 (2317355a); the real Gemini save is not yet verified (see Not yet verified). Planned 2026-11-25, moved out of Slice 350.*
 
 **Why.** Two tooling items left open in Slice 350 (moved out 2026-11-25), both for `.claude/skills/create-dino-story/`.
 
@@ -28,7 +28,7 @@
 - Skipped #6 (`reviews/pr-1414-check.md`): "The backup copy is made before the save is known to succeed." - the same as medium #3, already skipped: an extra backup copy, nothing lost.
 - Skipped #5 (`reviews/pr-1414-medium.md`): "`scale = image.width // WORK_WIDTH` uses integer division." - the scale only sets the detection mask's working size; output heights are computed from the original pixels and tested exactly.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 None.
 
 #### Not yet verified
