@@ -10,14 +10,13 @@ namespace Sirous.Reading.Mobile.Shared.Usage;
 /// <summary>
 /// Whether this build and device count (Slice 167, widened by Slice 179): the facts are read once at start and decided by <see cref="UsageEligibility"/>.
 /// Debug build, an unstamped version, an emulator or simulator (MAUI <c>DeviceType.Virtual</c>), Android emulator and robot signs (build fingerprint,
-/// hardware, model, an Intel process, a monkey), Firebase Test Lab (a setting that cannot be read counts as a test: fail closed), our harnesses'
+/// hardware, model, an Intel process, a monkey), Firebase Test Lab (a setting that cannot be read counts as a test: fail closed) and Android Test Harness Mode (Slice 462; a flag that cannot be read counts as not a harness), our harnesses'
 /// off switch, an iOS build from TestFlight or App Review and a Windows install not signed by the Store do not count. Windows is one head
 /// (Dino Reader's); a real user in a Windows VM with a Store install still counts. Any other fact that cannot be read means the build is not counted.
 /// </summary>
 public static class UsageGate
 {
     private const string TestLabSetting = "firebase.test.lab";
-    private const string TestLabOn = "true";
 
     private static readonly Lazy<UsageFacts?> CachedFacts = new(ReadFacts);
     private static readonly Lazy<UsageSkipReason> Cached = new(Decide);
@@ -77,7 +76,10 @@ public static class UsageGate
         try
         {
             var resolver = Microsoft.Maui.ApplicationModel.Platform.AppContext.ContentResolver;
-            return global::Android.Provider.Settings.System.GetString(resolver, TestLabSetting) == TestLabOn;
+            string? setting = global::Android.Provider.Settings.System.GetString(resolver, TestLabSetting);
+            bool testHarness = IsInUserTestHarness();
+            System.Diagnostics.Debug.WriteLine($"Usage gate (Android): testLabSetting={setting} userTestHarness={testHarness}");
+            return UsageEligibility.IsTestLabDevice(setting, testHarness);
         }
         catch (Exception ex)
         {
@@ -89,6 +91,24 @@ public static class UsageGate
         return false;
 #endif
     }
+
+#if ANDROID
+    // Slice 462: Test Harness Mode is a secondary signal, so a throw here means "not a harness" and real users stay counted (the Test Lab setting read keeps its fail-closed rule).
+    // A fallback count cannot be reported from here: the usage queue asks this gate before it sends, so the call would re-enter the lazy facts being read.
+    private static bool IsInUserTestHarness()
+    {
+        try
+        {
+            return OperatingSystem.IsAndroidVersionAtLeast(29) && global::Android.App.ActivityManager.IsRunningInUserTestHarness; // API 29: ActivityManager.isRunningInUserTestHarness()
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: analytics eligibility only; an unreadable harness flag counts as not a harness, and the usage queue reads this gate, so reporting would loop
+            System.Diagnostics.Debug.WriteLine($"Test Harness flag unreadable, treated as not a harness: {ex.Message}");
+            return false;
+        }
+    }
+#endif
 
     // Slice 179: emulator and robot signs beyond MAUI's DeviceType.Virtual. Real phones run ARM processes; Play's pre-launch robot is an Intel image.
     private static bool IsRobotDevice()

@@ -10,6 +10,7 @@ public enum UsageSkipReason
     DebugBuild,
     UnstampedBuild,
     Emulator,
+    /// <summary>Firebase Test Lab, and (Slice 462) Android Test Harness Mode devices: both log as this reason.</summary>
     TestLab,
     Unreadable,
     TestInstall,
@@ -20,7 +21,7 @@ public enum UsageSkipReason
 /// <param name="IsDebug">True for a debug build.</param>
 /// <param name="DisplayVersion">The version the app reports; CI stamps every shipped build, so the project default means a desk build.</param>
 /// <param name="IsVirtual">True on an emulator or simulator.</param>
-/// <param name="IsTestLab">True on Android Firebase Test Lab (Play's pre-launch report).</param>
+/// <param name="IsTestLab">True on Android Firebase Test Lab (Play's pre-launch report) or in Android Test Harness Mode (Slice 462, <see cref="UsageEligibility.IsTestLabDevice"/>).</param>
 /// <param name="IsTestInstall">True when one of our own test harnesses switched counting off (Slice 179, <see cref="UsageEligibility.NoUsageVariable"/>).</param>
 /// <param name="IsNonStoreInstall">True when the install did not come from the store: a Windows MSIX not signed by the Store, an iOS build from TestFlight or App Review (Slice 179).</param>
 /// <param name="Channel">Where the install came from (Slice 227): only crash reports read it (<see cref="CrashEligibility"/>); usage counts decide on <paramref name="IsNonStoreInstall"/> alone, as before.</param>
@@ -39,6 +40,8 @@ public static class UsageEligibility
     public const string NoUsageMarkerFile = "no-usage";
 
     private const string NoUsageOn = "1";
+
+    private const string TestLabSettingOn = "true";
     private const char VersionSeparator = '.';
     private const int PreReleaseMajor = 0;
 
@@ -62,6 +65,13 @@ public static class UsageEligibility
         || (hardware is not null && Array.Exists(EmulatorHardware, h => string.Equals(h, hardware, StringComparison.OrdinalIgnoreCase)))
         || ContainsAny(model, EmulatorModelParts)
         || ContainsAny(product, EmulatorModelParts);
+
+    /// <summary>
+    /// True when an Android device says it is a test device (Slice 462): Firebase Test Lab's <c>firebase.test.lab</c> setting is "true", or the system is in Test Harness Mode
+    /// (<c>ActivityManager.isRunningInUserTestHarness()</c>, API 29: a device farm such as Play's pre-launch report). Both are platform signals, never a guess from the numbers.
+    /// </summary>
+    public static bool IsTestLabDevice(string? testLabSetting, bool inUserTestHarness) =>
+        inUserTestHarness || string.Equals(testLabSetting, TestLabSettingOn, StringComparison.Ordinal);
 
     private static bool ContainsAny(string? text, string[] parts) =>
         text is not null && Array.Exists(parts, part => text.Contains(part, StringComparison.OrdinalIgnoreCase));
