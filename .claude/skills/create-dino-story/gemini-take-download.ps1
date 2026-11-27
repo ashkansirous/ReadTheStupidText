@@ -16,16 +16,20 @@ param(
   [int]$WaitSeconds = 30,
   [long[]]$Bytes = @(),
   [switch]$Untouched,
-  [int]$FreshSeconds = 120   # how old a download may be; gemini-step.ps1 collect raises it for a recovery that spans minutes
+  [switch]$UserAskedRedo,   # Slice 447: only when the user named this page; without it a page on art.md's "## Accepted by the user" list is refused
+  [int]$FreshSeconds = 120,   # how old a download may be; gemini-step.ps1 collect raises it for a recovery that spans minutes
+  [string]$BackupFolder = '',   # Slice 447: where a replaced picture is copied (the working folder's previous/); see Get-BackupFolder in accepted-pages.ps1 for the default
+  [string]$DownloadsFolder = ''   # tests point this at an empty temp folder; default is the user's Downloads
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 . (Join-Path $PSScriptRoot '..\..\..\tools\dino\picture-review-copy.ps1')   # New-ReviewCopy, the one resize function (Slice 375)
+. (Join-Path $PSScriptRoot 'accepted-pages.ps1')   # Assert-NotAccepted, Backup-ReplacedFiles (Slice 447)
 
 $saveQuality = 95L
 $freshSeconds = $FreshSeconds
-$downloads = Join-Path $env:USERPROFILE 'Downloads'
+$downloads = if ($DownloadsFolder) { $DownloadsFolder } else { Join-Path $env:USERPROFILE 'Downloads' }
 $namePattern = 'Gemini_Generated_Image_*'
 $failedFolder = Join-Path $downloads '.gemini-failed'
 
@@ -52,7 +56,7 @@ function Wait-ForDownload {
 function Save-AsJpeg([System.IO.FileInfo]$source, [string]$file) {
   $picture = [System.Drawing.Image]::FromFile($source.FullName)
   try {
-    $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }
+    $encoder =[System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }
     $parameters = [System.Drawing.Imaging.EncoderParameters]::new(1)
     $parameters.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, $saveQuality)
     $picture.Save($file, $encoder, $parameters)
@@ -89,14 +93,43 @@ function Assert-NameFree([string]$file) {
 
 function Save-Untouched([System.IO.FileInfo]$source, [string]$file) {
   $final = [System.IO.Path]::ChangeExtension($file, $source.Extension.ToLowerInvariant())
-  Assert-NameFree $file
+  if (-not $UserAskedRedo) { Assert-NameFree $file }
   $picture = [System.Drawing.Image]::FromFile($source.FullName)
   try { $width = $picture.Width; $height = $picture.Height }
   finally { $picture.Dispose() }
-  Move-Item -LiteralPath $source.FullName -Destination $final
+  Move-IntoPlace $source $final
+  Remove-OtherExtensionOriginals $file $final
   Write-Host "Saved $final (${width}x${height}, $($source.Length) bytes, untouched) from $($source.Name)"
   Write-SizeWarning $final $width $height
   Write-SmallCopy $final
+}
+
+# Slice 447: a picture this save replaces is copied to the backup folder (the working folder's previous/) first.
+function Backup-BeforeReplace([string]$file) {
+  $script:backedUp = @(Backup-ReplacedFiles $file $BackupFolder)
+  foreach ($copy in $script:backedUp) { Write-Host "Previous picture kept at $copy" }
+}
+
+# The download is first moved to a temp name beside the target, then replaces the same-extension original in one -Force move, so a
+# failure at either step leaves the page's picture as it was. If the second move fails the download goes back to where it was.
+function Move-IntoPlace([System.IO.FileInfo]$source, [string]$final) {
+  $temp = "$final.new-$([guid]::NewGuid().ToString('N'))"
+  Move-Item -LiteralPath $source.FullName -Destination $temp
+  try { Move-Item -LiteralPath $temp -Destination $final -Force }
+  catch {
+    Move-Item -LiteralPath $temp -Destination $source.FullName -Force -ErrorAction SilentlyContinue
+    throw
+  }
+}
+
+# With -Untouched the extension may change: originals under another extension go only after the new picture is in place.
+function Remove-OtherExtensionOriginals([string]$file, [string]$final) {
+  $folder = [System.IO.Path]::GetDirectoryName($file)
+  $name = [System.IO.Path]::GetFileNameWithoutExtension($file)
+  foreach ($ext in '.jpg', '.jpeg', '.png') {
+    $old = Join-Path $folder "$name$ext"
+    if ($old -ne $final) { Remove-Item -LiteralPath $old -ErrorAction SilentlyContinue }
+  }
 }
 
 function Move-ToFailedFolder([System.IO.FileInfo]$source) {
@@ -107,8 +140,11 @@ function Move-ToFailedFolder([System.IO.FileInfo]$source) {
 }
 
 $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
-if ($Untouched) { Assert-NameFree $target }
+Assert-NotAccepted $target $UserAskedRedo.IsPresent   # throws before anything is touched: exit 1, the file unchanged
+Assert-BackupFolder $target $BackupFolder   # book content needs -BackupFolder <working folder>/previous: exit 1 before anything is touched
+if ($Untouched -and -not $UserAskedRedo) { Assert-NameFree $target }
 $original = Wait-ForDownload
+Backup-BeforeReplace $target
 $download = Move-ToFailedFolder $original
 $script:smallCopyFailed = $false
 try { if ($Untouched) { Save-Untouched $download $target } else { Save-AsJpeg $download $target } }
@@ -116,7 +152,8 @@ catch {
   $restored = Join-Path $downloads $original.Name
   try { Move-Item -LiteralPath $download.FullName -Destination $restored -Force -ErrorAction Stop; $where = $restored }
   catch { $where = $download.FullName }
-  throw "Saving $target failed ($($_.Exception.Message)); the picture is at $where"
+  $kept = if ($script:backedUp.Count) { "; the replaced picture is copied at $($script:backedUp -join ', ')" } else { '' }
+  throw "Saving $target failed ($($_.Exception.Message)); the picture is at $where$kept"
 }
 if (-not $Untouched) { Remove-Item -LiteralPath $download.FullName }
 if ($script:smallCopyFailed) { Write-Host "SAVED $script:savedPath; small copy failed: $script:smallCopyReason"; exit 2 }
