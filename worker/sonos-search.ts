@@ -1,5 +1,5 @@
 // Slice 440: search on Sonos. Pure: no I/O. Two categories, "Stories" (titles in the current story language) and "All languages"
-// (every title in every language, the language's name in the subtitle). The matching ignores case and accents (`Intl.Collator` base sensitivity).
+// (every title in every language, the language's name in the subtitle). The matching ignores case and accents (`Intl.Collator`, accent sensitivity: Japanese dakuten still count).
 
 import { sortAlphabetically } from "./sonos-shelves.ts";
 import type { Track } from "./sonos.ts";
@@ -11,10 +11,16 @@ export type SearchCategoryId = (typeof SearchCategory)[keyof typeof SearchCatego
 
 const FALLBACK_LANGUAGE = "en";
 const MAX_TERM_LENGTH = 64;
-const COMBINING_MARKS = /\p{M}/gu;
+// Every combining mark except the Japanese dakuten and handakuten (U+3099, U+309A): they make a different kana (が is not か).
+const COMBINING_MARKS = /(?![゙゚])\p{M}/gu;
 // Letters Persian keyboards and Arabic ones write differently, and the zero-width joiner that only changes how a word is drawn.
 const PERSIAN_FOLDS: ReadonlyArray<readonly [RegExp, string]> = [[/ي/g, "ی"], [/ى/g, "ی"], [/ك/g, "ک"], [/[‌‍]/g, ""]];
-const BASE_COLLATOR = new Intl.Collator(undefined, { sensitivity: "base" });
+// Letters that fold to two (German sharp s, Norwegian and Danish ae, oe ligatures) and the invisible soft hyphen and zero-width space, so equal-length windows line up.
+const EXPANDING_FOLDS: ReadonlyArray<readonly [RegExp, string]> = [[/[ßẞ]/g, "ss"], [/[æÆ]/g, "ae"], [/[œŒ]/g, "oe"], [/[­​]/g, ""],
+  // Letters with no Unicode decomposition (Danish and Norwegian ø) fold to their base letter; the Arabic tatweel (U+0640) only stretches a word and is removed.
+  [/[øØ]/g, "o"], [/[đĐð]/g, "d"], [/[łŁ]/g, "l"], [/[ħĦ]/g, "h"], [/ı/g, "i"], [/ـ/g, ""]];
+// "accent" ignores case but keeps the kana marks ("base" would make が equal か); Latin accents are already folded away.
+const MATCH_COLLATOR = new Intl.Collator("en", { sensitivity: "accent" });
 
 /** The two category names in the 15 app languages (the same words as `site/dino/sonos/strings.xml`). */
 const CATEGORY_NAMES: Readonly<Record<string, Readonly<Record<SearchCategoryId, string>>>> = {
@@ -55,23 +61,26 @@ export function searchCategories(label: string): CategoryRow[] {
 
 /** Lower-cased words are not enough: marks are stripped (é to e), Persian letter variants are unified, spaces are collapsed. */
 export function foldText(text: string): string {
-  let folded = text.normalize("NFKD").replace(COMBINING_MARKS, "");
+  // NFC at the end puts the kept kana marks back onto their kana, so が stays one character.
+  let folded = text.normalize("NFKD").replace(COMBINING_MARKS, "").normalize("NFC");
+  for (const [pattern, replacement] of EXPANDING_FOLDS) folded = folded.replace(pattern, replacement);
   for (const [pattern, replacement] of PERSIAN_FOLDS) folded = folded.replace(pattern, replacement);
   return folded.replace(/\s+/g, " ").trim();
 }
 
-/** The term as it is matched: folded and cut to a sane length; empty when nothing is left. */
+/** The term as it is matched: cut to a sane length by whole characters (before folding, so a body-cap term is not folded in full), folded, cut again and trimmed; empty when nothing is left. */
 export function cleanTerm(term: string | null): string {
-  return foldText(term ?? "").slice(0, MAX_TERM_LENGTH);
+  const cut = (text: string): string => Array.from(text).slice(0, MAX_TERM_LENGTH).join("");
+  return cut(foldText(cut(term ?? ""))).trim();
 }
 
-/** True when `text` holds `term` anywhere, comparing equal-length windows with the base-sensitivity collator. */
+/** True when `text` holds `term` anywhere, comparing equal-length windows with the accent-sensitivity collator. */
 export function matchesTerm(text: string, term: string): boolean {
   const wanted = Array.from(cleanTerm(term));
   if (wanted.length === 0) return false;
   const have = Array.from(foldText(text));
   for (let start = 0; start + wanted.length <= have.length; start += 1) {
-    if (BASE_COLLATOR.compare(have.slice(start, start + wanted.length).join(""), wanted.join("")) === 0) return true;
+    if (MATCH_COLLATOR.compare(have.slice(start, start + wanted.length).join(""), wanted.join("")) === 0) return true;
   }
   return false;
 }

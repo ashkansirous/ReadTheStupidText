@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 
 import { serveObject } from "./downloads.ts";
 import { handleSonos } from "./sonos.ts";
@@ -55,7 +56,39 @@ test("the matcher ignores case, accents and Persian letter variants", () => {
   assert.equal(matchesTerm("Goats", "wolf"), false);
   assert.equal(matchesTerm("Goats", "   "), false);
   assert.equal(foldText("  É  a "), "E a");
+  assert.equal(matchesTerm("がっこう", "か"), false);
+  assert.equal(matchesTerm("はな", "ぱ"), false);
+  assert.equal(matchesTerm("ばなな", "ば"), true);
+  assert.equal(matchesTerm("ぱん", "は"), false);
   assert.equal(cleanTerm(null), "");
+});
+
+test("letters that fold to a different length still match (review finding 1)", () => {
+  assert.equal(matchesTerm("Straße", "strasse"), true);
+  assert.equal(matchesTerm("Strasse", "straße"), true);
+  assert.equal(matchesTerm("Æsop", "aesop"), true);
+  assert.equal(matchesTerm("Aesop", "æsop"), true);
+  assert.equal(matchesTerm("Cœur", "coeur"), true);
+  assert.equal(matchesTerm("Zie­gen", "ziegen"), true);
+  assert.equal(matchesTerm("Zie​gen", "ziegen"), true);
+});
+
+test("letters with no decomposition and the Arabic tatweel fold (check finding 1, 2, 3)", () => {
+  assert.equal(matchesTerm("Bjørn", "bjorn"), true);
+  assert.equal(matchesTerm("Bjorn", "BJØRN"), true);
+  assert.equal(matchesTerm("Łódź", "lodz"), true);
+  assert.equal(matchesTerm("كتـاب", "كتاب"), true);
+  assert.equal(matchesTerm("كتاب", "كتـاب"), true);
+  assert.equal(matchesTerm("がっこう", "か"), false);
+});
+
+test("a long term is cut by whole characters and trimmed (review finding 6)", () => {
+  const long = `${"a".repeat(63)}😀`;
+  assert.equal(Array.from(cleanTerm(long)).length, 64);
+  assert.equal(cleanTerm(long).endsWith("😀"), true);
+  assert.equal(cleanTerm(`${"a".repeat(63)} b`), "a".repeat(63));
+  assert.equal(Array.from(cleanTerm("😀".repeat(100))).length, 64);
+  assert.equal(cleanTerm("x".repeat(100000)).length, 64);
 });
 
 test("the categories are named in every label language and match the strings file", () => {
@@ -63,7 +96,18 @@ test("the categories are named in every label language and match the strings fil
   assert.deepEqual(searchCategories("de").map((c) => c.id), ["stories", "all-languages"]);
   assert.equal(searchCategories("xx")[0].name, "Stories");
   const strings = readFileSync(new URL("../site/dino/sonos/strings.xml", import.meta.url), "utf8");
-  for (const code of SEARCH_LANGUAGES) for (const category of searchCategories(code)) assert.ok(strings.includes(`<stringtext language="${code}">${category.name}</stringtext>`), `${code} ${category.id}`);
+  // Sonos accepts only these locales (docs.sonos.com/docs/localization); ar, fa, fi and ru are named by the Worker only.
+  const sonosLocales = { da: "da-DK", de: "de-DE", en: "en-US", es: "es-ES", fr: "fr-FR", ja: "ja-JP", nb: "nb-NO", nl: "nl-NL", pt: "pt-BR", sv: "sv-SE", zh: "zh-CN" };
+  const desktopOnly = ["ar", "fa", "fi", "ru"];
+  for (const code of SEARCH_LANGUAGES) assert.ok(code in sonosLocales || desktopOnly.includes(code), `${code} is in strings.xml or listed as desktop-only`);
+  const stringIds = { stories: "Stories", "all-languages": "AllLanguages" };
+  for (const [code, locale] of Object.entries(sonosLocales)) {
+    const from = strings.indexOf(`xml:lang="${locale}"`);
+    const until = strings.indexOf("</stringtable>", from);
+    assert.ok(from >= 0 && until > from, `${locale} table`);
+    const table = strings.slice(from, until);
+    for (const category of searchCategories(code)) assert.ok(table.includes(`<string stringId="${stringIds[category.id]}">${category.name}</string>`), `${code} ${category.id}`);
+  }
   const map = readFileSync(new URL("../site/dino/sonos/presentation-map.xml", import.meta.url), "utf8");
   assert.match(map, /mappedId="stories"/);
   assert.match(map, /mappedId="all-languages"/);
@@ -121,6 +165,69 @@ test("the search container lists the two categories as search items, in the phon
   assert.match(text, /<total>2<\/total>/);
   assert.match(text, /<id>stories<\/id><title>Geschichten<\/title><itemType>search<\/itemType>/);
   assert.match(text, /<id>all-languages<\/id><title>Alle Sprachen<\/title><itemType>search<\/itemType>/);
+});
+
+test("with no Accept-Language header search answers in English and Stories looks in the catalogue's first language (review finding 2)", async () => {
+  const soap = (inner) => `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>${inner}</s:Body></s:Envelope>`;
+  const send = async (inner) => (await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: soap(inner) }), env(), "", serveObject)).text();
+  const container = await send(`<ns:getMetadata xmlns:ns="${NS}"><ns:id>search</ns:id><ns:index>0</ns:index><ns:count>100</ns:count></ns:getMetadata>`);
+  assert.match(container, /<id>stories<\/id><title>Stories<\/title>/);
+  assert.match(container, /<id>all-languages<\/id><title>All languages<\/title>/);
+  const found = await send(`<ns:search xmlns:ns="${NS}"><ns:id>stories</ns:id><ns:term>ziegenbock</ns:term></ns:search>`);
+  assert.deepEqual(titles(found), ["Die drei Ziegenböcke"]);
+});
+
+// A D1Database over node:sqlite, as sonos-link.test.mjs builds it (only what the link flow calls).
+function fakeD1() {
+  const sqlite = new DatabaseSync(":memory:");
+  sqlite.exec(readFileSync(new URL("./schema/sonos-homes.sql", import.meta.url), "utf8"));
+  const statement = (sql, args = []) => ({
+    bind: (...values) => statement(sql, values),
+    first: async () => sqlite.prepare(sql).get(...args) ?? null,
+    all: async () => ({ results: sqlite.prepare(sql).all(...args) }),
+    run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...args).changes) } }),
+  });
+  return {
+    prepare: (sql) => statement(sql),
+    async batch(statements) {
+      sqlite.exec("BEGIN");
+      try {
+        const results = [];
+        for (const item of statements) results.push(await item.run());
+        sqlite.exec("COMMIT");
+        return results;
+      } catch (error) {
+        sqlite.exec("ROLLBACK");
+        throw error;
+      }
+    },
+  };
+}
+
+test("a linked home's Stories search looks in its saved language, worded in the phone's, and a paid book shows 'In the Dino app' (review finding 3)", async () => {
+  const paidBook = { schemaVersion: 1, title: "Paid Tale", language: "en", version: 2, added: "2026-11-03", access: "paid", titles: { fa: "قصه پولی" }, audio: { en: { version: 3, bytes: 5, listenSeconds: 420 }, fa: { version: 3, bytes: 5, listenSeconds: 420 } } };
+  const ID_P = "7d0e5a4e000040008000000000000009";
+  const store = { DOWNLOADS: bucketOf([...files(ID_A, goats, ["en", "fa", "de"]), ...files(ID_P, paidBook, ["en", "fa"])]) };
+  const links = { db: fakeD1(), now: () => 1_800_000_000_000 };
+  const send = async (inner, login = null, language = "en") => {
+    const header = login === null ? "" : `<s:Header><credentials xmlns="${NS}"><loginToken><token>${login.token}</token><key>${login.key}</key><householdId>HOME_ONE</householdId></loginToken><deviceId>XX</deviceId></credentials></s:Header>`;
+    const body = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">${header}<s:Body>${inner}</s:Body></s:Envelope>`;
+    return (await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body, headers: { "Accept-Language": language } }), store, "", serveObject, undefined, undefined, links)).text();
+  };
+  const linkText = await send(`<ns:getAppLink xmlns:ns="${NS}"><ns:householdId>HOME_ONE</ns:householdId><ns:callbackPath>sonos://sonos.com/applink?state=S</ns:callbackPath></ns:getAppLink>`);
+  const code = /<linkCode>([^<]*)<\/linkCode>/.exec(linkText)[1];
+  const confirmed = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: JSON.stringify({ op: "confirm", code, language: "fa" }), headers: { "Content-Type": "application/json" } }), store, "", serveObject, undefined, undefined, links);
+  assert.equal(confirmed.status, 200);
+  const tokens = await send(`<ns:getDeviceAuthToken xmlns:ns="${NS}"><ns:householdId>HOME_ONE</ns:householdId><ns:linkCode>${code}</ns:linkCode></ns:getDeviceAuthToken>`);
+  const login = { token: /<authToken>([^<]*)<\/authToken>/.exec(tokens)[1], key: /<privateKey>([^<]*)<\/privateKey>/.exec(tokens)[1] };
+  const stories = await send(`<ns:search xmlns:ns="${NS}"><ns:id>stories</ns:id><ns:term>بز</ns:term></ns:search>`, login);
+  assert.deepEqual(titles(stories), ["سه بز کوهی"]);
+  assert.match(stories, /<album>[^<]*Free/, "the subtitle is in the phone's words (English)");
+  const paid = await send(`<ns:search xmlns:ns="${NS}"><ns:id>stories</ns:id><ns:term>قصه</ns:term></ns:search>`, login);
+  assert.deepEqual(titles(paid), ["قصه پولی"]);
+  assert.match(paid, /<album>[^<]*In the Dino app/);
+  const english = await send(`<ns:search xmlns:ns="${NS}"><ns:id>stories</ns:id><ns:term>goat</ns:term></ns:search>`, login);
+  assert.deepEqual(titles(english), [], "an English title is not found in the Farsi Stories category");
 });
 
 test("searchTracks gives nothing for a blank term", () => {

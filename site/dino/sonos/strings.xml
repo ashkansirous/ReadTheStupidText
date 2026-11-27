@@ -1,37 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<stringtable xmlns="http://sonos.com/sonosapi">
-  <string stringId="Stories">
-      <stringtext language="ar">القصص</stringtext>
-      <stringtext language="da">Historier</stringtext>
-      <stringtext language="de">Geschichten</stringtext>
-      <stringtext language="en">Stories</stringtext>
-      <stringtext language="es">Cuentos</stringtext>
-      <stringtext language="fa">داستان‌ها</stringtext>
-      <stringtext language="fi">Tarinat</stringtext>
-      <stringtext language="fr">Histoires</stringtext>
-      <stringtext language="ja">お話</stringtext>
-      <stringtext language="nb">Historier</stringtext>
-      <stringtext language="nl">Verhalen</stringtext>
-      <stringtext language="pt">Histórias</stringtext>
-      <stringtext language="ru">Истории</stringtext>
-      <stringtext language="sv">Berättelser</stringtext>
-      <stringtext language="zh">故事</stringtext>
-  </string>
-  <string stringId="AllLanguages">
-      <stringtext language="ar">كل اللغات</stringtext>
-      <stringtext language="da">Alle sprog</stringtext>
-      <stringtext language="de">Alle Sprachen</stringtext>
-      <stringtext language="en">All languages</stringtext>
-      <stringtext language="es">Todos los idiomas</stringtext>
-      <stringtext language="fa">همه‌ی زبان‌ها</stringtext>
-      <stringtext language="fi">Kaikki kielet</stringtext>
-      <stringtext language="fr">Toutes les langues</stringtext>
-      <stringtext language="ja">すべての言語</stringtext>
-      <stringtext language="nb">Alle språk</stringtext>
-      <stringtext language="nl">Alle talen</stringtext>
-      <stringtext language="pt">Todos os idiomas</stringtext>
-      <stringtext language="ru">Все языки</stringtext>
-      <stringtext language="sv">Alla språk</stringtext>
-      <stringtext language="zh">所有语言</stringtext>
-  </string>
-</stringtable>
+<!-- Slice 440 D1: legacy Sonos string table shape (stringtables > stringtable xml:lang > string stringId), only the locales
+     docs.sonos.com/docs/localization lists. ar, fa, fi and ru are not Sonos locales: the Worker still names the categories in them
+     for desktop apps (getMetadata), and Sonos shows the English table for them. -->
+<stringtables xmlns="http://sonos.com/sonosapi">
+  <stringtable rev="1" xml:lang="da-DK">
+    <string stringId="Stories">Historier</string>
+    <string stringId="AllLanguages">Alle sprog</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="de-DE">
+    <string stringId="Stories">Geschichten</string>
+    <string stringId="AllLanguages">Alle Sprachen</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="en-US">
+    <string stringId="Stories">Stories</string>
+    <string stringId="AllLanguages">All languages</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="es-ES">
+    <string stringId="Stories">Cuentos</string>
+    <string stringId="AllLanguages">Todos los idiomas</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="fr-FR">
+    <string stringId="Stories">Histoires</string>
+    <string stringId="AllLanguages">Toutes les langues</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="ja-JP">
+    <string stringId="Stories">お話</string>
+    <string stringId="AllLanguages">すべての言語</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="nb-NO">
+    <string stringId="Stories">Historier</string>
+    <string stringId="AllLanguages">Alle språk</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="nl-NL">
+    <string stringId="Stories">Verhalen</string>
+    <string stringId="AllLanguages">Alle talen</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="pt-BR">
+    <string stringId="Stories">Histórias</string>
+    <string stringId="AllLanguages">Todos os idiomas</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="sv-SE">
+    <string stringId="Stories">Berättelser</string>
+    <string stringId="AllLanguages">Alla språk</string>
+  </stringtable>
+  <stringtable rev="1" xml:lang="zh-CN">
+    <string stringId="Stories">故事</string>
+    <string stringId="AllLanguages">所有语言</string>
+  </stringtable>
+</stringtables>
