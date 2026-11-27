@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (406 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (425 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 ### Read The Stupid Text
 
@@ -125,12 +125,11 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 - Slice 283, Sonos: closed 2026-11-25; the user played it on their Sonos on 2026-11-24, never ask for a play again. The fixes are Slices 436-440; the Self Test rerun, Sonos developer case 09396143 and the production submission are Slice 438 item B9 ([case](https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos); [slice](docs/plan/slices/283-dino-sonos-music-service.md), *Progress 2026-11-19*).
 - Slice 282, Alexa (code merged, #935): the 2026-11-20 park date has passed and `ALEXA_SKILL_ID` is still empty in `wrangler.jsonc` and `wrangler.workers-dev.jsonc`, so `POST https://dinoreader.sirous.uk/alexa` returns 400 (read 2026-11-25). The user's last word was 2026-11-19: "I have problems with amazon developer. park until tomorrow"; nothing since. Owner step: the free Amazon developer account at https://developer.amazon.com/alexa/console/ask and one ASK CLI login; Claude does the rest ([slice](docs/plan/slices/282-dino-alexa-kid-skill.md)).
-- Slice 350 closed 2026-11-24; its tooling side findings (the "says the <name>" attribution, the line-up script and the accepted-page save guard) are Slices 446 and 447 ([slice](docs/plan/slices/350-dino-high-res-pictures.md)).
-- 132 of the unverified checks are tagged **You** (Read The Stupid Text 6, Dino Reader 87, Shared 39) in [docs/plan/unverified.md](docs/plan/unverified.md); they block nothing.
+- 148 of the unverified checks are tagged **You** (Read The Stupid Text 6, Dino Reader 103, Shared 39) in [docs/plan/unverified.md](docs/plan/unverified.md); they block nothing.
 
+- Slice 350 closed 2026-11-24; its tooling side findings (the "says the <name>" attribution, the line-up script and the accepted-page save guard) are Slice 446 (built, PR #1396) and Slice 447 (planned) ([slice](docs/plan/slices/350-dino-high-res-pictures.md)).
 - **Crashes:** Dino store-tap crash is Slice 394 (built, PR #1249, not yet verified) and the stream-close crash is Slice 400 (built, PR #1240; item 3, the iOS scene-update 10 s block, still open) ([Slice 400](docs/plan/slices/400-dino-crashes-2026-11-14.md)). Re-read the crash store before quoting counts: `node tools/crashes/pull-crashes.mjs` (see `tools/CLAUDE.md`). Windows Store crash data is still not read: its `AZURE_AD_*` credentials exist only as GitHub Actions secrets (Slice 311).
 - **Leftover Gemini downloads (Claude's, from the 2026-11-14 feedback loop):** 204 `Gemini_Generated_Image_*.jpg` remain in `~/Downloads` (count read 2026-11-25). Move those already saved into book folders to the scratchpad `previous/` folder, never delete unsaved tries; check: `ls ~/Downloads | grep -c Gemini_Generated` ([note](docs/plan/notes/2026-11-14-feedback-loop.md)).
-- Slice 395 is built and merged (PR #1233) with part takes switched off; part takes are Slice 443, which can start. Nothing waits on the user ([slice](docs/plan/slices/395-dino-record-only-the-characters-words.md)). Keep `D:/ReadTheStupidText-worktrees/reviews/pr-1233-*` until Slice 443 copies their findings.
 - Slice 343 (Claude's work, unparked): build the pair-only comma in `FarsiEzafe.Apply` for «صبح یک», «روز صبح», «دفتر خرید» ([slice](docs/plan/slices/343-four-farsi-voices.md)).
 - **Secrets README wording (tooling in `D:/secrets`, not this repo's slice):** row 141 of `D:/secrets/README.md` for `CF_WORKER_DEPLOY_HOOK_URL` still says "planned release workflow step (Slice 354 item 18)"; change it to "called by `batch-release.mjs release` (ClaudeSkills)" (line 147 already says so).
 - **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
