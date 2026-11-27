@@ -291,6 +291,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 434 | Dino: Microsoft Store 1920 x 1080 shots and the landscape video (Play YouTube link, Store trailer) | built (shots on main, PR #1341; trailer, Partner Center push and Play video link moved to Slice 445) | #1341 | | [434-dino-windows-store-shots-and-landscape-video.md](../slices/434-dino-windows-store-shots-and-landscape-video.md) |
 | 409 | Dino: the store upload only uploads (listening tracks built on the PC, the slice that changes old books ships them; audio-pack step 30 min for one book) | built, closed 2026-11-25 (240 tracks committed; release run: audio-pack step 25 s, no ffmpeg install, all 16 books list listenSeconds in 15 languages) | #1358 | | [409-dino-store-ffmpeg-install.md](../slices/409-dino-store-ffmpeg-install.md) |
 | 433 | Dino: store screenshots in a new look, App Store preview videos, Play feature graphic | built, closed 2026-11-25 (Play live and read back in 17 languages; App Store sets and previews on 1.136.5, WAITING_FOR_REVIEW) | #1342 | | [433-dino-store-screenshots-video-play-appstore.md](../slices/433-dino-store-screenshots-video-play-appstore.md) |
+| 457 | Dino Alexa: finds a book by any part of its name, lists every book, plays only what it can, and keeps favourites | built (owner real-Echo checks in unverified.md) | #1377, #1379, #1381, #1384 | | [457-dino-alexa-find-list-favourites.md](../slices/457-dino-alexa-find-list-favourites.md) |
 
 ## Shared
 

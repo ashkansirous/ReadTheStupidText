@@ -77,6 +77,30 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 431: Dino: the story skill reports its steps to the agent board, with process keys ([slice](slices/431-dino-story-board-steps.md))
+- [session] Item C: one real book run, read back with `get_item` on the board (steps, process keys, the owner-read wait).
+
+### Slice 463: Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background ([slice](slices/463-dino-quick-first-book-package-for-slow-internet.md))
+- [owner] **You:** pick the quick package's picture size and audio bitrate (quick 448x600 / AAC 24 kb/s mono vs standard, four free books, en and de) | the side-by-side page is made by an interactive session; no link yet
+
+### Slice 457: Dino Alexa: finds a book by any part of its name, lists every book, plays only what it can, and keeps favourites ([slice](slices/457-dino-alexa-find-list-favourites.md))
+- [owner] **You:** on your Echo: "Alexa, open Dino Books", then "yes", "no", "search", "goldylock", "the lion", "add this to my favourites", "play my favourites" | no link (a real Echo)
+- [owner] **You:** on your Echo: the end-of-story clip pacing by ear | no link (a real Echo)
+- [owner] **You:** on your Echo: saving a favourite mid-story ("Alexa, ask Dino Books to save this story") and the story carries on | no link (a real Echo)
+- [owner] **You:** on your Echo: "Alexa, repeat" and "Alexa, next" (a random other story, decision 17) during and after the clip; whether "Alexa, next story" without the skill name reaches the skill while audio plays (Amazon routes it, not the model) | no link (a real Echo)
+
+### Slice 440: Dino: search on Sonos, "Stories" and "All languages" ([slice](slices/440-dino-sonos-search.md))
+- [owner] **You:** set the presentation map URL and version once 440 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
+
+### Slice 438: Dino: every Sonos home links once through the Dino app and saves its story language ([slice](slices/438-dino-sonos-link-story-language.md))
+- [owner] **You:** switch the Sonos integration's auth to AppLink once 438 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
+
+### Slice 436: Dino: Sonos counts only real plays and shows new books quickly ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
+- [owner] **You:** set the Sonos Reporting Endpoint to the A2 URL (item A4) | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (the integration page link is not recorded yet; the open case is https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
+
+### Slice 435: Dino: a YouTube channel with the four free books as read-aloud videos in 15 languages ([slice](slices/435-dino-youtube-read-aloud-channel.md))
+- [owner] **You:** grant YouTube upload to the Dino channel | sign in as the channel owner at https://console.cloud.google.com/auth/overview?project=dino-reader, then run the uploader's one-time sign-in the slice's script prints
+
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
 - [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again.
 

@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `worker/alexa.ts`, `worker/alexa*.test.mjs`, `worker/alexa-favourites.ts` (new), `worker/index.ts` (passes the paid-books switch), `worker/schema/stats.sql` (the favourites table), `alexa/skill-package/interactionModels/custom/en-US.json`, `alexa/skill-package/interactionModels/custom/en-GB.json`, `tools/dino/alexa-book-names.mjs` (new), `PRIVACY.md`, `site/dino/privacy.html`, `site/dino/alexa-clips/*.m4a` (new, the end-of-story clips), `worker/object-path.ts` (new, shared path helper), this slice file.
 
-*Built 2026-11-26 (items 1-5 and 7), not merged; items 6 (post-deploy simulation) and 8 (live D1 table) open, favourites are not available until item 8 is done. Not yet verified on an Echo. Planned from the owner's first real-Echo test of the Slice 282 skill.*
+*Built 2026-11-26 (items 1-11), merged as PRs #1377, #1379, #1381 and #1384 (state MERGED, read 2026-11-27). Not yet verified on an Echo (the owner's real-Echo checks are in `docs/plan/unverified.md`). Planned from the owner's first real-Echo test of the Slice 282 skill.*
 
 ## Why
 

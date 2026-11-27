@@ -1,9 +1,9 @@
 ### Slice 431 — Dino: the story skill reports its steps to the agent board, with process keys
 **Product:** Dino
 
-*Planned.* **Starts after:** agent-progress-board Slice 55 (a start condition; the slice has not started). Needs process keys and step counts in the installed agent-board plugin.
+*Planned.* The start condition is met: agent-progress-board Slice 55 (process keys and step counts in the agent-board plugin) merged as PR #209 and has been live since 2026-11-25 (stated in the Start pass brief of 2026-11-27; not re-read in that repo).
 
-*Plan-cleanup check 2026-11-25:* Slice 55 is still `planned (needs 54)` on agent-progress-board `origin/main` (plan.md row 55); `git grep process_key` finds nothing in its plugin; no `report_progress`, `under_step` or `story/` key exists in `.claude/` here. A-C are unbuilt and the claims hold. Verdict: keep open, not started; nothing to move out.
+*Plan-cleanup check 2026-11-25:* `git grep process_key` found nothing in the plugin then; no `report_progress`, `under_step` or `story/` key exists in `.claude/` here. A-C are unbuilt and the claims hold. Verdict: keep open, not started; nothing to move out.
 
 **Touches:** `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-writer.md`,
 `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `.claude/agents/farsi-review.md`,
@@ -45,3 +45,7 @@ From the approved answers (2026-11-22):
 
 - Live: the next new Dino book's card on the board shows every step with its process key, the owner-read step as
   waiting on the owner until approved, and `story/translate` starting after it.
+
+## Not yet verified
+
+- Item C: one real book run, read back with `get_item` on the board (steps, process keys, the owner-read wait).

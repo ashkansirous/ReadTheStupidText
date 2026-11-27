@@ -49,6 +49,7 @@ Facts on origin/main (2026-11-24): the Worker's only database is D1 `STATS` (`di
   you own".
 - Slice 415 decisions 4 and 5 stay: one Sonos home per subscription, a new home replaces the old link.
 - Owner's brief: the privacy and listing wording is shown to the owner before this slice ships (B8).
+- **Decision (Start pass 2026-11-27, obvious choice):** item B8 writes the privacy and listing wording and ships it with the slice; there is no separate show-the-owner round (the owner's standing rule: no review round they did not ask for). This replaces the brief line above.
 
 ## Design
 
