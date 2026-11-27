@@ -1,7 +1,7 @@
 # Slice 395 — Dino: recording a character shows and replaces only that character's words, not the narration around them
 **Product:** Dino
 
-*Built (wave 2026-11-27, night 2026-11-27-0154 wave 1), draft PR #1233 (resumed; origin/main merged in), not merged. Items 1, 2, 4 (cards and counts), 5 and 6 are built; item 3 and part-take playback are Slice 443's.*
+*Merged as PR #1233 (4c4f5865). Built (wave 2026-11-27, night 2026-11-27-0154 wave 1). Items 1, 2, 4 (cards and counts), 5 and 6 are built; item 3 and part-take playback are Slice 443's.*
 
 *Part takes ship switched off (`PartTakes.Enabled = false`); Slice 443 turns the switch on together with playback.*
 
@@ -77,7 +77,7 @@ The same holds for every character in every book.
 - Medium #7 (`RecordSplitBook.cs:138`, `WithTranslatedText` dereferencing `s.Parts!`) is marked Fixed in the findings file's Outcome.
 - Medium #1 and #2 applied: `FileStoryLibrary` adopts part files only while `PartTakes.Enabled`; `StoryRecordings.Count`, `PagesRecorded` ignore part clips while it is off (`CountStored` keeps them for the schema mark and `UseRecordings` on save, so they are carried untouched). A part-file delete that fails stays swallowed by `TryDelete`, so file-before-entry ordering cannot detect it; Slice 443 should revisit with the switch on.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - Part takes are gated by `PartTakes.Enabled` (`src/Dino/DinoReader.Core/PartTakes.cs`, false); tests that need it on run in `PartTakesCollection`. Never set it in app code: Slice 443 turns it on together with playback of a part take. (Slice 395: docs/plan/slices/395-dino-record-only-the-characters-words.md)
 

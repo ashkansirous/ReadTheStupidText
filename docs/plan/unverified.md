@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 395: Dino: recording a character shows and replaces only that character's quoted words ([slice](slices/395-dino-record-only-the-characters-words.md))
+- [session] Windows head: record a page on the Dino Windows head with the switch off (`PartTakes.Enabled = false`) behaves as before (not run).
+
 ### Slice 436: Dino: Sonos counts only real plays and shows new books within 5 minutes ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
 - [owner] **You:** Sonos Reporting Endpoint (item A4) | Sonos Dev Portal > Dashboard > Dino Book Reader integration (a6BPs000000qWNBMA2) > Sonos Music API > Reporting Endpoint = `https://dinoreader.sirous.uk/sonos/v2.0`, Save. Link: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos (the integration's case; the Dashboard link is not recorded).
 - [owner] Whether Sonos sends `/timePlayed` reports to an anonymous (no-login) service: the docs are silent. After A4, a real play should show a `reported` row (`analytics-query`); if none arrive, Sonos plays show 0 rather than invented hours, and that result goes back to the owner as one question.
