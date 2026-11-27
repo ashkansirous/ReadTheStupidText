@@ -47,6 +47,52 @@ internal static class AndroidCrashHooks
         }
     }
 
+    /// <summary>
+    /// Slice 424 item 3: the system's record of how the previous launch's process ended, of any reason (user swipe, low memory, ANR, a signal, "user requested"), as
+    /// <c>reason Name, importance N, description text</c>; the newest record not older than <paramref name="since"/> (when that launch started). Null below API 30, when Android has
+    /// no such record or on any failure. The running process has no record yet, so the newest one is the launch that died.
+    /// </summary>
+    public static string? LastExitDescription(DateTimeOffset? since)
+    {
+        try
+        {
+            if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+            {
+                return null;
+            }
+
+            var manager = (ActivityManager?)Microsoft.Maui.ApplicationModel.Platform.AppContext.GetSystemService(Context.ActivityService);
+            IList<ApplicationExitInfo>? exits = manager?.GetHistoricalProcessExitReasons(null, 0, MaxExitReasons);
+            ApplicationExitInfo? own = exits is null ? null : NewestOfMainProcess(exits);
+            return own is null ? null : Describe(own, since);
+        }
+        catch (Exception ex)
+        {
+            // no-fallback: crash-hook code; an unreadable exit record only means the report has no exit reason
+            System.Diagnostics.Debug.WriteLine($"Last exit reason unreadable: {ex.Message}");
+            return null;
+        }
+    }
+
+    // Newest first. Helper processes (a WebView sandbox, a ":service" process) also leave records: only the main process's record (ProcessName equals the package name) is the dead launch's.
+    [SupportedOSPlatform("android30.0")]
+    private static ApplicationExitInfo? NewestOfMainProcess(IList<ApplicationExitInfo> exits)
+    {
+        string? mainProcess = Microsoft.Maui.ApplicationModel.Platform.AppContext.PackageName;
+        return exits.FirstOrDefault(e => string.Equals(e.ProcessName, mainProcess, StringComparison.Ordinal));
+    }
+
+    [SupportedOSPlatform("android30.0")]
+    private static string? Describe(ApplicationExitInfo info, DateTimeOffset? since)
+    {
+        if (since is not { } start || DateTimeOffset.FromUnixTimeMilliseconds(info.Timestamp) < start)
+        {
+            return null; // no known start for the dead launch, or an older launch's record: Android has none for the one that died
+        }
+
+        return Sirous.Reading.Application.Crashes.CrashReportBuilder.AndroidExitText((int)info.Reason, info.Status, (int)info.Importance, info.Description);
+    }
+
     [SupportedOSPlatform("android30.0")]
     private static NativeCrash? ToNative(ApplicationExitInfo info)
     {

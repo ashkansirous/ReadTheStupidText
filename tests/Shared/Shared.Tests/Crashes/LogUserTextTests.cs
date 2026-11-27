@@ -27,7 +27,7 @@ public sealed class LogUserTextTests : IDisposable
     [Fact]
     public async Task The_sentence_cache_path_logs_hashes_and_lengths_but_never_the_sentence_or_a_path_in_an_error()
     {
-        var file = new RollingLogFile(_folder);
+        using var file = new RollingLogFile(_folder);
         var log = new RollingFileSystemLog(() => file);
         var source = new SentenceAudioSource(new SentenceAudioCache(new FailingStore()), log);
         SentenceCacheKey key = SentenceCacheTestData.Key(Secret);
@@ -46,7 +46,7 @@ public sealed class LogUserTextTests : IDisposable
     [Fact]
     public void A_file_is_logged_by_its_kind_never_its_name_and_an_error_message_loses_its_paths()
     {
-        var file = new RollingLogFile(_folder);
+        using var file = new RollingLogFile(_folder);
         var log = new RollingFileSystemLog(() => file);
 
         log.Error($"failed to extract text from a {LogLineFormatter.FileKind($"/storage/emulated/0/{SecretFile}")} file", null,

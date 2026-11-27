@@ -8,13 +8,20 @@ namespace Sirous.Reading.Application.Crashes;
 /// about, never another launch's: the running launch holds its own in memory and in <see cref="LaunchFactsFile"/>, the previous launch's are in that file's previous copy, a MetricKit
 /// diagnostic carries its own. <paramref name="Since"/> is when the launch started (set by <see cref="LaunchFactsFile"/>), so a system exit record can be matched to it.
 /// </summary>
-public sealed record LaunchFacts(string? Version, string? Build, string? BinaryUuid, DateTimeOffset? Since = null, bool Foreground = false)
+public sealed record LaunchFacts(string? Version, string? Build, string? BinaryUuid, DateTimeOffset? Since = null, bool Foreground = false, string? Session = null, string? LastPage = null, string? State = null)
 {
-    /// <summary><paramref name="now"/> made about the launch these facts describe: its version, build number and UUID, and no memory, state or session (those describe only the running launch). Null facts leave all three null.</summary>
+    /// <summary>
+    /// <paramref name="now"/> made about the launch these facts describe: its version, build number, UUID and (Slice 424 item 4) the session id and last app state that launch wrote to its
+    /// file as they changed; never the running launch's memory, state or session. Null facts leave all of them null.
+    /// </summary>
     public static CrashContext About(CrashContext now, LaunchFacts? launch) =>
         launch is null
             ? now with { Version = null, Session = null, Facts = null }
-            : now with { Version = launch.Version, Session = null, Facts = new CrashFacts(launch.Build, launch.BinaryUuid) };
+            : now with { Version = launch.Version, Session = launch.Session, Facts = new CrashFacts(launch.Build, launch.BinaryUuid, null, null, launch.State) };
+
+    /// <summary>These facts with the given session id, last page and app state (each kept when the argument is null).</summary>
+    public LaunchFacts WithState(string? session, string? lastPage, string? state) =>
+        this with { Session = session ?? Session, LastPage = lastPage ?? LastPage, State = state ?? State };
 }
 
 /// <summary>
@@ -98,7 +105,7 @@ public sealed class LaunchFactsFile(string folder)
         {
             Directory.CreateDirectory(folder);
             string temp = CurrentPath + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(new Stored(current.Version, current.Build, current.BinaryUuid, current.Since, current.Foreground), Options), new UTF8Encoding(false));
+            File.WriteAllText(temp, JsonSerializer.Serialize(new Stored(current.Version, current.Build, current.BinaryUuid, current.Since, current.Foreground, current.Session, current.LastPage, current.State), Options), new UTF8Encoding(false));
             File.Move(temp, CurrentPath, true);
         }
         catch (Exception)
@@ -140,7 +147,7 @@ public sealed class LaunchFactsFile(string folder)
         try
         {
             Stored? stored = JsonSerializer.Deserialize<Stored>(text, Options);
-            return stored is null || (stored.Version is null && stored.Build is null && stored.BinaryUuid is null) ? null : new LaunchFacts(stored.Version, stored.Build, stored.BinaryUuid, stored.Since, stored.Foreground);
+            return stored is null || (stored.Version is null && stored.Build is null && stored.BinaryUuid is null) ? null : new LaunchFacts(stored.Version, stored.Build, stored.BinaryUuid, stored.Since, stored.Foreground, stored.Session, stored.LastPage, stored.State);
         }
         catch (JsonException)
         {
@@ -162,5 +169,5 @@ public sealed class LaunchFactsFile(string folder)
         }
     }
 
-    private sealed record Stored(string? Version, string? Build, string? BinaryUuid, DateTimeOffset? Since, bool Foreground = false);
+    private sealed record Stored(string? Version, string? Build, string? BinaryUuid, DateTimeOffset? Since, bool Foreground = false, string? Session = null, string? LastPage = null, string? State = null);
 }
