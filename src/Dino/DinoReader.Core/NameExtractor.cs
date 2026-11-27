@@ -62,7 +62,7 @@ internal sealed class NameExtractor
     {
         var verb = TagPatterns.Verb(rules);
         var gap = TagPatterns.SubjectVerbGap(rules);
-        var named = $"(?<n>{name})";
+        var named = TagPatterns.Named(rules, name);
         return new Regex(
             $"(?:{verb}{TagPatterns.VerbSubjectGap(rules)}{named}|{rules.NameLead}{named}{gap}{TagPatterns.AdverbBefore(rules)}{verb})",
             RegexOptions.CultureInvariant);

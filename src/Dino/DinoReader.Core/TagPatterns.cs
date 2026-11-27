@@ -16,6 +16,18 @@ internal static class TagPatterns
     public static string Verb(LanguageRules rules) =>
         $"(?:{rules.VerbPrefix}(?i:{Alternation(rules.SpeechVerbs)})){Boundary(rules)}";
 
+    /// <summary>
+    /// The captured name <c>(?&lt;n&gt;...)</c>, also accepted after the language's article ("said the Referee").
+    /// The article form is refused when the run is cut short by backtracking or is followed by a colon, so
+    /// "said the Magic Words: ..." is not a speaker.
+    /// </summary>
+    public static string Named(LanguageRules rules, string name)
+    {
+        var plain = $"(?<n>{name})";
+        if (rules.NameArticle.Length == 0) return plain;
+        return $@"(?:{rules.NameArticle}{plain}(?![ \t]*:)(?!\p{{L}})(?![ \t]+\p{{Lu}})|{plain})";
+    }
+
     /// <summary>The gap between a name or pronoun and its verb.</summary>
     public static string SubjectVerbGap(LanguageRules rules) => rules.NameVerbGap;
 

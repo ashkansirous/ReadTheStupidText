@@ -43,9 +43,10 @@ internal sealed class SpeakerTagParser
         var verbGap = TagPatterns.VerbSubjectGap(rules);
         var branches = new List<string>();
         if (pron is not null) branches.Add($"{rules.NameLead}(?<p>{pron}){gap}{adverb}{verb}");
-        branches.Add($"{rules.NameLead}(?<n>{names.Pattern}){gap}{adverb}{verb}");
+        var named = TagPatterns.Named(rules, names.Pattern);
+        branches.Add($"{rules.NameLead}{named}{gap}{adverb}{verb}");
         if (pron is not null) branches.Add($"{verb}{verbGap}(?<p>{pron})");
-        branches.Add($"{verb}{verbGap}(?<n>{names.Pattern})");
+        branches.Add($"{verb}{verbGap}{named}");
         return branches;
     }
 

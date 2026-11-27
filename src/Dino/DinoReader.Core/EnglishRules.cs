@@ -51,7 +51,8 @@ internal static class EnglishRules
             "somebody", "anyone", "anybody", "all", "both", "they", "we", "none", "others"),
         SentenceTerminators: ".!?…",
         DialogueGapChars: DialogueGapChars,
-        Flavours: FlavourWords.English);
+        Flavours: FlavourWords.English,
+        NameArticle: @"the\s+");
 
     private static HashSet<string> Set(params string[] items) =>
         new(items, StringComparer.OrdinalIgnoreCase);
