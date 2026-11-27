@@ -1,7 +1,7 @@
 ### Slice 431 — Dino: the story skill reports its steps to the agent board, with process keys
 **Product:** Dino
 
-*Built wave 4 of night 2026-11-27-0154 (PR #1409); items A and B built, item C (one real book run) not yet verified.* The start condition was met: agent-progress-board Slice 55 (process keys and step counts in the agent-board plugin) merged as PR #209 on 2026-11-25.
+*Built wave 4 of night 2026-11-27-0154 ; merged as PR #1409 (c23345a); items A and B built, item C (one real book run) not yet verified.* The start condition was met: agent-progress-board Slice 55 (process keys and step counts in the agent-board plugin) merged as PR #209 on 2026-11-25.
 
 **Touches:** `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-writer.md`,
 `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `.claude/agents/farsi-review.md`,

@@ -77,6 +77,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 431: Dino: the story skill reports its steps to the agent board ([slice](slices/431-dino-story-board-steps.md))
+- [owner] Item C: when the owner next makes a new book, read the book card back with `get_item` on the board (steps, process keys, the owner-read wait).
+
 ### Slice 441: Dino: iPad reading page hides Back and the view switch from VoiceOver ([slice](slices/441-dino-ipad-reading-header-voiceover.md))
 - [session] The iPad and iPhone simulator hierarchy (the CI iOS simulator, Maestro) shows `ReadingBack` and `ReadingModes` on the reading page (item 1 and item 3 for iOS).
 - [owner] **You:** VoiceOver on an iPad reads Back, the view switch and the book title as a heading, and does not read the title twice on the sideways tablet layout (`SideTitle` plus heading).

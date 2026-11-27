@@ -2,7 +2,7 @@
 **Product:** Shared
 **Touches:** `tools/emulator/store-screenshots.ps1`, `tools/phone/**` (Maestro launchers), `tools/emulator/common.ps1`, `tools/emulator/test-jdk-pick.ps1`, `tools/CLAUDE.md`
 
-*Built wave 4, night 2026-11-27-0154, PR #1410, not merged. No device run: the change is a pre-check and the test scripts cover it.* (Planned 2026-11-25, moved out of Slice 389.)
+*Built wave 4, night 2026-11-27-0154; merged as PR #1410 (b320b15). No device run: the change is a pre-check and the test scripts cover it.* (Planned 2026-11-25, moved out of Slice 389.)
 
 **Why:** Slice 389 made `run-flows.ps1` call `Set-ProcessJavaHome` (`tools/emulator/common.ps1`) so a dead `JAVA_HOME` is replaced for the process. `tools/CLAUDE.md` line 71 says `store-screenshots.ps1` and the `tools/phone` Maestro launchers still do not call it (read on origin/main 1a8bf725: the only caller outside the self-test is `run-flows.ps1:318`). A dead `JAVA_HOME` still breaks them.
 
