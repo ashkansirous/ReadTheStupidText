@@ -96,10 +96,10 @@ test("root lists the languages that have tracks, in their own names", async () =
 });
 
 test("every track is playable and skippable, after duration and cover as the WSDL orders them", async () => {
-  const { text } = await call("getMetadata", "<id>lang:en</id><index>0</index><count>50</count>");
+  const { text } = await call("getMetadata", "<id>lang:en/all</id><index>0</index><count>50</count>");
   const tracks = text.match(/<trackMetadata>.*?<\/trackMetadata>/g);
   assert.equal(tracks.length, 2);
-  for (const meta of tracks) assert.match(meta, /<album>Dino: Kids Books &amp; Stories<\/album><duration>\d+<\/duration>(<albumArtURI>[^<]*<\/albumArtURI>)?<canPlay>true<\/canPlay><canSkip>true<\/canSkip><\/trackMetadata>/);
+  for (const meta of tracks) assert.match(meta, /<album>[^<]+<\/album><duration>\d+<\/duration>(<albumArtURI>[^<]*<\/albumArtURI>)?<canPlay>true<\/canPlay><canSkip>true<\/canSkip><\/trackMetadata>/);
 });
 
 function withCredentials(inner) {
@@ -128,23 +128,23 @@ test("a credentials header with only a device id, or none, is answered as before
 });
 
 test("a language lists its books as tracks, title in that language, only books with a track", async () => {
-  const { text } = await call("getMetadata", "<id>lang:en</id><index>0</index><count>10</count>");
+  const { text } = await call("getMetadata", "<id>lang:en/all</id><index>0</index><count>10</count>");
   assert.match(text, /<total>2<\/total>/);
   assert.match(text, /<title>Goldilocks &amp; Bears<\/title>/);
   assert.match(text, new RegExp(`<id>track:en:${ID_A}</id>`));
   assert.match(text, /<mimeType>audio\/mp4<\/mimeType>/);
   assert.match(text, /<duration>600<\/duration>/);
-  assert.match(text, new RegExp(`<albumArtURI>https://dino.test/api/stories/${ID_A}/cover\\?v=2</albumArtURI>`));
-  const fa = (await call("getMetadata", "<id>lang:fa</id><index>0</index><count>10</count>")).text;
+  assert.match(text, new RegExp(`<albumArtURI>https://dino.test/api/stories/${ID_A}/cover\\?v=2&amp;sq=1</albumArtURI>`));
+  const fa = (await call("getMetadata", "<id>lang:fa/all</id><index>0</index><count>10</count>")).text;
   assert.match(fa, /<title>دخترک<\/title>/);
   assert.match(fa, /<total>1<\/total>/);
 });
 
 test("paging returns the asked slice with the right index, count and total", async () => {
-  const { text } = await call("getMetadata", "<id>lang:en</id><index>1</index><count>1</count>");
+  const { text } = await call("getMetadata", "<id>lang:en/all</id><index>1</index><count>1</count>");
   assert.match(text, /<index>1<\/index><count>1<\/count><total>2<\/total>/);
   assert.equal([...text.matchAll(/<mediaMetadata>/g)].length, 1);
-  const past = (await call("getMetadata", "<id>lang:en</id><index>9</index><count>5</count>")).text;
+  const past = (await call("getMetadata", "<id>lang:en/all</id><index>9</index><count>5</count>")).text;
   assert.match(past, /<index>2<\/index><count>0<\/count><total>2<\/total>/);
 });
 
@@ -242,7 +242,7 @@ test("characters XML cannot carry are dropped, so a stray control character cann
   assert.equal(escapeXml("a\u0000b\u0008c\u000Bd￾e\ud800f\tg\nh"), "abcdef\tg\nh");
   const bad = metaOf("Bad\u0001 Title", { audio: { en: { version: 3, bytes: 5, listenSeconds: 60 } } });
   const bucket = { DOWNLOADS: bucketOf(bookFiles(ID_A, bad, ["en"])) };
-  const { text } = await call("getMetadata", "<id>lang:en</id>", { bucket });
+  const { text } = await call("getMetadata", "<id>lang:en/all</id>", { bucket });
   assert.match(text, /<title>Bad Title<\/title>/);
   assert.doesNotMatch(text, /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/);
 });
@@ -262,7 +262,7 @@ test("without the bucket the service is unavailable, as a fault", async () => {
 test("getLastUpdate carries catalog, favorites and a poll interval, and the catalog token follows the tracks", async () => {
   const { text } = await call("getLastUpdate");
   assert.match(text, /<getLastUpdateResult><catalog>3-[0-9a-f]+<\/catalog><favorites>0<\/favorites><pollInterval>600<\/pollInterval>/);
-  const one = { language: "en", storyId: "a", version: 1, seconds: 5 };
+  const one = { language: "en", storyId: "a", title: "A", version: 1, seconds: 5, tags: [], ageMin: null, ageMax: null, added: null, paid: false };
   assert.equal(catalogToken([one, { ...one, storyId: "b" }]), catalogToken([{ ...one, storyId: "b" }, one]));
   assert.notEqual(catalogToken([one]), catalogToken([{ ...one, version: 2 }]));
   assert.notEqual(catalogToken([one]), catalogToken([]));
@@ -338,7 +338,7 @@ test("with telemetry off an unknown track writes nothing", async () => {
 });
 
 test("two reads of the same catalogue give the same order and total (C2)", async () => {
-  const inner = "<id>lang:en</id><index>0</index><count>50</count>";
+  const inner = "<id>lang:en/all</id><index>0</index><count>50</count>";
   const first = await call("getMetadata", inner);
   const second = await call("getMetadata", inner);
   assert.equal(first.text, second.text);
@@ -355,4 +355,170 @@ test("a fault row that cannot be written never changes the fault answer", async 
   const { response } = await callCounting(usage, "getMediaURI", "<id>track:en:nope</id>");
   assert.equal(response.status, 500);
   await Promise.all(deferred);
+});
+
+// Slice 437: the shelves, the header and the paid rows.
+const SHELF_IDS = ["7d0e5a4e000040008000000000000011", "7d0e5a4e000040008000000000000012", "7d0e5a4e000040008000000000000013", "7d0e5a4e000040008000000000000014"];
+const [ID_ZEBRA, ID_APPLE, ID_PAID, ID_LONG] = SHELF_IDS;
+
+function shelfBooks() {
+  const pack = (seconds) => ({ version: 3, bytes: 5, listenSeconds: seconds });
+  return [
+    [ID_ZEBRA, metaOf("The Zebra", { tags: ["New"], ageMin: 3, ageMax: 5, added: "2026-11-20", titles: { fa: "پرنده" }, audio: { en: pack(300), fa: pack(300), de: pack(300) } }), ["en", "fa", "de"]],
+    [ID_APPLE, metaOf("Apple Tale", { tags: ["New"], ageMin: 3, ageMax: 9, added: "2026-11-25", titles: { fa: "آب" }, audio: { en: pack(500), fa: pack(500) } }), ["en", "fa"]],
+    [ID_PAID, metaOf("Big Paid", { access: "paid", ageMin: 6, ageMax: 9, added: "2026-10-01", titles: { fa: "بزرگ" }, audio: { en: pack(700), fa: pack(700) } }), ["en", "fa"]],
+    [ID_LONG, metaOf("Long Free", { added: "2026-09-01", audio: { en: pack(900) } }), ["en"]],
+  ];
+}
+
+const shelfEnv = () => ({ DOWNLOADS: bucketOf(shelfBooks().flatMap(([id, meta, langs]) => bookFiles(id, meta, langs))) });
+
+async function browseWith(id, { language = null, recursive = false, bucket = shelfEnv() } = {}) {
+  const headers = language === null ? {} : { "Accept-Language": language };
+  const body = envelope("getMetadata", `<id>${id}</id><index>0</index><count>100</count>${recursive ? "<recursive>true</recursive>" : ""}`);
+  const response = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body, headers }), bucket, "", serveObject);
+  return { response, text: await response.text() };
+}
+
+const titlesOf = (text) => [...text.matchAll(/<title>([^<]*)<\/title>/g)].map((found) => found[1]);
+const idsOf = (text) => [...text.matchAll(/<id>([^<]*)<\/id>/g)].map((found) => found[1]);
+
+test("root opens in the first Accept-Language language that has books, region dropped, shelves in the mock's order (Slice 437 A5)", async () => {
+  const { text } = await browseWith("root", { language: "fa-IR, en-GB;q=0.8" });
+  assert.deepEqual(idsOf(text), ["lang:fa/bedtime", "lang:fa/new", "lang:fa/age-3-5", "lang:fa/age-6-9", "lang:fa/free", "lang:fa/all", "lang:en", "lang:fa/others/en"]);
+  assert.deepEqual(titlesOf(text).slice(0, 2), ["قصه‌های شب: ۱۰ دقیقه یا کمتر", "داستان‌های تازه"]);
+  assert.match(text, /<title>English<\/title><artist>انگلیسی · ۴ داستان<\/artist>/);
+  assert.match(text, /<title>زبان‌های دیگر<\/title><artist>۲ زبان<\/artist>/);
+  assert.match(text, /<title>۳ تا ۵ سال<\/title><artist>۲ داستان<\/artist>/);
+});
+
+test("an Accept-Language with no language that has books keeps today's language list, and so does no header", async () => {
+  for (const language of [null, "ko-KR, it;q=0.5", "*", "junk;;"]) {
+    const { text } = await browseWith("root", { language });
+    assert.deepEqual(idsOf(text), ["lang:de", "lang:en", "lang:fa"], String(language));
+    assert.doesNotMatch(text, /canPlay>true/);
+  }
+});
+
+test("a language the catalogue lacks is skipped for the next one in the header, in q order", async () => {
+  const { text } = await browseWith("root", { language: "it, en;q=0.4, de;q=0.9" });
+  assert.match(text, /<id>lang:de\/bedtime<\/id>/);
+  assert.match(text, /<id>lang:en<\/id><itemType>container<\/itemType><title>English<\/title>/);
+});
+
+test("a shelf is playable, hidden when empty, and its books follow the shelf's rule (Slice 437 A3)", async () => {
+  const root = (await browseWith("root", { language: "en" })).text;
+  assert.match(root, /<id>lang:en\/bedtime<\/id>.*?<canPlay>true<\/canPlay>/);
+  assert.match(root, /<id>lang:en\/others<\/id>.*?<canPlay>false<\/canPlay>/);
+  const bedtime = (await browseWith("lang:en/bedtime")).text;
+  assert.deepEqual(idsOf(bedtime), [`track:en:${ID_ZEBRA}`, `track:en:${ID_APPLE}`], "shortest first");
+  assert.deepEqual(idsOf((await browseWith("lang:en/new")).text), [`track:en:${ID_APPLE}`, `track:en:${ID_ZEBRA}`], "newest first");
+  assert.deepEqual(idsOf((await browseWith("lang:en/age-3-5")).text), [`track:en:${ID_APPLE}`, `track:en:${ID_ZEBRA}`]);
+  assert.deepEqual(idsOf((await browseWith("lang:en/age-6-9")).text), [`track:en:${ID_APPLE}`, `track:en:${ID_PAID}`], "a 3-9 book is on both age shelves");
+  assert.deepEqual(idsOf((await browseWith("lang:en/free")).text), [`track:en:${ID_APPLE}`, `track:en:${ID_LONG}`, `track:en:${ID_ZEBRA}`]);
+  assert.deepEqual(titlesOf((await browseWith("lang:en/all")).text), ["Apple Tale", "Big Paid", "Long Free", "The Zebra"], "A-Z ignores a leading The");
+  assert.equal((await browseWith("lang:de/bedtime")).response.status, 200);
+  const emptyShelf = await browseWith("lang:de/age-6-9");
+  assert.equal(emptyShelf.response.status, 200, "a saved shelf that is now empty is an empty page, not a fault");
+  assert.deepEqual(idsOf(emptyShelf.text), []);
+  assert.equal((await browseWith("lang:xx/age-6-9")).response.status, 500, "a language with no books is still not there");
+  const german = (await browseWith("root", { language: "de" })).text;
+  assert.doesNotMatch(german, /lang:de\/age-6-9/);
+});
+
+test("a book with no age range is on no age shelf but stays on All and Free", async () => {
+  assert.doesNotMatch((await browseWith("lang:en/age-3-5")).text, new RegExp(ID_LONG));
+  assert.doesNotMatch((await browseWith("lang:en/age-6-9")).text, new RegExp(ID_LONG));
+  assert.match((await browseWith("lang:en/all")).text, new RegExp(ID_LONG));
+});
+
+test("Farsi A-Z follows the Persian alphabet, not the English title", async () => {
+  assert.deepEqual(titlesOf((await browseWith("lang:fa/all")).text), ["آب", "بزرگ", "پرنده"]);
+});
+
+test("a paid book is listed with 'In the Dino app', cannot play, and is left out of what Play queues", async () => {
+  const { text } = await browseWith("lang:en/age-6-9");
+  assert.match(text, /<album>Ages 6–9 · 12 min · In the Dino app<\/album>.*?<canPlay>false<\/canPlay>/s);
+  assert.match(text, /<album>Ages 3–9 · 8 min · Free<\/album>/);
+  const queued = (await browseWith("lang:en/age-6-9", { recursive: true })).text;
+  assert.deepEqual(idsOf(queued), [`track:en:${ID_APPLE}`]);
+  const refused = await call("getMediaURI", `<id>track:en:${ID_PAID}</id>`, { bucket: shelfEnv() });
+  assert.equal(refused.response.status, 500);
+  assert.match(refused.text, /<faultcode>Client\.ItemNotFound<\/faultcode>/, "a fault that starts no login or upgrade flow");
+  assert.doesNotMatch(refused.text, /Login/);
+  const meta = await call("getMediaMetadata", `<id>track:en:${ID_PAID}</id>`, { bucket: shelfEnv() });
+  assert.match(meta.text, /<canPlay>false<\/canPlay>/);
+});
+
+test("a book whose square cover link is too long still shows its plain cover (review 1 #4)", async () => {
+  const probe = await call("getMediaMetadata", `<id>track:en:${ID_ZEBRA}</id>`, { bucket: shelfEnv() });
+  const path = /<albumArtURI>https:\/\/dino\.test([^<]*)&amp;sq=1<\/albumArtURI>/.exec(probe.text)?.[1] ?? /<albumArtURI>https:\/\/dino\.test([^<]*)<\/albumArtURI>/.exec(probe.text)[1];
+  const host = "a".repeat(128 - "https://".length - path.length - 2);
+  const init = { method: "POST", body: envelope("getMediaMetadata", `<id>track:en:${ID_ZEBRA}</id>`) };
+  const response = await handleSonos(new Request(`https://${host}/sonos`, init), shelfEnv(), "", serveObject);
+  const text = await response.text();
+  assert.match(text, new RegExp(`<albumArtURI>https://${host}${path.replace("?", "\\?")}</albumArtURI>`));
+  assert.doesNotMatch(text, /sq=1/);
+});
+
+test("a shelf with no free book is listed with canPlay false (review 1 #3)", async () => {
+  const paidOnly = { DOWNLOADS: bucketOf(shelfBooks().filter(([id]) => id === ID_PAID).flatMap(([id, meta, langs]) => bookFiles(id, meta, langs))) };
+  const { text } = await browseWith("lang:en", { bucket: paidOnly });
+  assert.match(text, /<id>lang:en\/age-6-9<\/id>.*?<canPlay>false<\/canPlay>/);
+  assert.match(text, /<id>lang:en\/all<\/id>.*?<canPlay>false<\/canPlay>/);
+  const mixed = (await browseWith("lang:en")).text;
+  assert.match(mixed, /<id>lang:en\/age-6-9<\/id>.*?<canPlay>true<\/canPlay>/);
+});
+
+test("old track ids and the bare language id still resolve", async () => {
+  const uri = await call("getMediaURI", `<id>track:en:${ID_ZEBRA}</id>`, { bucket: shelfEnv() });
+  assert.match(uri.text, /listen\/en\?v=3/);
+  assert.deepEqual(idsOf((await browseWith("lang:en")).text).slice(-1), ["lang:en/others"]);
+});
+
+test("Other languages: the parent's own header languages first, then by name in the parent's language", async () => {
+  const { text } = await browseWith("lang:fa/others/en,de");
+  assert.deepEqual(idsOf(text), ["lang:en", "lang:de"]);
+  assert.match(text, /<title>Deutsch<\/title><artist>آلمانی · ۱ داستان<\/artist>/);
+  const plain = await browseWith("lang:en/others");
+  assert.deepEqual(idsOf(plain.text), ["lang:de", "lang:fa"]);
+  assert.match(plain.text, /<title>فارسی<\/title><artist>Persian · 3 stories<\/artist>/);
+});
+
+test("nothing after root reads the header: the same id answers the same whatever Accept-Language is sent", async () => {
+  const plain = (await browseWith("lang:en/bedtime")).text;
+  assert.equal((await browseWith("lang:en/bedtime", { language: "fa-IR" })).text, plain);
+  const folder = (await browseWith("lang:en")).text;
+  assert.equal((await browseWith("lang:en", { language: "de" })).text, folder);
+});
+
+test("malformed shelf ids are an item-not-found fault", async () => {
+  for (const id of ["lang:en/nope", "lang:en/bedtime/x", "lang:en/others/a b", "lang:xx/all", "lang:en/all/extra/more", "lang:"]) {
+    assert.equal((await browseWith(id)).response.status, 500, id);
+  }
+});
+
+test("getExtendedMetadata answers a shelf folder with its words and art", async () => {
+  const { text } = await call("getExtendedMetadata", "<id>lang:en/free</id>", { bucket: shelfEnv() });
+  assert.match(text, /<getExtendedMetadataResult><mediaCollection><id>lang:en\/free<\/id>.*<title>Free stories<\/title>/);
+  assert.match(text, /<albumArtURI>https:\/\/dino\.test\/dino\/sonos-art\/free\.png<\/albumArtURI>/);
+});
+
+test("a favourite saved on a language folder still plays: canPlay true, and the recursive browse lists its free books (review 2 #5)", async () => {
+  const { text } = await call("getExtendedMetadata", "<id>lang:en</id>", { bucket: shelfEnv() });
+  assert.match(text, /<id>lang:en<\/id>.*<canPlay>true<\/canPlay>/);
+  const queued = idsOf((await browseWith("lang:en", { recursive: true })).text);
+  assert.ok(queued.length > 0 && queued.every((id) => id.startsWith("track:en:")));
+});
+
+test("the catalog token changes when a shelf's contents or labels change, not only the tracks", async () => {
+  const token = async (bucket) => (await call("getLastUpdate", "", { bucket })).text.match(/<catalog>([^<]*)<\/catalog>/)[1];
+  const base = await token(shelfEnv());
+  assert.equal(await token(shelfEnv()), base);
+  const retagged = shelfBooks().map(([id, meta, langs]) => [id, id === ID_LONG ? { ...meta, tags: ["New"] } : meta, langs]);
+  assert.notEqual(await token({ DOWNLOADS: bucketOf(retagged.flatMap(([id, meta, langs]) => bookFiles(id, meta, langs))) }), base);
+  const one = { language: "en", storyId: "a", title: "A", version: 1, seconds: 5, tags: [], ageMin: null, ageMax: null, added: null, paid: false };
+  assert.notEqual(catalogToken([one], "https://a.test"), catalogToken([one], "https://b.test"), "art URLs are part of the token");
+  assert.notEqual(catalogToken([one]), catalogToken([{ ...one, seconds: 9000 }]));
+  assert.notEqual(catalogToken([one]), catalogToken([{ ...one, paid: true }]));
 });

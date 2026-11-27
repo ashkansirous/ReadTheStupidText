@@ -43,6 +43,7 @@ import { PROOF_HEADER } from "./entitlements/proof.ts";
 import { SubscriptionAnswerKind } from "./entitlements/subscription.ts";
 import type { SubscriptionAnswer, SubscriptionSource } from "./entitlements/subscription.ts";
 import { isProductId, productsUnlocking } from "./products.ts";
+import { keptSquareCover, squareCoverResponse } from "./sonos-art.ts";
 
 export const STORIES_API_PATH = "/api/stories";
 const STORY_PATH_PREFIX = "/api/stories/";
@@ -101,6 +102,8 @@ export type StoreTag = (typeof STORE_TAGS)[number];
 /** Slice 346: whether a book is sold. Closed set; a meta without `access` (or with anything but "free") is paid, as a book's `book.json` is. */
 export const BOOK_ACCESS = ["free", "paid"] as const;
 export type BookAccess = (typeof BOOK_ACCESS)[number];
+/** The paid member of `BOOK_ACCESS`, for code that compares against it. */
+export const PAID_ACCESS: BookAccess = "paid";
 
 // Slice 357: an error answer is its status only; the app supplies the text. The one slug left is downloads.ts's `ServedFile.unavailable`
 // (the 502 body serveObject writes when a listed file is missing from the bucket).
@@ -400,6 +403,8 @@ export interface ListItem {
   readonly ageMin: number | null;
   readonly ageMax: number | null;
   readonly author: string | null;
+  /** Slice 437: the date the book was added to the store (meta's `added`, YYYY-MM-DD), null when meta has none; Sonos orders "New stories" by it. */
+  readonly added: string | null;
   readonly titles: Readonly<Record<string, string>> | null;
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   /** Slice 246 B2: the packs on offer per language (version, size, link); null when the book has none. */
@@ -456,6 +461,7 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     ageMin: entry.meta.ageMin,
     ageMax: entry.meta.ageMax,
     author: entry.meta.author,
+    added: entry.meta.added,
     titles: entry.meta.titles,
     creditsByLanguage: entry.meta.creditsByLanguage,
     audio: audioItems(entry, base),
@@ -957,7 +963,7 @@ export function isStoryPath(pathname: string): boolean {
  */
 export async function handleStories(
   request: Request,
-  env: { DOWNLOADS?: R2Bucket },
+  env: { DOWNLOADS?: R2Bucket; IMAGES?: ImagesBinding },
   pathPrefix: string,
   serve: ObjectServer,
   paid?: PaidGate,
@@ -969,7 +975,10 @@ export async function handleStories(
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
   if (!env.DOWNLOADS) return statusOnly(503);
-  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket, subscription, catalogue);
+  const kept = await keptSquareCover(request, env); // Slice 437: a kept crop is answered before any R2 read
+  if (kept !== undefined) return kept;
+  const routed = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket, subscription, catalogue);
+  const response = await squareCoverResponse(request, env, routed); // Slice 437: ?sq=1 on a cover asks for the square crop Sonos shows
   if (request.method !== "HEAD" || response.status < 400) return response;
   return new Response(null, { status: response.status, headers: response.headers });
 }

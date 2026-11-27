@@ -26,6 +26,7 @@ export const FaultMessage = {
   Unsupported: "Unsupported call",
   Unavailable: "Service unavailable",
   NoCatalogue: "The catalogue is not available",
+  NotPlayable: "This story is in the Dino app",
 } as const;
 
 /** The faultcode values the service raises (https://docs.sonos.com/docs/error-handling). */
@@ -116,6 +117,27 @@ export function parseSonosRequest(xml: string): SonosRequest | null {
     count: wholeNumberParam(inner, Param.Count),
     recursive: elementText(inner, Param.Recursive) === TRUE_TEXT,
   };
+}
+
+const ACCEPT_LANGUAGE_PART = /^\s*([A-Za-z]{1,8})(?:-[A-Za-z0-9-]+)?\s*(?:;\s*q\s*=\s*([0-9.]+))?\s*$/;
+/** Browser language codes that are one of the app's languages under another code (Norwegian, "no" and "nn", is `nb`). */
+const LANGUAGE_ALIASES: Readonly<Record<string, string>> = { no: "nb", nn: "nb" };
+
+/**
+ * Slice 437: the primary languages of an Accept-Language header, best first (`fa-IR, en-GB;q=0.8` is `["fa", "en"]`): region dropped,
+ * q order kept (equal q keeps header order), q=0 and `*` left out, duplicates once. Null or junk gives an empty list.
+ */
+export function acceptedLanguages(header: string | null): string[] {
+  const ranked: { code: string; q: number; at: number }[] = [];
+  (header ?? "").split(",").forEach((part, at) => {
+    const found = ACCEPT_LANGUAGE_PART.exec(part);
+    if (found === null) return;
+    const q = found[2] === undefined ? 1 : Number(found[2]);
+    const lower = (found[1] ?? "").toLowerCase();
+    if (Number.isFinite(q) && q > 0) ranked.push({ code: LANGUAGE_ALIASES[lower] ?? lower, q, at });
+  });
+  ranked.sort((a, b) => b.q - a.q || a.at - b.at);
+  return [...new Set(ranked.map((entry) => entry.code))];
 }
 
 async function readCapped(request: Request): Promise<Uint8Array | null> {
