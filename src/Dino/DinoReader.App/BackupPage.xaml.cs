@@ -425,7 +425,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		StoreListing listing = await _store.ListAsync(CancellationToken.None);
 		if (listing.Status == StoreLoadStatus.Ok && _restoreStartedOn)
 		{
-			await _store.Sales.Purchases.RestoreAsync(listing.Items, CancellationToken.None);
+			await _store.Sales.Purchases.RestoreAsync(listing.Items, CancellationToken.None, countAsRestore: false); // Slice 455: the person did not press Restore purchases, so no restore count
 		}
 
 		var left = new List<MissingBook>();

@@ -1917,6 +1917,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			StoreListing listing = await store.ListAsync(CancellationToken.None);
 			StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, bookId, StringComparison.OrdinalIgnoreCase));
 			string? product = item?.Products.FirstOrDefault(p => !SubscriptionProducts.Is(p));
+			if (product is not null)
+			{
+				store.Sales.Purchases.RecordShown(product, listing.Items); // Slice 455: the buy prompt of a locked book opened (once per press, not per redraw)
+			}
+
 			return product is null ? BuyOutcome.Failed : await store.Sales.Purchases.BuyAsync(product, listing.Items, CancellationToken.None);
 		});
 		if (outcome == BuyOutcome.Failed && _mode.IsGrownUp)

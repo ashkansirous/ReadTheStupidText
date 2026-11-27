@@ -797,6 +797,25 @@ test("book_update takes result:from:to for a shelf book and drops any other deta
   assert.equal(parseEvent({ ...ownEvent, name: "book_update", detail: "updated:5:6" }), null);
 });
 
+// ---- The purchase count (Slice 455) ---------------------------------------------------------------------------------------
+test("purchase takes what.outcome[.offer] from the closed lists: a book is a shelf count, everything else names no book", () => {
+  const shelfDetails = ["book.shown", "book.started", "book.bought", "book.pending", "book.cancelled", "book.failed", "book.already_owned"];
+  const otherDetails = ["restore.restored", "restore.nothing_to_restore", "code.started", "code.bought", "sub_monthly.shown.trial", "sub_yearly.started.paid", "sub_monthly.bought.code", "sub_yearly.already_owned.paid"];
+  for (const detail of shelfDetails) assert.equal(parseEvent({ ...shelfEvent, name: "purchase", detail })?.detail, detail, detail);
+  for (const detail of otherDetails) assert.equal(parseEvent({ ...noBook, name: "purchase", detail })?.detail, detail, detail);
+});
+
+test("purchase drops an unknown or malformed detail, a wrong offer part and a source that does not match the detail", () => {
+  for (const bad of ["", "book", "book.", "buy.started", "book.refunded", "book.bought.paid", "sub_monthly.bought", "sub_monthly.bought.free", "restore.restored.paid", "book.bought.x.y", "Book.bought"]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "purchase", detail: bad }), null, bad);
+    assert.equal(parseEvent({ ...noBook, name: "purchase", detail: bad }), null, `${bad} none`);
+  }
+  assert.equal(parseEvent({ ...noBook, name: "purchase", detail: "book.bought" }), null, "a book count without a book");
+  assert.equal(parseEvent({ ...shelfEvent, name: "purchase", detail: "restore.restored" }), null, "a restore naming a book");
+  assert.equal(parseEvent({ ...ownEvent, name: "purchase", detail: "book.bought" }), null, "an own book");
+  assert.equal(parseEvent({ ...shelfEvent, book: "not-a-guid", name: "purchase", detail: "book.bought" }), null, "a book without a valid GUID");
+});
+
 // ---- The fallback count (Slice 273 part A) ----------------------------------------------------------------------------------
 
 const FALLBACK_DETAILS = FALLBACK_AREAS.flatMap((area) => FALLBACK_REASONS.map((reason) => `${area}:${reason}`));

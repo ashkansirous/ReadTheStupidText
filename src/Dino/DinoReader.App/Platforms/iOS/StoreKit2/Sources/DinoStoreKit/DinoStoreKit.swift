@@ -36,6 +36,14 @@ private func isTrial(_ transaction: Transaction) -> Bool {
     return transaction.offerType == .introductory
 }
 
+// Slice 455: how the transaction was bought, for the purchase usage count: "code" (an offer code), "trial" (the free trial) or "paid". Nothing else leaves the device.
+private func offerKind(_ transaction: Transaction) -> String {
+    if transaction.offerType == .code {
+        return "code"
+    }
+    return isTrial(transaction) ? "trial" : "paid"
+}
+
 private func describe(_ transaction: Transaction, jws: String) -> [String: Any] {
     return [
         "productId": transaction.productID,
@@ -45,6 +53,7 @@ private func describe(_ transaction: Transaction, jws: String) -> [String: Any] 
         "originalPurchasedAt": millis(transaction.originalPurchaseDate),
         "expiresAt": millis(transaction.expirationDate),
         "trial": isTrial(transaction),
+        "offer": offerKind(transaction),
         "revoked": transaction.revocationDate != nil,
         "jws": jws,
     ]

@@ -36,6 +36,12 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
 
     public string StoreName => PurchaseProofs.IosStore;
 
+    /// <summary>Slice 455: how the last Buy was bought (Apple's own word: trial, paid or code).</summary>
+    public BuyNote LastBuyNote { get; private set; } = BuyNote.None;
+
+    /// <summary>Slice 455: the subscriptions the last read found an offer code started.</summary>
+    public IReadOnlyList<string> CodeRedemptions { get; private set; } = [];
+
     public async Task<PurchaseSnapshot> RefreshAsync(IReadOnlyCollection<string> productIds, bool interactive, CancellationToken cancel)
     {
         StoreKit2Bridge? bridge = StoreKit2Bridge.Load();
@@ -71,6 +77,7 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
 
     public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
     {
+        LastBuyNote = BuyNote.None;
         StoreKit2Bridge? bridge = StoreKit2Bridge.Load();
         if (bridge is null)
         {
@@ -91,6 +98,7 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
 
         StoreKitBuyAnswer? bought = StoreKit2Answers.Buy(answer);
         PurchaseTrace.Line($"buy answer outcome={bought?.Outcome ?? "unreadable"}");
+        LastBuyNote = new BuyNote(bought?.Transaction?.Offer); // Slice 455: the offer Apple says applied (null from an older wrapper or a buy with no transaction)
         return bought is null ? BuyOutcome.Failed : OutcomeOf(productId, bought.Outcome);
     }
 
@@ -239,6 +247,7 @@ public sealed class IosPurchases : IBookPurchases, IDisposable
             return new PurchaseSnapshot(prices, new HashSet<string>(), pending, new Dictionary<string, string>(), Reachable: false); // Apple's list could not be read: BookPurchases keeps the last snapshot
         }
 
+        CodeRedemptions = owned.CodeRedemptions; // Slice 455: where Apple's redeem sheet's result shows (it answers nothing itself)
         return new PurchaseSnapshot(prices, owned.Owned, pending, owned.Proofs, Reachable: true, Subscription: owned.Subscription(DateTimeOffset.UtcNow), PurchasedAt: owned.PurchasedAt.ToDictionary(e => e.Key, e => e.Value), Incomplete: owned.Incomplete);
     }
 

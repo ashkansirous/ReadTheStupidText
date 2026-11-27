@@ -42,8 +42,12 @@ public sealed class WindowsPurchases : IBookPurchases
     // The Store has no separate restore: the account's add-ons are read again.
     public Task<PurchaseSnapshot> RestoreAsync(IReadOnlyCollection<string> productIds, CancellationToken cancel) => RefreshAsync(productIds, interactive: true, cancel);
 
+    /// <summary>Slice 455: the paid offer and whether the Store said the account already owns it, for the purchase usage count.</summary>
+    public BuyNote LastBuyNote { get; private set; } = BuyNote.None;
+
     public async Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel)
     {
+        LastBuyNote = BuyNote.None;
         StoreContext? context = Context();
         if (context is null)
         {
@@ -61,6 +65,7 @@ public sealed class WindowsPurchases : IBookPurchases
         }
 
         StorePurchaseResult result = await product.RequestPurchaseAsync();
+        LastBuyNote = new BuyNote(Offer: null, AlreadyOwned: result.Status == StorePurchaseStatus.AlreadyPurchased); // Slice 455: no offer from the buy itself; BookPurchases reads the subscription's trial state (collection data) after the buy
         return result.Status switch
         {
             StorePurchaseStatus.Succeeded or StorePurchaseStatus.AlreadyPurchased => BuyOutcome.Bought,

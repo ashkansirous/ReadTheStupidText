@@ -247,6 +247,8 @@ interface EventRule {
   readonly deviceCount?: boolean;
   /** Slice 288: true for the events whose `seconds` (whole seconds of audio played, 0 to a day) is kept (`read_paused`, `read_stopped`). */
   readonly seconds?: boolean;
+  /** Slice 455: when set, the source the event's detail demands (a `purchase` about a book is a shelf count, every other one is about no book). */
+  readonly sourceOf?: (detail: string) => string;
 }
 
 const emptyDetail = (value: unknown): boolean => value === undefined || value === NO_DETAIL;
@@ -287,6 +289,20 @@ const fallbackDetail = (value: unknown): boolean => {
   const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
   return parts.length === 2 && oneOf(FALLBACK_AREAS, parts[0]) && oneOf(FALLBACK_REASONS, parts[1]);
 };
+
+// Slice 455: a purchase count's detail is "<what>.<outcome>" or, for a subscription, "<what>.<outcome>.<offer>", like "book.bought" or "sub_monthly.shown.trial". Every part comes from a closed list.
+const PURCHASE_SEPARATOR = ".";
+const PURCHASE_BOOK = "book";
+const PURCHASE_SUBSCRIPTIONS = ["sub_monthly", "sub_yearly"] as const;
+const PURCHASE_WHATS = [PURCHASE_BOOK, ...PURCHASE_SUBSCRIPTIONS, "restore", "code"] as const;
+const PURCHASE_OUTCOMES = ["shown", "started", "bought", "pending", "cancelled", "failed", "already_owned", "restored", "nothing_to_restore"] as const;
+const PURCHASE_OFFERS = ["trial", "paid", "code"] as const;
+const purchaseDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(PURCHASE_SEPARATOR) : [];
+  if (parts.length < 2 || parts.length > 3 || !oneOf(PURCHASE_WHATS, parts[0]) || !oneOf(PURCHASE_OUTCOMES, parts[1])) return false;
+  return oneOf(PURCHASE_SUBSCRIPTIONS, parts[0]) ? parts.length === 3 && oneOf(PURCHASE_OFFERS, parts[2]) : parts.length === 2;
+};
+const purchaseSource = (detail: string): string => (detail.startsWith(PURCHASE_BOOK + PURCHASE_SEPARATOR) ? SHELF_SOURCE : NO_BOOK);
 
 // Slice 352: a read's origin (book_opened, read_started) is empty for an older build, else one of READ_ORIGINS.
 const originDetail = (value: unknown): boolean => emptyDetail(value) || oneOf(READ_ORIGINS, value);
@@ -339,6 +355,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_update: { sources: [SHELF_SOURCE], detail: bookUpdateDetail },
   // Slice 273: a feature fell back (area:reason); about a book or about no book. Its `count` is how many times in that session.
   fallback: { sources: [...BOOK_SOURCES, NO_BOOK], detail: fallbackDetail, counts: true },
+  // Slice 455: a buy, restore or code outcome (what.outcome[.offer]); a book's count names the book (shelf), every other one names none.
+  purchase: { sources: [SHELF_SOURCE, NO_BOOK], detail: purchaseDetail, sourceOf: purchaseSource },
   // Slice 352: where the app was and what was pressed; all about no book, closed lists only.
   screen: { sources: [NO_BOOK], detail: pairDetail(SCREENS, SCREEN_ACTIONS) },
   tap: { sources: [NO_BOOK], detail: pairDetail(SCREENS, CONTROLS) },
@@ -477,6 +495,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   const valid =
     typeof name === "string" &&
     oneOf(rule.sources, source) &&
+    (rule.sourceOf === undefined || rule.sourceOf(detail) === source) &&
     bookMatchesSource(book, source) &&
     matches(LANGUAGE_PATTERN, language) &&
     (rule.language === undefined || language === rule.language) &&

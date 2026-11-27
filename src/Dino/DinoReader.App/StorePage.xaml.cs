@@ -473,11 +473,36 @@ public partial class StorePage : ContentView, ICornerTabView
 		_cardShowsPlans = plan.ShowPlans;
 		_planShowsTrial = plan.PlansHaveTrial;
 		ApplyCardLayout();
+		RecordCardShown(monthly, yearly);
 #if DEBUG
 		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] card visible={SubscriptionCard.IsVisible} active={active} monthly={BookAccess.HasPrice(monthly)} yearly={BookAccess.HasPrice(yearly)} kind={plan.Kind} save={plan.SaveTag?.ToString() ?? "none"} trial={plan.PlansHaveTrial} locked={plan.LockedCount} wide={_cardWide}");
 #endif
 	}
 
+	// Slice 455: the plans were shown to the grown-up: one count per plan, once per visit to the Store (the card redraws many times; a card that only appears later in the visit counts then), with the offer the card promises.
+	private void RecordCardShown(string? monthly, string? yearly)
+	{
+		if (!_onScreen || !SubscriptionCard.IsVisible || !_cardShowsPlans)
+		{
+			return;
+		}
+
+		IEnumerable<StoreItem> items = _allRows.Select(r => r.Item);
+		if (!_monthlyShownCounted && BookAccess.HasPrice(monthly))
+		{
+			_monthlyShownCounted = true; // one flag per plan: a price that arrives later in the visit still counts its own plan, once
+			_client.Sales.Purchases.RecordShown(SubscriptionProducts.Monthly, items, _planShowsTrial);
+		}
+
+		if (!_yearlyShownCounted && BookAccess.HasPrice(yearly))
+		{
+			_yearlyShownCounted = true;
+			_client.Sales.Purchases.RecordShown(SubscriptionProducts.Yearly, items, _planShowsTrial);
+		}
+	}
+
+	private bool _monthlyShownCounted; // both reset when the tab goes off screen
+	private bool _yearlyShownCounted;
 	private bool _cardWide;
 	private bool _cardShowsPlans;
 	private bool _planShowsTrial = true;
@@ -685,6 +710,8 @@ public partial class StorePage : ContentView, ICornerTabView
 		ClearOnScreen();
 		_restoreRun?.Cancel(); // a running restore stops fetching and shows no line (its downloads may still finish, as a row's do)
 		_onScreen = false; // the subscription stays: a change while hidden is remembered (check8 #7)
+		_monthlyShownCounted = false; // Slice 455: the next visit shows the card again
+		_yearlyShownCounted = false;
 		_lifetime.Cancel();
 	}
 
@@ -986,6 +1013,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 
 		HideRestoreMessage(); // a buy changes what the last restore counted
+		_client.Sales.Purchases.RecordShown(product, _allRows.Select(r => r.Item)); // Slice 455: the paid book's buy prompt opened (once per press, as the Gallery's lapsed-book Buy does)
 		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
 			_ => _client.Sales.Purchases.BuyAsync(product, _allRows.Select(r => r.Item), CancellationToken.None));
 		await ReplanRowsAsync();

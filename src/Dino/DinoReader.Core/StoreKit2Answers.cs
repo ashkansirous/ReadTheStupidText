@@ -3,12 +3,16 @@ using System.Text.Json;
 namespace DinoReader.Core;
 
 /// <summary>One StoreKit 2 transaction as the Swift wrapper reports it (Slice 390). <paramref name="Jws"/> is Apple's signed transaction, the purchase proof the Worker verifies.</summary>
-public sealed record StoreKitTransaction(string ProductId, DateTimeOffset? PurchasedAt, DateTimeOffset? ExpiresAt, bool Trial, string Jws, bool Revoked = false);
+public sealed record StoreKitTransaction(string ProductId, DateTimeOffset? PurchasedAt, DateTimeOffset? ExpiresAt, bool Trial, string Jws, bool Revoked = false, string? Offer = null, string? OriginalId = null); // Slice 455: Offer is the wrapper's "trial", "paid" or "code" (a PurchaseDetail offer), null from an older wrapper; OriginalId is the subscription's id across renewals (kept on the device only, never sent)
 
 /// <summary>The wrapper's answer to "what does this Apple ID own": <paramref name="Current"/> are the entitlements, <paramref name="Latest"/> the newest transaction of each subscription plan (expired ones too).</summary>
 public sealed record StoreKitEntitlements(IReadOnlyList<StoreKitTransaction> Current, IReadOnlyList<StoreKitTransaction> Latest, bool Incomplete = false) // Incomplete: some entry did not verify and was left out; it only triggers one fallback event, the verified ones are the whole truth
 {
     public IReadOnlySet<string> Owned => Current.Select(t => t.ProductId).ToHashSet();
+
+    /// <summary>Slice 455: the original transaction id of each subscription an offer code started (the purchase usage count's "code.bought", once per id).</summary>
+    public IReadOnlyList<string> CodeRedemptions =>
+        [.. Current.Where(t => SubscriptionProducts.Is(t.ProductId) && t.Offer == PurchaseDetail.OfferCode && !string.IsNullOrEmpty(t.OriginalId)).Select(t => t.OriginalId!).Distinct()];
 
     /// <summary>The proof per owned product: the JWS of its newest transaction.</summary>
     public IReadOnlyDictionary<string, string> Proofs =>
@@ -181,7 +185,8 @@ public static class StoreKit2Answers
 
         bool trial = item.TryGetProperty("trial", out JsonElement t) && t.ValueKind == JsonValueKind.True;
         bool revoked = item.TryGetProperty("revoked", out JsonElement r) && r.ValueKind == JsonValueKind.True;
-        return new StoreKitTransaction(product, Millis(item, "purchasedAt"), Millis(item, "expiresAt"), trial, jws, revoked);
+        string? offer = Text(item, "offer") is { } named && PurchaseDetail.Offers.Contains(named) ? named : null; // closed list only: nothing else is ever counted
+        return new StoreKitTransaction(product, Millis(item, "purchasedAt"), Millis(item, "expiresAt"), trial, jws, revoked, offer, Text(item, "originalId"));
     }
 
     private static DateTimeOffset? Millis(JsonElement item, string name) =>

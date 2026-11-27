@@ -57,11 +57,15 @@ public sealed class AndroidPurchases : IBookPurchases
     // Play has no separate restore: what the account owns is read again.
     public Task<PurchaseSnapshot> RestoreAsync(IReadOnlyCollection<string> productIds, CancellationToken cancel) => RefreshAsync(productIds, interactive: true, cancel);
 
+    /// <summary>Slice 455: the offer the last Buy asked for and whether Play said the account already owns it, for the purchase usage count.</summary>
+    public BuyNote LastBuyNote { get; private set; } = BuyNote.None;
+
     public Task<BuyOutcome> BuyAsync(string productId, CancellationToken cancel) => BuyAsync(productId, withTrial: true, cancel);
 
     // withTrial false buys the base plan even when Play lists the trial offer: the card (an Ended one) showed the plain price with no trial, so the sheet must not start one.
     public async Task<BuyOutcome> BuyAsync(string productId, bool withTrial, CancellationToken cancel)
     {
+        LastBuyNote = BuyNote.None; // first: an early Failed below must not leave the previous buy's note (an already-owned one) to be read
         BillingClient? client = await ConnectAsync();
         if (client is null || Platform.CurrentActivity is not { } activity)
         {
@@ -81,7 +85,7 @@ public sealed class AndroidPurchases : IBookPurchases
             return BuyOutcome.Failed;
         }
 
-        Task<BuyOutcome> result = _updates.NextAsync();
+        Task<PurchasesUpdates.Result> result = _updates.NextAsync();
         BillingFlowParams.ProductDetailsParams.Builder builder = BillingFlowParams.ProductDetailsParams.NewBuilder().SetProductDetails(details);
         if (isPlan)
         {
@@ -95,10 +99,16 @@ public sealed class AndroidPurchases : IBookPurchases
         if (launched.ResponseCode != BillingResponseCode.Ok)
         {
             _updates.Abandon();
+            string? launchOffer = isPlan ? PurchaseDetail.OfferOf(withTrial && plans.TrialPlans.Contains(productId)) : null;
+            LastBuyNote = new BuyNote(launchOffer, AlreadyOwned: launched.ResponseCode == BillingResponseCode.ItemAlreadyOwned); // Slice 455: Play refuses to launch the sheet for an owned item, and says so here
             return launched.ResponseCode == BillingResponseCode.UserCancelled ? BuyOutcome.Cancelled : BuyOutcome.Failed;
         }
 
-        return await result; // the purchase is acknowledged in the updates listener, and any other one wherever the account's purchases are read
+        (BuyOutcome ended, bool alreadyOwned) = await result; // alreadyOwned is this buy's own completion, never an earlier or unrelated Play callback's
+        // Slice 455: the offer asked for (the trial only when Play listed it for this account); Play's client cannot confirm a trial was granted, so Slice 458's server notifications are the source of truth for trials.
+        string? offer = isPlan ? PurchaseDetail.OfferOf(withTrial && plans.TrialPlans.Contains(productId)) : null;
+        LastBuyNote = new BuyNote(offer, alreadyOwned);
+        return ended; // the purchase is acknowledged in the updates listener, and any other one wherever the account's purchases are read
     }
 
     public async Task<bool> RedeemCodeAsync() => await Launcher.Default.OpenAsync(new Uri(RedeemAddress));
@@ -394,13 +404,16 @@ public sealed class AndroidPurchases : IBookPurchases
     // Play reports the result of the purchase sheet here; BuyAsync waits for the next one.
     private sealed class PurchasesUpdates : Java.Lang.Object, IPurchasesUpdatedListener
     {
-        private TaskCompletionSource<BuyOutcome>? _next;
+        /// <summary>Slice 455: what one buy's completion says: its outcome and whether Play said the account already owns the item.</summary>
+        public readonly record struct Result(BuyOutcome Outcome, bool AlreadyOwned);
+
+        private TaskCompletionSource<Result>? _next;
 
         /// <summary>The client the updates arrive from, so a purchase reported here (also one nobody is waiting for) is acknowledged.</summary>
         public BillingClient? Client { get; set; }
-        public Task<BuyOutcome> NextAsync()
+        public Task<Result> NextAsync()
         {
-            _next = new TaskCompletionSource<BuyOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _next = new TaskCompletionSource<Result>(TaskCreationOptions.RunContinuationsAsynchronously);
             return _next.Task;
         }
 
@@ -416,7 +429,7 @@ public sealed class AndroidPurchases : IBookPurchases
                 }
             }
 
-            _next?.TrySetResult(OutcomeOf(result, purchases));
+            _next?.TrySetResult(new Result(OutcomeOf(result, purchases), result.ResponseCode == BillingResponseCode.ItemAlreadyOwned));
         }
 
         private static BuyOutcome OutcomeOf(BillingResult result, IList<Purchase>? purchases)
