@@ -298,9 +298,9 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 
 			return swapped ? HighResOutcome.Done : HighResOutcome.Gone;
 		}
-		catch (Exception ex) when (ex is not (IOException or UnauthorizedAccessException or OperationCanceledException or ShelfRaceException)) // Slice 377 item 16: a shelf race (ShelfRaceException, thrown only by the shelf call sites; any other InvalidOperationException is the package's) is the shelf's, not the package's: it is retried below, never counted against a good package
+		catch (Exception ex) when (QuickUpgradePlan.IsBadStagedPackage(ex)) // Slice 463 F7 (same fault as check pass 2 #5): only a confirmed bad file (broken zip or manifest content) is the package's; a shelf race, storage, cancellation or any other fault is retried below and counts nothing
 		{
-			// Review round 6 #2: any fault that is not storage or cancellation is the package's (a damaged zip entry can throw many types): counted, so three of them end the attempts for this version.
+			// Review round 6 #2: a corrupt package (a damaged zip entry can throw many types, see QuickUpgradePlan.IsBadStagedPackage; storage, network and cancellation faults are not counted) is counted, so three of them end the attempts for this version.
 			HighResLog.Write($"{entry.Id}: bad staged high-res package: {ex.Message}");
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			return HighResOutcome.BadPackage;

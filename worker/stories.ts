@@ -886,7 +886,7 @@ function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, langu
   const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
   if (version === null || version === "invalid" || offered === undefined || !servesAudioVersion(entry, language, offered.version, version)) return Promise.resolve(statusOnly(404));
   const size = requestedSize(new URL(request.url));
-  if (size === "invalid") return Promise.resolve(badRequest(`Unknown pack size. Use ${PACKAGE_SIZES.join(" or ")}.`));
+  if (size === "invalid" || size === "hd") return Promise.resolve(badRequest("Unknown pack size. Use standard or quick.")); // Slice 463 F5: an audio pack has no high-res copy
   if (size === "quick") return serveQuickAudio(request, bucket, entry, language, offered, version, serve);
   return serve(request, bucket, audioFile(entry.id, language, version), VERSIONED_CACHE);
 }

@@ -223,13 +223,15 @@ public sealed class AudioPackStoreTests : IDisposable
 
         Assert.Equal(PackInstall.Installed, result); // decided by the new manifest being in place, not by the delete of the old copy
         Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "s.m4a")); // the cached pack is the new one
-        Assert.True(Directory.Exists(FaFolder + ".old"));
-        File.SetAttributes(Path.Combine(FaFolder + ".old", "q.m4a"), FileAttributes.Normal);
+        Assert.False(Directory.Exists(FaFolder + ".old")); // check pass 3 #2: renamed to a trash folder under the lock, the delete after it failed
+        string[] trash = Directory.GetDirectories(Path.GetDirectoryName(FaFolder)!, "*.trash-*");
+        Assert.Single(trash);
+        File.SetAttributes(Path.Combine(trash[0], "q.m4a"), FileAttributes.Normal);
 
         AudioPackStore nextLaunch = Store(new FakeFetcher(standard));
         Assert.Equal(1, nextLaunch.InstalledVersion(Book, "fa"));
 
-        Assert.False(Directory.Exists(FaFolder + ".old"));
+        Assert.Empty(Directory.GetDirectories(Path.GetDirectoryName(FaFolder)!, "*.trash-*")); // the next launch's recovery swept it
         Assert.NotNull(nextLaunch.Open(Book, "fa")!.PathOf(0, Text + "s.m4a"));
     }
 
