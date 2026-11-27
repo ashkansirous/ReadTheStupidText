@@ -9,7 +9,7 @@ Play short description (<= 80): Godnathistorier og billedbøger for børn. Indta
 Play search phrases used in the text: godnathistorier, eventyr for børn, billedbøger, oplæsning
 App Store subtitle (<= 30): Godnathistorier med din stemme
 App Store keywords (<= 100 bytes): eventyr,billedbog,oplæsning,højtlæsning,lydbog,børn,indtale,mormor,tosproget,børnehave
-App Store promotional text (<= 170): Historier læst højt for børn på 3 til 9 år, med en stemme til hver figur og plads til din egen. Ingen reklamer. Fire gratis, resten 0,99 USD. 15 sprog.
+App Store promotional text (<= 170): Historier læst højt for børn på 3 til 9 år, med en stemme til hver figur og plads til din egen. Ingen reklamer. Abonner på alle bøger, eller køb kun dem, du kan lide.
 Microsoft search terms (7): godnathistorier; børnebøger; historier for børn; oplæsning; billedbøger; børnehistorier; eventyr
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ LAVET TIL BØRN
 - Når en historie og dens sprog er hentet, læses den højt uden internet.
 - Dine optagelser bliver på din enhed. Tag sikkerhedskopi og gendan dem fra de voksnes område.
 - Valgfri anonyme brugstællinger uden navne eller identifikatorer, som kan slås fra i Indstillinger (bag de voksnes lås).
+
+## App Store description (live since 2026-11-15, locale da; read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader læser billedbogshistorier højt for børn på 3 til 9 år, med en forskellig stemme til hver figur. Fortælleren fortæller historien, og ulven, grisene og honningkagemanden taler hver med sin egen stemme.
+
+VÆLG DINE HISTORIER
+En voksen vælger bøger fra historiehylden: klassiske eventyr genfortalt blidt, med et billede på hver side. Fire historier er gratis. Hver bog kommer med sine egne færdiglavede stemmer, på det sprog du vælger.
+
+FAMILIEN I HISTORIEN
+En forælder eller bedsteforælder kan indtale sin egen stemme til en hvilken som helst figur, på en hvilken som helst side og på et hvilket som helst historiesprog. Dit barn hører dig læse op, og optagelsen bliver på din enhed.
+
+LÆS SAMMEN
+- Hver sætning lyser op, mens den læses, så børnene kan følge med.
+- Vælg kun billede, kun tekst, eller billede og tekst.
+- Læsehastighed fra 0,8x til 1,2x og dyrelyde, som du kan slå til og fra.
+- Et nattema til godnathistorier.
+
+HISTORIER OG PRISER
+Fire illustrerede historier er gratis: Løven og musen, Honningkagemanden, De tre små grise og X markerer skatten. Abonner for at få alle de andre historier, eller køb kun de historier, du vil have, og behold dem. Abonnementet er månedligt eller årligt, begynder med 7 dages gratis prøveperiode for nye abonnenter (én gang pr. Apple-ID) og fornys automatisk til den pris, der vises i appen, indtil du opsiger det i dine Apple-ID-indstillinger mindst 24 timer før periodens udløb. Det åbner alle betalte historier, mens det kører; når det slutter, forlader historier, du kun havde via det, barnets hylde, og et nyt abonnement eller køb af én bringer den straks tilbage. Historier, du køber, er dine at beholde, med eller uden abonnement. En voksen abonnerer eller køber bag de voksnes lås og kan gendanne køb når som helst. Historier, du allerede har, bliver på din enhed.
+
+FEMTEN SPROG
+Appen, historierne og stemmerne findes på engelsk, arabisk, kinesisk, dansk, hollandsk, persisk, finsk, fransk, tysk, japansk, norsk, portugisisk, russisk, spansk og svensk.
+
+LAVET TIL BØRN
+- Ingen reklamer.
+- Abonnementer og historier købes via App Store af en voksen bag de voksnes lås. Der er ingen konto at oprette, og vi gemmer intet om dig eller dit køb; butikkens bevis tjekkes og glemmes.
+- Indstillinger, køb og sletning af historier, optagelse og sikkerhedskopier ligger bag de voksnes lås.
+- Når en historie og dens sprog er hentet, læses den højt uden internet.
+- Dine optagelser bliver på din enhed. Tag sikkerhedskopi og gendan dem fra de voksnes område.
+- Valgfri anonyme brugstællinger uden navne eller identifikatorer, som kan slås fra i Indstillinger (bag de voksnes lås).
+
+Brugsvilkår: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privatlivspolitik: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

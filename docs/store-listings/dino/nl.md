@@ -9,7 +9,7 @@ Play short description (<= 80): Voorgelezen slaapverhaaltjes en prentenboeken. N
 Play search phrases used in the text: slaapverhaaltjes, sprookjes voor kinderen, prentenboeken, voorlezen
 App Store subtitle (<= 30): Slaapverhaaltjes in jouw stem
 App Store keywords (<= 100 bytes): sprookjes,prentenboek,voorlezen,luisterboek,kinderen,opnemen,oma,tweetalig,peuter,kleuter,bedtijd
-App Store promotional text (<= 170): Verhalen voorgelezen aan kinderen van 3 tot 9 jaar, met een stem voor elk personage en ruimte voor je eigen stem. Geen reclame. Vier gratis, de rest 0,99 USD. 15 talen.
+App Store promotional text (<= 170): Verhalen voor kinderen van 3 tot 9 jaar, met een stem voor elk personage en ruimte voor je eigen stem. Geen reclame. Neem een abonnement of koop alleen wat je mooi vindt.
 Microsoft search terms (7): slaapverhaaltjes; kinderboeken; verhalen voor kinderen; voorlezen; prentenboeken; kinderverhalen; sprookjes
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ GEMAAKT VOOR KINDEREN
 - Zodra een verhaal en zijn taal zijn gedownload, wordt er offline voorgelezen.
 - Je opnames blijven op je apparaat. Maak er een back-up van en herstel ze vanuit het volwassenengedeelte.
 - Optionele anonieme gebruikstellers zonder namen of identificatoren, uit te zetten in Instellingen (achter de volwassenenpoort).
+
+## App Store description (live since 2026-11-15, locale nl-NL; read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader leest prentenboekverhalen voor aan kinderen van 3 tot 9 jaar, met een andere stem voor elk personage. De verteller vertelt het verhaal, en de wolf, de biggetjes en het peperkoekmannetje praten elk met hun eigen stem.
+
+KIES JE VERHALEN
+Een volwassene kiest boeken uit de verhalenplank: klassieke sprookjes, zacht hervertelt, met een plaatje op elke pagina. Vier verhalen zijn gratis. Elk boek komt met zijn eigen vooraf gemaakte stemmen, in de taal die je kiest.
+
+FAMILIE IN HET VERHAAL
+Een ouder of grootouder kan de eigen stem opnemen voor elk personage, op elke pagina en in elke verhaaltaal. Je kind hoort jou voorlezen, en de opname blijft op je apparaat.
+
+SAMEN LEZEN
+- Elke zin licht op terwijl hij wordt voorgelezen, zodat kinderen kunnen meelezen.
+- Kies alleen plaatje, alleen tekst, of plaatje en tekst.
+- Leessnelheid van 0,8x tot 1,2x en dierengeluiden die je aan of uit kunt zetten.
+- Een nachtthema voor slaapverhaaltjes.
+
+VERHALEN EN PRIJZEN
+Vier geïllustreerde verhalen zijn gratis: De leeuw en de muis, Het peperkoekmannetje, De drie biggetjes en X markeert de schat. Neem een abonnement voor alle andere verhalen, of koop alleen de verhalen die je wilt en bewaar ze. Het abonnement is maandelijks of jaarlijks, begint voor nieuwe abonnees met een gratis proefperiode van 7 dagen (één keer per Apple ID) en wordt automatisch verlengd tegen de prijs die in de app staat, tot je het opzegt in je Apple ID-instellingen, minstens 24 uur voor het einde van de periode. Het opent alle betaalde verhalen zolang het loopt; als het afloopt, verdwijnen verhalen die je alleen daardoor had van de plank van het kind, en opnieuw abonneren of er een kopen brengt het meteen terug. Verhalen die je koopt, zijn van jou, met of zonder abonnement. Een volwassene neemt een abonnement of koopt achter de volwassenenpoort en kan aankopen op elk moment herstellen. Verhalen die je al hebt, blijven op je apparaat.
+
+VIJFTIEN TALEN
+De app, de verhalen en de stemmen zijn er in het Engels, Arabisch, Chinees, Deens, Nederlands, Perzisch, Fins, Frans, Duits, Japans, Noors, Portugees, Russisch, Spaans en Zweeds.
+
+GEMAAKT VOOR KINDEREN
+- Geen reclame.
+- Abonnementen en verhalen worden gekocht via App Store, door een volwassene achter de volwassenenpoort. Je hoeft geen account aan te maken, en we bewaren niets over jou of je aankoop; het bewijs van de winkel wordt gecontroleerd en vergeten.
+- Instellingen, het kopen en verwijderen van verhalen, opnemen en back-ups zitten achter een volwassenenpoort.
+- Zodra een verhaal en zijn taal zijn gedownload, wordt er offline voorgelezen.
+- Je opnames blijven op je apparaat. Maak er een back-up van en herstel ze vanuit het volwassenengedeelte.
+- Optionele anonieme gebruikstellers zonder namen of identificatoren, uit te zetten in Instellingen (achter de volwassenenpoort).
+
+Gebruiksvoorwaarden: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacybeleid: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

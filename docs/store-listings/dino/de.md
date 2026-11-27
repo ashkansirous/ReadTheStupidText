@@ -61,13 +61,13 @@ Subtitle (<= 30): Gute Nacht mit Ihrer Stimme
 
 Keywords (<= 100 bytes, no spaces after commas): gutenachtgeschichten,kindergeschichten,bilderbuch,vorlesen,hörbuch,märchen,aufnehmen,zweisprachig
 
-Promotional text (<= 170): Geschichten zum Vorlesen für Kinder von 3 bis 9, mit einer Stimme für jede Figur und Platz für Ihre eigene. Keine Werbung. Vier gratis, weitere je 0,99 €. 15 Sprachen.
+Promotional text (<= 170): Vorlesegeschichten für Kinder von 3 bis 9, mit einer Stimme für jede Figur und Platz für Ihre eigene. Keine Werbung. Alle Bücher abonnieren oder nur einzelne kaufen.
 
 What's new: none (first version 1.0).
 
-Description (<= 4,000):
+Description (<= 4,000), live since 2026-11-15 (locale de-DE, read from App Store Connect 2026-11-27, includes the subscription paragraph, purchase bullet and the Terms and Privacy Policy lines with `https://dinoreader.sirous.uk/privacy.html`):
 
-Dino liest Kindern von 3 bis 9 Jahren Bilderbuch-Geschichten vor, mit einer eigenen Stimme für jede Figur. Der Erzähler erzählt die Geschichte, und der Wolf, die Schweinchen und der Lebkuchenmann sprechen jeweils mit ihrer eigenen Stimme.
+Dino Book Reader liest Kindern von 3 bis 9 Jahren Bilderbuch-Geschichten vor, mit einer eigenen Stimme für jede Figur. Der Erzähler erzählt die Geschichte, und der Wolf, die Schweinchen und der Lebkuchenmann sprechen jeweils mit ihrer eigenen Stimme.
 
 GESCHICHTEN AUSSUCHEN
 Ein Erwachsener wählt Bücher aus dem Geschichtenregal: bekannte Märchen, sanft neu erzählt, mit einem Bild auf jeder Seite. Vier Geschichten sind kostenlos. Jedes Buch bringt seine eigenen vorproduzierten Stimmen mit, in der Sprache, die Sie wählen.
@@ -82,18 +82,21 @@ GEMEINSAM LESEN
 - Ein Nachtmodus für Gutenachtgeschichten.
 
 GESCHICHTEN UND PREISE
-Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Jede weitere Geschichte im Geschichtenregal kostet je 0,99 € bzw. der entsprechende Preis in Ihrer Landeswährung (der App Store zeigt den Preis an). Ein Erwachsener kauft eine Geschichte einmal, hinter der Erwachsenensperre, per In-App-Kauf und kann frühere Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
+Vier bebilderte Geschichten sind kostenlos: Der Löwe und die Maus, Der Lebkuchenmann, Die drei kleinen Schweinchen und X markiert die Stelle. Abonnieren Sie alle weiteren Geschichten, oder kaufen Sie nur die Geschichten, die Sie möchten, und behalten Sie sie. Das Abo gibt es monatlich oder jährlich, beginnt für neue Abonnenten mit einer 7-tägigen kostenlosen Testphase (einmal pro Apple-ID) und verlängert sich automatisch zum in der App angezeigten Preis, bis Sie es spätestens 24 Stunden vor Ende des Zeitraums in den Einstellungen Ihrer Apple-ID kündigen. Es öffnet alle kostenpflichtigen Geschichten, solange es läuft; wenn es endet, verlassen Geschichten, die Sie nur darüber hatten, das Regal des Kindes, und ein erneutes Abonnieren oder der Kauf einer Geschichte bringt sie sofort zurück. Gekaufte Geschichten gehören Ihnen, mit oder ohne Abo. Ein Erwachsener abonniert oder kauft hinter der Erwachsenensperre und kann Käufe jederzeit wiederherstellen. Geschichten, die Sie schon haben, bleiben auf Ihrem Gerät.
 
 FÜNFZEHN SPRACHEN
-Die App, die Geschichten und die Stimmen gibt es auf Englisch, Chinesisch, Spanisch, Arabisch, Französisch, Portugiesisch, Russisch, Deutsch, Japanisch, Farsi, Niederländisch, Schwedisch, Dänisch, Finnisch und Norwegisch.
+Die App, die Geschichten und die Stimmen gibt es auf Arabisch, Chinesisch, Dänisch, Deutsch, Englisch, Farsi, Finnisch, Französisch, Japanisch, Niederländisch, Norwegisch, Portugiesisch, Russisch, Schwedisch und Spanisch.
 
 FÜR KINDER GEMACHT
 - Keine Werbung.
-- Geschichten werden über den App Store gekauft, von einem Erwachsenen hinter der Erwachsenensperre. Es gibt kein Konto anzulegen, und wir speichern nichts über den Käufer.
+- Abos und Geschichten werden über den App Store gekauft, von einem Erwachsenen hinter der Erwachsenensperre. Es gibt kein Konto anzulegen, und wir speichern nichts über Sie oder Ihren Kauf; der Nachweis des Stores wird geprüft und vergessen.
 - Einstellungen, Kaufen und Löschen von Geschichten, Aufnehmen und Sicherungen liegen hinter einer Erwachsenensperre.
 - Sobald eine Geschichte und ihre Sprache geladen sind, funktioniert das Vorlesen offline.
 - Ihre Aufnahmen bleiben auf Ihrem Gerät. Sie lassen sich im Erwachsenenbereich sichern und wiederherstellen.
 - Optionale anonyme Nutzungszählungen ohne Namen oder Kennungen, in den Einstellungen abschaltbar (hinter der Erwachsenensperre).
+
+Nutzungsbedingungen: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Datenschutzerklärung: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 
