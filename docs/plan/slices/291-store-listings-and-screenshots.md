@@ -1,7 +1,7 @@
 # Slice 291 — Store listings and screenshots for both apps on Play, App Store and Microsoft Store
 **Product:** Shared
 
-*In progress (wave 2026-11-27, night wave 9), draft PR: items 12 and 13 only.*
+*Items 12 and 13 merged as PR #1445 (06618f59, wave 2026-11-27, night wave 9): the Dino repo listing files match the live App Store text, and RTST App Store availability is set (175 territories, CHN off). Still open: the RTST Microsoft Store English text push, the RTST control-panel shot, the RTST iOS shots and uploads, and item 4's RTST values. The row stays `planned`.*
 
 *Start pass 2026-11-27: row set from `in progress` to `planned`, because nobody holds the slice (no PR, no live worktree). Tonight's buildable part is item 12 (repo Dino listing files level with the live text) and item 13 (App Store Connect availability for app 6825052929 through the ASC API, with the `ASC_API_*` secrets); the Partner Center items need the owner's browser.*
 

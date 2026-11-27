@@ -761,6 +761,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 406: Feedback loop 2026-11-17-2105 leftovers ([slice](slices/406-feedback-loop-2026-11-17-2105-leftovers.md))
+- [cloud] The `flow-lint` job starts on the first src-only PR after PR #1443 merges and the full self-test set is skipped (the job gating has no self-test).
+
 ### Slice 442: Phone, emulator and iOS harness follow-ups ([slice](slices/442-phone-emulator-ios-harness-followups.md))
 - [cloud] The `ios-sim-*.sh` and `dinoreader-ios-sim.yml` changes (budget guard, `kill_driver`, settle seconds, 1080 s step budget) run on the CI Mac: check the next iOS simulator workflow run.
 - [session] `reset-dino-language.ps1` exit 2 path (Dino dev app not installed) has not been run.
