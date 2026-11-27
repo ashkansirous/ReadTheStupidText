@@ -1,7 +1,7 @@
 ### Slice 430 — Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform
 **Product:** Dino
 
-*Built 2026-11-22; dashboard uploaded the same day.*
+*Built 2026-11-22, merged as PR #1336 (a8b1121); dashboard uploaded the same day.*
 
 **Touches:** `docs/analytics/ninjalog-forced-update.template.json` (new), `docs/analytics/ninjalog-dashboards/forced-update.json` (new, generated), `tools/dino/ninjalog-dashboards.mjs`, `tools/dino/ninjalog-dashboards.test.mjs`, `docs/analytics/ninjalog-queries.md`, `.gitattributes`, `.github/workflows/public-name.yml`
 

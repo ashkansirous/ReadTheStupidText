@@ -48,8 +48,8 @@ Facts checked on origin/main 2026-11-18:
 - [x] Regenerate `full-logo.svg`, `support-banner.svg`, `support-banner.png` with the new wordmark (`tools/dino/wordmark/make-wordmarks.mjs`; fontkit + resvg-js, `npm ci` in that folder first).
 - [x] `tools/dino/check-public-name.mjs` + test, wired into CI.
 - [x] Rule line in `src/Dino/DinoReader.App/CLAUDE.md`: the public name comes from `ApplicationTitle`; the check enforces it.
-- [ ] After merge: upload the new full logo and support banner to the Sonos sandbox, Send again (main thread, user's Chrome).
-- [ ] After merge: publish the two changed store books (`love-from-seagull-island`, `x-marks-the-treasure`, credit now
+- [ ] (moved to docs/plan/unverified.md) After merge: upload the new full logo and support banner to the Sonos sandbox, Send again (main thread, user's Chrome).
+- [ ] (moved to docs/plan/unverified.md) After merge: publish the two changed store books (`love-from-seagull-island`, `x-marks-the-treasure`, credit now
       "Dino Book Reader") through the repo's store upload route, then compare `meta.json` with `/api/stories`.
 
 ## Sonos Self Test fixes (first run, 2026-11-18)
@@ -70,7 +70,7 @@ MIME Type not applicable. The failing lines, read from the portal's Test Results
   `Client.LoginUnauthorized`~~ **Reverted** (see *Self Test second run* below): Sonos's own tester sends those values on
   normal browse requests, so the server ignores the credentials header entirely.
 - [x] Tests for all three (worker/sonos.test.mjs).
-- [ ] After merge and deploy, rerun Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal.
+- [ ] (moved to docs/plan/unverified.md) After merge and deploy, rerun Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal.
 
 *Main was red when this PR ran (2026-11-18):* `StoreFilterTests.EveryBookJsonRange_FitsExactlyOneBand` (Slice 394) and
 Love from Seagull Island (PR merged the same day, ages 3-6) landed in parallel, so main's Dino tests fail. This PR sets

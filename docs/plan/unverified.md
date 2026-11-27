@@ -77,6 +77,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 430: Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform ([slice](slices/430-ninjalog-forced-update-dashboard.md))
+- [session] Once someone below `minVersion` opens the app, the "Saw the please update page" chart shows them (on 2026-11-22 no `screen=update` event existed yet in 30 days).
+
+### Slice 417: Dino: both web pages point at the live stores, show the new name and current screenshots; testing closed ([slice](slices/417-dino-sites-after-launch.md))
+- [chrome] Both live pages after deploy: store buttons open the right store pages, no tester link left.
+
+### Slice 410: Dino: the public name is "Dino Book Reader" everywhere a person sees it ([slice](slices/410-dino-public-name-guard.md))
+- [owner] Upload the new full logo and support banner to the Sonos sandbox and Send again (Slice 283 is closed; Slice 438 B9 holds the Self Test and case).
+- [session] Publish the two changed store books (`love-from-seagull-island`, `x-marks-the-treasure`, credit now "Dino Book Reader") through the repo's store upload route, then compare `meta.json` with `/api/stories`.
+- [owner] Rerun the Sonos Self Test (SOAP Compliance, Browse, Sonos Cloud) from the portal after the deploy.
+
 ### Slice 395: Dino: recording a character shows and replaces only that character's quoted words ([slice](slices/395-dino-record-only-the-characters-words.md))
 - [session] Windows head: record a page on the Dino Windows head with the switch off (`PartTakes.Enabled = false`) behaves as before (not run).
 
