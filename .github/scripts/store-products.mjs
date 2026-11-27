@@ -12,6 +12,8 @@
  *   --apply            really create the products (each store is asked first: a complete product is left alone, a half-created one (Apple: missing listing, availability or price; Google: not activated) is completed, so a rerun is safe)
  *   --store <name>     only this store; repeat the flag for several (default: all three)
  *   --content <folder> the books' content folder (default content/dino)
+ *   --locales <list>   only these App Store locales (comma separated, e.g. fr-FR) of the subscription and group listings (Slice 454: the live apply runs one locale first, reads it back, then the rest; an empty list, --book, a run without the Apple store or --submit together with it is an error)
+ *   --submit           with --apply, Apple only, never with --locales or --book: also send the new listing versions to App Review, in the final all-locales run only (without it they stay drafts and the run says so; a rerun reuses the draft; an open review submission holding anything else is left alone with a NOT DONE note)
  *
  * Env for --apply (a store whose variables are missing fails that store only, naming the variable):
  *   Apple:     ASC_API_KEY_P8_BASE64, ASC_API_KEY_ID, ASC_API_ISSUER_ID (the App Store Connect API key; D:/secrets/lets-call-mom holds the key, the same three the iOS review workflow uses)
@@ -29,11 +31,11 @@
  *              then activates the buy option. No API step is left, apart from the merchant/bank setup that must already be done.
  *   Microsoft: API creates the durable add-on shell, then (Slice 411, proven live 2026-11-18) its submission: price Tier1012 (0.99 USD), the en-us listing and the other fields copied from the newest published book
  *              add-on, commit, and a poll of the commit status (a 429 waits the seconds Microsoft names, up to 10 minutes). A pending submission Partner Center edited (409 on PUT) must be deleted there and re-created.
- *              The Partner Center payout and tax profile must exist. Subscription add-on shells are still shells only (UNVERIFIED shapes).
+ *              The Partner Center payout and tax profile must exist. Subscription add-ons are never created here (Slice 454: the submission API accepts only Durable and Consumable); the run prints the Partner Center steps.
  *              Microsoft keys: the Entra app's MS_STORE_TENANT_ID / _CLIENT_ID / _CLIENT_SECRET in D:/secrets/dinoreader/secrets.env map to MS_SUBMISSION_* (store-products-local.mjs does it).
  *
  * Slice 384 adds the Dino subscription (a monthly 1.99 GBP and a yearly 14.99 GBP plan, 7-day free trial) to the same run, after the books: Play one subscription with two base plans and trial offers, Apple one group with
- * two subscriptions (price, listing, trial), Microsoft two subscription add-on shells. Its Apple request shapes are checked against Apple's App Store Connect API docs (developer.apple.com/documentation/appstoreconnectapi, read through context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) and the first --apply answer (the create call has no availableInAllTerritories); the Play shapes are checked against the Google Play Developer API reference (developers.google.com/android-publisher/api-ref/rest/v3, read through context7 /websites/developers_google_android-publisher and the pages themselves, 2026-11-15; no --apply has run yet); the Microsoft shapes are still UNVERIFIED. The dry run lists them and what is left by hand.
+ * two subscriptions (price, listing, trial), Microsoft nothing (Slice 454: by hand in Partner Center). Its Apple request shapes are checked against Apple's App Store Connect API docs (developer.apple.com/documentation/appstoreconnectapi, read through context7 /websites/developer_apple_appstoreconnectapi, 2026-11-15) and the first --apply answer (the create call has no availableInAllTerritories); the Play shapes are checked against the Google Play Developer API reference (developers.google.com/android-publisher/api-ref/rest/v3, read through context7 /websites/developers_google_android-publisher and the pages themselves, 2026-11-15; no --apply has run yet); Microsoft makes no subscription call (Slice 454: the run prints the Partner Center steps). Slice 454 adds the Apple subscription and group listings as new versions (v2 localization routes, reviewSubmissions); those version routes are read from the docs only and not yet proven on a live APPROVED subscription, so the first live run uses --locales with one locale (without --submit) and reads it back.
  *
  * Run live on 2026-11-13 against all three stores (Play: 11 created and activated; Apple: 11 created; Partner Center: 11 add-on shells created). Request shapes the
  * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
@@ -49,7 +51,7 @@ import { accessOf } from './publish-store-books.mjs';
 
 export const Store = { Apple: 'apple', Google: 'google', Microsoft: 'microsoft' };
 export const ALL_STORES = [Store.Apple, Store.Google, Store.Microsoft];
-export const Outcome = { Created: 'created', Completed: 'completed', Exists: 'exists', Failed: 'failed', RateLimited: 'rate limited, rerun later' };
+export const Outcome = { Created: 'created', Completed: 'completed', Exists: 'exists', Failed: 'failed', RateLimited: 'rate limited, rerun later', Manual: 'by hand, no API' };
 
 /** Thrown when a store keeps answering 429 past the run's wait budget; the book ends as `Outcome.RateLimited` (nonzero exit), never reported as done. */
 export class RateLimitedError extends Error {}
@@ -200,7 +202,7 @@ export function isNonJsonBody(text) {
 
 /** Pure: parses the command line; an unknown flag or store is an error, so a typo never turns into a real run. */
 export function parseArgs(argv) {
-    const options = { apply: false, stores: [], contentRoot: DEFAULT_CONTENT_ROOT, book: null, checkPrices: false };
+    const options = { apply: false, stores: [], contentRoot: DEFAULT_CONTENT_ROOT, book: null, checkPrices: false, locales: null, submit: false };
     for (let i = 0; i < argv.length; i++) {
         const flag = argv[i];
         if (flag === '--apply') options.apply = true;
@@ -208,10 +210,24 @@ export function parseArgs(argv) {
         else if (flag === '--content') options.contentRoot = requireValue(flag, argv[++i]);
         else if (flag === '--book') options.book = requireValue(flag, argv[++i]);
         else if (flag === '--check-prices') options.checkPrices = true;
-        else throw new Error(`Unknown argument "${flag}". Usage: store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>] [--book <stem>] [--check-prices]`);
+        else if (flag === '--submit') options.submit = true;
+        else if (flag === '--locales') options.locales = requireValue(flag, argv[++i]).split(',').map((locale) => locale.trim()).filter((locale) => locale !== '');
+        else throw new Error(`Unknown argument "${flag}". Usage: store-products.mjs [--apply] [--store apple|google|microsoft]... [--content <folder>] [--book <stem>] [--check-prices] [--locales <list>] [--submit]`);
     }
     if (options.stores.length === 0) options.stores = [...ALL_STORES];
+    checkSubscriptionFlags(options);
     return options;
+}
+
+/** Pure: --locales and --submit only act on the Apple subscription listings, so a run they cannot reach, an empty list, or both together is an error, never silently ignored (review #3, #4). */
+function checkSubscriptionFlags(options) {
+    if (options.locales !== null && options.locales.length === 0) throw new Error('--locales needs at least one locale (e.g. fr-FR).');
+    for (const [flag, given] of [['--locales', options.locales !== null], ['--submit', options.submit]]) {
+        if (!given) continue;
+        if (options.book !== null) throw new Error(`${flag} only applies to the Apple subscription listings, not to --book.`);
+        if (!options.stores.includes(Store.Apple)) throw new Error(`${flag} only applies to the Apple store; add --store apple.`);
+    }
+    if (options.locales !== null && options.submit) throw new Error('--submit with --locales is refused: --submit is for the final all-locales run only (a one-locale version sent to review blocks the rest run).');
 }
 
 function requireValue(flag, value) {
@@ -489,10 +505,10 @@ export function appleScreenshotReserveBody(iapId, fileSize) {
 }
 
 /** Pure: the commit body (PATCH): `uploaded` plus the MD5 of the whole file. */
-export function appleScreenshotCommitBody(screenshotId, bytes) {
+export function appleScreenshotCommitBody(screenshotId, bytes, type = 'inAppPurchaseAppStoreReviewScreenshots') {
     return {
         data: {
-            type: 'inAppPurchaseAppStoreReviewScreenshots',
+            type,
             id: screenshotId,
             attributes: { uploaded: true, sourceFileChecksum: createHash('md5').update(bytes).digest('hex') },
         },
@@ -536,9 +552,9 @@ async function appleReadScreenshot(asc, iapId, fresh) {
     return must(response, 'check the review screenshot').data ?? null;
 }
 
-async function appleUploadScreenshot(asc, reservation, bytes, put) {
+async function appleUploadScreenshot(asc, reservation, bytes, put, type = 'inAppPurchaseAppStoreReviewScreenshots') {
     for (const operation of reservation.attributes.uploadOperations ?? []) await put(operation, bytes);
-    const committed = must(await asc.patch(`/v1/inAppPurchaseAppStoreReviewScreenshots/${reservation.id}`, appleScreenshotCommitBody(reservation.id, bytes)), 'commit the review screenshot');
+    const committed = must(await asc.patch(`/v1/${type}/${reservation.id}`, appleScreenshotCommitBody(reservation.id, bytes, type)), 'commit the review screenshot');
     if (committed.data?.attributes?.assetDeliveryState?.state === AssetState.Failed) throw new Error(`review screenshot upload failed: ${appleScreenshotErrors(committed.data)}`);
 }
 
@@ -740,8 +756,8 @@ async function microsoftExistingIds(token) {
 export async function createMicrosoftProduct(token, book, existing, storeAppId, { request = microsoftRequest, list = microsoftExistingIds } = {}) {
     const wanted = normalProductId(book.productId);
     if (existing.has(wanted)) return Outcome.Exists;
-    const body = book.kind === 'subscription' ? microsoftSubscriptionBody(book, storeAppId) : microsoftAddOnBody(book, storeAppId);
-    const response = await request(token, 'POST', `${MS_API}/inappproducts`, body);
+    if (book.kind === 'subscription') throw new Error(`${book.productId}: the submission API has no subscription add-on type; create it by hand in Partner Center (Slice 454)`);
+    const response = await request(token, 'POST', `${MS_API}/inappproducts`, microsoftAddOnBody(book, storeAppId));
     if (response.status === HTTP_CONFLICT) {
         const fresh = await list(token);
         if (fresh.has(wanted)) return Outcome.Exists;
@@ -998,7 +1014,7 @@ async function fetchCatalogJson(storeId) {
 
 // ---- Subscription (Slice 384) ----
 // One subscription per store with a monthly (1.99 GBP) and a yearly (14.99 GBP) plan and a 7-day free trial for new subscribers; the stores fill in other countries (Play: convertRegionPrices; Apple: equalised price points).
-// Play: one subscription with two base plans and a trial offer on each. Apple: one subscription group with two products. Microsoft: two subscription add-on shells (price, period and trial are set in Partner Center by hand).
+// Play: one subscription with two base plans and a trial offer on each. Apple: one subscription group with two products. Microsoft: two subscription add-ons made by hand in Partner Center (the submission API has no subscription type, period, trial or GBP price; Slice 454).
 // Every request shape below follows the stores' docs read 2026-11-15 and is marked UNVERIFIED (Microsoft) or "checked against" its doc page (Apple, Play) until a real --apply has run once; this script's dry run (the default) is all that has run for Play.
 
 export const SUBSCRIPTION_PRODUCT_ID = `${PACKAGE_NAME}.sub`;
@@ -1021,23 +1037,24 @@ export function subscriptionItemsFor(store) {
     return SUBSCRIPTION_PLANS.map((plan) => ({ kind: 'subscription', title: `${SUBSCRIPTION_TITLE} (${plan.id})`, productId: plan.productId, plan, problem: null }));
 }
 
-/** Pure: the dry-run lines for the subscription of one store. */
-export function subscriptionPlanLines(store) {
+/** Pure: the dry-run lines for the subscription of one store; `listings` (Apple only) are the other-language listings the run would add. */
+export function subscriptionPlanLines(store, listings = []) {
     const lines = [`${STORE_TITLES[store]}: subscription, ${SUBSCRIPTION_PLANS.map((plan) => `${plan.id} ${plan.gbpLabel} ${SUBSCRIPTION_CURRENCY}`).join(' and ')}, ${TRIAL_DAYS}-day free trial`];
-    for (const item of subscriptionItemsFor(store)) lines.push(`  would create ${item.productId} ("${item.title}")`);
+    for (const item of subscriptionItemsFor(store)) lines.push(store === Store.Microsoft ? `  would NOT create ${item.productId}: the submission API takes only Durable and Consumable add-ons, so Partner Center is by hand (Slice 454)` : `  would create ${item.productId} ("${item.title}")`);
+    if (store === Store.Apple && listings.length > 0) lines.push(...appleListingPlanLines(listings));
     if (store === Store.Google) lines.push(`  other regions: converted from the tax-exclusive equivalent of the GB price (convertRegionPrices takes tax-exclusive, answers tax-inclusive); --apply prints GB, US, DE, JP, AU, CA prices per plan before it creates anything`);
     return [...lines, ...SUBSCRIPTION_MANUAL_STEPS[store].map((step) => `  by hand: ${step}`)];
 }
 
 export const SUBSCRIPTION_MANUAL_STEPS = {
     [Store.Apple]: [
-        'add the review screenshot to each subscription and the subscription group\'s localisation if App Store Connect asks, then submit them for review with an app version (https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions)',
+        'the run adds the review screenshot, the other-language listings (new versions) and, only with --submit, sends them to review through reviewSubmissions; read the answer back at https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions (a subscription Apple refuses is named in the run output)',
     ],
     [Store.Google]: [
         'nothing left once the merchant account is done (Play Console > Monetise with Play > Subscriptions)',
     ],
     [Store.Microsoft]: [
-        'for each subscription add-on set the period (1 month, 1 year), the price (1.99 GBP, 14.99 GBP), the 7-day free trial, its listing and submit it in Partner Center (the submission API cannot set a subscription\'s price or trial)',
+        'the script makes NO Microsoft subscription call: the submission API accepts only Durable and Consumable add-ons and has no billing period, trial or recurring price (Slice 454). In Partner Center (https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview) create two subscription add-ons: uk.sirous.dinoreader.sub.monthly (1 month, 1.99 GBP) and uk.sirous.dinoreader.sub.yearly (1 year, 14.99 GBP), each with a 7-day free trial, the listing texts of docs/store-listings/dino/subscription-listings.md, then submit',
     ],
 };
 
@@ -1300,7 +1317,7 @@ export function appleSubscriptionBody(item, groupId) {
 
 /** Pure: the en-US name and description of an Apple subscription (POST /v1/subscriptionLocalizations). Checked against Apple's docs (managing-auto-renewable-subscriptions, 2026-11-15; the pre-4.4.1 route, deprecated but available). */
 export function appleSubscriptionLocalizationBody(item, subscriptionId) {
-    return { data: { type: 'subscriptionLocalizations', attributes: { name: SUBSCRIPTION_TITLE, description: cut(SUBSCRIPTION_DESCRIPTION, APPLE_DESCRIPTION_MAX), locale: APPLE_LOCALE }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
+    return { data: { type: 'subscriptionLocalizations', attributes: { name: withinLimit(SUBSCRIPTION_TITLE, APPLE_SUBSCRIPTION_NAME_MAX, 'the subscription name'), description: withinLimit(SUBSCRIPTION_DESCRIPTION, APPLE_DESCRIPTION_MAX, 'the subscription description'), locale: APPLE_LOCALE }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
 }
 
 /** Pure: the territory availability of a subscription (POST /v1/subscriptionAvailabilities): every territory, as Apple adds new ones. The create call itself has no availableInAllTerritories (Apple answered so on the first --apply). */
@@ -1532,9 +1549,265 @@ async function appleGroupListings(asc, groupId) {
     return data;
 }
 
-/** Pure: Partner Center's create-add-on body for a subscription shell. UNVERIFIED: that the submission API accepts productType Subscription; if it answers 409 or an error, create the add-on by hand. */
-export function microsoftSubscriptionBody(item, storeAppId) {
-    return { applicationIds: [storeAppId], productId: item.productId, productType: 'Subscription' };
+/** Microsoft subscription add-ons have no API route (Slice 454): no call is made, the outcome says so and the by-hand steps print under it. */
+export function microsoftSubscriptionManual(item) {
+    return { outcome: Outcome.Manual, message: `${item.productId} is created in Partner Center, not through the API` };
+}
+
+// ---- Slice 454: the other App Store languages, the subscription review screenshot, the review submission ----
+// Shapes read through context7 /websites/developer_apple_appstoreconnectapi on 2026-11-27 (4.4.1 versions): POST /v1/subscriptionVersions then POST /v2/subscriptionLocalizations;
+// POST /v1/subscriptionGroupVersions then POST /v2/subscriptionGroupLocalizations; POST /v1/subscriptionAppStoreReviewScreenshots (reserve, PUT, PATCH commit);
+// POST /v1/reviewSubmissions, POST /v1/reviewSubmissionItems (subscriptionVersion / subscriptionGroupVersion), PATCH /v1/reviewSubmissions/{id} submitted. UNVERIFIED until the live apply: whether an APPROVED
+// subscription takes a new version in this way (the first live run uses --locales with one locale and reads it back).
+
+const SUBSCRIPTION_LISTINGS_PATH = fileURLToPath(new URL('../../docs/store-listings/dino/subscription-listings.md', import.meta.url));
+const LISTING_HEADER = /^## (\S+) \(Apple ([A-Za-z-]+), Play [^)]*\)\s*$/;
+const LISTING_NO_APPLE = /^## \S+ \(Apple no App Store listing, Play [^)]*\)\s*$/; // the one heading allowed to carry no Apple locale (fa)
+const APPLE_LISTING_COUNT = 15; // the App Store languages of the listings file; a heading lost or mistyped is caught here, not silently skipped
+const LISTING_NAME_LABEL = '- Apple name: ';
+const LISTING_DESCRIPTION_LABEL = '- Description: ';
+const APPLE_SUBSCRIPTION_NAME_MAX = 30;
+const REVIEW_PLATFORM = 'IOS';
+const SCREENSHOT_TYPE_SUBSCRIPTION = 'subscriptionAppStoreReviewScreenshots';
+const APPLE_LOCALE_LIST_LIMIT = 200;
+
+/** Pure: `text` itself when it fits `max` characters, else an error naming what is too long (never cut: a cut name would go live unseen). */
+export function withinLimit(text, max, what) {
+    const length = Array.from(text).length;
+    if (length > max) throw new Error(`${what} is ${length} characters, Apple allows ${max}: "${text}"`);
+    return text;
+}
+
+/** Pure: the per-language Apple name and description of subscription-listings.md (a language with no Apple locale, such as fa, is skipped); an empty or over-long text is an error. */
+export function parseSubscriptionListings(text) {
+    const listings = [];
+    let current = null;
+    for (const raw of text.split(/\r?\n/)) {
+        const line = raw.trimEnd();
+        const header = LISTING_HEADER.exec(line);
+        if (line.startsWith('## ') && header === null && !LISTING_NO_APPLE.test(line)) throw new Error(`subscription-listings.md: the heading "${line}" is not "## <language> (Apple <locale>, Play <locale>)", so its language would be dropped silently`);
+        if (line.startsWith('## ')) current = header === null ? null : { language: header[1], locale: header[2], name: '', description: '' };
+        if (header !== null) listings.push(current);
+        else if (current !== null && line.startsWith(LISTING_NAME_LABEL)) current.name = line.slice(LISTING_NAME_LABEL.length);
+        else if (current !== null && line.startsWith(LISTING_DESCRIPTION_LABEL)) current.description = line.slice(LISTING_DESCRIPTION_LABEL.length);
+    }
+    const seen = new Set();
+    for (const listing of listings) {
+        if (seen.has(listing.locale)) throw new Error(`subscription-listings.md: the Apple locale ${listing.locale} has two headings`);
+        seen.add(listing.locale);
+    }
+    return listings.map(checkedListing);
+}
+
+function checkedListing(listing) {
+    if (listing.name === '' || listing.description === '') throw new Error(`subscription-listings.md: ${listing.language} (${listing.locale}) has no Apple name or no description`);
+    withinLimit(listing.name, APPLE_SUBSCRIPTION_NAME_MAX, `the ${listing.locale} subscription name`);
+    withinLimit(listing.description, APPLE_DESCRIPTION_MAX, `the ${listing.locale} subscription description`);
+    return listing;
+}
+
+/** Reads the listings file; `locales` (from --locales) keeps only those App Store locales and an unknown one is an error. */
+export function readSubscriptionListings(locales = null, read = () => readFileSync(SUBSCRIPTION_LISTINGS_PATH, 'utf8')) {
+    const all = parseSubscriptionListings(read());
+    if (all.length !== APPLE_LISTING_COUNT) throw new Error(`subscription-listings.md holds ${all.length} Apple languages, expected ${APPLE_LISTING_COUNT}: ${all.map((listing) => listing.locale).join(', ')}`);
+    if (locales === null) return all;
+    const unknown = locales.filter((locale) => !all.some((listing) => listing.locale === locale));
+    if (unknown.length > 0) throw new Error(`--locales: no listing for ${unknown.join(', ')} (known: ${all.map((listing) => listing.locale).join(', ')})`);
+    return all.filter((listing) => locales.includes(listing.locale));
+}
+
+/** Pure: the dry-run lines for the other-language listings. */
+export function appleListingPlanLines(listings) {
+    const codes = listings.map((listing) => listing.locale).join(', ');
+    return [
+        `  would add ${listings.length} listings (${codes}) to the group and to each subscription, each missing one only, in a new version`,
+        '  would add the subscription review screenshot (tools/dino/iap-review-screenshot.png) unless it has one',
+        '  would leave the new versions as drafts; with --submit they go to review (reviewSubmissions, reusing an open one)',
+    ];
+}
+
+// What differs between the subscription and the group when a language is added; both go: new version, then one v2 localization per missing locale.
+const SUBSCRIPTION_KIND = {
+    label: 'subscription',
+    parentType: 'subscriptions',
+    parentRelationship: 'subscription',
+    versionType: 'subscriptionVersions',
+    versionRoute: '/v1/subscriptionVersions',
+    versionsOf: (id) => `/v1/subscriptions/${id}/versions?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    listingsOf: (id) => `/v1/subscriptions/${id}/subscriptionLocalizations?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    versionListingsOf: (id) => `/v1/subscriptionVersions/${id}/localizations?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    listingType: 'subscriptionLocalizations',
+    listingRoute: '/v2/subscriptionLocalizations',
+    itemRelationship: 'subscriptionVersion',
+    attributesOf: (listing) => ({ locale: listing.locale, name: listing.name, description: listing.description }),
+};
+const GROUP_KIND = {
+    label: 'group',
+    parentType: 'subscriptionGroups',
+    parentRelationship: 'subscriptionGroup',
+    versionType: 'subscriptionGroupVersions',
+    versionRoute: '/v1/subscriptionGroupVersions',
+    versionsOf: (id) => `/v1/subscriptionGroups/${id}/versions?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    listingsOf: (id) => `/v1/subscriptionGroups/${id}/subscriptionGroupLocalizations?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    versionListingsOf: (id) => `/v1/subscriptionGroupVersions/${id}/localizations?limit=${APPLE_LOCALE_LIST_LIMIT}`,
+    listingType: 'subscriptionGroupLocalizations',
+    listingRoute: '/v2/subscriptionGroupLocalizations',
+    itemRelationship: 'subscriptionGroupVersion',
+    attributesOf: (listing) => ({ locale: listing.locale, name: APPLE_GROUP_DISPLAY_NAME }),
+};
+export const APPLE_LISTING_KINDS = { subscription: SUBSCRIPTION_KIND, group: GROUP_KIND };
+
+/** Pure: POST of a draft version of a subscription or group. */
+export function appleVersionBody(kind, parentId) {
+    return { data: { type: kind.versionType, relationships: { [kind.parentRelationship]: { data: { type: kind.parentType, id: parentId } } } } };
+}
+
+/** Pure: POST /v2/subscription(Group)Localizations of one language on a version. */
+export function appleVersionListingBody(kind, listing, versionId) {
+    return { data: { type: kind.listingType, attributes: kind.attributesOf(listing), relationships: { version: { data: { type: kind.versionType, id: versionId } } } } };
+}
+
+/** The version states that are never an open draft (context7 /websites/developer_apple_appstoreconnectapi, "Working with subscription versions", 2026-11-27); any other state, including one not named there, counts as a draft (review #2). */
+const APPLE_NON_DRAFT_VERSION_STATES = new Set(['WAITING_FOR_REVIEW', 'IN_REVIEW', 'ACCEPTED', 'APPROVED', 'REJECTED', 'DEVELOPER_REJECTED', 'REPLACED_WITH_NEW_VERSION']);
+
+/** Pure: true when a version in this state is an open draft. */
+export function appleVersionIsDraft(state) {
+    return !APPLE_NON_DRAFT_VERSION_STATES.has(String(state ?? ''));
+}
+
+/** The locales a subscription or group already holds (the current listings plus those of every version) and its newest draft version, if any. A 404 on a version list is an error: the parent exists, so a wrong route must not read as "no versions" (review #5). */
+async function appleHeldLocales(asc, kind, parentId, log = console.log) {
+    const held = new Set((await appleListAll(asc, kind.listingsOf(parentId), `read the ${kind.label} listings`)).map((entry) => entry?.attributes?.locale));
+    let draftId = null;
+    for (const version of await appleListAll(asc, kind.versionsOf(parentId), `read the ${kind.label} versions`)) {
+        for (const entry of await appleListAll(asc, kind.versionListingsOf(version.id), `read the ${kind.label} version listings`)) held.add(entry?.attributes?.locale);
+        const state = version?.attributes?.state;
+        log(`  ${kind.label} ${parentId}: version ${version.id} state ${state ?? '(none)'}`); // the first live run records the real spelling
+        if (appleVersionIsDraft(state)) draftId = version.id;
+    }
+    return { held, draftId };
+}
+
+/** Adds the listings the subscription or group lacks to its draft version (the one a failed run left, else a new one) and queues that version for review in `session.versionItems`. True when it added or queued anything (review #1: a half-filled draft is finished and queued on the rerun). */
+export async function appleAddListings(asc, kind, parentId, listings, session) {
+    const { held, draftId } = await appleHeldLocales(asc, kind, parentId, session.log ?? console.log);
+    const missing = listings.filter((listing) => !held.has(listing.locale));
+    if (missing.length === 0 && draftId === null) return false;
+    const versionId = draftId ?? must(await asc.post(kind.versionRoute, appleVersionBody(kind, parentId)), `create a ${kind.label} version`).data.id;
+    (session.log ?? console.log)(`  ${kind.label} ${parentId}: ${missing.length > 0 ? `adding ${missing.map((listing) => listing.locale).join(', ')} in` : 'queueing'} ${draftId === null ? 'version' : 'the draft version'} ${versionId}`);
+    for (const listing of missing) must(await asc.post(kind.listingRoute, appleVersionListingBody(kind, listing, versionId)), `add the ${listing.locale} ${kind.label} listing`);
+    (session.versionItems ??= []).push({ relationship: kind.itemRelationship, type: kind.versionType, id: versionId });
+    return true;
+}
+
+/** Pure: POST /v1/subscriptionAppStoreReviewScreenshots (reserve). */
+export function appleSubscriptionScreenshotReserveBody(subscriptionId, fileSize) {
+    return { data: { type: SCREENSHOT_TYPE_SUBSCRIPTION, attributes: { fileName: REVIEW_SCREENSHOT_NAME, fileSize }, relationships: { subscription: { data: { type: 'subscriptions', id: subscriptionId } } } } };
+}
+
+/** Adds the shared review screenshot to a subscription unless it has one (the same states as for a book product); true when it uploaded one. */
+export async function appleEnsureSubscriptionScreenshot(asc, subscriptionId, { readImage = readReviewScreenshot, put = putUploadOperation } = {}) {
+    const response = await asc.get(`/v1/subscriptions/${subscriptionId}/appStoreReviewScreenshot`);
+    const current = response.status === HTTP_NOT_FOUND ? null : (must(response, 'check the subscription review screenshot').data ?? null);
+    const need = appleScreenshotNeed(current);
+    if (need.action === 'none') return false;
+    const bytes = readImage();
+    if (need.action === 'replace') must(await asc.delete(`/v1/${SCREENSHOT_TYPE_SUBSCRIPTION}/${need.screenshot.id}`), `delete the failed subscription review screenshot (${need.message})`);
+    const reservation = need.action === 'upload' ? need.screenshot : must(await asc.post(`/v1/${SCREENSHOT_TYPE_SUBSCRIPTION}`, appleSubscriptionScreenshotReserveBody(subscriptionId, bytes.length)), 'reserve the subscription review screenshot').data;
+    await appleUploadScreenshot(asc, reservation, bytes, put, SCREENSHOT_TYPE_SUBSCRIPTION);
+    return true;
+}
+
+/** After createAppleSubscription: the review screenshot, then the other-language listings of the subscription and (once per run) of its group. True when anything was added. */
+export async function appleSubscriptionExtras(asc, item, session, io = {}) {
+    const found = must(await asc.get(`/v1/subscriptionGroups/${session.groupId}/subscriptions`), 'look up subscription');
+    const id = (found.data ?? []).find((entry) => entry?.attributes?.productId === item.productId)?.id;
+    if (id === undefined) throw new Error(`${item.productId}: not found in the group after it was created`);
+    let did = false;
+    try {
+        did = await appleEnsureSubscriptionScreenshot(asc, id, io);
+    } catch (error) {
+        (session.notes ??= []).push(`${item.productId}: the review screenshot was not added (${error.message}); the listings go on`); // review #8: a refused screenshot never blocks the listing versions
+    }
+    const listings = session.listings ?? [];
+    const queuedBefore = session.versionItems?.length ?? 0;
+    try {
+        if (listings.length > 0) did = (await appleAddListings(asc, SUBSCRIPTION_KIND, id, listings, session)) || did;
+        if (listings.length > 0 && !session.groupListingsDone) {
+            did = (await appleAddListings(asc, GROUP_KIND, session.groupId, listings, session)) || did;
+            session.groupListingsDone = true;
+        }
+    } catch (error) {
+        if (session.versionItems !== undefined) session.versionItems.length = queuedBefore; // review #6: a version whose extras failed is never submitted; the rerun finds the draft and queues it
+        throw error;
+    }
+    return did;
+}
+
+/** Pure: the bodies of the three review-submission calls for the queued versions. */
+export function appleReviewSubmissionBodies(appId, submissionId, items) {
+    return {
+        open: { data: { type: 'reviewSubmissions', attributes: { platform: REVIEW_PLATFORM }, relationships: { app: { data: { type: 'apps', id: appId } } } } },
+        items: items.map((item) => ({ data: { type: 'reviewSubmissionItems', relationships: { reviewSubmission: { data: { type: 'reviewSubmissions', id: submissionId } }, [item.relationship]: { data: { type: item.type, id: item.id } } } } })),
+        submit: { data: { type: 'reviewSubmissions', id: submissionId, attributes: { submitted: true } } },
+    };
+}
+
+/** The id of the app's open (READY_FOR_REVIEW, IOS) review submission, or null; Apple refuses a second open one (review #6). */
+async function appleOpenReviewSubmission(asc, appId) {
+    const open = await appleListAll(asc, `/v1/apps/${appId}/reviewSubmissions?filter[state]=READY_FOR_REVIEW&filter[platform]=${REVIEW_PLATFORM}&limit=${APPLE_LOCALE_LIST_LIMIT}`, 'look for an open review submission');
+    return open.find((entry) => entry?.attributes?.state === 'READY_FOR_REVIEW' && entry?.attributes?.platform === REVIEW_PLATFORM)?.id ?? null;
+}
+
+/** The (relationship, id) pairs of the items an open review submission holds; an item with no pair named in `ours` is foreign (review #1). Reading the ids needs `include`, so an unreadable item reads as foreign. */
+async function appleSubmissionHoldsOnlyOurs(asc, submissionId, items) {
+    const held = await appleListAll(asc, `/v1/reviewSubmissions/${submissionId}/items?include=subscriptionVersion,subscriptionGroupVersion&limit=${APPLE_LOCALE_LIST_LIMIT}`, 'read the open review submission items');
+    const ours = new Set(items.map((item) => `${item.relationship}:${item.id}`));
+    const present = new Set();
+    for (const entry of held) {
+        const key = [...ours].find((candidate) => entry?.relationships?.[candidate.split(':')[0]]?.data?.id === candidate.split(':')[1]);
+        if (key === undefined) return { onlyOurs: false, present };
+        present.add(key);
+    }
+    return { onlyOurs: true, present };
+}
+
+/**
+ * Submits the queued versions in one review submission, reusing the app's open one; only with `session.submit` (--submit), else the versions stay drafts and a note says so (review #2). A refusal is a note in the report
+ * (naming a submission left open), never a crash of the run.
+ */
+export async function appleSubmitQueuedVersions(asc, appId, session) {
+    const items = session.versionItems ?? [];
+    if (items.length === 0) return;
+    if (session.submit !== true) {
+        (session.notes ??= []).push('the new listing versions are drafts, not submitted: read them back, then rerun with --submit');
+        return;
+    }
+    const log = session.log ?? console.log;
+    let submissionId = null;
+    try {
+        submissionId = await appleOpenReviewSubmission(asc, appId);
+        let present = new Set();
+        if (submissionId !== null) {
+            const held = await appleSubmissionHoldsOnlyOurs(asc, submissionId, items);
+            if (!held.onlyOurs) {
+                (session.notes ??= []).push(`NOT DONE: the open review submission ${submissionId} holds items that are not this run's listing versions, so nothing was added or submitted; submit it by hand (or remove its other items) and rerun --submit`);
+                submissionId = null;
+                return;
+            }
+            present = held.present;
+        }
+        submissionId ??= must(await asc.post('/v1/reviewSubmissions', appleReviewSubmissionBodies(appId, '', items).open), 'open a review submission').data.id;
+        const bodies = appleReviewSubmissionBodies(appId, submissionId, items);
+        for (const [index, body] of bodies.items.entries()) {
+            if (!present.has(`${items[index].relationship}:${items[index].id}`)) must(await asc.post('/v1/reviewSubmissionItems', body), 'add a version to the review submission');
+        }
+        must(await asc.patch(`/v1/reviewSubmissions/${submissionId}`, bodies.submit), 'submit for review');
+        log(`  review submission ${submissionId}: ${items.length} version(s) submitted`);
+    } catch (error) {
+        const left = submissionId === null ? '' : ` (review submission ${submissionId} is left open, not submitted; the next --submit run reuses it)`;
+        (session.notes ??= []).push(`the new listing versions were added but not submitted: ${error.message}${left}`);
+    }
 }
 
 // ---- running ----
@@ -1544,23 +1817,36 @@ export function requireReviewScreenshot(books, read = readReviewScreenshot) {
     if (books.some((book) => book.problem === null && book.kind !== 'subscription')) read();
 }
 
-async function openStore(store, books = []) {
+async function openStore(store, books = [], options = {}) {
     if (store === Store.Apple) {
         requireReviewScreenshot(books);
-        return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [] };
+        const withSubscription = books.some((book) => book.kind === 'subscription');
+        return { asc: appleClientFromEnv(), appId: APPS.dino.id, notes: [], submit: options.submit === true, listings: withSubscription ? readSubscriptionListings(options.locales ?? null) : [] };
     }
     if (store === Store.Google) return { token: await googleToken() };
     return { token: await microsoftToken(), existing: undefined, storeAppId: requireEnv('MS_STORE_APP_ID') };
 }
 
 async function createOne(store, session, book) {
-    if (store === Store.Apple && book.kind === 'subscription') return createAppleSubscription(session.asc, book, session.appId, session);
+    if (store === Store.Apple && book.kind === 'subscription') return createAppleSubscriptionWithExtras(session, book);
     if (store === Store.Google && book.kind === 'subscription') return createPlaySubscription(session.token, book);
+    if (store === Store.Microsoft && book.kind === 'subscription') return microsoftSubscriptionManual(book);
     if (store === Store.Apple) return createAppleProduct(session.asc, book, session.appId, { notes: session.notes, sleep: session.sleep });
     if (store === Store.Google) return createPlayProduct(session.token, book);
-    if (book.kind !== 'subscription') return createMicrosoftBook(session.token, book, session);
-    session.existing ??= await microsoftExistingIds(session.token);
-    return createMicrosoftProduct(session.token, book, session.existing, session.storeAppId);
+    return createMicrosoftBook(session.token, book, session);
+}
+
+/** One Apple subscription as before, then (Slice 454) its review screenshot and the other-language listings; the outcome says Completed when only the extras were done. */
+async function createAppleSubscriptionWithExtras(session, item) {
+    const outcome = await createAppleSubscription(session.asc, item, session.appId, session);
+    let did = false;
+    try {
+        did = await appleSubscriptionExtras(session.asc, item, session);
+    } catch (error) {
+        if (outcome !== Outcome.Created) throw error;
+        (session.notes ??= []).push(`${item.productId} was created, but its listings are not finished (${error.message}); rerun to finish`); // review #4: the Created outcome is never lost
+    }
+    return outcome === Outcome.Exists && did ? Outcome.Completed : outcome;
 }
 
 /** Creates the products of one store; a book that fails does not stop the others. Returns `{ book, outcome, message }` per book. */
@@ -1584,6 +1870,7 @@ export async function applyStore(store, books, open = openStore, create = create
             results.push({ book, outcome: error instanceof RateLimitedError ? Outcome.RateLimited : Outcome.Failed, message: error.message });
         }
     }
+    if (session?.asc !== undefined && session.versionItems?.length > 0) await appleSubmitQueuedVersions(session.asc, session.appId, session); // Slice 454: one review submission for every version this run added
     results.notes = session?.notes ?? []; // things a run left undone without failing (skipped territories ...), printed in the end report
     return results;
 }
@@ -1631,14 +1918,15 @@ async function main() {
     if (options.checkPrices) return runPriceCheck(books);
     if (!options.apply) {
         console.log(`DRY RUN (nothing is created; add --apply to create): ${books.length} paid book(s)`);
-        options.stores.forEach((store) => console.log([...planLines(store, books), ...(options.book === null ? subscriptionPlanLines(store) : [])].join('\n')));
+        const listings = options.book === null && options.stores.includes(Store.Apple) ? readSubscriptionListings(options.locales) : [];
+        options.stores.forEach((store) => console.log([...planLines(store, books), ...(options.book === null ? subscriptionPlanLines(store, listings) : [])].join('\n')));
         if (books.some((book) => book.problem !== null)) process.exitCode = 1; // review #9: a scripted pre-check must not pass what --apply would refuse
         return;
     }
     let failed = false;
     for (const store of options.stores) {
         try {
-            const results = await applyStore(store, itemsForStore(store, books, options)); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop (Slice 411: none with --book)
+            const results = await applyStore(store, itemsForStore(store, books, options), (name, items) => openStore(name, items, options)); // Slice 384: the subscription after the books, through the same one-failure-never-stops-the-rest loop (Slice 411: none with --book)
             failed ||= results.some((result) => result.outcome === Outcome.Failed || result.outcome === Outcome.RateLimited);
             printResults(store, results, options.book === null);
         } catch (error) {
