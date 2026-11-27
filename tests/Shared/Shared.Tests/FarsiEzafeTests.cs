@@ -28,8 +28,8 @@ public class FarsiEzafeTests
     }
 
     [Theory]
-    [InlineData("من هر روز صبح یک فنجان چای می‌نوشم و کتاب می‌خوانم.")]
-    [InlineData("علی ساعت هفت و نیم به مدرسه رفت و بیست و پنج دفتر خرید.")]
+    [InlineData("من هر صبح چای می‌نوشم و کتاب می‌خوانم.")]
+    [InlineData("علی ساعت هفت و نیم به مدرسه رفت.")]
     [InlineData("حال خوب است")]
     [InlineData("شما حال")]
     [InlineData("")]
@@ -52,6 +52,80 @@ public class FarsiEzafeTests
     {
         const string text = "حال، شما";
         Assert.Same(text, FarsiEzafe.Apply(text));
+    }
+
+    // Slice 343: the extra-ezafe pairs get an Arabic comma after the first word (third listen).
+    [Theory]
+    [InlineData("آن صبح یک فنجان", "آن صبح، یک فنجان")]
+    [InlineData("بیست و پنج دفتر خرید.", "بیست و پنج دفتر، خرید.")]
+    [InlineData("روز صبح بود", "روز، صبح بود")]
+    [InlineData("صبح یک", "صبح، یک")]
+    [InlineData("علی دفتر خرید", "علی دفتر، خرید")]
+    [InlineData("او دفتر خرید !", "او دفتر، خرید !")]
+    [InlineData("او دفتر خرید؟ بله", "او دفتر، خرید؟ بله")]
+    [InlineData("او دفتر خرید، و رفت", "او دفتر، خرید، و رفت")]
+    [InlineData("دفتر خرید: سه", "دفتر، خرید: سه")]
+    [InlineData("دفتر خرید؛ سه", "دفتر، خرید؛ سه")]
+    [InlineData("دفتر خرید   ", "دفتر، خرید   ")]
+    [InlineData("دفتر خرید\nسه کتاب", "دفتر، خرید\nسه کتاب")]
+    [InlineData("دفتر خرید\r\nسه کتاب", "دفتر، خرید\r\nسه کتاب")]
+    [InlineData("او گفت: «بیست و پنج دفتر خرید»", "او گفت: «بیست و پنج دفتر، خرید»")]
+    [InlineData("(دفتر خرید) ، سه", "(دفتر، خرید) ، سه")]
+    [InlineData("\"دفتر خرید\".", "\"دفتر، خرید\".")]
+    [InlineData("دفتر خرید» ", "دفتر، خرید» ")]
+    [InlineData("دفتر خرید… سه", "دفتر، خرید… سه")]
+    [InlineData("دفتر خرید»… سه", "دفتر، خرید»… سه")]
+    public void Comma_pairs_get_the_comma_after_the_first_word(string text, string expected)
+    {
+        Assert.Equal(expected, FarsiEzafe.Apply(text));
+    }
+
+    [Fact]
+    public void A_chain_of_comma_pairs_gets_each_comma()
+    {
+        Assert.Equal("من هر روز، صبح، یک فنجان", FarsiEzafe.Apply("من هر روز صبح یک فنجان"));
+    }
+
+    [Theory]
+    [InlineData("صبح دو")]
+    [InlineData("یک صبح")]
+    [InlineData("صبح خرید")]
+    [InlineData("روز یک")]
+    [InlineData("دفتر یک")]
+    [InlineData("خرید دفتر")]
+    [InlineData("صبحانه یک")]
+    [InlineData("صبح یکشنبه")]
+    [InlineData("دفترچه خرید")]
+    [InlineData("صبح‌یک")]
+    [InlineData("صبح، یک")]
+    [InlineData("صبح. یک")]
+    [InlineData("صبح یَک")]
+    [InlineData("دفتر خرید را باز کرد.")]
+    [InlineData("دفتر خرید و رفت")]
+    [InlineData("«دفتر خرید» را باز کرد")]
+    [InlineData("او دفتر خرید جدید داشت")]
+    [InlineData("دفتر\nخرید")]
+    [InlineData("دفتر\r\nخرید")]
+    public void Near_misses_of_the_comma_pairs_are_the_same_instance(string text)
+    {
+        Assert.Same(text, FarsiEzafe.Apply(text));
+    }
+
+    [Fact]
+    public void Comma_and_kasra_pairs_in_one_text_are_both_applied_and_nothing_else_changes()
+    {
+        Assert.Equal("حال" + Kasra + " شما، صبح، یک و خوب است", FarsiEzafe.Apply("حال شما، صبح یک و خوب است"));
+    }
+
+    [Fact]
+    public void The_comma_pairs_only_apply_for_the_Farsi_Piper_model()
+    {
+        const string text = "صبح یک";
+        var farsi = new VoiceModelPaths("x", VoiceEngineKind.Vits, VoiceChoices.PersianLanguageCode);
+        var norwegian = new VoiceModelPaths("x", VoiceEngineKind.Vits, "nb");
+
+        Assert.Equal("صبح، یک", FarsiEzafe.ForModel(farsi, text));
+        Assert.Same(text, FarsiEzafe.ForModel(norwegian, text));
     }
 
     [Fact]
