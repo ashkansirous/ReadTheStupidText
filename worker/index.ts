@@ -34,6 +34,8 @@ import { handleSonos, isSonosPath } from "./sonos";
 import { handleSonosReporting, isSonosReportingPath } from "./sonos-reporting";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
+import { handleStoreNotification, isStorePath } from "./store-notifications/handler";
+import type { StoreNotificationsEnv } from "./store-notifications/handler";
 import { handleStats, isStatsApiPath, isStatsPath } from "./stats";
 import { runRollup } from "./stats-rollup";
 import type { StatsEnv } from "./stats-rollup";
@@ -208,6 +210,8 @@ async function serveAsset(request: Request, env: Env & StatsEnv & NinjalogEnv, c
     const answer = serveStats(request, url, env, site);
     if (answer !== null) return answer;
   }
+  // Slice 458: the stores' server notifications (Apple App Store Server Notifications v2, Play RTDN push), Dino host only.
+  if (isStorePath(site.path)) return site.product === Product.DinoReader ? handleStoreNotification(withPath(request, url, site.path), env as Env & StoreNotificationsEnv) : new Response("Not found", { status: 404 });
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site, ctx);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);

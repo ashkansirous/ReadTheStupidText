@@ -17,17 +17,23 @@
 - Windows is not covered in this slice. Microsoft Store offers no comparable push for add-on subscriptions as far as this plan knows. Item 6 checks that and opens its own slice if one exists.
 
 **Work:**
-- [ ] 1. Apple endpoint, verifier and mapping table for `notificationType`/`subtype` to kind, with fixture tests built from Apple's sample signed payloads (`apple-jws-fixture.mjs` style).
-- [ ] 2. Google endpoint: verify the Pub/Sub OIDC token, call `subscriptionsv2.get` and `purchases.products.get` with the Dino Play service account, and map the results to kinds. Tests use recorded fixtures.
-- [ ] 3. `store` rule in `worker/events.ts` (closed detail list, `NO_BOOK` or book source), with tests.
+- [x] 1. Apple endpoint, verifier and mapping table for `notificationType`/`subtype` to kind, with fixture tests built from Apple's sample signed payloads (`apple-jws-fixture.mjs` style).
+- [x] 2. Google endpoint: verify the Pub/Sub OIDC token, call `subscriptionsv2.get` and `purchases.products.get` with the Dino Play service account, and map the results to kinds. Tests use recorded fixtures.
+- [x] 3. `store` rule in `worker/events.ts` (closed detail list, `NO_BOOK` or book source), with tests.
 - [ ] 4. Wiring the owner can't skip, done by tool:
   - Set the App Store Connect "App Store Server Notifications" production and sandbox URLs for Dino with the App Store Connect API (`apps/{id}` `subscriptionStatusUrl`, version 2).
   - Create the Pub/Sub topic and push subscription for Play with `gcloud`, and set it in Play Console's Monetization setup. If no API exists for that setting, the slice records the one console field with its deep link.
   - Prove the wiring: send Apple's `requestTestNotification` and Play's "Send test notification", then read the `dino_usage_beta` rows back.
-- [ ] 5. `STORE.md` and `site/dino/privacy.html`: one line each on what the stores send and what is kept.
+- [x] 5. `STORE.md` and `site/dino/privacy.html`: one line each on what the stores send and what is kept.
 - [ ] 6. Check Microsoft Partner Center for an add-on subscription notification (`library-docs`/`web-research`) and write the answer into this file. If one exists, plan its own slice.
 
 **Verification:**
 - Worker tests are green.
 - Apple's test notification and Play's test notification each land as one `store` row in `dino_usage_beta`, read back with `analytics-query`.
 - After release, *Watch* (plan.md *Outstanding work*): the next real trial start shows up as `ios.trial_started.trial` or `android.trial_started.trial` in `dino_usage`, and Apple's SUBSCRIPTION_EVENT report agrees for that day.
+
+**Not yet verified:**
+- `wrangler.workers-dev.jsonc` still lacks `"/api/store/*"` and `"/dino/api/store/*"` in `assets.run_worker_first` (not on this slice's Touches line), so `npm run typecheck` fails in `check-configs` until both are added there; `tsc` passes with them.
+- The KV namespace for the dedup key (`STORE_DEDUP`) and the vars `STORE_GOOGLE_AUDIENCE` and `STORE_GOOGLE_PUSH_EMAIL` are not in the wrangler configs (item 4 creates them); without the namespace every delivery counts, without the vars every Google push is refused (401).
+- Fixtures are synthetic: Apple payloads are signed with the throwaway chain, Play answers are hand-written to the documented shapes, not recorded from Play or Apple's sample payloads. The trial-to-paid detection (Apple: first period shorter than the paid one; Play: first `..0` order on a subscription with an offer id) and `offerPhase.freeTrial` are assumptions to confirm on the first real notification.
+- A voided one-time Play purchase names no sku, so a refunded book on Android is not counted.
