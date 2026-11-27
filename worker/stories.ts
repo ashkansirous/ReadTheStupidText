@@ -68,7 +68,7 @@ const LIST_CACHE_CONTROL = "public, max-age=60";
 const COVER_CACHE = "public, max-age=3600";
 // Slice 283 F1/F2: how long the colo's shared list is served without waiting for a rebuild, how long the Cache API keeps it (a stale copy beats none), how long a caller waits for a rebuild while an older list is held, and its cache key (never fetched).
 const SHARED_FRESH_MS = 5 * 60_000;
-const SHARED_HOLD_SECONDS = 5 * 60; // Slice 436 C1: staleness bound: isolate list fresh 60 s, up to 5 min served while refreshing, the shared copy at most 5 min (a new listening track shows within about 5 min)
+const SHARED_HOLD_SECONDS = 30 * 60; // Slice 436 C1: staleness bound: isolate list fresh 60 s, a held list up to SHARED_FRESH_MS (5 min) served while refreshing; one older is rebuilt before the answer (a new listening track shows within about 5 min), and is kept up to 30 min only as the list to fall back on when the rebuild fails or runs past 3 s
 const SHARED_HOLD_MS = SHARED_HOLD_SECONDS * 1000;
 const REBUILD_BUDGET_MS = 3000;
 const META_READ_CONCURRENCY = 24; // meta.json reads in flight at once, for every caller of buildEntries

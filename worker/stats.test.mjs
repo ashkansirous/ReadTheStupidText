@@ -31,10 +31,13 @@ function fakeDb(seed = [], failDay = null) {
     },
     async all() {
       ops.count += 1;
-      if (sql.includes("FROM rollup_days")) return { results: [...rollupDays.keys()].filter((d) => d >= this.args[0] && d <= this.args[1]).map((day) => ({ day })) };
+      const staleSonos = (day) => [...stats.values()].some((r) => r.day === day && r.platform === "sonos" && r.metric === "seconds_estimated");
+      if (sql.includes("FROM rollup_days")) return { results: [...rollupDays.keys()].filter((d) => d >= this.args[0] && d <= this.args[1] && !(sql.includes("NOT IN") && staleSonos(d))).map((day) => ({ day })) };
+      if (sql.includes("SELECT DISTINCT day")) return { results: [...new Set([...stats.values()].filter((r) => r.day >= this.args[0] && r.day <= this.args[1] && staleSonos(r.day)).map((r) => r.day))].map((day) => ({ day })) };
       const totals = new Map();
       for (const r of stats.values()) {
         if (r.day < this.args[0] || r.day > this.args[1]) continue;
+        if (sql.includes("NOT (platform = 'sonos'") && r.platform === "sonos" && staleSonos(r.day)) continue;
         const key = `${r.day}|${r.metric}`;
         totals.set(key, { day: r.day, metric: r.metric, total: (totals.get(key)?.total ?? 0) + r.value });
       }
@@ -62,6 +65,14 @@ function fakeDb(seed = [], failDay = null) {
         if (failDay !== null && statements[0].args[0] === failDay) throw new Error("D1 down");
         rollupDays.set(statements[0].args[0], statements[0].args[1]);
         return [{ results: [] }];
+      }
+      if (statements[0].sql.includes("DELETE FROM daily_stats") && statements[0].sql.includes("platform = 'sonos'")) {
+        for (const [key, r] of [...stats]) if (r.day === statements[0].args[0] && r.platform === "sonos") stats.delete(key);
+        for (const s of statements.slice(1)) {
+          if (s.sql.includes("INTO rollup_days")) rollupDays.set(s.args[0], s.args[1]);
+          else for (const r of JSON.parse(s.args[0])) stats.set(`${r.day}|${r.book}|${r.platform}|${r.metric}`, r);
+        }
+        return statements.map(() => ({ results: [] }));
       }
       if (statements[0].sql.includes("DELETE FROM daily_stats")) {
         if (failDay !== null && statements[0].args[0] === failDay) throw new Error("D1 down");
@@ -97,7 +108,8 @@ function fakeAe(byDay = {}, failing = null) {
     lists.push(askedDays);
     if (failing !== null) return failing();
     const days = Object.keys(byDay).filter((d) => askedDays.includes(d));
-    const data = init.body.includes("store_download") ? days.flatMap((d) => byDay[d]) : [];
+    const wanted = init.body.includes("store_download") ? "downloads" : init.body.includes("blob9 = 'reported'") ? "seconds" : init.body.includes("'book_listened' AND NOT") ? "listens" : "other";
+    const data = days.flatMap((d) => byDay[d]).filter((r) => (r.metric ?? "downloads") === wanted);
     return new Response(JSON.stringify({ data }), { status: 200 });
   };
   fetchFn.asked = asked;
@@ -125,9 +137,10 @@ test("each metric has its own SQL on the production dataset", () => {
   assert.match(seconds, /read_paused', 'read_stopped'/);
   assert.match(seconds, /SUM\(_sample_interval \* double1 \* double5\)/);
   assert.match(metricSql(Metric.SecondsEstimated, ["2026-11-07"]), /blob9 = 'estimated'/);
-  // Slice 436 A5: the owner's Sonos tests (estimated rows before the cutover) are left out of listens and estimated hours.
+  // Slice 436 A5: the owner's Sonos tests (every estimated Sonos row, no date bound) are left out of listens and estimated hours.
   for (const metric of [Metric.Listens, Metric.SecondsEstimated]) {
-    assert.match(metricSql(metric, ["2026-11-07"]), /NOT \(blob7 = 'sonos' AND blob9 = 'estimated' AND timestamp < toDateTime\('2026-11-28 00:00:00'\)\)/);
+    assert.match(metricSql(metric, ["2026-11-07"]), /NOT \(blob7 = 'sonos' AND blob9 = 'estimated'\)/);
+    assert.doesNotMatch(metricSql(metric, ["2026-11-07"]), /toDateTime/);
   }
   assert.match(downloads, /IN \('2026-11-07', '2026-11-09'\)/, "exactly the run's days, so 2026-11-08 is not read");
   assert.doesNotMatch(downloads, /timestamp >=/);
@@ -283,6 +296,63 @@ test("a lower total from AE keeps D1's rows, logs it, marks the day and takes no
   assert.equal(db.rollupDays.has("2026-11-10"), true, "kept days are marked");
   assert.equal(logs.some((l) => l.includes("stats-rollup: lower total from AE")), true);
   assert.equal(db.stats.has(`2026-11-11|${BOOK}|android|downloads`), true);
+});
+
+test("Slice 436 A5: stored Sonos test hours higher than the filtered AE answer are replaced, and a done old day holding them is rolled up again", async () => {
+  const sonosTest = (metric, value) => ({ day: "2026-11-05", book: BOOK, platform: "sonos", metric, value });
+  const db = fakeDb([sonosTest("listens", 3), sonosTest("seconds_estimated", 15_840), { day: "2026-11-05", book: BOOK, platform: "android", metric: "downloads", value: 2 }]);
+  for (let day = addDays("2026-11-11", -89); day <= addDays("2026-11-11", -2); day = addDays(day, 1)) db.rollupDays.set(day, "2026-11-20T00:00:00.000Z"); // every old day marked done by earlier runs
+  const result = await runRollup(envOf(db), NOW, fakeAe({ "2026-11-05": [row("2026-11-05", 2)] }));
+  assert.equal(result.status, "done");
+  assert.equal(result.written.includes("2026-11-05"), true, "the day is read again, not skipped as done");
+  assert.equal(result.kept.includes("2026-11-05"), false, "the lower Sonos total does not keep D1's rows");
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|seconds_estimated`), false);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|listens`), false);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|android|downloads`), true);
+  const again = await runRollup(envOf(db), NOW, fakeAe({ "2026-11-05": [row("2026-11-05", 2)] }));
+  assert.equal(again.written.includes("2026-11-05"), false, "once the test rows are gone the day is done again");
+});
+
+const sonosRow = (day, metric, value) => ({ day, book: BOOK, platform: "sonos", metric, value });
+const androidRow = (day, value) => ({ day, book: BOOK, platform: "android", metric: "downloads", value });
+const markOldDaysDone = (db) => {
+  for (let day = addDays("2026-11-11", -89); day <= addDays("2026-11-11", -2); day = addDays(day, 1)) db.rollupDays.set(day, "2026-11-20T00:00:00.000Z");
+};
+
+test("Slice 436 A5 (design 2026-11-27): a stale day's sonos rows are replaced as a whole from AE (old listens and seconds_estimated gone, a reported row written) in one 3-statement batch", async () => {
+  const db = fakeDb([sonosRow("2026-11-05", "seconds_estimated", 15_840), sonosRow("2026-11-05", "listens", 3), androidRow("2026-11-05", 1)]);
+  markOldDaysDone(db);
+  const ae = fakeAe({ "2026-11-05": [row("2026-11-05", 1), { ...row("2026-11-05", 90), platform: "sonos", metric: "seconds" }] });
+  const first = await runRollup(envOf(db), NOW, ae);
+  assert.equal(first.written.includes("2026-11-05"), true);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|seconds_estimated`), false);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|listens`), false);
+  assert.equal(db.stats.get(`2026-11-05|${BOOK}|sonos|seconds`).value, 90, "the reported seconds come back from AE");
+  const again = await runRollup(envOf(db), NOW, ae);
+  assert.equal([...again.written, ...again.kept].includes("2026-11-05"), false, "never stale after one run");
+});
+
+test("Slice 436 A5 (design 2026-11-27): a non-stale day with a lower AE sonos total keeps D1's rows", async () => {
+  const db = fakeDb([sonosRow("2026-11-06", "seconds", 600), sonosRow("2026-11-06", "listens", 4)]);
+  markOldDaysDone(db);
+  const first = await runRollup(envOf(db), NOW, fakeAe({ "2026-11-06": [{ ...row("2026-11-06", 100), platform: "sonos", metric: "seconds" }] }));
+  assert.equal(first.written.includes("2026-11-06"), false, "a reported-only Sonos day is done and not re-rolled");
+  assert.equal(db.stats.get(`2026-11-06|${BOOK}|sonos|seconds`).value, 600);
+  assert.equal(db.stats.has(`2026-11-06|${BOOK}|sonos|listens`), true);
+});
+
+test("Slice 436 A5 (design 2026-11-27): another platform's lower total on a stale day keeps that platform's rows while the sonos rows are still replaced", async () => {
+  const db = fakeDb([sonosRow("2026-11-05", "seconds_estimated", 15_840), sonosRow("2026-11-05", "listens", 3), androidRow("2026-11-05", 9)]);
+  markOldDaysDone(db);
+  const ae = fakeAe({ "2026-11-05": [row("2026-11-05", 2)] });
+  const first = await runRollup(envOf(db), NOW, ae);
+  assert.equal(first.kept.includes("2026-11-05"), true, "android 9 is higher than AE's 2");
+  assert.equal(db.stats.get(`2026-11-05|${BOOK}|android|downloads`).value, 9);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|seconds_estimated`), false);
+  assert.equal(db.stats.has(`2026-11-05|${BOOK}|sonos|listens`), false, "the listens row of the old estimate goes too");
+  assert.equal(db.rollupDays.get("2026-11-05") !== "2026-11-20T00:00:00.000Z", true, "the day is re-marked");
+  const again = await runRollup(envOf(db), NOW, ae);
+  assert.equal([...again.written, ...again.kept].includes("2026-11-05"), false, "the day is not retried");
 });
 
 test("a lower-total old day is marked and no longer takes one of the 10 backfill slots", async () => {

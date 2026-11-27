@@ -5,9 +5,9 @@
 // the oldest days in [today-89, today-2] that have no `rollup_days` row; a day older than today-89 is never read or touched. A day is one
 // D1 batch of exactly 3 statements (delete its rows, ONE multi-row insert of all its rows, mark the day), so data and mark land together or
 // not at all. One AE query per metric covers exactly the run's days (an IN list; 4 fetches a run; a failed or malformed answer skips the
-// whole run, nothing written); a day whose total of a metric is lower than D1's is "kept" (marked in rollup_days, rows untouched); a D1
+// whole run, nothing written); a day whose total of a metric is lower than D1's is "kept" (marked in rollup_days, rows untouched except a stale Sonos day's `sonos` rows, which are replaced); a D1
 // batch error skips that day. The run fails unless today's day was written or kept. Counting every D1 statement as a subrequest:
-// 4 AE + 1 done-days read + 1 totals read + 12 days x 3 + 1 meta write = 43 at most, under 50.
+// 4 AE + 1 done-days read + 1 totals read + 1 stale-Sonos-days read + 12 days x 3 + 1 meta write = 44 at most, under 50.
 // Without the STATS binding, the token or the account id it logs and returns: nothing throws.
 
 export const Metric = {
@@ -73,9 +73,8 @@ export function statsPlatform(platform: unknown, formFactor: unknown): string | 
   return typeof platform === "string" && PLATFORM_IDS.includes(platform) ? platform : null;
 }
 
-// Slice 436 A5: the `sonos` `book_listened` rows written before plays were counted from Sonos's play report hold the owner's tests (every getMediaURI wrote the whole book's length), so the rollup leaves them out. Rows cannot be deleted from the dataset.
-export const SONOS_COUNT_CUTOVER = "2026-11-28 00:00:00";
-const NOT_SONOS_ESTIMATE = `NOT (blob7 = 'sonos' AND blob9 = 'estimated' AND timestamp < toDateTime('${SONOS_COUNT_CUTOVER}'))`;
+// Slice 436 A5: the `sonos` `book_listened` rows with detail `estimated` hold the owner's tests (every getMediaURI wrote the whole book's length); no code writes one after this slice, so the rollup leaves all of them out, whatever the deploy day. Rows cannot be deleted from the dataset.
+const NOT_SONOS_ESTIMATE = "NOT (blob7 = 'sonos' AND blob9 = 'estimated')";
 
 const WHERE_BY_METRIC: Readonly<Record<MetricName, string>> = {
   [Metric.Downloads]: "blob1 = 'store_download'",
@@ -161,8 +160,15 @@ const INSERT_DAY_SQL =
 const META_SQL = "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value";
 const DELETE_DAY_SQL = "DELETE FROM daily_stats WHERE day = ?";
 const MARK_DAY_SQL = "INSERT INTO rollup_days (day, rolled_at) VALUES (?, ?) ON CONFLICT (day) DO UPDATE SET rolled_at = excluded.rolled_at";
-const DAYS_TOTALS_SQL = "SELECT day, metric, SUM(value) AS total FROM daily_stats WHERE day >= ? AND day <= ? GROUP BY day, metric";
-const DONE_DAYS_SQL = "SELECT day FROM rollup_days WHERE day >= ? AND day <= ?";
+// Slice 436 A5: a day that still holds a stored `sonos` `seconds_estimated` row (the owner's old tests) is "stale": it is not "done" and is rolled up again,
+// and its `sonos` rows are left out of the lower-total guard on both sides (stored test hours are higher than the filtered AE answer on purpose).
+// On a stale day the `sonos` platform is replaced as a whole (all its rows deleted, the filtered AE `sonos` rows written, in the same batch as the mark),
+// even when the guard keeps the other platforms, so a stale day is never stale after one run. A day with no such row keeps the full guard.
+const STALE_SONOS_DAYS = `SELECT day FROM daily_stats WHERE platform = '${Platform.Sonos}' AND metric = '${Metric.SecondsEstimated}'`;
+const DAYS_TOTALS_SQL = `SELECT day, metric, SUM(value) AS total FROM daily_stats WHERE day >= ? AND day <= ? AND NOT (platform = '${Platform.Sonos}' AND day IN (${STALE_SONOS_DAYS})) GROUP BY day, metric`;
+const DONE_DAYS_SQL = `SELECT day FROM rollup_days WHERE day >= ? AND day <= ? AND day NOT IN (${STALE_SONOS_DAYS})`;
+const STALE_DAYS_SQL = `SELECT DISTINCT day FROM daily_stats WHERE day >= ? AND day <= ? AND platform = '${Platform.Sonos}' AND metric = '${Metric.SecondsEstimated}'`;
+const DELETE_SONOS_DAY_SQL = `DELETE FROM daily_stats WHERE day = ? AND platform = '${Platform.Sonos}'`;
 
 /** Replaces one UTC day in one D1 batch of exactly 3 statements: delete its rows, insert all the new ones at once, mark the day done. All or nothing. */
 async function replaceDay(db: D1Database, day: string, rows: readonly StatRow[], now: number): Promise<void> {
@@ -188,15 +194,28 @@ async function storedTotals(db: D1Database, first: string, last: string): Promis
   return byDay;
 }
 
-/** True when any metric's new total for the day is lower than the total D1 already holds (AE only appends inside its retention, so that answer is partial). */
-function lowerThanStored(stored: ReadonlyMap<string, number> | undefined, rows: readonly StatRow[]): boolean {
-  const fresh = totalsOf(rows);
+/** The days in [first, last] that still hold a stored `sonos` `seconds_estimated` row. */
+async function staleSonosDays(db: D1Database, first: string, last: string): Promise<Set<string>> {
+  const result = await db.prepare(STALE_DAYS_SQL).bind(first, last).all<{ day: string }>();
+  return new Set((result.results ?? []).map((row) => row.day));
+}
+
+/** True when any metric's new total for the day is lower than the total D1 already holds (AE only appends inside its retention, so that answer is partial). A stale Sonos day leaves its Sonos rows out of the fresh side, as the stored side does. */
+function lowerThanStored(stored: ReadonlyMap<string, number> | undefined, rows: readonly StatRow[], staleSonos: boolean): boolean {
+  const fresh = totalsOf(staleSonos ? rows.filter((row) => row.platform !== Platform.Sonos) : rows);
   return [...(stored ?? [])].some(([metric, total]) => (fresh.get(metric) ?? 0) < total - TOTAL_EPSILON);
 }
 
 /** Marks a day done without touching its rows (D1 already holds the higher, correct data), so it takes no more backfill slots. */
 async function markDay(db: D1Database, day: string, now: number): Promise<void> {
   await db.batch([db.prepare(MARK_DAY_SQL).bind(day, new Date(now).toISOString())]);
+}
+
+/** A stale Sonos day whose other platforms are kept: the `sonos` platform is replaced as a whole (every `sonos` row of the day, all metrics, deleted; the re-roll's filtered `sonos` rows inserted; the day marked) in one 3-statement batch, so the day is never stale again. */
+async function replaceSonosOnly(db: D1Database, day: string, rows: readonly StatRow[], now: number): Promise<void> {
+  const sonos = rows.filter((row) => row.platform === Platform.Sonos);
+  const rowsJson = JSON.stringify(sonos.map((row) => ({ day: row.day, book: row.book, platform: row.platform, metric: row.metric, value: row.value })));
+  await db.batch([db.prepare(DELETE_SONOS_DAY_SQL).bind(day), db.prepare(INSERT_DAY_SQL).bind(rowsJson), db.prepare(MARK_DAY_SQL).bind(day, new Date(now).toISOString())]);
 }
 
 async function doneDays(db: D1Database, today: string): Promise<Set<string>> {
@@ -207,11 +226,11 @@ async function doneDays(db: D1Database, today: string): Promise<Set<string>> {
 type DayOutcome = { readonly kind: "written"; readonly rows: number } | { readonly kind: "kept" } | { readonly kind: "failed" };
 
 /** Writes one day (one D1 batch): kept when AE's total is lower than D1's (marked, rows untouched), failed when the D1 batch throws (logged, retried next run). */
-async function rollupDay(db: D1Database, day: string, rows: readonly StatRow[], stored: ReadonlyMap<string, number> | undefined, now: number): Promise<DayOutcome> {
+async function rollupDay(db: D1Database, day: string, rows: readonly StatRow[], stored: ReadonlyMap<string, number> | undefined, now: number, staleSonos: boolean): Promise<DayOutcome> {
   try {
-    if (lowerThanStored(stored, rows)) {
+    if (lowerThanStored(stored, rows, staleSonos)) {
       console.error(`stats-rollup: lower total from AE for ${day}, kept D1's rows`);
-      await markDay(db, day, now);
+      await (staleSonos ? replaceSonosOnly(db, day, rows, now) : markDay(db, day, now));
       return { kind: "kept" };
     }
     await replaceDay(db, day, rows, now);
@@ -261,12 +280,13 @@ function failRun(reason: string): RollupResult {
 /** One D1 totals read, then one 3-statement D1 batch per day (at most 12 days): decides each day, and the run fails unless today's day was written or kept. */
 async function writeDays(db: D1Database, days: readonly string[], byDay: ReadonlyMap<string, readonly StatRow[]>, today: string, now: number): Promise<RollupResult> {
   const stored = await storedTotals(db, days[0] ?? today, today);
+  const stale = await staleSonosDays(db, days[0] ?? today, today);
   const written: string[] = [];
   const kept: string[] = [];
   const skipped: string[] = [];
   let rows = 0;
   for (const day of days) {
-    const outcome = await rollupDay(db, day, byDay.get(day) ?? [], stored.get(day), now);
+    const outcome = await rollupDay(db, day, byDay.get(day) ?? [], stored.get(day), now, stale.has(day));
     if (outcome.kind === "written") {
       written.push(day);
       rows += outcome.rows;
