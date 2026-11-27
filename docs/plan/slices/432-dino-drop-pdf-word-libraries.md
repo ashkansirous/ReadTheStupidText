@@ -3,7 +3,7 @@
 
 *Plan-cleanup check 2026-11-25 (origin/main 1a8bf725): verdict keep open, nothing built yet. Checked: both csproj ProjectReferences to Sirous.Reading.Documents are still there (DinoReader.App.csproj:198, Mobile.Shared.csproj:70); no Dino or Mobile.Shared source names a Documents type (only those two csproj files match); the three workflow path filters and ship-targets.mjs:107 still list Documents; Dino CLAUDE.md:23 still says it shares Documents; no PR for this work. All five work items are own work and no wait is inside the slice (item 3 uses the next release the merge cuts, a next step, not a wait).*
 
-*Planned 2026-11-23.* *Built 2026-11-27 (night 2026-11-27-0154, wave 1), PR #1389, not merged. Items 1, 2, 4, 5 done; item 3 waits for the release IPA. Emulator checks for the Dino first run, open book, premade audio and record page showing words passed; RTST opening a PDF and a full record-and-save flow, and the TestFlight launch, are not yet verified.*
+*Planned 2026-11-23.* *Built 2026-11-27 (night 2026-11-27-0154, wave 1), merged as PR #1389 (cc12970a). Items 1, 2, 4, 5 done; item 3 waits for the release IPA. Emulator checks for the Dino first run, open book, premade audio and record page showing words passed; RTST opening a PDF and a full record-and-save flow, and the TestFlight launch, are not yet verified.*
 
 **Touches:** `src/Dino/DinoReader.App/DinoReader.App.csproj`, `src/Shared/Sirous.Reading.Mobile.Shared/Sirous.Reading.Mobile.Shared.csproj`, `src/Dino/DinoReader.App/CLAUDE.md`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/workflows/dinoreader-android.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/workflows/dinoreader.yml`, `docs/plan/slices/432-dino-drop-pdf-word-libraries.md`
 
@@ -73,7 +73,7 @@ reference, and never measured the IPA.
 - Skipped #1 (`reviews/pr-1389-medium.md`): "no test pins that a Documents-only change selects the shared and rtst suites" - nit: no behaviour change; follow-up.
 - Skipped #2 (`reviews/pr-1389-medium.md`): "header comment, nit: describes" - nit: no behaviour change; follow-up.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 - Dino's phone apps never reference `Sirous.Reading.Documents`: it pulls PdfPig and OpenXml (about 8 MB of IL, plus their precompiled iOS code) that Dino does not use. Dino shares Domain/Application on Android and iOS; Windows reaches Documents only through Infrastructure. (Slice 432: docs/plan/slices/432-dino-drop-pdf-word-libraries.md) (already written in `src/Dino/DinoReader.App/CLAUDE.md` by the builder)
 
 #### Not yet verified

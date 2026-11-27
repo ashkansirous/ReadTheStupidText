@@ -292,6 +292,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 409 | Dino: the store upload only uploads (listening tracks built on the PC, the slice that changes old books ships them; audio-pack step 30 min for one book) | built, closed 2026-11-25 (240 tracks committed; release run: audio-pack step 25 s, no ffmpeg install, all 16 books list listenSeconds in 15 languages) | #1358 | | [409-dino-store-ffmpeg-install.md](../slices/409-dino-store-ffmpeg-install.md) |
 | 433 | Dino: store screenshots in a new look, App Store preview videos, Play feature graphic | built, closed 2026-11-25 (Play live and read back in 17 languages; App Store sets and previews on 1.136.5, WAITING_FOR_REVIEW) | #1342 | | [433-dino-store-screenshots-video-play-appstore.md](../slices/433-dino-store-screenshots-video-play-appstore.md) |
 | 457 | Dino Alexa: finds a book by any part of its name, lists every book, plays only what it can, and keeps favourites | built (owner real-Echo checks in unverified.md) | #1377, #1379, #1381, #1384 | | [457-dino-alexa-find-list-favourites.md](../slices/457-dino-alexa-find-list-favourites.md) |
+| 432 | Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps | built (item 3 IPA listing and the device checks in unverified.md) | #1389 | | [432-dino-drop-pdf-word-libraries.md](../slices/432-dino-drop-pdf-word-libraries.md) |
+| 453 | Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" | built (phone checks in unverified.md) | #1390 | | [453-dino-first-books-cancelled-load-copy.md](../slices/453-dino-first-books-cancelled-load-copy.md) |
+| 436 | Dino: Sonos counts only real plays and shows new books within 5 minutes | built (worker only; A4 Sonos portal field and A7 are the owner's, live checks in unverified.md) | #1391 | | [436-dino-sonos-real-plays-and-browse.md](../slices/436-dino-sonos-real-plays-and-browse.md) |
 
 ## Shared
 
