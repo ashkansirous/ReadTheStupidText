@@ -766,6 +766,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 451: A Debug hook that makes the user-report endpoint refuse ([slice](slices/451-debug-hook-user-report-endpoint-refuses.md))
+- [session] The flow `.maestro/dino/user-report-not-kept-usage-off.yaml` has not been run against the old behaviour (without the not-kept text) to show it fails there; that needs a second build and D: was under 2 GB.
+- [session] No unit tests exist for `UserReportRefusePlan` (they need a `Compile` link in `DinoReader.Tests.csproj`, which parked draft PR #1437's worktree edits); add them once that PR is settled.
+
 ### Slice 406: Feedback loop 2026-11-17-2105 leftovers ([slice](slices/406-feedback-loop-2026-11-17-2105-leftovers.md))
 - [cloud] The `flow-lint` job starts on the first src-only PR after PR #1443 merges and the full self-test set is skipped (the job gating has no self-test).
 
@@ -933,7 +937,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 - [owner] **You:** iOS wizard layout (no Mac or iPhone tonight).
 
 ### Slice 300: Kept problem report with the crash switch off ([slice](slices/300-user-report-kept-while-crash-switch-off.md))
-- [phone] **Device:** Emulator: with the usage switch off, a failed user-report send shows the not-kept text and logs `not kept, usage switch off`. Needs a Debug hook that makes the report endpoint refuse; none exists.
 - [owner] **You:** iOS device: the same shared code, not run on a device.
 
 ### Slice 308: Slice 225 run-checks -Serial and failed-build cause ([slice](slices/308-slice-225-run-checks-serial-and-build-cause.md))
