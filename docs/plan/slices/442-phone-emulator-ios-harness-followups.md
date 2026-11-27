@@ -2,7 +2,9 @@
 **Product:** Shared
 **Touches:** `tools/emulator/store-screenshots.ps1`, `tools/emulator/reset-dino-language.ps1`, `tools/phone/**`, `.github/scripts/ios-sim-*.sh`, `.github/workflows/dinoreader-ios-sim.yml`
 
-*Planned 2026-11-25 (plan-cleanup of that day; not built).*
+*Planned 2026-11-25 (plan-cleanup of that day).*
+
+*In progress (wave 2026-11-27), draft PR.*
 
 Small, low findings left open by the Slice 393 reviews, all in this repo's tooling (full text in the Slice 393 file under *From review*, *Follow-ups from PR #1071* and *Follow-ups from the check pass after the CI fix*):
 
