@@ -296,6 +296,12 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 453 | Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" | built (phone checks in unverified.md) | #1390 | | [453-dino-first-books-cancelled-load-copy.md](../slices/453-dino-first-books-cancelled-load-copy.md) |
 | 436 | Dino: Sonos counts only real plays and shows new books within 5 minutes | built (worker only; A4 Sonos portal field and A7 are the owner's, live checks in unverified.md) | #1391 | | [436-dino-sonos-real-plays-and-browse.md](../slices/436-dino-sonos-real-plays-and-browse.md) |
 | 395 | Dino: recording a character shows and replaces only that character's quoted words; the narration around them keeps the book's own audio | built (split: part keys and per-character cards; part takes ship switched off, `PartTakes.Enabled = false`; playback is Slice 443) | #1233 | | [395-dino-record-only-the-characters-words.md](../slices/395-dino-record-only-the-characters-words.md) |
+| 410 | Dino: the public name is "Dino Book Reader" everywhere a person sees it | built (the three after-merge actions are in unverified.md) | #1269, #1271, #1272 | — | [410-dino-public-name-guard.md](../slices/410-dino-public-name-guard.md) |
+| 416 | Dino: store-products adds the Apple review screenshot and submits a new book's purchase itself | built | #1288 | — | [416-dino-apple-book-review-screenshot.md](../slices/416-dino-apple-book-review-screenshot.md) |
+| 417 | Dino: both web pages point at the live stores, show the new name and current screenshots; testing closed | built | #1303, #1304, #1306 | — | [417-dino-sites-after-launch.md](../slices/417-dino-sites-after-launch.md) |
+| 422 | Dino: a high-res package for every store book, the four old "starter" books too | built | #1316 | — | [422-dino-high-res-for-every-book.md](../slices/422-dino-high-res-for-every-book.md) |
+| 429 | Dino: Ninjalog dashboards get device and app data, one dashboard per platform, charts split by version | built | #1335 | — | [429-ninjalog-dashboards-per-platform.md](../slices/429-ninjalog-dashboards-per-platform.md) |
+| 430 | Dino: a Ninjalog dashboard that shows whether people see and act on the forced update, by platform | built | #1336 | — | [430-ninjalog-forced-update-dashboard.md](../slices/430-ninjalog-forced-update-dashboard.md) |
 
 ## Shared
 

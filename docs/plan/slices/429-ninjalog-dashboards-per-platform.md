@@ -1,7 +1,7 @@
 ### Slice 429 — Dino: Ninjalog dashboards get device and app data, one dashboard per platform, charts split by version
 **Product:** Dino
 
-*Built 2026-11-22; dashboards uploaded and checked live the same day.*
+*Built 2026-11-22, merged as PR #1335 (e54f746); dashboards uploaded and checked live the same day.*
 
 **Touches:** `docs/analytics/ninjalog-dashboard.template.json` (new, replaces `ninjalog-dashboard.json`), `docs/analytics/ninjalog-dashboards/*.json` (new, generated), `tools/dino/ninjalog-dashboards.mjs` (new), `tools/dino/ninjalog-dashboards.test.mjs` (new), `docs/analytics/ninjalog-queries.md`, `worker/CLAUDE.md`
 
