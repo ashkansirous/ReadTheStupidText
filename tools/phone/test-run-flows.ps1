@@ -243,3 +243,4 @@ Assert-Equal 'check2 3: any non-zero exit cleans up the driver and forwards' $tr
 
 if ($script:failed -gt 0) { Write-Host "test-run-flows: $($script:failed) FAILED"; exit 1 }
 Write-Host 'test-run-flows: all passed'
+exit 0
