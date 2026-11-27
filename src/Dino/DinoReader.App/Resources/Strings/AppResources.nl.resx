@@ -470,4 +470,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Verbinden met Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino kon zijn server niet bereiken. Controleer het internet en probeer het opnieuw.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>Deze link is verlopen. Begin opnieuw vanuit de Sonos-app.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>De winkel van Dino is nu even druk. Probeer het zo meteen opnieuw.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
 </root>

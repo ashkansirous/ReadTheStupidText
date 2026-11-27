@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>جارٍ الاتصال بـ Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>تعذّر على دينو الوصول إلى خادمه. تحقق من الإنترنت وحاول مرة أخرى.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>انتهت صلاحية هذا الرابط. ابدأ من جديد من تطبيق Sonos.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>متجر Dino مشغول الآن. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
 </root>

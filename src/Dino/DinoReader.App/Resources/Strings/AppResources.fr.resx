@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Connexion à Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino n’a pas pu joindre son serveur. Vérifiez Internet et réessayez.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>Ce lien a expiré. Recommencez depuis l’appli Sonos.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>La boutique de Dino est occupée en ce moment. Réessayez dans un instant.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>Réessayer</value></data>
 </root>

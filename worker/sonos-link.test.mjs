@@ -6,9 +6,9 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
 import { serveObject } from "./downloads.ts";
-import { handleSonos } from "./sonos.ts";
-import { STORY_LANGUAGES, callbackWithCode, currentWord, isSonosCallback, storyLanguageTap, storyLanguageTitle } from "./sonos-link.ts";
-import { LABEL_LANGUAGES } from "./sonos-labels.ts";
+import { handleSonos, isSonosPath } from "./sonos.ts";
+import { STORY_LANGUAGES, callbackWithCode, currentWord, isSonosCallback, resetSubscriptionAnswers, storyLanguageTap, storyLanguageTitle } from "./sonos-link.ts";
+import { LABEL_LANGUAGES, SUBSCRIBE_MESSAGES } from "./sonos-labels.ts";
 import { parseSonosRequest } from "./sonos-soap.ts";
 
 const NS = "http://www.sonos.com/Services/1.1";
@@ -17,7 +17,8 @@ const ID_C = "7d0e5a4e000040008000000000000003";
 const HOME_1 = "Sonos_HOME_ONE_abc123";
 const HOME_2 = "Sonos_HOME_TWO_def456";
 const CALLBACK = "sonos://sonos.com/applink?state=STATE42";
-const PROOF = "proof-key-of-one-subscription";
+const PROOF = "ios:uk.sirous.dinoreader.sub.monthly:txn-100001";
+const PROOF_RENEWED = "ios:uk.sirous.dinoreader.sub.monthly:txn-100002";
 const NOW = 1_800_000_000_000;
 
 function bookFiles(id, meta, listenLangs) {
@@ -92,17 +93,32 @@ function envelope(action, inner = "", login = null) {
 function world(now = NOW) {
   const db = fakeD1();
   const clock = { now };
-  const links = { db, now: () => clock.now };
-  const soap = async (action, inner = "", { login = null, language = "en", host = "https://dino.test" } = {}) => {
-    const request = new Request(`${host}/sonos`, { method: "POST", body: envelope(action, inner, login), headers: { "Accept-Language": language } });
-    const response = await handleSonos(request, bucket, "", serveObject, undefined, undefined, links);
+  // Slice 439: the subscription source the Worker builds from the paid gate; here it answers what `sub.answer` says and notes what it was asked.
+  // The default answer is an active subscription, so a link made with a proof passes the store check at confirm (review 1, finding 3); tests change `sub.answer` after linking.
+  const sub = { answer: { kind: "status", status: { state: "active", expiresAt: "2027-01-01T00:00:00Z" } }, asked: [] };
+  const subscription = async (proof, clientKey) => {
+    sub.asked.push({ proof, clientKey });
+    if (proof === "") return sub.answer.kind === "off" ? sub.answer : { kind: "no-proof" }; // the real source reads its switch first, then wants a proof
+    return sub.answer;
+  };
+  resetSubscriptionAnswers();
+  const links = { db, now: () => clock.now, subscription };
+  const soap = async (action, inner = "", { login = null, language = "en", host = "https://dino.test", files = bucket, headers = {} } = {}) => {
+    const request = new Request(`${host}/sonos`, { method: "POST", body: envelope(action, inner, login), headers: { "Accept-Language": language, ...headers } });
+    const response = await handleSonos(request, files, "", serveObject, undefined, undefined, links);
     return { status: response.status, text: await response.text() };
   };
-  const api = async (body) => {
-    const response = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }), bucket, "", serveObject, undefined, undefined, links);
+  const api = async (body, extraHeaders = {}) => {
+    const response = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "application/json", ...extraHeaders } }), bucket, "", serveObject, undefined, undefined, links);
     return { status: response.status, json: await response.json() };
   };
-  return { db, clock, links, soap, api };
+  // Slice 439: a GET of a file route of this module (the paid-book media route, the subscribe message), as a player sends it.
+  const get = async (path, { token = null, method = "GET", headers = {}, files = bucket } = {}) => {
+    const sent = { ...headers, ...(token === null ? {} : { Authorization: `Bearer ${token}` }) };
+    const response = await handleSonos(new Request(`https://dino.test${path}`, { method, headers: sent }), files, "", serveObject, undefined, undefined, links);
+    return { status: response.status, text: await response.text(), headers: response.headers };
+  };
+  return { db, clock, links, soap, api, get, sub };
 }
 
 const between = (text, tagName) => new RegExp(`<${tagName}>([^<]*)</${tagName}>`).exec(text)?.[1];
@@ -213,14 +229,34 @@ test("a start on a linked home leaves its row byte-identical, and a home keeps a
   assert.equal((await browse(w, login)).status, 200);
 });
 
-test("a relink without a proof keeps the stored proof, so unlink still finds the home", async () => {
+test("a relink without a proof clears the stored proof and its hash, as the app forgets it too (review 2, finding 4)", async () => {
   const w = world();
   await fullLink(w, { language: "fa", proof: PROOF });
-  const proofBefore = rows(w.db, "sonos_homes")[0].proof_hash;
-  assert.notEqual(proofBefore, null);
+  assert.notEqual(rows(w.db, "sonos_homes")[0].proof_hash, null);
   await fullLink(w, { language: "en" });
-  assert.equal(rows(w.db, "sonos_homes")[0].proof_hash, proofBefore);
-  assert.equal((await w.api({ op: "unlink", proof: PROOF })).json.removed, 1);
+  const [row] = rows(w.db, "sonos_homes");
+  assert.deepEqual([row.proof_hash, row.proof, row.story_language], [null, null, "en"]);
+  assert.equal((await w.api({ op: "unlink", proof: PROOF })).json.removed, 0, "no home holds the old proof any more");
+});
+
+test("a database without the proof column still links: the row is written without the proof and the home has no subscription (review 2, finding 1)", async () => {
+  const w = world();
+  w.db.sqlite.exec("ALTER TABLE sonos_homes DROP COLUMN proof; ALTER TABLE sonos_pending_links DROP COLUMN proof");
+  const warned = [];
+  const original = console.warn;
+  console.warn = (line) => warned.push(String(line));
+  try {
+    const { login } = await fullLink(w, { language: "en", proof: PROOF });
+    const browsed = await browse(w, login);
+    assert.equal(browsed.status, 200);
+    assert.equal(rows(w.db, "sonos_homes").length, 1);
+    await fullLink(w, { language: "fa" });
+    assert.equal(rows(w.db, "sonos_homes")[0].story_language, "fa", "a relink works too");
+  } finally {
+    console.warn = original;
+  }
+  assert.ok(warned.some((line) => line.includes("fallback=no-proof-column")));
+  assert.ok(warned.every((line) => !line.includes(PROOF) && !line.includes(HOME_1)));
 });
 
 test("every link call purges expired pending links, not only getAppLink", async () => {
@@ -353,7 +389,7 @@ test("one row per home: a second home linked with the same subscription replaces
   assert.equal(homes.length, 1);
   assert.equal((await browse(w, second.login)).status, 200);
   assert.match((await browse(w, first.login)).text, /Client\.AuthTokenExpired/);
-  const third = await fullLink(w, { household: "Sonos_HOME_THREE", proof: "another-subscription-proof" });
+  const third = await fullLink(w, { household: "Sonos_HOME_THREE", proof: "android:uk.sirous.dinoreader.sub.yearly:token-200002" });
   assert.equal(rows(w.db, "sonos_homes").length, 2);
   assert.equal((await browse(w, second.login)).status, 200);
   assert.equal((await browse(w, third.login)).status, 200);
@@ -389,7 +425,7 @@ test("unlinking before Sonos asks for the token also drops the confirmed pending
 test("unlink deletes the homes of one subscription proof and nothing else; the removed home's token faults", async () => {
   const w = world();
   const { login } = await fullLink(w, { household: HOME_1, proof: PROOF });
-  const other = await fullLink(w, { household: HOME_2, proof: "a-different-subscription" });
+  const other = await fullLink(w, { household: HOME_2, proof: "android:uk.sirous.dinoreader.sub:token-300003" });
   assert.equal((await w.api({ op: "unlink", proof: "bad proof" })).status, 400);
   assert.deepEqual((await w.api({ op: "unlink", proof: PROOF })).json, { removed: 1 });
   assert.deepEqual((await w.api({ op: "unlink", proof: PROOF })).json, { removed: 0 });
@@ -460,6 +496,369 @@ test("without links the service stays the anonymous one: no token needed, link c
   assert.equal((await handleSonos(request, bucket, "", serveObject)).status, 200);
   const link = await handleSonos(new Request("https://dino.test/sonos", { method: "POST", body: envelope("getAppLink", `<ns:householdId>${HOME_1}</ns:householdId>`) }), bucket, "", serveObject);
   assert.match(await link.text(), /Unsupported call/);
+});
+
+// Slice 439: a linked home with an active Dino subscription plays the paid books; every other home hears the spoken "subscribe in the Dino app" message.
+const ID_P = "7d0e5a4e000040008000000000000009";
+const bookP = { schemaVersion: 1, title: "Big Paid", language: "en", version: 2, added: "2026-11-02", access: "paid", ageMin: 3, ageMax: 5, audio: { en: { version: 3, bytes: 5, listenSeconds: 420 }, fa: { version: 3, bytes: 5, listenSeconds: 420 } } };
+const SUBSCRIBE_KEY = "dinoreader/sonos/subscribe-en.m4a";
+const paidFiles = () => ({ DOWNLOADS: bucketOf([...bookFiles(ID_A, bookA, ["en", "fa"]), ...bookFiles(ID_P, bookP, ["en", "fa"]), [SUBSCRIBE_KEY, Buffer.from("spoken")]]) });
+const ACTIVE = { kind: "status", status: { state: "active", expiresAt: "2027-01-01T00:00:00Z" } };
+const status = (state) => ({ kind: "status", status: { state, expiresAt: null } });
+const PAID_URI = `https://dino.test/api/stories/${ID_P}/listen/en?v=3`;
+const SUBSCRIBE_URI = "https://dino.test/sonos/subscribe/en.m4a";
+
+async function mediaUri(w, login, id = ID_P, files = paidFiles()) {
+  return w.soap("getMediaURI", `<ns:id>track:en:${id}</ns:id>`, { login, files });
+}
+
+test("confirm keeps the subscription proof as sent and refuses a single-book or Windows proof with a clear reason (C1)", async () => {
+  const w = world();
+  const code = await startLink(w);
+  const book = await w.api({ op: "confirm", code, language: "en", proof: "ios:uk.sirous.dinoreader.book.big_paid:txn-5555555" });
+  assert.deepEqual([book.status, book.json], [400, { error: "not_subscription" }]);
+  assert.equal((await w.api({ op: "confirm", code, language: "en", proof: "windows::keykeykey" })).json.error, "not_subscription");
+  assert.equal((await w.api({ op: "confirm", code, language: "en", proof: PROOF })).status, 200);
+  assert.equal(rows(w.db, "sonos_pending_links")[0].proof, PROOF);
+  await w.soap("getDeviceAuthToken", `<ns:householdId>${HOME_1}</ns:householdId><ns:linkCode>${code}</ns:linkCode>`);
+  assert.equal(rows(w.db, "sonos_homes")[0].proof, PROOF);
+  assert.notEqual(rows(w.db, "sonos_homes")[0].proof_hash, null);
+});
+
+const IP = "203.0.113.7";
+const SHELF_ALL = "<ns:id>lang:en/all</ns:id><ns:index>0</ns:index><ns:count>50</ns:count>";
+const PAID_MEDIA = `/sonos/media/en/${ID_P}.m4a`;
+
+test("confirm asks the store first: a lapsed, unknown or unverifiable proof is refused and never stored, and the limiter key is the connection's IP, not the home hash (review 1, finding 3)", async () => {
+  const cases = [[status("expired"), 403, "subscription_inactive"], [{ kind: "bad-proof" }, 403, "subscription_inactive"], [{ kind: "rate-limited" }, 429, "rate_limited"], [{ kind: "cannot-verify" }, 503, "unavailable"]];
+  for (const [answer, httpStatus, error] of cases) {
+    const w = world();
+    const code = await startLink(w);
+    w.sub.answer = answer;
+    const refused = await w.api({ op: "confirm", code, language: "en", proof: PROOF }, { "CF-Connecting-IP": IP });
+    assert.deepEqual([refused.status, refused.json], [httpStatus, { error }], answer.kind);
+    assert.equal(rows(w.db, "sonos_pending_links")[0].proof, null, "a refused proof is not stored");
+    assert.deepEqual(w.sub.asked, [{ proof: PROOF, clientKey: IP }]);
+  }
+  const w = world();
+  const code = await startLink(w);
+  assert.equal((await w.api({ op: "confirm", code, language: "en", proof: PROOF })).status, 200);
+  assert.equal(w.sub.asked.at(-1).clientKey, "unknown", "no IP header: the gate's own 'unknown' key, never a per-home key");
+  assert.equal((await w.api({ op: "confirm", code: await startLink(w, HOME_2), language: "en" })).status, 200);
+  assert.equal(w.sub.asked.length, 1, "a link without a proof asks the store nothing");
+});
+
+test("with the paid-books switch off, confirm links the home without storing the proof and renew answers 'paid_books_off' with a 200, never a 503 (review 2, finding 2)", async () => {
+  const w = world();
+  const code = await startLink(w);
+  w.sub.answer = { kind: "off" };
+  const confirmed = await w.api({ op: "confirm", code, language: "en", proof: PROOF });
+  assert.equal(confirmed.status, 200);
+  assert.deepEqual([rows(w.db, "sonos_pending_links")[0].proof, rows(w.db, "sonos_pending_links")[0].proof_hash], [null, null]);
+  const linked = await fullLink(w, { language: "en", proof: PROOF });
+  assert.equal(rows(w.db, "sonos_homes")[0].proof, null, "no proof is stored while the switch is off");
+  w.sub.answer = ACTIVE;
+  const second = await fullLink(w, { household: HOME_2, language: "en", proof: PROOF });
+  assert.ok(second.login.token !== linked.login.token);
+  w.sub.answer = { kind: "off" };
+  const renewed = await w.api({ op: "renew", oldProof: PROOF, newProof: PROOF_RENEWED });
+  assert.deepEqual([renewed.status, renewed.json.status], [200, "paid_books_off"]);
+  assert.equal(rows(w.db, "sonos_homes").find((row) => row.proof !== null).proof, PROOF, "nothing was swapped");
+});
+
+test("an active subscription plays a paid book: no access word, canPlay, and getMediaURI hands the player the Worker's media URL with the home's own Sonos token, never the proof (C2, review 1 finding 2)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const shown = await w.soap("getMetadata", SHELF_ALL, { login, files: paidFiles() });
+  assert.match(shown.text, /<album>Ages 3–5 · 7 min<\/album>.*?<canPlay>true<\/canPlay>/s);
+  const asked = w.sub.asked.length;
+  const played = await mediaUri(w, login);
+  assert.equal(played.status, 200);
+  assert.match(played.text, new RegExp(`<getMediaURIResult>https://dino\\.test${PAID_MEDIA.replace("/", "/")}</getMediaURIResult>`));
+  assert.match(played.text, new RegExp(`<httpHeaders><httpHeader><header>Authorization</header><value>Bearer ${login.token}</value></httpHeader></httpHeaders></getMediaURIResponse>`));
+  assert.doesNotMatch(played.text, /txn-100001|X-Purchase-Proof|listen/, "the proof never leaves the Worker");
+  assert.equal(w.sub.asked.length, asked, "getMediaURI does not call the store");
+  const free = await mediaUri(w, login, ID_A);
+  assert.doesNotMatch(free.text, /httpHeaders/, "a free book carries no header");
+});
+
+test("confirm says whether the proof was stored: true when kept, false with no proof, with the switch off, or on a database without the proof column (review 3, finding 1)", async () => {
+  const w = world();
+  assert.equal((await w.api({ op: "confirm", code: await startLink(w), language: "en", proof: PROOF })).json.proofStored, true);
+  assert.equal((await w.api({ op: "confirm", code: await startLink(w, HOME_2), language: "en" })).json.proofStored, false);
+  w.sub.answer = { kind: "off" };
+  assert.equal((await w.api({ op: "confirm", code: await startLink(w), language: "en", proof: PROOF })).json.proofStored, false);
+  const old = world();
+  old.db.sqlite.exec("ALTER TABLE sonos_homes DROP COLUMN proof; ALTER TABLE sonos_pending_links DROP COLUMN proof");
+  const original = console.warn;
+  console.warn = () => {};
+  try {
+    assert.equal((await old.api({ op: "confirm", code: await startLink(old), language: "en", proof: PROOF })).json.proofStored, false);
+  } finally {
+    console.warn = original;
+  }
+});
+
+test("with the paid-books switch off, a linked home's paid book plays like everyone else's, with or without a proof, never the subscribe clip (review 3, finding 2)", async () => {
+  const w = world();
+  const withProof = await fullLink(w, { household: HOME_1, language: "en", proof: PROOF });
+  const without = await fullLink(w, { household: HOME_2, language: "en" });
+  assert.equal((await w.get(PAID_MEDIA, { token: without.login.token, files: paidFiles() })).text, "spoken", "switch on, no subscription: the message");
+  w.sub.answer = { kind: "off" };
+  for (const { login } of [withProof, without]) {
+    assert.deepEqual((({ status, text }) => [status, text])(await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })), [200, "m4a"]);
+  }
+});
+
+test("a Range or HEAD request is answered from the kept answer, so the store-call limit cannot cut a book mid-play; only the first request asks the store (review 3, finding 5)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a");
+  const asked = w.sub.asked.length;
+  w.sub.answer = { kind: "rate-limited" };
+  const ranged = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), headers: { Range: "bytes=1-2" } });
+  assert.deepEqual([ranged.status, ranged.text], [200, "m4a"], "the file is served (the test's object server ignores Range), not a 503");
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), method: "HEAD" })).status, 200);
+  assert.equal(w.sub.asked.length, asked, "neither continuation asked the store");
+  w.clock.now += 11 * 60_000;
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), headers: { Range: "bytes=1-2" } })).status, 503, "past the kept answer's time the store is asked again");
+});
+
+test("a browse keys the store-call limiter on the linked home, whatever the caller's IP (review 3, finding 1)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  w.sub.asked.length = 0;
+  assert.equal((await browse(w, login, "root", { headers: { "CF-Connecting-IP": IP } })).status, 200);
+  const keys = w.sub.asked.map((ask) => ask.clientKey);
+  assert.ok(keys.length > 0 && keys.every((key) => key === `home:${rows(w.db, "sonos_homes")[0].home_hash}`), JSON.stringify(keys));
+});
+
+test("the media route streams the paid book for an active or grace subscription and asks the store with the stored proof at play time (C2)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const file = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), headers: { "CF-Connecting-IP": IP } });
+  assert.deepEqual([file.status, file.text], [200, "m4a"]);
+  assert.equal(file.headers.get("Cache-Control"), "private, no-store");
+  assert.deepEqual(w.sub.asked.at(-1), { proof: PROOF, clientKey: `home:${rows(w.db, "sonos_homes")[0].home_hash}` }, "a Sonos call keys the limiter on the linked home, not the shared Sonos IP (review 3, finding 1)");
+  w.sub.answer = status("grace");
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a", "a grace period still plays");
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), method: "HEAD" })).status, 200);
+});
+
+test("the media route refuses a missing or wrong token, a book that is not paid and a POST (review 1, finding 2)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const asked = w.sub.asked.length;
+  assert.equal((await w.get(PAID_MEDIA, { files: paidFiles() })).status, 401);
+  assert.equal((await w.get(PAID_MEDIA, { token: "f".repeat(64), files: paidFiles() })).status, 401);
+  assert.equal((await w.get(PAID_MEDIA, { token: PROOF, files: paidFiles() })).status, 401, "the store proof is not a credential");
+  assert.equal((await w.get(`/sonos/media/en/${ID_A}.m4a`, { token: login.token, files: paidFiles() })).status, 404, "a free book is not served here");
+  assert.equal((await w.get("/sonos/media/en/nope.m4a", { token: login.token, files: paidFiles() })).status, 404);
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles(), method: "POST" })).status, 405);
+  assert.equal(w.sub.asked.length, asked, "none of these reached the store");
+  assert.ok(isSonosPath(PAID_MEDIA) && !isSonosPath("/sonos/media/en/x.mp3") && !isSonosPath("/sonos/media/../x.m4a"));
+});
+
+test("a lapsed, unknown or missing subscription plays the spoken subscribe message from the media route, and the shelf lists the book playable with 'In the Dino app' (C2, C5, review 1 finding 9)", async () => {
+  for (const answer of [status("expired"), status("revoked"), { kind: "bad-proof" }]) {
+    const w = world();
+    const { login } = await fullLink(w, { language: "en", proof: PROOF });
+    w.sub.answer = answer;
+    const played = await mediaUri(w, login);
+    assert.match(played.text, /<getMediaURIResult>https:\/\/dino\.test\/sonos\/media\/en\//, "the same media URL: the route decides");
+    const message = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() });
+    assert.deepEqual([message.status, message.text], [200, "spoken"], answer.kind);
+    const shown = await w.soap("getMetadata", SHELF_ALL, { login, files: paidFiles() });
+    assert.match(shown.text, /<album>Ages 3–5 · 7 min · In the Dino app<\/album>.*?<canPlay>true<\/canPlay>/s, "playable, so the message is reachable from browse");
+  }
+});
+
+test("an anonymous browse still lists a paid book unplayable and its getMediaURI faults (Slice 437 A1)", async () => {
+  const request = new Request("https://dino.test/sonos", { method: "POST", body: envelope("getMetadata", SHELF_ALL) });
+  const shown = await (await handleSonos(request, paidFiles(), "", serveObject)).text();
+  assert.match(shown, /In the Dino app<\/album>.*?<canPlay>false<\/canPlay>/s);
+});
+
+test("a home linked with no subscription never asks the store about a proof and hears the message; its free books still play (C2, C5)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en" });
+  const message = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() });
+  assert.equal(message.text, "spoken");
+  assert.ok(w.sub.asked.every((asked) => asked.proof === ""), "only the paid-books switch is read, with no proof");
+  assert.match((await mediaUri(w, login, ID_A)).text, /<getMediaURIResult>https:\/\/dino\.test\/api\/stories\/[0-9a-f]+\/listen\/en\?v=3<\/getMediaURIResult>/);
+});
+
+test("the message is in the book's language and the subscription is checked again at every play (C2, C3)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const files = { DOWNLOADS: bucketOf([...bookFiles(ID_P, bookP, ["en", "fa"]), ["dinoreader/sonos/subscribe-fa.m4a", Buffer.from("parlé")], [SUBSCRIBE_KEY, Buffer.from("spoken")]]) };
+  assert.equal((await w.get(`/sonos/media/fa/${ID_P}.m4a`, { token: login.token, files })).text, "m4a");
+  w.sub.answer = status("expired");
+  assert.equal((await w.get(`/sonos/media/fa/${ID_P}.m4a`, { token: login.token, files })).text, "parlé");
+  assert.equal(w.sub.asked.length, 3, "each play asks the subscription source again (the link's own check is the first)");
+});
+
+test("a subscribe clip missing from R2 plays the English one, and with that missing too the media route answers 503, never 404, and logs the miss (review 3, finding 6)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  w.sub.answer = status("expired");
+  const warnings = [];
+  const realWarn = console.warn;
+  console.warn = (line) => warnings.push(String(line));
+  try {
+    const noFa = { DOWNLOADS: bucketOf([...bookFiles(ID_P, bookP, ["en", "fa"]), [SUBSCRIBE_KEY, Buffer.from("spoken")]]) };
+    assert.equal((await w.get(`/sonos/media/fa/${ID_P}.m4a`, { token: login.token, files: noFa })).text, "spoken", "no Farsi clip yet: the English one plays");
+    assert.ok(warnings.some((line) => line.includes("language=fa")), "the miss is logged");
+    const none = { DOWNLOADS: bucketOf([...bookFiles(ID_P, bookP, ["en", "fa"])]) };
+    for (const path of [PAID_MEDIA, `/sonos/media/fa/${ID_P}.m4a`]) {
+      assert.equal((await w.get(path, { token: login.token, files: none })).status, 503, `${path}: no clip at all is a 503`);
+    }
+    assert.ok(warnings.some((line) => line.includes("language=en")));
+  } finally {
+    console.warn = realWarn;
+  }
+});
+
+test("a store error or rate limit keeps the home's last real answer for ten minutes, then the message plays (review 1, finding 10)", async () => {
+  for (const failing of [{ kind: "cannot-verify" }, { kind: "rate-limited" }, { kind: "off" }]) {
+    const w = world();
+    const { login } = await fullLink(w, { language: "en", proof: PROOF });
+    assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a");
+    w.sub.answer = failing;
+    assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a", `${failing.kind}: a paying home keeps playing`);
+    assert.match((await w.soap("getMetadata", SHELF_ALL, { login, files: paidFiles() })).text, /<album>Ages 3–5 · 7 min<\/album>/, "and keeps its shelf");
+    w.clock.now += 11 * 60_000;
+    const after = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() });
+    if (failing.kind === "off") assert.equal(after.text, "m4a", "the switch is off: the paid books are free for everyone, as on the app's own route");
+    else assert.equal(after.status, 503, "the kept answer ends after its time; the store is unknown, so the player retries");
+  }
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  for (const failing of [{ kind: "cannot-verify" }, { kind: "rate-limited" }]) {
+    w.sub.answer = failing;
+    const unknown = await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() });
+    assert.equal(unknown.status, 503, `${failing.kind}, no earlier answer: the player retries, never the subscribe clip (review 2, finding 5)`);
+    assert.notEqual(unknown.text, "spoken");
+  }
+  w.sub.answer = { kind: "off" };
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a", "switch off, no earlier answer: the paid books play (review 3, finding 2)");
+  w.sub.answer = ACTIVE;
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "m4a");
+  w.sub.answer = status("expired");
+  assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "spoken", "a real lapsed answer replaces the kept one at once");
+});
+
+test("the catalog token follows the last real answer; getLastUpdate itself never calls the store (C2, review 1 finding 10)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const token = async () => between((await w.soap("getLastUpdate", "", { login, files: paidFiles() })).text, "catalog");
+  const browseOnce = () => w.soap("getMetadata", SHELF_ALL, { login, files: paidFiles() });
+  const before = w.sub.asked.length;
+  const unknown = await token();
+  assert.equal(await token(), unknown);
+  assert.equal(w.sub.asked.length, before, "polling never reaches the store");
+  await browseOnce();
+  const active = await token();
+  assert.notEqual(unknown, active, "a browse that saw the active subscription changes the token");
+  w.sub.answer = status("expired");
+  await browseOnce();
+  assert.equal(await token(), unknown, "and a lapsed answer changes it back");
+});
+
+test("a subscribed home's paid books stay off its Free stories shelf (review 1, finding 11)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const free = (text) => text.includes("Big Paid");
+  const onShelf = async (shelf) => (await w.soap("getMetadata", `<ns:id>lang:en/${shelf}</ns:id><ns:index>0</ns:index><ns:count>50</ns:count>`, { login, files: paidFiles() })).text;
+  assert.ok(free(await onShelf("all")), "the paid book is on A-Z");
+  assert.ok(!free(await onShelf("free")), "but not on Free");
+  assert.match(await onShelf("free"), /Goldilocks/);
+  w.sub.answer = status("expired");
+  assert.ok(!free(await onShelf("free")), "an unsubscribed home never had it there either");
+});
+
+test("a database where the proof column was not added yet still reads the home: it has no proof, its paid books play the message, nothing faults (review 1, finding 4)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  w.db.sqlite.exec("ALTER TABLE sonos_homes DROP COLUMN proof");
+  const warned = [];
+  const original = console.warn;
+  console.warn = (line) => warned.push(String(line));
+  try {
+    assert.equal((await browse(w, login)).status, 200);
+    assert.equal((await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() })).text, "spoken");
+  } finally {
+    console.warn = original;
+  }
+  assert.ok(warned.some((line) => line.includes("fallback=no-proof-column")), "reported, by name only");
+  assert.ok(warned.every((line) => !line.includes(PROOF) && !line.includes(HOME_1)));
+});
+
+test("renew swaps the stored proof of the home that held the old one, once the store confirms the new one; the new proof decides from then on (C4)", async () => {
+  const w = world();
+  const { login } = await fullLink(w, { language: "en", proof: PROOF });
+  const renewed = await w.api({ op: "renew", oldProof: PROOF, newProof: PROOF_RENEWED }, { "CF-Connecting-IP": IP });
+  assert.deepEqual([renewed.status, renewed.json], [200, { renewed: 1 }]);
+  assert.deepEqual(w.sub.asked.at(-1), { proof: PROOF_RENEWED, clientKey: IP }, "the store was asked about the new proof");
+  const [row] = rows(w.db, "sonos_homes");
+  assert.equal(row.proof, PROOF_RENEWED);
+  await w.get(PAID_MEDIA, { token: login.token, files: paidFiles() });
+  assert.equal(w.sub.asked.at(-1).proof, PROOF_RENEWED);
+  assert.deepEqual((await w.api({ op: "unlink", proof: PROOF_RENEWED })).json, { removed: 1 }, "unlink finds the home by the new proof");
+});
+
+test("renew changes nothing unless the store confirms the new proof as active: a made-up, lapsed or unverifiable one is refused (review 1, finding 1)", async () => {
+  for (const [answer, httpStatus] of [[status("expired"), 403], [{ kind: "bad-proof" }, 403], [{ kind: "rate-limited" }, 429], [{ kind: "cannot-verify" }, 503]]) {
+    const w = world();
+    await fullLink(w, { language: "en", proof: PROOF });
+    w.sub.answer = answer;
+    const refused = await w.api({ op: "renew", oldProof: PROOF, newProof: "ios:uk.sirous.dinoreader.sub.monthly:junk-junk" });
+    assert.equal(refused.status, httpStatus, answer.kind);
+    assert.equal(rows(w.db, "sonos_homes")[0].proof, PROOF, "the stored proof is untouched");
+  }
+});
+
+test("renew refuses an unknown old proof without asking the store, a non-subscription proof and a malformed body; the same proof twice is harmless (C4)", async () => {
+  const w = world();
+  await fullLink(w, { language: "en", proof: PROOF });
+  const asked = w.sub.asked.length;
+  assert.deepEqual(await w.api({ op: "renew", oldProof: "ios:uk.sirous.dinoreader.sub.yearly:nobody-has-this", newProof: PROOF_RENEWED }), { status: 404, json: { error: "unknown_home" } });
+  assert.equal(w.sub.asked.length, asked, "no home holds the old proof, so no store call is spent");
+  assert.equal(rows(w.db, "sonos_homes")[0].proof, PROOF);
+  assert.equal((await w.api({ op: "renew", oldProof: PROOF, newProof: "ios:uk.sirous.dinoreader.book.big_paid:txn-5555555" })).json.error, "not_subscription");
+  assert.equal((await w.api({ op: "renew", oldProof: PROOF })).status, 400);
+  assert.deepEqual((await w.api({ op: "renew", oldProof: PROOF, newProof: PROOF })).json, { renewed: 1 });
+  assert.equal(rows(w.db, "sonos_homes")[0].proof, PROOF);
+});
+
+test("renew never deletes another home: a new proof another home already holds is refused and both homes stay (review 1, finding 1)", async () => {
+  const w = world();
+  await fullLink(w, { household: HOME_1, proof: PROOF });
+  await fullLink(w, { household: HOME_2, proof: PROOF_RENEWED });
+  const refused = await w.api({ op: "renew", oldProof: PROOF, newProof: PROOF_RENEWED });
+  assert.deepEqual([refused.status, refused.json], [409, { error: "proof_taken" }]);
+  const left = rows(w.db, "sonos_homes");
+  assert.equal(left.length, 2);
+  assert.deepEqual(left.map((row) => row.proof).sort(), [PROOF, PROOF_RENEWED].sort());
+});
+
+test("the spoken message is served from R2 at /sonos/subscribe/<language>.m4a and nowhere else (C3)", async () => {
+  const get = (path, method = "GET") => handleSonos(new Request(`https://dino.test${path}`, { method }), paidFiles(), "", serveObject, undefined, undefined, undefined);
+  const spoken = await get("/sonos/subscribe/en.m4a");
+  assert.equal(spoken.status, 200);
+  assert.equal(await spoken.text(), "spoken");
+  assert.equal(spoken.headers.get("Content-Type"), "audio/mp4");
+  assert.equal((await get("/sonos/subscribe/de.m4a")).status, 404, "a language not rendered yet is not found");
+  assert.equal((await get("/sonos/subscribe/en.m4a", "POST")).status, 405);
+  assert.ok(isSonosPath("/sonos/subscribe/en.m4a") && !isSonosPath("/sonos/subscribe/en.mp3") && !isSonosPath("/sonos/subscribe/xx.m4a") && !isSonosPath("/sonos/subscribe/../x.m4a"));
+});
+
+test("the subscribe message has words in exactly the 15 story languages, each short and naming the Dino app (C3)", () => {
+  assert.deepEqual(Object.keys(SUBSCRIBE_MESSAGES).sort(), [...STORY_LANGUAGES].sort());
+  for (const [language, words] of Object.entries(SUBSCRIBE_MESSAGES)) {
+    assert.ok(words.length > 20 && words.length <= 140, `${language} is a sentence or two`);
+    assert.match(words, /Dino|دینو|دينو/, `${language} names the app`);
+  }
 });
 
 // The link page's store choice (B4): the script block between the storeFor markers is run as it is shipped.

@@ -40,6 +40,8 @@
     <Compile Include="..\..\..\src\Dino\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
     <!-- Slice 346 E3: the retry schedule for a 403 on a paid download, and the row's cancel slot: plain .NET, tested on the real files. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\PurchaseLagRetry.cs" Link="Linked\PurchaseLagRetry.cs" />
+    <!-- Slice 439 C4: when a linked Sonos home's subscription proof must be swapped at the Worker; plain .NET, tested on the real file. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\Purchases\SonosProofRenewal.cs" Link="Linked\SonosProofRenewal.cs" />
     <Compile Include="..\..\..\src\Dino\DinoReader.App\DownloadCancelSlot.cs" Link="Linked\DownloadCancelSlot.cs" />
     <!-- The pure rules of the Debug-only forced book update (Slice 225 item 16). -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />

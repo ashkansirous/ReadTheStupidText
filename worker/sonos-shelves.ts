@@ -96,7 +96,8 @@ export function shelfTracks(books: readonly Track[], shelf: ShelfName, language:
     case Shelf.Ages69:
       return sortAlphabetically(books.filter((track) => track.ageMax !== null && track.ageMax >= OLDER_MIN_AGE), language);
     case Shelf.Free:
-      return sortAlphabetically(books.filter((track) => !track.paid), language);
+      // Slice 439 (review 1, finding 11): a paid book a subscription opens (`unlocked`) is not a free book, so it stays off this shelf.
+      return sortAlphabetically(books.filter((track) => !track.paid && track.unlocked !== true), language);
     case Shelf.All:
       return sortAlphabetically(books, language);
     default:

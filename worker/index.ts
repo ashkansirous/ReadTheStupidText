@@ -116,7 +116,8 @@ function serveSonos(request: Request, url: URL, env: Env & EventsEnv & NinjalogE
   const catalogue = { defer: usage.defer, shared: caches.default };
   const forwarded = withPath(request, url, site.path);
   if (isSonosReportingPath(site.path)) return handleSonosReporting(forwarded, env, pathPrefix, serveObject, usage, catalogue); // Slice 436: the players' play reports are the only place a Sonos play is counted
-  return handleSonos(forwarded, env, pathPrefix, serveObject, usage, catalogue, { db: env.STATS });
+  // Slice 439: a linked home's subscription proof is checked with the paid gate's switch, store-call limit and cache (paidGateFor), never a second copy of them.
+  return handleSonos(forwarded, env, pathPrefix, serveObject, usage, catalogue, { db: env.STATS, subscription: paidGateFor(env).subscription });
 }
 
 // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.

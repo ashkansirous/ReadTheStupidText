@@ -211,6 +211,18 @@ fails closed. In this order, once:
 
 The page Sonos opens is `https://dinoreader.sirous.uk/dino/sonos-link.html` (a static file; no Worker route and no `run_worker_first` entry). No secret and no new binding are needed.
 
+### The subscription proof column and the spoken message (Slice 439)
+
+A linked home that holds a Dino subscription plays the paid books; the Worker asks the store with the proof the app sent, so the row keeps it in a `proof` column. In this order, once:
+
+1. **Before the merge deploys the Worker, on the database where the Slice 438 tables already exist** (a fresh database gets the column from `worker/schema/sonos-homes.sql`): run both lines, each once (a second run says "duplicate column name", which is fine):
+   `npx wrangler d1 execute dino-stats --remote --command "ALTER TABLE sonos_homes ADD COLUMN proof TEXT"` and
+   `npx wrangler d1 execute dino-stats --remote --command "ALTER TABLE sonos_pending_links ADD COLUMN proof TEXT"`.
+   The Worker reads a home without the column too (the home then has no proof and its paid books play the message, logged as `fallback=no-proof-column`), so a deploy that runs first breaks nothing, but linking a home with a subscription needs the column: apply it first.
+   Optional, once: `npx wrangler d1 execute dino-stats --remote --command "CREATE INDEX IF NOT EXISTS sonos_homes_token ON sonos_homes (token_hash)"` (the paid-book media route looks a home up by its token hash; without the index it scans the table).
+2. Upload the 15 spoken "subscribe in the Dino app" clips to R2 as `dinoreader/sonos/subscribe-<language>.m4a` (languages: `en ar da de es fa fi fr ja nb nl pt ru sv zh`; AAC in an `.m4a`, the apps' narrator voice, text in `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`). A language with no clip answers 404 on `/sonos/subscribe/<language>.m4a`, so a paid book of that language plays nothing instead of the message.
+3. Homes linked before this slice have no proof: their paid books play the message until the grown-up links again.
+
 ## Deploying from Windows
 
 A Windows checkout with `core.autocrlf=true` writes `site/` with CRLF line endings, which would upload different bytes than git (and than Workers Builds on Linux). `npm run deploy` runs `worker/check-site-eol.mjs` first and refuses; fix with `git -c core.autocrlf=false checkout -- site/`.

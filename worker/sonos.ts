@@ -13,12 +13,35 @@ import { LABEL_LANGUAGES, Shelf, bookSubtitle, languageNameIn, languageSubtitle,
 import type { ShelfName } from "./sonos-labels.ts";
 import { languageFolderId, otherLanguages, parseShelfId, shelfId, shelfTracks, shelvesOf } from "./sonos-shelves.ts";
 import type { ShelfTarget } from "./sonos-shelves.ts";
-import { answerLinkAction, currentWord, guarded, handleLinkApi, isJsonRequest, isLinkAction, languageNameFor, requireHome, saveStoryLanguage, storyLanguageTap, storyLanguageTitle } from "./sonos-link.ts";
+import type { ServedFile } from "./downloads.ts";
+import { STORY_LANGUAGES, answerLinkAction, currentWord, guarded, handleLinkApi, homeForToken, homeKeyOf, isJsonRequest, isLinkAction, languageNameFor, requireHome, saveStoryLanguage, storyLanguageTap, storyLanguageTitle, subscriptionActive, subscriptionForPlayback, subscriptionKnown } from "./sonos-link.ts";
 import type { Home, SonosLinks } from "./sonos-link.ts";
 import { SPEAKER_PLATFORM_SONOS, recordSpeakerFault } from "./speaker-usage.ts";
 import type { SpeakerUsage } from "./speaker-usage.ts";
 
 export const SONOS_PATH = "/sonos";
+// Slice 439: the spoken "subscribe in the Dino app" message, one file per story language, rendered once with the apps' narrator voices (tools/dino/sonos-subscribe) and kept in R2 under SUBSCRIBE_KEY_PREFIX.
+const SUBSCRIBE_PATH_PREFIX = `${SONOS_PATH}/subscribe/`;
+const SUBSCRIBE_FILE = /^([a-z]{2})\.m4a$/;
+const SUBSCRIBE_KEY_PREFIX = "dinoreader/sonos/subscribe-";
+const SUBSCRIBE_CACHE = "public, max-age=3600";
+const SUBSCRIBE_UNAVAILABLE = "story-unavailable";
+const FALLBACK_MESSAGE_LANGUAGE = "en";
+const HTTP_HEADERS_TAG = "httpHeaders";
+// Slice 439 (review 1, finding 2): a paid book's audio is served by this Worker at `/sonos/media/<language>/<storyId>.m4a`. The player sends the home's own Sonos auth token there (`Authorization: Bearer`, the
+// `httpHeaders` entry of getMediaURI, https://docs.sonos.com/docs/getmediauri); the route finds the home by that token, asks the store about the home's stored proof, and streams the book or the subscribe message.
+// The proof itself never leaves the Worker.
+const MEDIA_PATH_PREFIX = `${SONOS_PATH}/media/`;
+const MEDIA_FILE = /^([A-Za-z0-9_-]{1,64})\/([A-Za-z0-9_-]{1,64})\.m4a$/;
+const AUTHORIZATION_HEADER = "Authorization";
+const BEARER_PREFIX = "Bearer ";
+const PRIVATE_NO_STORE = "private, no-store";
+const RANGE_HEADER = "Range";
+const FORWARDED_HEADERS = [RANGE_HEADER, "If-Range", "If-None-Match", "If-Modified-Since"];
+const STATUS_UNAUTHORIZED = 401;
+const STATUS_NOT_FOUND = 404;
+const STATUS_UNAVAILABLE = 503;
+const STATUS_BAD_GATEWAY = 502;
 const ROOT_ID = "root";
 const TRACK_PREFIX = "track:";
 const ID_SEPARATOR = ":";
@@ -84,6 +107,10 @@ export interface Track {
   readonly added: string | null;
   /** A paid book is listed ("In the Dino app") but not playable on this anonymous service. */
   readonly paid: boolean;
+  /** Slice 439: a paid book the linked home's active subscription opens (set only on the copy a browse works with; `paid` is then false). */
+  readonly unlocked?: boolean;
+  /** Slice 439 (review 1, finding 9): a paid book of a linked home without an active subscription; it is listed playable so a press on it plays the spoken subscribe message (set only on the copy a browse works with; `paid` stays true). */
+  readonly subscribePrompt?: boolean;
   /** Slice 438: the book's title in each language it has one, for the phone-language title under a story language's row (absent in older callers). */
   readonly altTitles?: Readonly<Record<string, string>>;
 }
@@ -217,7 +244,7 @@ function languageViews(tracks: readonly Track[], origin: string, language: strin
 // words, picture and book order. FNV-1a over those lines.
 export function catalogToken(tracks: readonly Track[], origin = ""): string {
   const trackLines = tracks.map((track) =>
-    JSON.stringify([track.language, track.storyId, track.version, track.seconds, track.title, track.author, track.coverUrl, track.squareCoverUrl, track.listenUrl, track.tags, track.ageMin, track.ageMax, track.added, track.paid]),
+    JSON.stringify([track.language, track.storyId, track.version, track.seconds, track.title, track.author, track.coverUrl, track.squareCoverUrl, track.listenUrl, track.tags, track.ageMin, track.ageMax, track.added, track.paid, track.unlocked === true, track.subscribePrompt === true]),
   );
   const folderLines = languageIds(tracks).flatMap((language) =>
     languageViews(tracks, origin, language).map((view) => JSON.stringify([view.id, view.title, view.subtitle, view.art, view.canPlay, view.books.map(trackId), languageTileUrl(origin, language)])),
@@ -248,7 +275,7 @@ function trackFields(track: Track, label: string = track.language): string {
     tag("album", clip(subtitle === "" ? ALBUM_NAME : subtitle, MAX_TITLE)),
     tag("duration", track.seconds),
     art === null ? "" : tag("albumArtURI", art),
-    tag("canPlay", !track.paid),
+    tag("canPlay", !track.paid || track.subscribePrompt === true),
     tag("canSkip", true),
   ].join("");
   return [tag("id", trackId(track)), tag("itemType", ITEM_TRACK), tag("title", clip(track.title, MAX_TITLE)), tag("mimeType", TRACK_MIME), `<trackMetadata>${meta}</trackMetadata>`].join("");
@@ -290,6 +317,8 @@ interface Browse {
   readonly languages: readonly string[];
   /** Slice 438: the linked home (its saved story language), or null for a browse with no link checks (tests, older callers). */
   readonly home: Home | null;
+  /** Slice 439: "" on the Dino host, "/dino" under workers.dev; the spoken message's address needs it. */
+  readonly pathPrefix: string;
 }
 
 /** The language of the words for a browse: the request's first Accept-Language the labels cover, else English. */
@@ -447,17 +476,144 @@ function getMediaMetadata(browse: Browse, request: SonosRequest): Response {
 }
 
 // Slice 436: getMediaURI is not a play count (Sonos sends it for a queued next track as well); plays are counted from the player's own report at /timePlayed (sonos-reporting.ts). An unplayable request is a fault row (A3).
-async function getMediaUri(tracks: readonly Track[], request: SonosRequest, usage: SpeakerUsage | undefined, httpRequest: Request): Promise<Response> {
-  const track = findTrack(tracks, request.id);
+async function getMediaUri(browse: Browse, request: SonosRequest, usage: SpeakerUsage | undefined, httpRequest: Request): Promise<Response> {
+  const track = findTrack(browse.tracks, request.id);
   if (track === null) {
     const faulting = recordSpeakerFault(usage, SPEAKER_PLATFORM_SONOS, httpRequest).catch(() => false);
     if (usage?.defer === undefined) await faulting;
     else usage.defer(faulting);
     throw new SoapFault(FaultCode.ItemNotFound, FaultMessage.NoSuchItem);
   }
-  // Slice 437 A1: a paid book is listed with canPlay false. Sonos documents no fault for an unplayable track; Client.LoginUnsupported and the login faults make the app ask the user to upgrade or sign in, and this service has no accounts, so a call that reaches here (a queue or favourite made elsewhere) gets Client.ItemNotFound, which starts no login flow (owner's sandbox decides, Not yet verified).
-  if (track.paid) throw new SoapFault(FaultCode.ItemNotFound, FaultMessage.NotPlayable);
+  // Slice 437 A1: an anonymous call for a paid book (a queue or favourite made elsewhere) gets Client.ItemNotFound, which starts no login flow; this service has no accounts there (owner's sandbox decides, Not yet verified).
+  // Slice 439: a linked home's paid book answers with this Worker's media URL and the home's own Sonos auth token as the `Authorization` header (Sonos holds that token already). The media route asks the store at play time and
+  // streams the story or the spoken "subscribe in the Dino app" message; getMediaURI itself never calls the store (review 1, finding 10) and never carries the subscription proof (finding 2).
+  if (track.paid) {
+    const token = request.login?.token;
+    if (browse.home === null || token === undefined) throw new SoapFault(FaultCode.ItemNotFound, FaultMessage.NotPlayable);
+    return withHttpHeader(resultResponse(SonosAction.GetMediaURI, escapeXml(mediaUrl(browse, track))), AUTHORIZATION_HEADER, `${BEARER_PREFIX}${token}`);
+  }
   return resultResponse(SonosAction.GetMediaURI, escapeXml(track.listenUrl));
+}
+
+function mediaUrl(browse: Browse, track: Track): string {
+  return `${browse.origin}${browse.pathPrefix}${MEDIA_PATH_PREFIX}${track.language}/${track.storyId}.m4a`;
+}
+
+function spokenLanguage(language: string): string {
+  return STORY_LANGUAGES.includes(language) ? language : FALLBACK_MESSAGE_LANGUAGE;
+}
+
+/** The language and book id a `/sonos/media/<language>/<storyId>.m4a` path names, or null for any other path. */
+function mediaOf(pathname: string): { readonly language: string; readonly storyId: string } | null {
+  if (!pathname.startsWith(MEDIA_PATH_PREFIX)) return null;
+  const found = MEDIA_FILE.exec(pathname.slice(MEDIA_PATH_PREFIX.length));
+  return found === null ? null : { language: found[1] as string, storyId: found[2] as string };
+}
+
+function bearerOf(request: Request): string | null {
+  const header = request.headers.get(AUTHORIZATION_HEADER) ?? "";
+  const token = header.startsWith(BEARER_PREFIX) ? header.slice(BEARER_PREFIX.length).trim() : "";
+  return token === "" ? null : token;
+}
+
+function privately(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", PRIVATE_NO_STORE);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/** The story's own request, with only the headers a ranged or conditional read needs; the subscription was checked here, so the paid gate is not asked again. */
+function listenRequestOf(request: Request, track: Track): Request {
+  const headers = new Headers();
+  for (const name of FORWARDED_HEADERS) {
+    const value = request.headers.get(name);
+    if (value !== null) headers.set(name, value);
+  }
+  return new Request(track.listenUrl, { method: request.method, headers });
+}
+
+interface MediaWorld {
+  readonly env: { DOWNLOADS?: R2Bucket };
+  readonly pathPrefix: string;
+  readonly serve: ObjectServer;
+  readonly catalogue: CatalogueRuntime | undefined;
+  readonly links: SonosLinks | undefined;
+}
+
+async function mediaHome(request: Request, links: SonosLinks | undefined): Promise<Home | null> {
+  const token = bearerOf(request);
+  if (links?.db === undefined || token === null) return null;
+  const db = links.db;
+  return guarded(() => homeForToken(db, token));
+}
+
+// Slice 439 (review 1, finding 2): the media route. 401 for a token that is not a linked home's, 404 for a book that is not paid, the story for an active (or grace) subscription, else the subscribe message.
+async function serveMedia(request: Request, world: MediaWorld, wanted: { readonly language: string; readonly storyId: string }): Promise<Response> {
+  const home = await mediaHome(request, world.links);
+  if (home === null || world.links === undefined) return new Response(null, { status: STATUS_UNAUTHORIZED });
+  const tracks = await loadTracks(request, world.env, world.pathPrefix, world.serve, world.catalogue);
+  const track = tracks.find((candidate) => candidate.paid && candidate.language === wanted.language && candidate.storyId === wanted.storyId);
+  if (track === undefined) return new Response(null, { status: STATUS_NOT_FOUND });
+  // Review 3, finding 5: only the first request of a play asks the store; a Range or HEAD request is a continuation and uses the kept answer, so the store-call limit cannot cut a book mid-play.
+  const continuation = request.method === "HEAD" || request.headers.has(RANGE_HEADER);
+  const subscribed = await subscriptionForPlayback(home, world.links, homeKeyOf(home), continuation);
+  // Review 2, finding 5: a store that cannot be asked (and no kept answer) is not "not subscribed": the player is told to retry, never given the subscribe clip.
+  if (subscribed === null) return new Response(null, { status: STATUS_UNAVAILABLE });
+  if (!subscribed) return privately(await serveSubscribeForMedia(request, world.env, world.serve, spokenLanguage(track.language)));
+  return privately(await handleStories(listenRequestOf(request, track), world.env, world.pathPrefix, world.serve, undefined, undefined, undefined, world.catalogue));
+}
+
+async function answerMedia(request: Request, world: MediaWorld, wanted: { readonly language: string; readonly storyId: string }): Promise<Response> {
+  try {
+    return await serveMedia(request, world, wanted);
+  } catch {
+    // no-fallback: a failure of D1 or the catalogue is a plain 503 here (the player retries); guarded() already logged the error name
+    return new Response(null, { status: STATUS_UNAVAILABLE });
+  }
+}
+
+/** The response with one `httpHeaders` entry added after the result (resultResponse has no place for it). */
+async function withHttpHeader(response: Response, name: string, value: string): Promise<Response> {
+  const entry = `<${HTTP_HEADERS_TAG}><httpHeader>${tag("header", name)}${tag("value", value)}</httpHeader></${HTTP_HEADERS_TAG}>`;
+  const closing = `</${SonosAction.GetMediaURI}Response>`;
+  const text = (await response.text()).replace(closing, `${entry}${closing}`);
+  return new Response(text, { status: response.status, headers: response.headers });
+}
+
+/** True for the one file route this module serves besides SMAPI: `/sonos/subscribe/<language>.m4a`. */
+function subscribeLanguageOf(pathname: string): string | null {
+  if (!pathname.startsWith(SUBSCRIBE_PATH_PREFIX)) return null;
+  const language = SUBSCRIBE_FILE.exec(pathname.slice(SUBSCRIBE_PATH_PREFIX.length))?.[1];
+  return language !== undefined && STORY_LANGUAGES.includes(language) ? language : null;
+}
+
+function serveSubscribeMessage(request: Request, env: { DOWNLOADS?: R2Bucket }, serve: ObjectServer, language: string): Promise<Response> {
+  if (env.DOWNLOADS === undefined) return Promise.resolve(new Response(null, { status: 404 }));
+  const fileName = `subscribe-${language}.m4a`;
+  const file: ServedFile = { key: `${SUBSCRIBE_KEY_PREFIX}${language}.m4a`, contentType: TRACK_MIME, fileName, disposition: "inline", unavailable: SUBSCRIBE_UNAVAILABLE };
+  return serve(request, env.DOWNLOADS, file, SUBSCRIBE_CACHE);
+}
+
+const SUBSCRIBE_MISSING_LOG = "[sonos] subscribe clip missing";
+
+/** True when `serve` could not find the clip: the 502 `story-unavailable` of a missing R2 object, or the 404 of a Worker with no bucket. */
+function clipMissing(response: Response): boolean {
+  return response.status === STATUS_NOT_FOUND || response.status === STATUS_BAD_GATEWAY;
+}
+
+/**
+ * Review 3, finding 6: the clip a paid book's media route plays to a home without a subscription. A language whose clip is not in R2 yet plays the English one; with that missing too the answer is a plain
+ * 503 (the player retries), never a 404 or a 502 error body; each miss is logged by language only.
+ */
+async function serveSubscribeForMedia(request: Request, env: { DOWNLOADS?: R2Bucket }, serve: ObjectServer, language: string): Promise<Response> {
+  const wanted = await serveSubscribeMessage(request, env, serve, language);
+  if (!clipMissing(wanted)) return wanted;
+  console.warn(`${SUBSCRIBE_MISSING_LOG} language=${language}`);
+  if (language === FALLBACK_MESSAGE_LANGUAGE) return new Response(null, { status: STATUS_UNAVAILABLE });
+  const english = await serveSubscribeMessage(request, env, serve, FALLBACK_MESSAGE_LANGUAGE);
+  if (!clipMissing(english)) return english;
+  console.warn(`${SUBSCRIBE_MISSING_LOG} language=${FALLBACK_MESSAGE_LANGUAGE}`);
+  return new Response(null, { status: STATUS_UNAVAILABLE });
 }
 
 function getLastUpdate(browse: Browse): Response {
@@ -497,7 +653,7 @@ async function answer(browse: Browse, request: SonosRequest, usage: SpeakerUsage
     case SonosAction.GetMediaMetadata:
       return getMediaMetadata(browse, request);
     case SonosAction.GetMediaURI:
-      return getMediaUri(browse.tracks, request, usage, httpRequest);
+      return getMediaUri(browse, request, usage, httpRequest);
     case SonosAction.GetLastUpdate:
       return getLastUpdate(browse);
     default:
@@ -505,9 +661,30 @@ async function answer(browse: Browse, request: SonosRequest, usage: SpeakerUsage
   }
 }
 
-/** True for the one path this module answers (after the `/dino` prefix is stripped). */
+/** True for the paths this module answers (after the `/dino` prefix is stripped): the SMAPI endpoint and, since Slice 439, the spoken subscribe message files and the paid-book media route. */
 export function isSonosPath(pathname: string): boolean {
-  return pathname === SONOS_PATH;
+  return pathname === SONOS_PATH || subscribeLanguageOf(pathname) !== null || mediaOf(pathname) !== null;
+}
+
+/**
+ * Slice 439: a linked home whose subscription is active sees its paid books as plain books (`unlocked`); a linked home without one sees them as paid but playable (`subscribePrompt`: a press plays the spoken
+ * message, review 1 finding 9); an anonymous browse (no home) sees them as paid and not playable.
+ */
+function unlockPaid(tracks: readonly Track[], subscribed: boolean, linked: boolean): readonly Track[] {
+  if (!linked) return tracks;
+  return tracks.map((track) => {
+    if (!track.paid) return track;
+    return subscribed ? { ...track, paid: false, unlocked: true } : { ...track, subscribePrompt: true };
+  });
+}
+
+/**
+ * Whether the home's subscription is active, as the call needs it. Only the calls that show a book's state ask the store (its answer is cached by the subscription source, and a store error keeps the last answer):
+ * getMediaURI needs none (the media route asks at play time) and the poll for a changed catalogue (getLastUpdate) only reads the last answer, so a poll never reaches the store (review 1, finding 10).
+ */
+async function isSubscribed(action: string, home: Home | null, links: SonosLinks | undefined): Promise<boolean> {
+  if (home === null || links === undefined || action === SonosAction.GetMediaURI) return false;
+  return action === SonosAction.GetLastUpdate ? subscriptionKnown(home, links) : subscriptionActive(home, links, homeKeyOf(home));
 }
 
 async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined, catalogue: CatalogueRuntime | undefined, links: SonosLinks | undefined): Promise<Response> {
@@ -522,7 +699,9 @@ async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPref
   }
   // Slice 438: with links, every other call needs the home's login token (an unlinked home gets Client.AuthTokenExpired, which makes Sonos ask the grown-up to link again).
   const home = links === undefined ? null : await requireHome(parsed, links);
-  const browse = { tracks: await loadTracks(request, env, pathPrefix, serve, catalogue), origin, languages: acceptedLanguages(request.headers.get(ACCEPT_LANGUAGE_HEADER)), home };
+  const subscribed = await isSubscribed(parsed.action, home, links);
+  const tracks = unlockPaid(await loadTracks(request, env, pathPrefix, serve, catalogue), subscribed, home !== null);
+  const browse = { tracks, origin, languages: acceptedLanguages(request.headers.get(ACCEPT_LANGUAGE_HEADER)), home, pathPrefix };
   return answer(browse, parsed, usage, request, links);
 }
 
@@ -531,6 +710,12 @@ async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPref
  * `links` (Slice 438) turns the link on: the Dino app's JSON calls (confirm, unlink) are answered here too, and without `links` the service stays the anonymous one of Slice 283.
  */
 export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage, catalogue?: CatalogueRuntime, links?: SonosLinks): Promise<Response> {
+  const spoken = subscribeLanguageOf(new URL(request.url).pathname);
+  const media = mediaOf(new URL(request.url).pathname);
+  if (spoken !== null || media !== null) {
+    if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: NOT_ALLOWED_STATUS, headers: { Allow: "GET, HEAD" } });
+    return spoken !== null ? serveSubscribeMessage(request, env, serve, spoken) : answerMedia(request, { env, pathPrefix, serve, catalogue, links }, media as { language: string; storyId: string });
+  }
   if (request.method !== "POST") return new Response(null, { status: NOT_ALLOWED_STATUS, headers: { Allow: ALLOWED_METHODS } });
   if (links !== undefined && isJsonRequest(request)) return handleLinkApi(request, links);
   try {

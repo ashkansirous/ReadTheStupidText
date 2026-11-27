@@ -470,4 +470,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Yhdistetään Sonosiin…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino ei tavoittanut palvelintaan. Tarkista verkkoyhteys ja yritä uudelleen.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>Tämä linkki on vanhentunut. Aloita alusta Sonos-sovelluksesta.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>Dinon kauppa on juuri nyt kiireinen. Yritä hetken kuluttua uudelleen.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
 </root>

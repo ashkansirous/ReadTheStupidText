@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>در حال اتصال به Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>دینو به سرور خود نرسید. اینترنت را بررسی کنید و دوباره تلاش کنید.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>این پیوند منقضی شده است. دوباره از برنامه‌ی Sonos شروع کنید.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>فروشگاه Dino اکنون مشغول است. چند لحظه دیگر دوباره تلاش کنید.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>تلاش دوباره</value></data>
 </root>

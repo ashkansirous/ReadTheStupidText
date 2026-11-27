@@ -21,6 +21,7 @@ public static class SonosLink
     private const string LanguageField = "language";
     private const string ProofField = "proof";
     private const string CallbackField = "callback";
+    private const string ProofStoredField = "proofStored";
 
     /// <summary>
     /// The link code of a link the app was opened with (<c>dinoreader://sonos-link?code=...</c>, or the same query on the Dino site's
@@ -104,6 +105,31 @@ public static class SonosLink
         {
             // no-fallback: not JSON, so there is no address to open
             return null;
+        }
+    }
+
+    /// <summary>
+    /// True only when the Worker's answer says it kept the subscription proof (<c>proofStored: true</c>); an answer without the field, or one that is not JSON, counts as not kept, so the app
+    /// remembers a proof for renewal only when the Worker holds one to replace (review 3, finding 1).
+    /// </summary>
+    public static bool ProofStoredOf(string? answerJson)
+    {
+        if (string.IsNullOrEmpty(answerJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(answerJson);
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty(ProofStoredField, out JsonElement value)
+                && value.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            // no-fallback: not JSON, so no proof was reported as kept
+            return false;
         }
     }
 

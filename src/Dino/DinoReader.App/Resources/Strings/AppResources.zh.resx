@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>正在连接 Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino 无法连接到服务器。请检查网络后重试。</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>此链接已失效。请从 Sonos 应用重新开始。</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>Dino 商店现在较忙。请稍后再试。</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>重试</value></data>
 </root>

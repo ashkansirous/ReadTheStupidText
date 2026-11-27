@@ -20,12 +20,15 @@ public partial class SonosLinkPage : ContentPage
 
 	private readonly IReadOnlyList<string> _languages = SonosLink.LanguagesFor(LanguageChoice.Current());
 	private readonly WaitController _wait;
+	private readonly BookPurchases _purchases;
 	private string _code = string.Empty;
 	private bool _done;
 	private bool _connecting;
+	private string? _sentProof;
 
-	public SonosLinkPage()
+	public SonosLinkPage(BookPurchases purchases)
 	{
+		_purchases = purchases;
 		InitializeComponent();
 		LanguagePicker.ItemsSource = _languages.Select(code => LanguageNames.NativeName(code)).ToList();
 		LanguagePicker.SelectedIndex = 0;
@@ -92,6 +95,12 @@ public partial class SonosLinkPage : ContentPage
 		{
 			ShowError(AppResources.SonosLink_Expired, "expired");
 		}
+		else if (SonosProofRenewal.StoreBusy((int?)answer.status))
+		{
+			// review 3, finding 1: the store could not be asked (429, 503): never link without the proof here, the grown-up tries again in a moment
+			ShowError(AppResources.SonosLink_Busy, "store busy");
+			ConnectButton.Text = AppResources.SonosLink_TryAgain;
+		}
 		else if (answer.status != HttpStatusCode.OK || SonosLink.CallbackOf(answer.body) is not { } callback)
 		{
 			ShowError(AppResources.SonosLink_Failed, "failed");
@@ -102,11 +111,37 @@ public partial class SonosLinkPage : ContentPage
 		}
 	}
 
+	// Slice 439: the Dino subscription's proof goes with the link, so the speakers play the paid books; without a subscription the home is linked with the free books only. A store read that has not run yet (the app was opened by Sonos)
+	// is run here, inside the Connecting wait. The Worker refuses a proof that is not a subscription's (400) or that the store does not confirm as active (403): the home is then linked without one rather than not at all.
 	private async Task<(HttpStatusCode? Status, string Body)> PostAsync(string language, CancellationToken cancel)
+	{
+		string? proof = await SubscriptionProofAsync(cancel);
+		(HttpStatusCode? status, string body) answer = await SendConfirmAsync(language, proof, cancel);
+		if (proof is not null && answer.status is HttpStatusCode.BadRequest or HttpStatusCode.Forbidden)
+		{
+			Log("subscription proof refused, linking without it");
+			proof = null;
+			answer = await SendConfirmAsync(language, null, cancel);
+		}
+
+		_sentProof = answer.status == HttpStatusCode.OK && SonosLink.ProofStoredOf(answer.body) ? proof : null; // review 3, finding 1: remembered only when the Worker kept it
+		return answer;
+	}
+
+	private async Task<string?> SubscriptionProofAsync(CancellationToken cancel)
+	{
+		await _purchases.RefreshLastListedAsync(cancel); // review 1, finding 8: always a fresh store read, so a subscription that lapsed since the last read is not sent
+
+		string? proof = _purchases.SubscriptionProof;
+		Log(proof is null ? "no subscription proof, linking for the free books" : "linking with the subscription proof");
+		return proof;
+	}
+
+	private async Task<(HttpStatusCode? Status, string Body)> SendConfirmAsync(string language, string? proof, CancellationToken cancel)
 	{
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		timeout.CancelAfter(CallTimeout);
-		using var content = new StringContent(SonosLink.ConfirmBody(_code, language), Encoding.UTF8, JsonMime);
+		using var content = new StringContent(SonosLink.ConfirmBody(_code, language, proof), Encoding.UTF8, JsonMime);
 		try
 		{
 			using HttpResponseMessage response = await Http.PostAsync(SonosEndpoint, content, timeout.Token);
@@ -122,6 +157,8 @@ public partial class SonosLinkPage : ContentPage
 	private async Task HandBackAsync(Uri callback, string language)
 	{
 		_done = true;
+		SonosLinkedProof.Remember(_sentProof); // C4: later renewals replace this proof at the Worker; a link made without one forgets the old one (review 1, finding 7)
+
 		Log($"connected language={language}");
 		try
 		{
