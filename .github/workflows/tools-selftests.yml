@@ -12,7 +12,9 @@ on:
       - '.maestro/**'
       - '.github/workflows/tools-selftests.yml'
       - 'PSScriptAnalyzerSettings.psd1'
-      # Slice 272: the Dino audio alignment check below. The `scope` job keeps the Windows self-tests off these paths.
+      # Slice 406 item 6b: the folder lint checks every `# expect-log:` marker against the app source, so a reworded log line anywhere under src must run it. The `scope` job sends a src-only change to the small `flow-lint` job, not the Windows self-tests.
+      - 'src/**'
+      # Slice 272: the Dino audio alignment check below. The `scope` job keeps the Windows self-tests off these paths (and off any src-only change).
       - 'src/Dino/DinoReader.Core/**'
       - 'src/Shared/Sirous.Reading.Application/**'
       - 'src/Dino/DinoReader.App/StoryVoicing.cs'
@@ -32,6 +34,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       tooling: ${{ steps.scope.outputs.tooling }}
+      flowlint: ${{ steps.scope.outputs.flowlint }}
       audio: ${{ steps.scope.outputs.audio }}
     steps:
       - name: Checkout
@@ -46,6 +49,7 @@ jobs:
         run: |
           changed="$(git diff --name-only "$BASE" "$GITHUB_SHA")"
           if echo "$changed" | grep -qE '^(tools/|\.maestro/|\.github/workflows/tools-selftests\.yml$|PSScriptAnalyzerSettings\.psd1$)'; then echo "tooling=true" >> "$GITHUB_OUTPUT"; else echo "tooling=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -qE '^src/.*\.(cs|swift|kt|java)$'; then echo "flowlint=true" >> "$GITHUB_OUTPUT"; else echo "flowlint=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -qE '^(src/Dino/DinoReader\.Core/|src/Shared/Sirous\.Reading\.Application/|src/Dino/DinoReader\.App/StoryVoicing\.cs$|tools/dino/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
 
   # Slice 272: every Dino pre-made audio manifest must hash the sentences the app reads now, position by position (Slice 255 changed the count and eight Farsi packs silently stopped fitting).
@@ -77,6 +81,23 @@ jobs:
 
       - name: Check that every audio manifest lines up with the sentences the app reads
         run: dotnet run --project tools/dino/DinoReader.BookBuilder --configuration Release -- check-audio
+
+  # Slice 406 item 6b: an app source change (C#, Swift, Kotlin, Java under src) runs only the folder lint, which checks every `# expect-log:` marker against that source; a tools change runs the whole set below.
+  # Skipped when `selftests` runs anyway (its own lint step does the same check).
+  flow-lint:
+    needs: scope
+    if: needs.scope.outputs.flowlint == 'true' && needs.scope.outputs.tooling != 'true'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Lint the Maestro flows against the app source
+        run: ./tools/emulator/lint-flows.ps1
 
   # Slice 215: one job, two shells (pwsh = PowerShell 7, powershell = Windows PowerShell 5.1), instead of two copies of the same steps.
   selftests:

@@ -1,0 +1,8 @@
+appId: uk.sirous.dinoreader.dbg
+# expect-log: verbatim "quoted" marker
+# expect-log: kotlin $price 'ok'
+# expect-log: swift "quoted" marker
+# expect-log: swift 'single' marker
+# expect-log: swift raw "quoted" marker
+---
+- back
