@@ -17,7 +17,9 @@ support case link in Slice 283), so the builder must look it up before writing t
 
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/sonos-search.ts` (new),
 `worker/sonos-search.test.mjs` (new), `site/dino/sonos/presentation-map.xml` (new),
-`site/dino/sonos/strings.xml` (new), `worker/index.ts`, `docs/plan/slices/283-dino-sonos-music-service.md`, this file.
+`site/dino/sonos/strings.xml` (new), `worker/index.ts`, `worker/sonos-labels.ts`, `worker/sonos-shelves.ts` (both widened 2026-11-27), `docs/plan/slices/283-dino-sonos-music-service.md`, this file.
+
+*In progress (wave 2026-11-27), draft PR.*
 
 ## Why
 
