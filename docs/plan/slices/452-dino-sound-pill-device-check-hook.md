@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `src/Dino/DinoReader.App/Testing/**`, `src/Dino/DinoReader.App/**/SoundStatusPill.cs`, `src/Dino/DinoReader.App/**/SoundPillText.cs`, `.maestro/dino/**`
 
-*Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 290; not built).*
+*In progress (wave 2026-11-27), draft PR.* (Planned 2026-11-25, moved out of Slice 290.)
 
 **Why.** Slice 290 (built, #889 and #895) cannot be compared with frames 197-199 on a device: no flow stops on the reading page while a pill shows. Moved out of Slice 290 and plan.md on 2026-11-25.
 
