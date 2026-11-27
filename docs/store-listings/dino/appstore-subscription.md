@@ -1,6 +1,6 @@
 # App Store listing: Dino: Kids Books & Stories - subscription version (en-US changes only)
 
-**Draft 2026-11-15 (Slice 384 work item H). NOT pushed. Push only when Slice 384 is live on the App Store (the subscription group and both products approved and the app version that carries the subscription released); until then `appstore.md` is the live text.** Written from `play-subscription.md`. Plans from Slice 384 Decisions 2 and 5: $ prices are the store's own (UK 1.99 GBP a month, 14.99 GBP a year, set in App Store Connect), 7-day free trial once per Apple ID, single books still sold and kept, free and bought books never affected.
+**LIVE on the App Store since 2026-11-15 (Slice 384 work item H; Slice 291 item 12 checked 2026-11-27).** Read from App Store Connect: the promotional text, the STORIES AND PRICES paragraph, the purchase bullet and the two closing lines below are in the live descriptions of all 16 localizations (this file holds the en-US wording; the 13 language files hold the others). The privacy URL is `https://dinoreader.sirous.uk/privacy.html`. Written from `play-subscription.md`. Plans from Slice 384 Decisions 2 and 5: $ prices are the store's own (UK 1.99 GBP a month, 14.99 GBP a year, set in App Store Connect), 7-day free trial once per Apple ID, single books still sold and kept, free and bought books never affected.
 Apple requires, for an auto-renewing subscription: the price, the length, the trial and the renewal terms next to the buy button (the app's subscription card shows them), and a working link to the **Terms of Use (EULA)** and the **privacy policy** in the App Store description (or the EULA field) and in the app. The links are below; set them with the API (`appInfoLocalizations.privacyPolicyUrl`, and the description lines here), never by hand.
 
 ## Promotional text (replaces the line in `appstore.md` section 2; <= 170)
@@ -21,7 +21,7 @@ Replace the "Stories are bought through the App Store ..." bullet under MADE FOR
 Add these two lines at the very end of the description (Apple's own check looks for them):
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: https://dinoreader.sirous.uk/privacy
+Privacy Policy: https://dinoreader.sirous.uk/privacy.html
 
 ## In-app purchase metadata (made by `store-products.mjs`, not by this file)
 

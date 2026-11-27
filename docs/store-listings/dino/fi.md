@@ -9,7 +9,7 @@ Play short description (<= 80): Iltasatuja ja kuvakirjoja lapsille. Äänitä my
 Play search phrases used in the text: iltasadut, lastensadut, kuvakirjat, ääneen luku
 App Store subtitle (<= 30): Iltasadut omalla äänelläsi
 App Store keywords (<= 100 bytes): kuvakirja,satukirja,ääneen,luku,äänikirja,lapset,tarinat,nauhoita,mummo,kaksikielinen,esikoulu
-App Store promotional text (<= 170): Satuja luettuna ääneen 3-9-vuotiaille, jokaiselle hahmolle oma ääni ja tilaa omalle äänellesi. Ei mainoksia. Neljä ilmaista, muut 0,99 USD. 15 kieltä.
+App Store promotional text (<= 170): Satuja luettuna ääneen 3-9-vuotiaille, jokaiselle hahmolle oma ääni ja tilaa omalle äänellesi. Ei mainoksia. Tilaa kaikki kirjat tai osta vain suosikkisi.
 Microsoft search terms (7): iltasadut; lastenkirjat; lasten sadut; ääneen luku; kuvakirjat; satukirjat; lastentarinat
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ TEHTY LAPSILLE
 - Kun satu ja sen kieli on ladattu, lukeminen toimii ilman verkkoa.
 - Äänitteesi pysyvät laitteellasi. Varmuuskopioi ne ja palauta ne aikuisten alueelta.
 - Valinnainen anonyymi käyttölaskenta ilman nimiä tai tunnisteita, joka voidaan kytkeä pois Asetuksissa (aikuisten lukon takana).
+
+## App Store description (live since 2026-11-15, locale fi; read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader lukee kuvakirjojen satuja ääneen 3-9-vuotiaille lapsille, ja jokaisella hahmolla on eri ääni. Kertoja kertoo tarinan, ja susi, possut ja piparkakkumies puhuvat kukin omalla äänellään.
+
+VALITSE SADUT
+Aikuinen valitsee kirjat satuhyllystä: klassisia satuja kerrottuna lempeästi, jokaisella sivulla kuva. Neljä satua on ilmaista. Jokaisen kirjan mukana tulevat sen omat valmiit äänet valitsemallasi kielellä.
+
+PERHE MUKANA SADUSSA
+Vanhempi tai isovanhempi voi äänittää oman äänensä mille tahansa hahmolle, millä tahansa sivulla ja millä tahansa sadun kielellä. Lapsesi kuulee sinun lukevan, ja äänite pysyy laitteellasi.
+
+LUKEKAA YHDESSÄ
+- Jokainen lause valaistuu lukemisen aikana, jotta lapset pysyvät mukana.
+- Valitse vain kuva, vain teksti tai kuva ja teksti.
+- Lukunopeus 0,8x-1,2x ja eläinten äänet, jotka voi kytkeä päälle tai pois.
+- Yöteema iltasatuja varten.
+
+SADUT JA HINNAT
+Neljä kuvitettua satua on ilmaista: Leijona ja hiiri, Piparkakkumies, Kolme pientä porsasta ja X merkitsee aarteen paikan. Tilaa kaikki muut sadut tai osta vain haluamasi sadut ja pidä ne. Tilaus on kuukausi- tai vuosittainen, alkaa uusille tilaajille 7 päivän ilmaisella kokeilulla (kerran Apple ID:tä kohti) ja uusiutuu automaattisesti sovelluksessa näkyvään hintaan, kunnes peruutat sen Apple ID:n asetuksissa vähintään 24 tuntia ennen jakson loppua. Se avaa kaikki maksulliset sadut sen aikaa kun se on voimassa; kun se päättyy, vain tilauksen kautta saadut sadut poistuvat lapsen hyllystä, ja uusi tilaus tai sadun osto tuo ne heti takaisin. Ostamasi sadut ovat omasi pysyvästi, tilauksella tai ilman. Aikuinen tilaa tai ostaa aikuisten lukon takana ja voi palauttaa ostokset milloin tahansa. Jo omistamasi sadut pysyvät laitteellasi.
+
+VIISITOISTA KIELTÄ
+Sovellus, sadut ja äänet ovat saatavilla englanniksi, arabiaksi, kiinaksi, tanskaksi, hollanniksi, persiaksi, suomeksi, ranskaksi, saksaksi, japaniksi, norjaksi, portugaliksi, venäjäksi, espanjaksi ja ruotsiksi.
+
+TEHTY LAPSILLE
+- Ei mainoksia.
+- Tilaukset ja sadut ostetaan App Store -kaupan kautta, aikuinen aikuisten lukon takana. Tiliä ei tarvitse luoda, emmekä tallenna sinusta tai ostoksestasi mitään; kaupan todiste tarkistetaan ja unohdetaan.
+- Asetukset, satujen osto ja poisto, äänitys ja varmuuskopiot ovat aikuisten lukon takana.
+- Kun satu ja sen kieli on ladattu, lukeminen toimii ilman verkkoa.
+- Äänitteesi pysyvät laitteellasi. Varmuuskopioi ne ja palauta ne aikuisten alueelta.
+- Valinnainen anonyymi käyttölaskenta ilman nimiä tai tunnisteita, joka voidaan kytkeä pois Asetuksissa (aikuisten lukon takana).
+
+Käyttöehdot: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Tietosuojakäytäntö: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

@@ -9,7 +9,7 @@ Play short description (<= 80): Histórias de dormir e livros ilustrados para cr
 Play search phrases used in the text: histórias para dormir, contos infantis, livros ilustrados, leitura em voz alta
 App Store subtitle (<= 30): Contos de dormir na sua voz
 App Store keywords (<= 100 bytes): infantis,crianças,ler,alta,audiolivro,ilustrado,gravar,vovó,bilíngue,bebé,pré-escola,fábulas
-App Store promotional text (<= 170): Histórias lidas para crianças de 3 a 9 anos, com uma voz para cada personagem e espaço para a sua. Sem anúncios. Quatro grátis, as outras US$ 0,99. 15 idiomas.
+App Store promotional text (<= 170): Histórias lidas para crianças de 3 a 9 anos, com uma voz para cada personagem e espaço para a sua. Sem anúncios. Assine para ter tudo ou compre só o que gostar.
 Microsoft search terms (7): histórias infantis; livros infantis; histórias de dormir; leitura em voz alta; livros ilustrados; contos de fadas; histórias para crianças
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ FEITO PARA CRIANÇAS
 - Depois que a história e o idioma são baixados, a leitura funciona offline.
 - Suas gravações ficam no seu aparelho. Faça backup e restaure na área dos adultos.
 - Contagens de uso anônimas opcionais, sem nomes nem identificadores, que podem ser desligadas nas Configurações (atrás do portão dos adultos).
+
+## App Store description (live since 2026-11-15, locale pt-BR (pt-BR and pt-PT hold the same text); read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+O Dino Book Reader lê em voz alta histórias de livros ilustrados para crianças de 3 a 9 anos, com uma voz diferente para cada personagem. O narrador conta a história, e o lobo, os porquinhos e o homem-biscoito falam cada um com a sua própria voz.
+
+ESCOLHA AS HISTÓRIAS
+Um adulto escolhe livros na estante de histórias: contos clássicos recontados com carinho, com uma imagem em cada página. Quatro histórias são grátis. Cada livro vem com as suas próprias vozes já gravadas, no idioma que você escolher.
+
+A FAMÍLIA NA HISTÓRIA
+Um pai, uma mãe ou um avô podem gravar a própria voz para qualquer personagem, em qualquer página e em qualquer idioma da história. Seu filho ouve você ler, e a gravação fica no seu aparelho.
+
+LER JUNTOS
+- Cada frase se ilumina enquanto é lida, para as crianças acompanharem.
+- Só imagem, só texto, ou imagem e texto.
+- Velocidade de leitura de 0,8x a 1,2x, e sons de animais que você pode ligar ou desligar.
+- Um tema noturno para as histórias de dormir.
+
+HISTÓRIAS E PREÇOS
+Quatro histórias ilustradas são grátis: O Leão e o Ratinho, O Homem-Biscoito, Os Três Porquinhos e X Marca o Tesouro. Assine para ter todas as outras histórias, ou compre só as histórias que quiser e fique com elas. A assinatura é mensal ou anual, começa com um teste gratuito de 7 dias para novos assinantes (uma vez por Apple ID) e renova automaticamente pelo preço mostrado no aplicativo até você cancelar nos ajustes do seu Apple ID, pelo menos 24 horas antes do fim do período. Ela abre todas as histórias pagas enquanto estiver ativa; quando termina, as histórias que você só tinha por ela saem da estante da criança, e assinar de novo ou comprar uma a traz de volta na hora. As histórias que você compra são suas para sempre, com ou sem assinatura. Um adulto assina ou compra atrás do portão dos adultos e pode restaurar compras a qualquer momento. As histórias que você já tem ficam no seu aparelho.
+
+QUINZE IDIOMAS
+O aplicativo, as histórias e as vozes estão em inglês, árabe, chinês, dinamarquês, holandês, persa, finlandês, francês, alemão, japonês, norueguês, português, russo, espanhol e sueco.
+
+FEITO PARA CRIANÇAS
+- Sem anúncios.
+- As assinaturas e as histórias são compradas pelo App Store, por um adulto atrás do portão dos adultos. Não há conta para criar, e não guardamos nada sobre você nem sobre a compra; a prova da loja é conferida e esquecida.
+- Configurações, compra e exclusão de histórias, gravação e backups ficam atrás de um portão dos adultos.
+- Depois que a história e o idioma são baixados, a leitura funciona offline.
+- Suas gravações ficam no seu aparelho. Faça backup e restaure na área dos adultos.
+- Contagens de uso anônimas opcionais, sem nomes nem identificadores, que podem ser desligadas nas Configurações (atrás do portão dos adultos).
+
+Termos de Uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de Privacidade: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

@@ -11,7 +11,7 @@ Play short description (<= 80): Histoires du soir et livres illustrés pour enfa
 Play search phrases used in the text: histoires du soir, contes pour enfants, livres illustrés, lecture à voix haute
 App Store subtitle (<= 30): Contes du soir à votre voix
 App Store keywords (<= 100 bytes): livre,illustré,album,lecture,haute,coucher,bébé,enregistrer,mamie,bilingue,maternelle,conte
-App Store promotional text (<= 170): Des histoires lues aux enfants de 3 à 9 ans, une voix pour chaque personnage et de la place pour la vôtre. Sans pub. Quatre gratuites, les autres 0,99 $. 15 langues.
+App Store promotional text (<= 170): Des histoires lues aux enfants de 3 à 9 ans, une voix par personnage et de la place pour la vôtre. Sans pub. Abonnez-vous à tout, ou n'achetez que vos livres préférés.
 Microsoft search terms (7): histoires pour enfants; livres pour enfants; histoires du soir; lecture à voix haute; livres illustrés; contes; contes du soir
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -76,6 +76,41 @@ CONÇU POUR LES ENFANTS
 - Une fois l'histoire et sa langue téléchargées, la lecture fonctionne hors ligne.
 - Vos enregistrements restent sur votre appareil. Sauvegardez-les et restaurez-les depuis l'espace des adultes.
 - Compteurs d'utilisation anonymes facultatifs, sans nom ni identifiant, désactivables dans les Réglages (derrière la barrière parentale).
+
+## App Store description (live since 2026-11-15, locale fr-FR; read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader lit à voix haute des histoires de livres illustrés aux enfants de 3 à 9 ans, avec une voix différente pour chaque personnage. Le narrateur raconte l'histoire, et le loup, les cochons et le bonhomme de pain d'épices parlent chacun avec leur propre voix.
+
+CHOISIR LES HISTOIRES
+Un adulte choisit des livres sur l'étagère des histoires : des contes classiques racontés avec douceur, avec une image sur chaque page. Quatre histoires sont gratuites. Chaque livre vient avec ses propres voix préenregistrées, dans la langue que vous choisissez.
+
+LA FAMILLE DANS L'HISTOIRE
+Un parent ou un grand-parent peut enregistrer sa propre voix pour n'importe quel personnage, sur n'importe quelle page, dans n'importe quelle langue d'histoire. Votre enfant vous entend lire, et l'enregistrement reste sur votre appareil.
+
+LIRE ENSEMBLE
+- Chaque phrase s'illumine pendant la lecture, pour que les enfants puissent suivre.
+- Image seule, texte seul, ou image et texte.
+- Vitesse de lecture de 0,8x à 1,2x, et bruitages d'animaux que vous pouvez activer ou couper.
+- Un thème de nuit pour les histoires du soir.
+
+HISTOIRES ET PRIX
+Quatre histoires illustrées sont gratuites : Le Lion et la Souris, Le Bonhomme de pain d'épices, Les Trois Petits Cochons et X marque le trésor. Abonnez-vous pour toutes les autres histoires, ou n'achetez que celles que vous voulez et gardez-les. L'abonnement est mensuel ou annuel, commence par un essai gratuit de 7 jours pour les nouveaux abonnés (une fois par identifiant Apple) et se renouvelle automatiquement au prix affiché dans l'application, jusqu'à ce que vous le résiliez dans les réglages de votre identifiant Apple au moins 24 heures avant la fin de la période. Il ouvre toutes les histoires payantes tant qu'il est actif ; à son terme, les histoires que vous n'aviez que grâce à lui quittent l'étagère de l'enfant, et se réabonner ou en acheter une la ramène aussitôt. Les histoires que vous achetez sont à vous, avec ou sans abonnement. Un adulte s'abonne ou achète derrière la barrière parentale, et peut restaurer ses achats à tout moment. Les histoires que vous avez déjà restent sur votre appareil.
+
+QUINZE LANGUES
+L'application, les histoires et les voix existent en anglais, arabe, chinois, danois, néerlandais, persan, finnois, français, allemand, japonais, norvégien, portugais, russe, espagnol et suédois.
+
+CONÇU POUR LES ENFANTS
+- Aucune publicité.
+- Les abonnements et les histoires s'achètent via App Store, par un adulte derrière la barrière parentale. Il n'y a aucun compte à créer, et nous ne conservons rien sur vous ni sur votre achat ; la preuve du magasin est vérifiée puis oubliée.
+- Les réglages, l'achat et la suppression d'histoires, l'enregistrement et les sauvegardes sont derrière une barrière parentale.
+- Une fois l'histoire et sa langue téléchargées, la lecture fonctionne hors ligne.
+- Vos enregistrements restent sur votre appareil. Sauvegardez-les et restaurez-les depuis l'espace des adultes.
+- Compteurs d'utilisation anonymes facultatifs, sans nom ni identifiant, désactivables dans les Réglages (derrière la barrière parentale).
+
+Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Politique de confidentialité : https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

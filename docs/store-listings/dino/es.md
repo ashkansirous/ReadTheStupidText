@@ -9,7 +9,7 @@ Play short description (<= 80): Cuentos para dormir y libros ilustrados para ni�
 Play search phrases used in the text: cuentos para dormir, cuentos infantiles, libros ilustrados, leer en voz alta
 App Store subtitle (<= 30): Cuentos para dormir con tu voz
 App Store keywords (<= 100 bytes): libro,ilustrado,leer,alta,audiolibro,bebé,grabar,abuela,bilingüe,preescolar,fábulas,historias
-App Store promotional text (<= 170): Cuentos leídos a niños de 3 a 9 años, con una voz para cada personaje y espacio para la suya. Sin anuncios. Cuatro gratis, el resto 0,99 US$. 15 idiomas.
+App Store promotional text (<= 170): Cuentos leídos a niños de 3 a 9 años, con una voz para cada personaje y espacio para la suya. Sin anuncios. Suscríbase a todos los libros o compre solo los que le gusten.
 Microsoft search terms (7): cuentos infantiles; libros infantiles; cuentos para dormir; leer en voz alta; libros ilustrados; cuentos para niños; cuentos de hadas
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ HECHA PARA NIÑOS
 - Una vez descargados el cuento y su idioma, se lee sin conexión.
 - Sus grabaciones se quedan en su dispositivo. Haga copias de seguridad y restáurelas desde la zona de adultos.
 - Contadores de uso anónimos opcionales, sin nombres ni identificadores, que se desactivan en Ajustes (tras el control para adultos).
+
+## App Store description (live since 2026-11-15, locale es-ES (es-ES and es-MX hold the same text); read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader lee en voz alta cuentos de libros ilustrados a niños de 3 a 9 años, con una voz diferente para cada personaje. El narrador cuenta la historia, y el lobo, los cerditos y el hombrecito de jengibre hablan cada uno con su propia voz.
+
+ELIJA LOS CUENTOS
+Un adulto elige libros de la estantería de cuentos: cuentos clásicos contados con suavidad, con una imagen en cada página. Cuatro cuentos son gratis. Cada libro trae sus propias voces ya grabadas, en el idioma que usted elija.
+
+LA FAMILIA EN EL CUENTO
+Un padre, una madre o un abuelo pueden grabar su propia voz para cualquier personaje, en cualquier página y en cualquier idioma del cuento. Su hijo le oye leer, y la grabación se queda en su dispositivo.
+
+LEER JUNTOS
+- Cada frase se ilumina al leerse, para que los niños puedan seguirla.
+- Solo imagen, solo texto, o imagen y texto.
+- Velocidad de lectura de 0,8x a 1,2x, y sonidos de animales que se pueden activar o desactivar.
+- Un tema nocturno para los cuentos antes de dormir.
+
+CUENTOS Y PRECIOS
+Cuatro cuentos ilustrados son gratis: El león y el ratón, El hombrecito de jengibre, Los tres cerditos y la X marca el tesoro. Suscríbase para tener todos los demás cuentos, o compre solo los cuentos que quiera y consérvelos. La suscripción es mensual o anual, empieza con una prueba gratuita de 7 días para los nuevos suscriptores (una vez por Apple ID) y se renueva automáticamente al precio que se muestra en la aplicación hasta que la cancele en los ajustes de su Apple ID al menos 24 horas antes de que termine el periodo. Abre todos los cuentos de pago mientras está activa; cuando termina, los cuentos que solo tenía por la suscripción salen de la estantería del niño, y volver a suscribirse o comprar uno lo devuelve al instante. Los cuentos que compre son suyos para siempre, con o sin suscripción. Un adulto se suscribe o compra tras el control para adultos, y puede restaurar las compras en cualquier momento. Los cuentos que ya tiene se quedan en su dispositivo.
+
+QUINCE IDIOMAS
+La aplicación, los cuentos y las voces están en inglés, árabe, chino, danés, neerlandés, persa, finlandés, francés, alemán, japonés, noruego, portugués, ruso, español y sueco.
+
+HECHA PARA NIÑOS
+- Sin anuncios.
+- Las suscripciones y los cuentos se compran a través de App Store, por un adulto tras el control para adultos. No hay que crear ninguna cuenta, y no guardamos nada sobre usted ni su compra; la prueba de la tienda se comprueba y se olvida.
+- Los ajustes, la compra y el borrado de cuentos, la grabación y las copias de seguridad están tras un control para adultos.
+- Una vez descargados el cuento y su idioma, se lee sin conexión.
+- Sus grabaciones se quedan en su dispositivo. Haga copias de seguridad y restáurelas desde la zona de adultos.
+- Contadores de uso anónimos opcionales, sin nombres ni identificadores, que se desactivan en Ajustes (tras el control para adultos).
+
+Términos de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de privacidad: https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 

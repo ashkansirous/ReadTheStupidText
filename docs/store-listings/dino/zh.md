@@ -9,7 +9,7 @@ Play short description (<= 80): 睡前故事与儿童绘本，每个角色有声
 Play search phrases used in the text: 睡前故事, 儿童绘本, 童话故事, 朗读
 App Store subtitle (<= 30): 用你的声音讲睡前故事
 App Store keywords (<= 100 bytes): 童话,朗读,有声书,幼儿,早教,宝宝,亲子,录音,双语,启蒙,晚安
-App Store promotional text (<= 170): 为 3 至 9 岁孩子朗读的故事，每个角色都有自己的声音，还能录上您自己的声音。无广告。四个故事免费，其余每个 0.99 美元。支持 15 种语言。
+App Store promotional text (<= 170): 为 3 至 9 岁孩子朗读的故事，每个角色都有自己的声音，还能录上您自己的声音。无广告。订阅即可读全部故事，也可只购买喜欢的。
 Microsoft search terms (7): 睡前故事; 儿童绘本; 儿童故事; 故事朗读; 童话; 亲子阅读; 有声绘本
 
 ## Google Play full description (<= 4,000), live 2026-11-15
@@ -74,6 +74,41 @@ Dino 为 3 至 9 岁的孩子朗读绘本故事，每个角色都有不同的声
 - 故事及其语言下载完成后，可离线朗读。
 - 您的录音保留在您的设备上。可在大人专区备份和恢复。
 - 可选的匿名使用统计，不含姓名或标识符，可在设置中关闭（在家长锁后面）。
+
+## App Store description (live since 2026-11-15, locale zh-Hans; read from App Store Connect 2026-11-27, equal to what was sent)
+
+Includes the subscription paragraph, the purchase bullet, and the Terms of Use and Privacy Policy lines (privacy URL `https://dinoreader.sirous.uk/privacy.html`). This text is the App Store description; it replaces the "Google Play" to "App Store" derivation described above. Machine draft, native read open.
+
+Dino Book Reader 为 3 至 9 岁的孩子朗读绘本故事，每个角色都有不同的声音。旁白讲述故事，大灰狼、小猪和姜饼人各用自己的声音说话。
+
+挑选故事
+由大人从故事书架上挑选图书：温柔重述的经典童话，每一页都有插图。四个故事免费。每本书都带有预先制作好的配音，语言由您选择。
+
+让家人走进故事
+爸爸妈妈或爷爷奶奶可以为任何角色、任何一页、任何故事语言录上自己的声音。孩子能听到您来讲故事，录音只保存在您的设备上。
+
+一起阅读
+- 朗读时每一句都会高亮显示，方便孩子跟读。
+- 可选只看图、只看文字，或图文同时显示。
+- 朗读速度 0.8 倍到 1.2 倍，动物音效可随时开关。
+- 夜间主题，适合睡前故事。
+
+故事与价格
+四个插图故事免费：狮子和老鼠、姜饼人、三只小猪、X 标出宝藏。订阅即可阅读其他所有故事，也可以只购买您想要的故事并永久保留。订阅分按月和按年两种，新订阅用户可享 7 天免费试用（每个 Apple ID 一次），并按应用内显示的价格自动续订，直到您在当前周期结束前至少 24 小时在 Apple ID 设置中取消。订阅有效期间，所有付费故事均可阅读；订阅结束后，仅通过订阅获得的故事会离开孩子的书架，重新订阅或购买该故事即可立刻恢复。您购买的故事永远属于您，无论是否订阅。大人在家长锁后面订阅或购买，并可随时恢复购买。您已有的故事会保留在您的设备上。
+
+十五种语言
+应用、故事和配音提供英语、阿拉伯语、中文、丹麦语、荷兰语、波斯语、芬兰语、法语、德语、日语、挪威语、葡萄牙语、俄语、西班牙语和瑞典语。
+
+专为孩子设计
+- 没有广告。
+- 订阅和故事由大人在家长锁后面通过 App Store 购买。无需创建账号，我们不保存任何关于您或您的购买的信息；商店的凭证验证后即丢弃。
+- 设置、购买和删除故事、录音与备份都在家长锁后面。
+- 故事及其语言下载完成后，可离线朗读。
+- 您的录音保留在您的设备上。可在大人专区备份和恢复。
+- 可选的匿名使用统计，不含姓名或标识符，可在设置中关闭（在家长锁后面）。
+
+使用条款： https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+隐私政策： https://dinoreader.sirous.uk/privacy.html
 
 ## What's new 1.133.1 (App Store, pushed 2026-11-18 to the editable version, read back equal)
 
