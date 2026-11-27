@@ -25,6 +25,68 @@ public class StoreKit2AnswersTests
         Assert.Equal(["new"], incomplete.Owned);
     }
 
+    // Both plans carry the same flags (they share one subscription group); `eligible` null writes the JSON null, "absent" leaves the field out (an older wrapper).
+    private static string Plans(string trial, string eligible)
+    {
+        string flags = "\"trial\":" + trial + (eligible == "absent" ? "" : ",\"eligible\":" + eligible);
+        return "{\"ok\":true,\"products\":[{\"id\":\"" + SubscriptionProducts.Monthly + "\",\"price\":\"$1.99\"," + flags + "},{\"id\":\"" + SubscriptionProducts.Yearly + "\",\"price\":\"$14.99\"," + flags
+            + "},{\"id\":\"" + Book + "\",\"price\":\"$3.99\",\"trial\":false,\"eligible\":null}],\"invalid\":[]}";
+    }
+
+    [Fact]
+    public void TrialAnswer_IsTrue_WhenAPlanHasATrialThisAccountMayUse()
+    {
+        Assert.True(SubscriptionTrialAnswer.Read(Plans("true", "true")));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsFalse_WhenTheAccountUsedItsTrial()
+    {
+        Assert.False(SubscriptionTrialAnswer.Read(Plans("true", "false")));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsFalse_WhenEligibleButNoPlanHasATrialOffer()
+    {
+        Assert.False(SubscriptionTrialAnswer.Read(Plans("false", "true")));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsNull_WhenTheWrapperSaysNothingAboutEligibility()
+    {
+        Assert.Null(SubscriptionTrialAnswer.Read(Plans("true", "absent")));
+        Assert.Null(SubscriptionTrialAnswer.Read(Plans("true", "null")));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsTrue_WhenOnePlanIsEligibleWithATrialAndTheOtherIsNot()
+    {
+        string json = "{\"ok\":true,\"products\":[{\"id\":\"" + SubscriptionProducts.Monthly + "\",\"trial\":true,\"eligible\":false},{\"id\":\"" + SubscriptionProducts.Yearly + "\",\"trial\":true,\"eligible\":true}]}";
+        Assert.True(SubscriptionTrialAnswer.Read(json));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsNull_WhenEligibleIsNotABoolean()
+    {
+        string json = "{\"ok\":true,\"products\":[{\"id\":\"" + SubscriptionProducts.Monthly + "\",\"trial\":true,\"eligible\":\"true\"}]}";
+        Assert.Null(SubscriptionTrialAnswer.Read(json));
+    }
+
+    [Fact]
+    public void TrialAnswer_IsNull_WhenTheProductsHoldNoPlan()
+    {
+        Assert.Null(SubscriptionTrialAnswer.Read("{\"ok\":true,\"products\":[{\"id\":\"" + Book + "\",\"trial\":false,\"eligible\":true}]}"));
+    }
+
+    [Theory]
+    [InlineData("""{"ok":true,"products":[],"invalid":[]}""")]
+    [InlineData("""{"ok":false,"error":"x:1"}""")]
+    [InlineData("not json")]
+    public void TrialAnswer_IsNull_ForNoPlansOrAnUnreadableAnswer(string json)
+    {
+        Assert.Null(SubscriptionTrialAnswer.Read(json));
+    }
+
     [Fact]
     public void ACompleteRead_IsNotFlagged()
     {

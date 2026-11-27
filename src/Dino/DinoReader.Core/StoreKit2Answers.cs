@@ -55,6 +55,13 @@ public sealed record StoreKitBuyAnswer(string Outcome, StoreKitTransaction? Tran
 /// </summary>
 public static class StoreKit2Answers
 {
+    // The property names of the wrapper's products answer (`dino_sk_products`), shared with SubscriptionTrialAnswer.
+    public const string ProductsKey = "products";
+    public const string IdKey = "id";
+    public const string PriceKey = "price";
+    public const string TrialKey = "trial";
+    public const string EligibleKey = "eligible";
+
     public const string Bought = "bought";
     public const string Cancelled = "cancelled";
     public const string Pending = "pending";
@@ -66,7 +73,7 @@ public static class StoreKit2Answers
     public static (Dictionary<string, string> Prices, IReadOnlyList<string> Invalid)? Prices(string json)
     {
         using JsonDocument? doc = Open(json);
-        if (doc is null || !doc.RootElement.TryGetProperty("products", out JsonElement products) || products.ValueKind != JsonValueKind.Array)
+        if (doc is null || !doc.RootElement.TryGetProperty(ProductsKey, out JsonElement products) || products.ValueKind != JsonValueKind.Array)
         {
             return null;
         }
@@ -74,7 +81,7 @@ public static class StoreKit2Answers
         var prices = new Dictionary<string, string>();
         foreach (JsonElement product in products.EnumerateArray())
         {
-            if (Text(product, "id") is { Length: > 0 } id && Text(product, "price") is { } price)
+            if (Text(product, IdKey) is { Length: > 0 } id && Text(product, PriceKey) is { } price)
             {
                 prices[id] = price;
             }
