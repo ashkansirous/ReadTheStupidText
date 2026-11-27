@@ -195,7 +195,6 @@
 		<ProjectReference Include="..\..\Shared\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
 		<ProjectReference Include="..\..\Shared\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
 		<ProjectReference Include="..\..\Shared\Sirous.Reading.Mobile.Shared\Sirous.Reading.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there); Slice 305: and which engines this app links -->
-		<ProjectReference Include="..\..\Shared\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
 

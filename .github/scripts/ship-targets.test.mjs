@@ -36,7 +36,7 @@ const CASES = [
     ['Mobile resource', [`${M}/Resources/Images/a.png`], { android: true, ios: true }],
     ['Domain core', ['src/Shared/Sirous.Reading.Domain/PlaybackRate.cs'], ALL3],
     ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/Shared/Sirous.Reading.Application/X.cs'], { ...ALL3, dinostore: true }],
-    ['Documents core', ['src/Shared/Sirous.Reading.Documents/X.cs'], ALL3],
+    ['Documents (Slice 432): RTST everywhere and Dino Windows, not the Dino phone apps', ['src/Shared/Sirous.Reading.Documents/X.cs'], { windows: true, android: true, ios: true, dinowin: true }],
     ['unit tests build and ship nothing', ['tests/Rtst/ReadTheStupidText.Tests/X.cs'], {}],
     ['shared unit tests build and ship nothing', ['tests/Shared/Shared.Tests/X.cs'], {}],
     // Slice 316 item 8: no build or test job goes through the solution file (each builds its own csproj), so editing it, e.g. a Dino-only line, ships nothing.
@@ -332,14 +332,14 @@ function derivedPaths(groupNames) {
 
 // Slice 369: rtstrelease / dinorelease are release-rtst.yml / release-dino.yml; the shared half, release-shared.yml, is in `core`.
 const PR_TARGETS = {
-    'windows.yml': ['core', 'windows', 'rtstrelease'],
-    'android.yml': ['core', 'android', 'mobileshared', 'sharedroot', 'rtstrelease'],
-    'ios.yml': ['core', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'],
+    'windows.yml': ['core', 'documents', 'windows', 'rtstrelease'],
+    'android.yml': ['core', 'documents', 'android', 'mobileshared', 'sharedroot', 'rtstrelease'],
+    'ios.yml': ['core', 'documents', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'],
     'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot', 'dinorelease'],
     'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot', 'dinorelease'],
     'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot', 'dinorelease'],
     // tests.yml holds RTST's suite and the shared suite (Slice 368; Slice 128 before it): the shared suite gates the Dino builds too, and testSuites() selects it for every Dino group, so a Dino-only PR must start this workflow.
-    'tests.yml': ['core', 'unittests', 'sharedtests', 'sherpapins', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'dinoapp', 'dinoios', 'dinowin', 'rtstrelease', 'dinorelease'],
+    'tests.yml': ['core', 'documents', 'unittests', 'sharedtests', 'sherpapins', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'dinoapp', 'dinoios', 'dinowin', 'rtstrelease', 'dinorelease'],
     // dinoreader.yml is Dino's suite: it runs for every Dino target (core is in each of them).
     'dinoreader.yml': ['core', 'dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'sharedroot', 'dinorelease'],
 };
@@ -765,7 +765,7 @@ test('a mixed push (a book plus Dino code) still starts release-dino.yml; shared
 // The iOS simulator flow (Slice 244) is a dispatch-only test: no GROUPS entry reads its scripts or flows either.
 // Slice 291: the same for the dispatch-only App Store screenshot run (store-screenshots.yml, its flows and ios-sim-store-shots.sh, which ios-sim-*.sh already covers).
 const RTST_EXTRA_NEGATIONS = ['!content/dino/**', '!.github/workflows/dino-store.yml', '!.github/scripts/ios-sim-*.sh', '!.maestro/dino/ios-*.yaml', '!.github/workflows/store-screenshots.yml', '!.maestro/*/store-shot-ios-*.yaml'];
-const RTST_RELEASE_GROUPS = ['core', 'unittests', 'sharedtests', 'sherpapins', 'infrastructure', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'];
+const RTST_RELEASE_GROUPS = ['core', 'documents','unittests', 'sharedtests', 'sherpapins', 'infrastructure', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot', 'rtstrelease'];
 const sampleFileOf = (pattern) => globOf(pattern).replace('**', 'sample.cs').replace('*', 'a');
 const includeSamples = (groups) => groups.flatMap((name) => GROUPS[name].include.map(sampleFileOf));
 

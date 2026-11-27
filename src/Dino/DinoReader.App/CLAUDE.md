@@ -20,11 +20,13 @@ Dino Reader also has a
 `dotnet publish src/Dino/DinoReader.App -f net11.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64`
 (never a global `RuntimeIdentifier`; rules in `Platforms/Windows/CLAUDE.md` and `.github/CLAUDE.md`).
 
-**What it is (Batch 10):** a kids' book reader, a second MAUI app sharing `Mobile.Shared` plus Domain/Application/Documents;
-`DinoReader.Core` holds the pure dialogue logic. Icons ("Book hug") live in `docs/design/dino-reader/icons/`: copy, never
+**What it is (Batch 10):** a kids' book reader, a second MAUI app sharing `Mobile.Shared` plus Domain/Application on Android and iOS
+(Windows also gets Documents, through Infrastructure); `DinoReader.Core` holds the pure dialogue logic. Icons ("Book hug") live in `docs/design/dino-reader/icons/`: copy, never
 redraw. Screens are the mocks in `docs/design/dino-reader/` (`Dino Reader v2.dc.html` plus one file per later batch; the
 index is that folder's README): read visual values (colours, sizes, copy, layout) from them, never guess, never call
 `DesignSync` for them. (Decisions 72-82, `docs/plan/slices/58-67`)
+
+**Dino's phone apps never reference `Sirous.Reading.Documents`:** it pulls PdfPig and OpenXml (about 8 MB of IL, plus their precompiled iOS code) that Dino does not use. (Slice 432: docs/plan/slices/432-dino-drop-pdf-word-libraries.md)
 
 ## Data, store, books
 

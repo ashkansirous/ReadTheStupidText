@@ -67,7 +67,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Sirous.Reading.Domain\Sirous.Reading.Domain.csproj" />
 		<ProjectReference Include="..\Sirous.Reading.Application\Sirous.Reading.Application.csproj" />
-		<ProjectReference Include="..\Sirous.Reading.Documents\Sirous.Reading.Documents.csproj" />
 	</ItemGroup>
 
 	<!-- Scan and OCR (Slice 63, Decision 78): Dino Reader reads scanned pages too, so the document

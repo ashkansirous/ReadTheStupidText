@@ -17,7 +17,6 @@ on:
     paths:
       - 'src/Shared/Sirous.Reading.Domain/**'
       - 'src/Shared/Sirous.Reading.Application/**'
-      - 'src/Shared/Sirous.Reading.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
       - 'src/Shared/SherpaOnnxVersion.props'
