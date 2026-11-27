@@ -41,6 +41,9 @@ public partial class FirstBooksPage
 	private Grid _bar = null!;
 	private OnboardingShell _listShell = null!;
 	private OnboardingShell _offlineShell = null!;
+	private Label _offlineHeading = null!;
+	private Label _offlineBody = null!;
+	private Border _offlineBadge = null!; // the no-connection badge: only the real offline case shows it (Slice 453)
 
 	private void BuildViews()
 	{
@@ -70,13 +73,13 @@ public partial class FirstBooksPage
 
 	private Grid BuildOfflineLayer()
 	{
-		var heading = new Label
+		var heading = _offlineHeading = new Label
 		{
 			Text = AppResources.FirstBooks_OfflineTitle, FontSize = OfflineHeadingSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center,
 			TextColor = DinoTokens.Get(DinoTokens.Ink), AutomationId = "FirstBooksOfflineTitle",
 		};
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var body = new Label
+		var body = _offlineBody = new Label
 		{
 			Text = AppResources.FirstBooks_OfflineBody, FontSize = 14, LineHeight = 1.4, HorizontalTextAlignment = TextAlignment.Center,
 			TextColor = DinoTokens.Get(DinoTokens.Body), MaximumWidthRequest = OfflineBodyMaxWidth, HorizontalOptions = LayoutOptions.Center,
@@ -94,14 +97,14 @@ public partial class FirstBooksPage
 	private const double OnboardingBackInset = 14;
 
 	// The dino in a 150 dp tinted circle with a white 44 dp no-connection badge at its bottom right (frame O4).
-	private static Grid BuildOfflineIcon()
+	private Grid BuildOfflineIcon()
 	{
 		var circle = new Border
 		{
 			WidthRequest = OfflineIconSize, HeightRequest = OfflineIconSize, StrokeThickness = 0, BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint), StrokeShape = new Ellipse(),
 			Content = new Image { Source = "dino_icon", WidthRequest = OfflineIconInner, HeightRequest = OfflineIconInner, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
-		var badge = new Border
+		var badge = _offlineBadge = new Border
 		{
 			WidthRequest = OfflineBadgeSize, HeightRequest = OfflineBadgeSize, BackgroundColor = Colors.White, Stroke = DinoTokens.Get(DinoTokens.Cream), StrokeThickness = OfflineBadgeBorder,
 			StrokeShape = new Ellipse(), HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.End,

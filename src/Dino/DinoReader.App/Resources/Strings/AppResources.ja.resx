@@ -144,6 +144,10 @@
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>もう一度再生</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>読み始める</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>はじめる前に、Dinoには2冊の本が必要です。Wi-Fiかモバイルデータをオンにして、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>本のよみこみが おわりませんでした</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>じゅんびができる前に、リストをとめました。「もういちど」をおして、さいしょの本をえらびましょう。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>本をよみこめませんでした</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>つながりではなく、こちらがわで問題がおきました。すこしまってから、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} / {1}</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
   <data name="Language_Title" xml:space="preserve"><value>言語</value></data>

@@ -114,6 +114,10 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Book {0} of {1}</value></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Connect to the internet to choose your first books</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino needs two books before you start. Turn on Wi-Fi or mobile data, then try again.</value></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>The books did not finish loading</value></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>You stopped the list before it was ready. Tap Try again to choose your first books.</value></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>We could not load the books</value></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>Something went wrong on our side, not with your connection. Wait a moment, then try again.</value></data>
   <data name="Onboarding_StepOf" xml:space="preserve"><value>Step {0} of {1} · {2}</value></data>
   <data name="Onboarding_Step_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Onboarding_Step_Books" xml:space="preserve"><value>Books</value></data>

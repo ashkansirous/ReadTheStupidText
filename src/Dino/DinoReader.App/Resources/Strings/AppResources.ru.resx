@@ -144,6 +144,10 @@
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Ещё раз</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Начать читать</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino нужны две книги, прежде чем вы начнёте. Включите Wi-Fi или мобильные данные и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>Книги не успели загрузиться</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>Вы остановили загрузку списка, прежде чем он был готов. Нажмите «Повторить», чтобы выбрать первые книги.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>Не удалось загрузить книги</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>Что-то пошло не так на нашей стороне, а не с вашим подключением. Подождите немного и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} из {1}</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>

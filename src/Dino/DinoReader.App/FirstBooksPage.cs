@@ -73,13 +73,14 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	private readonly List<string> _tickOrder = [];
 	private CancellationTokenSource? _downloadCancel;
 	private CancellationTokenSource? _loadCancel;
+	private bool _stoppedByGrownUp; // Slice 453: the list wait ended on the grown-up's Cancel or Back
 	private readonly List<FirstBookCard> _cards = [];
 	private IReadOnlyList<StoreItem> _items = [];
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
 	private bool _finished;
 	private bool _handedOver;
-	private bool _offline;
+	private bool _reloadsOnReconnect; // the shown load copy (offline or failed, not cancelled) reloads by itself when the connection returns
 	private Size _windowSize;
 	private OnboardingShape? _shape;
 
@@ -92,6 +93,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Cream);
 		_wait = new WaitController(_waitOverlay);
+		_wait.CancelRequested += () => _stoppedByGrownUp = true; // Slice 453: set at the tap itself, so a cancel landing outside the list lambda still counts; ListWithWaitAsync clears it before each list wait
 		BuildViews();
 	}
 
@@ -145,6 +147,11 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 
 		if (_wait.IsActive || _downloadCancel is not null)
 		{
+			if (_downloadCancel is null)
+			{
+				_stoppedByGrownUp = true; // Slice 453: Back on the list-load wait is the grown-up stopping it
+			}
+
 			(_downloadCancel ?? _loadCancel)?.Cancel(); // the getting page or the list-load wait
 			return true;
 		}
@@ -197,7 +204,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		if (_offline && e.NetworkAccess == NetworkAccess.Internet)
+		if (_reloadsOnReconnect && e.NetworkAccess == NetworkAccess.Internet)
 		{
 			await MainThread.InvokeOnMainThreadAsync(() => _busy.RunAsync(LoadAsync));
 		}
@@ -205,6 +212,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 
 	private async Task LoadAsync()
 	{
+		_stoppedByGrownUp = false; // a Cancel from an earlier download must not word this load's unrequested cancel as "You stopped the list"
 		try
 		{
 			await ReadShelfAsync();
@@ -217,7 +225,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 			StoreListing listing = await ListWithWaitAsync();
 			if (listing.Status == StoreLoadStatus.Offline)
 			{
-				ShowOffline();
+				ShowLoadCopy(FirstBooksLoadCopy.ForOfflineListing(listing.Error?.Kind)); // Slice 453: a server error or bad body is a failed load, not "offline"
 				return;
 			}
 
@@ -226,13 +234,13 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		catch (OperationCanceledException)
 		{
 			// no-fallback: the grown-up cancelled or left the page; the load-failed state is shown, nothing was swapped in
-			ShowLoadFailed(); // Cancel on the list wait, or the page was left: Try again takes over, but nothing reloads by itself
+			ShowLoadCopy(FirstBooksLoadCopy.ForCancellation(_stoppedByGrownUp)); // the cancelled copy only after the grown-up's Cancel or Back on the wait: Try again takes over, but nothing reloads by itself
 		}
 		catch (Exception ex)
 		{
 			DinoFallbacks.Report(Sirous.Reading.Application.Usage.FallbackArea.Store, Sirous.Reading.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the page shows its load-failed state with Try again
 			Debug.WriteLine($"Dino Reader first-books load failed: {ex}");
-			ShowLoadFailed();
+			ShowLoadCopy(FirstBooksLoadCopy.ForFailure());
 		}
 	}
 
@@ -241,6 +249,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	{
 		using CancellationTokenSource backCancel = new();
 		_loadCancel = backCancel;
+		_stoppedByGrownUp = false;
 		try
 		{
 			return await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: true, async cancel =>
@@ -276,7 +285,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		TickTheDefault();
 
 		_loaded = true;
-		_offline = false;
+		_reloadsOnReconnect = false;
 		BuildCards();
 		ShowLayer(_listLayer);
 		RefreshBar();
@@ -319,19 +328,16 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	private void ShowOffline()
+	// One layer, three states (offline, cancelled by the grown-up, failed), each with its own words, badge and log marker, and Try again. The offline and failed cases are reloaded by a connection coming back; cancelled is not.
+	// A timeout or a server error never reaches here as offline: the store client's list call answers a timeout as Offline, a server error or bad body as an error kind (FirstBooksLoadCopy.ForOfflineListing).
+	private void ShowLoadCopy(FirstBooksLoadCopy copy)
 	{
-		_offline = true;
+		_reloadsOnReconnect = copy.Kind != FirstBooksLoadKind.Cancelled; // offline and failed (a captive portal's HTML maps to failed) reload when the connection returns; cancelled does not
+		_offlineHeading.Text = copy.Title;
+		_offlineBody.Text = copy.Body;
+		_offlineBadge.IsVisible = copy.ShowsOfflineBadge;
 		ShowLayer(_offlineLayer);
-		LogState("offline");
-	}
-
-	// The list could not load for a reason other than having no connection (cancelled, timed out, failed): the same layer with Try again, but only a connection coming back reloads the offline case.
-	private void ShowLoadFailed()
-	{
-		_offline = false;
-		ShowLayer(_offlineLayer);
-		LogState("failed-load");
+		LogState(copy.Marker);
 	}
 
 	private void Toggle(FirstBookCard card)
