@@ -16,6 +16,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 
+if ($Serial -and -not (Test-PhoneSerialShape $Serial)) { Write-Host (Get-PhoneSerialShapeText $Serial); exit 2 }   # Slice 442
 $explicitRequest = [bool]($PairAddress -or $ConnectAddress)   # review 3: an explicit pair/connect always runs, even with a USB phone plugged in
 $phone = if ($explicitRequest) { $null } else { Find-Phone $Serial }
 if (-not $phone) {
@@ -24,7 +25,7 @@ if (-not $phone) {
     if ($ConnectAddress) { & $script:Adb connect $ConnectAddress }
     $ErrorActionPreference = 'Stop'
     # after an explicit -ConnectAddress, report that address (or the mDNS name adb lists for it) when adb shows it connected, not a USB phone
-    $phone = if ($ConnectAddress) { Select-ConnectedAddress @(Get-AdbDevices) $ConnectAddress } else { Find-Phone $Serial }
+    $phone = if ($ConnectAddress) { Select-ConnectedAddress @(Get-AdbDevices) $ConnectAddress $Serial } else { Find-Phone $Serial }
 }
 if (-not $phone) {
     Write-PairingAsk $Serial   # says the USB line instead when a USB phone is listed unauthorized or offline (review 4)

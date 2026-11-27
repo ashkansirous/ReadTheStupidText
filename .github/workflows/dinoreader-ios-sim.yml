@@ -98,7 +98,7 @@ jobs:
 
       - name: Boot an iPhone simulator
         timeout-minutes: 10
-        run: bash .github/scripts/ios-sim-boot.sh
+        run: SIM_SETTLE_SECONDS=20 bash .github/scripts/ios-sim-boot.sh   # Slice 442: the 20 s settle is for the Maestro driver start that follows (the script default is 0)
 
       - name: Show the booted device type and runtime
         run: xcrun simctl list devices booted
@@ -167,10 +167,11 @@ jobs:
 
       # Slice 393 item 23: start Maestro's iOS driver (retried) before the flow, so the flow does not pay for the cold driver start.
       # A driver that never answers is a warning here; the flow's own driver start follows.
+      # Slice 442: worst case 3 attempts x 360 s + 2 x 10 s pause = 1100 s, and the step allows 20 min = 1200 s; the script's own 1080 s budget (18 min) stops it first, so the step timeout never kills an attempt half-way.
       - name: Warm the Maestro driver
         timeout-minutes: 20
         run: |
-          bash .github/scripts/ios-sim-driver-ready.sh "$SIM_UDID" || echo "::warning::the Maestro driver did not answer the warm-up; the flow starts it itself"
+          DRIVER_READY_BUDGET_SECONDS=1080 bash .github/scripts/ios-sim-driver-ready.sh "$SIM_UDID" || echo "::warning::the Maestro driver did not answer the warm-up; the flow starts it itself"
 
       # The flow's appId is the Android dev package; the iOS app's bundle id has no .dbg suffix.
       # MAESTRO_DRIVER_STARTUP_TIMEOUT (milliseconds): run 43935624690 on iOS 27.2 died with "iOS driver not ready in time"

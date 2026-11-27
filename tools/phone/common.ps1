@@ -97,10 +97,25 @@ function Select-ReadyPhoneSerial([object[]]$Devices, [string]$Serial, [bool]$All
 }
 
 # After an explicit -ConnectAddress: the address itself when adb lists it ready, else the first ready mDNS-named wireless device (adb may list the same phone as adb-<serial>-<suffix>._adb-tls-connect._tcp), else $null.
-function Select-ConnectedAddress([object[]]$Devices, [string]$Address) {
+# Slice 442: with -Serial (the phone's own serial number), the mDNS name counts only when it names that phone (adb-<serial>-<suffix>._adb-tls-connect._tcp), so a failed connect never reads as ready because another wireless device is listed.
+function Select-ConnectedAddress([object[]]$Devices, [string]$Address, [string]$Serial = '') {
     $ready = @($Devices | Where-Object { $_.State -eq 'device' })
     if (@($ready | Where-Object { $_.Serial -eq $Address }).Count -gt 0) { return $Address }
-    return $ready | Where-Object { $_.Serial -match '^adb-.+_adb-tls-connect\._tcp$' } | Select-Object -First 1 -ExpandProperty Serial
+    $mdns = @($ready | Where-Object { $_.Serial -match '^adb-.+_adb-tls-connect\._tcp$' })
+    if ($Serial -and $Serial -notmatch ':') { $mdns = @($mdns | Where-Object { $_.Serial -like "adb-$Serial-*" -or $_.Serial -eq $Serial }) }
+    return $mdns | Select-Object -First 1 -ExpandProperty Serial
+}
+
+# Slice 442: the shapes a -Serial can have: an emulator (emulator-<port>), a USB serial (letters and digits only), a wireless IPv4:port that is not loopback, or an adb mDNS name. localhost:port, 127.x.x.x:port and free text are not a phone. Pure.
+function Test-PhoneSerialShape([string]$Serial) {
+    if ($Serial -match $script:PhoneEmulatorSerialPattern) { return $true }
+    if ($Serial -match '^adb-[\w.-]+_adb-tls-connect\._tcp$') { return $true }
+    if ($Serial -match '^(?!127\.)(\d{1,3}\.){3}\d{1,3}:\d{2,5}$') { return $true }
+    if ($Serial -match '^(localhost|127\.)' -or $Serial -match '^(\d{1,3}\.){3}\d{1,3}$') { return $false }   # review 3: loopback and a bare IP are refused; any other adb-style serial (dashes, underscores, short, host:port) passes
+    return [bool]($Serial -match '^[A-Za-z0-9._:-]{1,64}$')
+}
+function Get-PhoneSerialShapeText([string]$Serial) {
+    return "-Serial '$Serial' is not a phone serial: use the USB serial (letters, digits, . _ - :), <ip>:<port> of the wireless phone (not 127.x or localhost), an adb-...._adb-tls-connect._tcp name, or emulator-<port>."
 }
 
 function Write-EmulatorNotRunning([string]$Serial) {

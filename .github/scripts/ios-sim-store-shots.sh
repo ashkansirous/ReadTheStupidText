@@ -1142,7 +1142,7 @@ shoot_device() {
   fi
   use_preboot "$label"
   udid="$PREBOOT_UDID"
-  [ -n "$udid" ] || udid="$(SIM_DEVICE_NAME="shots-$label" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' bash "$HERE/ios-sim-boot.sh" | tail -n 1 | sed 's/^udid=//')"
+  [ -n "$udid" ] || udid="$(SIM_SETTLE_SECONDS=20 SIM_DEVICE_NAME="shots-$label" SIM_DEVICE_PATTERNS="$patterns" GITHUB_ENV='' bash "$HERE/ios-sim-boot.sh" | tail -n 1 | sed 's/^udid=//')"
   if [ -z "$udid" ]; then
     problem "$label: no simulator booted (device patterns: $patterns)"
     return
@@ -1156,8 +1156,12 @@ shoot_device() {
     echo "no shot is taken on $label without the book packages"
   else
     # Slice 393 item 23: the first shot no longer pays for the cold driver start; a driver that never answers is a warning, the shot's own retry follows.
-    local warm_started=$SECONDS
-    if ! run_limited "$DRIVER_READY_BUDGET_SECONDS" "$udid" env DRIVER_READY_ATTEMPTS=2 DRIVER_READY_TIME_LIMIT_SECONDS="$DRIVER_READY_ATTEMPT_SECONDS" bash "$HERE/ios-sim-driver-ready.sh" "$udid"; then
+    # Slice 442: the warm-up never uses the time a shot attempt needs: it gets what is left of the script budget minus one unit, at most DRIVER_READY_BUDGET_SECONDS (the script itself starts no attempt it cannot finish).
+    local warm_started=$SECONDS warm_budget=$((SCRIPT_BUDGET_SECONDS - SECONDS - UNIT_LIMIT))
+    [ "$warm_budget" -le "$DRIVER_READY_BUDGET_SECONDS" ] || warm_budget="$DRIVER_READY_BUDGET_SECONDS"
+    if [ "$warm_budget" -lt 60 ]; then
+      note "- WARNING: $label: no time left for the Maestro driver warm-up (script budget $SCRIPT_BUDGET_SECONDS s); the first shot starts the driver itself"
+    elif ! run_limited "$((warm_budget + 10))" "$udid" env DRIVER_READY_ATTEMPTS=2 DRIVER_READY_BUDGET_SECONDS="$warm_budget" DRIVER_READY_TIME_LIMIT_SECONDS="$DRIVER_READY_ATTEMPT_SECONDS" bash "$HERE/ios-sim-driver-ready.sh" "$udid"; then
       note "- WARNING: $label: the Maestro driver did not answer before the first shot; the shots go on with their own retry"
     fi
     echo "driver warm-up on $label took $((SECONDS - warm_started)) s (charged to the $SCRIPT_BUDGET_SECONDS s script budget)"
