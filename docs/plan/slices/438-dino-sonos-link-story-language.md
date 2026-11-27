@@ -16,7 +16,13 @@ page) for the link itself; 415 keeps Alexa. Slice 439 adds the subscription chec
 `src/Dino/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/Dino/DinoReader.App/Platforms/iOS/Info.plist`,
 `src/Dino/DinoReader.Core/SonosLink.cs` (new), `tests/Dino/DinoReader.Tests/SonosLinkTests.cs` (new), `PRIVACY.md`,
 `site/dino/privacy.html`, `docs/plan/slices/283-dino-sonos-music-service.md` (listing text), `worker/CLAUDE.md`, this
-file.
+file. Widened at claim (wave 2026-11-27, premise check): `src/Dino/DinoReader.App/App.xaml.cs`,
+`src/Dino/DinoReader.App/MauiProgram.cs`, `src/Dino/DinoReader.App/Platforms/Android/MainActivity.cs`,
+`src/Dino/DinoReader.App/Platforms/iOS/AppDelegate.cs`, `src/Dino/DinoReader.App/Platforms/iOS/SceneDelegate.cs`
+(app-link routing), `site/dino/index.html` (store ids), `worker/wrangler.jsonc` (only if a binding is needed),
+`docs/DEPLOYING.md` (the hand-applied D1 schema).
+
+*In progress (wave 2026-11-27), draft PR.*
 
 ## Why
 
