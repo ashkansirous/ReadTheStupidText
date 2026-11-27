@@ -241,6 +241,7 @@ public sealed partial class AudioPackStore
 	private const string PartExtension = ".part";
 	private const string TmpExtension = ".tmp";
 	private const string AsideExtension = ".old"; // Slice 463 review #3, #9: the installed pack folder set aside while its replacement goes in. NOT a ".tmp": the cleanup never deletes it, the start-up recovery decides (RecoverInterruptedSwaps)
+	private const string TrashMarker = ".trash-"; // Slice 463 check pass 3 #2: a folder that must go is renamed to "<name>.trash-<guid>" under the swap lock and deleted after it; a leftover is swept by the next launch's recovery
 	private const string CacheFolder = "audio-packs";
 	private const int MaxEntries = 4000;
 	private const long MaxUnpackedBytes = 400L * 1024 * 1024;
@@ -258,6 +259,7 @@ public sealed partial class AudioPackStore
 	private bool _cleaned;
 	private readonly object _swapLock = new(); // Slice 463 check pass 1, rule 1: held by a swap (both renames) and by the recovery, so the recovery never sees a swap half done. Not the install gate: that one is held across a whole download
 	private bool _recovered;
+	private readonly ConcurrentQueue<string> _trash = new();
 
 	/// <summary>Test seam: runs between the two renames of a swap, inside the swap lock.</summary>
 	internal Action? BetweenSwapRenames { get; set; }
@@ -366,7 +368,21 @@ public sealed partial class AudioPackStore
 	/// <summary>The installed pack of a book language, or null when there is none (or its manifest cannot be read, which reads as none).</summary>
 	public InstalledPack? Open(string bookId, string language)
 	{
-		if (!IsSafe(bookId, language) || InstalledVersion(bookId, language) is not { } version)
+		if (!IsSafe(bookId, language))
+		{
+			return null;
+		}
+
+		RecoverInterruptedSwaps(); // Slice 463 check pass 2 #1: before the lock, so its trash deletes (EmptyTrash) never run while _swapLock is held
+		lock (_swapLock) // Slice 463 check pass 1 #1: the lookup, the manifest read and the cache insert are one step against a swap
+		{
+			return OpenLocked(bookId, language);
+		}
+	}
+
+	private InstalledPack? OpenLocked(string bookId, string language)
+	{
+		if (ListInstalledVersion(bookId, language) is not { } version) // not InstalledVersion: its recovery would empty the trash under the lock (Open ran the recovery before taking it)
 		{
 			return null;
 		}
@@ -383,7 +399,7 @@ public sealed partial class AudioPackStore
 			_opened[folder] = pack;
 			return pack;
 		}
-		catch (Exception ex) when (ex is IOException or PremadeAudioException or UnauthorizedAccessException)
+		catch (Exception ex) when (ex is IOException or PremadeAudioException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException) // Slice 463 check pass 3 #3: a manifest parse fault reads as no pack, never an exception out of Open
 		{
 			// no-fallback: marked failed for this launch, so the read that finds no clips reports premade_audio pack_failed (not no_pack) at the place that decides (StoryVoicing)
 			_failedThisLaunch[Key(bookId, language)] = true;
@@ -396,6 +412,14 @@ public sealed partial class AudioPackStore
 	public int? InstalledVersion(string bookId, string language)
 	{
 		RecoverInterruptedSwaps(); // once per launch, before the first look at the folders: a pack set aside by a killed replace is back in place
+		lock (_swapLock) // Slice 463 F1: the listing never lands between the two renames of a swap, where no pack or an older one shows (the lock is the swap's; a monitor, so the recovery above taking it first is fine)
+		{
+			return ListInstalledVersion(bookId, language);
+		}
+	}
+
+	private int? ListInstalledVersion(string bookId, string language)
+	{
 		string bookFolder = BookFolder(bookId);
 		if (!IsSafe(bookId, language) || !Directory.Exists(bookFolder))
 		{
@@ -452,6 +476,36 @@ public sealed partial class AudioPackStore
 
 			_recovered = RecoverPass(); // done only after a full pass: a pass that met a fault is tried again by the next call
 		}
+
+		EmptyTrash();
+	}
+
+	// Called with _swapLock held: a rename only, never a delete. A rename that fails leaves the folder where it was (what a failed delete did before).
+	private void MoveToTrash(string path)
+	{
+		try
+		{
+			if (Directory.Exists(path))
+			{
+				string trash = path + TrashMarker + Guid.NewGuid().ToString("N");
+				Directory.Move(path, trash);
+				_trash.Enqueue(trash);
+			}
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: housekeeping; the folder stays and a later install or the next launch's recovery settles it
+			_log($"pack folder {Path.GetFileName(path)}: could not be set aside for deletion ({ex.GetType().Name})");
+		}
+	}
+
+	// Called outside _swapLock: the slow recursive deletes of what MoveToTrash set aside. Best effort; a leftover is queued again by the next launch's recovery.
+	private void EmptyTrash()
+	{
+		while (_trash.TryDequeue(out string? trash))
+		{
+			DeleteFolder(trash);
+		}
 	}
 
 	// One pass over every book folder, each guarded on its own, so a fault in one folder never stops the others and never reaches the caller. True only when nothing went wrong.
@@ -463,8 +517,10 @@ public sealed partial class AudioPackStore
 		}
 
 		bool complete = true;
-		foreach (string book in SafeList(() => Directory.EnumerateDirectories(_root).ToList(), ref complete))
+		QueueLeftoverTrash(_root, ref complete);
+		foreach (string book in SafeList(() => Directory.EnumerateDirectories(_root).Where(dir => !IsTrash(dir)).ToList(), ref complete))
 		{
+			QueueLeftoverTrash(book, ref complete);
 			foreach (string aside in SafeList(() => Directory.EnumerateDirectories(book, "*" + AsideExtension).ToList(), ref complete))
 			{
 				complete &= RecoverOneSwap(aside);
@@ -472,6 +528,17 @@ public sealed partial class AudioPackStore
 		}
 
 		return complete;
+	}
+
+	private static bool IsTrash(string dir) => Path.GetFileName(dir).Contains(TrashMarker, StringComparison.Ordinal);
+
+	// A trash folder a killed or failed delete left: queued here (inside the pass), deleted by EmptyTrash after the lock is released.
+	private void QueueLeftoverTrash(string parent, ref bool complete)
+	{
+		foreach (string trash in SafeList(() => Directory.EnumerateDirectories(parent, "*" + TrashMarker + "*").ToList(), ref complete))
+		{
+			_trash.Enqueue(trash);
+		}
 	}
 
 	private List<string> SafeList(Func<List<string>> list, ref bool complete)
@@ -496,11 +563,11 @@ public sealed partial class AudioPackStore
 		{
 			if (File.Exists(Path.Combine(final, PremadeAudio.ManifestFile)))
 			{
-				DeleteFolder(aside);
-				return !Directory.Exists(aside); // a delete that did not finish is retried by the next pass
+				MoveToTrash(aside);
+				return !Directory.Exists(aside); // a rename that did not finish is retried by the next pass
 			}
 
-			DeleteFolder(final); // a folder without a manifest is never an installed pack
+			MoveToTrash(final); // a folder without a manifest is never an installed pack
 			Directory.Move(aside, final);
 			_log($"pack recovery: {Path.GetFileName(final)} restored after an interrupted replace");
 			return true;
@@ -586,9 +653,10 @@ public sealed partial class AudioPackStore
 		{
 			lock (_swapLock) // check pass 2 #2 (rule 1)
 			{
-				DeleteFolder(BookFolder(bookId));
+				MoveToTrash(BookFolder(bookId));
 			}
 
+			EmptyTrash();
 			_log($"pack {bookId}: book removed, packs deleted");
 		}
 		finally
@@ -612,17 +680,18 @@ public sealed partial class AudioPackStore
 		{
 			lock (_swapLock) // check pass 2 #2 (rule 1)
 			{
-				foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)))
+				foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)).ToList())
 				{
 					Match match = VersionFolder.Match(Path.GetFileName(dir));
 					if (match.Success && match.Groups[1].Value == language)
 					{
-						DeleteFolder(dir);
+						MoveToTrash(dir);
 						_opened.TryRemove(dir, out _);
 					}
 				}
 			}
 
+			EmptyTrash();
 			_log($"pack {bookId}/{language}: removed");
 		}
 		finally
@@ -665,13 +734,15 @@ public sealed partial class AudioPackStore
 
 			lock (_swapLock) // check pass 2 #2 (rule 1)
 			{
-				foreach (string book in Directory.EnumerateDirectories(_root).Where(dir => !present.Contains(Path.GetFileName(dir))))
+				foreach (string book in Directory.EnumerateDirectories(_root).Where(dir => !IsTrash(dir) && !present.Contains(Path.GetFileName(dir))).ToList())
 				{
-					DeleteFolder(book);
+					MoveToTrash(book);
 					_log($"pack {Path.GetFileName(book)}: book is not on the shelf, packs deleted");
 					swept = true;
 				}
 			}
+
+			EmptyTrash();
 		}
 		finally
 		{
@@ -765,7 +836,7 @@ public sealed partial class AudioPackStore
 			else
 			{
 				BeforePlainPublish?.Invoke();
-				DeleteFolder(final); // only a folder without a manifest can be here (InstalledVersion said the version was not installed)
+				MoveToTrash(final); // only a folder without a manifest can be here (InstalledVersion said the version was not installed)
 				Directory.Move(tmp, final);
 			}
 
@@ -773,6 +844,8 @@ public sealed partial class AudioPackStore
 			_opened.TryRemove(final, out _);
 			RemoveOtherVersions(bookId, language, final);
 		}
+
+		EmptyTrash(); // the slow deletes, outside the lock
 	}
 
 	// Best effort: an older version left behind is removed by the next install of that language; it never changes the result of this one.
@@ -785,7 +858,7 @@ public sealed partial class AudioPackStore
 				Match match = VersionFolder.Match(Path.GetFileName(dir));
 				if (match.Success && match.Groups[1].Value == language && !string.Equals(dir, final, StringComparison.Ordinal))
 				{
-					DeleteFolder(dir);
+					MoveToTrash(dir);
 					_opened.TryRemove(dir, out _);
 				}
 			}
@@ -825,26 +898,12 @@ public sealed partial class AudioPackStore
 
 			if (!File.Exists(Path.Combine(final, PremadeAudio.ManifestFile)))
 			{
-				DeleteFolder(final); // the new manifest is not in place: the installed pack goes back and the install fails
+				MoveToTrash(final); // the new manifest is not in place: the installed pack goes back and the install fails
 				RestoreAside(aside, final);
 				throw new IOException("The replaced pack folder has no manifest."); // check pass 2 #4 (rule 4): a local swap fault (storage), never a bad package
 			}
 
-			DiscardAside(aside); // confirmed: the install is a success from here, whatever this delete meets
-		}
-	}
-
-	// Best effort: a copy that stays is removed by the next launch's recovery (RecoverInterruptedSwaps), which sees the whole final folder.
-	private static void DiscardAside(string aside)
-	{
-		try
-		{
-			DeleteFolder(aside);
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: the install already succeeded; the next launch's recovery deletes the leftover copy
-			System.Diagnostics.Debug.WriteLine($"Dino Reader could not remove a replaced pack copy: {ex.Message}");
+			MoveToTrash(aside); // confirmed: the install is a success from here; best effort, a copy that stays is settled by the next launch's recovery (RecoverInterruptedSwaps), which sees the whole final folder
 		}
 	}
 

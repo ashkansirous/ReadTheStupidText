@@ -201,6 +201,23 @@ public sealed class AudioPackTests : IDisposable
         Assert.DoesNotContain("quickBytes", JsonSerializer.Serialize(AudioPacks.MetaOf(book)));
     }
 
+    [Fact]
+    public void Build_WhenTheQuickSetBecomesIncomplete_DeletesTheStaleQuickZipOfAnEarlierBuild()
+    {
+        (BookFolder book, string clips, string store) = Arrange(["a.m4a"]);
+        string quick = Path.Combine(clips, AudioPacks.QuickClipsFolderName);
+        Directory.CreateDirectory(quick);
+        File.WriteAllText(Path.Combine(quick, "a.m4a"), "q-a");
+        Assert.NotNull(AudioPacks.Build(book, Language, clips, store).QuickBytes);
+        string zip = Path.Combine(store, BookId, "audio-fa-v1.quick.zip");
+        Assert.True(File.Exists(zip));
+
+        File.Delete(Path.Combine(quick, "a.m4a")); // the quick set is now incomplete
+
+        Assert.Null(AudioPacks.Build(book, Language, clips, store).QuickBytes);
+        Assert.False(File.Exists(zip)); // Slice 463 F6
+    }
+
     private (BookFolder Book, string Clips, string Store) Arrange(string[] clipNames, string[]? extra = null)
     {
         string bookDir = Path.Combine(_root, "book");

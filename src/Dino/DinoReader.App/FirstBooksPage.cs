@@ -543,6 +543,10 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		_waitCovers?.SetLanded(1);
 		_usage.RecordStoreDownload(item, ageFilterSet: false, authorFilterSet: false);
 		LogState("landed");
+		if (_store.SwitchedToQuick(item.Id))
+		{
+			LogState("landed-quick"); // Slice 463 check pass 1 #2: the marker the slow-link flow reads, only after the quick package was the one that landed
+		}
 	}
 
 	// Slice 148 counted every wait that showed and every Cancel on one; the getting page is a page, not the shared overlay, so it reports the same two counts itself (only when it stayed 500 ms or more).

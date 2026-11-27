@@ -199,6 +199,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [cloud] The iOS simulator first-books step on a slow link.
 - [session] The Windows VM first-books step throttled to 256 kbit/s.
 - [session] Ninjalog after release: `wait_shown` detail `getting_quick_file:*` appears.
+- [session] `.maestro/dino/first-book-slow-link.yaml` (expects `[FirstBooks] landed-quick`) was not run: it needs quick packages in the store, none exist until item 2.
+- [session] `high-res-swap-on-wifi` asserted nothing in the 2026-11-27 run: run `high-res-limited-then-wifi` first, with a live high-res pack.
 
 ### Slice 457: Dino Alexa: finds a book by any part of its name, lists every book, plays only what it can, and keeps favourites ([slice](slices/457-dino-alexa-find-list-favourites.md))
 - [owner] **You:** on your Echo: "Alexa, open Dino Books", then "yes", "no", "search", "goldylock", "the lion", "add this to my favourites", "play my favourites" | no link (a real Echo)

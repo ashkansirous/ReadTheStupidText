@@ -960,7 +960,8 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			await SettlePurchasesAsync(cancel);
 			await FetchPackAsync(standard.Url, zip, new Progress<long>(), cancel);
-			PackInstall result = await packs.InstallAsync(bookId, language, standard, null, CancellationToken.None, new LocalFileAudioPackFetcher(zip), replaceSameVersion: true); // unpacked and verified beside the quick pack, then switched: a failure keeps the quick pack
+			cancel.ThrowIfCancellationRequested(); // Slice 463 check pass 2 #2: a cancel before the install stops the upgrade; once it starts the token is None (below)
+			PackInstall result = await packs.InstallAsync(bookId, language, standard, null, CancellationToken.None, new LocalFileAudioPackFetcher(zip), replaceSameVersion: true); // Slice 463 check pass 3 #4: the token goes only to the download above; once the zip is local the install finishes, so a late cancel never reports PackCancelled for an installed pack. Unpacked and verified beside the quick pack, then switched: a failure keeps the quick pack
 			return QuickPackUpgradeOf(bookId, language, result);
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)

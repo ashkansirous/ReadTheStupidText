@@ -255,6 +255,7 @@ internal static class AudioPacks
         string[] clips = files.Where(name => name != ManifestFile).ToArray();
         if (clips.Length == 0 || !clips.All(name => File.Exists(Path.Combine(quickFolder, name)) && !IsLfsPointer(Path.Combine(quickFolder, name))))
         {
+            File.Delete(Path.Combine(storeBookFolder, QuickPackFileName(language, version))); // Slice 463 F6: a quick zip left by an earlier, complete build must not be published or listed beside a pack that now has none (File.Delete ignores a missing file)
             return null;
         }
 

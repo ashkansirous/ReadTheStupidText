@@ -103,3 +103,9 @@ test("size=quick on an audio pack serves its quick zip for the listed version on
   assert.equal(noQuick.response.status, 404);
   assert.equal(noQuick.served.length, 0);
 });
+
+test("size=hd on an audio pack is a 400 (an audio pack has no high-res copy), Slice 463 F5", async () => {
+  const hd = await call(`/api/stories/${ID}/audio/en?v=3&size=hd`, audioMeta, audioFiles);
+  assert.equal(hd.response.status, 400);
+  assert.equal(hd.served.length, 0);
+});

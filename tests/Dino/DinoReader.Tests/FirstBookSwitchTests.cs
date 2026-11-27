@@ -329,9 +329,32 @@ public sealed class FirstBookSwitchTests
         Assert.True(QuickUpgradePlan.IsBadStagedPackage(new InvalidDataException("zip")));
         Assert.True(QuickUpgradePlan.IsBadStagedPackage(new StoryPackageException("manifest")));
         Assert.True(QuickUpgradePlan.IsBadStagedPackage(new System.Text.Json.JsonException("json")));
+        Assert.False(QuickUpgradePlan.IsBadStagedPackage(new ArgumentException("our bug"))); // medium check 3 #1/#6: our own faults are transient, never blamed on a good package
+        Assert.False(QuickUpgradePlan.IsBadStagedPackage(new KeyNotFoundException("shelf key")));
+        Assert.False(QuickUpgradePlan.IsBadStagedPackage(new NullReferenceException()));
+        Assert.False(QuickUpgradePlan.IsBadStagedPackage(new OperationCanceledException()));
         Assert.False(QuickUpgradePlan.IsBadStagedPackage(new InvalidOperationException("sqlite busy")));
         Assert.False(QuickUpgradePlan.IsBadStagedPackage(new IOException("disk")));
         Assert.False(QuickUpgradePlan.IsBadStagedPackage(new TimeoutException()));
+    }
+
+    [Fact]
+    public void ARealCorruptZipAndACorruptManifest_CountAsABadStagedPackage()
+    {
+        string zip = Path.Combine(Path.GetTempPath(), $"corrupt-{Guid.NewGuid():N}.zip");
+        try
+        {
+            File.WriteAllBytes(zip, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+            Exception zipFault = Assert.ThrowsAny<Exception>(() => System.IO.Compression.ZipFile.OpenRead(zip).Dispose());
+            Assert.True(QuickUpgradePlan.IsBadStagedPackage(zipFault));
+        }
+        finally
+        {
+            File.Delete(zip);
+        }
+
+        Exception manifestFault = Assert.ThrowsAny<Exception>(() => System.Text.Json.JsonDocument.Parse("{ not json"));
+        Assert.True(QuickUpgradePlan.IsBadStagedPackage(manifestFault));
     }
 
     [Theory]

@@ -212,7 +212,7 @@ public static class QuickUpgradePlan
     /// <summary>Check pass 1, rule 4: whether a failed pack install counts toward the ledger. Only a bad file does (wrong size, a broken zip or clip, a 404); a network, timeout or disk fault counts nothing and the pass retries later.</summary>
     public static bool CountsAsBadPack(PackFailureKind kind) => kind is PackFailureKind.Size or PackFailureKind.Unzip or PackFailureKind.Clip or PackFailureKind.Missing;
 
-    /// <summary>Check pass 2 #5 (rule 4): whether a failed swap of a staged standard book package is the package's fault: only a confirmed bad file (broken zip or manifest content). Every other exception is transient and counts nothing.</summary>
+    /// <summary>Check pass 2 #5 (rule 4): whether a failed swap of a staged standard book package is the package's fault: only a fault that proves the file is corrupt: InvalidDataException (what System.IO.Compression throws for a bad zip), a manifest StoryPackageException or JsonException. NullReferenceException, KeyNotFoundException and ArgumentException are our own bugs (shelf or library code runs in the same try): transient, logged, never counted against a good package (medium check 3 #1). Storage, network, timeout and cancellation count nothing either.</summary>
     public static bool IsBadStagedPackage(Exception ex) => ex is InvalidDataException or StoryPackageException or System.Text.Json.JsonException;
 
     /// <summary>Whether the standard copy of a quick pack may be fetched again: the same back-off the high-res upgrades use.</summary>

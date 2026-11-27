@@ -1,0 +1,48 @@
+# Slice 463 F9: on a slow link (the emulator throttled, e.g. -netspeed umts) the first book still lands: real store (no test-store hook), pick one book, wait for the getting page to finish.
+# The flow fails when the "[FirstBooks] landed" line is missing: run-flows.ps1 checks every expect-log line after the flow (the wait below is only a delay for the download to end).
+# To see it fail against the old behaviour: a failed or cancelled download logs "[FirstBooks] failed" or "cancelled" and never "landed".
+# Check pass 1 #2: "landed-quick" is logged only when the quick package was what landed, so a fast link (standard package) fails this flow. It needs the emulator throttled and a store holding quick packages; until then do not count it in the passing set.
+# expect-log: [FirstBooks] landed
+# expect-log: [FirstBooks] landed-quick
+appId: uk.sirous.dinoreader.dbg
+name: slice 463 slow-link first book lands
+---
+- launchApp:
+    # clearState: wipes the dev app's data (settings, packs, own books) on purpose: fresh install first run.
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: WaitLine
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: WaitLine
+    timeout: 200000
