@@ -69,6 +69,8 @@ public sealed class ReadingSession
 
 		public int Index { get; set; }
 
+		public Dictionary<int, PartTakeSpan> Takes { get; init; } = []; // Slice 443: the steps (by index) that play a parent's part take instead of the book's own audio
+
 		public HashSet<int> Reported { get; } = []; // the steps whose missing or unplayable clip was already reported, so a resumed step reports nothing twice
 
 		public string? SilentReason { get; init; } = Sirous.Reading.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text); Slice 351: null for an own book, which never has a pack, so a silent piece is expected and reports nothing
@@ -234,6 +236,7 @@ public sealed class ReadingSession
 		_pageStarts = StoryRecordings.PageStarts(story.Pages);
 		_pageSentences = SentencesOfPages(story.Pages.Count);
 		_unplayable.Clear();
+		_takes = [];
 #if DEBUG
 		_pagesReached.Clear();
 #endif
@@ -272,14 +275,18 @@ public sealed class ReadingSession
 			return;
 		}
 
-		if (ClipAt(story, CurrentSentence) is not null || NextClipAfter(story, CurrentPosition) is not null)
+		if (ClipAt(story, CurrentSentence) is not null || NextClipAfter(story, CurrentPosition) is not null || PartTakes.HasPlayableTakes(story, _reading))
 		{
 			_ = ContinueAtAsync(CurrentSentence);
 		}
 	}
 
 	/// <summary>Takes the story as it is now (the grown-up turned "Read with my voice" on or off); the next read follows it.</summary>
-	public void UpdateStory(Story story) => _story = story;
+	public void UpdateStory(Story story)
+	{
+		_story = story;
+		_takes = []; // worked out again by the next read, from the story as it is now
+	}
 
 	/// <summary>Turns "Read with my voice" on or off on the session's own story, leaving the rest of it as it is.</summary>
 	public void SetUseRecordings(bool useRecordings)
@@ -733,7 +740,6 @@ public sealed class ReadingSession
 			return;
 		}
 
-		_voiceCount.Begin(id, reading, new VoiceToCount(story, segments, why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip
 		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments), reading);
 		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never plays a clip
 		if (id != _pendingReadId)
@@ -741,9 +747,46 @@ public sealed class ReadingSession
 			return;
 		}
 
+		IReadOnlyList<PartTakeSpan> takes = await TakeSpansAsync(story, reading);
+		cancellation.ThrowIfCancellationRequested();
+		if (id != _pendingReadId)
+		{
+			return;
+		}
+
+		_takes = takes; // Slice 443 review: held only once this read is known to be the current one, so a stale read never writes takes back after UpdateStory cleared them
+		_voiceCount.Begin(id, reading, new VoiceToCount(story, PartTakes.WithoutTakeWords(segments, takes), why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip; Slice 443: the words a part take stands in for are not the book's voice
 		bool shelfBook = UsageEvent.ShelfId(story.SourceId) is not null; // Slice 351: an own book never has a pack, so its silent pieces report nothing
-		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReasonFor(shelfBook, why.Reason, why.Misses), story, reading);
+		BeginSteps(segments, takes, id, cancellation, ClipMisses.SilentPieceReasonFor(shelfBook, why.Reason, why.Misses), story, reading);
 	}
+
+	// Slice 443: the book's parts are cut once per book (and off the main thread), and only when the book holds a part take this read could play.
+	private async Task<IReadOnlyList<PartTakeSpan>> TakeSpansAsync(Story story, string reading)
+	{
+		if (!_screenTextMatches || !PartTakes.HasPlayableTakes(story, reading)) // Slice 443 review: a take plays only beside the words it was made for, as a sentence clip does (ClipStands)
+		{
+			return [];
+		}
+
+		PartListCache cache = _partList is { } held && ReferenceEquals(held.Pages, story.Pages) && ReferenceEquals(held.Cast, story.Cast)
+			? held
+			: await Task.Run(() => new PartListCache(story.Pages, story.Cast, RecordSplitBook.PartListOf(story)));
+		_partList = cache;
+		return PartTakes.SpansOf(story, reading, cache.Parts, ClipStands, (hidden, by) => RecordedClipLog($"[RecordedClip] part take {hidden} hidden by the earlier take {by}"));
+	}
+
+	private IReadOnlyList<PartTakeSpan> _takes = []; // the part takes of the latest read's plan: Next and Back leave a take as one unit (SkipRangeOf)
+
+	/// <summary>The first and last sentence Next and Back treat as one unit around <paramref name="sentence"/>: the recorded page or run (<see cref="RecordedRangeOf"/>), else the part take that holds it (Slice 443 review),
+	/// so Next after a take goes to the sentence after the take's range and never replays it. Null when neither holds it.</summary>
+	public (int First, int Last)? SkipRangeOf(int sentence) =>
+		RecordedRangeOf(sentence) ?? (_screenTextMatches && sentence >= 0 && sentence < _sentences.Count
+			? PartTakes.SentenceRangeOf(_takes, sentence, position => StorySentences.IndexAt(_sentences, position))
+			: null);
+
+	private sealed record PartListCache(IReadOnlyList<StoryPage> Pages, IReadOnlyList<CastMember> Cast, IReadOnlyList<RecordPart> Parts);
+
+	private PartListCache? _partList; // the story's part list, cut for the pages and cast it was cut from (a recording saved later changes neither, so it is not cut again)
 
 	// Slice 297: the first clip of a read has started playing, so its voice is counted now; a later clip, or a clip of another read, counts nothing (the pending count is taken once, and only by its own read).
 	private void CountVoiceOnFirstClip(int readId)
@@ -799,10 +842,11 @@ public sealed class ReadingSession
 	}
 
 	// The read as steps (PlaybackSteps): a piece's clip, an animal's recording, or a piece with no clip shown for a beat. When the last step has ended the read is over.
-	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation, string? silentReason, Story story, string language)
+	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, IReadOnlyList<PartTakeSpan> takes, int id, CancellationToken cancellation, string? silentReason, Story story, string language)
 	{
 		cancellation.ThrowIfCancellationRequested();
-		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation) { SilentReason = silentReason, Story = story, Language = language };
+		PartTakePlan plan = PartTakes.Plan(segments, takes); // Slice 443: a part take stands in for its own segments only; every other segment keeps the book's own step
+		var read = new StepRead(id, plan.Steps, cancellation) { SilentReason = silentReason, Story = story, Language = language, Takes = plan.Takes };
 		_stepRead = read;
 		_pendingAdvance = false;
 		if (read.Steps.Count == 0)
@@ -888,6 +932,17 @@ public sealed class ReadingSession
 	private void StartStep(StepRead read)
 	{
 		read.Cancellation.ThrowIfCancellationRequested();
+		if (read.Takes.TryGetValue(read.Index, out PartTakeSpan take) && !TryPlayTake(read, take))
+		{
+			ContinueWithOwnAudio(read); // the take's file is gone or will not open: its words are read from the book's own audio
+			return;
+		}
+
+		if (read.Takes.ContainsKey(read.Index))
+		{
+			return; // the take plays
+		}
+
 		PremadeAudioPlan.Step step = read.Steps[read.Index];
 		if (step.Animal is { } clip)
 		{
@@ -906,6 +961,142 @@ public sealed class ReadingSession
 		}
 
 		BeginBeat(read, step);
+	}
+
+	// Slice 443: plays a parent's part take in place of the segments it covers; the segments before and after it play the book's own audio as steps of their own.
+	// False (nothing started) when the file is gone or the player will not open it; the caller then reads those segments from the book's own audio.
+	private bool TryPlayTake(StepRead read, PartTakeSpan take)
+	{
+		string? path = TakeFileOf(read, take);
+		if (path is null || !StartTakePlayer(read, take, path))
+		{
+			return false;
+		}
+
+		RecordedClipLog($"[RecordedClip] playing part take {take.Key} parts={take.Key.First}-{take.Key.Last} reading={_reading}"); // the line a device check reads to tell a parent's part take from the book's own audio
+		NoteFirstSound("part take", read.ReadId);
+		RunOnMain(() => MarkTake(read, take));
+		RunOnMain(() => PieceAudio?.Invoke(true));
+		ClearPending();
+		return true;
+	}
+
+	// The take's file, or null (reported, and the take left out for the session) when it is gone.
+	private string? TakeFileOf(StepRead read, PartTakeSpan take)
+	{
+		Story story = read.Story!;
+		string? path = _library.TryResolveFile(story.Id, StoryRecordings.FileOf(story, take.Key, name => FileExists(story.Id, name)));
+		if (path is not null && File.Exists(path))
+		{
+			return path;
+		}
+
+		NoteTakeUnplayable(take, "missing"); // the words are read from the book's own audio
+		return null;
+	}
+
+	// A take that cannot play is reported once and never planned again this session (Slice 443 review: a corrupt file sent one report per page read), like a sentence clip in _unplayable.
+	private void NoteTakeUnplayable(PartTakeSpan take, string how)
+	{
+		MarkTakeUnplayable(take, how);
+		ReportRecordingUnplayable();
+	}
+
+	private void MarkTakeUnplayable(PartTakeSpan take, string how)
+	{
+		_unplayable.Add(take.Key);
+		RecordedClipLog($"[RecordedClip] {how} part take {take.Key}");
+	}
+
+	private bool StartTakePlayer(StepRead read, PartTakeSpan take, string path)
+	{
+		int index = read.Index;
+		try
+		{
+			_playStarting = true;
+			_recorded = RecordedPlay.Playing;
+			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyTakeEnded(read, index, take, failed: false)),
+				() => MainThread.BeginInvokeOnMainThread(() => ApplyTakeEnded(read, index, take, failed: true)));
+			_playStarting = false;
+			UpdateAudible();
+			return true;
+		}
+		catch (Exception)
+		{
+			_playStarting = false;
+			_recorded = RecordedPlay.None;
+			MarkTakeUnplayable(take, "unplayable");
+			ReportFallback(Sirous.Reading.Application.Usage.FallbackArea.Speech, Sirous.Reading.Application.Usage.FallbackReason.RecordingUnplayable); // Slice 443: the take's words are read from the book's own audio
+			return false;
+		}
+	}
+
+	// The take plays from its own first words, so the mark goes to its first segment even when the read started inside it (Slice 443 review): what is heard and what is marked agree.
+	private void MarkTake(StepRead read, PartTakeSpan take)
+	{
+		int sentence = StorySentences.IndexAt(_sentences, take.SourceStart);
+		if (read == _stepRead && sentence >= 0)
+		{
+			MoveTo(sentence, take.SourceStart);
+		}
+	}
+
+	// A take that played to its end advances the read; one that failed while playing is replaced by the book's own audio for its words, at once when playing or when the user resumes when they had paused.
+	private void ApplyTakeEnded(StepRead read, int index, PartTakeSpan take, bool failed)
+	{
+		if (read != _stepRead || read.Index != index || _recorded == RecordedPlay.None)
+		{
+			return; // stopped or replaced meanwhile, or this step's end was already taken
+		}
+
+		if (!failed)
+		{
+			AdvanceStep(read.ReadId);
+			return;
+		}
+
+		NoteTakeUnplayable(take, "unplayable");
+		ReplaceFailedTake(read);
+	}
+
+	private void ReplaceFailedTake(StepRead read)
+	{
+		bool wasPaused = _recorded == RecordedPlay.Paused;
+		_player.Stop();
+		_recorded = RecordedPlay.None;
+		if (!wasPaused)
+		{
+			ContinueWithOwnAudio(read);
+			return;
+		}
+
+		bool hasSteps = ReplaceTakeWithOwnAudio(read);
+		_restartStep = hasSteps ? read : null;
+		_pendingAdvance = !hasSteps;
+		RaiseStateChanged();
+	}
+
+	// The take at the read's current step is replaced by the book's own steps for the same segments (Slice 443). False when they have none (nothing in them to say or show).
+	private static bool ReplaceTakeWithOwnAudio(StepRead read)
+	{
+		int added = PartTakes.ExpandTake(read.Steps, read.Takes, read.Index);
+		if (added == 0)
+		{
+			read.Index--; // the next step is now at the take's place: advancing from here starts it
+		}
+
+		return added > 0;
+	}
+
+	private void ContinueWithOwnAudio(StepRead read)
+	{
+		if (ReplaceTakeWithOwnAudio(read))
+		{
+			RunStep(read);
+			return;
+		}
+
+		AdvanceStep(read.ReadId);
 	}
 
 	// Plays the animal's recording. A clip that is missing or will not play is skipped silently, never read as the sound word, and the read goes straight on (posted, so it

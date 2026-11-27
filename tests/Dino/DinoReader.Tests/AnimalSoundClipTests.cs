@@ -221,7 +221,9 @@ public class AnimalSoundClipTests
     {
         string session = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.App", "ReadingSession.cs"));
 
-        Assert.Contains("PlaybackSteps.Plan(segments)", session); // Slice 278 B: the plan is PlaybackSteps over the Slice 246 C2 plan, which cuts pre-made clips out and hands the rest to AnimalClipRuns.Plan
+        Assert.Contains("PartTakes.Plan(segments, takes)", session); // Slice 443: the session plans through PartTakes, which plans every segment no take covers with PlaybackSteps.Plan
+        Assert.Contains("PlaybackSteps.Plan(plain)", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.Core", "PartTakes.cs")));
+        Assert.Contains("PremadeAudioPlan.Plan(segments)", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.Core", "PlaybackSteps.cs"))); // Slice 278 B: the plan is PlaybackSteps over the Slice 246 C2 plan, which cuts pre-made clips out and hands the rest to AnimalClipRuns.Plan
         Assert.Contains("PremadeAudioPlan.Plan(segments)", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.Core", "PlaybackSteps.cs")));
         Assert.Contains("AnimalClipRuns.Plan(run", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.Core", "PremadeAudio.cs")));
         Assert.Contains("PlayClip(read, clip);", session);

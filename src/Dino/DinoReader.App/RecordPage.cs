@@ -470,8 +470,9 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		string? says = whole ? null : RecordCard.SaysOf(setup.Book, piece.Speaker);
 		RecordChip chip = _take is not null ? RecordChip.NewTake : KeptClip() is not null ? RecordChip.Recorded : RecordChip.None;
 		double font = RecordCard.FittedFontSize(whole, Width > 0 ? Width : RecordCardFit.ReferenceWindowWidth, Height > 0 ? Height : RecordCardFit.ReferenceWindowHeight); // the pieces are cut once for the reference card; a smaller card shows them smaller
-		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key);
-		var view = new RecordCardView(says, piece.Text, setup.Language, font, chip, Recording, replacesRest);
+		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key, take.Piece.Cover);
+		bool widerPlays = StoryRecordings.WiderSentenceClipsOver(_story!, piece.Key, piece.Cover).Count > 0; // a kept whole-sentence clip covers this part's words: the take is not heard until it is removed
+		var view = new RecordCardView(says, piece.Text, setup.Language, font, chip, Recording, replacesRest, widerPlays);
 		return RecordViews.WordsCard(view, PlayOldTakeAsync, KeepOldAsync);
 	}
 
@@ -908,10 +909,11 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		StoryClipKey key = take.Piece.Key;
 		try
 		{
-			Story latest = await _library.GetAsync(storyId) ?? _story!;
-			bool first = StoryRecordings.Clips(latest).All(c => !c.Key.Overlaps(key));
-			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key);
-			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName));
+			Story latest = StoryRecordings.WithoutFile(await _library.GetAsync(storyId) ?? _story!, fileName); // Slice 443: the read adopts the part file just placed as a clip; it is the take being saved, not an earlier one
+			SentenceCover? cover = take.Piece.Cover;
+			bool first = StoryRecordings.ReplacedClips(latest, key, cover).Count == 0; // the same set that drives the card's warning and the files deleted below
+			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key, cover); // Slice 443 review: a sentence clip over the take's words goes too, so the new take is the one that plays
+			Story updated = StoryRecordings.WithSavedTake(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName, cover));
 			await _library.UpdateAsync(updated);
 			return new Committed(updated, replaced, first);
 		}

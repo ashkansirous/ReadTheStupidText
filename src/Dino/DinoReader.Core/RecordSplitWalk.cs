@@ -125,8 +125,18 @@ public static class RecordSplitWalk
     public static IReadOnlyList<RecordPiece> Recorded(Story story, RecordBook book, RecordMode mode, IReadOnlySet<string> ticked, string language)
     {
         var pieces = new List<RecordPiece>();
-        foreach (StoryClipKey clip in StoryRecordings.Clips(story, language).Select(c => c.Key).Where(k => !k.IsPart)) // Slice 395: a part take is listened to in place by Slice 443, not here
+        foreach (StoryClipKey clip in StoryRecordings.Clips(story, language).Select(c => c.Key).Where(k => !k.IsPart || PartTakes.Enabled))
         {
+            if (clip.IsPart)
+            {
+                if (PartPieceOf(book, clip, mode, ticked) is { } part)
+                {
+                    pieces.Add(part);
+                }
+
+                continue; // Slice 443: a part take is listened to alone, as a card of its own parts (its file holds only those words)
+            }
+
             List<RecordSentence> covered = book.Sentences.Where(s => s.Page == clip.Page && s.Index >= clip.First && s.Index <= clip.Last).ToList();
             if (covered.Count == 0 || (mode == RecordMode.PerCharacter && !ticked.Contains(covered[0].Speaker)))
             {
@@ -138,6 +148,18 @@ public static class RecordSplitWalk
         }
 
         return pieces;
+    }
+
+    // The card of a part take: its own parts' words and speaker. A take whose parts the page no longer has, or whose speaker is not ticked, is not listed.
+    private static RecordPiece? PartPieceOf(RecordBook book, StoryClipKey clip, RecordMode mode, IReadOnlySet<string> ticked)
+    {
+        List<RecordPart> run = RecordSplit.PartsIn(book.Sentences).Where(p => p.Page == clip.Page && p.Index >= clip.First && p.Index <= clip.Last).ToList();
+        if (run.Count == 0 || run.Count != clip.Last - clip.First + 1 || (mode == RecordMode.PerCharacter && !ticked.Contains(run[0].Speaker)))
+        {
+            return null;
+        }
+
+        return RecordSplit.PartPiece(clip, run[0].Speaker, RecordSplit.TextOfParts(run), run);
     }
 
     /// <summary>The remembered choice written as text for a preference.</summary>

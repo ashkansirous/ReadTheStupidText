@@ -195,7 +195,7 @@ public static class StoryJson
     {
         List<PieceRecordingFile> files = (pieces ?? new Dictionary<StoryClipKey, PageRecording>())
             .Where(r => r.Key.IsValid && r.Key.Page < pageCount && r.Key.IsPart == parts).OrderBy(r => r.Key.Page).ThenBy(r => r.Key.First).ThenBy(r => r.Key.Language, StringComparer.Ordinal)
-            .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Key.Language.Length > 0 ? r.Key.Language : r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key) }).ToList();
+            .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Key.Language.Length > 0 ? r.Key.Language : r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key), CoverFirst = parts ? r.Value.Cover?.First : null, CoverLast = parts ? r.Value.Cover?.Last : null }).ToList();
         return files.Count == 0 ? null : files;
     }
 
@@ -229,13 +229,17 @@ public static class StoryJson
                 string? file = FileToKeep(r.File, key) ?? MigratedFile(key, migrateTo, parts);
                 if (parts || !kept.Keys.Any(k => k.Overlaps(key)))
                 {
-                    kept.TryAdd(key, new PageRecording(key.Language, Math.Max(0, r.Seconds), file)); // the same key twice is one clip
+                    kept.TryAdd(key, new PageRecording(key.Language, Math.Max(0, r.Seconds), file, parts ? CoverOf(r) : null)); // the same key twice is one clip
                 }
             }
         }
 
         return kept.Count > 0 ? kept : null;
     }
+
+    // Slice 443: a stored cover is kept only when it is a real range; a damaged one reads as no cover (the take is kept and plays), never as a reason to drop the take.
+    private static SentenceCover? CoverOf(PieceRecordingFile r) =>
+        r.CoverFirst is { } first && r.CoverLast is { } last && new SentenceCover(first, last) is { IsValid: true } cover ? cover : null;
 
     private static List<CastFile> ToCastFiles(IReadOnlyList<CastMember> cast) =>
         cast.Select(c => new CastFile
@@ -525,6 +529,13 @@ public static class StoryJson
         /// <summary>The clip's file when it is not the usual name (Slice 279); absent otherwise.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? File { get; set; }
+
+        /// <summary>Slice 443: the sentences a part take sat in when it was saved (first and last, from 0 on the page); written for a part clip only, absent when not known.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? CoverFirst { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? CoverLast { get; set; }
     }
 
     private sealed class PageFile

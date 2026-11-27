@@ -22,7 +22,7 @@ internal enum RecordChip
 }
 
 /// <summary>What the words card shows: the "Rex says:" line (null for a whole page), the words, their font and size, the chip, and whether a recording is running (a red ring).</summary>
-internal sealed record RecordCardView(string? Says, string Words, string Language, double FontSize, RecordChip Chip, bool Recording, bool ReplacesRest = false);
+internal sealed record RecordCardView(string? Says, string Words, string Language, double FontSize, RecordChip Chip, bool Recording, bool ReplacesRest = false, bool WiderClipPlays = false);
 
 /// <summary>What the button row shows and does. <see cref="Clock"/> is the running time, drawn under the stop square while recording.</summary>
 internal sealed record RecordButtons(
@@ -76,6 +76,7 @@ internal static class RecordViews
 	internal const string SaysId = "RecordSays";
 	internal const string ChipId = "RecordChip";
 	internal const string ReplacesRestId = "RecordReplacesRest";
+	internal const string WiderClipId = "RecordWiderClip";
 	internal const string OldTakeId = "RecordOldTake";
 	internal const string KeepOldId = "RecordKeepOld";
 	internal const string UseDinoId = "RecordUseDino";
@@ -146,6 +147,11 @@ internal static class RecordViews
 			column.Add(ReplacesRestNote());
 		}
 
+		if (view.WiderClipPlays)
+		{
+			column.Add(WiderClipNote());
+		}
+
 		column.Add(WordsLabel(view));
 		if (view.Chip == RecordChip.NewTake && oldTake is not null && keepOld is not null)
 		{
@@ -168,6 +174,12 @@ internal static class RecordViews
 	private static Label ReplacesRestNote() => new()
 	{
 		AutomationId = ReplacesRestId, Text = AppResources.Record_ReplacesRest, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted),
+	};
+
+	// Slice 443: a kept whole-sentence clip still plays over this part's words, so the parent is told why the take is not heard.
+	private static Label WiderClipNote() => new()
+	{
+		AutomationId = WiderClipId, Text = AppResources.Record_WiderClipPlays, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted),
 	};
 
 	private static View? SpeakerRow(RecordCardView view)

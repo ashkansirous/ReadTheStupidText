@@ -12,18 +12,26 @@ public static class PartClipAdoption
     /// <summary>The search pattern of the files <see cref="Adopt"/> looks at, for a folder listing.</summary>
     public const string FilePattern = StoryRecordings.FilePrefix + "-*-p*" + StoryRecordings.FileExtension;
 
+    /// <summary>Slice 443 review: the suffix of the empty marker file the library leaves beside a recording whose delete failed; a part file with this marker is never adopted.</summary>
+    public const string DeletedSuffix = ".deleted";
+
     private static readonly Regex PartFileName = new(@"^rec-(?<lang>[a-z]{2,3})-(?<page>[1-9][0-9]{0,3})-p(?<first>[1-9][0-9]{0,3})-(?<last>[1-9][0-9]{0,3})(-[0-9a-f]{8})?\.m4a$", RegexOptions.CultureInvariant);
+
+    /// <summary>Slice 443 review pass 2: whether <paramref name="fileName"/> is a part take's file name, the only kind of file a <see cref="DeletedSuffix"/> marker is written for.</summary>
+    public static bool IsPartFileName(string fileName) => PartFileName.IsMatch(fileName);
 
     /// <summary><paramref name="story"/> with a part clip for each of <paramref name="fileNames"/> that is a part file name, names a page of the story, is named by no clip, and whose range no part clip of the story already
     /// covers or shares a part with (the clips the story has are the newer takes). The clip's length is unknown (0). Several such files that overlap keep the first by name.</summary>
     public static Story Adopt(Story story, IEnumerable<string> fileNames)
     {
         Story adopted = story;
+        HashSet<string> named = StoryRecordings.Files(story).ToHashSet(StringComparer.Ordinal); // Slice 443: the files the story names, worked out once (the switch is on, so this runs on every read of a book that has part files)
         foreach (string name in fileNames.Order(StringComparer.Ordinal))
         {
-            if (KeyOf(name, story.Pages.Count) is { } key && !StoryRecordings.IsReferenced(adopted, name) && StoryRecordings.Clips(adopted).All(c => !c.Key.Overlaps(key)))
+            if (KeyOf(name, story.Pages.Count) is { } key && !named.Contains(name) && StoryRecordings.Clips(adopted).All(c => !c.Key.Overlaps(key)))
             {
                 adopted = StoryRecordings.WithClip(adopted, key, new PageRecording(key.Language, 0, name)) with { UseRecordings = adopted.UseRecordings }; // finding a file never turns the book's switch on
+                named.Add(name);
             }
         }
 

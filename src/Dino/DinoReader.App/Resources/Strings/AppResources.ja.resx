@@ -285,6 +285,7 @@
   <data name="Record_NewTake" xml:space="preserve"><value>新しいテイク</value></data>
   <data name="Record_OldTake" xml:space="preserve"><value>前のテイク</value></data>
   <data name="Record_ReplacesRest" xml:space="preserve"><value>このページの残りの録音は置き換えられます。</value></data>
+  <data name="Record_WiderClipPlays" xml:space="preserve"><value>ここでは文全体の録音が再生されます。この部分を聞くには、その録音を削除してください。</value></data>
   <data name="Record_KeepOld" xml:space="preserve"><value>前のを残す</value></data>
   <data name="Record_UseDino" xml:space="preserve"><value>ディノの声にする</value></data>
   <data name="Record_Undo" xml:space="preserve"><value>元に戻す</value></data>

@@ -422,6 +422,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         await _gate.WaitAsync();
         try
         {
+            ClearMarker(target); // Slice 443 review pass 2: a file saved under a name whose old file once failed to delete is a new file; the old marker must not outlive it
             File.Move(temp, target, overwrite: true);
         }
         finally
@@ -429,6 +430,8 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             _gate.Release();
         }
     }
+
+    private static void ClearMarker(string path) => TryDelete(path + PartClipAdoption.DeletedSuffix);
 
     public async Task DeleteFileAsync(string storyId, string fileName)
     {
@@ -442,11 +445,45 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         try
         {
             TryDelete(path);
+            if (PartClipAdoption.IsPartFileName(fileName) && File.Exists(path))
+            {
+                MarkDeleted(path); // Slice 443 review: a recording that would not go (locked) must not come back through PartClipAdoption on the next load
+            }
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private static void MarkDeleted(string path)
+    {
+        try
+        {
+            File.WriteAllBytes(path + PartClipAdoption.DeletedSuffix, []);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: the marker is best effort; without it the leftover file may be adopted again
+        }
+    }
+
+    // A part file whose delete failed has a marker beside it: it is never adopted. A listing never deletes a file (it may run beside a writer, and the story may reference the name again);
+    // it only drops a marker whose file is already gone. Every writer of a recording file clears the marker first, under the gate.
+    private static bool IsDeletedLeftover(string path)
+    {
+        string marker = path + PartClipAdoption.DeletedSuffix;
+        if (!File.Exists(marker))
+        {
+            return false;
+        }
+
+        if (!File.Exists(path))
+        {
+            TryDelete(marker);
+        }
+
+        return true;
     }
 
     // Only cover photos and page recordings this library stored are ever deleted; a hand-edited story.json naming a page picture must not remove it.
@@ -539,7 +576,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
                     await SaveMigratedRecordingsAsync(story, mainLanguage!);
                 }
 
-                return PartTakes.Enabled ? PartClipAdoption.Adopt(story, PartFileNamesIn(id)) : story; // Slice 395: a part take an older app's re-save dropped from the story file is found again by its file; with the switch off no folder is listed and nothing is adopted
+                return PartTakes.Enabled ? PartClipAdoption.Adopt(story, await PartFileNamesUnderGateAsync(id)) : story; // Slice 395: a part take an older app's re-save dropped from the story file is found again by its file; with the switch off no folder is listed and nothing is adopted
             }
 
             Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
@@ -557,12 +594,36 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
+    // Slice 443 review: listed under the gate, so a writer's marker clear and File.Move (MoveIntoPlaceAsync) never fall between the marker check and the listing.
+    private async Task<IEnumerable<string>> PartFileNamesUnderGateAsync(string id)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            return PartFileNamesIn(id);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private IEnumerable<string> PartFileNamesIn(string id)
     {
         try
         {
             string folder = FolderOf(id);
-            return Directory.Exists(folder) ? [.. Directory.EnumerateFiles(folder, PartClipAdoption.FilePattern).Select(f => Path.GetFileName(f))] : [];
+            if (!Directory.Exists(folder))
+            {
+                return [];
+            }
+
+            foreach (string marker in Directory.EnumerateFiles(folder, "*" + PartClipAdoption.DeletedSuffix))
+            {
+                IsDeletedLeftover(marker[..^PartClipAdoption.DeletedSuffix.Length]); // drops the marker of a file that is already gone
+            }
+
+            return [.. Directory.EnumerateFiles(folder, PartClipAdoption.FilePattern).Where(f => !IsDeletedLeftover(f)).Select(f => Path.GetFileName(f))];
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -608,6 +669,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             {
                 string target = TryResolveFile(story.Id, file.Name) ?? throw new ArgumentException("Not a plain file name.", nameof(files));
                 Directory.CreateDirectory(folder);
+                ClearMarker(target); // Slice 443 review pass 2: a restored or imported file is never read as a failed delete (ImportAsync holds the gate)
                 await using FileStream output = new(target, FileMode.CreateNew, FileAccess.Write);
                 written.Add(target);
                 await using Stream input = file.Open();

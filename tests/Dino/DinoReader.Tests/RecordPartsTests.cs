@@ -9,9 +9,9 @@ namespace DinoReader.Tests;
 [Collection(PartTakesCollection.Name)]
 public sealed class RecordPartsTests : IDisposable
 {
-    public RecordPartsTests() => PartTakes.Enabled = true; // Slice 395: the switch is off in the app until Slice 443; these tests run with it on, alone (PartTakesCollection)
+    public RecordPartsTests() => PartTakes.Enabled = true; // Slice 443: the switch is on in the app; the tests that turn it off run alone (PartTakesCollection) and every test starts from on
 
-    public void Dispose() => PartTakes.Enabled = false;
+    public void Dispose() => PartTakes.Enabled = true;
 
     private static Story Freddy()
     {
@@ -172,17 +172,18 @@ public sealed class RecordPartsTests : IDisposable
     }
 
     [Fact]
-    public void A_part_clip_is_kept_but_not_played_and_covers_no_sentence_for_the_reader()
+    public void A_part_clip_is_no_sentence_clip_and_covers_no_sentence_for_the_reader()
     {
         Story story = Freddy();
         RecordPiece dinner = MummyDinner(story);
         var sentence = new StoryClipKey(0, 0, 0, "en");
         Story recorded = StoryRecordings.WithClip(StoryRecordings.WithClip(story, dinner.Key, Rec("rec-en-2-p2-2-0a0a0a0a.m4a")), sentence, Rec("rec-en-1-1-1-0b0b0b0b.m4a"));
 
-        Assert.Equal([sentence], StoryRecordings.PlayingClips(recorded, "en")); // the part take plays in Slice 443, not here
+        Assert.Equal([sentence], StoryRecordings.PlayingClips(recorded, "en")); // the sentence-clip rule never lists a part clip: it plays through PlayingParts (Slice 443)
         Assert.False(StoryRecordings.PlaysClip(recorded, dinner.Key, "en"));
+        Assert.Equal([dinner.Key.In("en")], StoryRecordings.PlayingParts(recorded, "en"));
         Assert.Null(StoryRecordings.ClipCovering(recorded, dinner.Key.Page, dinner.FirstSentence, "en"));
-        Assert.Empty(RecordSplitWalk.Recorded(StoryRecordings.WithoutClip(recorded, sentence), RecordSplitBook.Of(story), RecordMode.WholePage, new HashSet<string>(), "en"));
+        Assert.Equal([dinner.Key.In("en")], RecordSplitWalk.Recorded(StoryRecordings.WithoutClip(recorded, sentence), RecordSplitBook.Of(story), RecordMode.WholePage, new HashSet<string>(), "en").Select(p => p.Key)); // "Listen and change" lists the part take as its own card
     }
 
     [Fact]

@@ -121,7 +121,8 @@ public partial class NoSpeechEngineTests
 
         Assert.DoesNotContain("_reader", session);
         Assert.DoesNotContain("SpeakAsync", session);
-        Assert.Contains("PlaybackSteps.Plan(segments)", session);
+        Assert.Contains("PartTakes.Plan(segments, takes)", session); // Slice 443: the plan is PlaybackSteps with a parent's part take standing in for its own segments
+        Assert.Contains("PlaybackSteps.Plan(plain)", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "Dino", "DinoReader.Core", "PartTakes.cs")));
         Assert.Contains("FallbackReason.ClipMissing", session);
         Assert.Contains("read.Reported.Add(index)", session); // once per step, however often a pause starts it again
         Assert.Contains("PlaybackSteps.BeatMilliseconds", session);

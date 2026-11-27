@@ -285,6 +285,7 @@
   <data name="Record_NewTake" xml:space="preserve"><value>Новый дубль</value></data>
   <data name="Record_OldTake" xml:space="preserve"><value>Старый дубль</value></data>
   <data name="Record_ReplacesRest" xml:space="preserve"><value>Ваша запись остальной части этой страницы будет заменена.</value></data>
+  <data name="Record_WiderClipPlays" xml:space="preserve"><value>Здесь звучит ваша запись всего предложения. Удалите её, чтобы услышать эту часть.</value></data>
   <data name="Record_KeepOld" xml:space="preserve"><value>Оставить старый</value></data>
   <data name="Record_UseDino" xml:space="preserve"><value>Голос Дино</value></data>
   <data name="Record_Undo" xml:space="preserve"><value>Отменить</value></data>
