@@ -26,7 +26,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** `stall-return-overlay` on iOS (**You**, no Mac; the iOS reader edit is not compiled or run) and on the Windows head (VM); only the Android emulator ran, twice, 2026-11-09.
 
 ### Slice 314: Restore the stall overlay when the person returns to the reader ([slice](slices/314-reader-stall-overlay-after-return.md))
-- [phone] **Device:** Start a stalled read on Android, open Settings, come back: overlay and Cancel shown.
+- [phone] **Device:** Start a stalled read on Android, open Settings, come back: overlay and Cancel shown. (live check 2026-11-27: failed, follow-up in Slice 345)
 - [owner] **You:** The iOS stall watcher on device.
 
 ### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
@@ -80,22 +80,22 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [cloud] Apple trial-to-paid detection (`isTrialConversion`: previous period at most 8 days) and the Google trial/conversion heuristic were built on synthetic fixtures; confirm on the first real notifications after item 4 (console wiring).
 
 ### Slice 424: Dino: the Android 1.136.0 unclean exit ([slice](slices/424-dino-android-1136-unclean-exit.md))
-- [phone] Item 1: the walk on the S21 with the Play release build (first-run pack downloads, then Settings); the flow `first-run-to-settings` itself was written and run on the emulator, but the real pack downloads are not scripted.
-- [cloud] Item 3 iOS: the MetricKit exit-count path and the iOS simulator kill check on the CI Mac (`dinoreader-ios-sim.yml`); both heads compile, nothing ran on iOS.
+- [phone] Item 1: the walk on the S21 with the Play release build (first-run pack downloads, then Settings); the flow `first-run-to-settings` itself was written and run on the emulator, but the real pack downloads are not scripted. (live check 2026-11-27: failed, follow-up in Slice 424)
+- [cloud] Item 3 iOS: the MetricKit exit-count path and the iOS simulator kill check on the CI Mac (`dinoreader-ios-sim.yml`); both heads compile, nothing ran on iOS. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [phone] Item 6: a second distinct death on the same tail gets its own report.
-- [session] After release: read a real `unclean_exit` with `tools/crashes/report.mjs -App dino` (the exit reason, session and last page on a real report).
+- [session] After release: read a real `unclean_exit` with `tools/crashes/report.mjs -App dino` (the exit reason, session and last page on a real report). (live check 2026-11-27: unreachable: the release went live at 22:32 UTC tonight, so no real traffic from it exists yet)
 
 ### Slice 460: Dino Windows: the store works at first run, or recovers on its own ([slice](slices/460-dino-windows-first-run-store-recovery.md))
 - [session] Item 1, the Windows VM `AppTrace` read at first run: not run, the VM needs 8 GB free and this wave had 6.8, 4.5 and 7.9 GB. Compare the cached origin/main package `8bbbca166301` with the new one `9fc20fa691d1`, and write down which call fails, its error and whether the window or Store-context ordering is the trigger.
 - [session] Windows VM fresh-install first run with the network cut for 5 s and restored: first run finishes with no manual Try again.
-- [cloud] iOS simulator run of the same first-run and offline checks in `dinoreader-ios-sim.yml`.
-- [phone] On the S21 a first run shows no `store_failed` row from the purchase read (`BookPurchases.ReportReadProblems`); the emulator's rows came from having no Play Billing, which is likely but not proven.
+- [cloud] iOS simulator run of the same first-run and offline checks in `dinoreader-ios-sim.yml`. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
+- [phone] On the S21 a first run shows no `store_failed` row from the purchase read (`BookPurchases.ReportReadProblems`); the emulator's rows came from having no Play Billing, which is likely but not proven. (live check 2026-11-27: unreachable: no scripted S21 first run with real store reads, follow-up in Slice 460)
 - [session] Windows VM run: `OpenContext` is now reached from a `Task.Run` pool thread (`WaitForWindowAsync` -> `ContextWithRetryAsync`) and touches `Application.Current.Windows`, `Handler.PlatformView`, `InitializeWithWindow` and writes `_context` unlocked; a wrong-thread COMException would be caught as Failure=null, end the poll early and report `store_failed` with no recovery (`src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs:149`; `reviews/s460/pr-1428-check5.md` #3, unconfirmed, not run on a device).
 
 ### Slice 439: Dino: a linked Sonos home with an active Dino subscription plays the paid books ([slice](slices/439-dino-sonos-owned-books.md))
 - [session] C3 clips (a render run with the narrator voices, then an upload to R2 `dinoreader/sonos/subscribe-<lang>.m4a`; nothing was rendered or uploaded; C3 stays open on this wait): the 15 texts are `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`; steps in `docs/DEPLOYING.md`, *The subscription proof column and the spoken message*. The render script is outside Slice 439's Touches and is not written (planned row: C3 in Slice 439).
 - [owner] **You:** Device and Sonos sandbox: that Sonos sends the `Authorization: Bearer <token>` from `getMediaURI`'s `httpHeaders` to the media route and plays the story (the S21 with a test subscription; a refreshed token is picked up by the next `getMediaURI`, a track already queued with the old token gets 401), that the message clip plays for a lapsed home, and that a renewal on the S21 reaches the Worker (Debug log `[SonosLink] proof renew Renewed`).
-- [cloud] iOS: the shared `BookPurchases` code compiled for Windows and Android only; an iOS compile and a TestFlight run are owed (no Mac here).
+- [cloud] iOS: the shared `BookPurchases` code compiled for Windows and Android only; an iOS compile and a TestFlight run are owed (no Mac here). (live check 2026-11-27: unreachable: the iOS compile now passes, dinoreader-ios run 46072316030; the TestFlight run needs an iPhone)
 - [owner] **You (native read):** the 15 subscribe texts (`SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`).
 
 ### Slice 435: Dino: YouTube channel with the four free books as read-aloud videos in 15 languages ([slice](slices/435-dino-youtube-read-aloud-channel.md))
@@ -104,7 +104,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You (native read):** the 14 non-English card lines, titles and descriptions in `lib/strings.mjs` were written by Claude, not a native speaker; read the first non-English video you open.
 - [session] First upload DONE 2026-11-27 (item 4), video `Fjo-TUF3EoU` (unlisted; API read-back: title, language en, madeForKids true, privacy unlisted). Not done: the custom thumbnail (`thumbnails.set` answered 403, likely an unverified channel; not confirmed) and the playlist "Dino Reader stories in English". After the owner's phone verification, rerun `upload.mjs`: it resumes from `uploaded.json` and finishes both; the check is the read-back of the playlist membership. Item 4 stays unticked until then. (live check 2026-11-27: unreachable: waits on the owner's YouTube channel phone verification, which no tool can read)
 - [session] Item 5 spoken clips: 2 of 75 exist (`voice/en/grown-ups.m4a`, `voice/en/title-lion-and-mouse.m4a`); the other 73 wait on the Gemini daily cap. Render them with `make_voice.py` (`node voice-lines.mjs --book all --lang all > ../../../../tmp/lines.json && python make_voice.py --lines ../../../../tmp/lines.json`, about 75 requests, may take two days), then rerun the render; item 5's spoken half stays open until then.
-- [session] Private-lock check (answered 2026-11-27, no step for you): YouTube's revision history says videos from unverified API projects "are no longer restricted" to private (entry dated 2 November 2026); `upload.mjs` reads each video back and fails loudly if the privacy differs from the one requested, so the first real upload proves it.
 
 ### Slice 454: Dino subscription: Microsoft Store add-ons, 14 other App Store languages, script gaps ([slice](slices/454-dino-subscription-microsoft-addons-and-app-store-languages.md))
 - [session] Live App Store apply, denied at night by auto mode (needs an interactive session): `node .github/scripts/store-products-local.mjs --apply --store apple --locales fr-FR`, read back, then all locales, then `--submit`. (live check 2026-11-27: unreachable: auto mode denies the live App Store apply in an unattended session; needs an interactive one)
@@ -113,7 +112,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] Native read of the machine-written subscription texts (already in unverified.md under Slice 384).
 
 ### Slice 447: Dino story skill: true-size line-up script and accepted-page save guard ([slice](slices/447-dino-story-skill-lineup-script-and-save-guard.md))
-- [session] One real Gemini save of an accepted page is refused, and a `-UserAskedRedo` save backs up to the working folder's `previous/`, in the next illustrator run.
+- [session] One real Gemini save of an accepted page is refused, and a `-UserAskedRedo` save backs up to the working folder's `previous/`, in the next illustrator run. (live check 2026-11-27: unreachable: no real illustrator book run happened tonight)
 
 ### Slice 455: Dino: buy, restore and subscription outcome events ([slice](slices/455-dino-purchase-outcome-events.md))
 - [phone] S21: the Store card shows `sub_monthly.shown.trial`, and a cancelled buy sends `book.started` then `book.cancelled` with the book GUID (read in `dino_usage_beta` via `analytics-query`).
@@ -121,47 +120,47 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] Windows sandbox buy: trial versus paid is recorded correctly.
 
 ### Slice 452: Dino: sound pill device check hook and Part B leftovers ([slice](slices/452-dino-sound-pill-device-check-hook.md))
-- [session] Compare the four shots (`reading-sound-pill-states`) with mock frames 197-199 when `docs/design/dino-reader/frames` exists (only the HTML mock is in the repo today).
-- [session] iOS simulator run of the same flow (iOS is not compiled on this PC).
+- [session] Compare the four shots (`reading-sound-pill-states`) with mock frames 197-199 when `docs/design/dino-reader/frames` exists (only the HTML mock is in the repo today). (live check 2026-11-27: unreachable: docs/design/dino-reader/frames still does not exist)
+- [session] iOS simulator run of the same flow (iOS is not compiled on this PC). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 
 ### Slice 431: Dino: the story skill reports its steps to the agent board ([slice](slices/431-dino-story-board-steps.md))
 - [owner] Item C: when the owner next makes a new book, read the book card back with `get_item` on the board (steps, process keys, the owner-read wait).
 
 ### Slice 441: Dino: iPad reading page hides Back and the view switch from VoiceOver ([slice](slices/441-dino-ipad-reading-header-voiceover.md))
-- [session] The iPad and iPhone simulator hierarchy (the CI iOS simulator, Maestro) shows `ReadingBack` and `ReadingModes` on the reading page (item 1 and item 3 for iOS).
+- [session] The iPad and iPhone simulator hierarchy (the CI iOS simulator, Maestro) shows `ReadingBack` and `ReadingModes` on the reading page (item 1 and item 3 for iOS). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 - [owner] **You:** VoiceOver on an iPad reads Back, the view switch and the book title as a heading, and does not read the title twice on the sideways tablet layout (`SideTitle` plus heading).
 - [phone] Android TalkBack on a tablet reads Back, the view switch and the title as a heading.
 - [owner] Windows Narrator reads Back, the view switch and the title as a heading.
 
 ### Slice 464: Dino: an older part-take file never plays after a new take is saved ([slice](slices/464-dino-reused-part-take-file-orphan.md))
-- [phone] The Verification walk-through by hand on the S21 or emulator (record a part, re-record an overlapping part, delete the new take, and the older recording does not play). The emulator flows `record-only-the-words`, `record-per-character` and `record-per-language` pass but log `replacedFiles=0`, and a scripted flow cannot make a stale orphan, so the orphan path is covered by unit tests only.
+- [phone] The Verification walk-through by hand on the S21 or emulator (record a part, re-record an overlapping part, delete the new take, and the older recording does not play). The emulator flows `record-only-the-words`, `record-per-character` and `record-per-language` pass but log `replacedFiles=0`, and a scripted flow cannot make a stale orphan, so the orphan path is covered by unit tests only. (live check 2026-11-27: unreachable: a hand walk-through, since no scripted flow can make a stale orphan; the three record flows pass on the emulator)
 
 ### Slice 462: Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog ([slice](slices/462-dino-drop-leaking-test-traffic.md))
 - [owner] **You:** iOS parity (blocks nothing): Android now drops Test Harness Mode devices, iOS has no such signal, so iOS keeps today's behaviour (TestFlight and App Review already go to `dino_usage_beta`; the iOS Groups A and C stay in `dino_usage`). Exempt iOS or name a signal and the iOS usage gate would change to match; otherwise nothing changes. [Slice file](https://github.com/ashkansirous/ReadTheStupidText/blob/main/docs/plan/slices/462-dino-drop-leaking-test-traffic.md).
-- [cloud] After the release that ships this slice, the next analytics window (7 days of Ninjalog): the share of test-looking first sessions (third query in `docs/analytics/ninjalog-queries.md`, "Test-looking sessions") is under 5%, and Group B (10 or more cancels) is gone. Unproven that Play's pre-launch devices set Test Harness Mode. No device run is planned for the Test Harness read (a Debug build skips usage before the harness check, and `adb shell cmd testharness enable` wipes the device); the 7-day query is the proof.
+- [cloud] After the release that ships this slice, the next analytics window (7 days of Ninjalog): the share of test-looking first sessions (third query in `docs/analytics/ninjalog-queries.md`, "Test-looking sessions") is under 5%, and Group B (10 or more cancels) is gone. Unproven that Play's pre-launch devices set Test Harness Mode. No device run is planned for the Test Harness read (a Debug build skips usage before the harness check, and `adb shell cmd testharness enable` wipes the device); the 7-day query is the proof. (live check 2026-11-27: unreachable: the release went live at 22:32 UTC tonight, so no real traffic from it exists yet)
 
 ### Slice 459: Dino first books: the first book is playable within seconds of Continue ([slice](slices/459-dino-first-book-playable-in-seconds.md))
 - [phone] The S21 first run with the network throttled to 1 Mbit/s: the first book opens before the rest finish (`tools/emulator` has no throttle flag).
-- [cloud] iOS simulator first run.
+- [cloud] iOS simulator first run. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [session] Windows VM first run (VM not started: 7.8 GB free memory, under the 8 GB the VM needs).
-- [session] The Ninjalog `wait_shown` query after release (the Verification line of the slice).
+- [session] The Ninjalog `wait_shown` query after release (the Verification line of the slice). (live check 2026-11-27: unreachable: the release went live at 22:32 UTC tonight, so no real traffic from it exists yet)
 
 ### Slice 443: Dino: a parent's part take plays in place of only its words ([slice](slices/443-dino-parent-part-take-plays-its-words-only.md))
 - [phone] Hear "said Mummy" in the book's voice between two part takes on the S21 (the parent's ear).
-- [cloud] iOS simulator: record a part take and read it back.
+- [cloud] iOS simulator: record a part take and read it back. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [session] Windows VM: record a part take and read it back (the VM was not started, for memory).
 
 ### Slice 437: Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) ([slice](slices/437-dino-sonos-browse-shelves.md))
 - [owner] **You:** Sonos sandbox run in your Sonos app: the root opens in the phone's language, the shelf order, the paid row ("In the Dino app"), where the subtitle shows, and the element order.
 - [owner] **You:** A1 on your sandbox (S21 Sonos app): what a tap on a paid book, adding it to the queue and pressing Play on a shelf that holds one do with `canPlay` false and `Client.ItemNotFound`; whether the app's wording for it reads well.
-- [session] **Device:** the Sonos app accepts the new element order: a folder row `id, itemType, title, artist, albumArtURI, canPlay, canEnumerate` and a book's subtitle in `album`, and shows each where the mock shows its subtitle.
+- [session] **Device:** the Sonos app accepts the new element order: a folder row `id, itemType, title, artist, albumArtURI, canPlay, canEnumerate` and a book's subtitle in `album`, and shows each where the mock shows its subtitle. (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
 - [owner] **You:** the square cover crop needs `"images": { "binding": "IMAGES" }` in `wrangler.jsonc` and `wrangler.workers-dev.jsonc` and the Cloudflare Images binding on the account (until then covers are served uncropped).
-- [session] **Device:** the seven folder PNGs and the 15 language tiles on a real Sonos screen (`site/dino/sonos-art/`).
+- [session] **Device:** the seven folder PNGs and the 15 language tiles on a real Sonos screen (`site/dino/sonos-art/`). (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
 - [owner] **You:** the 13 translated label sets (`worker/sonos-labels.ts`; English and Farsi are the mock's words).
-- [session] **Device:** Sonos sends `Accept-Language` on SOAP calls (no live call read).
-- [session] **Device:** does the Sonos app lay out Farsi right to left? (S21 Sonos app, phone in Farsi.)
-- [session] **Device:** does Sonos cache the root per household? If so, two phones with different languages could see the same first screen.
-- [session] **Device:** can a service's folder (not just a track) be saved to My Sonos?
+- [session] **Device:** Sonos sends `Accept-Language` on SOAP calls (no live call read). (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
+- [session] **Device:** does the Sonos app lay out Farsi right to left? (S21 Sonos app, phone in Farsi.) (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
+- [session] **Device:** does Sonos cache the root per household? If so, two phones with different languages could see the same first screen. (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
+- [session] **Device:** can a service's folder (not just a track) be saved to My Sonos? (live check 2026-11-27: unreachable: needs a Sonos speaker on the home network, none was driven in this unattended run)
 
 ### Slice 417: Dino: both web pages point at the live stores, show the new name and current screenshots; testing closed ([slice](slices/417-dino-sites-after-launch.md))
 - [chrome] Both live pages after deploy: store buttons open the right store pages, no tester link left.
@@ -180,25 +179,24 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] Whether the 5-then-8 count came from the hour-long cache (not reproduced 2026-11-24).
 
 ### Slice 432: Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps ([slice](slices/432-dino-drop-pdf-word-libraries.md))
-- [phone] The Dino TestFlight build launches and opens a book.
-- [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up).
-- [session] A record-and-save flow (record-per-character) on the emulator.
+- [phone] The Dino TestFlight build launches and opens a book. (live check 2026-11-27: unreachable: needs an iPhone or TestFlight, none reachable here)
+- [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up). (live check 2026-11-27: unreachable: no flow exists, follow-up in Slice 432)
 
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
 - [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again, and the device log carries the `cancelled-load` marker (not `failed-load`). (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
-- [phone] With the network back after a failed load (offline or a server error), the first-books list reloads by itself.
-- [phone] The same two checks on the iPhone (shared page, no iOS-only code).
+- [phone] With the network back after a failed load (offline or a server error), the first-books list reloads by itself. (live check 2026-11-27: unreachable: no flow asserts the reload without a tap, follow-up in Slice 453)
+- [phone] The same two checks on the iPhone (shared page, no iOS-only code). (live check 2026-11-27: unreachable: needs an iPhone or TestFlight, none reachable here)
 
 ### Slice 431: Dino: the story skill reports its steps to the agent board, with process keys ([slice](slices/431-dino-story-board-steps.md))
-- [session] Item C: one real book run, read back with `get_item` on the board (steps, process keys, the owner-read wait).
+- [session] Item C: one real book run, read back with `get_item` on the board (steps, process keys, the owner-read wait). (live check 2026-11-27: unreachable: no real illustrator book run happened tonight)
 
 ### Slice 463: Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background ([slice](slices/463-dino-quick-first-book-package-for-slow-internet.md))
 - [owner] **You:** pick the quick package's picture size and audio bitrate (quick 448x600 / AAC 24 kb/s mono vs standard, four free books, en and de) | the side-by-side page is made by an interactive session; no link yet
 - [phone] The slow-link switch judged after about 3 s on a real slow link, and the 404 fallback to standard (try `emu network speed edge`; the 2026-11-27 `umts` run never got past the store list).
 - [session] The real quick-then-standard swap, once quick packages are published.
-- [cloud] The iOS simulator first-books step on a slow link.
+- [cloud] The iOS simulator first-books step on a slow link. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [session] The Windows VM first-books step throttled to 256 kbit/s.
-- [session] Ninjalog after release: `wait_shown` detail `getting_quick_file:*` appears.
+- [session] Ninjalog after release: `wait_shown` detail `getting_quick_file:*` appears. (live check 2026-11-27: unreachable: the release went live at 22:32 UTC tonight, so no real traffic from it exists yet)
 - [session] `.maestro/dino/first-book-slow-link.yaml` (expects `[FirstBooks] landed-quick`) was not run: it needs quick packages in the store, none exist until item 2.
 - [session] `high-res-swap-on-wifi` asserted nothing in the 2026-11-27 run: run `high-res-limited-then-wifi` first, with a live high-res pack.
 
@@ -214,7 +212,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] The sandbox check ("goat" in the S21 Sonos app: two English rows under Stories, the own-language matches under All languages).
 
 ### Slice 438: Dino: every Sonos home links once through the Dino app and saves its story language ([slice](slices/438-dino-sonos-link-story-language.md))
-- [session] iOS simulator: the link opens `SonosLinkPage` and the Debug test-hook plist merge keeps the `dinoreader` scheme (review high #8).
+- [session] iOS simulator: the link opens `SonosLinkPage` and the Debug test-hook plist merge keeps the `dinoreader` scheme (review high #8). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 - [phone] The S21 opens the link from the Sonos page and hands back.
 - [owner] **You:** switch the Sonos integration's auth to AppLink once 438 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
@@ -243,10 +241,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 420: Dino Windows checks after one shelf ([slice](slices/420-dino-windows-checks-after-one-shelf.md))
 - [session] `needs-file/store-shot-phone` and `needs-file/store-shot-tablet` Maestro flows (tap on a book's dots by title) were not run.
-- [cloud] iOS: a cover tap reads the book on the unlocked shelf.
+- [cloud] iOS: a cover tap reads the book on the unlocked shelf. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 
 ### Slice 418: Dino one shelf with a lock ([slice](slices/418-dino-one-shelf-with-a-lock.md))
-- [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock.
+- [cloud] iOS on a simulator or device: the lock, the buying sheet and recording hold the clock. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [owner] Native reads of the new and changed strings in 14 languages: `Lock_*`, `Onboarding_SkipStep`, `Onboarding_VoiceBody`, `Onboarding_ThatsYouBody`, `FirstRun_HelloBody`, `Gallery_ReorderHint`.
 
 ### Slice 413: Dino store name, subtitle and keywords in 14 languages ([slice](slices/413-dino-store-name-13-languages.md))
@@ -309,10 +307,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 390: Dino iOS purchases on StoreKit 2 ([slice](slices/390-dino-ios-purchases-storekit-2.md))
 - [owner] **Not a user to-do (the sandbox Buy was done by the user, 2026-11-15: "I tried the sandbox buy!"; never ask again):** not stated by the user and so still unverified: a subscription plan showing its real end date, and Restore purchases (also on a second install), on an iPhone with a TestFlight build.
-- [session] **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain.
+- [session] **Device:** the macOS jobs prove the Swift XCFramework builds and the signed Release build links it (`dinoreader-ios.yml`, `dinoreader-ios-sim.yml`); the Worker's check of a real Apple JWS (the pinned Apple Root CA - G3 chain) has only run against a test chain. (live check 2026-11-27: unreachable: dinoreader-ios.yml passes on main-bound PRs (run 46072316030), but no real Apple JWS has reached the Worker check)
 
 ### Slice 384: Dino subscription ([slice](slices/384-dino-subscription.md))
-- [session] **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`).
+- [session] **Device:** iOS simulator subscription flow (`.maestro/dino/subscription.yaml`). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 - [phone] **Device:** Windows Hyper-V VM subscription flow.
 - [owner] **You:** real store sandbox (Play licence tester, Apple sandbox) after the store setup.
 - [chrome] **Device:** Worker route `GET /api/stories/subscription` live, after the batched release deploy.
@@ -350,14 +348,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 387: Dino: the shelf title cut by the Grown-ups button ([slice](slices/387-dino-shelf-title-cut-by-grownups-button.md))
 - [phone] **Device:** The title's seven taps open the developer switch while the short label sits above the full one at Opacity 0 (InputTransparent), on iOS and Windows; and on Windows the VM checks (`Find-UiaById 'GalleryTitle'`) find only the full label, so they miss a shelf whose title is Short or Hidden.
 - [phone] **Device:** Farsi strings on the shelf header (title whole or shortened, never cut by the pill).
-- [phone] **Device:** The iPhone shots (run 43657945195, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException`, twice); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame).
+- [phone] **Device:** The iPhone shots (run 43657945195, 2026-11-15): 6.5" FAILS the check (title "My s…" with clear space before the pill; item 3); 6.9" produced no shots (Maestro `IOSDriverTimeoutException`, twice); iPad 13" failed at `ReadingBack` not found, the same step as wave 4 (Slice 291's open iPad frame). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 
 ### Slice 380: Dino Android: product details through the listener only ([slice](slices/380-dino-android-listener-only-details.md))
 - [phone] **Device:** S21 with a Play internal-track build shows a price for every product and one `product details:` line per refresh (needs the next batched release).
 
 ### Slice 375: Dino: every picture in two sizes ([slice](slices/375-dino-two-picture-sizes.md))
 
-- [session] **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
+- [session] **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript. (live check 2026-11-27: unreachable: no real illustrator book run happened tonight)
 - [phone] **Device:** parts B-D (merged #1113 on review and unit tests, no device run): a tablet on Wi-Fi gets a store book at standard size, then the high-res pack swaps in at the next cold start; a phone stays standard; on mobile data no hd download starts and one in flight is cancelled.
 
 ### Slice 362: Dino onboarding shows what Dino can do ([slice](slices/362-dino-onboarding-shows-what-dino-can-do.md))
@@ -425,8 +423,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** Switched-on check after the paid books store setup (Slice 346 Part D).
 
 ### Slice 356: Dino illustrator: faster and cheaper ([slice](slices/356-illustrator-faster-and-cheaper.md))
-- [session] **Device:** after-numbers on a real page group of a book (seconds per picture, peak context, cache reads per picture against the Baseline table), taken on the next real illustrator run with `illustrator-usage.mjs`.
-- [session] **Device:** a real send after the check-pass edit to `__setupPicture` (pictures validation, mark only after all checks, mark restored on REFUSED/MISSING); only the earlier version was live-sent on 2026-11-13.
+- [session] **Device:** after-numbers on a real page group of a book (seconds per picture, peak context, cache reads per picture against the Baseline table), taken on the next real illustrator run with `illustrator-usage.mjs`. (live check 2026-11-27: unreachable: no real illustrator book run happened tonight)
+- [session] **Device:** a real send after the check-pass edit to `__setupPicture` (pictures validation, mark only after all checks, mark restored on REFUSED/MISSING); only the earlier version was live-sent on 2026-11-13. (live check 2026-11-27: unreachable: no real illustrator book run happened tonight)
 
 ### Slice 352: Dino: every screen, wizard step and button press is counted ([slice](slices/352-dino-screen-and-tap-events.md))
 - [phone] **Device:** corner screen row and a speed `setting_changed` on a device (the flows do not open them).
@@ -653,10 +651,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** iPhone: pre-made audio rate and playback, and a real store download fetching live packs.
 
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
-- [phone] **Device:** The audio-backed flow `ios-read-audio.yaml` passes reliably on main: two runs on main failed for harness reasons, no app crash (43649148563 StoryTile 60 s wait timed out after skip-first-run; 43650858536 Maestro `XCUITestServerError` Unreachable); the branch run 43646782384 passed.
+- [phone] **Device:** The audio-backed flow `ios-read-audio.yaml` passes reliably on main: two runs on main failed for harness reasons, no app crash (43649148563 StoryTile 60 s wait timed out after skip-first-run; 43650858536 Maestro `XCUITestServerError` Unreachable); the branch run 43646782384 passed. (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 - [owner] **You:** The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
 - [phone] **Device:** The window size on a real phone.
-- [phone] **Device:** The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt for dino-test:// links is tapped (prompt text, timing, locale), the `.ips` file naming, the Jetsam `largestProcess` field.
+- [phone] **Device:** The first `dinoreader-ios-sim` run: MAUI `AutomationId` to `accessibilityIdentifier`, the "Open in" prompt for dino-test:// links is tapped (prompt text, timing, locale), the `.ips` file naming, the Jetsam `largestProcess` field. (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 
 ### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
 - [phone] **Device:** A translated title for a newly added store book on an installed app, with no app update.
@@ -776,10 +774,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] No unit tests exist for `UserReportRefusePlan` (they need a `Compile` link in `DinoReader.Tests.csproj`, which parked draft PR #1437's worktree edits); add them once that PR is settled.
 
 ### Slice 406: Feedback loop 2026-11-17-2105 leftovers ([slice](slices/406-feedback-loop-2026-11-17-2105-leftovers.md))
-- [cloud] The `flow-lint` job starts on the first src-only PR after PR #1443 merges and the full self-test set is skipped (the job gating has no self-test).
+- [cloud] The `flow-lint` job starts on the first src-only PR after PR #1443 merges and the full self-test set is skipped (the job gating has no self-test). (live check 2026-11-27: unreachable: no src-only PR since #1443; #1448 and #1450 also changed .maestro/, so the full set rightly ran)
 
 ### Slice 442: Phone, emulator and iOS harness follow-ups ([slice](slices/442-phone-emulator-ios-harness-followups.md))
-- [cloud] The `ios-sim-*.sh` and `dinoreader-ios-sim.yml` changes (budget guard, `kill_driver`, settle seconds, 1080 s step budget) run on the CI Mac: check the next iOS simulator workflow run.
+- [cloud] The `ios-sim-*.sh` and `dinoreader-ios-sim.yml` changes (budget guard, `kill_driver`, settle seconds, 1080 s step budget) run on the CI Mac: check the next iOS simulator workflow run. (live check 2026-11-27: unreachable: dinoreader-ios-sim.yml is manual and has no run since the change)
 - [session] `reset-dino-language.ps1` exit 2 path (Dino dev app not installed) has not been run.
 - [session] `store-screenshots.ps1` demo-mode early stop and exit 8 on an emulator that will not start have not been run.
 
@@ -793,8 +791,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] **Device:** `tools/phone/test-phone-lib.ps1` and a real-phone preflight after #1242's lease changes (a foreign lease gives `PREFLIGHT WARN` exit 3, `Invoke-LeaseFileOnly`, owner compare `-ceq`): never run, the lease was held by another session (feedback loop 2026-11-17-2105).
 - [phone] **Device:** item 13: the VM run of `-Check dino-reorder` through its `# after:` chain (the VM needs 8 GB free; 3.2 GB was free).
 - [phone] **Device:** item 14: the first shot's status bar (10:00, no icons) after `install-debug.ps1 -BuildOnly` for Dino (the 2026-11-18 run stopped at a run-flows cache miss), then the retake of the RTST and Dino phone and tablet shots.
-- [session] **Device:** item 23: a macOS run of `store-screenshots.yml` and `dinoreader-ios-sim.yml` (whether the warm-up leaves the driver warm for `maestro test`).
-- [session] **Device:** item 15: the device-test brief change (run `reset-dino-language.ps1` before the first and after the last flow) in ClaudeSkills `agents/device-test.md`, not this repo, is still open.
+- [session] **Device:** item 23: a macOS run of `store-screenshots.yml` and `dinoreader-ios-sim.yml` (whether the warm-up leaves the driver warm for `maestro test`). (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 
 ### Slice 379: Everything to the latest stable, .NET 11 ([slice](slices/379-everything-to-latest-stable.md))
 - [owner] **Device:** RTST cold start on iOS under the scene lifecycle (MT7199 fix; RTST only compiled on CI, Dino's cold start is shown), on an iOS 27 and an older iOS device or simulator; the Debug test hooks firing through `SceneOpenUrl`, `SceneWillConnect` and `SceneOnActivated` in RTST; file "Open in" / share hand-off (none is declared today).
@@ -824,7 +821,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 317: Feedback loop 2026-11-08-0106 leftovers ([slice](slices/317-feedback-loop-2026-11-08-0106-leftovers.md))
 - [phone] Item 3: `pack-failure-network` passes twice in a row on emulator-5554 (the Kotlin error is undiagnosed; the 60 s timeout is untested). (live check 2026-11-27: failed, follow-up in Slice 317)
-- [session] The commit retry in `store-submit.yml` (a failed `msstore submission publish` is run once more after 60 s) has not run on a runner; what `submission publish` does when the draft is already committed or missing is undocumented and unverified.
+- [session] The commit retry in `store-submit.yml` (a failed `msstore submission publish` is run once more after 60 s) has not run on a runner; what `submission publish` does when the draft is already committed or missing is undocumented and unverified. (live check 2026-11-27: unreachable: store-submit.yml has not run since 2026-09-01)
 
 ### Slice 376: Feedback loop 2026-11-13-1149 leftovers ([slice](slices/376-feedback-loop-2026-11-13-1149-leftovers.md))
 - [phone] Item 2: a run with a real stale onboarding flag (the run saw `pending=none`, so the cause stays likely).
@@ -839,15 +836,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] Item 9: the Mono SIGSEGV at cold start; no crash-store match, needs a device run (10 cold starts).
 
 ### Slice 377: Feedback loop 2026-11-14-0726 leftovers ([slice](slices/377-feedback-loop-2026-11-14-0726-leftovers.md))
-- [session] **Device:** item 2: a live read-back of one non-English Microsoft Store listing after certification (the store name in the text; the `pt-br` listing created beside any `pt-pt`; the `submission update` payload shape).
+- [session] **Device:** item 2: a live read-back of one non-English Microsoft Store listing after certification (the store name in the text; the `pt-br` listing created beside any `pt-pt`; the `submission update` payload shape). (live check 2026-11-27: unreachable: tonight's release went out at 22:32 UTC, and Store certification hasn't finished)
 - [phone] **Device:** item 16: first install on an unmetered link, turn the link metered mid-download: the standard pack arrives and the log line shows; a brief offline gap must not stop the high-res fetch.
 
 ### Slice 193: German store listings ([slice](slices/193-german-store-listings.md))
 - [owner] **You:** native German read of both files (machine-written).
-- [session] **Device:** after the next RTST release's certification, the Partner Center submission shows the German listing with the `docs/store-listings/de.md` text (it replaces the existing `de` listing).
+- [session] **Device:** after the next RTST release's certification, the Partner Center submission shows the German listing with the `docs/store-listings/de.md` text (it replaces the existing `de` listing). (live check 2026-11-27: unreachable: tonight's release went out at 22:32 UTC, and Store certification hasn't finished)
 
 ### Slice 243: Crash reports: everything missing to explain a crash ([slice](slices/243-crash-report-gaps.md))
-- [session] **Device:** a Release iOS build in CI attaches the dSYM zip to its GitHub Release; `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2, merged #1122 on unit tests and review only).
+- [session] **Device:** a Release iOS build in CI attaches the dSYM zip to its GitHub Release; `tools/crashes/symbolicate` resolves a frame of a test crash (`crash-test`, Slice 227) of that build to a C# method (items 1-2, merged #1122 on unit tests and review only). (live check 2026-11-27: unreachable: the dSYM zips are on dino-v1.136.8, but no crash-test crash of a Release iOS build exists to symbolicate)
 - [phone] **Device:** the rolling log of a test crash on the Android emulator and an iPhone shows the page, Back and lifecycle lines, and the report carries the new build, UUID, memory and foreground fields (items 5-7).
 
 ### Slice 371: Folders grouped by product ([slice](slices/371-folders-by-product.md))
@@ -861,7 +858,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
 
-- [session] **Release:** Microsoft Store listings in 13 languages reach both apps' Store pages after the next release (read back with `msstore submission get <id>` after the first release run that calls `store-submit.yml`; check the keys, `pt-br`, no duplicate `fr`/`fr-fr`, and that the run's log shows no `::warning::` from the listing step). Built, not yet run live.
+- [session] **Release:** Microsoft Store listings in 13 languages reach both apps' Store pages after the next release (read back with `msstore submission get <id>` after the first release run that calls `store-submit.yml`; check the keys, `pt-br`, no duplicate `fr`/`fr-fr`, and that the run's log shows no `::warning::` from the listing step). Built, not yet run live. (live check 2026-11-27: unreachable: tonight's release went out at 22:32 UTC, and Store certification hasn't finished)
 - [owner] **You:** native read of the Arabic store listings (`ar`).
 - [owner] **You:** native read of the Chinese (Simplified) store listings (`zh`).
 - [owner] **You:** native read of the Danish store listings (`da`).
@@ -883,7 +880,6 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 366: Plan split by product ([slice](slices/366-plan-split-by-product.md))
 
-- [session] `update-docs` index mode adding a row to the right product table was not run (instructions changed only, no dry run).
 
 ### Slice 372: S21 check fixes ([slice](slices/372-s21-check-fixes-2026-11-13.md))
 
@@ -931,9 +927,9 @@ Machine drafts; none of these holds a push. Each line covers the Dino file (`doc
 
 ### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
 - [owner] **You:** A native read (Farsi) of the translated Microsoft Store notes and usage-counts bullets before the Partner Center push.
-- [session] **Device:** Partner Center RTST English read-back after the next RTST release (item 3).
+- [session] **Device:** Partner Center RTST English read-back after the next RTST release (item 3). (live check 2026-11-27: unreachable: tonight's release went out at 22:32 UTC, and Store certification hasn't finished)
 - [owner] **You:** A native read of the 14 machine-translated RTST listings (ar, da, de, es, fi, fr, ja, nb, nl, pt, ru, sv, zh, fa), already live on Play and the App Store (fa on Play only).
-- [session] **Device:** The RTST iOS store shots: the RTST flows on all three devices failed in the 2026-11-14 run (`PackStatusLabel is not visible... FAILED`) and have not been retaken. (Dino's iPhone and iPad sets are done, run 43748250465, 2026-11-15.)
+- [session] **Device:** The RTST iOS store shots: the RTST flows on all three devices failed in the 2026-11-14 run (`PackStatusLabel is not visible... FAILED`) and have not been retaken. (Dino's iPhone and iPad sets are done, run 43748250465, 2026-11-15.) (live check 2026-11-27: unreachable: needs an iPhone or an iOS simulator run, none in this unattended run)
 - [chrome] **Device:** Whether App Store localizations without screenshots show the en-US set (Apple's docs do not say); read it on the App Store page once Dino is live.
 - [session] **Device:** The resume path of `store-screenshots.yml` (no job failed in run 43761667169), its `resume_run` input, and the RTST single-flow unit.
 - [owner] **You:** A native read of the 15 machine-translated App Store subscription texts (Dino; also Slice 384).

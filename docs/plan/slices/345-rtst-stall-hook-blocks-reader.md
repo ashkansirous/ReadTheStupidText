@@ -29,3 +29,6 @@
 #### Not yet verified
 
 - **Device:** `stall-return-overlay` on iOS and the Windows head (the hook edits in the iOS and Windows readers are not compiled or run here; only Android emulator ran, twice, 2026-11-09).
+
+#### Follow-ups
+- [ ] (live check 2026-11-27, after wave 10; Slice 314's line) `stall-return-overlay` FAILED on emulator-5554 at main a3164329 (build key 409aad083463, neural pack installed): `HOOK stall-read ok` and `STALL hold begins` at 22:40:17.855 were logged, but the "Still getting the voice ready" overlay never showed within 15 s, and `STALL hold released` never appeared. Chunk 2's synth ended at 22:40:17.284, before the hold, which fits open #6 above (not proven). Where to look: `StallReporter.WatchAsync` (`src/Shared/Sirous.Reading.Application/Reading/StallReporter.cs:65-108`) and `OnReaderStallChanged` / `BeginStallWait` (`src/Rtst/ReadTheStupidText.Mobile/ReaderPage.Wait.cs:80-128`). Logs: `D:\ReadTheStupidText-worktrees\.emulator\logcat-i1\rtst-stall-return-overlay.log` and `.maestro.log`.

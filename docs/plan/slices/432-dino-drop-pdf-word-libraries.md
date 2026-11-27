@@ -81,3 +81,6 @@ reference, and never measured the IPA.
 - [phone] The Dino TestFlight build launches and opens a book.
 - [session] RTST Android opens a PDF on the emulator (no flow exists; a flow that pushes a small PDF is a follow-up).
 - [session] A record-and-save flow (record-per-character) on the emulator.
+
+#### Follow-ups
+- [ ] (live check 2026-11-27) Add an RTST Android Maestro flow that pushes a small PDF to the emulator and opens it in the app, so the *Not yet verified* PDF line can run; it goes through its own reviewed slice work, not a docs PR.

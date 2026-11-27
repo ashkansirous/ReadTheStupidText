@@ -55,6 +55,7 @@ The first crash report on a 1.136.0 build (Slice 418's one shelf with a lock):
 ## Not yet verified
 
 - [phone] Item 1: the walk on the S21 with the Play release build (first-run pack downloads, then Settings); the flow `first-run-to-settings` itself was written and run on the emulator (run 1 and run 2, `reviews/s424-device/`), but the real pack downloads are not scripted.
+  - Follow-up (live check 2026-11-27, after wave 10): `first-run-to-settings` FAILED on the S21 (R3CR30FQT0V, main a3164329, Debug build key 4d84d4fb02da) at `assert StoryTile visible` after the `skip-first-run` launch (80 s). Logcat: the app was alive and was stopped by Maestro (ApplicationExitInfo reason 10); no crash, no `unclean_exit`. Not diagnosed. To fix: the flow on the S21, then a scripted first run with real pack downloads.
 - [cloud] Item 3 iOS: the MetricKit exit-count path and the iOS simulator kill check on the CI Mac (`dinoreader-ios-sim.yml`); both heads compile, nothing ran on iOS.
 - [phone] Item 6: a second distinct death on the same tail gets its own report.
 - [session] After release: read a real `unclean_exit` with `tools/crashes/report.mjs -App dino` (the exit reason, session and last page on a real report).
