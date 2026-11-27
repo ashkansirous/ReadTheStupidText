@@ -186,3 +186,7 @@ is the first release carrying this slice.
 - iOS simulator (none on this machine) and the `DidEnterBackground` flush.
 - Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path). The package build was fixed by Slice 353 (PR #1024), so this can run now. Harness gap (2026-11-13 VM run, all 10 Dino checks passed): no VM check closes the window and reads the usage events.
 - `tools/usage-sessions` against live data after release.
+
+## Follow-ups (live check 2026-11-27)
+
+- [ ] **`usage-sessions session` fails on live data.** `node tools/usage-sessions/usage-sessions.mjs day 2026-11-26` works (14 launches, 105 reads, last-screen counts), but `session 41ed5f7e19b1be79b69f8b20b86fe358` gets HTTP 422 `unable to find type of column: "double6"`: `sessionSql` in `tools/usage-sessions/usage-sessions-lib.mjs:58` selects `double6` (seconds since launch), which `dino_usage` does not have. Fix the column (check what `worker/events.ts` writes), rerun on a real launch id. Also unexplained: the wizard page rows were all 0 for 2026-11-26.

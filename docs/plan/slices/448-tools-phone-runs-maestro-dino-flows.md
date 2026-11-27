@@ -34,3 +34,7 @@
 
 #### Not yet verified
 - `[phone]` the three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after their follow-up slice (S21 run 4: 1 of 4 passed).
+
+## Follow-ups (live check 2026-11-27)
+
+- [ ] **`paid-books` and `subscription` still fail on the S21 after Slice 465.** S21 R3CR30FQT0V, Dino Debug build key 6d6fe467d893 at ab345cbf (release-dino 46029195935 success): `store-restore` PASS (68 s) and `store-payment-required` PASS; `paid-books` FAILED at assert `id: StoreRestoreResult` not visible; `subscription` FAILED, missing log marker `[Subscription] shelf columns=3 grownUp=True`. Logs: `D:\ReadTheStupidText-worktrees\reviews\lc0154w7\phone-dino.log`, per-flow `.tools\maestro-out\phone\`.

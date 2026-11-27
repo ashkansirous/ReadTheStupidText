@@ -152,3 +152,7 @@ Already edited on the branch: the SDK floor and iOS pin note in `.github/CLAUDE.
 **Park note (moved back to planned by the 2026-11-14-1547 feedback loop, 2026-11-15):** the row was `parked: part B (.NET 11) needs the Android API 37 platform installed (denied at night) and a CoreCLR device run, since .NET 11 forces CoreCLR on Android and iOS (draft #1176, worktree s379b) (part A built #1175)`.
 
 **2026-11-16:** the allow line for installing the Android API 37 platform exists in ClaudeSkills `home/settings.json` since 2026-11-15, so nothing waits on the user. Part B was picked up 2026-11-16 (draft #1176).
+
+## Follow-ups (live check 2026-11-27)
+
+- [ ] **R8 guard floor to 37.2.29.** Release run 45968693273 (`build-android`) installed `Microsoft.Android.Sdk.Linux 37.2.29`; `src/Shared/AndroidRelease.props` on origin/main ab345cbf still checks `VersionLessThan('$(AndroidNETSdkVersion)', '36.1.118')`. Raise the floor and its message to 37.2.29 (the Not-yet-verified line is marked "failed, follow-up in Slice 379"). The same run passed the TestFlight upload (Xcode 27.2 ipa, altool on macos-26, "UPLOAD SUCCEEDED", ASC VALID), Node 26 (`v26.13.1`) and the ARM64 MSIX; those lines were removed.
