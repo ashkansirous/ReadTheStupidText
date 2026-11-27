@@ -145,6 +145,10 @@
   <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Toista uudelleen</value></data>
   <data name="Tour_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledTitle" xml:space="preserve"><value>Kirjojen lataus ei valmistunut</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_CancelledBody" xml:space="preserve"><value>Pysäytit luettelon ennen kuin se oli valmis. Valitse ensimmäiset kirjasi napauttamalla Yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedTitle" xml:space="preserve"><value>Kirjoja ei voitu ladata</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_FailedBody" xml:space="preserve"><value>Vika oli meidän päässämme, ei yhteydessäsi. Odota hetki ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>

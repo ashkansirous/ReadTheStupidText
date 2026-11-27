@@ -43,6 +43,9 @@
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />
     <!-- Slice 405: the back cover's lines in a reading language (names, "and", list), tested on the real file over the real strings files. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\BackCoverText.cs" Link="Linked\BackCoverText.cs" />
+    <!-- Slice 453: which "could not load" copy the first-books picker shows: plain .NET, tested on the real file. -->
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\FirstBooksLoadCopy.cs" Link="Linked\FirstBooksLoadCopy.cs" />
+    <Compile Include="..\..\..\src\Dino\DinoReader.App\StoreListError.cs" Link="Linked\StoreListError.cs" />
     <!-- Slice 377: the connection-cancel scope is plain .NET behind a seam, tested on the real file. -->
     <Compile Include="..\..\..\src\Dino\DinoReader.App\ConnectionCancelScope.cs" Link="Linked\ConnectionCancelScope.cs" />
     <!-- The usage session (Slice 250): plain .NET, so its id, sequence and roll are tested on the real file. -->

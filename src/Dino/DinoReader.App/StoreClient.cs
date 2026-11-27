@@ -264,7 +264,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			using GuardedResponse response = await GetGuardedAsync(ListPath, timeout.Token);
 			response.Message.EnsureSuccessStatusCode();
 			string json = await ReadCappedTextAsync(response, timeout.Token);
-			IReadOnlyList<StoreItem> parsed = StoreCatalog.Parse(json, out int skipped);
+			IReadOnlyList<StoreItem> parsed = ParseListing(json, out int skipped);
 			if (skipped > 0)
 			{
 				Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: the listing lost books the server sent (malformed entries); the rest is shown
@@ -289,7 +289,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		{
 			Debug.WriteLine($"Dino Reader could not load the free stories: {ex.Message}");
 			ReportFallback(ex);
-			HttpErrorKind? kind = HttpErrorClassifier.Classify(ex);
+			HttpErrorKind? kind = StoreListError.KindOf(ex); // Slice 453: a listing body that does not parse is a server answer, not "no connection"; a JsonException from a local purchase or saved-listing read is not
 			Debug.WriteLine($"Dino Reader store list error kind: {kind?.ToString() ?? "none"}"); // Slice 357: which text the page shows
 			return new StoreListing(StoreLoadStatus.Offline, [], kind is { } k ? new HttpError(k, null) : null);
 		}
@@ -937,7 +937,21 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		ex is HttpRequestException or TimeoutException or OperationCanceledException or IOException { InnerException: System.Net.Sockets.SocketException };
 
 	private static bool IsNetworkFailure(Exception ex) =>
-		ex is HttpRequestException or IOException or OperationCanceledException or TimeoutException or JsonException;
+		ex is HttpRequestException or IOException or OperationCanceledException or TimeoutException or JsonException or StoreListFormatException;
+
+	// Slice 453: only the live listing's own parse failure is marked, so the page can tell it from a local read that threw JsonException.
+	private static IReadOnlyList<StoreItem> ParseListing(string json, out int skipped)
+	{
+		try
+		{
+			return StoreCatalog.Parse(json, out skipped);
+		}
+		catch (JsonException ex)
+		{
+			// no-fallback: rethrown as a typed exception; ListAsync's catch reports the fallback
+			throw new StoreListFormatException(ex);
+		}
+	}
 
 	private static void TryDelete(string path)
 	{
