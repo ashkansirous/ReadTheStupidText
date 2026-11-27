@@ -510,6 +510,11 @@ public sealed class PartTakePlaybackTests : IDisposable
             }
 
             Assert.Empty(StoryRecordings.Clips((await library.GetAsync(book.Id))!)); // a listing never deletes a file: the marked file stays, unadopted
+            if (!OperatingSystem.IsWindows())
+            {
+                return; // only Windows refuses to delete a held file; elsewhere the first delete went through and no marker was written (CI runs on Linux)
+            }
+
             Assert.True(File.Exists(Path.Combine(library.FolderOf(book.Id), file + PartClipAdoption.DeletedSuffix)));
             await library.DeleteFileAsync(book.Id, file); // the retry that goes through
             Assert.Empty(StoryRecordings.Clips((await library.GetAsync(book.Id))!));
