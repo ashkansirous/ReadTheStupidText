@@ -136,6 +136,14 @@ public class ReadingLayoutRulesTests
         Assert.Equal(new ReadingLayoutRules.SurfaceInsets(52, 18, 0, 0), ReadingLayoutRules.StackedChip);
     }
 
+    [Theory]
+    [InlineData(true, true, HeadingLabel.Title)]
+    [InlineData(true, false, HeadingLabel.Title)]
+    [InlineData(false, true, HeadingLabel.Side)]
+    [InlineData(false, false, HeadingLabel.None)]
+    public void The_heading_sits_on_one_visible_title_label_only(bool headerTitle, bool tabletTitle, HeadingLabel expected) =>
+        Assert.Equal(expected, ReadingLayoutRules.HeadingLabelFor(headerTitle, tabletTitle));
+
     [Fact]
     public void The_tablet_title_is_never_shown_when_stacked() =>
         Assert.False(ReadingLayoutRules.ShowsTabletTitle(ReadingLayout.Stacked, ControlsPlacement.Row, true, true, true));
