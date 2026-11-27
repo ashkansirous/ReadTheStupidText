@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Подключаемся к Sonos…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino не смог связаться со своим сервером. Проверьте интернет и повторите попытку.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>Срок действия ссылки истёк. Начните заново из приложения Sonos.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>Магазин Dino сейчас занят. Попробуйте ещё раз через минуту.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>Повторить</value></data>
 </root>

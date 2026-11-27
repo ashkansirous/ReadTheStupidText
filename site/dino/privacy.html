@@ -144,15 +144,20 @@
   in and presses Connect. There is no account or sign-in. For each linked home this project&rsquo;s own database on Cloudflare (D1) keeps
   only these things: a one-way hash of the Sonos household id (the id itself is not kept), the story language you chose, one-way hashes of
   the two secret codes Sonos holds for the link, a one-way hash of the subscription proof key the Dino app sends (so that one subscription
-  links one home, and a new home replaces the old), and the time the home was linked and the time it was last used (noted at most once a
+  links one home, and a new home replaces the old), the subscription proof key itself as the Dino app sent it (the store&rsquo;s purchase
+  token for your Dino subscription, kept only so the server can ask Apple or Google whether the subscription is active when Sonos plays a
+  subscriber&rsquo;s book; it is replaced when the subscription renews and deleted with the row; nothing else about the purchase or the buyer
+  is kept), and the time the home was linked and the time it was last used (noted at most once a
   day). Nothing about your child, a listener, a speaker, a name, an e-mail address or your Sonos account is kept. While you connect, a
-  pending link (a hash of the home id, a hash of the link code and the Sonos address to return to) works for at most one hour and is
+  pending link (a hash of the home id, a hash of the link code, the subscription proof key when you have a subscription and the Sonos address to return to) works for at most one hour and is
   deleted when the link finishes; one that is never finished is deleted the next time any Sonos link is started, confirmed, refreshed or removed.</p>
   <p><strong>To unlink,</strong> remove Dino in the Sonos app. That ends the link on Sonos&rsquo;s side, and the unused row is deleted
   automatically after 400 days without use.</p>
   <p>When Sonos browses or plays the service, Sonos&rsquo;s servers ask this project&rsquo;s server for the list of books and for a
-  book&rsquo;s audio; Sonos sends the request with the link&rsquo;s secret code, and the server checks it against the stored hash and keeps
-  nothing else about the request. When Sonos reports that a book was played for 30 seconds or more, the server adds one anonymous row to
+  book&rsquo;s audio; Sonos sends the request (and, when it fetches a subscriber&rsquo;s book, the audio request) with the link&rsquo;s secret
+  code, and the server checks it against the stored hash and keeps nothing else about the request. For a subscriber&rsquo;s book the server
+  then uses the stored subscription proof key to ask Apple or Google whether the subscription is active; the proof key is never sent to
+  Sonos, to your speaker or to anyone but Apple or Google. When Sonos reports that a book was played for 30 seconds or more, the server adds one anonymous row to
   the usage counts described above: the book, its language, the seconds played, the UTC day and the country the request came from. Nothing
   in it names your home, speaker or account, and it is switched off together with the other counts. What Sonos collects about your
   listening is governed by Sonos&rsquo;s own privacy policy.</p>

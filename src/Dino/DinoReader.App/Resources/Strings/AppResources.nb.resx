@@ -470,4 +470,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Kobler til Sonos …</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dino fikk ikke kontakt med serveren sin. Sjekk internett og prøv igjen.</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>Lenken har gått ut. Start på nytt fra Sonos-appen.</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>Dinos butikk har det travelt akkurat nå. Prøv igjen om litt.</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
 </root>

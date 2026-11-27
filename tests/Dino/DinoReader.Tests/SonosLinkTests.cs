@@ -44,6 +44,16 @@ public class SonosLinkTests
         Assert.Equal(UiLanguage.Supported.OrderBy(c => c), languages.OrderBy(c => c));
     }
 
+    [Theory]
+    [InlineData("{\"callback\":\"sonos://x\",\"proofStored\":true}", true)]
+    [InlineData("{\"callback\":\"sonos://x\",\"proofStored\":false}", false)]
+    [InlineData("{\"callback\":\"sonos://x\"}", false)]
+    [InlineData("{\"proofStored\":\"true\"}", false)]
+    [InlineData("not json", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void ProofStoredOf_IsTrueOnlyWhenTheWorkerSaysItKeptTheProof(string? json, bool expected) => Assert.Equal(expected, SonosLink.ProofStoredOf(json));
+
     [Fact]
     public void ConfirmBody_CarriesTheOperationCodeAndLanguage_AndTheProofOnlyWhenThereIsOne()
     {

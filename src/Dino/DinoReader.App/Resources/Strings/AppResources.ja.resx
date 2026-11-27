@@ -471,4 +471,6 @@
   <data name="SonosLink_Connecting" xml:space="preserve"><value>Sonosに接続しています…</value></data>
   <data name="SonosLink_Failed" xml:space="preserve"><value>Dinoのサーバーに接続できませんでした。インターネットを確認して、もう一度お試しください。</value></data>
   <data name="SonosLink_Expired" xml:space="preserve"><value>このリンクは期限切れです。Sonosアプリからやり直してください。</value></data>
+  <data name="SonosLink_Busy" xml:space="preserve"><value>Dinoのストアは今、混み合っています。少し待ってからもう一度お試しください。</value></data>
+  <data name="SonosLink_TryAgain" xml:space="preserve"><value>もう一度試す</value></data>
 </root>

@@ -18,6 +18,12 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private readonly ISubscriptionEnd _end = subscriptionEnd ?? new SubscriptionEndClient();
     private readonly SemaphoreSlim _endGate = new(1, 1);
 
+    // Slice 439: the newest subscription's proof header (`store:product:token`) the last real store read gave; null until a read found a subscription. The Link screen sends it to the Worker.
+    private string? _subscriptionProof;
+
+    /// <summary>The subscription proof the last store read gave (iOS and Android), or null when it found no subscription or has not run.</summary>
+    public string? SubscriptionProof => Volatile.Read(ref _subscriptionProof);
+
     // Slice 384: the device's kept subscription record and per-book unlock records; the one shared store when the host registers none (the app has one process-wide instance).
     private readonly SubscriptionStore subscription = subscriptionStore ?? SubscriptionStore.Shared;
 
@@ -411,8 +417,15 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
     private void StartEndCheck(PurchaseSnapshot read, bool hasInternet)
     {
         string? header = EndCheckHeader(read, hasInternet);
+        if (header is null && SonosProofRenewal.ProofIsDead(read.Reachable, hasInternet, read.Subscription))
+        {
+            Volatile.Write(ref _subscriptionProof, null); // Slice 439 (review 1, finding 8): a read that reached the store and found no entitled subscription (it lapsed) drops the proof, so the Link screen never sends a dead one
+        }
+
         if (header is not null)
         {
+            Volatile.Write(ref _subscriptionProof, header);
+            _ = Task.Run(() => SonosLinkedProof.RenewObservedAsync(header)); // Slice 439: a linked Sonos home keeps the subscription proof the store gives now; nothing happens unless one is linked and it changed; a failure is traced, not lost
             long readNumber = subscription.Record?.ReadNumber ?? 0; // the device read this check belongs to: a later read makes its answer late
             _ = Task.Run(() => ApplyEndAsync(_end, header, readNumber));
         }

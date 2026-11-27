@@ -102,17 +102,44 @@ export function shelfSubtitle(language: string, shelf: ShelfName, count: number)
   return localDigits(parts.join(PART_SEPARATOR), language);
 }
 
-/** "Ages 3–5 · 6 min · Free" (or "In the Dino app"): the age part only when the book has an age range. */
+function accessWord(track: Track, labels: { readonly paidTag: string; readonly freeTag: string }): string | null {
+  if (track.unlocked === true) return null;
+  return track.paid ? labels.paidTag : labels.freeTag;
+}
+
+/** "Ages 3–5 · 6 min · Free" (or "In the Dino app"): the age part only when the book has an age range. A paid book a linked home's subscription opens (`unlocked`, Slice 439) drops the access word: "Ages 3–5 · 7 min". */
 export function bookSubtitle(track: Track, language: string): string {
   const labels = labelsFor(language);
   const minutes = Math.max(1, Math.round(track.seconds / 60));
   const parts = [
     track.ageMin !== null && track.ageMax !== null ? fill(labels.ages, { a: track.ageMin, b: track.ageMax }) : null,
     fill(labels.minutes, { n: minutes }),
-    track.paid ? labels.paidTag : labels.freeTag,
+    accessWord(track, labels),
   ].filter((part): part is string => part !== null);
   return localDigits(parts.join(PART_SEPARATOR), language);
 }
+
+/**
+ * Slice 439 (C3): what a speaker says in place of a paid book when the home has no active Dino subscription, in the 15 story languages. These are the texts the clips at
+ * `dinoreader/sonos/subscribe-<language>.m4a` are rendered from (with the apps' narrator voices); the Worker serves the clips, never these words.
+ */
+export const SUBSCRIBE_MESSAGES: Readonly<Record<string, string>> = {
+  en: "This story is in the Dino app. Subscribe in the Dino app to hear it on Sonos.",
+  fa: "این قصه در برنامه‌ی دینو است. برای شنیدن آن در سونوس، در برنامه‌ی دینو اشتراک بگیرید.",
+  ar: "هذه القصة في تطبيق دينو. اشترك في تطبيق دينو لتسمعها على سونوس.",
+  da: "Denne historie er i Dino-appen. Abonnér i Dino-appen for at høre den på Sonos.",
+  de: "Diese Geschichte gibt es in der Dino-App. Abonniere in der Dino-App, um sie auf Sonos zu hören.",
+  es: "Este cuento está en la app de Dino. Suscríbete en la app de Dino para escucharlo en Sonos.",
+  fi: "Tämä tarina on Dino-sovelluksessa. Tilaa Dino-sovelluksessa, niin voit kuunnella sen Sonosilla.",
+  fr: "Cette histoire est dans l'appli Dino. Abonnez-vous dans l'appli Dino pour l'écouter sur Sonos.",
+  ja: "このお話はDinoアプリにあります。Sonosで聞くには、Dinoアプリで購読してください。",
+  nb: "Denne historien er i Dino-appen. Abonner i Dino-appen for å høre den på Sonos.",
+  nl: "Dit verhaal staat in de Dino-app. Neem een abonnement in de Dino-app om het op Sonos te horen.",
+  pt: "Esta história está no app Dino. Assine no app Dino para ouvi-la no Sonos.",
+  ru: "Эта история есть в приложении Dino. Оформите подписку в приложении Dino, чтобы слушать её на Sonos.",
+  sv: "Den här berättelsen finns i Dino-appen. Prenumerera i Dino-appen för att höra den på Sonos.",
+  zh: "这个故事在 Dino 应用里。请在 Dino 应用中订阅，即可在 Sonos 上收听。",
+};
 
 /** A language's name in `inLanguage` ("German" for de in en), by the platform's own language data. */
 export function languageNameIn(code: string, inLanguage: string): string {

@@ -240,6 +240,8 @@ public static class AppResources
 	public static string SonosLink_Connecting => Get();
 	public static string SonosLink_Failed => Get();
 	public static string SonosLink_Expired => Get();
+	public static string SonosLink_Busy => Get();
+	public static string SonosLink_TryAgain => Get();
 	public static string Backup_Restored_One => Get();
 	public static string Backup_Restored_Other => Get();
 	public static string Backup_Added => Get();

@@ -1,9 +1,15 @@
 // Slice 438: every Sonos home links once through the Dino app (Sonos AppLink) and saves its story language. This file holds the whole link:
 // the three SMAPI calls (getAppLink, getDeviceAuthToken, refreshAuthToken), the JSON calls the Dino app makes (confirm, unlink), the D1 rows
 // (worker/schema/sonos-homes.sql) and the words of the "Story language" row. Sources: docs/plan/slices/438-dino-sonos-link-story-language.md (B1).
-// A home is kept as hashes only: SHA-256 of the household id, of the authToken and privateKey given to Sonos and of the subscription proof key;
-// the household id, the tokens and the proof never reach a log. The page Sonos opens is site/dino/sonos-link.html.
+// A home is kept as hashes (SHA-256 of the household id, of the authToken and privateKey given to Sonos and of the subscription proof key) plus, since Slice 439, the subscription proof itself
+// in the `proof` column (plain, reachable only by this Worker; the proof is asked of Apple or Google here and is never sent to Sonos, a speaker or the app). The household id, the tokens and
+// the proof never reach a log. The page Sonos opens is site/dino/sonos-link.html.
 
+import { isSubscriptionProduct } from "./products.ts";
+import { parseProof } from "./entitlements/proof.ts";
+import { SubscriptionAnswerKind } from "./entitlements/subscription.ts";
+import type { SubscriptionSource } from "./entitlements/subscription.ts";
+import { Store, SubscriptionState } from "./entitlements/types.ts";
 import { FaultCode, FaultMessage, SoapFault, SonosAction, escapeXml, readBoundedText, resultResponse, tag } from "./sonos-soap.ts";
 import type { LoginToken, SonosRequest } from "./sonos-soap.ts";
 
@@ -35,16 +41,132 @@ export interface SonosLinks {
   readonly db: D1Database | undefined;
   /** Epoch milliseconds; tests pass a fixed clock. */
   readonly now?: () => number;
+  /** Slice 439: asks the store whether a home's subscription proof is active (the paid gate's switch, limit and cache, built in index.ts). Absent = no home has a subscription. */
+  readonly subscription?: SubscriptionSource;
 }
 
-/** A linked home as a browse sees it. */
+/** A linked home as a browse sees it. `proof` is the subscription proof the app linked with (Slice 439), null for a home linked without one. */
 export interface Home {
   readonly homeHash: string;
   readonly storyLanguage: string;
+  readonly proof?: string | null;
 }
 
-/** The JSON operations the Dino app sends to `POST /sonos` with `Content-Type: application/json`. */
-export const LinkOp = { Confirm: "confirm", Unlink: "unlink" } as const;
+/** The JSON operations the Dino app sends to `POST /sonos` with `Content-Type: application/json`. `renew` (Slice 439) swaps the stored proof when the subscription renews or changes. */
+export const LinkOp = { Confirm: "confirm", Unlink: "unlink", Renew: "renew" } as const;
+
+const NOT_SUBSCRIPTION_ERROR = "not_subscription";
+const NO_HOME_ERROR = "unknown_home";
+const INACTIVE_ERROR = "subscription_inactive";
+const PROOF_TAKEN_ERROR = "proof_taken";
+const PAID_BOOKS_OFF = "paid_books_off";
+const SUBSCRIPTION_LOG = "sonos subscription";
+
+/** True for a proof the subscription check can use: a store proof (not Windows, which reads its end on the device) whose product is a Dino subscription. A single-book or bundle proof is not one. */
+export function isSubscriptionProof(proof: string): boolean {
+  const parsed = parseProof(proof);
+  return parsed !== null && parsed.store !== Store.Windows && isSubscriptionProduct(parsed.productId);
+}
+
+const UNKNOWN_CLIENT = "unknown";
+const CLIENT_IP_HEADER = "CF-Connecting-IP";
+const LAST_ANSWER_MS = 10 * 60_000;
+const MAX_LAST_ANSWERS = 500;
+
+/** The key the store-call limit counts a request under: the connection's IP, exactly as the paid gate keys its own limit (stories.ts); only the limiter sees it, nothing stores or logs it. */
+export function clientKeyOf(request: Request): string {
+  return request.headers.get(CLIENT_IP_HEADER) ?? UNKNOWN_CLIENT;
+}
+
+/**
+ * Slice 439 (review 3, finding 1): the store-call key for a call that comes from Sonos (browse, getMediaURI, the media route). Those arrive from Sonos's cloud servers, so one IP stands for every home; a linked home
+ * (made only by a store-checked confirm, so a fake one cannot be made) gets its own bucket. The app's own calls (confirm, renew) stay on clientKeyOf.
+ */
+export function homeKeyOf(home: Home): string {
+  return `home:${home.homeHash}`;
+}
+
+/** What the store says about one subscription proof: `Active` (active or grace), `Inactive` (lapsed, unknown, not a subscription), `Limited` (over the client's store-call limit) or `Unavailable` (the store cannot be asked, or nothing can ask it). */
+export const ProofCheck = { Active: "active", Inactive: "inactive", Limited: "limited", Unavailable: "unavailable", Off: "off" } as const;
+export type ProofCheckName = (typeof ProofCheck)[keyof typeof ProofCheck];
+
+function checkOfAnswer(kind: string, state: string | undefined): ProofCheckName {
+  if (kind === SubscriptionAnswerKind.Off) return ProofCheck.Off;
+  if (kind === SubscriptionAnswerKind.RateLimited) return ProofCheck.Limited;
+  if (kind === SubscriptionAnswerKind.Status) return state === SubscriptionState.Active || state === SubscriptionState.Grace ? ProofCheck.Active : ProofCheck.Inactive;
+  return kind === SubscriptionAnswerKind.BadProof || kind === SubscriptionAnswerKind.NoProof ? ProofCheck.Inactive : ProofCheck.Unavailable;
+}
+
+/** Asks the store (through the paid gate's source: its switch, store-call limit and cache) about one proof. The proof never reaches a log. */
+export async function checkProof(proof: string, links: SonosLinks, clientKey: string): Promise<ProofCheckName> {
+  if (links.subscription === undefined) return ProofCheck.Unavailable;
+  try {
+    const answer = await links.subscription(proof, clientKey);
+    if (answer.kind !== SubscriptionAnswerKind.Status && answer.kind !== SubscriptionAnswerKind.NoProof) console.warn(`${SUBSCRIPTION_LOG} answer=${answer.kind}`);
+    return checkOfAnswer(answer.kind, answer.status?.state);
+  } catch (error) {
+    // no-fallback: a store check that throws is "cannot ask" (the caller keeps the last answer or refuses); logged by error name only
+    console.warn(`${SUBSCRIPTION_LOG} error=${error instanceof Error ? error.name : typeof error}`);
+    return ProofCheck.Unavailable;
+  }
+}
+
+// Slice 439 (review 1, finding 10): the last real answer per home, kept for LAST_ANSWER_MS. A store error or rate limit gives this answer back instead of flipping a paying home to the message.
+const lastAnswers = new Map<string, { readonly at: number; readonly proof: string; readonly subscribed: boolean }>();
+
+function rememberAnswer(home: Home, proof: string, subscribed: boolean, now: number): void {
+  lastAnswers.delete(home.homeHash);
+  if (lastAnswers.size >= MAX_LAST_ANSWERS) lastAnswers.delete(lastAnswers.keys().next().value as string);
+  lastAnswers.set(home.homeHash, { at: now, proof, subscribed });
+}
+
+/** The last real answer for this home and this proof, while it is fresh; null when there is none. Never asks the store. */
+function lastAnswer(home: Home, now: number): boolean | null {
+  const held = lastAnswers.get(home.homeHash);
+  return held !== undefined && held.proof === home.proof && now - held.at < LAST_ANSWER_MS ? held.subscribed : null;
+}
+
+/** What a browse knows about the home's subscription without asking the store (the poll for a changed catalogue uses it): the last real answer, else false. */
+export function subscriptionKnown(home: Home, links: SonosLinks): boolean {
+  return lastAnswer(home, clock(links)) ?? false;
+}
+
+/**
+ * Whether the home may play the paid books: true while its proof is active (or in grace) and, with the paid-books switch off, always (review 3, finding 2: the app's own paid-file route is free then, so a linked home's
+ * paid tracks play like everyone else's, linked with a proof or not); false for no source, no proof, or a lapsed or unknown subscription. A store that cannot be
+ * asked, an error or a rate limit keeps the last real answer for LAST_ANSWER_MS, and answers null (unknown) when there is none (review 2, finding 5: the media route then asks the player to retry). The proof never reaches a log.
+ */
+export async function subscriptionAnswer(home: Home, links: SonosLinks, clientKey: string): Promise<boolean | null> {
+  if (links.subscription === undefined) return false;
+  const proof = home.proof ?? "";
+  const check = await checkProof(proof, links, clientKey); // an empty proof still reads the switch first: Off answers before the proof is looked at
+  if (check === ProofCheck.Off) return true;
+  if (proof === "") return false;
+  if (check === ProofCheck.Active || check === ProofCheck.Inactive) {
+    rememberAnswer(home, proof, check === ProofCheck.Active, clock(links));
+    return check === ProofCheck.Active;
+  }
+  return lastAnswer(home, clock(links));
+}
+
+/**
+ * Review 3, finding 5: what the media route knows for a Range or HEAD request (a continuation of a play already started): the kept answer while it is fresh, so the store-call limit is spent once
+ * per play and cannot cut a book mid-way; with none kept, or for the first request, the store is asked as `subscriptionAnswer` does.
+ */
+export async function subscriptionForPlayback(home: Home, links: SonosLinks, clientKey: string, continuation: boolean): Promise<boolean | null> {
+  const kept = continuation ? lastAnswer(home, clock(links)) : null;
+  return kept ?? subscriptionAnswer(home, links, clientKey);
+}
+
+/** True while the home's subscription is active; an unknown answer counts as false (a browse then lists the paid books as "In the Dino app"). */
+export async function subscriptionActive(home: Home, links: SonosLinks, clientKey: string): Promise<boolean> {
+  return (await subscriptionAnswer(home, links, clientKey)) ?? false;
+}
+
+/** Test seam: forgets every kept answer. */
+export function resetSubscriptionAnswers(): void {
+  lastAnswers.clear();
+}
 
 export function isLinkAction(action: string): boolean {
   return action === SonosAction.GetAppLink || action === SonosAction.GetDeviceAuthToken || action === SonosAction.RefreshAuthToken;
@@ -137,15 +259,29 @@ export interface ConfirmBody {
   readonly proof: string | null;
 }
 
-/** The Dino app's answer: saves the language (and the subscription proof, when it has one) on the pending row; returns the Sonos URL to open, or null for an unknown or expired code. */
-export async function confirmLink(db: D1Database, body: ConfirmBody, now: number): Promise<string | null> {
+/** The Dino app's answer: saves the language (and the subscription proof, when it has one) on the pending row; returns the Sonos URL to open and whether the proof was kept (review 3, finding 1: a database without the `proof` column keeps none), or null for an unknown or expired code. */
+export async function confirmLink(db: D1Database, body: ConfirmBody, now: number): Promise<{ readonly callback: string; readonly proofStored: boolean } | null> {
   await purgeExpired(db, now);
   const proof = body.proof === null ? null : await hashProof(body.proof);
-  const row = await db
-    .prepare(`UPDATE ${PENDING_TABLE} SET story_language = ?2, proof_hash = ?3 WHERE code_hash = ?1 AND expires_at >= ?4 RETURNING callback`)
-    .bind(await hashCode(body.code), body.language, proof, now)
-    .first<{ callback: string }>();
-  return row === null ? null : callbackWithCode(row.callback, body.code);
+  const codeHash = await hashCode(body.code);
+  let row: { callback: string } | null;
+  let proofStored = body.proof !== null;
+  try {
+    row = await db
+      .prepare(`UPDATE ${PENDING_TABLE} SET story_language = ?2, proof_hash = ?3, proof = ?5 WHERE code_hash = ?1 AND expires_at >= ?4 RETURNING callback`)
+      .bind(codeHash, body.language, proof, now, body.proof)
+      .first<{ callback: string }>();
+  } catch (error) {
+    if (!isMissingColumn(error)) throw error;
+    // Review 2, finding 1: a database without the `proof` column still links; the row is written without the proof, so the home links as one without a subscription.
+    console.warn(`${D1_ERROR_LOG} fallback=no-proof-column`);
+    proofStored = false;
+    row = await db
+      .prepare(`UPDATE ${PENDING_TABLE} SET story_language = ?2, proof_hash = ?3 WHERE code_hash = ?1 AND expires_at >= ?4 RETURNING callback`)
+      .bind(codeHash, body.language, proof, now)
+      .first<{ callback: string }>();
+  }
+  return row === null ? null : { callback: callbackWithCode(row.callback, body.code), proofStored };
 }
 
 interface PendingRow {
@@ -170,7 +306,7 @@ export async function issueTokens(db: D1Database, householdId: string, linkCode:
   // One token pair per link, and the link is never lost: the home row is written from the pending row and the pending row deleted in ONE batch (a D1 batch is one
   // transaction, so both happen or neither). Only the call whose insert changed a row issues tokens; a second call for the same code finds no pending row and fails.
   const tokens = { authToken: randomHex(TOKEN_BYTES), privateKey: randomHex(TOKEN_BYTES) };
-  const results = await db.batch(linkStatements(db, { codeHash, homeHash }, await hashToken(tokens.authToken), await hashKey(tokens.privateKey), now));
+  const results = await batchLink(db, { codeHash, homeHash }, await hashToken(tokens.authToken), await hashKey(tokens.privateKey), now);
   const written = results[results.length - 2];
   if (written === undefined || written.meta.changes === 0) throw notLinked(FaultCode.NotLinkedFailure, "NOT_LINKED_FAILURE", 6);
   return tokens;
@@ -188,18 +324,38 @@ function notLinked(code: typeof FaultCode.NotLinkedFailure | typeof FaultCode.No
   return new SoapFault(code, FaultMessage.NotLinked, notLinkedDetail(info, sonosError));
 }
 
+function isMissingColumn(error: unknown): boolean {
+  return error instanceof Error && MISSING_COLUMN.test(error.message);
+}
+
+type LinkKey = { readonly codeHash: string; readonly homeHash: string };
+
+// Review 2, finding 1: the batch writes the `proof` column; a database without it (the hand-run ALTER not done yet) gets the same batch without the column, so the link still works (with no proof).
+async function batchLink(db: D1Database, key: LinkKey, tokenHash: string, keyHash: string, now: number): Promise<D1Result[]> {
+  try {
+    return await db.batch(linkStatements(db, key, tokenHash, keyHash, now, true));
+  } catch (error) {
+    if (!isMissingColumn(error)) throw error;
+    console.warn(`${D1_ERROR_LOG} fallback=no-proof-column`);
+    return db.batch(linkStatements(db, key, tokenHash, keyHash, now, false));
+  }
+}
+
 // One home per subscription: a new home with the same proof replaces the old rows (Slice 415 decision 5). The home row is written once per household (a relink keeps `created_at`).
+// A relink without a proof clears the stored proof and its hash (review 2, finding 4: the app forgets it too, so the two sides agree).
 // The statements read the confirmed pending row themselves, so a call that finds none changes nothing; the upsert is always second to last (issueTokens reads its `changes`).
-function linkStatements(db: D1Database, key: { readonly codeHash: string; readonly homeHash: string }, tokenHash: string, keyHash: string, now: number): D1PreparedStatement[] {
+function linkStatements(db: D1Database, key: LinkKey, tokenHash: string, keyHash: string, now: number, withProof: boolean): D1PreparedStatement[] {
   const confirmed = `code_hash = ?1 AND home_hash = ?2 AND story_language IS NOT NULL AND expires_at >= ?3`;
   const replace = db
     .prepare(`DELETE FROM ${HOME_TABLE} WHERE home_hash <> ?2 AND proof_hash = (SELECT proof_hash FROM ${PENDING_TABLE} WHERE ${confirmed})`)
     .bind(key.codeHash, key.homeHash, now);
+  const columns = withProof ? "proof_hash, proof" : "proof_hash";
+  const updates = withProof ? "proof_hash = excluded.proof_hash, proof = excluded.proof" : "proof_hash = excluded.proof_hash";
   const upsert = db
     .prepare(
-      `INSERT INTO ${HOME_TABLE} (home_hash, story_language, token_hash, key_hash, proof_hash, created_at, last_seen) ` +
-        `SELECT home_hash, story_language, ?4, ?5, proof_hash, ?3, ?3 FROM ${PENDING_TABLE} WHERE ${confirmed} ` +
-        `ON CONFLICT(home_hash) DO UPDATE SET story_language = excluded.story_language, token_hash = excluded.token_hash, key_hash = excluded.key_hash, proof_hash = COALESCE(excluded.proof_hash, ${HOME_TABLE}.proof_hash), last_seen = excluded.last_seen`,
+      `INSERT INTO ${HOME_TABLE} (home_hash, story_language, token_hash, key_hash, ${columns}, created_at, last_seen) ` +
+        `SELECT home_hash, story_language, ?4, ?5, ${columns}, ?3, ?3 FROM ${PENDING_TABLE} WHERE ${confirmed} ` +
+        `ON CONFLICT(home_hash) DO UPDATE SET story_language = excluded.story_language, token_hash = excluded.token_hash, key_hash = excluded.key_hash, ${updates}, last_seen = excluded.last_seen`,
     )
     .bind(key.codeHash, key.homeHash, now, tokenHash, keyHash);
   const consume = db.prepare(`DELETE FROM ${PENDING_TABLE} WHERE ${confirmed}`).bind(key.codeHash, key.homeHash, now);
@@ -209,13 +365,38 @@ function linkStatements(db: D1Database, key: { readonly codeHash: string; readon
 /** The home a request's login token belongs to, or null when the token is not (or no longer) one. Notes a use at most once a day. */
 export async function homeFor(db: D1Database, login: LoginToken, now: number): Promise<Home | null> {
   const homeHash = await hashHome(login.householdId);
-  const row = await db
-    .prepare(`SELECT story_language, last_seen FROM ${HOME_TABLE} WHERE home_hash = ?1 AND token_hash = ?2`)
-    .bind(homeHash, await hashToken(login.token))
-    .first<{ story_language: string; last_seen: number }>();
+  const row = await homeRow(db, "home_hash = ?1 AND token_hash = ?2", [homeHash, await hashToken(login.token)]);
   if (row === null) return null;
   if (now - row.last_seen >= DAY_MS) await db.prepare(`UPDATE ${HOME_TABLE} SET last_seen = ?2 WHERE home_hash = ?1`).bind(homeHash, now).run();
-  return { homeHash, storyLanguage: row.story_language };
+  return { homeHash, storyLanguage: row.story_language, proof: row.proof };
+}
+
+/** Slice 439: the home whose Sonos auth token this is (the media file route has no household id, only the token the player sends as `Authorization: Bearer`); null when it is not (or no longer) one. */
+export async function homeForToken(db: D1Database, token: string): Promise<Home | null> {
+  const row = await homeRow(db, "token_hash = ?1", [await hashToken(token)]);
+  return row === null ? null : { homeHash: row.home_hash, storyLanguage: row.story_language, proof: row.proof };
+}
+
+interface HomeRow {
+  readonly home_hash: string;
+  readonly story_language: string;
+  readonly last_seen: number;
+  readonly proof: string | null;
+}
+
+const MISSING_COLUMN = /no such column|has no column named/i; // a SELECT or UPDATE says the first, an INSERT the second
+
+// Slice 439 (review 1, finding 4): the `proof` column is added by hand (docs/DEPLOYING.md), so a Worker deployed before that step still reads the home: without the column the home has no proof (its paid books
+// play the message) instead of every call faulting. The fallback is reported by one log line, error name only.
+async function homeRow(db: D1Database, condition: string, bindings: readonly string[]): Promise<HomeRow | null> {
+  try {
+    return await db.prepare(`SELECT home_hash, story_language, last_seen, proof FROM ${HOME_TABLE} WHERE ${condition}`).bind(...bindings).first<HomeRow>();
+  } catch (error) {
+    if (!isMissingColumn(error)) throw error;
+    console.warn(`${D1_ERROR_LOG} fallback=no-proof-column`);
+    const row = await db.prepare(`SELECT home_hash, story_language, last_seen FROM ${HOME_TABLE} WHERE ${condition}`).bind(...bindings).first<Omit<HomeRow, "proof">>();
+    return row === null ? null : { ...row, proof: null };
+  }
 }
 
 /** refreshAuthToken: new tokens for the home whose current token and key match; null when they do not. */
@@ -245,6 +426,24 @@ export async function unlinkProof(db: D1Database, proof: string): Promise<number
     db.prepare(`DELETE FROM ${PENDING_TABLE} WHERE proof_hash = ?1`).bind(proofHash),
   ]);
   return homes?.meta.changes ?? 0;
+}
+
+/** True when some home is linked with this subscription proof. */
+export async function holdsProof(db: D1Database, proof: string): Promise<boolean> {
+  return (await db.prepare(`SELECT 1 AS held FROM ${HOME_TABLE} WHERE proof_hash = ?1 LIMIT 1`).bind(await hashProof(proof)).first()) !== null;
+}
+
+/**
+ * Slice 439: the subscription renewed or changed, so the app sends the new proof with the old one. The home holding the old proof gets the new proof (and its hash). It changes nothing and deletes no
+ * home when no home holds the old proof, or when another home already holds the new one (one subscription, one home: that is a relink's job, never a renew's). Returns how many homes were updated.
+ * The caller has checked the new proof with the store first (renewCall).
+ */
+export async function renewProof(db: D1Database, oldProof: string, newProof: string): Promise<number> {
+  const oldHash = await hashProof(oldProof);
+  const newHash = await hashProof(newProof);
+  const free = `?1 = ?2 OR NOT EXISTS (SELECT 1 FROM ${HOME_TABLE} WHERE proof_hash = ?2)`;
+  const result = await db.prepare(`UPDATE ${HOME_TABLE} SET proof = ?3, proof_hash = ?2 WHERE proof_hash = ?1 AND (${free})`).bind(oldHash, newHash, newProof).run();
+  return result.meta.changes;
 }
 
 /** The home of a browse request, or the not-logged-in fault Sonos answers with its re-authorize prompt (Client.AuthTokenExpired). */
@@ -325,11 +524,25 @@ function confirmBodyOf(body: unknown): ConfirmBody | null {
   return { code, language, proof };
 }
 
-async function confirmCall(body: unknown, db: D1Database, now: number): Promise<Response> {
-  const confirm = confirmBodyOf(body);
-  if (confirm === null) return badRequest();
-  const callback = await confirmLink(db, confirm, now);
-  return callback === null ? jsonResponse(404, { error: "unknown_link" }) : jsonResponse(200, { callback });
+/** The refusal for a proof the store did not confirm as active: 403 for a lapsed or unknown one, 429 over the client's store-call limit, 503 when the store cannot be asked; null for an active one. */
+function refusalOf(check: ProofCheckName): Response | null {
+  if (check === ProofCheck.Active) return null;
+  if (check === ProofCheck.Inactive) return jsonResponse(403, { error: INACTIVE_ERROR });
+  return check === ProofCheck.Limited ? jsonResponse(429, { error: "rate_limited" }) : jsonResponse(503, { error: "unavailable" });
+}
+
+async function confirmCall(body: unknown, db: D1Database, links: SonosLinks, request: Request): Promise<Response> {
+  const sent = confirmBodyOf(body);
+  if (sent === null) return badRequest();
+  if (sent.proof !== null && !isSubscriptionProof(sent.proof)) return jsonResponse(400, { error: NOT_SUBSCRIPTION_ERROR });
+  // Review 1, finding 3: the store confirms the proof before it is kept, so a made-up proof never becomes a stored one.
+  // Review 2, finding 2: with the paid-books switch off the store is not asked and the proof is not stored: the home links with the free books, exactly as one without a subscription.
+  const check = sent.proof === null ? ProofCheck.Active : await checkProof(sent.proof, links, clientKeyOf(request));
+  const refused = check === ProofCheck.Off ? null : refusalOf(check);
+  if (refused !== null) return refused;
+  const confirm = check === ProofCheck.Off ? { ...sent, proof: null } : sent;
+  const linked = await confirmLink(db, confirm, clock(links));
+  return linked === null ? jsonResponse(404, { error: "unknown_link" }) : jsonResponse(200, { callback: linked.callback, proofStored: linked.proofStored });
 }
 
 async function unlinkCall(body: unknown, db: D1Database, now: number): Promise<Response> {
@@ -337,6 +550,23 @@ async function unlinkCall(body: unknown, db: D1Database, now: number): Promise<R
   if (proof === null || !PROOF_PATTERN.test(proof)) return badRequest();
   await purgeExpired(db, now);
   return jsonResponse(200, { removed: await unlinkProof(db, proof) });
+}
+
+async function renewCall(body: unknown, db: D1Database, links: SonosLinks, request: Request): Promise<Response> {
+  const oldProof = stringField(body, "oldProof");
+  const newProof = stringField(body, "newProof");
+  if (oldProof === null || newProof === null || !PROOF_PATTERN.test(oldProof) || !PROOF_PATTERN.test(newProof)) return badRequest();
+  if (!isSubscriptionProof(oldProof) || !isSubscriptionProof(newProof)) return jsonResponse(400, { error: NOT_SUBSCRIPTION_ERROR });
+  await purgeExpired(db, clock(links));
+  if (!(await holdsProof(db, oldProof))) return jsonResponse(404, { error: NO_HOME_ERROR });
+  // Review 1, finding 1: the stored proof is replaced only by one the store confirms as active; anything else refuses and changes nothing.
+  // Review 2, finding 2: with the paid-books switch off there is nothing to swap; the app reads this status as "nothing to do" (never a 503 it would retry).
+  const check = await checkProof(newProof, links, clientKeyOf(request));
+  if (check === ProofCheck.Off) return jsonResponse(200, { renewed: 0, status: PAID_BOOKS_OFF });
+  const unconfirmed = refusalOf(check);
+  if (unconfirmed !== null) return unconfirmed;
+  const renewed = await renewProof(db, oldProof, newProof);
+  return renewed === 0 ? jsonResponse(409, { error: PROOF_TAKEN_ERROR }) : jsonResponse(200, { renewed });
 }
 
 async function parseJson(request: Request): Promise<unknown> {
@@ -354,10 +584,11 @@ async function parseJson(request: Request): Promise<unknown> {
 export async function handleLinkApi(request: Request, links: SonosLinks): Promise<Response> {
   const body = await parseJson(request);
   const op = stringField(body, "op");
-  if (op !== LinkOp.Confirm && op !== LinkOp.Unlink) return badRequest();
+  if (op !== LinkOp.Confirm && op !== LinkOp.Unlink && op !== LinkOp.Renew) return badRequest();
   if (links.db === undefined) return jsonResponse(503, { error: "unavailable" });
   try {
-    return op === LinkOp.Confirm ? await confirmCall(body, links.db, clock(links)) : await unlinkCall(body, links.db, clock(links));
+    if (op === LinkOp.Confirm) return await confirmCall(body, links.db, links, request);
+    return op === LinkOp.Renew ? await renewCall(body, links.db, links, request) : await unlinkCall(body, links.db, clock(links));
   } catch (error) {
     console.warn(`${D1_ERROR_LOG} error=${error instanceof Error ? error.name : typeof error}`);
     return jsonResponse(503, { error: "unavailable" });
