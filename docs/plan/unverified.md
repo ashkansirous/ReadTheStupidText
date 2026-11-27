@@ -77,6 +77,19 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 441: Dino: iPad reading page hides Back and the view switch from VoiceOver ([slice](slices/441-dino-ipad-reading-header-voiceover.md))
+- [session] The iPad and iPhone simulator hierarchy (the CI iOS simulator, Maestro) shows `ReadingBack` and `ReadingModes` on the reading page (item 1 and item 3 for iOS).
+- [owner] **You:** VoiceOver on an iPad reads Back, the view switch and the book title as a heading, and does not read the title twice on the sideways tablet layout (`SideTitle` plus heading).
+- [phone] Android TalkBack on a tablet reads Back, the view switch and the title as a heading.
+- [owner] Windows Narrator reads Back, the view switch and the title as a heading.
+
+### Slice 464: Dino: an older part-take file never plays after a new take is saved ([slice](slices/464-dino-reused-part-take-file-orphan.md))
+- [phone] The Verification walk-through by hand on the S21 or emulator (record a part, re-record an overlapping part, delete the new take, and the older recording does not play). The emulator flows `record-only-the-words`, `record-per-character` and `record-per-language` pass but log `replacedFiles=0`, and a scripted flow cannot make a stale orphan, so the orphan path is covered by unit tests only.
+
+### Slice 462: Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog ([slice](slices/462-dino-drop-leaking-test-traffic.md))
+- [owner] **You:** iOS parity (blocks nothing): Android now drops Test Harness Mode devices, iOS has no such signal, so iOS keeps today's behaviour (TestFlight and App Review already go to `dino_usage_beta`; the iOS Groups A and C stay in `dino_usage`). Exempt iOS or name a signal and the iOS usage gate would change to match; otherwise nothing changes. [Slice file](https://github.com/ashkansirous/ReadTheStupidText/blob/main/docs/plan/slices/462-dino-drop-leaking-test-traffic.md).
+- [cloud] After the release that ships this slice, the next analytics window (7 days of Ninjalog): the share of test-looking first sessions (third query in `docs/analytics/ninjalog-queries.md`, "Test-looking sessions") is under 5%, and Group B (10 or more cancels) is gone. Unproven that Play's pre-launch devices set Test Harness Mode. No device run is planned for the Test Harness read (a Debug build skips usage before the harness check, and `adb shell cmd testharness enable` wipes the device); the 7-day query is the proof.
+
 ### Slice 459: Dino first books: the first book is playable within seconds of Continue ([slice](slices/459-dino-first-book-playable-in-seconds.md))
 - [phone] The S21 first run with the network throttled to 1 Mbit/s: the first book opens before the rest finish (`tools/emulator` has no throttle flag).
 - [cloud] iOS simulator first run.

@@ -1,7 +1,7 @@
 ### Slice 407 — Dino: the premade-audio Farsi delivery fixture matches Good Enough's cast again
 **Product:** Dino
 
-*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), PR #1403, not merged.*
+*Built 2026-11-27 (wave 3 of night 2026-11-27-0154); merged as PR #1403 (b3df8fe8).*
 
 **Touches:** `tools/dino/premade-audio/testdata/farsi-delivery-styles.json`, `tools/dino/premade-audio/test_premade_audio.py`
 

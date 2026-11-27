@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `src/Dino/DinoReader.App/ReadingPage.xaml.cs`, `src/Dino/DinoReader.App/ReadingPage.xaml`, `src/Dino/DinoReader.Core/ReadingLayoutRules.cs`, `tests/Dino/DinoReader.Tests/ReadingLayoutRulesTests.cs`, `.maestro/dino/**`
 
-*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), PR #1405, not merged. Checked on the Android tablet emulator only; iPad, iPhone, VoiceOver, TalkBack and Narrator are not yet verified.*
+*Built 2026-11-27 (wave 3 of night 2026-11-27-0154), merged as PR #1405 (ffcc39e5). Checked on the Android tablet emulator only; iPad, iPhone, VoiceOver, TalkBack and Narrator are not yet verified.*
 
 *Planned 2026-11-25 (plan-cleanup of that day).*
 
@@ -33,7 +33,7 @@ Found by Slice 291's 2026-11-15 App Store pass (its item 11, still open on origi
 - Skipped #2 (`reviews/pr-1405-check3-medium.md`): "asserts ReadingTabletTitle and heading=side, which only holds on a tablet" - a nit; the flow is a tablet flow and runs with `-Instance tablet`. Follow-up.
 - Skipped #3 (`reviews/pr-1405-check3-medium.md`): "removed Header description; no action needed" - the reviewer asks for no action.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 - The reading page header (`ReadingPage.xaml`) never carries `SemanticProperties.Description` or `HeadingLevel` on a container holding Back or the view switch: iOS then hides them from VoiceOver. Put the heading on the visible title label via `ReadingLayoutRules.HeadingLabelFor`. (Slice 441: docs/plan/slices/441-dino-ipad-reading-header-voiceover.md)
 
 #### Not yet verified

@@ -306,6 +306,10 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 437 | Dino: Sonos opens in the parent's language with shelves (Bedtime, New, ages, Free, A–Z) | built (Sonos sandbox run and IMAGES binding open; checks in unverified.md) | #1398 | — | [437-dino-sonos-browse-shelves.md](../slices/437-dino-sonos-browse-shelves.md) |
 | 459 | Dino first books: the first book is playable within seconds of Continue | built (device checks in unverified.md) | #1395 | | [459-dino-first-book-playable-in-seconds.md](../slices/459-dino-first-book-playable-in-seconds.md) |
 | 443 | Dino: a parent's part take plays in place of only its words | built (device checks in unverified.md) | #1397 | | [443-dino-parent-part-take-plays-its-words-only.md](../slices/443-dino-parent-part-take-plays-its-words-only.md) |
+| 407 | Dino: the premade-audio Farsi delivery fixture matches Good Enough's cast again (suite red on main) | built | #1403 | | [407-premade-audio-good-enough-fixture.md](../slices/407-premade-audio-good-enough-fixture.md) |
+| 462 | Dino: drop the test and review traffic that still reaches dino_usage and Ninjalog | built (7-day query check in unverified.md) | #1404 | | [462-dino-drop-leaking-test-traffic.md](../slices/462-dino-drop-leaking-test-traffic.md) |
+| 464 | Dino: an older part-take file never plays after a new take is saved | built (device walk-through in unverified.md) | #1402 | | [464-dino-reused-part-take-file-orphan.md](../slices/464-dino-reused-part-take-file-orphan.md) |
+| 441 | Dino: iPad reading page hides Back and the view switch from VoiceOver | built (iPad, VoiceOver, TalkBack, Narrator checks in unverified.md) | #1405 | | [441-dino-ipad-reading-header-voiceover.md](../slices/441-dino-ipad-reading-header-voiceover.md) |
 
 ## Shared
 
