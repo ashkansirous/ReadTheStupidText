@@ -1,11 +1,20 @@
 # Slice 463 — Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background
 **Product:** Dino
 
+*In progress (wave 2026-11-27), draft PR. This wave builds items 1, 3, 4 and 5; item 2 (the owner's side-by-side page, an Artifact) needs an interactive session.*
+
 *Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
+
+**Design (coordinator, wave 2026-11-27, before the build; the builder builds this):**
+- **One owner of the state:** the installed book's variant (`quick` | `standard` | `hd`), stored with the high-res state the way `HighResUpgrades` keeps its ledger (`HighResStateFile.WriteAtomic`). Nothing else decides which copy is installed.
+- **States:** standard downloading -> (slow: after about 3 s the measured speed predicts more than about 10 s left) cancelled -> quick downloading -> installed `quick` -> background standard download staged (`StagedBookUpdates`) -> verified -> swapped, installed `standard` (then high-res where `PictureSizeChoice` says so, as today).
+- **The switch decision is one pure, unit-tested function** (bytes so far, elapsed, total bytes -> keep or switch).
+- **Interrupts:** app killed during the quick download: the first-books step starts over as it does today (Slice 459). Killed, offline or failed during the background standard download: the staged copy is dropped, the book stays `quick`, and the upgrade is tried again at the next start (the `HighResUpgradeRunner` pattern, metered links included). Cancel on the first-books page: cancels both, as today. A swap that fails verification keeps the quick copy. The reading position and progress are never touched by a swap: only the picture and audio files change. A book never stays `quick` once a standard download has completed and verified.
+- **No default until the owner's pick:** the quick sizes are the named defaults (448x600, AAC 24 kb/s mono), built and listed; item 2's pick may change them before release.
 
 **Starts after:** [Slice 459](459-dino-first-book-playable-in-seconds.md) (merged as PR #1395; it edits the same first-books download path).
 
-**Touches:** `tools/dino/prepare-story-pictures.ps1`, `tools/dino/premade-audio/encode.py`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `worker/stories.ts`, `worker/**` tests, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/HighResUpgradeRunner.cs`, `src/Dino/DinoReader.Core/PictureSizeChoice.cs`, `tests/Dino/DinoReader.Tests/PictureSizeChoiceTests.cs`, `tests/Dino/DinoReader.Tests/**` (first books), `src/Dino/DinoReader.App/FirstBooksPage.cs`
+**Touches:** `tools/dino/prepare-story-pictures.ps1`, `tools/dino/premade-audio/encode.py`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `worker/stories.ts`, `worker/**` tests, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/HighResUpgradeRunner.cs`, `src/Dino/DinoReader.Core/PictureSizeChoice.cs`, `tests/Dino/DinoReader.Tests/PictureSizeChoiceTests.cs`, `tests/Dino/DinoReader.Tests/**` (first books), `src/Dino/DinoReader.App/FirstBooksPage.cs`, `worker/events.ts`, `src/Dino/DinoReader.App/HighResUpgrades.cs`, `src/Dino/DinoReader.App/StagedBookUpdates.cs`, `src/Dino/DinoReader.App/PictureSizeSource.cs`, `src/Dino/DinoReader.App/UsageCounter.cs`, `src/Dino/DinoReader.App/MauiProgram.cs`, `src/Dino/DinoReader.Core/HighResStateFile.cs`, `src/Dino/DinoReader.Core/HighResUpgradePlan.cs`, `src/Dino/DinoReader.Core/StoreCatalog.cs`, `src/Dino/DinoReader.Core/UsageEvent.cs`, `src/Dino/DinoReader.Core/FirstBookSwitch.cs` (new), `src/Shared/Sirous.Reading.Application/Reading/WaitStage.cs`, `src/Shared/Sirous.Reading.Application/Usage/**`, `tests/Shared/Shared.Tests/**` (usage wait stages)
 
 **Why:** the owner's words (2026-11-27): "we probably need an even lower quality package for people with slow internet. when we start downloading the first book, if it is too slow, we drop it and switch to the even smaller package. then we download a proper package in the background. when it is done, it would replace the low quality package."
 
