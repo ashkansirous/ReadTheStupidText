@@ -319,6 +319,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 440 | Dino: search on Sonos, "Stories" and "All languages" | built (Sonos sandbox checks in unverified.md) | #1427 | | [440-dino-sonos-search.md](../slices/440-dino-sonos-search.md) |
 | 460 | Dino Windows: the store works at first run, or recovers on its own | built (items 2-4; item 1 open; 11 follow-ups in the slice; checks in unverified.md) | #1428 | | [460-dino-windows-first-run-store-recovery.md](../slices/460-dino-windows-first-run-store-recovery.md) |
 | 424 | Dino: the Android 1.136.0 unclean exit of 2026-11-20: the exit reason, session, last page and a current log tail in every unclean-exit report | built (item 1's S21 walk and the iOS path in unverified.md) | #1438 | — | [424-dino-android-1136-unclean-exit.md](../slices/424-dino-android-1136-unclean-exit.md) |
+| 468 | Dino: the pack-failure-corrupt flow never shows the failed chip | built (flows only; emulator run 2 passed 5/5) | #1454 | | [468-dino-pack-failure-corrupt-flow-never-shows-failed-chip.md](../slices/468-dino-pack-failure-corrupt-flow-never-shows-failed-chip.md) |
 
 ## Shared
 

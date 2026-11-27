@@ -1,7 +1,7 @@
 # Slice 467 — Dino: Sonos on dino.elinsoft.co.uk, and a Reporting Endpoint the portal can reach
 **Product:** Dino
 
-*Built 2026-11-27 (items 1, 2, 5), PR #1453, not merged. Items 3 (live read after the release) and 4 (Sonos portal) are open.*
+*Built 2026-11-27 (items 1, 2, 5), merged as PR #1453 (90cb5a8d). Items 3 (live read after the release) and 4 (Sonos portal) are open.*
 
 *Changed while building:* the `run_worker_first` entries are exact paths (no wildcard), so the trailing-slash forms (`/sonos/v2/`, `/sonos/v2.0/`) are listed as their own entries. The wrangler forms were checked on developers.cloudflare.com (custom-domains page; static-assets binding page) because the context7 quota was out.
 

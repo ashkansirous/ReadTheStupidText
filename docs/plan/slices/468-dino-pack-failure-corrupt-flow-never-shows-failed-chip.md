@@ -3,7 +3,7 @@
 
 **Touches:** `src/Dino/DinoReader.App/ShelfAudioPacks.cs`, `src/Dino/DinoReader.App/ShelfAudioPacksCard.cs`, `src/Dino/DinoReader.App/StoryLanguagesPage.cs`, `.maestro/dino/pack-failure-corrupt.yaml`, `.maestro/dino/pack-failure-network.yaml`, `.maestro/dino/pack-failure-disk-full.yaml` (widened at build: same below-the-fold assert), `.maestro/dino/side-language-audio.yaml`, `.maestro/dino/pack-cancel-stalled.yaml` (widened at review 1: same Swedish-row wait), `tests/Dino/DinoReader.Tests/**`, `src/Dino/DinoReader.App/Testing/DinoTestCommands.ShelfAudio.cs` (new partial, only if a test hook is needed; never `DinoTestCommands.cs`, which the parked s403 worktree edits), `docs/plan/unverified.md`
 
-*Built 2026-11-27, PR #1454, device run 2 passed 5/5 on the emulator, not merged. Planned 2026-11-27 (index pass of wave 10) from Slice 463's follow-up F17.*
+*Built 2026-11-27, merged as PR #1454 (f1ab6e84), device run 2 passed 5/5 on the emulator. Planned 2026-11-27 (index pass of wave 10) from Slice 463's follow-up F17.*
 
 **Why.** `.maestro/dino/pack-failure-corrupt.yaml` FAILS on an `origin/main` build (9ea9d6bd, emulator-5554, 2026-11-27 about 21:3xZ) and on the Slice 463 branch: the app logs `failed:unzip` and `shelf audio sv: 0 of 1 done, 1 failed`, the Story languages page opens 8 s later, and `id: ShelfAudioFailed-sv` (`src/Dino/DinoReader.App/ShelfAudioPacksCard.cs:23`) never appears in 120 s. The chip state is in memory (`ShelfAudioPacks._states`, `ShelfAudioPacks.cs:275-283`, `StoryLanguagesPage.cs:296`). The last PASS found is 2026-11-08; the flow was last edited in Slice 418 (2026-11-19). Logs: `D:/ReadTheStupidText-worktrees/reviews/w10-device/main-baseline/` and `reviews/w10-device/s463f/`.
 
@@ -18,7 +18,7 @@ None for this slice's flows: the emulator run passed (run 2, above), so the Slic
 
 Follow-up (not in this slice): `.maestro/dino/onboarding-two-languages.yaml:38,42` scrolls to and taps `StoryLanguageRow-sv` on the onboarding page. Run 1 showed that id is not exposed on the Story languages page (the row's hit Button, `StoryLanguagesPage.cs:167`, is not exposed to automation); whether it is exposed on the onboarding page was not checked.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-27)
 
 - A Maestro flow that waits for or taps something in the Swedish (12th) row of the Story languages page scrolls to `ShelfAudioCard-sv` first with `scrollUntilVisible`: the row is clipped by the page's ScrollView viewport on a 1080x2400 screen. Never scroll to `StoryLanguageRow-sv` there (its hit Button, `StoryLanguagesPage.cs:167`, is not exposed to automation). After Cancel the card is gone, so assert the text `Svenska`. (Slice 468: docs/plan/slices/468-dino-pack-failure-corrupt-flow-never-shows-failed-chip.md)
 
