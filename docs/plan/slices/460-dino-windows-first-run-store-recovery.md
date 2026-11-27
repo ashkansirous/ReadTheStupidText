@@ -5,7 +5,9 @@
 
 **Starts after:** [Slice 453](453-dino-first-books-cancelled-load-copy.md) (both edit `FirstBooksPage.cs`).
 
-**Touches:** `src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/Dino/DinoReader.App/Purchases/BookPurchases.cs`, `src/Dino/DinoReader.App/Purchases/PurchaseTrace.cs`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `worker/events.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `docs/analytics/ninjalog-queries.md`
+**Touches:** `src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs`, `src/Dino/DinoReader.App/Purchases/BookPurchases.cs`, `src/Dino/DinoReader.App/Purchases/PurchaseTrace.cs`, `src/Dino/DinoReader.App/StoreClient.cs`, `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `worker/events.ts`, `worker/events.test.mjs`, `tests/Dino/DinoReader.Tests/**`, `docs/analytics/ninjalog-queries.md`, `src/Dino/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/Shared/Sirous.Reading.Application/Usage/**`, `tools/desktop-vm/checks/**`, `tests/Shared/Shared.Tests/**` (last four widened 2026-11-27: the window wait, a new cause enum, item 1's VM check, the fallback list-sync test)
+
+*In progress (wave 2026-11-27), draft PR.*
 
 **Why:**
 - All 3 real Windows first launches that left during onboarding left on `first_run`. Two of them had fallback `store:store_unreachable` or `store:store_failed` (Russia 1.136.5.0, Oman 1.136.3.0). The Oman user retried in a new session and finished.
