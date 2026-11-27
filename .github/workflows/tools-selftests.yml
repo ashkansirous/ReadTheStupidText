@@ -169,6 +169,10 @@ jobs:
       - name: Run-checks runner self-test (${{ matrix.shell }})
         run: ./tools/phone/test-run-checks.ps1
 
+      # Slice 448: the phone Maestro flow runner's pure helpers (flows-lib.ps1) and its dry run.
+      - name: Phone flow runner self-test (${{ matrix.shell }})
+        run: ./tools/phone/test-run-flows.ps1
+
       - name: Flow host stub self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-need-stubs.ps1
 

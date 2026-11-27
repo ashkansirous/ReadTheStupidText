@@ -90,6 +90,21 @@ Assert-Equal 'debug: no AOT flag' $false (($debugArgs -join ' ') -match 'Publish
 Assert-Equal 'aot: ReadyToRun flags added to the debug command' (($debugArgs + '-p:PublishReadyToRun=true' + '-p:PublishTrimmed=true') -join ' ') ($aotArgs -join ' ')
 Assert-Equal 'rid and package in the command' $true ((($debugArgs -join ' ') -match 'RuntimeIdentifier=android-arm64') -and (($debugArgs -join ' ') -match [regex]::Escape("ApplicationId=$pkg")))
 Assert-Equal 'x64 rid for the emulator' $true ((Get-PhoneBuildArguments 'P' 'A' $pkg 'android-x64' $false) -contains '-p:RuntimeIdentifier=android-x64')
+$script:EmulatorDinoDisplayVersion = '99.0.0'   # stand-in for build-cache.ps1's value, which this test does not load
+Assert-Equal 'Slice 448: Dino gets the emulator stamp' $true ((Get-PhoneBuildArguments 'P' 'A' $pkg 'android-arm64' $false 'dino') -contains '-p:ApplicationDisplayVersion=99.0.0')
+Assert-Equal 'Slice 448: RTST keeps its version' $false ((Get-PhoneBuildArguments 'P' 'A' $pkg 'android-arm64' $false 'rtst') -join ' ' -match 'ApplicationDisplayVersion')
+$dinoLine = Get-PhoneBuildKeyLine 'dino'
+$rtstLine = Get-PhoneBuildKeyLine 'rtst'
+Assert-Equal 'Slice 448: the phone key line holds the Dino stamp' $true ($dinoLine -like '*-p:ApplicationDisplayVersion=99.0.0*')
+Assert-Equal 'Slice 448: the RTST key line has no stamp' $false ($rtstLine -like '*ApplicationDisplayVersion*')
+Assert-Equal 'Slice 448: the key line leaves out the project, artifacts, package and rid' $false ($dinoLine -cmatch 'PROJECT|ARTIFACTS|RID|PACKAGE|ApplicationId|RuntimeIdentifier')
+Assert-Equal 'Slice 448: the key line holds both the Debug and the AOT list' $true (($dinoLine -like 'phone-build-args=debug:*') -and ($dinoLine -like '*| aot:*PublishReadyToRun*'))
+$realBuildArguments = ${function:Get-PhoneBuildArguments}
+try {
+    function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot, [string]$App = '') { return @(& $realBuildArguments $Project $Artifacts $Package $Rid $Aot $App) + '-p:NewPhoneFlag=1' }
+    Assert-Equal 'Slice 448: a changed argument list changes the key line' $true ((Get-PhoneBuildKeyLine 'dino') -ne $dinoLine)
+} finally { Set-Item function:Get-PhoneBuildArguments $realBuildArguments }
+Assert-Equal 'Slice 448: the key line is back after the change is undone' $dinoLine (Get-PhoneBuildKeyLine 'dino')
 Assert-Equal 'quoting only where there are spaces' 'a "b c"' ((ConvertTo-ProcessArguments @('a', 'b c')) -join ' ')
 foreach ($script in 'audio-timing.ps1', 'run-checks.ps1') {
     $source = Get-Content (Join-Path $PSScriptRoot $script) -Raw

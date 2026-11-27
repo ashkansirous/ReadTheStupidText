@@ -60,6 +60,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'checks\_lib.ps1')
 . (Join-Path $PSScriptRoot 'checks\_device.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
+Set-PhoneBuildKeyInputs $App   # Slice 448: the phone build's arguments are part of the build key
 
 $package = Get-DevPackage $App
 $script:Projects = @{ rtst = 'src\Rtst\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; dino = 'src\Dino\DinoReader.App\DinoReader.App.csproj' }
@@ -172,7 +173,7 @@ function Build-VariantApk([string]$V, [string]$Dir, [string]$Key) {
     $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $platform
     Assert-BuildPathLength $artifacts   # Slice 216: fail now, not minutes into the build (APT2264)
     Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
-    $arguments = ConvertTo-ProcessArguments (Get-PhoneBuildArguments $project $artifacts $package $script:Rid ($V -eq $script:VariantAot))   # the one build command, shared with audio-timing.ps1
+    $arguments = ConvertTo-ProcessArguments (Get-PhoneBuildArguments $project $artifacts $package $script:Rid ($V -eq $script:VariantAot) $App)   # the one build command, shared with audio-timing.ps1
     $exitCode = Invoke-DotnetBuild $V $arguments
     if ($exitCode -ne 0) { throw "dotnet build exited $exitCode" }
     $built = Find-PhoneArtifactApk $artifacts $script:ApkFilter

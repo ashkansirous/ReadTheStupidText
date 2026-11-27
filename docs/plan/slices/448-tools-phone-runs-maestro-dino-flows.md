@@ -1,14 +1,36 @@
 # Slice 448 — tools/phone runs the .maestro/dino flows on a real phone
 **Product:** Shared
-**Touches:** `tools/phone/**`, `tools/CLAUDE.md`
+**Touches:** `tools/phone/**`, `tools/CLAUDE.md`, `tools/emulator/common.ps1` (widened at claim, wave 2026-11-27: only if `Set-ProcessJavaHome` or the flow runner needs a change), `.github/workflows/tools-selftests.yml` (widened by the coordinator after the build: one step runs `tools/phone/test-run-flows.ps1`), `tools/emulator/build-cache.ps1` and `tools/emulator/test-build-key.ps1` (widened by the coordinator after the S21 run 3: an empty-by-default extra key-input hook, so the phone key carries the phone's build arguments)
 
-*Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 396; not built).*
+*Built 2026-11-27 (wave 2026-11-27, PR #1415, not merged). Planned 2026-11-25 (moved out of Slice 396). The runner works on the S21; 1 of Slice 396's 4 flows passes, 3 fail in the app's store flows (item 3), for a follow-up slice.*
 
 ## Why
 `tools/phone` has only scripted checks (`checks/*.ps1`, `run-checks.ps1`) and no runner for the Maestro UI flows in `.maestro/dino`. Slice 396's S21 run was 0/4: all four flows stopped at FirstRunLanguage (evidence `reviews/s396-device/`, night 2026-11-17-2105). Phone runs therefore cannot check any flow-based "Not yet verified" line. Moved out of Slice 396 (its own work, items 1-7, is built).
 
 ## Work
-- [ ] 1. A runner in `tools/phone` that runs a `.maestro/dino` (and `.maestro/rtst`) flow on the leased S21 (USB first), with the lease, the JDK pick (`Set-ProcessJavaHome`, `tools/emulator/common.ps1`) and the 10-minute stop of `tools/CLAUDE.md`.
-- [ ] 2. Get past first run (FirstRunLanguage) the way the emulator's `run-flows.ps1` does, or by the app's Debug test hook.
-- [ ] 3. Run Slice 396's four flows (`store-restore`, `paid-books`, `subscription`, `store-payment-requ...`) through it and report pass/fail.
-- [ ] 4. Self-test script and a line in `tools/CLAUDE.md`.
+- [x] 1. A runner in `tools/phone` that runs a `.maestro/dino` (and `.maestro/rtst`) flow on the leased S21 (USB first), with the lease, the JDK pick (`Set-ProcessJavaHome`, `tools/emulator/common.ps1`) and the 10-minute stop of `tools/CLAUDE.md`.
+- [x] 2. Get past first run (FirstRunLanguage) the way the emulator's `run-flows.ps1` does, or by the app's Debug test hook.
+- [x] 3. Run Slice 396's four flows (`store-restore`, `paid-books`, `subscription`, `store-payment-requ...`) through it and report pass/fail. Run command: `tools/phone/run-flows.ps1 -App dino -Flow store-restore,paid-books,subscription,store-payment-required -Install`. **Result, S21 run 4** (logs `D:/ReadTheStupidText-worktrees/reviews/s448-device/run4/`, build key `37a55377f846`, versionName 99.0.0): `store-payment-required` PASS; `store-restore` FAIL (assert `Nothing bought with this .* yet\.` not visible); `paid-books` FAIL (id `StoreRestoreResult` not visible); `subscription` FAIL (missing marker `[Subscription] shelf columns=3 grownUp=True`). Runs 1-3 stopped on the Update page (the unstamped build, see *Changed while building*). The runner did its job (it reached the app and ran the flows); the three failures are in the earlier store flows on a real phone, for a follow-up slice the index pass plans.
+- [x] 4. Self-test script and a line in `tools/CLAUDE.md`.
+
+#### Changed while building
+- Files: `tools/phone/run-flows.ps1`, `tools/phone/flows-lib.ps1`, `tools/phone/test-run-flows.ps1` (self-test, run in `.github/workflows/tools-selftests.yml`). The runner takes the lease, picks the JDK, runs preflight, then gives the flows a 10-minute budget that starts after install, lease and preflight. Each flow gets its own Maestro log and `--debug-output` folder, and its FAIL line shows Maestro's own failing step.
+- Safety: it refuses flows with network steps (airplane mode, `svc`, and so on) or includes it cannot resolve. It saves and restores the phone's rotation (only when both reads succeed) and the stay-awake setting, and after a failed flow it cleans the Maestro driver and this run's adb forwards. `-App rtst` runs a `.dbg` copy of the flow.
+- The phone Dino Debug build is stamped 99.0.0 (same source as the emulator build), because the live `minVersion` gate otherwise opens "Dino needs an update" and S21 runs 1-3 stopped on that page. The phone build key carries the phone's build arguments (`$script:ExtraBuildKeyInputs` hook, empty by default, in `tools/emulator/build-cache.ps1`; `Get-PhoneBuildKeyLine` in `tools/phone/common.ps1`), so an APK built with other arguments is never reused. Both widened the Touches line (see above).
+- `Test-StoppedAtFirstRun` and its hint were removed (review high #8): `store-restore.yaml` waits for FirstRunLanguage on purpose.
+
+#### From review
+- Review files read: `reviews/pr-1415-high.md` (8 findings), `pr-1415-medium.md` (6), `pr-1415-check.md` (6), `pr-1415-check2.md` (3), `pr-1415-check3.md` (5), `pr-1415-check4.md` (5), `pr-1415-check5.md` (3), `pr-1415-check6.md` (no findings, 3 nits), `pr-1415-check7.md` (1 low). All fixed unless listed below; the other findings' outcomes are in each file's *Outcome* list.
+- Low follow-ups, not fixed (below the fix threshold): `reviews/pr-1415-check7.md` finding 1: the phone build key line in `tools/phone/common.ps1:709` omits `ApplicationId` (fix: add `package=<Get-DevPackage $App>` and relax `test-phone-leftovers.ps1:100`). `reviews/pr-1415-check6.md` nits: (1) `tools/phone/common.ps1:700` a phone Dino APK cached before this change has the same key and is reused without the 99.0.0 stamp (clear that cache entry); (2) `Get-PhoneBuildArguments` relies on `$script:EmulatorDinoDisplayVersion` from `build-cache.ps1`, so a caller that does not load it passes an empty version; (3) `tools/phone/run-flows.ps1:331` `RunStart` is reset after `Start-KeepAwake`, so job start-up eats a few seconds of the budget. Also `reviews/pr-1415-medium.md` finding 6 is the known trade-off of high #8 (removed with it).
+
+- Fixed by removal #8 (`reviews/pr-1415-high.md`): "`Test-StoppedAtFirstRun` matches the text `FirstRunLanguage` anywhere in Maestro's output." - not skipped after all: the phone run showed it misreports flows such as `store-restore.yaml` that wait for FirstRunLanguage on purpose, so `Test-StoppedAtFirstRun`, `Format-FirstRunHint` and the hint line are removed (check4 round).
+- Fixed by removal #6 (`reviews/pr-1415-medium.md`): "`Test-StoppedAtFirstRun` matches `FirstRunLanguage` anywhere in the Maestro output" - the same matcher as high #8, removed with it.
+- Skipped #5 (`reviews/pr-1415-check3.md`): "The run copy `.phone-run-<flow>.yaml` and the output files `phone-<flow>.out/.err` have fixed names in the shared `.maestro/<app>` folder." - the device lease allows one run per phone and the repo has one phone, so two runs of the same flow at once cannot happen today.
+- Skipped #1 (`reviews/pr-1415-check5.md`): "The network-cut patterns still miss forms: `cmd -w wifi ...` (flag between words), `cmd connectivity` subcommands other than airplane-mode, `su -c svc` with extra flags, `ip link ... down`, `ifconfig`, `ndc`, `iptables`, `pm disable-user` of phone/wifi packages." - no repo flow uses those commands (`grep -rlE "cmd -w wifi|cmd connectivity|ip link|iptables|pm disable-user" .maestro/` hits only a comment "Skip link" in onboarding-skip.yaml); a low follow-up.
+- Skipped #3 (`reviews/pr-1415-check5.md`): "Forward cleanup removes every forward missing from the before-list, including one another process opened during the flow (and leaves identical stale ones)." - under the device lease only this run's Maestro adds forwards during a flow.
+
+#### For CLAUDE.md
+`tools/CLAUDE.md` already carries the `run-flows.ps1` line (added by the builder in this slice, line 19: usage, the 10-minute budget, refusals, exit codes). Nothing more to lift. (Slice 448: docs/plan/slices/448-tools-phone-runs-maestro-dino-flows.md)
+
+#### Not yet verified
+- `[phone]` the three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after their follow-up slice (S21 run 4: 1 of 4 passed).

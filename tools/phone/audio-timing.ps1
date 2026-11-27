@@ -54,6 +54,7 @@ $ErrorActionPreference = 'Stop'
 $Rates = @(ConvertTo-RateList $Rates)
 . (Join-Path $PSScriptRoot 'timing.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
+Set-PhoneBuildKeyInputs $App   # Slice 448: the phone build's arguments are part of the build key
 
 $apps = @{
     rtst = @{ Project = 'src\Rtst\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
@@ -82,7 +83,7 @@ function Build-PhoneApk([string]$Dir, [string]$Key) {
     $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $script:PhonePlatform
     Assert-BuildPathLength $artifacts   # Slice 216: fail now, not minutes into the build (APT2264)
     Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
-    $buildArguments = Get-PhoneBuildArguments $project $artifacts $package $script:PhoneRid ([bool]$Aot)   # the one build command, shared with run-checks.ps1
+    $buildArguments = Get-PhoneBuildArguments $project $artifacts $package $script:PhoneRid ([bool]$Aot) $App   # the one build command, shared with run-checks.ps1
     dotnet build @buildArguments
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Find-PhoneArtifactApk $artifacts $script:ApkFilter
