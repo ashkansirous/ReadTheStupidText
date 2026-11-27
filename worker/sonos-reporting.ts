@@ -17,6 +17,10 @@ import type { SpeakerUsage } from "./speaker-usage.ts";
 
 /** Sonos requires the version number in the Reporting Endpoint URL; the owner sets `<host>/sonos/v2.0` and players POST `/timePlayed` under it. */
 export const SONOS_REPORTING_PATH = "/sonos/v2.0/timePlayed";
+/** Slice 467: the owner's Reporting Endpoint is `<host>/sonos/v2` (no ".0"), so both bases serve `/timePlayed` and answer the portal's reachability GET. */
+export const SONOS_REPORTING_BASES: readonly string[] = ["/sonos/v2", "/sonos/v2.0"];
+const TIME_PLAYED_SUFFIX = "/timePlayed";
+const BASE_METHODS = "GET, HEAD";
 export const MIN_PLAY_SECONDS = 30;
 /** The most rows one request can write: a player reports one track at a time, so more final reports in a request are left uncounted. */
 export const MAX_COUNTED_PER_REQUEST = 5;
@@ -107,8 +111,24 @@ export function countedSeconds(report: FinalReport, track: Track): number | null
   return report.seconds >= MIN_PLAY_SECONDS ? Math.round(Math.min(report.seconds, track.seconds)) : null;
 }
 
+/** True for `<base>/timePlayed` (the reports) on either base. */
+export function isTimePlayedPath(pathname: string): boolean {
+  return SONOS_REPORTING_BASES.some((base) => pathname === `${base}${TIME_PLAYED_SUFFIX}`);
+}
+
+/** True for a base itself, with or without a trailing slash (the portal's reachability check). */
+export function isSonosReportingBase(pathname: string): boolean {
+  return SONOS_REPORTING_BASES.some((base) => pathname === base || pathname === `${base}/`);
+}
+
 export function isSonosReportingPath(pathname: string): boolean {
-  return pathname === SONOS_REPORTING_PATH;
+  return isTimePlayedPath(pathname) || isSonosReportingBase(pathname);
+}
+
+/** `GET`/`HEAD` on a base: 200 with an empty body; any other method 405. */
+function answerBase(request: Request): Response {
+  if (request.method === "GET" || request.method === "HEAD") return new Response(null, { status: STATUS_OK });
+  return new Response(null, { status: STATUS_NOT_ALLOWED, headers: { Allow: BASE_METHODS } });
 }
 
 async function readJson(request: Request): Promise<unknown> {
@@ -146,8 +166,9 @@ async function countAll(counted: readonly CountedReport[], memory: ReportMemory 
   }
 }
 
-/** `POST /sonos/v2.0/timePlayed`: 200 with an empty body once the reports are read (counted, too short, unknown or malformed ones skipped; at most `MAX_COUNTED_PER_REQUEST` rows), 400 for a body that is not an `items` list, 405 for any other method. No fault row: the endpoint is anonymous. */
+/** `POST /sonos/v2.0/timePlayed` and `POST /sonos/v2/timePlayed`: 200 with an empty body once the reports are read (counted, too short, unknown or malformed ones skipped; at most `MAX_COUNTED_PER_REQUEST` rows), 400 for a body that is not an `items` list, 405 for any other method. `GET`/`HEAD` on the two bases (`/sonos/v2`, `/sonos/v2.0`) answer 200 with an empty body (the portal's reachability check; Slice 467), so the base check must stay. No fault row: the endpoint is anonymous. */
 export async function handleSonosReporting(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage, catalogue?: CatalogueRuntime): Promise<Response> {
+  if (isSonosReportingBase(new URL(request.url).pathname)) return answerBase(request);
   if (request.method !== "POST") return new Response(null, { status: STATUS_NOT_ALLOWED, headers: { Allow: ALLOWED_METHODS } });
   const parsed = parseReports(await readJson(request));
   if (!parsed.ok) return bad();

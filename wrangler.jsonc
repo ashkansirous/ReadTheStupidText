@@ -10,7 +10,9 @@
   // See docs/DEPLOYING.md.
   "routes": [
     { "pattern": "readthestupidtext.sirous.uk", "custom_domain": true },
-    { "pattern": "dinoreader.sirous.uk", "custom_domain": true }
+    { "pattern": "dinoreader.sirous.uk", "custom_domain": true },
+    // Slice 467: the Dino site again on the Elinsoft zone (the Sonos integration's host), chosen by Host like the one above.
+    { "pattern": "dino.elinsoft.co.uk", "custom_domain": true }
   ],
 
   // A custom route makes workers_dev default to false; keep the *.workers.dev
@@ -42,7 +44,9 @@
       // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
       "/sonos",
       // Slice 436: Sonos players' play reports (worker/sonos-reporting.ts); an exact path, so "/sonos" does not cover it.
-      "/sonos/v2.0/timePlayed",
+      "/sonos/v2.0/timePlayed", "/sonos/v2.0", "/sonos/v2.0/",
+      // Slice 467: the same endpoint without the ".0" (the Reporting Endpoint the owner set), and its base for the portal's reachability GET.
+      "/sonos/v2/timePlayed", "/sonos/v2", "/sonos/v2/",
       // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts).
       "/alexa",
       // Slice 287: the public Dino usage dashboard page and its data (worker/stats.ts).
@@ -59,7 +63,8 @@
       "/dino/api/events", "/dino/api/events/beta",
       "/dino/api/crash",
       "/dino/sonos",
-      "/dino/sonos/v2.0/timePlayed",
+      "/dino/sonos/v2.0/timePlayed", "/dino/sonos/v2.0", "/dino/sonos/v2.0/",
+      "/dino/sonos/v2/timePlayed", "/dino/sonos/v2", "/dino/sonos/v2/",
       "/dino/alexa",
       "/dino/stats", "/dino/stats/", "/dino/stats.html", "/dino/api/stats",
       "/dino/books", "/dino/books/", "/dino/books.html",

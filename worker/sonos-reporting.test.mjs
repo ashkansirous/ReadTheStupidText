@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 
 import { serveObject } from "./downloads.ts";
 import { runFirst, stripJsonc } from "./jsonc-run-first.mjs";
-import { MAX_COUNTED_PER_REQUEST, SONOS_REPORTING_PATH, countedSeconds, handleSonosReporting, isSonosReportingPath, parseReports } from "./sonos-reporting.ts";
+import { MAX_COUNTED_PER_REQUEST, SONOS_REPORTING_BASES, SONOS_REPORTING_PATH, countedSeconds, handleSonosReporting, isSonosReportingPath, parseReports } from "./sonos-reporting.ts";
 
 const ID_A = "7d0e5a4e000040008000000000000001";
 
@@ -43,6 +43,32 @@ test("the path is /sonos/v2.0/timePlayed", () => {
   assert.equal(isSonosReportingPath("/sonos/v2.0/timePlayed"), true);
   assert.equal(isSonosReportingPath("/sonos/timePlayed"), false);
   assert.equal(isSonosReportingPath("/sonos"), false);
+});
+
+test("Slice 467: /sonos/v2 and /sonos/v2.0 both serve timePlayed and answer GET/HEAD on the base", async () => {
+  for (const base of ["/sonos/v2", "/sonos/v2.0"]) {
+    assert.equal(isSonosReportingPath(`${base}/timePlayed`), true, base);
+    for (const path of [base, `${base}/`]) {
+      assert.equal(isSonosReportingPath(path), true, path);
+      for (const method of ["GET", "HEAD"]) {
+        const response = await handleSonosReporting(new Request(`https://dino.test${path}`, { method }), { DOWNLOADS: bucket() }, "", serveObject);
+        assert.equal(response.status, 200, `${method} ${path}`);
+        assert.equal(await response.text(), "");
+      }
+      assert.equal((await handleSonosReporting(new Request(`https://dino.test${path}`, { method: "POST", body: "{}" }), { DOWNLOADS: bucket() }, "", serveObject)).status, 405);
+    }
+  }
+  assert.equal(isSonosReportingPath("/sonos/v3"), false);
+  assert.equal(isSonosReportingPath("/sonos/v2/other"), false);
+});
+
+test("Slice 467: a final report POSTed to /sonos/v2/timePlayed counts like the v2.0 one", async () => {
+  const { points, usage } = usageOf();
+  const body = JSON.stringify({ items: [item("final", 120_000)] });
+  const response = await handleSonosReporting(new Request("https://dino.elinsoft.co.uk/sonos/v2/timePlayed", { method: "POST", body }), { DOWNLOADS: bucket() }, "", serveObject, usage);
+  assert.equal(response.status, 200);
+  assert.equal(points.length, 1);
+  assert.equal((await handleSonosReporting(new Request("https://dino.elinsoft.co.uk/sonos/v2/timePlayed", { method: "POST", body: "" }), { DOWNLOADS: bucket() }, "", serveObject)).status, 400);
 });
 
 test("a final report of 30 s or more is one reported row with the played seconds", async () => {
@@ -150,6 +176,12 @@ test("both wrangler configs run the Worker first for the report path and its /di
     const config = JSON.parse(stripJsonc(readFileSync(new URL(`../${name}`, import.meta.url), "utf8")));
     assert.ok(runFirst(config).includes(SONOS_REPORTING_PATH), `${name} lacks ${SONOS_REPORTING_PATH}`);
     assert.ok(runFirst(config).includes(`/dino${SONOS_REPORTING_PATH}`), `${name} lacks the /dino twin`);
+    for (const base of SONOS_REPORTING_BASES) {
+      for (const path of [`${base}/timePlayed`, base, `${base}/`]) {
+        assert.ok(runFirst(config).includes(path), `${name} lacks ${path}`);
+        assert.ok(runFirst(config).includes(`/dino${path}`), `${name} lacks /dino${path}`);
+      }
+    }
   }
 });
 

@@ -20,6 +20,8 @@ The same Worker also serves `https://dinoreader.sirous.uk/` (a second custom dom
 `site/dino/`, anything else serves the Read The Stupid Text files above. The host names
 are constants (`Host` in `worker/downloads.ts`, routing in `resolveSite`).
 
+**Third host (Slice 467):** `https://dino.elinsoft.co.uk/` is a third custom domain in `wrangler.jsonc` (`elinsoft.co.uk` is already a Cloudflare zone on this account, so the release pipeline creates the DNS record; never a shell deploy) and serves the same Dino site as `dinoreader.sirous.uk`: `DINO_HOSTS`/`isDinoHost` in `worker/download-keys.mjs` are the one list, and `check-configs` fails when either custom domain is missing. The Sonos integration's host. Its Reporting Endpoint is `https://dino.elinsoft.co.uk/sonos/v2` (Sonos portal, an owner step): `POST /sonos/v2/timePlayed` and `/sonos/v2.0/timePlayed` count plays, and `GET`/`HEAD` on `/sonos/v2` or `/sonos/v2.0` (with or without a trailing slash) answer 200 with an empty body for the portal's reachability check.
+
 | URL on `dinoreader.sirous.uk` | Served from |
 | --- | --- |
 | `/`, `/index.html` | `site/dino/index.html` |
