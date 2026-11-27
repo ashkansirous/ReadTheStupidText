@@ -256,6 +256,41 @@ public class SpeakerAttributorTests
             Speakers(Run("\"Hi!\" Peter said. \"Hello!\" Lucy replied. \"Fine.\"")).Take(2));
 
     [Fact]
+    public void Says_the_name_gives_the_line_to_that_character()
+    {
+        const string text =
+            "\"Time!\" says the Referee. \"Go on!\" says Carrot. \"Hooray!\" the Referee says. " +
+            "\"Again!\" said the Referee.";
+
+        Assert.Equal(new string?[] { "Referee", "Carrot", "Referee", "Referee" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void Says_the_multi_word_name_gives_the_line_to_that_character()
+    {
+        var speakers = Speakers(Run("\"Cluck!\" said the Little Red Hen. \"Hello!\" Peter said."));
+
+        Assert.Equal(new string?[] { "Little Red Hen", "Peter" }, speakers);
+    }
+
+    [Fact]
+    public void Says_the_name_across_a_line_break()
+    {
+        var speakers = Speakers(Run("\"Hi!\" said the\nReferee. \"Yo!\" said Carrot."));
+
+        Assert.Equal(new string?[] { "Referee", "Carrot" }, speakers);
+    }
+
+    [Fact]
+    public void A_phrase_after_said_the_is_not_a_speaker()
+    {
+        var speakers = Speakers(Run("Peter said the Magic Words: \"Abracadabra!\" Poof."));
+
+        Assert.DoesNotContain("Magic Words", speakers);
+        Assert.DoesNotContain("Magic", speakers);
+    }
+
+    [Fact]
     public void Name_followed_by_a_non_speech_verb_is_not_the_tag() =>
         Assert.Equal(new string?[] { "Lucy" }, Speakers(Run("Lucy whispered, \"Be quiet.\" Peter nodded.")));
 }

@@ -52,7 +52,8 @@ public sealed record LanguageRules(
     bool DashTagAfterQuote = false,
     FlavourWords? Flavours = null,
     string QuotePairs = "",
-    string PluralVerbSuffix = "")
+    string PluralVerbSuffix = "",
+    string NameArticle = "")
 {
     private static readonly IReadOnlySet<string> NoWords = new HashSet<string>();
     private static readonly IReadOnlyList<string> NoEndings = [];
