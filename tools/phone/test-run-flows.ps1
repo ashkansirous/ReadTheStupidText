@@ -223,6 +223,11 @@ try {
 } finally { Remove-Item $probe -Force -ErrorAction SilentlyContinue }
 $runText = Get-Content -Raw (Join-Path $PSScriptRoot 'run-flows.ps1')
 Assert-Equal 'run-flows copies -Serial before the dot-source' $true ($runText.IndexOf('$script:RequestedSerial = $Serial') -ge 0 -and $runText.IndexOf('$script:RequestedSerial = $Serial') -lt $runText.IndexOf("emulator\common.ps1"))
+# Slice 406 item 3c: the flow lint is one batched call that passes -CheckSource and joins the flow files with ';' (dropping either silently stops the `# expect-log:` source check on the phone path).
+$lintFn = [regex]::Match($runText, '(?s)function Invoke-FlowLint.*?\r?\n\}').Value
+Assert-Equal 'run-flows lint passes -CheckSource' $true ($lintFn -match "lint-flows\.ps1.*-CheckSource")
+Assert-Equal 'run-flows lint joins the flows with ;' $true ($lintFn -match "\(\`$flows -join ';'\)")
+Assert-Equal 'run-flows lint is one call, not one per flow' 1 ([regex]::Matches($lintFn, 'lint-flows\.ps1').Count)
 Assert-Equal 'run-flows finds the phone with the copy' $true ($runText -match 'Find-Phone \$script:RequestedSerial')
 Assert-Equal 'run-flows restarts the budget clock at the first flow' $true ($runText -match '(?s)function Invoke-LeasedRun.*\$script:RunStart = Get-Date.*Invoke-PlannedFlows')
 Assert-Equal 'run-flows JAVA_TOOL_OPTIONS uses the space-free path' $true ($runText -match 'JAVA_TOOL_OPTIONS = "-Duser.home=\$\(Get-SpaceFreePath')

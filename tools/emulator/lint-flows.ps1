@@ -19,12 +19,13 @@
    - Slice 376 item 4 (Slice 354 item 3): every `- takeScreenshot: <name>` of a flow (not under an `rtst` folder: RTST has no mock frames) is listed in
      screenshot-frames.json (the contact-sheet manifest, -Manifest), so a shot nobody lays out fails here and not first in CI's test-contact-sheet.ps1.
    - Slice 406 item 3: every fixed word of every `# expect-log:` marker (the words up to its first run-time value: digit, `{`, `<`, `(`, or what follows an `=`) appears somewhere in the C#, Swift, Kotlin or Java
-     source under src (each word is checked against the source as a whole, not on one line; same-line is open item 3b) (-SourceRoot, Testing/ included), so a reworded log line fails here and not in an 8-minute emulator run. It runs when linting a folder, or one flow with -CheckSource (one-flow calls
-     from run-flows.ps1 skip it: reading the source costs seconds). A marker that starts with a value is printed as a warning (unchecked); a missing source folder is a warning too.
+     source under src (each word is checked against the source as a whole, not on one line; same-line is open item 3b) (-SourceRoot, Testing/ included), so a reworded log line fails here and not in an 8-minute emulator run. It runs when linting a folder, or flows with -CheckSource
+     (run-flows.ps1 passes all its flows in one call joined with ';', so the source is read once: reading it costs seconds). Marker text in a C# verbatim string (`""`), or a Kotlin
+     string with `\$` or `\'`, is matched unescaped too (item 3d); an unreadable folder while walking the source is skipped (item 3e). A marker that starts with a value is printed as a warning (unchecked); a missing source folder is a warning too.
   Used by run-flows.ps1 (before any build). Its self-test, test-lint-flows.ps1, runs in CI (tools-selftests.yml, Slice 212) and by hand.
 #>
 param(
-    [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro'),
+    [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro'),   # one folder or flow, or several flows joined with ';' (run-flows.ps1, Slice 406 item 3c: one call, the source read once)
     # The contact-sheet manifest every takeScreenshot name must appear in (Slice 376 item 4); a missing file switches the rule off.
     [string]$Manifest = (Join-Path $PSScriptRoot 'screenshot-frames.json'),
     # The app source every `# expect-log:` marker must appear in (Slice 406 item 3); a missing folder switches the rule off.
@@ -189,12 +190,20 @@ function Test-ExpectLogMarkers([string]$File, [string[]]$Lines) {
 # Slice 406 item 3: all source text under -SourceRoot (C#, Swift, Kotlin, Java; app code and Testing/) joined once, obj/bin pruned while walking; $null when the rule is off.
 # The rule runs for a whole folder, or for one flow with -CheckSource: run-flows.ps1 lints each flow in its own process and must not read ~940 files every time.
 function Get-SourceFiles([string]$Dir) {
-    $entries = try { @([IO.Directory]::EnumerateFileSystemEntries($Dir)) } catch [UnauthorizedAccessException] { @() }   # an unreadable folder holds no source we can lint
+    # Slice 406 item 3e: an unreadable folder (access denied, an IOException, a path past the length limit, a folder removed mid-walk) holds no source we can lint; it never aborts the lint.
+    $entries = try { @([IO.Directory]::EnumerateFileSystemEntries($Dir)) } catch [UnauthorizedAccessException], [IO.IOException], [ArgumentException], [NotSupportedException] { @() }
     foreach ($item in $entries) {
         $name = [IO.Path]::GetFileName($item)
-        if ([IO.Directory]::Exists($item)) { if ($name -ne 'obj' -and $name -ne 'bin' -and -not ([IO.File]::GetAttributes($item) -band [IO.FileAttributes]::ReparsePoint)) { Get-SourceFiles $item } }   # a junction or symlink could loop
-        elseif ($name -match '\.(cs|swift|kt|java)$') { $item }
+        if (Test-WalkableFolder $item $name) { Get-SourceFiles $item }
+        elseif ($name -match '\.(cs|swift|kt|java)$' -and -not [IO.Directory]::Exists($item)) { $item }
     }
+}
+
+# A folder worth walking: not obj/bin, not a junction or symlink (it could loop), and its attributes readable.
+function Test-WalkableFolder([string]$Item, [string]$Name) {
+    if (-not [IO.Directory]::Exists($Item) -or $Name -eq 'obj' -or $Name -eq 'bin') { return $false }
+    try { return -not ([IO.File]::GetAttributes($Item) -band [IO.FileAttributes]::ReparsePoint) }
+    catch { return $false }   # no-fallback: unreadable attributes mean the folder is skipped, like any unreadable folder
 }
 
 # One source file's text, or nothing plus a warning line when it is locked or unreadable: one bad file must not abort the whole lint.
@@ -210,7 +219,9 @@ function Get-SourceText {
     $raw = ((Get-SourceFiles (Resolve-Path -LiteralPath $SourceRoot).Path | ForEach-Object { Read-SourceFile $_ }) -join "`n")
     if (-not $raw) { Write-Host $off; return $null }
     # A log line in C# source is written escaped (`\"`, `\\`, `{{`, `}}`), the marker is the text the app prints: search both forms.
-    return ($raw + "`n" + $raw.Replace('\"', '"').Replace('\\', '\').Replace('{{', '{').Replace('}}', '}'))
+    # Slice 406 item 3d: a C# verbatim or raw string doubles its quote (`""`), a Kotlin string escapes `\$` and `\'`: those forms are unescaped in a third copy.
+    $plain = $raw.Replace('\"', '"').Replace('\\', '\').Replace('{{', '{').Replace('}}', '}')
+    return ($raw + "`n" + $plain + "`n" + $raw.Replace('""', '"').Replace('\$', '$').Replace("\'", "'"))
 }
 
 # The fixed words of a marker: the text up to its first run-time value. A log line is built from parts (`$"HOOK {name} ok paid={n}"`, a constant for the hook name, an enum
@@ -417,11 +428,16 @@ function Test-FlowFile([System.IO.FileInfo]$File) {
     Test-FlowBody $File.FullName $lines $separator -Dir (Split-Path $File.FullName -Parent)
 }
 
-if (-not (Test-Path $Path)) { Write-Host "lint-flows: $Path does not exist."; exit 2 }
+function Get-FlowFiles([string]$One) {
+    if ((Get-Item $One).PSIsContainer) { return @(Get-ChildItem $One -Include '*.yaml', '*.yml' -Recurse -File) }
+    return @(Get-Item $One)
+}
+
+$paths = @($Path -split ';' | Where-Object { $_ })
+foreach ($one in $paths) { if (-not (Test-Path $one)) { Write-Host "lint-flows: $one does not exist."; exit 2 } }
 $script:ManifestShots = Get-ManifestShots
-$files = @(Get-ChildItem $Path -Include '*.yaml', '*.yml' -Recurse -File)
-if ((Get-Item $Path).PSIsContainer -eq $false) { $files = @(Get-Item $Path) }
-$script:CheckSourceRule = $CheckSource -or (Get-Item $Path).PSIsContainer
+$files = @($paths | ForEach-Object { Get-FlowFiles $_ })
+$script:CheckSourceRule = $CheckSource -or [bool]@($paths | Where-Object { (Get-Item $_).PSIsContainer })
 $script:Unchecked = New-Object Collections.Generic.List[string]
 $script:SourceText = Get-SourceText
 foreach ($file in $files) { Test-FlowFile $file }

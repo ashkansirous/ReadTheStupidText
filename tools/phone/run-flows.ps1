@@ -79,19 +79,17 @@ function Write-DryRun($Plan) {
     }
 }
 
-# Review 7: lints only the flow files this run will start (an error in an unrelated flow must not block the phone stage). lint-flows.ps1 -Path takes one file.
+# Review 7: lints only the flow files this run will start (an error in an unrelated flow must not block the phone stage). lint-flows.ps1 -Path takes the files joined with ';' (one call, with -CheckSource, Slice 406 item 3c).
 function Invoke-FlowLint($Plan) {
     $engine = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'   # the child's exit code is the answer; a stderr line must not end this script
-    $clean = $true
-    foreach ($item in @($Plan | Where-Object { -not $_.Refusal })) {
-        $lines = @(& $engine -NoProfile -File (Join-Path $PSScriptRoot '..\emulator\lint-flows.ps1') -Path $item.File.FullName 2>&1 | ForEach-Object { "$_" })
-        if ($LASTEXITCODE -eq 0) { continue }
-        $clean = $false
-        $lines | Select-Object -First 12 | ForEach-Object { Write-Host "  $_" }
-    }
-    if ($clean) { Write-Host 'lint-flows: clean (the flows of this run)' }
-    return $clean
+    $flows = @($Plan | Where-Object { -not $_.Refusal } | ForEach-Object { $_.File.FullName })
+    if ($flows.Count -eq 0) { return $true }
+    # Slice 406 item 3c: one call for every flow of the run, with -CheckSource, so the `# expect-log:` source check runs on the phone path and the source is read once (not once per flow).
+    $lines = @(& $engine -NoProfile -File (Join-Path $PSScriptRoot '..\emulator\lint-flows.ps1') -Path ($flows -join ';') -CheckSource 2>&1 | ForEach-Object { "$_" })
+    if ($LASTEXITCODE -eq 0) { Write-Host 'lint-flows: clean (the flows of this run, markers checked against the source)'; return $true }
+    $lines | Select-Object -First 12 | ForEach-Object { Write-Host "  $_" }
+    return $false
 }
 
 function Invoke-InstallStep([string]$Phone) {

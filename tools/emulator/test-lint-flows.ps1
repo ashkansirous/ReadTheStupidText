@@ -64,6 +64,14 @@ Assert-Findings 'expect-log-missing-source.yaml' @() '' (Join-Path $fixtures 'no
 # Review #2: the old check looked only at the first two fixed words; '[Reading] animal zebra clip Pig plays' passed it ('[Reading]' and 'animal' exist) and must fail now ('zebra' is nowhere in the source).
 Assert-Findings 'expect-log-two-words.yaml' @(New-Expect 2 'appears nowhere in the app source')
 Assert-Findings 'expect-log-source-kinds.yaml' @()   # a marker logged by a Swift file, a literal cut at its first value, and one starting with a value (a warning, not a finding)
+Assert-Findings 'expect-log-escapes.yaml' @()   # Slice 406 item 3d: a marker in a C# verbatim string and one in a Kotlin-escaped string are found
+# Slice 406 item 3c: several flows joined with ';' are linted in one call, markers checked against the source.
+$multi = Invoke-Lint ((Join-Path $fixtures 'expect-log-ok.yaml') + ';' + (Join-Path $fixtures 'expect-log-missing-source.yaml')) ''
+Assert-Equal 'two flows in one call: the one with a missing marker is reported' 1 @($multi.Findings | Where-Object { $_ -match 'expect-log-missing-source.*appears nowhere' }).Count
+Assert-Equal 'two flows in one call: exit 1' 1 $multi.Exit
+# Slice 406 item 3e: a source root the walk cannot enumerate (here a file, which throws an IOException) is skipped, never an abort: the rule switches off and the lint ends 0.
+$rootIsFile = Invoke-Lint (Join-Path $fixtures 'expect-log-missing-source.yaml') '' (Join-Path $fixtures 'expect-log-ok.yaml')
+Assert-Equal 'an unreadable source root does not abort the lint' 0 $rootIsFile.Exit
 # Without -CheckSource a single flow is not checked against the source (run-flows.ps1's per-flow calls stay fast); a folder always is.
 $single = @(& $lint -Path (Join-Path $fixtures 'expect-log-missing-source.yaml') -SourceRoot (Join-Path $PSScriptRoot 'fixtures\lint-src') 6>&1 | ForEach-Object { "$_" })
 Assert-Equal 'a single flow without -CheckSource skips the source rule' 0 @($single | Where-Object { $_ -match 'appears nowhere' }).Count
