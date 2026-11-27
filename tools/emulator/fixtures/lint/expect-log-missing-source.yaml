@@ -1,0 +1,5 @@
+# expect-log: [Reading] fine marker
+# expect-log: [Reading] reworded marker nobody logs
+appId: uk.sirous.dinoreader.dbg
+---
+- back

@@ -1,0 +1,6 @@
+appId: uk.sirous.dinoreader.dbg
+# expect-log: StoreKit swift marker ok
+# expect-log: HOOK install-audio-pack ok paid=2
+# expect-log: 3 of 5
+---
+- back
