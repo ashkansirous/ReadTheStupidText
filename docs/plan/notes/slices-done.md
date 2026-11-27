@@ -295,6 +295,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 432 | Dino: drop the unused PDF and Word libraries (PdfPig, OpenXml) from the Android and iOS apps | built (item 3 IPA listing and the device checks in unverified.md) | #1389 | | [432-dino-drop-pdf-word-libraries.md](../slices/432-dino-drop-pdf-word-libraries.md) |
 | 453 | Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" | built (phone checks in unverified.md) | #1390 | | [453-dino-first-books-cancelled-load-copy.md](../slices/453-dino-first-books-cancelled-load-copy.md) |
 | 436 | Dino: Sonos counts only real plays and shows new books within 5 minutes | built (worker only; A4 Sonos portal field and A7 are the owner's, live checks in unverified.md) | #1391 | | [436-dino-sonos-real-plays-and-browse.md](../slices/436-dino-sonos-real-plays-and-browse.md) |
+| 395 | Dino: recording a character shows and replaces only that character's quoted words; the narration around them keeps the book's own audio | built (split: part keys and per-character cards; part takes ship switched off, `PartTakes.Enabled = false`; playback is Slice 443) | #1233 | | [395-dino-record-only-the-characters-words.md](../slices/395-dino-record-only-the-characters-words.md) |
 
 ## Shared
 

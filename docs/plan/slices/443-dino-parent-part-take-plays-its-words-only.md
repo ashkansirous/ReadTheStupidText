@@ -4,7 +4,7 @@
 
 *Planned 2026-11-25 (plan-cleanup of that day; not built).*
 
-**Starts after:** Slice 395 (part keys and per-character cards) is merged.
+**Starts after:** Slice 395 (part keys and per-character cards), merged as PR #1233 (2026-11-27).
 
 Second half of Slice 395, split out by the plan-cleanup check 2026-11-25. Read Slice 395's Decisions 1-6, its park note and the faults below first; the slice file wins.
 
@@ -14,4 +14,5 @@ Second half of Slice 395, split out by the plan-cleanup check 2026-11-25. Read S
 - [ ] 3. "Listen and change" plays a part's take alone.
 - [ ] 4. Fix the known faults from `D:/ReadTheStupidText-worktrees/reviews/pr-1233-starter-medium3.md` (copy them into this file first): `StarterUpdate.cs:944` a part-only move drops the sentence clip; `RecordSplitBook.cs:658` an animal-sound-only take is ignored; an unknown cover must not drop valid recordings; load-time overlap must not drop a newer take. A sentence clip wins where it and a part clip cover the same words; a moved part clip whose page splits differently keeps its cover cleared.
 - [ ] 5. Tests on Freddy's pages 2 and 3; a Maestro record flow with the Debug record hooks reading the `[RecordedClip] playing` lines.
+- [ ] 6. Turn `PartTakes.Enabled` on (`src/Dino/DinoReader.Core/PartTakes.cs`) together with playback; run `.maestro/dino/record-only-the-words.yaml`; handle Slice 395's follow-ups (its *From review* list).
 - Fresh review gate, both passes reading every file.
