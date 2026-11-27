@@ -1,11 +1,13 @@
 # Slice 424 — Dino: the Android 1.136.0 unclean exit of 2026-11-20 (first run, then the new shelf's Settings) and the gaps that hide its cause
 **Product:** Dino
 
+*In progress (wave 2026-11-27), draft PR.*
+
 *Plan-cleanup check 2026-11-25: keep open, nothing started. Checked on origin/main 1a8bf725: no `first-run-to-settings.yaml`; no PR for this slice's work (only planning PR #1323); `RollingLogFile` has no 5 s timer; the Crashes folder has no session id or last-page field (git grep). `AndroidCrashHooks` already reads `GetHistoricalProcessExitReasons` (Slice 227) but only for native, ANR and low-memory kinds, so item 3 (reason on `unclean_exit`) is still open. No outside waits; all 8 items are this slice's own work.*
 
 *Planned 2026-11-20 from the crash store and `dino_usage` (read 2026-11-20 ~18:30 UTC). User, 2026-11-20: "add a bug/slice for the crash".*
 
-**Touches:** `src/Shared/Sirous.Reading.Mobile.Shared/Crashes/CrashReporter.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/AndroidCrashHooks.cs`, `src/Shared/Sirous.Reading.Application/Crashes/LaunchFacts.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReport.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReportBuilder.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReportJson.cs`, `src/Shared/Sirous.Reading.Application/Crashes/RollingLogFile.cs`, `src/Shared/Sirous.Reading.Application/Crashes/PendingCrashStore.cs`, `tests/Shared/Shared.Tests/` (crash tests), `worker/` (only if the report JSON gains a field the Worker must keep), `.maestro/dino/first-run-to-settings.yaml` (new), this slice file.
+**Touches:** `src/Shared/Sirous.Reading.Mobile.Shared/Crashes/CrashReporter.cs`, `src/Shared/Sirous.Reading.Mobile.Shared/Platforms/Android/Crashes/AndroidCrashHooks.cs`, `src/Shared/Sirous.Reading.Application/Crashes/LaunchFacts.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReport.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReportBuilder.cs`, `src/Shared/Sirous.Reading.Application/Crashes/CrashReportJson.cs`, `src/Shared/Sirous.Reading.Application/Crashes/RollingLogFile.cs`, `src/Shared/Sirous.Reading.Application/Crashes/PendingCrashStore.cs`, `tests/Shared/Shared.Tests/` (crash tests), `worker/` (only if the report JSON gains a field the Worker must keep), `.maestro/dino/first-run-to-settings.yaml` (new), `tools/crashes/pull-play.py`, `tools/crashes/report.mjs`, this slice file.
 
 ## Why
 
