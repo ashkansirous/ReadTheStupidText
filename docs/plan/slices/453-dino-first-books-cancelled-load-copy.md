@@ -1,6 +1,8 @@
 # Slice 453 — Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet"
 **Product:** Dino
-**Touches:** `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/Dino/DinoReader.Tests/FirstBooks*Tests.cs`
+**Touches:** `src/Dino/DinoReader.App/FirstBooksPage.cs`, `src/Dino/DinoReader.App/FirstBooksPage.Views.cs`, `src/Dino/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/Dino/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/Dino/DinoReader.Tests/FirstBooks*Tests.cs`
+
+*In progress (wave 2026-11-27), draft PR.* (Wave decision: the English copy is written by the builder in the style of the existing FirstBooks_Offline* strings, and the 14 translations are filled in the same resx files as every other FirstBooks string.)
 
 *Planned 2026-11-25 (plan-cleanup of that day; moved out of Slice 299 item 2; not built).*
 
