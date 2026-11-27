@@ -19,7 +19,7 @@
 
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
-*Built 2026-11-27, PR #1422 (merge pending). Fast tests pass (Shared 1786, RTST 630, Dino 5165). The extra-ezafe comma fix only; the re-listen stays an `[owner]` ear check, not yet done.*
+*Built 2026-11-27, merged as PR #1422 (3e81d931). Fast tests pass (Shared 1786, RTST 630, Dino 5165). The extra-ezafe comma fix only; the re-listen stays an `[owner]` ear check, not yet done.*
 
 *Changed while building:* `FarsiEzafe.CommaPairs` inserts an Arabic comma «،» for «صبح یک» and «روز صبح». «دفتر خرید» gets it only at a clause end (the verb reading «bought»; closing marks and spaces are skipped; a line break and the end of text count as a clause end). Display text and highlight offsets never change: the only callers of `Apply` are the engine's Generate and the cache's `KeyFor`, so no offset is mapped back. `gyro-1` stays closed as the model's limit (recorded above).
 

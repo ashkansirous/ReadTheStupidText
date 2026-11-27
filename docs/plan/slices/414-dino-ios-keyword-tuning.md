@@ -6,8 +6,9 @@ Source: phone scope "Dino: store name, subtitle and keywords that parents search
 
 **Touches:** `docs/store-listings/dino/appstore.md` (keyword line only)
 
-Starts 4 weeks after Slice 412's English App Store name and subtitle go live (write that date here when it happens);
-finish by week 6.
+Starts 4 weeks after Slice 412's English App Store name and subtitle go live; finish by week 6.
+
+*Watch:* Slice 412's English App Store name went live 2026-11-24 (Slice 412). The slice starts about 2026-12-22 (4 weeks later) and finishes by about 2027-01-05 (week 6). Until then there is nothing to do: this is a date wait, not the slice's own work.
 
 ## Work items
 
