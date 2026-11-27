@@ -136,3 +136,15 @@ index=dino_usage name=fallback | timechart count by detail
 ```
 
 plus the funnel and where-stopped queries above, and the "Event flow" and "Where sessions end" tables (the span queries above). Seconds are whole seconds of audio heard since the previous paused/stopped row of that reading; a Sonos or Alexa `book_listened` row holds an estimated track length, so those platforms stay out.
+
+## Test-looking sessions (Slice 462)
+
+What still counts as a real user although it may be a test: first sessions under 2 s and sessions with 10 or more cancelled downloads (the two criteria the queries apply; version strings that look unreleased are not measured, so the number does not include them). The Worker and the app cannot tell these from people, so they are read here, never dropped. Run over 7 days after a release; the share of first sessions (`installAge=first`) that look like tests should stay under 5%. Cancels are `wait_cancelled` plus `audio_pack_download` with `detail=cancelled`.
+
+```
+index=dino_usage installAge=first platform!=sonos platform!=alexa | stats dc(session) by country, version
+index=dino_usage installAge=first platform!=sonos platform!=alexa | stats max(sinceLaunch) as seconds, count(eval(name="wait_cancelled" OR (name="audio_pack_download" AND detail="cancelled"))) as cancels by session, platform, version | where cancels >= 10 OR NOT seconds>=2
+index=dino_usage installAge=first platform!=sonos platform!=alexa | stats max(sinceLaunch) as seconds, count(eval(name="wait_cancelled" OR (name="audio_pack_download" AND detail="cancelled"))) as cancels by session, platform, version | eval test=if(cancels>=10,1,if(seconds>=2,0,1)) | stats count as sessions, sum(test) as testlike | eval pct=100*testlike/sessions
+```
+
+One denominator for all three queries and for the 38% baseline: first sessions seen in any event (not only those that logged `app_opened`), phones and desktops only (Sonos and Alexa out). A first session with no `sinceLaunch` (null `seconds`) counts as test-like (`NOT seconds>=2`; Ninjalog has no `isnull`). The third query gives the percentage (`pct`) of those sessions that look like tests. (Parsed and run on 2026-11-27; a 7-day window needs the data of a released build.) Builds from the release that ships Slice 462 skip Android Test Harness Mode devices (Firebase Test Lab has been skipped since Slice 167); the effect is unproven until the next window's count of sessions with 10 or more cancels. A group that still appears is a gap to write up, not data to subtract by hand.

@@ -116,4 +116,25 @@ public class UsageEligibilityTests
     [InlineData(null, null, null, null)]
     public void RealPhoneBuildStringsAreNotEmulators(string? fingerprint, string? hardware, string? model, string? product) =>
         Assert.False(UsageEligibility.IsEmulatorBuild(fingerprint, hardware, model, product));
+
+    // Slice 462: Test Lab's setting or Android's Test Harness Mode marks a test device; nothing else does.
+    [Theory]
+    [InlineData("true", false)]
+    [InlineData(null, true)]
+    [InlineData("false", true)]
+    [InlineData("true", true)]
+    public void TestLabSettingOrTestHarnessIsATestDevice(string? setting, bool inUserTestHarness) =>
+        Assert.True(UsageEligibility.IsTestLabDevice(setting, inUserTestHarness));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("false")]
+    [InlineData("True")]
+    public void NoTestLabSettingAndNoHarnessIsARealDevice(string? setting) =>
+        Assert.False(UsageEligibility.IsTestLabDevice(setting, false));
+
+    [Fact]
+    public void ATestHarnessDeviceIsSkippedAsTestLab() =>
+        Assert.Equal(UsageSkipReason.TestLab, UsageEligibility.Check(new UsageFacts(false, "1.136.3", false, UsageEligibility.IsTestLabDevice(null, true))));
 }
