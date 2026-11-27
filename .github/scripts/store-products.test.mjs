@@ -21,8 +21,13 @@ import {
 import { exitCodeOf, loadStoreEnv, missingKeys, parseEnvText, storeEnvFrom, isEntryScript as isLocalEntryScript } from './store-products-local.mjs';
 
 import {
-    applePlanForAvailability, appleRetryDelayMs, retryingAsc, SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionAvailabilityBody, applePricePlan, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionBody,
+    applePlanForAvailability, appleRetryDelayMs, retryingAsc, SUBSCRIPTION_PLANS, SUBSCRIPTION_PRODUCT_ID, TRIAL_DAYS, appleSubscriptionAvailabilityBody, applePricePlan, appleSubscriptionBody, appleSubscriptionPriceBody, appleTrialBody, createAppleSubscription, createPlaySubscription, microsoftSubscriptionManual,
     retryingPlay, playPlanRegionalConfigs, playHeldRegions, playHasGbPrice, playRegionsVersion, playTaxExclusiveInput, playSubscriptionBody, playSubscriptionStage, playTrialOfferBody, subscriptionItemsFor, subscriptionPlanLines,
+} from './store-products.mjs';
+
+import {
+    APPLE_LISTING_KINDS, SUBSCRIPTION_MANUAL_STEPS, appleAddListings, appleVersionIsDraft, appleEnsureSubscriptionScreenshot, appleReviewSubmissionBodies, appleScreenshotCommitBody, appleSubmitQueuedVersions, appleSubscriptionExtras,
+    appleSubscriptionScreenshotReserveBody, appleVersionBody, appleVersionListingBody, parseSubscriptionListings, readSubscriptionListings, withinLimit,
 } from './store-products.mjs';
 
 const SCRIPT = fileURLToPath(new URL('./store-products.mjs', import.meta.url));
@@ -54,8 +59,9 @@ test('Slice 346: a product id with a hyphen is flagged (Google Play rejects it),
 });
 
 test('Slice 346: the command line defaults to a dry run on all three stores; a typo never becomes a real run', () => {
-    assert.deepEqual(parseArgs([]), { apply: false, stores: ALL_STORES, contentRoot: 'content/dino', book: null, checkPrices: false });
-    assert.deepEqual(parseArgs(['--apply', '--store', 'google', '--store', 'apple', '--content', 'x']), { apply: true, stores: ['google', 'apple'], contentRoot: 'x', book: null, checkPrices: false });
+    assert.deepEqual(parseArgs([]), { apply: false, stores: ALL_STORES, contentRoot: 'content/dino', book: null, checkPrices: false, locales: null, submit: false });
+    assert.deepEqual(parseArgs(['--apply', '--store', 'google', '--store', 'apple', '--content', 'x']), { apply: true, stores: ['google', 'apple'], contentRoot: 'x', book: null, checkPrices: false, locales: null, submit: false });
+    assert.equal(parseArgs(['--apply', '--submit']).submit, true);
     assert.throws(() => parseArgs(['--aply']), /Unknown argument/);
     assert.throws(() => parseArgs(['--store', 'amazon']), /Unknown store/);
     assert.throws(() => parseArgs(['--store']), /Unknown store/);
@@ -1138,7 +1144,7 @@ test('Slice 384: the Apple subscription bodies carry the product id, the plan pe
     assert.deepEqual([trial.attributes.offerMode, trial.attributes.duration, trial.attributes.numberOfPeriods, trial.relationships.territory.data.id], ['FREE_TRIAL', 'ONE_WEEK', 1, 'FRA']);
     const plan = applePricePlan('gbp', [{ id: 'fr', relationships: { territory: { data: { id: 'FRA' } } } }]);
     assert.deepEqual([...plan], [['GBR', 'gbp'], ['FRA', 'fr']]);
-    assert.deepEqual(microsoftSubscriptionBody(monthly, 'store1'), { applicationIds: ['store1'], productId: monthly.productId, productType: 'Subscription' });
+    assert.equal(microsoftSubscriptionManual(monthly).outcome, Outcome.Manual);
 });
 
 test('Slice 384: an Apple subscription is created with group, listing, price and trial; a whole one is left alone; a missing price point is an error', async () => {
@@ -1422,10 +1428,11 @@ test('Slice 384: the dry run lists the subscription and what is left by hand for
     for (const store of ALL_STORES) {
         const lines = subscriptionPlanLines(store).join('\n');
         assert.match(lines, /1\.99 GBP and yearly 14\.99 GBP, 7-day free trial/);
-        assert.match(lines, /would create uk\.sirous\.dinoreader\.sub/);
+        assert.match(lines, store === Store.Microsoft ? /would NOT create uk\.sirous\.dinoreader\.sub/ : /would create uk\.sirous\.dinoreader\.sub/);
         assert.match(lines, /by hand:/);
     }
     assert.match(subscriptionPlanLines(Store.Microsoft).join('\n'), /Partner Center/);
+    assert.match(subscriptionPlanLines(Store.Microsoft).join('\n'), /Durable and Consumable/);
     const root = mkdtempSync(join(tmpdir(), 'dry-sub-'));
     try {
         mkdirSync(join(root, 'ok'));
@@ -1434,6 +1441,247 @@ test('Slice 384: the dry run lists the subscription and what is left by hand for
         const result = spawnSync(process.execPath, [SCRIPT, '--content', root], { env, encoding: 'utf8' });
         assert.equal(result.status, 0);
         assert.match(result.stdout, /subscription, monthly 1\.99 GBP and yearly 14\.99 GBP/);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+// ---- Slice 454: the other App Store languages, the subscription screenshot, the review submission, Microsoft by hand ----
+
+const FEW_LISTINGS = [
+    { language: 'de', locale: 'de-DE', name: 'Alle Buecher', description: 'Oeffnet alle Buecher.' },
+    { language: 'fr', locale: 'fr-FR', name: 'Tous les livres', description: 'Ouvre tous les livres.' },
+];
+
+test('Slice 454: the listings file gives every Apple language (fa has none), each within Apple\'s limits', () => {
+    const listings = readSubscriptionListings();
+    assert.equal(listings.length, 15);
+    assert.ok(!listings.some((listing) => listing.language === 'fa'));
+    assert.deepEqual(listings.filter((listing) => ['es-MX', 'zh-Hans', 'no', 'ar-SA'].includes(listing.locale)).map((listing) => listing.locale).sort(), ['ar-SA', 'es-MX', 'no', 'zh-Hans']);
+    assert.ok(listings.every((listing) => Array.from(listing.name).length <= 30 && Array.from(listing.description).length <= 45));
+    assert.deepEqual(readSubscriptionListings(['fr-FR']).map((listing) => listing.locale), ['fr-FR']);
+    assert.throws(() => readSubscriptionListings(['xx-XX']), /no listing for xx-XX/);
+});
+
+test('Slice 454: a subscription name or description over Apple\'s limit fails instead of being cut', () => {
+    const text = (name, description) => `## de (Apple de-DE, Play de-DE)\n- Apple name: ${name}\n- Description: ${description}\n`;
+    assert.equal(parseSubscriptionListings(text('x'.repeat(30), 'y'.repeat(45)))[0].name.length, 30);
+    assert.throws(() => parseSubscriptionListings(text('x'.repeat(31), 'ok')), /de-DE subscription name is 31 characters, Apple allows 30/);
+    assert.throws(() => parseSubscriptionListings(text('ok', 'y'.repeat(46))), /de-DE subscription description is 46 characters, Apple allows 45/);
+    assert.throws(() => parseSubscriptionListings(text('ok', '')), /no Apple name or no description/);
+    assert.equal(withinLimit('すべての本', 5, 'name'), 'すべての本', 'characters are counted, not UTF-16 units');
+    assert.throws(() => withinLimit('x'.repeat(46), 45, 'the description'), /46 characters/);
+});
+
+test('Slice 454: only the missing languages are added, in a new version, through the v2 routes; a complete subscription makes no call', async () => {
+    const kind = APPLE_LISTING_KINDS.subscription;
+    const asc = fakeAsc({
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [{ attributes: { locale: 'en-US' } }] }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [{ id: 'v0', attributes: { state: 'IN_REVIEW' } }] }),
+        'GET /v1/subscriptionVersions/v0/localizations': okJson({ data: [{ attributes: { locale: 'de-DE' } }] }),
+        'POST /v1/subscriptionVersions': okJson({ data: { id: 'v1' } }),
+        'POST /v2/subscriptionLocalizations': okJson({ data: {} }),
+    });
+    const session = { log: () => {} };
+    assert.equal(await appleAddListings(asc, kind, 's1', FEW_LISTINGS, session), true);
+    assert.deepEqual(asc.calls.filter((call) => call.startsWith('POST')), ['POST /v1/subscriptionVersions', 'POST /v2/subscriptionLocalizations']);
+    assert.deepEqual(session.versionItems, [{ relationship: 'subscriptionVersion', type: 'subscriptionVersions', id: 'v1' }]);
+    const body = appleVersionListingBody(kind, FEW_LISTINGS[1], 'v1').data;
+    assert.deepEqual([body.attributes, body.relationships.version.data], [{ locale: 'fr-FR', name: 'Tous les livres', description: 'Ouvre tous les livres.' }, { type: 'subscriptionVersions', id: 'v1' }]);
+    const whole = fakeAsc({
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: FEW_LISTINGS.map((listing) => ({ attributes: { locale: listing.locale } })) }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [] }),
+    });
+    assert.equal(await appleAddListings(whole, kind, 's1', FEW_LISTINGS, {}), false);
+    assert.equal(whole.calls.filter((call) => call.startsWith('POST')).length, 0);
+});
+
+test('Slice 454 review #1: a draft version a failed run left is finished and queued, not abandoned; no new version is created', async () => {
+    const kind = APPLE_LISTING_KINDS.subscription;
+    const asc = fakeAsc({
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [{ id: 'vd', attributes: { state: 'PREPARE_FOR_SUBMISSION' } }] }),
+        'GET /v1/subscriptionVersions/vd/localizations': okJson({ data: [{ attributes: { locale: 'de-DE' } }] }),
+        'POST /v2/subscriptionLocalizations': okJson({ data: {} }),
+    });
+    const session = { log: () => {} };
+    assert.equal(await appleAddListings(asc, kind, 's1', FEW_LISTINGS, session), true);
+    assert.deepEqual(asc.calls.filter((call) => call.startsWith('POST')), ['POST /v2/subscriptionLocalizations']);
+    assert.deepEqual(session.versionItems.map((item) => item.id), ['vd']);
+    const complete = fakeAsc({
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [{ id: 'vd', attributes: { state: 'DRAFT' } }] }),
+        'GET /v1/subscriptionVersions/vd/localizations': okJson({ data: FEW_LISTINGS.map((listing) => ({ attributes: { locale: listing.locale } })) }),
+    });
+    const queued = { log: () => {} };
+    assert.equal(await appleAddListings(complete, kind, 's1', FEW_LISTINGS, queued), true);
+    assert.equal(complete.calls.filter((call) => call.startsWith('POST')).length, 0);
+    assert.deepEqual(queued.versionItems.map((item) => item.id), ['vd']);
+});
+
+test('Slice 454 review #8: a refused review screenshot becomes a note and the listings still go on', async () => {
+    const asc = fakeAsc({
+        'GET /v1/subscriptionGroups/g9/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: 'uk.sirous.dinoreader.sub.monthly' } }] }),
+        'GET /v1/subscriptions/s1/appStoreReviewScreenshot': { status: 409, ok: false, json: { errors: [{ detail: 'UNMODIFIABLE' }] } },
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [] }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [] }),
+        'POST /v1/subscriptionVersions': okJson({ data: { id: 'v1' } }),
+        'POST /v2/subscriptionLocalizations': okJson({ data: {} }),
+    });
+    const session = { groupId: 'g9', groupListingsDone: true, listings: FEW_LISTINGS, notes: [], log: () => {} };
+    assert.equal(await appleSubscriptionExtras(asc, { productId: 'uk.sirous.dinoreader.sub.monthly' }, session), true);
+    assert.match(session.notes[0], /review screenshot was not added/);
+    assert.equal(asc.calls.filter((call) => call.startsWith('POST /v2/subscriptionLocalizations')).length, 2);
+});
+
+test('Slice 454 review #5: a 404 on the versions list fails the read, never "no versions"', async () => {
+    const asc = fakeAsc({ 'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: [] }) });
+    await assert.rejects(() => appleAddListings(asc, APPLE_LISTING_KINDS.subscription, 's1', FEW_LISTINGS, { log: () => {} }), /read the subscription versions/);
+    assert.equal(asc.calls.filter((call) => call.startsWith('POST')).length, 0);
+});
+
+test('Slice 454 review #7: an unreadable or duplicated language heading is an error, a lost one too', () => {
+    const body = (heading) => `${heading}\n- Apple name: A\n- Description: B\n`;
+    assert.throws(() => parseSubscriptionListings(body('## fr (Apple fr-FR; Play fr-FR)')), /would be dropped silently/);
+    assert.throws(() => parseSubscriptionListings(body('## fr (Apple fr-FR, Play fr-FR)') + body('## fr2 (Apple fr-FR, Play fr-FR)')), /fr-FR has two headings/);
+    assert.equal(parseSubscriptionListings(body('## fa (Apple no App Store listing, Play fa)')).length, 0);
+    assert.throws(() => readSubscriptionListings(null, () => body('## fr (Apple fr-FR, Play fr-FR)')), /holds 1 Apple languages, expected 15/);
+});
+
+test('Slice 454 review #3: a subscription item never reaches the Microsoft add-on create', async () => {
+    await assert.rejects(() => createMicrosoftProduct('t', { kind: 'subscription', productId: 'uk.sirous.dinoreader.sub.monthly' }, new Set(), '9N1', { request: async () => assert.fail('no POST') }), /by hand in Partner Center/);
+});
+
+test('Slice 454: a group version carries the group display name and relates to the group', () => {
+    const kind = APPLE_LISTING_KINDS.group;
+    assert.deepEqual(appleVersionBody(kind, '22582310'), { data: { type: 'subscriptionGroupVersions', relationships: { subscriptionGroup: { data: { type: 'subscriptionGroups', id: '22582310' } } } } });
+    const body = appleVersionListingBody(kind, FEW_LISTINGS[0], 'gv1').data;
+    assert.deepEqual([body.type, body.attributes, body.relationships.version.data.type], ['subscriptionGroupLocalizations', { locale: 'de-DE', name: 'Dino: Kids Books & Stories' }, 'subscriptionGroupVersions']);
+});
+
+test('Slice 454: the subscription review screenshot is reserved, uploaded and committed once; one already there is left alone', async () => {
+    const uploads = [];
+    const io = { readImage: () => IMAGE, put: async (operation) => { uploads.push(operation.url); } };
+    const fresh = fakeAsc({
+        'POST /v1/subscriptionAppStoreReviewScreenshots': okJson({ data: { id: 'sc1', attributes: { uploadOperations: [OP] } } }),
+        'PATCH /v1/subscriptionAppStoreReviewScreenshots/sc1': okJson({ data: { attributes: { assetDeliveryState: { state: 'UPLOAD_COMPLETE' } } } }),
+    });
+    assert.equal(await appleEnsureSubscriptionScreenshot(fresh, 's1', io), true);
+    assert.deepEqual(uploads, ['https://up.example/1']);
+    assert.equal(appleSubscriptionScreenshotReserveBody('s1', 9).data.relationships.subscription.data.id, 's1');
+    assert.equal(appleScreenshotCommitBody('sc1', IMAGE, 'subscriptionAppStoreReviewScreenshots').data.type, 'subscriptionAppStoreReviewScreenshots');
+    const done = fakeAsc({ 'GET /v1/subscriptions/s1/appStoreReviewScreenshot': okJson({ data: { id: 'sc1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } } }) });
+    assert.equal(await appleEnsureSubscriptionScreenshot(done, 's1', io), false);
+    assert.deepEqual(done.calls, ['GET /v1/subscriptions/s1/appStoreReviewScreenshot']);
+});
+
+test('Slice 454: the queued versions go to review in one submission; a refusal becomes a note, not a crash', async () => {
+    const session = { log: () => {}, notes: [], submit: true, versionItems: [{ relationship: 'subscriptionVersion', type: 'subscriptionVersions', id: 'v1' }, { relationship: 'subscriptionGroupVersion', type: 'subscriptionGroupVersions', id: 'g1' }] };
+    const asc = fakeAsc({
+        'GET /v1/apps/99/reviewSubmissions': okJson({ data: [] }),
+        'POST /v1/reviewSubmissions': okJson({ data: { id: 'rs1' } }),
+        'POST /v1/reviewSubmissionItems': okJson({ data: {} }),
+        'PATCH /v1/reviewSubmissions/rs1': okJson({ data: {} }),
+    });
+    await appleSubmitQueuedVersions(asc, '99', session);
+    assert.deepEqual(asc.calls.map((call) => call.split('?')[0]), ['GET /v1/apps/99/reviewSubmissions', 'POST /v1/reviewSubmissions', 'POST /v1/reviewSubmissionItems', 'POST /v1/reviewSubmissionItems', 'PATCH /v1/reviewSubmissions/rs1']);
+    assert.equal(session.notes.length, 0);
+    const reuse = fakeAsc({
+        'GET /v1/apps/99/reviewSubmissions': okJson({ data: [{ id: 'rsOpen', attributes: { state: 'READY_FOR_REVIEW', platform: 'IOS' } }] }),
+        'GET /v1/reviewSubmissions/rsOpen/items': okJson({ data: [{ relationships: { subscriptionVersion: { data: { id: 'v1' } } } }] }),
+        'POST /v1/reviewSubmissionItems': okJson({ data: {} }),
+        'PATCH /v1/reviewSubmissions/rsOpen': okJson({ data: {} }),
+    });
+    await appleSubmitQueuedVersions(reuse, '99', { ...session, notes: [] });
+    assert.ok(!reuse.calls.includes('POST /v1/reviewSubmissions'), 'an open submission is reused, never a second one');
+    assert.ok(reuse.calls.includes('PATCH /v1/reviewSubmissions/rsOpen'));
+    assert.equal(reuse.calls.filter((call) => call === 'POST /v1/reviewSubmissionItems').length, 1, 'v1 is already in it, only g1 is added');
+    const foreign = fakeAsc({
+        'GET /v1/apps/99/reviewSubmissions': okJson({ data: [{ id: 'rsOpen', attributes: { state: 'READY_FOR_REVIEW', platform: 'IOS' } }] }),
+        'GET /v1/reviewSubmissions/rsOpen/items': okJson({ data: [{ relationships: { appStoreVersion: { data: { id: 'app1' } } } }] }),
+    });
+    const foreignSession = { ...session, notes: [] };
+    await appleSubmitQueuedVersions(foreign, '99', foreignSession);
+    assert.match(foreignSession.notes[0], /NOT DONE.*rsOpen/);
+    assert.deepEqual(foreign.calls.filter((call) => !call.startsWith('GET')), [], 'a submission holding foreign items is never added to or submitted (review #1)');
+    const half = fakeAsc({ 'GET /v1/apps/99/reviewSubmissions': okJson({ data: [] }), 'POST /v1/reviewSubmissions': okJson({ data: { id: 'rs2' } }) });
+    const left = { ...session, notes: [] };
+    await appleSubmitQueuedVersions(half, '99', left);
+    assert.match(left.notes[0], /review submission rs2 is left open/);
+    const drafts = fakeAsc({});
+    const unsent = { ...session, notes: [], submit: false };
+    await appleSubmitQueuedVersions(drafts, '99', unsent);
+    assert.equal(drafts.calls.length, 0, 'without --submit nothing goes to review');
+    assert.match(unsent.notes[0], /drafts, not submitted.*--submit/);
+    const bodies = appleReviewSubmissionBodies('99', 'rs1', session.versionItems);
+    assert.deepEqual([bodies.open.data.attributes.platform, bodies.items[1].data.relationships.subscriptionGroupVersion.data.id, bodies.submit.data.attributes.submitted], ['IOS', 'g1', true]);
+    const refused = fakeAsc({ 'GET /v1/apps/99/reviewSubmissions': okJson({ data: [] }), 'POST /v1/reviewSubmissions': { status: 409, ok: false, json: { errors: [{ detail: 'already open' }] } } });
+    const notes = { notes: [], submit: true, versionItems: session.versionItems, log: () => {} };
+    await appleSubmitQueuedVersions(refused, '99', notes);
+    assert.match(notes.notes[0], /added but not submitted/);
+    await appleSubmitQueuedVersions(refused, '99', { versionItems: [] });
+});
+
+test('Slice 454 review #2: any version state outside the known final ones is a draft', () => {
+    for (const state of ['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DRAFT', 'SOMETHING_NEW', undefined]) assert.equal(appleVersionIsDraft(state), true, String(state));
+    for (const state of ['WAITING_FOR_REVIEW', 'IN_REVIEW', 'ACCEPTED', 'APPROVED', 'REJECTED', 'DEVELOPER_REJECTED', 'REPLACED_WITH_NEW_VERSION']) assert.equal(appleVersionIsDraft(state), false, state);
+});
+
+test('Slice 454 review #2: the version state seen is printed', async () => {
+    const asc = fakeAsc({
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: FEW_LISTINGS.map((listing) => ({ attributes: { locale: listing.locale } })) }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [{ id: 'vx', attributes: { state: 'NEW_SPELLING' } }] }),
+        'GET /v1/subscriptionVersions/vx/localizations': okJson({ data: [] }),
+    });
+    const lines = [];
+    assert.equal(await appleAddListings(asc, APPLE_LISTING_KINDS.subscription, 's1', FEW_LISTINGS, { log: (line) => lines.push(line) }), true);
+    assert.match(lines[0], /vx state NEW_SPELLING/);
+});
+
+test('Slice 454 review #3, #4: --locales and --submit are refused where they cannot act or clash', () => {
+    assert.throws(() => parseArgs(['--locales', 'fr-FR', '--submit']), /--submit with --locales is refused/);
+    assert.throws(() => parseArgs(['--locales', ',']), /at least one locale/);
+    assert.throws(() => parseArgs(['--locales', 'fr-FR', '--book', 'x']), /--locales only applies.*not to --book/);
+    assert.throws(() => parseArgs(['--locales', 'fr-FR', '--store', 'google']), /--locales only applies to the Apple store/);
+    assert.throws(() => parseArgs(['--submit', '--store', 'microsoft']), /--submit only applies to the Apple store/);
+    assert.throws(() => parseArgs(['--submit', '--book', 'x']), /--submit only applies/);
+    assert.equal(parseArgs(['--apply', '--store', 'apple', '--submit']).submit, true);
+});
+
+test('Slice 454 review #6: a version queued before a later listing call failed is not submitted', async () => {
+    const asc = fakeAsc({
+        'GET /v1/subscriptionGroups/g9/subscriptions': okJson({ data: [{ id: 's1', attributes: { productId: 'p' } }] }),
+        'GET /v1/subscriptions/s1/appStoreReviewScreenshot': okJson({ data: { id: 'sc', attributes: { assetDeliveryState: { state: 'COMPLETE' } } } }),
+        'GET /v1/subscriptions/s1/subscriptionLocalizations': okJson({ data: FEW_LISTINGS.map((listing) => ({ attributes: { locale: listing.locale } })) }),
+        'GET /v1/subscriptions/s1/versions': okJson({ data: [] }),
+        'GET /v1/subscriptionGroups/g9/subscriptionGroupLocalizations': okJson({ data: [] }),
+        'GET /v1/subscriptionGroups/g9/versions': okJson({ data: [] }),
+        'POST /v1/subscriptionGroupVersions': { status: 500, ok: false, json: {} },
+    });
+    const session = { groupId: 'g9', listings: FEW_LISTINGS, notes: [], log: () => {}, versionItems: [{ relationship: 'subscriptionVersion', type: 'subscriptionVersions', id: 'earlier' }] };
+    await assert.rejects(() => appleSubscriptionExtras(asc, { productId: 'p' }, session));
+    assert.deepEqual(session.versionItems.map((item) => item.id), ['earlier'], 'only what was queued before this item stays');
+});
+
+test('Slice 454: the Microsoft subscription path makes no call and reports the by-hand outcome', async () => {
+    const items = subscriptionItemsFor(Store.Microsoft);
+    const results = await applyStore(Store.Microsoft, items, async () => ({ token: 'never used', storeAppId: 'x' }));
+    assert.deepEqual(results.map((result) => result.outcome), [Outcome.Manual, Outcome.Manual]);
+    assert.match(results[0].message, /Partner Center, not through the API/);
+    assert.match(SUBSCRIPTION_MANUAL_STEPS[Store.Microsoft].join(' '), /NO Microsoft subscription call.*monthly.*1\.99 GBP.*yearly.*14\.99 GBP.*7-day free trial/);
+});
+
+test('Slice 454: --locales narrows the listings and a dry run lists the languages, the screenshot and the review submission', () => {
+    assert.deepEqual(parseArgs(['--locales', 'fr-FR, de-DE']).locales, ['fr-FR', 'de-DE']);
+    assert.equal(parseArgs([]).locales, null);
+    const root = mkdtempSync(join(tmpdir(), 'dry-454-'));
+    try {
+        const env = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot };
+        const result = spawnSync(process.execPath, [SCRIPT, '--content', root, '--store', 'apple', '--store', 'microsoft', '--locales', 'fr-FR'], { env, encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /would add 1 listings \(fr-FR\) to the group and to each subscription/);
+        assert.match(result.stdout, /would add the subscription review screenshot/);
+        assert.match(result.stdout, /would NOT create uk\.sirous\.dinoreader\.sub\.monthly/);
     } finally {
         rmSync(root, { recursive: true, force: true });
     }
