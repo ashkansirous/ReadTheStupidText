@@ -285,6 +285,7 @@
   <data name="Record_NewTake" xml:space="preserve"><value>ضبط تازه</value></data>
   <data name="Record_OldTake" xml:space="preserve"><value>ضبط قبلی</value></data>
   <data name="Record_ReplacesRest" xml:space="preserve"><value>ضبط شما از بقیهٔ این صفحه جایگزین می‌شود.</value></data>
+  <data name="Record_WiderClipPlays" xml:space="preserve"><value>ضبط شما از کل جمله اینجا پخش می‌شود. برای شنیدن این بخش آن را حذف کنید.</value></data>
   <data name="Record_KeepOld" xml:space="preserve"><value>قبلی بماند</value></data>
   <data name="Record_UseDino" xml:space="preserve"><value>استفاده از صدای دینو</value></data>
   <data name="Record_Undo" xml:space="preserve"><value>واگرد</value></data>

@@ -288,6 +288,7 @@
   <data name="Record_NewTake" xml:space="preserve"><value>New take</value></data>
   <data name="Record_OldTake" xml:space="preserve"><value>Old take</value></data>
   <data name="Record_ReplacesRest" xml:space="preserve"><value>Your recording of the rest of this page will be replaced.</value></data>
+  <data name="Record_WiderClipPlays" xml:space="preserve"><value>Your recording of the whole sentence plays here. Remove it to hear this part.</value></data>
   <data name="Record_KeepOld" xml:space="preserve"><value>Keep the old one</value></data>
   <data name="Record_UseDino" xml:space="preserve"><value>Use Dino's voice</value></data>
   <data name="Record_Undo" xml:space="preserve"><value>Undo</value></data>

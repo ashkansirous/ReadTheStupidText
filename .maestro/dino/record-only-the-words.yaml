@@ -1,19 +1,21 @@
-# Slice 395: recording a character shows and replaces only that character's words, not the narration around them.
-# Import Freddy and the Slipper, tick Mummy and Tummy only (untick the Storyteller and Freddy), record the first three lines, press Done, then check the clips the library holds.
-# Line 1 is Mummy's "Dinner, my dear! ..." with no "One evening his Mummy called," on the card; line 2 is "Just one little spoonful," and "said Mummy." is not on any card.
-# The record-state hook lists the clips: the first is a part clip of page 2 (file rec-en-2-p2-2-*.m4a, the narration before it is part 1). Playing a part take in place of only its words when the book is read is Slice 443, so this flow does not read the book back.
+# Slice 395 + 443: recording a character shows and replaces only that character's words, not the narration around them, and the book reads the parent's take in place of only those words.
+# Three Little Pigs is one of the four Debug test books the offline test store puts on the shelf (the import-test-book hook has no Freddy book): tick Pip only (untick the Storyteller, Pop, Pim and Wolf), record the three lines (line 1 is on page 2, line 2 on page 5, line 3 on page 16), press Done, then check the clips the library holds.
+# Line 1 is Pip's "Yay! Now I can play all day!" with no narration on the card; line 2 is "No, no, no! Not by the hair of my chinny chin chin!" and "said Pip." is not on any card.
+# The record-state hook lists the clips: the first is a part clip of page 2 (file rec-en-2-p1-1-*.m4a, part 0 of the page, the narration "said Pip. ..." is part 1).
+# Then the book is read back from page 2 (open-book page=2 play=1): the narration has no pre-made audio here (no audio pack is installed) so it is shown for a beat, and the take of page 2 plays its own file:
+# the log has a "[RecordedClip] playing part take" line for it, counted from 0 on the page: parts=0-0 (page 2).
 # The microphone permission is granted at launch. The emulator's microphone gives silence or noise, which is enough for a file with a length.
-# To see it fail against the old behaviour: before this slice the card held the whole sentence ("One evening his Mummy called, ..."), so the assertNotVisible below fails, and no clip file name carries "-p".
+# To see it fail against the old behaviour: before this slice the card held the whole sentence, so the assertNotVisible below fails, and no clip file name carries "-p".
 # expect-log: HOOK test-store ok offline
-# expect-log: HOOK import-test-book ok freddy-and-the-slipper
 # expect-log: [Record] saved
-# expect-log: [RecordState] clip rec-en-2-p2-2-
-# expect-log: HOOK record-state ok clips=3
+# expect-log: HOOK record-state ok clips=3 files=3
+# expect-log: [RecordedClip] playing part take
+# expect-log: parts=0-0 reading=en
 appId: uk.sirous.dinoreader.dbg
 name: Record only the character's words and read the book back
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: the flow imports the one test book and no audio pack may be installed, so every part without a take has no clip.
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the test books back and no audio pack may be installed, so every part without a take has no clip.
     clearState: true
     permissions:
       all: allow
@@ -36,21 +38,14 @@ name: Record only the character's words and read the book back
 - launchApp:
     stopApp: false
     arguments:
-      cmd: import-test-book
-      id: freddy-and-the-slipper
-- extendedWaitUntil:
-    visible: ".*Freddy.*"
-    timeout: 60000
-- launchApp:
-    stopApp: false
-    arguments:
       cmd: enter-grown-up
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 30000
 - tapOn:
-    text: ".*Freddy.*"
+    id: TileMore
+    text: ".*Three Little Pigs.*"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
@@ -63,12 +58,18 @@ name: Record only the character's words and read the book back
     visible:
       id: RecordIntroStart
     timeout: 20000
-# Only Mummy and Tummy are ticked: the Storyteller and Freddy are unticked.
+# Only Pip is ticked: the Storyteller, Pop, Pim and Wolf are unticked.
 - tapOn:
     text: "Storyteller"
     waitToSettleTimeoutMs: 300
 - tapOn:
-    text: "Freddy"
+    text: "Pop"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "Pim"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "Wolf"
     waitToSettleTimeoutMs: 300
 - tapOn:
     id: RecordIntroStart
@@ -77,9 +78,9 @@ name: Record only the character's words and read the book back
     visible:
       id: RecordButton
     timeout: 20000
-# Line 1: only Mummy's words, never the narration of the same sentence.
-- assertVisible: ".*Dinner, my dear.*Come and sit over here!.*"
-- assertNotVisible: ".*One evening his Mummy called.*"
+# Line 1: only Pip's words, never the narration of the same sentence.
+- assertVisible: ".*Yay! Now I can play all day!.*"
+- assertNotVisible: ".*Pip was in a big hurry.*"
 - tapOn:
     id: RecordButton
     waitToSettleTimeoutMs: 300
@@ -97,11 +98,11 @@ name: Record only the character's words and read the book back
 - tapOn:
     id: RecordNext
     waitToSettleTimeoutMs: 300
-# Line 2: Mummy's first words on page 3; "said Mummy." belongs to the narrator and is on no card.
+# Line 2: Pip's words on page 5; "said Pip." belongs to the narrator and is on no card.
 - extendedWaitUntil:
-    visible: ".*Just one little spoonful.*"
+    visible: ".*Not by the hair of my chinny chin chin.*"
     timeout: 15000
-- assertNotVisible: ".*said Mummy.*"
+- assertNotVisible: ".*said Pip.*"
 - tapOn:
     id: RecordButton
     waitToSettleTimeoutMs: 300
@@ -119,9 +120,9 @@ name: Record only the character's words and read the book back
 - tapOn:
     id: RecordNext
     waitToSettleTimeoutMs: 300
-# Line 3: Mummy's second part of the same sentence.
+# Line 3: Pip's words on page 16.
 - extendedWaitUntil:
-    visible: ".*It's yummy!.*chicken and peas!.*"
+    visible: ".*I'm sorry I was in such a hurry.*"
     timeout: 15000
 - tapOn:
     id: RecordButton
@@ -154,18 +155,38 @@ name: Record only the character's words and read the book back
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: LockChip
     timeout: 20000
 - launchApp:
     stopApp: false
     arguments:
       cmd: record-state
-      id: freddy-and-the-slipper
+      id: three-little-pigs
       clips: "3"
 - tapOn:
-    id: GalleryDone
+    id: GalleryLock
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryGrownUps
+      id: GalleryLock
     timeout: 20000
+# Read the book back from page 2 (the open-book hook refuses while grown-up mode is on; Done above left it): the narration is shown for a beat, then each take plays its own file.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# Nothing with this id ever shows: the wait only gives the read time to reach the take on page 2 (a beat for the narration around it).
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 30000
+    optional: true
+- assertVisible:
+    id: ReadingSurface

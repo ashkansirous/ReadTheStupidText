@@ -287,6 +287,7 @@
   <data name="Record_NewTake" xml:space="preserve"><value>Neue Aufnahme</value></data>
   <data name="Record_OldTake" xml:space="preserve"><value>Alte Aufnahme</value></data>
   <data name="Record_ReplacesRest" xml:space="preserve"><value>Deine Aufnahme vom Rest dieser Seite wird ersetzt.</value></data>
+  <data name="Record_WiderClipPlays" xml:space="preserve"><value>Hier wird deine Aufnahme des ganzen Satzes abgespielt. Entferne sie, um diesen Teil zu hören.</value></data>
   <data name="Record_KeepOld" xml:space="preserve"><value>Die alte behalten</value></data>
   <data name="Record_UseDino" xml:space="preserve"><value>Dinos Stimme nutzen</value></data>
   <data name="Record_Undo" xml:space="preserve"><value>Rückgängig</value></data>

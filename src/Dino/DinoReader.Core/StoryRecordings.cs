@@ -3,7 +3,22 @@ using System.Text.RegularExpressions;
 namespace DinoReader.Core;
 
 /// <summary>A parent's recording of one page (Slice 111, Decision 115): the language it was read in, which decides the text shown with it, and its length.</summary>
-public sealed record PageRecording(string Language, int Seconds, string? File = null);
+/// <remarks>Slice 443: <see cref="Cover"/> is the sentences a part take sat in when it was saved; stored with the clip and never worked out from the story's text again.</remarks>
+public sealed record PageRecording(string Language, int Seconds, string? File = null, SentenceCover? Cover = null);
+
+/// <summary>Slice 443: the first and last sentence (counted from 0 on the page) a part take's words sat in when it was recorded. The overlap rule between a part take and a sentence clip compares these stored numbers only;
+/// a take with no cover (a file found on disk, or a move to a page that splits differently) overlaps nothing, so it is kept and plays.</summary>
+public readonly record struct SentenceCover(int First, int Last)
+{
+    /// <summary>Whether the cover is a usable range.</summary>
+    public bool IsValid => First >= 0 && Last >= First;
+
+    /// <summary>Whether the cover shares a sentence with the sentence clip <paramref name="key"/> (a whole-page clip covers every sentence).</summary>
+    public bool Touches(StoryClipKey key) => First <= key.Last && key.First <= Last;
+
+    /// <summary>Whether every sentence of the sentence clip <paramref name="key"/> lies inside the cover.</summary>
+    public bool Contains(StoryClipKey key) => First <= key.First && key.Last <= Last;
+}
 
 /// <summary>
 /// Pure rules for the per-page parent recordings of a story (Slice 111): the file each page's recording lives in, which pages play one,
@@ -76,10 +91,61 @@ public static class StoryRecordings
 
     /// <summary>The files of every clip that shares a sentence with <paramref name="key"/>, a clip with exactly that key included: the files a new clip of <paramref name="key"/> replaces.
     /// A file that a clip which stays (any language) also names is never listed: no recording file is deleted while another clip still references it.</summary>
-    public static IReadOnlyList<string> ReplacedFiles(Story story, StoryClipKey key)
+    /// <remarks>Slice 443 review: a part take saved with <paramref name="cover"/> also replaces the sentence clips <see cref="SentenceClipsUnder"/> names, so the new take is the one that plays.</remarks>
+    public static IReadOnlyList<string> ReplacedFiles(Story story, StoryClipKey key, SentenceCover? cover = null)
     {
-        HashSet<string> stays = Clips(story).Where(c => !c.Key.Overlaps(key)).Select(c => FileOf(c.Value, c.Key)).ToHashSet(StringComparer.Ordinal);
-        return Clips(story).Where(c => c.Key.Overlaps(key)).Select(c => FileOf(c.Value, c.Key)).Where(f => !stays.Contains(f)).Distinct(StringComparer.Ordinal).ToList();
+        IReadOnlyList<StoryClipKey> goes = ReplacedClips(story, key, cover);
+        HashSet<string> stays = Clips(story).Where(c => !goes.Contains(c.Key)).Select(c => FileOf(c.Value, c.Key)).ToHashSet(StringComparer.Ordinal);
+        return Clips(story).Where(c => goes.Contains(c.Key)).Select(c => FileOf(c.Value, c.Key)).Where(f => !stays.Contains(f)).Distinct(StringComparer.Ordinal).ToList();
+    }
+
+    /// <summary>Slice 443 (review pass 2): the clips saving a take under <paramref name="key"/> removes from the story: every clip that overlaps the key and the sentence clips <see cref="SentenceClipsUnder"/> names. One set drives
+    /// the files deleted (<see cref="ReplacedFiles"/>), the warning on the Record card (<see cref="ReplacesBeyond"/>) and the "first recording" count, so they never disagree.</summary>
+    public static IReadOnlyList<StoryClipKey> ReplacedClips(Story story, StoryClipKey key, SentenceCover? cover = null)
+    {
+        IReadOnlyList<StoryClipKey> under = SentenceClipsUnder(story, key, cover);
+        return Clips(story).Select(c => c.Key).Where(k => k.Overlaps(key) || under.Contains(k)).ToList();
+    }
+
+    /// <summary>Slice 443 review: the sentence clips of the same page and language whose range lies wholly inside the stored <paramref name="cover"/> of a part take saved under <paramref name="key"/>: the take says all they said,
+    /// so saving it replaces them (their files go with them). A clip that also covers sentences outside the take (a whole-page clip over a one-sentence take) is never named here: it is kept, record and file, and still wins on its words.</summary>
+    public static IReadOnlyList<StoryClipKey> SentenceClipsUnder(Story story, StoryClipKey key, SentenceCover? cover)
+    {
+        List<StoryClipKey> inside = SentenceClipsTouching(story, key, cover).Where(k => cover!.Value.Contains(k)).ToList();
+        if (inside.Count == 0)
+        {
+            return [];
+        }
+
+        IReadOnlyList<RecordPart> parts = RecordSplitBook.PartListOf(story); // cut only when a clip lies inside the cover
+        return inside.Where(k => TakeHoldsEveryPartOf(parts, key, k)).ToList();
+    }
+
+    // Slice 443 review: a sentence clip is replaced only when the take's parts include every part that sits in any of the clip's sentences (a take over only a quote must not delete the narration beside it).
+    private static bool TakeHoldsEveryPartOf(IReadOnlyList<RecordPart> parts, StoryClipKey take, StoryClipKey sentenceClip) =>
+        parts.Where(p => p.Page == take.Page && p.InSentences && p.FirstSentence <= sentenceClip.Last && sentenceClip.First <= p.LastSentence)
+            .All(p => take.First <= p.Index && p.Index <= take.Last);
+
+    private static IEnumerable<StoryClipKey> SentenceClipsTouching(Story story, StoryClipKey key, SentenceCover? cover) =>
+        key.IsPart && cover is { IsValid: true } c
+            ? Clips(story).Select(x => x.Key).Where(k => !k.IsPart && k.Page == key.Page && k.Language == key.Language && c.Touches(k))
+            : [];
+
+    /// <summary>Slice 443 (review pass 2): the sentence clips that touch the stored <paramref name="cover"/> of a part take under <paramref name="key"/> but reach past it, so they are kept and still play over the take's words.
+    /// The Record card for that part says so (the take would otherwise never be heard).</summary>
+    public static IReadOnlyList<StoryClipKey> WiderSentenceClipsOver(Story story, StoryClipKey key, SentenceCover? cover)
+    {
+        List<StoryClipKey> touching = SentenceClipsTouching(story, key, cover).ToList();
+        IReadOnlyList<StoryClipKey> goes = SentenceClipsUnder(story, key, cover); // Slice 443 review: a clip the take does not wholly replace (by parts too) is the one kept
+        return touching.Where(k => !goes.Contains(k)).ToList();
+    }
+
+    /// <summary>The story with a recording saved from a Record card: <see cref="WithClip"/>, and for a part take the sentence clips <see cref="SentenceClipsUnder"/> go first, so the new take replaces whatever covers its words.
+    /// The book's "Read with my voice" switch is what <see cref="WithClip"/> would leave it as for the story before the sentence clips went.</summary>
+    public static Story WithSavedTake(Story story, StoryClipKey key, PageRecording recording)
+    {
+        Story cleared = SentenceClipsUnder(story, key, recording.Cover).Aggregate(story, WithoutClip);
+        return WithClip(cleared, key, recording) with { UseRecordings = story.UseRecordings || Count(story) == 0 };
     }
 
     /// <summary>Whether any clip of <paramref name="story"/> (any language) names <paramref name="fileName"/>: a file that still is referenced is never deleted.</summary>
@@ -97,9 +163,14 @@ public static class StoryRecordings
         return shared.Aggregate(story, (s, key) => WithoutClip(s, key));
     }
 
+    /// <summary>Slice 443 (emulator run): <paramref name="story"/> without any clip naming <paramref name="fileName"/>. A commit places its file before the story names it, and reading the book then adopts that part file as a clip
+    /// (<see cref="PartClipAdoption"/>); the commit works from the story without that clip, so the take is not counted as an earlier recording (the switch turns on) and its own file is never listed as a replaced one.</summary>
+    public static Story WithoutFile(Story story, string fileName) =>
+        Clips(story).Where(c => FileOf(c.Value, c.Key) == fileName).Select(c => c.Key).Aggregate(story, WithoutClip);
+
     /// <summary>Whether a clip that <paramref name="key"/> replaces also covers sentences outside it (a wider whole-page or differently cut clip): they lose their recording too, which the Record screen says.</summary>
-    public static bool ReplacesBeyond(Story story, StoryClipKey key) =>
-        Clips(story).Any(c => c.Key.Overlaps(key) && (c.Key.First < key.First || c.Key.Last > key.Last));
+    public static bool ReplacesBeyond(Story story, StoryClipKey key, SentenceCover? cover = null) =>
+        ReplacedClips(story, key, cover).Any(k => k.IsPart == key.IsPart && (k.First < key.First || k.Last > key.Last)); // a sentence clip that goes lies inside the take's cover, so only a clip cut like the take can reach beyond it
 
     /// <summary>A fresh name for a take in the cache folder (Slice 279).</summary>
     public static string NewTakeFileName() => $"{TakePrefix}-{Guid.NewGuid():N}{FileExtension}";
@@ -188,13 +259,28 @@ public static class StoryRecordings
         Clips(story, language).Select(c => c.Key).Where(k => !k.IsPart && k.Page == page && k.First <= sentence && sentence <= k.Last).Select(k => (StoryClipKey?)k).FirstOrDefault();
 
     /// <summary>Whether the reader plays the clip <paramref name="key"/> while reading in <paramref name="readingLanguage"/>: the book's "Read with my voice" is on, the clip exists, and it was made in that language (Slice 286).
-    /// Slice 395: a part clip is kept but not played here; its playback in place of only its words is Slice 443.</summary>
+    /// Slice 395: this is the sentence-clip rule only (a clip that plays in place of whole sentences); a part clip plays in place of its own words through <see cref="PlayingParts"/> (Slice 443).</summary>
     public static bool PlaysClip(Story story, StoryClipKey key, string readingLanguage) =>
         !key.IsPart && story.UseRecordings && ClipOf(story, key) is not null && key.Language == UiLanguage.Resolve(readingLanguage);
 
     /// <summary>Every clip the reader plays while reading in <paramref name="readingLanguage"/>, in page order.</summary>
     public static IReadOnlyList<StoryClipKey> PlayingClips(Story story, string readingLanguage) =>
         Clips(story).Select(c => c.Key).Where(k => PlaysClip(story, k, readingLanguage)).ToList();
+
+    /// <summary>Slice 443: whether the reader plays the part clip <paramref name="key"/> in <paramref name="readingLanguage"/>: part takes are on, "Read with my voice" is on, the clip exists and was made in that language.</summary>
+    public static bool PlaysPart(Story story, StoryClipKey key, string readingLanguage) =>
+        PartTakes.Enabled && key.IsPart && story.UseRecordings && ClipOf(story, key) is not null && key.Language == UiLanguage.Resolve(readingLanguage);
+
+    /// <summary>Slice 443: every part clip the reader plays while reading in <paramref name="readingLanguage"/>, in page order. A part clip is left out where a playing sentence clip covers the same words: the sentence clip wins.
+    /// That is decided by the cover stored with the part clip and the sentence clip's own range only, never by the story's text; a part clip with no stored cover overlaps nothing and plays.</summary>
+    public static IReadOnlyList<StoryClipKey> PlayingParts(Story story, string readingLanguage)
+    {
+        IReadOnlyList<StoryClipKey> sentences = PlayingClips(story, readingLanguage);
+        return Clips(story).Where(c => PlaysPart(story, c.Key, readingLanguage) && !SentenceClipWins(c.Value, c.Key, sentences)).Select(c => c.Key).ToList();
+    }
+
+    private static bool SentenceClipWins(PageRecording part, StoryClipKey key, IReadOnlyList<StoryClipKey> sentenceClips) =>
+        part.Cover is { IsValid: true } cover && sentenceClips.Any(s => s.Page == key.Page && s.Language == key.Language && cover.Touches(s));
 
     /// <summary>The recording of <paramref name="page"/>, or null.</summary>
     public static PageRecording? Of(Story story, int page) =>

@@ -95,7 +95,7 @@ public static class StarterUpdate
         IReadOnlyList<RecordingMove> moves = copiedMoves ?? RecordingMoves(stored, bundled);
         IReadOnlyList<ClipMove> clipMoves = copiedClipMoves ?? PieceMoves(stored, bundled);
         Dictionary<int, PageRecording>? recordings = moves.Count > 0 ? moves.ToDictionary(m => m.To, m => stored.Recordings![m.From] with { File = m.File }) : null; // a moved file is copied to its new key's usual name, or the fresh name the move carries
-        Dictionary<StoryClipKey, PageRecording>? pieces = clipMoves.Count > 0 ? clipMoves.ToDictionary(m => m.To, m => stored.PieceRecordings![m.From] with { File = m.File }) : null;
+        Dictionary<StoryClipKey, PageRecording>? pieces = clipMoves.Count > 0 ? clipMoves.ToDictionary(m => m.To, m => MovedClip(stored.PieceRecordings![m.From], m)) : null;
         return KeepCover(stored, bundled with
         {
             Recordings = recordings,
@@ -266,12 +266,16 @@ public static class StarterUpdate
             bool covered = StoryRecordings.Clips(move.To.IsPart ? target : merged).Any(c => c.Key.Overlaps(move.To));
             if (!covered)
             {
-                merged = StoryRecordings.WithClip(merged, move.To, source.PieceRecordings![move.From] with { File = move.File }, keepOverlappingParts: true);
+                merged = StoryRecordings.WithClip(merged, move.To, MovedClip(source.PieceRecordings![move.From], move), keepOverlappingParts: true);
             }
         }
 
         return merged;
     }
+
+    // The clip as it arrives at its new place: the moved file, and no stored cover when the page now splits into other sentences (a cover that names other sentences would hide or show the wrong take).
+    private static PageRecording MovedClip(PageRecording clip, ClipMove move) =>
+        clip with { File = move.File, Cover = move.DropCover ? null : clip.Cover };
 
     /// <summary>One recording carried to the refreshed story: the page it was on (<see cref="From"/>) and the page with the same text it moves to (<see cref="To"/>).</summary>
     /// <remarks><see cref="File"/> is the file name the copy was stored under when it is not the page's usual name (a file already sat there, so the copy took a fresh name); null otherwise.</remarks>
@@ -299,8 +303,9 @@ public static class StarterUpdate
     }
 
     /// <summary>One piece clip carried to the refreshed story (Slice 279): the clip it was (<see cref="From"/>) and the same sentences on the page with the same text (<see cref="To"/>).</summary>
-    /// <remarks><see cref="File"/> is the fresh file name the copy was stored under when the clip's usual name was taken; null otherwise.</remarks>
-    public readonly record struct ClipMove(StoryClipKey From, StoryClipKey To, string? File = null);
+    /// <remarks><see cref="File"/> is the fresh file name the copy was stored under when the clip's usual name was taken; null otherwise.
+    /// Slice 443: <see cref="DropCover"/> is true for a part clip whose page has the same parts but splits into other sentences on the new page: the clip moves with its stored sentence cover cleared (a cover that names other sentences would hide or show the wrong take), never dropped.</remarks>
+    public readonly record struct ClipMove(StoryClipKey From, StoryClipKey To, string? File = null, bool DropCover = false);
 
     /// <summary>Which of <paramref name="stored"/>'s piece clips still match <paramref name="bundled"/>: a page recorded in pieces follows its text like a whole-page recording
     /// (<see cref="RecordingMoves"/>, never onto a page a whole-page move took), and each of its clips keeps its sentence range on the new page.</summary>
@@ -318,13 +323,13 @@ public static class StarterUpdate
         List<StoryClipKey> partKeys = pieces.Keys.Where(k => k.IsPart).ToList();
         if (partKeys.Count > 0)
         {
-            moves.AddRange(PieceMovesOf(stored, bundled, partKeys, [], RecordSplitBook.PartCounts(stored), RecordSplitBook.PartCounts(bundled))); // a whole-page move never blocks a part clip: they do not overlap
+            moves.AddRange(PieceMovesOf(stored, bundled, partKeys, [], RecordSplitBook.PartCounts(stored), RecordSplitBook.PartCounts(bundled), RecordSplitBook.SentenceCounts(stored), RecordSplitBook.SentenceCounts(bundled))); // a whole-page move never blocks a part clip: they do not overlap
         }
 
         return moves;
     }
 
-    private static List<ClipMove> PieceMovesOf(Story stored, Story bundled, List<StoryClipKey> keys, IReadOnlyList<RecordingMove> wholeMoves, IReadOnlyList<int> storedCounts, IReadOnlyList<int> bundledCounts)
+    private static List<ClipMove> PieceMovesOf(Story stored, Story bundled, List<StoryClipKey> keys, IReadOnlyList<RecordingMove> wholeMoves, IReadOnlyList<int> storedCounts, IReadOnlyList<int> bundledCounts, IReadOnlyList<int>? storedSentences = null, IReadOnlyList<int>? bundledSentences = null)
     {
         var moves = new List<ClipMove>();
         var taken = new HashSet<int>(); // pages taken by moves of this kind
@@ -340,7 +345,8 @@ public static class StarterUpdate
             if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different count means a different split (a language or break change): the range would cover other words
             {
                 taken.Add(to);
-                moves.AddRange(keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to })));
+                bool splitsDifferently = storedSentences is not null && bundledSentences is not null && storedSentences[from] != bundledSentences[to]; // Slice 443: a part clip's stored cover would name other sentences
+                moves.AddRange(keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to }, DropCover: splitsDifferently)));
             }
         }
 

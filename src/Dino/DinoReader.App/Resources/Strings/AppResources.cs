@@ -127,6 +127,7 @@ public static class AppResources
 	public static string Record_NewTake => Get();
 	public static string Record_OldTake => Get();
 	public static string Record_ReplacesRest => Get();
+	public static string Record_WiderClipPlays => Get();
 	public static string Record_KeepOld => Get();
 	public static string Record_UseDino => Get();
 	public static string Record_Undo => Get();

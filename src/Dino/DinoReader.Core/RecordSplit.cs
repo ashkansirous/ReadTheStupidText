@@ -28,8 +28,12 @@ public sealed record RecordSpeaker(string Id, string Name);
 
 /// <summary>One thing to record: the sentences (or, for a part key, the parts) of one page it covers (<see cref="Key"/>), who says it and its words as the book shows them.
 /// A part piece also names the sentences it sits in now (<see cref="FirstSentence"/>, <see cref="LastSentence"/>, -1 when it sits in none), which an older sentence clip is matched with to show it as recorded;
-/// they are read from today's text for that display only, never stored with a clip.</summary>
-public sealed record RecordPiece(StoryClipKey Key, string Speaker, string Text, int FirstSentence = -1, int LastSentence = -1);
+/// they are read from the text as it is when the card is shown. Slice 443: a take saved from a part card stores them with its clip (<see cref="Cover"/>), and from then on the stored numbers are used, never today's text.</summary>
+public sealed record RecordPiece(StoryClipKey Key, string Speaker, string Text, int FirstSentence = -1, int LastSentence = -1)
+{
+    /// <summary>The sentences a part card sits in, for the clip saved from it; null for a sentence card or a part in no sentence.</summary>
+    public SentenceCover? Cover => Key.IsPart && FirstSentence >= 0 && LastSentence >= FirstSentence ? new SentenceCover(FirstSentence, LastSentence) : null;
+}
 
 /// <summary>
 /// The pure split of a book into the pieces a grown-up records (Slice 279, work items 1 and 2). Per character: the lines of the ticked speakers in story order, where a line is a run of

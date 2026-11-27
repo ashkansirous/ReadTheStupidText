@@ -1762,11 +1762,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session.MoveTo(plan.Target);
 	}
 
-	// A recorded page is one unit: skipping forward leaves from its last sentence, skipping back from its first (Slice 111).
+	// A recorded page is one unit: skipping forward leaves from its last sentence, skipping back from its first (Slice 111). A part take's sentences are one unit too (Slice 443 review): Next never replays the take.
 	private int SkipFrom(int delta)
 	{
 		int current = _session.CurrentSentence;
-		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
+		return _session.SkipRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
 	private async void OnBackTapped(object? sender, TappedEventArgs e)
