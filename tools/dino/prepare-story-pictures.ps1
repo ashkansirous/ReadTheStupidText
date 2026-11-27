@@ -5,12 +5,15 @@
 # Also writes <targetFolder>/cover-thumb.jpg (288x384, quality 80): the small cover the store list fetches (the full cover stays in the package).
 # -HighRes (Slice 375 B) writes the high-res pack's pictures instead: <targetFolder>/high-res/cover.jpg, 1.jpg..N.jpg and back-cover.jpg (when the source has it), each
 # centre-cropped to 3:4, shrunk to 1792x2400 (never enlarged) and saved as JPEG quality 85. A source that already is <targetFolder>/high-res is re-saved in place. No thumbnail.
+# -Quick (Slice 463) writes the quick package's pictures: <targetFolder>/quick/cover.jpg, 1.jpg..N.jpg and back-cover.jpg (when the source has it), each centre-cropped to 3:4, shrunk to
+# 448x600 (never enlarged) and saved as JPEG quality 75 (about ffmpeg -q:v 8). The owner's side-by-side pick (Slice 463 item 2) may change the size and quality before release. No thumbnail.
 # Fails, writing nothing, when a picture is missing or the folder holds more pages than <pageCount>.
 param(
   [Parameter(Mandatory = $true)][string]$SourceFolder,
   [Parameter(Mandatory = $true)][string]$TargetFolder,
   [Parameter(Mandatory = $true)][int]$PageCount,
-  [switch]$HighRes
+  [switch]$HighRes,
+  [switch]$Quick
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -19,6 +22,9 @@ Add-Type -AssemblyName System.Drawing
 $thumbWidth = 288
 $thumbHeight = 384
 $thumbQuality = 80L
+$quickWidth = 448    # the quick package's pictures (Slice 463): half the standard size each way
+$quickHeight = 600
+$quickQuality = 75L
 
 if (-not (Test-Path -LiteralPath $SourceFolder -PathType Container)) { throw "Source folder not found: $SourceFolder" }
 if ($PageCount -lt 1) { throw "Page count must be at least 1, got $PageCount." }
@@ -46,8 +52,23 @@ function Save-HighRes {
   Write-Host "Prepared $($names.Count) high-res pictures in $folder"
 }
 
+function Save-Quick {
+  $folder = [IO.Path]::GetFullPath((Join-Path $TargetFolder 'quick'))
+  New-Item -ItemType Directory -Force -Path $folder | Out-Null
+  $names = @($files)
+  if (Test-Path -LiteralPath (Join-Path $SourceFolder 'back-cover.jpg')) { $names += 'back-cover.jpg' }
+  foreach ($name in $names) {
+    $source = (Resolve-Path -LiteralPath (Join-Path $SourceFolder $name)).Path
+    $temp = Join-Path $folder "$name.tmp"
+    Save-Prepared $source $temp $quickWidth $quickHeight $quickQuality   # a temp file first, like the high-res copy: an in-place re-save cannot write over the picture it is still reading
+    Move-Item -LiteralPath $temp -Destination (Join-Path $folder $name) -Force
+  }
+  Write-Host "Prepared $($names.Count) quick pictures in $folder"
+}
+
 $files = Get-SourceFiles
 if ($HighRes) { Save-HighRes; return }
+if ($Quick) { Save-Quick; return }
 $picturesFolder = Join-Path $TargetFolder 'pictures'
 New-Item -ItemType Directory -Force -Path $picturesFolder | Out-Null
 foreach ($name in $files) {

@@ -240,6 +240,7 @@ public sealed partial class AudioPackStore
 {
 	private const string PartExtension = ".part";
 	private const string TmpExtension = ".tmp";
+	private const string AsideExtension = ".old"; // Slice 463 review #3, #9: the installed pack folder set aside while its replacement goes in. NOT a ".tmp": the cleanup never deletes it, the start-up recovery decides (RecoverInterruptedSwaps)
 	private const string CacheFolder = "audio-packs";
 	private const int MaxEntries = 4000;
 	private const long MaxUnpackedBytes = 400L * 1024 * 1024;
@@ -255,6 +256,14 @@ public sealed partial class AudioPackStore
 	private readonly ConcurrentDictionary<string, InstalledPack> _opened = new();
 	private readonly ConcurrentDictionary<string, bool> _failedThisLaunch = new();
 	private bool _cleaned;
+	private readonly object _swapLock = new(); // Slice 463 check pass 1, rule 1: held by a swap (both renames) and by the recovery, so the recovery never sees a swap half done. Not the install gate: that one is held across a whole download
+	private bool _recovered;
+
+	/// <summary>Test seam: runs between the two renames of a swap, inside the swap lock.</summary>
+	internal Action? BetweenSwapRenames { get; set; }
+
+	/// <summary>Test seam: runs inside the swap lock, before the plain (not same-version replace) publish touches the final folder.</summary>
+	internal Action? BeforePlainPublish { get; set; }
 
 #if DEBUG
 	/// <summary>Slice 310 (Debug only): while not <see cref="PackFailureInjection.None"/>, every download fails in that way (set by the <c>force-pack-failure</c> test hook).</summary>
@@ -291,9 +300,22 @@ public sealed partial class AudioPackStore
 
 	private static string Key(string bookId, string language) => $"{bookId.ToLowerInvariant()}/{language}";
 
+	private readonly ConcurrentDictionary<string, string> _lastFailure = new();
+
+	/// <summary>Slice 463 check pass 1, rule 4: why the last install of this book language failed (cleared when an install starts), so the quick upgrade counts only a bad file, never a network or disk fault.</summary>
+	public PackFailureKind? LastFailure(string bookId, string language) =>
+		_lastFailure.TryGetValue(Key(bookId, language), out string? detail)
+			? Enum.GetValues<PackFailureKind>().Cast<PackFailureKind?>().FirstOrDefault(kind => AudioPackUsage.PackFailed(kind!.Value) == detail)
+			: null;
+
 	private void Report(string bookId, string language, string detail, int version)
 	{
 		bool failed = detail.StartsWith(AudioPackUsage.PackFailedPrefix, StringComparison.Ordinal);
+		if (failed)
+		{
+			_lastFailure[Key(bookId, language)] = detail;
+		}
+
 		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail is AudioPackUsage.PackStarted or AudioPackUsage.PackCancelled ? was : failed);
 		try
 		{
@@ -373,6 +395,7 @@ public sealed partial class AudioPackStore
 	/// <summary>The installed version of a book language, or null.</summary>
 	public int? InstalledVersion(string bookId, string language)
 	{
+		RecoverInterruptedSwaps(); // once per launch, before the first look at the folders: a pack set aside by a killed replace is back in place
 		string bookFolder = BookFolder(bookId);
 		if (!IsSafe(bookId, language) || !Directory.Exists(bookFolder))
 		{
@@ -396,6 +419,7 @@ public sealed partial class AudioPackStore
 	/// <summary>Deletes what an interrupted install left: every <c>.part</c> file and <c>.tmp</c> folder this store owns. Runs by itself before the first install or sweep.</summary>
 	public void CleanupInterrupted()
 	{
+		RecoverInterruptedSwaps();
 		int removed = 0;
 		removed += DeleteMatching(_partFolder, file: true, PartExtension);
 		if (Directory.Exists(_root))
@@ -414,10 +438,86 @@ public sealed partial class AudioPackStore
 	}
 
 	/// <summary>
+	/// Slice 463 review #3: once per launch, finishes what a killed same-version replace left. A folder set aside (<see cref="AsideExtension"/>) whose final folder is missing (or has no manifest) is moved back: it is the
+	/// installed pack, the only copy. One whose final folder is whole is the old copy of a replace that completed: it goes. It is the recovery copy, so nothing else ever deletes it before the replacement is in place.
+	/// </summary>
+	public void RecoverInterruptedSwaps()
+	{
+		lock (_swapLock)
+		{
+			if (_recovered)
+			{
+				return;
+			}
+
+			_recovered = RecoverPass(); // done only after a full pass: a pass that met a fault is tried again by the next call
+		}
+	}
+
+	// One pass over every book folder, each guarded on its own, so a fault in one folder never stops the others and never reaches the caller. True only when nothing went wrong.
+	private bool RecoverPass()
+	{
+		if (!Directory.Exists(_root))
+		{
+			return true;
+		}
+
+		bool complete = true;
+		foreach (string book in SafeList(() => Directory.EnumerateDirectories(_root).ToList(), ref complete))
+		{
+			foreach (string aside in SafeList(() => Directory.EnumerateDirectories(book, "*" + AsideExtension).ToList(), ref complete))
+			{
+				complete &= RecoverOneSwap(aside);
+			}
+		}
+
+		return complete;
+	}
+
+	private List<string> SafeList(Func<List<string>> list, ref bool complete)
+	{
+		try
+		{
+			return list();
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the pass is marked incomplete, so the next call looks again; nothing is lost meanwhile (a set-aside copy is only ever deleted by a completed recovery)
+			_log($"pack recovery: could not list folders ({ex.GetType().Name})");
+			complete = false;
+			return [];
+		}
+	}
+
+	private bool RecoverOneSwap(string aside)
+	{
+		string final = aside[..^AsideExtension.Length];
+		try
+		{
+			if (File.Exists(Path.Combine(final, PremadeAudio.ManifestFile)))
+			{
+				DeleteFolder(aside);
+				return !Directory.Exists(aside); // a delete that did not finish is retried by the next pass
+			}
+
+			DeleteFolder(final); // a folder without a manifest is never an installed pack
+			Directory.Move(aside, final);
+			_log($"pack recovery: {Path.GetFileName(final)} restored after an interrupted replace");
+			return true;
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the set-aside copy stays where it is and the next call tries again; nothing else deletes it
+			_log($"pack recovery: could not restore {Path.GetFileName(final)} ({ex.GetType().Name})");
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Installs the listed pack of one book language. Offline, a server error, a wrong size or a broken zip give <see cref="PackInstall.Failed"/> and leave the previous pack (if any) in place: audio is
 	/// optional, so the caller's book is never failed or rolled back for it. <paramref name="bytes"/> reports the zip's bytes as they arrive.
 	/// </summary>
-	public async Task<PackInstall> InstallAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher? fetcher = null)
+	public async Task<PackInstall> InstallAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher? fetcher = null, bool replaceSameVersion = false)
 	{
 		if (!IsSafe(bookId, language))
 		{
@@ -437,7 +537,8 @@ public sealed partial class AudioPackStore
 
 		try
 		{
-			return await InstallGuardedAsync(bookId, language, pack, bytes, cancel, fetcher ?? _fetcher);
+			_lastFailure.TryRemove(Key(bookId, language), out _);
+			return await InstallGuardedAsync(bookId, language, pack, bytes, cancel, fetcher ?? _fetcher, replaceSameVersion);
 		}
 		finally
 		{
@@ -446,18 +547,18 @@ public sealed partial class AudioPackStore
 	}
 
 	// Audio never fails a book: whatever goes wrong here (a disk error, a bad address) is a failed install, never an exception for the caller. Only the caller's own cancel is passed on as Cancelled.
-	private async Task<PackInstall> InstallGuardedAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher fetcher)
+	private async Task<PackInstall> InstallGuardedAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher fetcher, bool replaceSameVersion)
 	{
 		try
 		{
 			EnsureCleaned();
-			if (InstalledVersion(bookId, language) == pack.Version)
+			if (!replaceSameVersion && InstalledVersion(bookId, language) == pack.Version)
 			{
 				_log($"pack {bookId}/{language} v{pack.Version}: already installed, skipped");
 				return PackInstall.AlreadyInstalled;
 			}
 
-			return await InstallCoreAsync(bookId, language, pack, bytes, cancel, fetcher);
+			return await InstallCoreAsync(bookId, language, pack, bytes, cancel, fetcher, replaceSameVersion);
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
@@ -483,7 +584,11 @@ public sealed partial class AudioPackStore
 		await _gate.WaitAsync(cancel);
 		try
 		{
-			DeleteFolder(BookFolder(bookId));
+			lock (_swapLock) // check pass 2 #2 (rule 1)
+			{
+				DeleteFolder(BookFolder(bookId));
+			}
+
 			_log($"pack {bookId}: book removed, packs deleted");
 		}
 		finally
@@ -505,13 +610,16 @@ public sealed partial class AudioPackStore
 		await _gate.WaitAsync(cancel);
 		try
 		{
-			foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)))
+			lock (_swapLock) // check pass 2 #2 (rule 1)
 			{
-				Match match = VersionFolder.Match(Path.GetFileName(dir));
-				if (match.Success && match.Groups[1].Value == language)
+				foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)))
 				{
-					DeleteFolder(dir);
-					_opened.TryRemove(dir, out _);
+					Match match = VersionFolder.Match(Path.GetFileName(dir));
+					if (match.Success && match.Groups[1].Value == language)
+					{
+						DeleteFolder(dir);
+						_opened.TryRemove(dir, out _);
+					}
 				}
 			}
 
@@ -555,11 +663,14 @@ public sealed partial class AudioPackStore
 				return;
 			}
 
-			foreach (string book in Directory.EnumerateDirectories(_root).Where(dir => !present.Contains(Path.GetFileName(dir))))
+			lock (_swapLock) // check pass 2 #2 (rule 1)
 			{
-				DeleteFolder(book);
-				_log($"pack {Path.GetFileName(book)}: book is not on the shelf, packs deleted");
-				swept = true;
+				foreach (string book in Directory.EnumerateDirectories(_root).Where(dir => !present.Contains(Path.GetFileName(dir))))
+				{
+					DeleteFolder(book);
+					_log($"pack {Path.GetFileName(book)}: book is not on the shelf, packs deleted");
+					swept = true;
+				}
 			}
 		}
 		finally
@@ -573,7 +684,7 @@ public sealed partial class AudioPackStore
 		}
 	}
 
-	private async Task<PackInstall> InstallCoreAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher fetcher)
+	private async Task<PackInstall> InstallCoreAsync(string bookId, string language, AudioPackInfo pack, IProgress<long>? bytes, CancellationToken cancel, IAudioPackFetcher fetcher, bool replaceSameVersion = false)
 	{
 		string label = $"pack {bookId}/{language} v{pack.Version}";
 		string part = Path.Combine(_partFolder, $"{bookId.ToLowerInvariant()}-{language}-v{pack.Version}-{Guid.NewGuid():N}{PartExtension}");
@@ -604,7 +715,7 @@ public sealed partial class AudioPackStore
 			}
 
 			Unpack(part, tmp, language);
-			PublishFolder(bookId, language, pack.Version, tmp);
+			PublishFolder(bookId, language, pack.Version, tmp, replaceSameVersion);
 			_log($"{label}: installed");
 			Report(bookId, language, AudioPackUsage.PackDone, pack.Version);
 			NotifyPacksChanged();
@@ -642,20 +753,113 @@ public sealed partial class AudioPackStore
 	}
 
 	// The extracted folder becomes the final one in one rename, then the other versions of that language go.
-	private void PublishFolder(string bookId, string language, int version, string tmp)
+	private void PublishFolder(string bookId, string language, int version, string tmp, bool replaceSameVersion = false)
 	{
 		string final = FolderOf(bookId, language, version);
-		DeleteFolder(final); // only a folder without a manifest can be here (InstalledVersion said the version was not installed)
-		Directory.Move(tmp, final);
-		_opened.TryRemove(final, out _);
-		foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)))
+		lock (_swapLock) // check pass 2 #2 (rule 1): every write to a pack's final folder, the plain publish and the tidying included, takes the lock the recovery takes
 		{
-			Match match = VersionFolder.Match(Path.GetFileName(dir));
-			if (match.Success && match.Groups[1].Value == language && !string.Equals(dir, final, StringComparison.Ordinal))
+			if (replaceSameVersion && Directory.Exists(final))
 			{
-				DeleteFolder(dir);
-				_opened.TryRemove(dir, out _);
+				SwapInPlace(final, tmp); // Slice 463: the verified copy goes in beside the installed one; the pack is never missing
 			}
+			else
+			{
+				BeforePlainPublish?.Invoke();
+				DeleteFolder(final); // only a folder without a manifest can be here (InstalledVersion said the version was not installed)
+				Directory.Move(tmp, final);
+			}
+
+			// Slice 463 review round 2: the new manifest is confirmed in place (Directory.Move or SwapInPlace would have thrown otherwise), so the pack is installed whatever the tidying below meets.
+			_opened.TryRemove(final, out _);
+			RemoveOtherVersions(bookId, language, final);
+		}
+	}
+
+	// Best effort: an older version left behind is removed by the next install of that language; it never changes the result of this one.
+	private void RemoveOtherVersions(string bookId, string language, string final)
+	{
+		try
+		{
+			foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)).ToList())
+			{
+				Match match = VersionFolder.Match(Path.GetFileName(dir));
+				if (match.Success && match.Groups[1].Value == language && !string.Equals(dir, final, StringComparison.Ordinal))
+				{
+					DeleteFolder(dir);
+					_opened.TryRemove(dir, out _);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: housekeeping after the new pack is in place; a leftover older version is removed by a later install
+			_log($"pack {bookId}/{language}: could not remove older versions ({ex.GetType().Name})");
+		}
+	}
+
+	// Slice 463 (review #3): two renames (the installed folder aside, the verified one in). The set-aside copy is the recovery copy: it is deleted only once the new folder is confirmed in place, a failed second rename puts it
+	// back, and a kill between the renames leaves it for RecoverInterruptedSwaps at the next start. A first rename that throws (on Windows a clip file is open) leaves everything as it was: the installed pack stays and the caller
+	// reports a failed install, so the next pass tries the replace again.
+	private void SwapInPlace(string final, string tmp)
+	{
+		lock (_swapLock)
+		{
+			string aside = final + AsideExtension;
+			if (Directory.Exists(aside) && !RecoverOneSwap(aside))
+			{
+				// check pass 1, rule 1: a leftover copy is settled by the recovery decision first (whole final: it goes; broken final: it is restored), never deleted blind
+				throw new IOException("A set-aside pack copy could not be settled; the replace waits for the next pass.");
+			}
+
+			Directory.Move(final, aside);
+			try
+			{
+				BetweenSwapRenames?.Invoke();
+				Directory.Move(tmp, final);
+			}
+			catch
+			{
+				RestoreAside(aside, final);
+				throw;
+			}
+
+			if (!File.Exists(Path.Combine(final, PremadeAudio.ManifestFile)))
+			{
+				DeleteFolder(final); // the new manifest is not in place: the installed pack goes back and the install fails
+				RestoreAside(aside, final);
+				throw new IOException("The replaced pack folder has no manifest."); // check pass 2 #4 (rule 4): a local swap fault (storage), never a bad package
+			}
+
+			DiscardAside(aside); // confirmed: the install is a success from here, whatever this delete meets
+		}
+	}
+
+	// Best effort: a copy that stays is removed by the next launch's recovery (RecoverInterruptedSwaps), which sees the whole final folder.
+	private static void DiscardAside(string aside)
+	{
+		try
+		{
+			DeleteFolder(aside);
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the install already succeeded; the next launch's recovery deletes the leftover copy
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not remove a replaced pack copy: {ex.Message}");
+		}
+	}
+
+	// Called with _swapLock held. A failed restore leaves the only copy hidden, so the recovery is due again: the next lookup runs it (check pass 2 #3, rule 1).
+	private void RestoreAside(string aside, string final)
+	{
+		try
+		{
+			Directory.Move(aside, final);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: the set-aside copy stays and the next lookup restores it (RecoverInterruptedSwaps); the original failure is what the caller reports
+			_recovered = false;
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not put a pack back after a failed replace: {ex.Message}");
 		}
 	}
 

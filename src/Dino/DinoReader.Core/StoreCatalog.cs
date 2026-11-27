@@ -9,13 +9,21 @@ public sealed record StoreItem(
     IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null,
     IReadOnlyList<StoreTag>? Tags = null, long? Bytes = null,
     BookSale Sale = BookSale.Free, string? ProductId = null, IReadOnlyList<string>? UnlockedBy = null,
-    string? HdDownloadUrl = null, long? HdBytes = null)
+    string? HdDownloadUrl = null, long? HdBytes = null, string? QuickDownloadUrl = null, long? QuickBytes = null)
 {
+    /// <summary>Slice 463: whether the store offers this version of the book as the small quick package too (448x600 pictures, AAC 24 kb/s); an older Worker lists none.</summary>
+    public bool HasQuick => !string.IsNullOrWhiteSpace(QuickDownloadUrl);
+
     /// <summary>Slice 375: whether the store offers this version of the book as a high-res package too (older Workers and books without print-size pictures: no).</summary>
     public bool HasHighRes => !string.IsNullOrWhiteSpace(HdDownloadUrl);
 
     /// <summary>The size of the package a download fetches for <paramref name="size"/> (Slice 375): the high-res pack's for High when the listing knows it, else the standard one's (also for StandardThenHigh, which fetches standard first).</summary>
-    public long? BytesFor(PictureSize size) => size == PictureSize.High && HdBytes is > 0 ? HdBytes : Bytes;
+    public long? BytesFor(PictureSize size) => size switch
+    {
+        PictureSize.High when HdBytes is > 0 => HdBytes,
+        PictureSize.Quick when QuickBytes is > 0 => QuickBytes,
+        _ => Bytes,
+    };
 
     /// <summary>Slice 346: every store product that unlocks this book (its own plus each bundle that lists it); empty for a free book or an older Worker.</summary>
     public IReadOnlyList<string> Products => UnlockedBy ?? [];
@@ -43,7 +51,11 @@ public sealed record StoreItem(
 }
 
 /// <summary>One audio pack the listing offers (Slice 246 B2): its version, the zip's size in bytes when the listing knows it, and the download address.</summary>
-public sealed record AudioPackInfo(int Version, long? Bytes, string Url);
+public sealed record AudioPackInfo(int Version, long? Bytes, string Url, string? QuickUrl = null, long? QuickBytes = null)
+{
+    /// <summary>Slice 463: the pack as a quick first book fetches it: the quick copy's address and size in place of the standard ones; the same pack when the listing has no quick copy.</summary>
+    public AudioPackInfo AsQuick() => string.IsNullOrWhiteSpace(QuickUrl) ? this : this with { Url = QuickUrl, Bytes = QuickBytes };
+}
 
 /// <summary>Reads the store's list response (Slice 92).</summary>
 public static class StoreCatalog
@@ -107,7 +119,8 @@ public static class StoreCatalog
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
                 ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio),
                 StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes), dto.Access == PaidAccess ? BookSale.Paid : BookSale.Free, ProductIdOf(dto.ProductId), ProductIdsOf(dto.UnlockedBy),
-                string.IsNullOrWhiteSpace(dto.HdDownloadUrl) ? null : dto.HdDownloadUrl.Trim(), BytesOf(dto.HdBytes))
+                string.IsNullOrWhiteSpace(dto.HdDownloadUrl) ? null : dto.HdDownloadUrl.Trim(), BytesOf(dto.HdBytes),
+                string.IsNullOrWhiteSpace(dto.QuickDownloadUrl) ? null : dto.QuickDownloadUrl.Trim(), BytesOf(dto.QuickBytes))
             : null;
     }
 
@@ -154,7 +167,9 @@ public static class StoreCatalog
 
         int? version = IntegerOf(pack.TryGetProperty("version", out JsonElement found) ? found : null);
         long? bytes = pack.TryGetProperty("bytes", out JsonElement size) && size.ValueKind == JsonValueKind.Number && size.TryGetInt64(out long length) && length > 0 ? length : null;
-        return version is >= 1 ? new AudioPackInfo(version.Value, bytes, url.GetString()!.Trim()) : null;
+        string? quickUrl = pack.TryGetProperty("quickUrl", out JsonElement quick) && quick.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(quick.GetString()) ? quick.GetString()!.Trim() : null;
+        long? quickBytes = pack.TryGetProperty("quickBytes", out JsonElement quickSize) ? BytesOf(quickSize) : null;
+        return version is >= 1 ? new AudioPackInfo(version.Value, bytes, url.GetString()!.Trim(), quickUrl, quickBytes) : null;
     }
 
     // Slice 260: the package size; anything but a whole positive number is unknown (null), as in the Worker.
@@ -225,6 +240,10 @@ public static class StoreCatalog
         public string? HdDownloadUrl { get; set; }
 
         public JsonElement? HdBytes { get; set; }
+
+        public string? QuickDownloadUrl { get; set; }
+
+        public JsonElement? QuickBytes { get; set; }
 
         public string? Access { get; set; }
 

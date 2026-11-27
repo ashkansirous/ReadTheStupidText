@@ -15,13 +15,22 @@ public sealed class HighResUpgrades
 	private const string InstalledFileName = "high-res-installed.json";
 	private const string StagedSizeFileName = "high-res-staged-size.json";
 	private const string LedgerFileName = "high-res-failures.json";
+	private const string QuickInstalledFileName = "quick-installed.json"; // Slice 463: which version of a book is installed as the quick package
+	private const string QuickPacksFileName = "quick-packs.json"; // Slice 463: which audio packs are installed as the quick copy ("<book id>|<language>" to version)
+	private const char PackKeySeparator = '|';
 
 	private readonly object _lock = new();
 	private HighResLedger? _ledger;
+	private readonly HashSet<string> _quickWrittenThisLaunch = new(StringComparer.OrdinalIgnoreCase);
+	private readonly HashSet<string> _quickPacksWrittenThisLaunch = new(StringComparer.OrdinalIgnoreCase);
 
 	private static string InstalledPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, InstalledFileName);
 
 	private static string StagedSizePath => System.IO.Path.Combine(FileSystem.AppDataDirectory, StagedSizeFileName);
+
+	private static string QuickInstalledPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, QuickInstalledFileName);
+
+	private static string QuickPacksPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, QuickPacksFileName);
 
 	private static string LedgerPath => System.IO.Path.Combine(FileSystem.AppDataDirectory, LedgerFileName);
 
@@ -51,9 +60,118 @@ public sealed class HighResUpgrades
 	/// <summary>A book delete: the installed-size record, any remembered staged size and the failure record go.</summary>
 	public void Remove(string id)
 	{
-		ChangeLedger(ledger => ledger.Remove(id), $"{id} removed");
+		string[] packKeys = QuickPacks().Where(p => string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase)).Select(p => QuickUpgradePlan.PackLedgerKey(p.Id, p.Language)).ToArray();
+		ChangeLedger(ledger => packKeys.Aggregate(ledger.Remove(id).Remove(QuickUpgradePlan.LedgerKey(id)), (l, key) => l.Remove(key)), $"{id} removed");
 		ForgetInstalledHigh(id);
 		ForgetStagedSize(id);
+		ForgetInstalledQuick(id);
+		ForgetQuickPacks(id);
+	}
+
+	/// <summary>The books recorded as installed quick (Slice 463), id to version (a copy; the quick upgrade pass derives from it).</summary>
+	public IReadOnlyDictionary<string, int> InstalledQuick()
+	{
+		lock (_lock)
+		{
+			return LoadFile(QuickInstalledPath) ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		}
+	}
+
+	/// <summary>Whether the copy on the shelf at <paramref name="version"/> is the quick one.</summary>
+	public bool InstalledIsQuick(string id, int version) => InstalledQuick().TryGetValue(id, out int have) && have == version;
+
+	/// <summary>Slice 463: the variant of the copy on the shelf at <paramref name="version"/>. The one place that answers it: quick, high-res or standard.</summary>
+	public BookVariant InstalledVariant(string id, int version) =>
+		InstalledIsQuick(id, version) ? BookVariant.Quick : InstalledIsHigh(id, version) ? BookVariant.High : BookVariant.Standard;
+
+	/// <summary>Slice 463: a quick copy of <paramref name="version"/> was installed (the import succeeded). It is never also high-res.</summary>
+	public void RecordInstalledQuick(string id, int version)
+	{
+		ForgetInstalledHigh(id);
+		lock (_lock)
+		{
+			_quickWrittenThisLaunch.Add(id);
+		}
+
+		ChangeFile(QuickInstalledPath, map => map[id] = version);
+		HighResLog.Write($"{id}: v{version} installed as {FirstBookSwitch.VariantName(BookVariant.Quick)}");
+	}
+
+	/// <summary>Check pass 1, rule 2: the ids whose quick record THIS launch wrote (the launch is the process; a record in the file with no entry here is from an earlier launch). The orphan drop never removes these.</summary>
+	public IReadOnlySet<string> QuickWrittenThisLaunch()
+	{
+		lock (_lock)
+		{
+			return new HashSet<string>(_quickWrittenThisLaunch, StringComparer.OrdinalIgnoreCase);
+		}
+	}
+
+	public void ForgetInstalledQuick(string id) => ChangeFile(QuickInstalledPath, map => map.Remove(id));
+
+	/// <summary>Slice 463: the quick copy of a book's pack in <paramref name="language"/> was installed at <paramref name="version"/>; remembered until the standard pack replaces it.</summary>
+	public void RecordQuickPack(string id, string language, int version)
+	{
+		lock (_lock)
+		{
+			_quickPacksWrittenThisLaunch.Add(PackKey(id, language));
+		}
+
+		ChangeFile(QuickPacksPath, map => map[PackKey(id, language)] = version);
+	}
+
+	/// <summary>Check pass 2 #1 (rule 2): whether this launch wrote the pack record (its install may still be in flight, so the drop leaves it).</summary>
+	public bool QuickPackWrittenThisLaunch(string id, string language)
+	{
+		lock (_lock)
+		{
+			return _quickPacksWrittenThisLaunch.Contains(PackKey(id, language));
+		}
+	}
+
+	public void ForgetQuickPack(string id, string language)
+	{
+		ChangeFile(QuickPacksPath, map => map.Remove(PackKey(id, language)));
+		ChangeLedger(ledger => ledger.Remove(QuickUpgradePlan.PackLedgerKey(id, language)), $"{id}/{language} quick pack forgotten");
+	}
+
+	/// <summary>Review round 2 (#1): the standard copy of a quick pack failed to install; counted in the ledger so a broken zip is not fetched again on every pass.</summary>
+	public void RecordQuickPackFailure(string id, string language, int version) =>
+		ChangeLedger(ledger => ledger.Apply(QuickUpgradePlan.PackLedgerKey(id, language), version, HighResOutcome.BadPackage), $"{id}/{language} quick pack failed v{version}");
+
+	/// <summary>The packs recorded as installed quick: (book id, language) to pack version.</summary>
+	public IReadOnlyList<(string Id, string Language, int Version)> QuickPacks()
+	{
+		lock (_lock)
+		{
+			return (LoadFile(QuickPacksPath) ?? []).Select(entry => (Parts: entry.Key.Split(PackKeySeparator), entry.Value))
+				.Where(x => x.Parts.Length == 2).Select(x => (x.Parts[0], x.Parts[1], x.Value)).ToList();
+		}
+	}
+
+	private void ForgetQuickPacks(string id) =>
+		ChangeFile(QuickPacksPath, map =>
+		{
+			foreach (string key in map.Keys.Where(key => key.StartsWith(id + PackKeySeparator, StringComparison.OrdinalIgnoreCase)).ToList())
+			{
+				map.Remove(key);
+			}
+		});
+
+	private static string PackKey(string id, string language) => $"{id}{PackKeySeparator}{language}";
+
+	/// <summary>
+	/// Slice 463: the quick-to-standard upgrade of a book ended as <paramref name="outcome"/>, counted under its own ledger key. Done: the swapped-in copy is standard, so the quick record goes (the high-res pass then
+	/// derives the book if the device wants it). Gone: an edited copy is never swapped, so the quick record goes with the attempts. BadPackage: a failure is counted and the copy stays quick.
+	/// </summary>
+	public void RecordQuickUpgrade(string id, int version, HighResOutcome outcome)
+	{
+		HighResLog.Write($"{id}: quick upgrade of v{version} outcome {outcome}");
+		if (outcome is HighResOutcome.Done or HighResOutcome.Gone)
+		{
+			ForgetInstalledQuick(id);
+		}
+
+		ChangeLedger(ledger => ledger.Apply(QuickUpgradePlan.LedgerKey(id), version, outcome), $"{id} quick {outcome} v{version}");
 	}
 
 	/// <summary>The outcome rule (<see cref="HighResLedger.Apply"/>): the one way an attempt's end changes the ledger. Done also records that the installed copy is high-res.</summary>
@@ -94,6 +212,7 @@ public sealed class HighResUpgrades
 			if (LoadFile(StagedSizePath) is not { } stagedSizes)
 			{
 				ForgetInstalledHigh(id); // review round 7 #9: unreadable, so the swapped-in copy is not known to be high-res: the old record is dropped (never kept wrong) and the pass derives the book again
+				ForgetInstalledQuick(id); // review round 2 (#5): a standard copy was swapped over whatever was there, so it is no longer the quick one
 				return;
 			}
 
@@ -106,6 +225,7 @@ public sealed class HighResUpgrades
 	/// <summary>A copy of <paramref name="version"/> was installed (the import succeeded): remembers a high-res one, forgets the record for any other.</summary>
 	public void RecordInstalledSize(string id, int version, bool high)
 	{
+		ForgetInstalledQuick(id); // a standard or high-res copy was installed over whatever was there: it is no longer the quick one
 		if (high)
 		{
 			SetInstalledHigh(id, version);

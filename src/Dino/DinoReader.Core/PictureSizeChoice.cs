@@ -22,6 +22,12 @@ public enum PictureSize
     Standard,
     High,
     StandardThenHigh,
+
+    /// <summary>
+    /// Slice 463: the small quick package of a first book. Never chosen by <see cref="PictureSizeChoice.Choose"/>: only the slow-link switch of the first-books download (<see cref="FirstBookSwitch"/>) fetches it,
+    /// and the background upgrade replaces it with the standard package.
+    /// </summary>
+    Quick,
 }
 
 /// <summary>The platforms the device class is read from.</summary>

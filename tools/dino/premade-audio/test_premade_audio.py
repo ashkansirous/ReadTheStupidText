@@ -630,6 +630,41 @@ class EncodeTests(Base):
         self.assertLess(self.duration(out), 0.8)  # 1.1 s in, about 0.5 s of tone plus the two 0.05 s pads
         self.assertGreater(self.duration(out), 0.45)
 
+    def test_quick_clip_is_a_smaller_aac_of_the_same_length(self):  # Slice 463
+        wav = os.path.join(self.tmp, "q.wav")
+        pathlib.Path(wav).write_bytes(tone_wav(1.0, 0.0))
+        standard = os.path.join(self.tmp, "q-standard.m4a")
+        quick = os.path.join(self.tmp, "q-quick.m4a")
+        encode.to_m4a(encode.find_ffmpeg(), wav, standard)
+        encode.to_quick_m4a(encode.find_ffmpeg(), standard, quick)
+        self.assertEqual(b"ftyp", pathlib.Path(quick).read_bytes()[4:8])
+        self.assertLess(os.path.getsize(quick), os.path.getsize(standard))
+        self.assertAlmostEqual(self.duration(standard), self.duration(quick), delta=0.1)
+        self.assertEqual([], [n for n in os.listdir(self.tmp) if ".part." in n])
+
+    def test_quick_folder_re_encodes_every_clip_under_the_same_name(self):
+        for name in ("a", "b"):
+            wav = os.path.join(self.tmp, name + ".wav")
+            pathlib.Path(wav).write_bytes(tone_wav(0.5, 0.0))
+            encode.to_m4a(encode.find_ffmpeg(), wav, os.path.join(self.tmp, name + ".m4a"))
+        self.assertEqual(2, encode.quick_folder(encode.find_ffmpeg(), self.tmp))
+        self.assertEqual(["a.m4a", "b.m4a"], sorted(os.listdir(os.path.join(self.tmp, encode.QUICK_FOLDER))))
+
+    def test_quick_command_uses_the_quick_bitrate_and_no_trim_filter(self):
+        command = encode.quick_command("ffmpeg", "in.m4a", "out.m4a")
+        self.assertEqual(encode.QUICK_BITRATE, command[command.index("-b:a") + 1])
+        self.assertEqual("24k", encode.QUICK_BITRATE)
+        self.assertNotIn("-af", command)
+
+    def test_a_quick_re_encode_of_a_broken_clip_is_an_error_and_leaves_no_half_file(self):
+        bad = os.path.join(self.tmp, "bad.m4a")
+        pathlib.Path(bad).write_bytes(b"not audio")
+        out = os.path.join(self.tmp, "bad-quick.m4a")
+        with self.assertRaises(encode.EncodeError):
+            encode.to_quick_m4a(encode.find_ffmpeg(), bad, out)
+        self.assertFalse(os.path.exists(out))
+        self.assertEqual([], [n for n in os.listdir(self.tmp) if ".part." in n])
+
     def test_a_silent_clip_is_an_error_and_the_sentence_is_requested_again(self):
         wav = os.path.join(self.tmp, "s.wav")
         pathlib.Path(wav).write_bytes(tone_wav(0.0, 0.5))

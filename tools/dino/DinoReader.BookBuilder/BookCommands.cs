@@ -76,6 +76,7 @@ internal static class BookCommands
             string folder = Path.Combine(StoreBuilder.StoreFolder(), spec.Id);
             File.Delete(Path.Combine(folder, StoreBuilder.PackageFileName(spec.Version)));
             File.Delete(Path.Combine(folder, HighResPack.HdPackageFileName(spec.Version)));
+            File.Delete(Path.Combine(folder, QuickPack.QuickPackageFileName(spec.Version)));
             return $"{book.Stem} did not build: {e.Message}";
         }
     }
@@ -85,7 +86,7 @@ internal static class BookCommands
     {
         try
         {
-            await StoreBuilder.WritePackageAsync(story, spec, library, book.CoverThumbPath, HighResPack.Find(book));
+            await StoreBuilder.WritePackageAsync(story, spec, library, book.CoverThumbPath, HighResPack.Find(book), QuickPack.Find(book));
             return null;
         }
         catch (Exception e) when (e is InvalidOperationException or JsonException or IOException or InvalidDataException)
@@ -93,6 +94,7 @@ internal static class BookCommands
             string folder = Path.Combine(StoreBuilder.StoreFolder(), spec.Id);
             File.Delete(Path.Combine(folder, StoreBuilder.PackageFileName(spec.Version)));
             File.Delete(Path.Combine(folder, HighResPack.HdPackageFileName(spec.Version)));
+            File.Delete(Path.Combine(folder, QuickPack.QuickPackageFileName(spec.Version)));
             return $"{book.Stem} did not build: {e.Message}";
         }
     }

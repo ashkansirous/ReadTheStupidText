@@ -60,6 +60,7 @@ const META_FILE = 'meta.json';
 const COVER_FILE = 'cover.jpg';
 const STORY_ID_PATTERN = /^[0-9a-f]{32}$/;
 const AUDIO_PACK_FILE = /^audio-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.zip$/;
+const QUICK_AUDIO_PACK_FILE = /^audio-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.quick\.zip$/; // Slice 463
 const LISTEN_TRACK_FILE = /^listen-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.m4a$/; // Slice 281
 const LISTEN_TRACK_KEY_PARTS = /\/([0-9a-f]{32})\/listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
 const TRACK_ONLY = 'track'; // Slice 409: third word of an --audio-behind line whose pack is live (only the committed listening track goes up)
@@ -170,6 +171,12 @@ export const packageName = (version) => `story-v${version}.dino`;
 /** Slice 375 B: the high-res package of the same version, built beside the standard one only for a book with a complete high-res/ folder. */
 export const hdPackageName = (version) => `story-v${version}.hd.dino`;
 
+/** Slice 463: the quick package of the same version (448x600 pictures, AAC 24 kb/s), a third copy of the book for a slow first download; built beside the standard one when the folder holds it. */
+export const quickPackageName = (version) => `story-v${version}.quick.dino`;
+
+/** Slice 463: the quick copy of an audio pack (AAC 24 kb/s), `audio-<lang>-v<n>.quick.zip`. */
+export const quickAudioPackName = (language, version) => `audio-${language}-v${version}.quick.zip`;
+
 /** Pure: a positive integer version from a meta value, else null. */
 export function parseVersion(value) {
     return Number.isInteger(value) && value > 0 ? value : null;
@@ -226,12 +233,12 @@ export function bucketVersionMatches(liveText, builtVersion) {
  * bucket's. `liveMeta(upload)` returns the bucket's meta.json text, or null when there is none. A failing book is skipped, the
  * run then throws listing them (the error carries `done`). Returns the ids refreshed.
  */
-export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () => false, audioExists = packageExists }) {
+export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () => false, audioExists = packageExists, packageSize = null }) {
     const done = [];
     const failures = [];
     for (const book of plan.filter((item) => item.outcome === Outcome.UpToDate)) {
         try {
-            putAudioPacks(book, join(root, book.id), { put, packageExists: audioExists }); // Slice 265: a pack built in this run goes up even when the meta is unchanged
+            putAudioPacks(book, join(root, book.id), { put, packageExists: audioExists, packageSize }); // Slice 265: a pack built in this run goes up even when the meta is unchanged
             const upload = metaUpload(book, join(root, book.id));
             const live = liveMeta(upload);
             if (!metaDiffers(readFileSync(upload.path, 'utf8'), live)) continue;
@@ -249,13 +256,14 @@ export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () =
     return done;
 }
 
-/** Pure: the uploads for one book, in the order they must run: cover, package, high-res package (only when the book has one, Slice 375 B), meta.json last. */
-export function uploadsFor({ id, version }, folder, hasCover, hasHd = false) {
+/** Pure: the uploads for one book, in the order they must run: cover, package, high-res package (only when the book has one, Slice 375 B), quick package (only when built, Slice 463), meta.json last. */
+export function uploadsFor({ id, version }, folder, hasCover, hasHd = false, hasQuick = false) {
     const key = (name) => `${KEY_PREFIX}/${id}/${name}`;
     const uploads = [];
     if (hasCover) uploads.push({ name: COVER_FILE, key: key(COVER_FILE), path: join(folder, COVER_FILE), contentType: 'image/jpeg' });
     uploads.push({ name: packageName(version), key: key(packageName(version)), path: join(folder, packageName(version)), contentType: 'application/octet-stream', isPackage: true });
     if (hasHd) uploads.push({ name: hdPackageName(version), key: key(hdPackageName(version)), path: join(folder, hdPackageName(version)), contentType: 'application/octet-stream', isPackage: true, isHdPackage: true });
+    if (hasQuick) uploads.push({ name: quickPackageName(version), key: key(quickPackageName(version)), path: join(folder, quickPackageName(version)), contentType: 'application/octet-stream', isPackage: true, isQuickPackage: true });
     uploads.push({ name: META_FILE, key: key(META_FILE), path: join(folder, META_FILE), contentType: 'application/json' });
     return uploads;
 }
@@ -275,7 +283,15 @@ export function audioUploadsFor({ id }, folder, metaText, fileExists = existsSyn
     const packs = Object.keys(audio).sort().map((language) => `audio-${language}-v${audio[language]?.version}.zip`)
         .filter((name) => AUDIO_PACK_FILE.test(name) && fileExists(join(folder, name)))
         .map((name) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'application/zip', isAudioPack: true }));
-    return [...packs, ...listenUploadsFor({ id }, folder, audio, fileExists)];
+    return [...packs, ...quickAudioUploadsFor({ id }, folder, audio, fileExists), ...listenUploadsFor({ id }, folder, audio, fileExists)];
+}
+
+/** Pure (Slice 463): the quick copies (`audio-<lang>-v<n>.quick.zip`) of the packs meta.json lists with a `quickBytes`, when built into this folder. They go up with the packs, before meta.json, so a listed quick copy is always there. */
+export function quickAudioUploadsFor({ id }, folder, audio, fileExists = existsSync) {
+    return Object.keys(audio).sort().filter((language) => Number(audio[language]?.quickBytes) > 0)
+        .map((language) => ({ language, name: quickAudioPackName(language, audio[language]?.version) }))
+        .filter(({ name }) => QUICK_AUDIO_PACK_FILE.test(name) && fileExists(join(folder, name)))
+        .map(({ language, name }) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'application/zip', isAudioPack: true, isQuickAudioPack: true, language }));
 }
 
 /** Pure (Slice 281): the listening tracks (`listen-<lang>-v<n>.m4a`, built by `BookBuilder build-listen`) of the packs meta.json lists with a `listenSeconds`, when built into this folder. They go up with the packs, before meta.json. */
@@ -292,6 +308,11 @@ export function listenUploadsFor({ id }, folder, audio, fileExists = existsSync)
  */
 export function audioPackIsLive(live, upload) {
     const match = /\/([0-9a-f]{32})\/(audio-.+\.zip)$/.exec(upload.key ?? '');
+    const quick = match ? /^audio-(.+)-v(\d+)\.quick\.zip$/.exec(match[2]) : null;
+    if (quick) {
+        const info = live.find((item) => item.id === match[1])?.audio?.[quick[1]]; // Slice 463: the Worker lists quickBytes only when the quick zip is in the bucket
+        return Number(info?.version) === Number(quick[2]) && Number(info?.quickBytes) > 0;
+    }
     const pack = match ? audioPackFileOf(match[2]) : null;
     if (!pack) return false;
     const story = live.find((item) => item.id === match[1]);
@@ -460,11 +481,12 @@ function warnUnsentAudio(plan, root) {
 }
 
 /** Sends the audio packs of one built book that are not in the bucket yet (never overwritten: the same version is the same content), before the cover, package and meta.json. Returns the names sent. */
-export function putAudioPacks(book, folder, { put, packageExists }) {
+export function putAudioPacks(book, folder, { put, packageExists, packageSize = null }) {
     const sent = [];
     for (const upload of audioUploadsFor(book, folder, readFileSync(join(folder, META_FILE), 'utf8'))) {
         if (packageExists(upload)) {
             console.log(`${upload.key} already exists, not overwriting`);
+            if (upload.isQuickAudioPack) listQuickAudioBucketSize(folder, upload, packageSize); // review #4: a kept quick zip is listed with ITS size, as the quick package is (a rebuilt zip is not byte-reproducible)
             continue;
         }
         put(upload);
@@ -708,6 +730,7 @@ export function runUploads(plan, root, { put, packageExists, audioExists = packa
 function moveToVersion(folder, from, to) {
     renameSync(join(folder, packageName(from)), join(folder, packageName(to)));
     if (existsSync(join(folder, hdPackageName(from)))) renameSync(join(folder, hdPackageName(from)), join(folder, hdPackageName(to)));
+    if (existsSync(join(folder, quickPackageName(from)))) renameSync(join(folder, quickPackageName(from)), join(folder, quickPackageName(to)));
     const metaPath = join(folder, META_FILE);
     writeFileSync(metaPath, `${JSON.stringify({ ...JSON.parse(readFileSync(metaPath, 'utf8')), version: to }, null, 2)}\n`);
 }
@@ -733,14 +756,17 @@ function settleVersion(book, folder, packageExists) {
 function uploadBook(book, root, { put, packageExists, audioExists = packageExists, hasCover, packageSize = null }) {
     const folder = join(root, book.id);
     if (!existsSync(join(folder, packageName(book.version)))) throw new Error(`${book.id}: meta.json says v${book.version} but ${packageName(book.version)} is missing.`);
-    putAudioPacks(book, folder, { put, packageExists: audioExists }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
+    putAudioPacks(book, folder, { put, packageExists: audioExists, packageSize }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
     const { version, packageThere } = settleVersion(book, folder, packageExists);
     const hasHd = existsSync(join(folder, hdPackageName(version)));
-    for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder), hasHd)) {
-        // Never overwrite a package key: the standard one is known to exist from settleVersion, the high-res one is asked of the bucket here.
-        if (upload.isPackage && (upload.isHdPackage ? packageExists({ key: upload.key }) : packageThere)) {
+    const hasQuick = existsSync(join(folder, quickPackageName(version)));
+    for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder), hasHd, hasQuick)) {
+        // Never overwrite a package key: the standard one is known to exist from settleVersion, the high-res and quick ones are asked of the bucket here.
+        const asked = upload.isHdPackage || upload.isQuickPackage;
+        if (upload.isPackage && (asked ? packageExists({ key: upload.key }) : packageThere)) {
             console.log(`${upload.key} already exists, not overwriting`);
-            if (upload.isHdPackage) listBucketHdSize(folder, upload, packageSize);
+            if (upload.isHdPackage) listBucketSize(folder, upload, packageSize, 'hdBytes');
+            if (upload.isQuickPackage) listBucketSize(folder, upload, packageSize, 'quickBytes');
             continue;
         }
         put(upload);
@@ -750,15 +776,27 @@ function uploadBook(book, root, { put, packageExists, audioExists = packageExist
 
 /**
  * Review #7: A high-res package already in the bucket is kept, so meta.json must list ITS size, not that of this run's rebuild (a zip is not byte-reproducible). `packageSize(upload)` is the
- * bucket object's size in bytes (null when unknown, then meta.json is left as built).
+ * bucket object's size in bytes (null when unknown, then meta.json is left as built). Slice 463: the quick package is kept the same way (`metaKey` is `quickBytes`).
  */
-function listBucketHdSize(folder, upload, packageSize) {
+function listBucketSize(folder, upload, packageSize, metaKey) {
     const bytes = packageSize ? packageSize(upload) : null;
     if (!Number.isInteger(bytes) || bytes <= 0) return;
     const metaPath = join(folder, META_FILE);
     const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
-    if (meta.hdBytes === bytes) return;
-    writeFileSync(metaPath, `${JSON.stringify({ ...meta, hdBytes: bytes }, null, 2)}
+    if (meta[metaKey] === bytes) return;
+    writeFileSync(metaPath, `${JSON.stringify({ ...meta, [metaKey]: bytes }, null, 2)}
+`);
+}
+
+/** Review #4: sets `audio.<language>.quickBytes` in the folder's meta.json to the size of the quick audio zip that is already in the bucket (`packageSize(upload)`; null or unknown leaves meta.json as built). */
+function listQuickAudioBucketSize(folder, upload, packageSize) {
+    const bytes = packageSize ? packageSize(upload) : null;
+    if (!Number.isInteger(bytes) || bytes <= 0) return;
+    const metaPath = join(folder, META_FILE);
+    const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
+    if (!meta.audio?.[upload.language] || meta.audio[upload.language].quickBytes === bytes) return;
+    meta.audio[upload.language] = { ...meta.audio[upload.language], quickBytes: bytes };
+    writeFileSync(metaPath, `${JSON.stringify(meta, null, 2)}
 `);
 }
 
@@ -1004,7 +1042,7 @@ async function main() {
     const errors = [];
     for (const [step, assign] of [
         [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket, audioExists: audioExists, packageSize: packageSizeInBucket }), (done) => { uploaded = done; }],
-        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket, audioExists: audioExists }), (done) => { refreshed = done; }],
+        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket, audioExists: audioExists, packageSize: packageSizeInBucket }), (done) => { refreshed = done; }],
         [() => runDeletions(deletions, { remove: removeFromBucket }), (done) => { delisted = done; }],
     ]) {
         try {

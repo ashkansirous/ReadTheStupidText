@@ -488,7 +488,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 		finally
 		{
 			_downloadCancel = null;
-			CountGettingWait(Stopwatch.GetElapsedTime(started), linked.IsCancellationRequested);
+			CountGettingWait(Stopwatch.GetElapsedTime(started), linked.IsCancellationRequested, _store.SwitchedToQuick(item.Id));
 		}
 	}
 
@@ -546,14 +546,16 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	}
 
 	// Slice 148 counted every wait that showed and every Cancel on one; the getting page is a page, not the shared overlay, so it reports the same two counts itself (only when it stayed 500 ms or more).
-	private void CountGettingWait(TimeSpan shown, bool cancelled)
+	// Slice 463: a wait whose book switched to the quick package (the slow-link rule) is counted under its own stage, so slow links show as "getting_quick_file".
+	private void CountGettingWait(TimeSpan shown, bool cancelled, bool switchedToQuick)
 	{
 		if (shown.TotalMilliseconds < WaitShownMilliseconds)
 		{
 			return;
 		}
 
-		string detail = UsageDetail.Wait(UsageWaitStage.Of(WaitStage.GettingFile), UsageBuckets.Duration(shown));
+		WaitStage stage = switchedToQuick ? WaitStage.GettingQuickFile : WaitStage.GettingFile;
+		string detail = UsageDetail.Wait(UsageWaitStage.Of(stage), UsageBuckets.Duration(shown));
 		_usage.RecordGeneral(UsageEventName.WaitShown, UsageEvent.NoLanguage, detail);
 		if (cancelled)
 		{
@@ -564,7 +566,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 	private async Task<bool> FetchOneAsync(StoreItem item, string mainLanguage, CancellationToken cancel)
 	{
 		ShowProgress(0, 1, 0);
-		DownloadOutcome outcome = await _store.DownloadAsync(item, new Progress<double>(p => ShowProgress(0, 1, p)), cancel, packLanguages: [mainLanguage]);
+		DownloadOutcome outcome = await _store.DownloadAsync(item, new Progress<double>(p => ShowProgress(0, 1, p)), cancel, packLanguages: [mainLanguage], allowQuick: true); // Slice 463: the first book only; a slow link switches to the quick package
 		if (outcome == DownloadOutcome.Done)
 		{
 			LandedFirst(item);

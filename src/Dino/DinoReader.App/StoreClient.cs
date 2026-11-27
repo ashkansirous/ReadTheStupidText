@@ -24,6 +24,15 @@ public enum FirstRunListSource
 	Prefetch,
 }
 
+/// <summary>Slice 463 check pass 1, rule 4: how the replacement of a quick audio pack ended. Only <see cref="BadFile"/> counts toward the failure ledger; <see cref="TryLater"/> (network, timeout, disk) counts nothing.</summary>
+public enum QuickPackUpgrade
+{
+	Replaced,
+	BadFile,
+	TryLater,
+	Cancelled,
+}
+
 public enum DownloadOutcome
 {
 	Done,
@@ -43,7 +52,22 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	public PictureSize PictureSizeFor(StoreItem item) => pictureSize?.ChoiceFor(item) ?? PictureSize.Standard;
 
 	/// <summary>Slice 375 D: a copy of <paramref name="version"/> was installed by <paramref name="size"/> (called only after the import succeeded): the installed-size record follows. Nothing else is recorded: a standard copy that a high-res pack can replace is found by the next upgrade pass.</summary>
-	public void RecordPictureSize(string id, int version, PictureSize size) => upgrades?.RecordInstalledSize(id, version, size == PictureSize.High);
+	public void RecordPictureSize(string id, int version, PictureSize size)
+	{
+		if (size == PictureSize.Quick)
+		{
+			upgrades?.RecordInstalledQuick(id, version); // Slice 463: the one record of the installed variant
+			return;
+		}
+
+		upgrades?.RecordInstalledSize(id, version, size == PictureSize.High);
+	}
+
+	// Slice 463: the first-book downloads in this run that gave up the standard package for the quick one; the first-books page counts its wait under the quick stage when its book is in here.
+	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _switchedToQuick = new(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>Slice 463: whether the first-book download of this book switched to the quick package in this run (so its wait is counted under the quick stage).</summary>
+	public bool SwitchedToQuick(string itemId) => _switchedToQuick.ContainsKey(itemId);
 
 	/// <summary>Slice 375 D: an update of <paramref name="version"/> was only staged; the installed-size record changes when the update is swapped in (<see cref="HighResUpgrades.SettleInstalledAtSwap"/>).</summary>
 	public void RecordStagedPictureSize(string id, int version, PictureSize size) => upgrades?.RecordStagedSize(id, version, size == PictureSize.High);
@@ -422,8 +446,9 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// second call for a story still downloading joins the first. On any failure nothing is left on the shelf.
 	/// Slice 459: an entry whose task already ended (finished, failed or cancelled) is removed before the lookup, so it is never joined. A caller that joins a run does not install packs: after a book lands, the caller installs
 	/// the packs it needs itself (<see cref="EnsurePackAsync"/>). <paramref name="packLanguages"/> narrows the packs a fresh run fetches (the first book asks for its main language only).
+	/// Slice 463: <paramref name="allowQuick"/> (the first book of the first-books step only) lets a slow standard download be dropped for the listed quick package (<see cref="FirstBookSwitch"/>).
 	/// </summary>
-	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore = null, IReadOnlyList<string>? packLanguages = null)
+	public async Task<DownloadOutcome> DownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore = null, IReadOnlyList<string>? packLanguages = null, bool allowQuick = false)
 	{
 		Task<DownloadOutcome> task;
 		lock (_inFlight)
@@ -435,7 +460,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 			if (!_inFlight.TryGetValue(item.Id, out task!))
 			{
-				task = RunDownloadAsync(item, progress, cancel, waitingForStore, packLanguages);
+				task = RunDownloadAsync(item, progress, cancel, waitingForStore, packLanguages, allowQuick);
 				_inFlight[item.Id] = task;
 			}
 		}
@@ -481,10 +506,11 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		Debug.WriteLine($"Dino Reader store download error kind for {itemId}: {known}");
 	}
 
-	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore, IReadOnlyList<string>? packLanguages)
+	private async Task<DownloadOutcome> RunDownloadAsync(StoreItem item, IProgress<double> progress, CancellationToken cancel, IProgress<bool>? waitingForStore, IReadOnlyList<string>? packLanguages, bool allowQuick)
 	{
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"{item.Id}-{Guid.NewGuid():N}{PartExtension}");
 		_downloadErrors.TryRemove(item.Id, out _);
+		_switchedToQuick.TryRemove(item.Id, out _); // review #6: a retry on a faster link is its own download, counted as what it is
 		bool imported = false; // set when THIS run's import finished: a cancel after that still leaves the book on the shelf (Slice 346 review pass 7 #2, #3: no storage lookup inside the catch)
 		try
 		{
@@ -498,8 +524,15 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, packLanguages ?? StoryLanguages.Current().All); // Slice 459: the first book asks for its main-language pack only; the rest follow in the background queue
 			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
 			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
-			PictureSize size = await FetchBookPackageRetryingLagAsync(item, part, summed, waitingForStore, cancel);
-			if (!await ImportPackageAsync(part, item.Id))
+			PictureSize size = await FetchBookPackageRetryingLagAsync(item, part, summed, waitingForStore, allowQuick, cancel);
+			if (size == PictureSize.Quick)
+			{
+				wanted = [.. wanted.Select(w => (w.Language, w.Pack.AsQuick()))]; // Slice 463: the packs follow as their quick copies (installed by InstallOnePackAsync); the bar counts their smaller size
+				summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
+				summed.Book(new FileInfo(part).Length, new FileInfo(part).Length);
+			}
+
+			if (!await ImportQuickRecordedFirstAsync(item, part, size))
 			{
 				return DownloadOutcome.Failed;
 			}
@@ -507,7 +540,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			imported = true;
 			sales.RecordDownload(item); // Slice 384: what opened the book (free, bought, the subscription), so only a subscription-only book can lock when it ends
 
-			// The size is recorded only for a copy that is on the shelf. A kill between the import and this line leaves a high-res copy recorded as standard, which the next upgrade pass swaps once more: harmless.
+			// A quick copy is recorded BEFORE its import (above), so a kill never leaves a quick copy recorded as standard; this line confirms it, and for a standard or high-res copy it is the record (a kill between the import and here leaves a high-res copy recorded as standard, which the next upgrade pass swaps once more: harmless).
 			RecordPictureSize(item.Id, item.Version, size);
 			return await FinishAfterImportAsync(item, wanted, summed, cancel);
 		}
@@ -533,6 +566,46 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		}
 	}
 
+	/// <summary>
+	/// Review #1: imports the package; a QUICK one is recorded as quick first (the intent), so the app killed between the import and the confirming record still leaves a quick copy that the upgrade pass sees. The intent is dropped when
+	/// the import does not succeed (a record with no book on the shelf is never acted on). A standard or high-res copy is recorded only after its import, by the caller.
+	/// </summary>
+	private async Task<bool> ImportQuickRecordedFirstAsync(StoreItem item, string part, PictureSize size)
+	{
+		if (size == PictureSize.Quick)
+		{
+			RecordPictureSize(item.Id, item.Version, size);
+		}
+
+		bool ok = false;
+		try
+		{
+			ok = await ImportPackageAsync(part, item.Id);
+			return ok;
+		}
+		finally
+		{
+			if (!ok && size == PictureSize.Quick && QuickUpgradePlan.ShouldForgetQuickRecord(ok, await IsOnShelfAsync(item.Id)))
+			{
+				upgrades?.ForgetInstalledQuick(item.Id); // check pass 1, rule 3: decided from the shelf, never from the cancel; a quick book on the shelf keeps its record
+			}
+		}
+	}
+
+	// A shelf that cannot be read counts as "on the shelf": a record is kept when in doubt (a record with no book is dropped later, a book with no record is never upgraded).
+	private async Task<bool> IsOnShelfAsync(string id)
+	{
+		try
+		{
+			return (await InstalledIdsAsync()).Contains(id);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: the record stays; the orphan drop of a later launch removes it if the book is not there
+			return true;
+		}
+	}
+
 	// Once the book is on the shelf it stays: the optional audio packs never fail it, and a cancel during them (or after the import) leaves the book installed, so the row shows it as installed (Slice 346 review pass 5 #5).
 	private async Task<DownloadOutcome> FinishAfterImportAsync(StoreItem item, IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted, SummedProgress summed, CancellationToken cancel)
 	{
@@ -552,40 +625,95 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// Slice 346 E3 (design changed after review pass 5): a 403 "purchase not valid" on a paid download is the store lagging behind the purchase (the app only offers a download for a book the store already says is owned),
 	/// so the fetch is tried again on the fixed schedule of <see cref="PurchaseLagRetry"/> (3, 6, 10, 15, 20, 30 s) while the row shows its wait; only the last 403 reaches the caller. Nothing is reported for a retried 403.
 	/// </summary>
-	private Task<PictureSize> FetchBookPackageRetryingLagAsync(StoreItem item, string part, SummedProgress summed, IProgress<bool>? waitingForStore, CancellationToken cancel) =>
+	private Task<PictureSize> FetchBookPackageRetryingLagAsync(StoreItem item, string part, SummedProgress summed, IProgress<bool>? waitingForStore, bool allowQuick, CancellationToken cancel) =>
 		PurchaseLagRetry.RunAsync(
-			() => FetchBookPackageAsync(item, PictureSizeFor(item), part, summed, cancel),
+			() => FetchBookPackageWithSwitchAsync(item, PictureSizeFor(item), part, summed, allowQuick && item.HasQuick, cancel),
 			ex => waitingForStore is not null && IsPurchaseNotValid(ex), // opt-in: only a caller that shows the wait (with Cancel) retries; restore, updates and tests fail at once as on main. Every other refusal or failure goes to the caller at once; only a refusal that reaches the caller is reported (purchase_not_valid)
 			Task.Delay,
 			waiting => waitingForStore?.Report(waiting),
 			cancel);
 
 	/// <summary>
+	/// Slice 463: the first book's download with the slow-link switch. The package <paramref name="size"/> names is fetched under a <see cref="SlowLinkWatch"/>; when <see cref="FirstBookSwitch"/> judges it too slow
+	/// after <see cref="FirstBookSwitch.CheckAfter"/>, it is cancelled and the quick package is fetched instead (returns <see cref="PictureSize.Quick"/>). The grown-up's own cancel, a purchase refusal or any
+	/// other failure is never a switch. A quick package the store cannot serve (404) falls back to the standard fetch, without the watch.
+	/// </summary>
+	private async Task<PictureSize> FetchBookPackageWithSwitchAsync(StoreItem item, PictureSize size, string part, SummedProgress summed, bool mayGoQuick, CancellationToken cancel)
+	{
+		if (!mayGoQuick)
+		{
+			return await FetchBookPackageAsync(item, size, part, summed, null, cancel);
+		}
+
+		using var watch = new SlowLinkWatch(cancel, item.Bytes); // review #5: judged against the STANDARD package's size, the one the quick package stands in for (a high-res fetch that is slow also switches, and one that falls back to standard restarts the watch)
+		try
+		{
+			PictureSize fetched = await FetchBookPackageAsync(item, size, part, summed, watch, watch.Token);
+			HighResLog.Write($"{item.Id}: first-book download kept (judged {watch.Judgement})");
+			return fetched;
+		}
+		catch (OperationCanceledException) when (watch.Switched && !cancel.IsCancellationRequested)
+		{
+			// no-fallback: the slow-link rule dropped the standard download on purpose; the quick package is fetched below and the switch is counted by the first-books page
+			HighResLog.Write($"{item.Id}: first-book download too slow ({watch.Judgement}), switching to the quick package");
+			return await FetchQuickInsteadAsync(item, part, summed, cancel);
+		}
+	}
+
+	private async Task<PictureSize> FetchQuickInsteadAsync(StoreItem item, string part, SummedProgress summed, CancellationToken cancel)
+	{
+		TryDelete(part); // the cancelled standard download's partial file must not be read as the quick package's bytes
+		summed.ResetBook();
+		try
+		{
+			await FetchPackageAsync(item.QuickDownloadUrl!, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			_switchedToQuick[item.Id] = true; // check pass 1, rule 3 (#7): only a quick fetch that succeeded counts the wait as getting_quick_file
+			return PictureSize.Quick;
+		}
+		catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
+		{
+			// no-fallback: the store lists a quick package it cannot serve; the standard package is fetched instead (no more switching) and the book is a normal standard one
+			HighResLog.Write($"{item.Id}: the quick package is gone (404), standard instead");
+			_switchedToQuick.TryRemove(item.Id, out _);
+			TryDelete(part);
+			summed.ResetBook();
+			return await FetchBookPackageAsync(item, PictureSize.Standard, part, summed, null, cancel);
+		}
+	}
+
+	/// <summary>
 	/// Slice 375: fetches the book's package as <paramref name="size"/> says (the high-res address for High, the standard one otherwise) and returns the size actually fetched: a high-res file the store
 	/// answers 404 for (listed but gone) falls back to the standard pack, which then carries no later upgrade.
 	/// </summary>
-	private async Task<PictureSize> FetchBookPackageAsync(StoreItem item, PictureSize size, string part, SummedProgress summed, CancellationToken cancel)
+	private async Task<PictureSize> FetchBookPackageAsync(StoreItem item, PictureSize size, string part, SummedProgress summed, SlowLinkWatch? watch, CancellationToken cancel)
 	{
+		Action<long, long?> book = (done, total) =>
+		{
+			watch?.Observe(done); // Slice 463: the first book's slow-link judge reads the same byte count the bar does
+			summed.Book(done, total);
+		};
 		if (size == PictureSize.High)
 		{
 			try
 			{
-				if (await FetchHighResWhileUnmeteredAsync(item, part, summed, cancel))
+				if (await FetchHighResWhileUnmeteredAsync(item, part, summed, book, cancel))
 				{
 					return size;
 				}
 
 				size = PictureSize.Standard;
+				watch?.Restart(); // the metered stop dropped the high-res bytes: the standard fetch starts at zero
 			}
 			catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
 			{
 				// no-fallback: the store lists a high-res pack it cannot serve; the standard pack is fetched instead and the book is not marked for an upgrade
 				HighResLog.Write($"high-res pack of {item.Id} v{item.Version} is gone (404), standard instead");
 				size = PictureSize.Standard;
+				watch?.Restart();
 			}
 		}
 
-		await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+		await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, book, refusalCodes: SwitchKnownOn);
 		return size;
 	}
 
@@ -593,18 +721,18 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// Slice 377 item 16: fetches the high-res pack, but stops it when the link turns metered mid-download (a first install chose high-res on an unmetered link). Returns true when the pack arrived whole,
 	/// false when the metered link stopped it and the caller fetches the standard pack instead; a grown-up's cancel still throws.
 	/// </summary>
-	private async Task<bool> FetchHighResWhileUnmeteredAsync(StoreItem item, string part, SummedProgress summed, CancellationToken cancel)
+	private async Task<bool> FetchHighResWhileUnmeteredAsync(StoreItem item, string part, SummedProgress summed, Action<long, long?> book, CancellationToken cancel)
 	{
 		if (pictureSize is null)
 		{
-			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), cancel, book, refusalCodes: SwitchKnownOn);
 			return true;
 		}
 
 		using var meteredStop = pictureSize.WatchConnection(PictureSizeChoice.ShouldStopHighRes, cancel); // only a limited link stops it: a roam or a blip with no connection is left to the stall timeout
 		try
 		{
-			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), meteredStop.Token, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
+			await FetchPackageAsync(item.HdDownloadUrl!, part, new Progress<double>(), meteredStop.Token, book, refusalCodes: SwitchKnownOn);
 			return true;
 		}
 		catch (OperationCanceledException) when (meteredStop.StoppedByConnection && !cancel.IsCancellationRequested)
@@ -793,7 +921,20 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		try
 		{
 			await SettlePurchasesAsync(cancel);
-			return await packs.InstallAsync(bookId, language, pack, bytes ?? (summed is null ? null : new SyncProgress<long>(summed.Pack)), cancel);
+			bool quick = upgrades?.InstalledQuick().ContainsKey(bookId) == true && !string.IsNullOrWhiteSpace(pack.QuickUrl); // Slice 463: a book installed quick gets the quick copy of each pack too, replaced later by the upgrade pass
+			bool intent = quick && packs.InstalledVersion(bookId, language) != pack.Version;
+			if (intent)
+			{
+				upgrades?.RecordQuickPack(bookId, language, pack.Version); // check pass 1, rule 2 (#6): the intent first, like the book record, so a kill after the install never leaves a quick pack unrecorded
+			}
+
+			PackInstall result = await packs.InstallAsync(bookId, language, quick ? pack.AsQuick() : pack, bytes ?? (summed is null ? null : new SyncProgress<long>(summed.Pack)), cancel);
+			if (intent && result != PackInstall.Installed)
+			{
+				upgrades?.ForgetQuickPack(bookId, language); // confirmed only by an install: a failed, cancelled or missing pack leaves no quick record
+			}
+
+			return result;
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
@@ -805,6 +946,60 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			// no-fallback: AudioPackStore.InstallAsync reports its own failures and never throws; this is only a last guard
 			Debug.WriteLine($"Dino Reader could not install the audio pack {bookId}/{language}: {ex.Message}");
 			return PackInstall.Failed;
+		}
+	}
+
+	/// <summary>
+	/// Slice 463: replaces the installed quick copy of a pack with the standard one of the same version. The standard zip is fetched whole first (a failed fetch leaves the quick pack in use); only then is it unpacked and verified
+	/// beside the quick copy and switched in (<see cref="AudioPackStore.InstallAsync"/> with replaceSameVersion), so the pack is never missing and a failed install keeps the quick pack. Never throws.
+	/// </summary>
+	public async Task<QuickPackUpgrade> UpgradeQuickPackAsync(string bookId, string language, AudioPackInfo standard, CancellationToken cancel)
+	{
+		string zip = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"pack-{bookId}-{language}-{Guid.NewGuid():N}{PartExtension}");
+		try
+		{
+			await SettlePurchasesAsync(cancel);
+			await FetchPackAsync(standard.Url, zip, new Progress<long>(), cancel);
+			PackInstall result = await packs.InstallAsync(bookId, language, standard, null, CancellationToken.None, new LocalFileAudioPackFetcher(zip), replaceSameVersion: true); // unpacked and verified beside the quick pack, then switched: a failure keeps the quick pack
+			return QuickPackUpgradeOf(bookId, language, result);
+		}
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			// no-fallback: the app is leaving or the pass was cancelled; the quick pack is still installed and the next pass tries again
+			return QuickPackUpgrade.Cancelled;
+		}
+		catch (AudioPackNotFoundException ex)
+		{
+			HighResLog.Write($"{bookId}/{language}: the standard pack is not in the store: {ex.Message}");
+			ReportFallback(ex);
+			return QuickPackUpgrade.BadFile; // a 404 counts as one failure of the ledger
+		}
+		catch (Exception ex)
+		{
+			HighResLog.Write($"{bookId}/{language}: the standard pack did not replace the quick one, tried again later: {ex.Message}");
+			ReportFallback(ex);
+			return QuickPackUpgrade.TryLater; // check pass 2 #4 (rule 4): only a 404 (above) or a confirmed bad file (QuickPackUpgradeOf) counts; any other fault says nothing about the file
+		}
+		finally
+		{
+			TryDelete(zip);
+		}
+	}
+
+	private QuickPackUpgrade QuickPackUpgradeOf(string bookId, string language, PackInstall result) => result switch
+	{
+		PackInstall.Installed or PackInstall.AlreadyInstalled => QuickPackUpgrade.Replaced,
+		PackInstall.Cancelled => QuickPackUpgrade.Cancelled,
+		PackInstall.NotFound => QuickPackUpgrade.BadFile,
+		_ => packs.LastFailure(bookId, language) is { } kind && QuickUpgradePlan.CountsAsBadPack(kind) ? QuickPackUpgrade.BadFile : QuickPackUpgrade.TryLater,
+	};
+
+	private sealed class LocalFileAudioPackFetcher(string path) : IAudioPackFetcher
+	{
+		public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel)
+		{
+			File.Copy(path, toPath, overwrite: true);
+			return Task.CompletedTask;
 		}
 	}
 

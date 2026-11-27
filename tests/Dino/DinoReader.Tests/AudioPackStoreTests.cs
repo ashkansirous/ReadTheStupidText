@@ -84,6 +84,291 @@ public sealed class AudioPackStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Replace_SwitchesTheSameVersionPackInPlace_WithTheOldFolderGoneAndNothingLeftBehind()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] standard = Zip(clipsInManifest: ["s.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Installed, result);
+        Assert.Equal(1, store.InstalledVersion(Book, "fa"));
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "s.m4a"));
+        Assert.Equal(["fa-v1"], Directory.EnumerateDirectories(Path.Combine(Root, Book)).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public async Task Replace_AFailedDownload_KeepsTheInstalledPack()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None, new FakeFetcher(null) { Throw = new HttpRequestException("offline") }, replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.Equal(1, store.InstalledVersion(Book, "fa"));
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+    }
+
+    [Fact]
+    public async Task Replace_APackThatFailsVerification_KeepsTheInstalledPack()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] broken = Zip(clipsInManifest: ["s.m4a"], clipsInZip: []); // the manifest names a clip the zip lacks
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(broken), null, CancellationToken.None, new FakeFetcher(broken), replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+        Assert.Equal(["fa-v1"], Directory.EnumerateDirectories(Path.Combine(Root, Book)).Select(Path.GetFileName));
+    }
+
+    private string FaFolder => Path.Combine(Root, Book, "fa-v1");
+
+    [Fact]
+    public async Task Replace_KilledBetweenTheTwoRenames_TheNextStartRestoresTheInstalledPack()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        await Store(new FakeFetcher(quick)).InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Directory.Move(FaFolder, FaFolder + ".old"); // what a kill after the first rename leaves: no pack folder, the set-aside one
+        Directory.CreateDirectory(FaFolder + ".tmp"); // and the verified copy's temp folder
+
+        AudioPackStore afterKill = Store(new FakeFetcher(quick));
+
+        Assert.Equal(1, afterKill.InstalledVersion(Book, "fa")); // the first look at the folders restores it: offline, the pack plays
+        Assert.NotNull(afterKill.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+        Assert.False(Directory.Exists(FaFolder + ".old"));
+    }
+
+    [Fact]
+    public async Task Replace_TheCleanupOfInterruptedInstalls_NeverDeletesTheSetAsidePack()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        await Store(new FakeFetcher(quick)).InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Directory.Move(FaFolder, FaFolder + ".old");
+        AudioPackStore afterKill = Store(new FakeFetcher(quick));
+
+        afterKill.CleanupInterrupted();
+
+        Assert.True(Directory.Exists(FaFolder)); // restored, not deleted as a leftover
+        Assert.Equal(1, afterKill.InstalledVersion(Book, "fa"));
+    }
+
+    [Fact]
+    public async Task Replace_KilledAfterTheSecondRename_TheNextStartDropsTheOldCopy()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        await Store(new FakeFetcher(quick)).InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Directory.CreateDirectory(FaFolder + ".old"); // the replace completed (the new pack is whole in its folder); only the delete of the old copy is missing
+        File.WriteAllText(Path.Combine(FaFolder + ".old", "old.txt"), "x");
+
+        AudioPackStore afterKill = Store(new FakeFetcher(quick));
+
+        Assert.Equal(1, afterKill.InstalledVersion(Book, "fa"));
+        Assert.False(Directory.Exists(FaFolder + ".old"));
+        Assert.NotNull(afterKill.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+    }
+
+    [Fact]
+    public async Task Replace_WhileAClipFileIsOpen_KeepsTheInstalledPackAndTheNextPassReplacesIt()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return; // only Windows refuses to rename a folder with an open file
+        }
+
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] standard = Zip(clipsInManifest: ["s.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+
+        PackInstall during;
+        using (new FileStream(Path.Combine(FaFolder, "q.m4a"), FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            during = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+            Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "q.m4a")); // still the quick pack, still playing
+        }
+
+        Assert.Equal(PackInstall.Failed, during);
+        Assert.Equal(["fa-v1"], Directory.EnumerateDirectories(Path.Combine(Root, Book)).Select(Path.GetFileName));
+
+        PackInstall next = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Installed, next);
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "s.m4a"));
+    }
+
+    [Fact]
+    public async Task Replace_WhenTheOldCopyCannotBeDeleted_IsStillInstalled_AndTheNextLaunchRemovesTheCopy()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return; // a read-only file blocks a folder delete on Windows
+        }
+
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] standard = Zip(clipsInManifest: ["s.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        string oldClip = Path.Combine(FaFolder, "q.m4a");
+        File.SetAttributes(oldClip, FileAttributes.ReadOnly); // the renamed .old copy then refuses to be deleted
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Installed, result); // decided by the new manifest being in place, not by the delete of the old copy
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "s.m4a")); // the cached pack is the new one
+        Assert.True(Directory.Exists(FaFolder + ".old"));
+        File.SetAttributes(Path.Combine(FaFolder + ".old", "q.m4a"), FileAttributes.Normal);
+
+        AudioPackStore nextLaunch = Store(new FakeFetcher(standard));
+        Assert.Equal(1, nextLaunch.InstalledVersion(Book, "fa"));
+
+        Assert.False(Directory.Exists(FaFolder + ".old"));
+        Assert.NotNull(nextLaunch.Open(Book, "fa")!.PathOf(0, Text + "s.m4a"));
+    }
+
+    [Fact]
+    public async Task LastFailure_ATimeoutOrIoError_IsNotABadFile_ASizeMismatchIs()
+    {
+        byte[] zip = Zip();
+        AudioPackStore timeout = Store(new FakeFetcher(null) { Throw = new TimeoutException("slow") });
+        AudioPackStore io = Store(new FakeFetcher(null) { Throw = new IOException("disk full") });
+        AudioPackStore wrongSize = Store(new FakeFetcher(zip));
+
+        Assert.Equal(PackInstall.Failed, await timeout.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None));
+        Assert.Equal(PackInstall.Failed, await io.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None));
+        Assert.Equal(PackInstall.Failed, await wrongSize.InstallAsync(Book, "fa", new AudioPackInfo(1, zip.Length + 5, "u"), null, CancellationToken.None));
+
+        Assert.False(QuickUpgradePlan.CountsAsBadPack(timeout.LastFailure(Book, "fa")!.Value));
+        Assert.False(QuickUpgradePlan.CountsAsBadPack(io.LastFailure(Book, "fa")!.Value));
+        Assert.True(QuickUpgradePlan.CountsAsBadPack(wrongSize.LastFailure(Book, "fa")!.Value));
+    }
+
+    [Fact]
+    public async Task Recovery_CannotRunBetweenTheTwoRenamesOfASwap()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] standard = Zip(clipsInManifest: ["s.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Task? recovery = null;
+        store.BetweenSwapRenames = () =>
+        {
+            recovery = Task.Run(store.RecoverInterruptedSwaps); // a second thread's recovery, while final is missing and .old holds the pack
+            Assert.False(recovery.Wait(300), "the recovery must wait for the swap to finish");
+            Assert.True(Directory.Exists(FaFolder + ".old"));
+        };
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+        await recovery!;
+
+        Assert.Equal(PackInstall.Installed, result);
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "s.m4a"));
+    }
+
+    [Fact]
+    public async Task Recovery_CannotRunInsideAPlainPublish()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        Task? recovery = null;
+        store.BeforePlainPublish = () =>
+        {
+            recovery = Task.Run(store.RecoverInterruptedSwaps); // check pass 2 #2: a recovery from another thread must wait for the plain publish too
+            Assert.False(recovery.Wait(300), "the recovery must wait for the publish to finish");
+        };
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
+        await recovery!;
+
+        Assert.Equal(PackInstall.Installed, result);
+    }
+
+    [Fact]
+    public async Task FailedRestoreAfterAFailedSwap_IsRecoveredByTheNextLookup_NotTheNextLaunch()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] standard = Zip(clipsInManifest: ["s.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        store.BetweenSwapRenames = () => File.WriteAllText(FaFolder, "in the way"); // the second rename and the restore both fail
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(standard), null, CancellationToken.None, new FakeFetcher(standard), replaceSameVersion: true);
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.True(Directory.Exists(FaFolder + ".old")); // the only copy is hidden
+        store.BetweenSwapRenames = null;
+
+        File.Delete(FaFolder); // the fault is gone
+
+        Assert.Equal(1, store.InstalledVersion(Book, "fa")); // same store, same launch: the lookup ran the recovery again
+        Assert.NotNull(store.Open(Book, "fa")!.PathOf(0, Text + "q.m4a"));
+    }
+
+    [Fact]
+    public async Task Replace_ALeftoverOldCopyWithABrokenFinal_IsRestoredNotDeleted()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        byte[] broken = Zip(clipsInManifest: ["s.m4a"], clipsInZip: []);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Directory.Move(FaFolder, FaFolder + ".old"); // a kill between the renames, recovery not yet done
+        Directory.CreateDirectory(FaFolder); // a final without a manifest
+        AudioPackStore later = Store(new FakeFetcher(broken));
+
+        PackInstall result = await later.InstallAsync(Book, "fa", Info(broken), null, CancellationToken.None, new FakeFetcher(broken), replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.NotNull(later.Open(Book, "fa")!.PathOf(0, Text + "q.m4a")); // the installed pack survived
+    }
+
+    [Fact]
+    public async Task Recovery_AFaultInOneFolder_NeverThrows_AndTheNextCallTriesAgain()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        await Store(new FakeFetcher(quick)).InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        Directory.Move(FaFolder, FaFolder + ".old");
+        File.WriteAllText(FaFolder, "in the way"); // a FILE with the final name: the restore cannot move the copy back
+        AudioPackStore afterKill = Store(new FakeFetcher(quick));
+
+        Assert.Null(Record.Exception(() => afterKill.RecoverInterruptedSwaps())); // guarded: nothing escapes
+        Assert.True(Directory.Exists(FaFolder + ".old")); // the only copy is kept
+
+        File.Delete(FaFolder); // the fault is gone: a failed pass was not marked done
+        Assert.Equal(1, afterKill.InstalledVersion(Book, "fa"));
+        Assert.False(Directory.Exists(FaFolder + ".old"));
+    }
+
+    [Fact]
+    public async Task Recovery_AfterAFullPass_IsNotRunAgain()
+    {
+        byte[] quick = Zip(clipsInManifest: ["q.m4a"]);
+        AudioPackStore store = Store(new FakeFetcher(quick));
+        await store.InstallAsync(Book, "fa", Info(quick), null, CancellationToken.None);
+        store.RecoverInterruptedSwaps(); // a full pass with nothing to do
+        Directory.CreateDirectory(FaFolder + ".old"); // appears after the pass: only the next launch looks
+
+        store.RecoverInterruptedSwaps();
+
+        Assert.True(Directory.Exists(FaFolder + ".old"));
+    }
+
+    [Fact]
+    public async Task Replace_WithNothingInstalled_IsAnOrdinaryInstall()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None, replaceSameVersion: true);
+
+        Assert.Equal(PackInstall.Installed, result);
+    }
+
+    [Fact]
     public async Task Install_ANewVersion_ReplacesTheOldFolder()
     {
         byte[] first = Zip();

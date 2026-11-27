@@ -57,10 +57,10 @@ internal static class StoreBuilder
             throw new InvalidOperationException(unpulled); // never publish a book with a complete high-res set as standard only
         }
 
-        await WritePackageAsync(await StarterBuilder.WithPictureCoverAsync(story, coverSource, library), spec, library, Path.Combine(StoryArtFolder(spec.Stem), CoverThumbFile), highRes);
+        await WritePackageAsync(await StarterBuilder.WithPictureCoverAsync(story, coverSource, library), spec, library, Path.Combine(StoryArtFolder(spec.Stem), CoverThumbFile), highRes, QuickPack.Find(Books.Folder(spec.Stem)));
     }
 
-    internal static async Task WritePackageAsync(Story story, StoreStorySpec spec, FileStoryLibrary library, string thumbnailPath, HighResFiles? highRes = null)
+    internal static async Task WritePackageAsync(Story story, StoreStorySpec spec, FileStoryLibrary library, string thumbnailPath, HighResFiles? highRes = null, HighResFiles? quick = null)
     {
         string folder = Path.Combine(StoreFolder(), spec.Id);
         Directory.CreateDirectory(folder);
@@ -72,7 +72,8 @@ internal static class StoreBuilder
         await File.WriteAllBytesAsync(Path.Combine(folder, CoverFile), CoverBytes(story, spec, library, thumbnailPath));
         long packageBytes = spec.LiveBytes ?? new FileInfo(Path.Combine(folder, PackageFileName(spec.Version))).Length; // a package already live at this version is never re-uploaded: list its size
         long? hdBytes = highRes is null ? null : await HighResPack.WriteAsync(story, library, highRes, folder, spec.Version); // last: it overwrites the story's pictures in the library with the print-size ones
-        await File.WriteAllTextAsync(Path.Combine(folder, MetaFile), MetaJson(spec, story, packageBytes, highRes is null ? null : spec.LiveHdBytes ?? hdBytes));
+        long? quickBytes = quick is null ? null : await QuickPack.WriteAsync(story, library, quick, folder, spec.Version); // Slice 463: after the high-res one; it overwrites the library's pictures with the quick ones
+        await File.WriteAllTextAsync(Path.Combine(folder, MetaFile), MetaJson(spec, story, packageBytes, highRes is null ? null : spec.LiveHdBytes ?? hdBytes, quickBytes));
     }
 
     /// <summary>The store list's cover (a row per story on a metered phone, so small): the checked-in <c>cover-thumb.jpg</c> (288x384, written by
@@ -91,10 +92,10 @@ internal static class StoreBuilder
     }
 
     /// <summary>The <c>meta.json</c> the Worker checks (<c>worker/stories.ts</c> <c>parseMeta</c>): the page count and the reading time come from the text.</summary>
-    public static string MetaJson(StoreStorySpec spec, Story story, long? packageBytes = null, long? hdBytes = null) =>
-        JsonSerializer.Serialize(MetaOf(spec, story, packageBytes, hdBytes), MetaOptions);
+    public static string MetaJson(StoreStorySpec spec, Story story, long? packageBytes = null, long? hdBytes = null, long? quickBytes = null) =>
+        JsonSerializer.Serialize(MetaOf(spec, story, packageBytes, hdBytes, quickBytes), MetaOptions);
 
-    private static Dictionary<string, object> MetaOf(StoreStorySpec spec, Story story, long? packageBytes, long? hdBytes)
+    private static Dictionary<string, object> MetaOf(StoreStorySpec spec, Story story, long? packageBytes, long? hdBytes, long? quickBytes)
     {
         var meta = new Dictionary<string, object>
         {
@@ -125,6 +126,11 @@ internal static class StoreBuilder
         if (hdBytes is > 0)
         {
             meta[HighResPack.MetaKey] = hdBytes.Value; // Slice 375 B: the size of story-v<n>.hd.dino; absent when the book has no complete high-res pack; not part of BookHash
+        }
+
+        if (quickBytes is > 0)
+        {
+            meta[QuickPack.MetaKey] = quickBytes.Value; // Slice 463: the size of story-v<n>.quick.dino; absent when the book has no complete quick set; not part of BookHash
         }
 
         // A starter's spec has no stem (its titles come from the shipped table), so its folder is found by id (Slice 258).

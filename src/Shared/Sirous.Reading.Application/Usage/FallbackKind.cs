@@ -314,6 +314,9 @@ public static class FallbackReason
     /// <summary>Slice 460 (area "store"): the purchase read did not finish inside the settle budget, so the files were asked for without it.</summary>
     public const string StoreSettleTimeout = "store_settle_timeout";
 
+    /// <summary>Slice 463 (area "store"): the background download that replaces a quick first book with the standard package failed (offline, killed, or the package did not verify); the book stays quick and the next start tries again.</summary>
+    public const string QuickUpgradeFailed = "quick_upgrade_failed";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -329,6 +332,7 @@ public static class FallbackReason
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
         BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, DownloadRefused, PurchaseNotValid, OnboardingTryNotDeleted,
         StoreTimeout, StoreNoNetwork, StoreDns, StoreTls, StoreHttp5xx, StoreHttp4xx, StoreNotAssociated, StoreNoWindow, StoreSettleTimeout,
+        QuickUpgradeFailed,
     ];
 }
 

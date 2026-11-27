@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { publishedStateFrom } from './r2-wrangler.mjs';
-import { audioBehindLines, listenLanguages, audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, hdBytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioBehindLines, listenLanguages, audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, hdBytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor, quickAudioUploadsFor, quickPackageName } from './publish-store-books.mjs';
 
 import { accessOf, applyAccessToBuiltMetas, refuseSharedProductIds, withAccess, paidSwitchOn, storeSafeOf } from './publish-store-books.mjs';
 
@@ -200,6 +200,86 @@ test('Slice 375 B: a hashed book moved up to a free version takes its high-res p
     });
 });
 
+test('Slice 463: a book with a quick package uploads cover, package, high-res, quick, then meta.json last', () => {
+    const names = (hd, quick) => uploadsFor({ id: A, version: 6 }, '/s/a', true, hd, quick).map((upload) => upload.name);
+    assert.deepEqual(names(true, true), ['cover.jpg', 'story-v6.dino', 'story-v6.hd.dino', 'story-v6.quick.dino', 'meta.json']);
+    assert.deepEqual(names(false, true), ['cover.jpg', 'story-v6.dino', 'story-v6.quick.dino', 'meta.json']);
+    assert.deepEqual(names(true, false), ['cover.jpg', 'story-v6.dino', 'story-v6.hd.dino', 'meta.json']);
+    assert.equal(uploadsFor({ id: A, version: 6 }, '/s/a', true, false, true)[2].key, `dinoreader/stories/${A}/story-v6.quick.dino`);
+});
+
+test('Slice 463: the quick package goes up after the standard and high-res ones, and a book without one sends none', () => {
+    withStore([{ id: A, version: 6, hd: true, quick: true }, { id: B, version: 3 }], (root) => {
+        const sent = [];
+        runUploads(planStoreUploads(readBuilt(root), []), root, { put: (upload) => sent.push(upload.key), packageExists: () => false });
+        assert.deepEqual(sent.filter((key) => key.includes(A)).map((key) => key.split('/').pop()), ['cover.jpg', 'story-v6.dino', 'story-v6.hd.dino', 'story-v6.quick.dino', 'meta.json']);
+        assert.equal(sent.filter((key) => key.includes(B)).some((key) => key.includes('.quick.')), false);
+    });
+});
+
+test('Slice 463: an existing quick package is never overwritten, and meta.json then lists the bucket object size as quickBytes', () => {
+    withStore([{ id: A, version: 6, quick: true }], (root) => {
+        const sent = [];
+        let metaText = '';
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 5 }]);
+        runUploads(plan, root, {
+            put: (upload) => { sent.push(upload.name); if (upload.name === 'meta.json') metaText = readFileSync(upload.path, 'utf8'); },
+            packageExists: ({ key }) => key.endsWith('.quick.dino'),
+            packageSize: () => 424242,
+        });
+        assert.deepEqual(sent, ['cover.jpg', 'story-v6.dino', 'meta.json']);
+        assert.equal(JSON.parse(metaText).quickBytes, 424242);
+    });
+});
+
+test('Slice 463 review #4: a quick audio zip already in the bucket is kept, and meta.json then lists the bucket size as audio.<lang>.quickBytes', () => {
+    withStore([{ id: A, version: 6, audio: { en: { version: 3, bytes: 9, quickBytes: 4 } }, zips: ['audio-en-v3.zip', 'audio-en-v3.quick.zip'] }], (root) => {
+        const sent = [];
+        let metaText = '';
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 5 }]);
+        runUploads(plan, root, {
+            put: (upload) => { sent.push(upload.name); if (upload.name === 'meta.json') metaText = readFileSync(upload.path, 'utf8'); },
+            packageExists: () => false,
+            audioExists: (upload) => upload.isQuickAudioPack === true,
+            packageSize: (upload) => (upload.isQuickAudioPack ? 777 : null),
+        });
+        assert.deepEqual(sent.filter((name) => name.startsWith('audio-')), ['audio-en-v3.zip']); // the kept quick zip is not rewritten
+        assert.equal(JSON.parse(metaText).audio.en.quickBytes, 777);
+        assert.equal(JSON.parse(metaText).audio.en.bytes, 9);
+    });
+});
+
+test('Slice 463: a hashed book moved up to a free version takes its quick package along', () => {
+    withStore([{ id: A, version: 6, hash: 'h', quick: true }], (root) => {
+        const sent = [];
+        const done = runUploads(planStoreUploads(readBuilt(root), []), root, { put: (upload) => sent.push(upload.name), packageExists: ({ key }) => key.endsWith('story-v6.dino') });
+        assert.deepEqual(done, [{ id: A, version: 7 }]);
+        assert.deepEqual(sent, ['cover.jpg', 'story-v7.dino', 'story-v7.quick.dino', 'meta.json']);
+        assert.ok(existsSync(join(root, A, 'story-v7.quick.dino')) && !existsSync(join(root, A, 'story-v6.quick.dino')));
+    });
+});
+
+test('Slice 463: a pack lists its quick copy only when meta.json carries quickBytes and the zip was built into the folder', () => {
+    const audio = { en: { version: 3, bytes: 9, quickBytes: 4 }, fa: { version: 1, bytes: 9 }, de: { version: 2, bytes: 9, quickBytes: 4 } };
+    const folder = '/s/a';
+    const built = new Set([join(folder, 'audio-en-v3.quick.zip'), join(folder, 'audio-fa-v1.quick.zip')]);
+    const uploads = quickAudioUploadsFor({ id: A }, folder, audio, (path) => built.has(path));
+    assert.deepEqual(uploads.map((upload) => upload.name), ['audio-en-v3.quick.zip']); // fa has no quickBytes, de's zip was not built
+    assert.equal(uploads[0].key, `dinoreader/stories/${A}/audio-en-v3.quick.zip`);
+    const all = audioUploadsFor({ id: A }, folder, JSON.stringify({ audio }), (path) => built.has(path) || path === join(folder, 'audio-en-v3.zip'));
+    assert.deepEqual(all.map((upload) => upload.name), ['audio-en-v3.zip', 'audio-en-v3.quick.zip']);
+});
+
+test('Slice 463: a quick zip is live only when the list carries quickBytes for that pack version', () => {
+    const upload = { key: `dinoreader/stories/${A}/audio-en-v3.quick.zip` };
+    const listed = (audio) => [{ id: A, audio }];
+    assert.equal(audioPackIsLive(listed({ en: { version: 3, quickBytes: 4 } }), upload), true);
+    assert.equal(audioPackIsLive(listed({ en: { version: 3 } }), upload), false, 'the standard pack is there but not its quick copy');
+    assert.equal(audioPackIsLive(listed({ en: { version: 2, quickBytes: 4 } }), upload), false);
+    assert.equal(audioPackIsLive([], upload), false);
+    assert.equal(audioPackIsLive(listed({ en: { version: 3 } }), { key: `dinoreader/stories/${A}/audio-en-v3.zip` }), true, 'the standard check is unchanged');
+});
+
 test('Slice 375 B: the live state carries the live hdBytes when the live meta lists a high-res package, and no key otherwise', () => {
     const metas = { [A]: JSON.stringify({ version: 3, contentHash: 'abc', bytes: 4096, hdBytes: 16384 }), [B]: JSON.stringify({ version: 2, contentHash: 'x', hdBytes: 'big' }) };
     const state = liveStateOf([{ id: A, version: 3 }, { id: B, version: 2 }], (id) => metas[id] ?? null);
@@ -275,10 +355,11 @@ test('Slice 239: too many delistings at once (a broken checkout) is refused', ()
 
 function storeFolder(books) {
     const root = mkdtempSync(join(tmpdir(), 'store-books-'));
-    for (const { id, version, withPackage = true, cover = true, hash, audio, zips = [], hd = false } of books) {
+    for (const { id, version, withPackage = true, cover = true, hash, audio, zips = [], hd = false, quick = false } of books) {
         mkdirSync(join(root, id));
-        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version, ...(hash ? { contentHash: hash } : {}), ...(audio ? { audio } : {}), ...(hd ? { hdBytes: 20 } : {}) }));
+        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version, ...(hash ? { contentHash: hash } : {}), ...(audio ? { audio } : {}), ...(hd ? { hdBytes: 20 } : {}), ...(quick ? { quickBytes: 5 } : {}) }));
         if (hd) writeFileSync(join(root, id, `story-v${version}.hd.dino`), 'h');
+        if (quick) writeFileSync(join(root, id, quickPackageName(version)), 'q');
         zips.forEach((zip) => writeFileSync(join(root, id, zip), 'z'));
         if (withPackage) writeFileSync(join(root, id, `story-v${version}.dino`), 'x');
         if (cover) writeFileSync(join(root, id, 'cover.jpg'), 'x');

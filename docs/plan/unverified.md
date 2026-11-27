@@ -191,6 +191,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 463: Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background ([slice](slices/463-dino-quick-first-book-package-for-slow-internet.md))
 - [owner] **You:** pick the quick package's picture size and audio bitrate (quick 448x600 / AAC 24 kb/s mono vs standard, four free books, en and de) | the side-by-side page is made by an interactive session; no link yet
+- [phone] The slow-link switch judged after about 3 s on a real slow link, and the 404 fallback to standard (try `emu network speed edge`; the 2026-11-27 `umts` run never got past the store list).
+- [session] The real quick-then-standard swap, once quick packages are published.
+- [cloud] The iOS simulator first-books step on a slow link.
+- [session] The Windows VM first-books step throttled to 256 kbit/s.
+- [session] Ninjalog after release: `wait_shown` detail `getting_quick_file:*` appears.
 
 ### Slice 457: Dino Alexa: finds a book by any part of its name, lists every book, plays only what it can, and keeps favourites ([slice](slices/457-dino-alexa-find-list-favourites.md))
 - [owner] **You:** on your Echo: "Alexa, open Dino Books", then "yes", "no", "search", "goldylock", "the lion", "add this to my favourites", "play my favourites" | no link (a real Echo)

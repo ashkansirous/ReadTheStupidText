@@ -9,7 +9,8 @@ namespace DinoReader.BookBuilder;
 
 /// <summary>What the book remembers about one published audio pack: its version, the hash of its content and its size. Lives in the book's <c>audio-cast.json</c> under <c>audioPacks</c>.</summary>
 /// <remarks>Slice 281: <paramref name="ListenSeconds"/> is the length of the book's listening track (<c>listen-&lt;lang&gt;-v&lt;n&gt;.m4a</c>, <see cref="ListenTrack"/>) of this pack version; null until it was built.</remarks>
-internal sealed record AudioPackRecord(int Version, string Hash, long Bytes, int? ListenSeconds = null);
+/// <remarks>Slice 463: <paramref name="QuickBytes"/> is the size of the pack's quick copy (<c>audio-&lt;lang&gt;-v&lt;n&gt;.quick.zip</c>, AAC 24 kb/s clips from the clips folder's <c>quick/</c> folder); null when the pack has none.</remarks>
+internal sealed record AudioPackRecord(int Version, string Hash, long Bytes, int? ListenSeconds = null, long? QuickBytes = null);
 
 /// <summary>
 /// Slice 246 B2: the per-language audio pack of a store book or a starter (Slice 258). One zip per book language, <c>audio-&lt;lang&gt;-v&lt;n&gt;.zip</c>, holding the generator's <c>manifest.json</c> (version 3) and the
@@ -32,6 +33,12 @@ internal static class AudioPacks
     private static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
 
     public static string PackFileName(string language, int version) => $"audio-{language}-v{version}.zip";
+
+    /// <summary>Slice 463: the quick copy of a pack, built beside it from the AAC 24 kb/s clips in <see cref="QuickClipsFolderName"/>.</summary>
+    public static string QuickPackFileName(string language, int version) => $"audio-{language}-v{version}.quick.zip";
+
+    /// <summary>Slice 463: the folder inside a pack's clips folder that holds the quick re-encode of each clip, under the same file names (made by <c>tools/dino/premade-audio/encode.py quick &lt;clips folder&gt;</c>).</summary>
+    public const string QuickClipsFolderName = "quick";
 
     /// <summary>Slice 265: where a book keeps its clips, <c>content/dino/&lt;book&gt;/audio/&lt;language&gt;</c> (Git LFS; a normal checkout holds only pointer files).</summary>
     public const string ClipsFolderName = "audio";
@@ -84,9 +91,22 @@ internal static class AudioPacks
     }
 
     // Slice 281: listenSeconds is listed only once the track was built (key order version, bytes, listenSeconds, so an unchanged book's meta.json text does not change).
-    private static object MetaEntryOf(AudioPackRecord record) => record.ListenSeconds is { } seconds
-        ? new { version = record.Version, bytes = record.Bytes, listenSeconds = seconds }
-        : new { version = record.Version, bytes = record.Bytes };
+    // Slice 463: quickBytes comes last, only when the pack has a quick copy, so a pack without one keeps its meta.json text.
+    private static object MetaEntryOf(AudioPackRecord record)
+    {
+        var entry = new Dictionary<string, object> { ["version"] = record.Version, ["bytes"] = record.Bytes };
+        if (record.ListenSeconds is { } seconds)
+        {
+            entry["listenSeconds"] = seconds;
+        }
+
+        if (record.QuickBytes is > 0)
+        {
+            entry["quickBytes"] = record.QuickBytes.Value;
+        }
+
+        return entry;
+    }
 
     /// <summary>The files a pack holds, in zip order: <c>manifest.json</c> first, then each clip the manifest names, once, by ordinal name. Fails on a manifest of another version or language, or a missing clip.</summary>
     public static IReadOnlyList<string> PackFiles(string clipsFolder, string language)
@@ -218,10 +238,41 @@ internal static class AudioPacks
         Directory.CreateDirectory(folder);
         string zipPath = Path.Combine(folder, PackFileName(language, version));
         WriteZip(zipPath, clipsFolder, files);
+        long? quickBytes = BuildQuick(folder, language, version, clipsFolder, files);
         AudioPackRecord? recorded = records.GetValueOrDefault(language);
-        var record = new AudioPackRecord(version, hash, new FileInfo(zipPath).Length, recorded?.Version == version ? recorded.ListenSeconds : null);
+        var record = new AudioPackRecord(version, hash, new FileInfo(zipPath).Length, recorded?.Version == version ? recorded.ListenSeconds : null, quickBytes);
         SaveRecord(book.Dir, language, record);
         return record;
+    }
+
+    /// <summary>
+    /// Slice 463: the quick copy of a pack, <c>audio-&lt;lang&gt;-v&lt;n&gt;.quick.zip</c>: the pack's own manifest and, for each clip, its quick re-encode from <c>&lt;clips&gt;/quick/</c>. Built only when that folder
+    /// holds every clip the pack names as a real file (never a Git LFS pointer); otherwise no quick copy and null (the pack ships standard only). Returns the zip's size.
+    /// </summary>
+    public static long? BuildQuick(string storeBookFolder, string language, int version, string clipsFolder, IReadOnlyList<string> files)
+    {
+        string quickFolder = Path.Combine(clipsFolder, QuickClipsFolderName);
+        string[] clips = files.Where(name => name != ManifestFile).ToArray();
+        if (clips.Length == 0 || !clips.All(name => File.Exists(Path.Combine(quickFolder, name)) && !IsLfsPointer(Path.Combine(quickFolder, name))))
+        {
+            return null;
+        }
+
+        string zipPath = Path.Combine(storeBookFolder, QuickPackFileName(language, version));
+        using (FileStream output = File.Create(zipPath))
+        using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
+        {
+            foreach (string name in files)
+            {
+                ZipArchiveEntry entry = zip.CreateEntry(name, CompressionLevel.NoCompression);
+                entry.LastWriteTime = ZipTime;
+                using Stream target = entry.Open();
+                using FileStream source = File.OpenRead(Path.Combine(name == ManifestFile ? clipsFolder : quickFolder, name));
+                source.CopyTo(target);
+            }
+        }
+
+        return new FileInfo(zipPath).Length;
     }
 
     internal static void SaveRecord(string bookDir, string language, AudioPackRecord record)
@@ -229,9 +280,18 @@ internal static class AudioPacks
         string path = Path.Combine(bookDir, CastFile);
         JsonObject cast = JsonNode.Parse(File.ReadAllText(path))?.AsObject() ?? throw new InvalidOperationException($"{path} is not a JSON object.");
         JsonObject packs = cast[RecordsKey]?.AsObject() ?? [];
-        packs[language] = record.ListenSeconds is { } seconds
-            ? JsonSerializer.SerializeToNode(new { version = record.Version, hash = record.Hash, bytes = record.Bytes, listenSeconds = seconds })
-            : JsonSerializer.SerializeToNode(new { version = record.Version, hash = record.Hash, bytes = record.Bytes });
+        var entry = new Dictionary<string, object> { ["version"] = record.Version, ["hash"] = record.Hash, ["bytes"] = record.Bytes };
+        if (record.ListenSeconds is { } seconds)
+        {
+            entry["listenSeconds"] = seconds;
+        }
+
+        if (record.QuickBytes is > 0)
+        {
+            entry["quickBytes"] = record.QuickBytes.Value; // Slice 463: written last, so a pack without a quick copy keeps its record text
+        }
+
+        packs[language] = JsonSerializer.SerializeToNode(entry);
         cast[RecordsKey] = new JsonObject(packs.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, p.Value?.DeepClone())));
         File.WriteAllText(path, cast.ToJsonString(WriteOptions).ReplaceLineEndings("\n") + "\n");
     }

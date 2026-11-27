@@ -956,6 +956,15 @@ test("the part D fallbacks (windows, fonts, library, swallowed catches) are acce
   }
 });
 
+test("Slice 463: the quick first-book wait stage and the failed quick upgrade fallback are accepted, with their closed halves", () => {
+  const wait = { ...shelfEvent, name: "wait_shown", book: "none", source: "none", language: "und", detail: "getting_quick_file:5-10" };
+  assert.equal(parseEvent(wait)?.detail, "getting_quick_file:5-10");
+  assert.equal(parseEvent({ ...wait, detail: "getting_quick_file:3-4" }), null);
+  assert.equal(parseEvent({ ...wait, detail: "getting_quick_file" }), null);
+  assert.equal(parseEvent({ ...noBook, name: "fallback", detail: "store:quick_upgrade_failed" })?.detail, "store:quick_upgrade_failed");
+  assert.equal(parseEvent({ ...noBook, name: "fallback", detail: "store:quick_upgrade_failed:x" })?.detail, undefined);
+});
+
 test("Slice 460: the store failure causes are accepted, the old store reasons stay accepted, and a cause with a sub-field or free text is not", () => {
   const causes = ["store_timeout", "store_no_network", "store_dns", "store_tls", "store_http_5xx", "store_http_4xx", "store_not_associated", "store_no_window", "store_settle_timeout"];
   for (const reason of [...causes, "store_unreachable", "store_failed"]) {

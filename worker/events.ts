@@ -37,7 +37,7 @@ const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl", "de"] as const;
 const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
-const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
+const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file", "getting_quick_file"] as const;
 const WAIT_DETAIL_SEPARATOR = ":";
 // The first-run intro (Slice 155; Slice 173 added the story languages step; Slice 228 the two places and the read step): six steps, each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
 // Slice 362: the new first run's six steps (language, story_languages, books, listen, voice, corner) count as intro steps too.
@@ -96,6 +96,8 @@ export const FALLBACK_REASONS = [
   "onboarding_try_not_deleted",
   // Slice 460: why a store call failed (store_unreachable and store_failed stay accepted: older builds, and the other-cause catch-all)
   "store_timeout", "store_no_network", "store_dns", "store_tls", "store_http_5xx", "store_http_4xx", "store_not_associated", "store_no_window", "store_settle_timeout",
+  // Slice 463: the background standard download that replaces a quick first book failed
+  "quick_upgrade_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;
@@ -115,7 +117,7 @@ export const SCREENS = [
   "intro_1", "intro_2", "intro_3", "intro_4", "first_run", "first_books", "shelf", "reading", "corner_books", "corner_store", "corner_settings", "gate", "story_languages", "language", "reading_speed", "animal_sounds",
   "record_intro", "record", "backup", "usage_counts", "about", "report_problem", "update", "close_question", "drop_language",
 ] as const;
-export const SCREEN_ACTIONS = ["shown", "next", "back", "skip", "close"] as const;
+export const SCREEN_ACTIONS = ["shown", "next", "back", "skip", "close", "quick_upgraded"] as const;
 export const CONTROLS = [
   "play", "pause", "stop", "next_page", "previous_page", "sentence", "back", "close", "done", "cancel", "confirm", "next", "skip", "skip_all", "try_it", "continue", "retry", "save", "restore", "send", "copy_code", "update", "download", "delete",
   "filter", "language", "voice", "speed", "mode", "book", "book_more", "read_now", "record", "open_corner", "tab_books", "tab_store", "tab_settings", "settings_row", "toggle", "reorder", "pick", "dismiss", "gate_key", "see_stories",
