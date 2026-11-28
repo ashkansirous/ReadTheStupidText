@@ -98,7 +98,14 @@ export const FALLBACK_REASONS = [
   "store_timeout", "store_no_network", "store_dns", "store_tls", "store_http_5xx", "store_http_4xx", "store_not_associated", "store_no_window", "store_settle_timeout",
   // Slice 463: the background standard download that replaces a quick first book failed
   "quick_upgrade_failed",
+  // Slice 425: one reason per site that said story_unreadable (which stays accepted: old builds, and a speaker's fault)
+  "story_id_mismatch", "story_empty", "story_invalid", "story_newer_version", "story_no_pages", "story_missing_fields", "story_listing_cleanup_failed",
+  "shelf_rebuild_timeout", "shelf_rebuild_cancelled", "shelf_rebuild_io", "shelf_rebuild_layout", "shelf_rebuild_library", "shelf_rebuild_other",
+  "own_books_cleanup_failed", "own_book_delete_failed", "backup_book_unapplied",
 ] as const;
+// Slice 425: the reasons whose detail may carry a third part, the store book's catalogue id ("library:story_empty:<id>"); every other reason takes exactly two parts.
+const FALLBACK_BOOK_AREA = "library";
+const FALLBACK_BOOK_REASONS = ["story_id_mismatch", "story_empty", "story_invalid", "story_newer_version", "story_no_pages", "story_missing_fields", "backup_book_unapplied"] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;
 export const NO_COUNT = -1;
@@ -293,6 +300,7 @@ const bookUpdateDetail = (value: unknown): boolean => {
 // A fallback count's detail is "<area>:<reason>", like "premade_audio:partial" (Slice 273): both halves come from closed lists.
 const fallbackDetail = (value: unknown): boolean => {
   const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  if (parts.length === 3) return parts[0] === FALLBACK_BOOK_AREA && oneOf(FALLBACK_BOOK_REASONS, parts[1]) && matches(STORY_ID_PATTERN, parts[2]);
   return parts.length === 2 && oneOf(FALLBACK_AREAS, parts[0]) && oneOf(FALLBACK_REASONS, parts[1]);
 };
 

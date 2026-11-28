@@ -7,8 +7,21 @@ namespace DinoReader;
 /// Dino Reader's answer to the shared readers and translators (Slice 273 part B): a fallback they report goes to <see cref="UsageCounter"/> as a count about no book, once per
 /// (area, reason, language) in the session with a count. Fallbacks that know their story call <see cref="UsageCounter.RecordFallback"/> directly. Never throws.
 /// </summary>
-public sealed class DinoFallbackSink(UsageCounter usage) : IFallbackSink
+public sealed class DinoFallbackSink(UsageCounter usage) : IBookFallbackSink
 {
+	/// <summary>Slice 425: a fallback about a store book; its catalogue id ends the detail.</summary>
+	public void ReportBook(string area, string reason, string book)
+	{
+		try
+		{
+			usage.RecordBookFallback(area, reason, book);
+		}
+		catch (Exception)
+		{
+			// no-fallback: counting is best effort and never reports itself
+		}
+	}
+
 	public void Report(string area, string reason, string? language = null)
 	{
 		try

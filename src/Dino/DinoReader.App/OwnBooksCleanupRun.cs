@@ -38,7 +38,7 @@ public sealed class OwnBooksCleanupFlight(IStoryLibrary library, IOwnBooksCleanu
 		}
 		catch (Exception ex)
 		{
-			sink.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // the shelf could not be listed; counts as a failed start
+			sink.Report(FallbackArea.Library, FallbackReason.OwnBooksCleanupFailed); // the shelf could not be listed; counts as a failed start
 			System.Diagnostics.Debug.WriteLine($"[OwnBooks] cleanup ended early: {ex}");
 			OwnBooksCleanupRun.Record(keys, 1);
 			return 0;
@@ -112,7 +112,7 @@ public static class OwnBooksCleanupRun
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			sink.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 278 A3: the book stays and the next start tries again (the reason list is shared with RTST and the Worker allow-list, so no delete-specific reason)
+			sink.Report(FallbackArea.Library, FallbackReason.OwnBookDeleteFailed); // Slice 278 A3: the book stays and the next start tries again (Slice 425: its own reason; an own book never sends an id)
 			System.Diagnostics.Debug.WriteLine($"[OwnBooks] could not delete {id}: {ex.Message}");
 			return false;
 		}

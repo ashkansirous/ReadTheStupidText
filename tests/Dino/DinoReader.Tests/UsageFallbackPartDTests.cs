@@ -29,7 +29,7 @@ public sealed class UsageFallbackPartDTests : IDisposable
         IReadOnlyList<Story> stories = await library.ListAsync();
 
         Assert.Empty(stories);
-        Assert.Equal([(FallbackArea.Library, FallbackReason.StoryUnreadable)], sink.Reported);
+        Assert.Equal([(FallbackArea.Library, FallbackReason.StoryInvalid)], sink.Reported); // Slice 425: its own reason (broken JSON), and no book id for a file that names none
     }
 
     [Fact]

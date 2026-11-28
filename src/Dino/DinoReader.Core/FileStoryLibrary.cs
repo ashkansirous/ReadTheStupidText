@@ -549,6 +549,28 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
+    // Slice 425: reported (reason, book) pairs of this launch, process-wide, so one bad book counts once per launch and not on every shelf listing. A book is its store catalogue id, or (an own book, which never sends an id) its folder name.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(string Reason, string Book), bool> UnreadableReported = new();
+
+    /// <summary>Tests only: forget every reported pair so one test's reports never hide another's.</summary>
+    internal static void ResetUnreadableReported() => UnreadableReported.Clear();
+
+    private void ReportUnreadableOnce(string area, string reason, string folderId, string? catalogueId)
+    {
+        if (Fallbacks is NoFallbackSink)
+        {
+            return; // no sink yet (a listing that runs before the app sets one): the pair stays unreported so the real listing still reports it
+        }
+
+        string? storeBook = UsageEvent.ShelfId(catalogueId);
+        if (!UnreadableReported.TryAdd((reason, storeBook ?? folderId), true))
+        {
+            return;
+        }
+
+        Fallbacks.ReportBook(area, reason, storeBook);
+    }
+
     // includeOwn is false only for the shelf listing, which never shows an own book (Slice 278 A3); lookups by id and the source-id sweep still see every book.
     private async Task<Story?> TryReadAsync(string id, bool includeOwn = true)
     {
@@ -557,9 +579,10 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             return null;
         }
 
+        string? rawJson = null;
         try
         {
-            string text = await File.ReadAllTextAsync(FilePathOf(id));
+            string text = rawJson = await File.ReadAllTextAsync(FilePathOf(id));
             if (!includeOwn && OwnBook.IsOwn(text))
             {
                 return null;
@@ -579,12 +602,12 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
                 return PartTakes.Enabled ? PartClipAdoption.Adopt(story, await PartFileNamesUnderGateAsync(id)) : story; // Slice 395: a part take an older app's re-save dropped from the story file is found again by its file; with the switch off no folder is listed and nothing is adopted
             }
 
-            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
+            ReportUnreadableOnce(FallbackArea.Library, FallbackReason.StoryIdMismatch, id, story.SourceId); // Slice 273 part D: the book is left off the shelf
             return null;
         }
-        catch (StoryFormatException)
+        catch (StoryFormatException ex)
         {
-            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
+            this.ReportUnreadableOnce(FallbackArea.Library, FallbackUsage.ReasonOf(ex.Error), id, rawJson is null ? null : StoryJson.CatalogueIdOf(rawJson)); // Slice 273 part D: the book is left off the shelf
             return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -608,7 +631,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception)
         {
-            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 464: the listing is optional cleanup; nothing is listed now and an older overlapping file is left for the next save
+            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryListingCleanupFailed); // Slice 464: the listing is optional cleanup; nothing is listed now and an older overlapping file is left for the next save
             return [];
         }
     }
