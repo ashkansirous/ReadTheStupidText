@@ -45,6 +45,7 @@ Open slices only. Finished slices (448 rows) are in [slices-done](docs/plan/note
 | 475 | Dino: name dino.elinsoft.co.uk on the Sonos link page and in the privacy text | planned | | | [475-dino-name-dino-elinsoft-on-sonos-link-page-and-privacy.md](docs/plan/slices/475-dino-name-dino-elinsoft-on-sonos-link-page-and-privacy.md) |
 | 476 | Dino: fix the Farsi (fa) premade-audio pack alignment (text_mismatch) | planned | | | [476-dino-farsi-pack-text-mismatch.md](docs/plan/slices/476-dino-farsi-pack-text-mismatch.md) |
 | 477 | Dino: a book keeps reading through a long lock, on battery, on every phone | planned | | | [477-dino-long-locked-read.md](docs/plan/slices/477-dino-long-locked-read.md) |
+| 479 | Dino: adding Dino Reader on Sonos opens the Dino app and finishes the link | planned | | | [479-dino-sonos-link-opens-app.md](docs/plan/slices/479-dino-sonos-link-opens-app.md) |
 
 ### Shared
 
