@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New books takeover</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;color:inherit;margin:0}
+a{color:#5B57E8}a:hover{color:#3f3bc4}
+</style>
+</helmet>
+<div style="width:405px;height:864px;box-sizing:border-box;border-radius:55px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;display:flex;flex-direction:column;position:relative;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+
+<div style="height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 32px 0 40px;font-size:15px;font-weight:600;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;margin-left:-63px;width:126px;height:37px;border-radius:19px;background:#000"></div><span>100%</span></div>
+
+<sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+<section aria-label="New books" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 20px 34px">
+
+
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;flex-shrink:0">
+<span style="height:26px;padding:0 11px;border-radius:13px;background:#FFF0C2;color:#8A5A00;font-size:13px;font-weight:700;letter-spacing:1.4px;display:flex;align-items:center">NEW</span>
+<h1 style="margin:0;font-size:30px;font-weight:600;line-height:1.15">{{ heading }}</h1>
+<p style="margin:0;font-size:16px;color:#5a5470;line-height:1.4">Fresh in the Dino Store.</p>
+</div>
+
+<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px 0">
+<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px 16px;max-width:{{ rowMax }}">
+<sc-for list="{{ books }}" as="b" hint-placeholder-count="3">
+<button type="button" aria-label="{{ b.label }}" style="width:{{ coverW }};border:0;padding:0;background:none;cursor:pointer;display:flex;flex-direction:column;gap:8px;text-align:center">
+<span style="position:relative;display:block;width:100%"><img src="{{ b.src }}" alt="" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:16px;display:block;box-shadow:0 6px 0 rgba(43,37,64,.10)"></span>
+<span style="font-size:{{ titleSize }};font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ b.t }}</span>
+</button>
+</sc-for>
+<sc-if value="{{ hasMore }}" hint-placeholder-val="{{ false }}">
+<button type="button" aria-label="{{ moreLabel }}" style="width:{{ coverW }};border:0;padding:0;background:none;cursor:pointer;display:flex;flex-direction:column;gap:8px;text-align:center">
+<span style="width:100%;aspect-ratio:3/4;border-radius:16px;background:#ECE7FF;border:2px dashed #5B57E8;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#3f3bc4"><span style="font-size:30px;font-weight:700;line-height:1">{{ moreCount }}</span><span style="font-size:14px;font-weight:600">more</span></span>
+<span style="font-size:{{ titleSize }};font-weight:600;line-height:1.2">In the Store</span>
+</button>
+</sc-if>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;flex-shrink:0">
+<button type="button" style="height:56px;border-radius:28px;border:0;background:#5B57E8;color:#ffffff;font-size:18px;font-weight:600;cursor:pointer;box-shadow:0 4px 0 #3f3bc4;display:flex;align-items:center;justify-content:center;gap:10px">{{ cta }}</button>
+<button type="button" onClick="{{ close }}" style="height:52px;border-radius:26px;border:2px solid #2b2540;background:transparent;color:#2b2540;font-size:17px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg>Back to books</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{ closed }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 40px;text-align:center;color:#5a5470">
+<img src="/_blob/a4982a6cf849d106747ffca91b2ffc65" alt="" style="width:72px;height:72px;border-radius:18px">
+<span style="font-size:15px;line-height:1.45">Back to books: the kids’ shelf, as usual. Press Play again to see the takeover.</span>
+</div>
+</sc-if>
+
+<div style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#2b2540"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"count":{"editor":"int","default":3,"min":1,"max":99},"$preview":{"width":405,"height":864}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const total = Math.max(1, Math.min(99, parseInt(this.props.count ?? 3, 10) || 3));
+    const hasMore = total > 5;
+    const n = hasMore ? 4 : total;
+    const slots = hasMore ? 5 : n;
+    const all = [
+      { t: 'Jack and the Beanstalk', src: '/_blob/5e28eb99d233982fa387811f4915e4fa' },
+      { t: 'Little Red Riding Hood', src: '/_blob/2220b16433dc2b60729b16731c345e85' },
+      { t: 'The Ugly Duckling', src: '/_blob/651c3e85c0abde4dfe00293140072c55' },
+      { t: 'Good Enough', src: '/_blob/e2f1f8056fb7c855a1f58f316d007489' },
+      { t: 'The Little Red Hen', src: '/_blob/e768ad4c7c2337c74b6ee41db7e8aeb0' }
+    ];
+    const books = all.slice(0, n).map((b) => ({ ...b, label: 'New: ' + b.t + '. Opens the grown-up lock, then the Store.' }));
+    const coverW = { 1: '230px', 2: '160px', 3: '138px', 4: '138px', 5: '104px' }[slots];
+    const rowMax = { 1: '230px', 2: '336px', 3: '292px', 4: '292px', 5: '344px' }[slots];
+    const closed = !!(this.state && this.state.closed);
+    return {
+      open: !closed,
+      closed,
+      close: () => this.setState({ closed: true }),
+      heading: total === 1 ? 'A new book is here!' : total + ' new books are here!',
+      hasMore,
+      moreCount: '+' + (total - 4),
+      moreLabel: (total - 4) + ' more new books. Opens the grown-up lock, then the Store.',
+      cta: total === 1 ? 'See it in the Store' : 'See them in the Store',
+      books,
+      coverW,
+      rowMax,
+      titleSize: slots === 1 ? '19px' : (slots === 5 ? '13px' : '15px')
+    };
+  }
+}
+</script>
+</body>
+</html>
