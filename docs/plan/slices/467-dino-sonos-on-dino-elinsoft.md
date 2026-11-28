@@ -23,13 +23,13 @@ The Sonos Developer Portal refused the Reporting Endpoint `https://dinoreader.si
 - [x] 1. Add `{ "pattern": "dino.elinsoft.co.uk", "custom_domain": true }` to `wrangler.jsonc` routes and treat that host exactly like `dinoreader.sirous.uk` wherever the Worker chooses by Host; tests.
 - [x] 2. Serve the reporting endpoint under both `/sonos/v2` and `/sonos/v2.0` (`POST .../timePlayed` as today), and answer `GET` and `HEAD` on the base (`/sonos/v2`, `/sonos/v2.0`, with or without a trailing slash) with 200 and an empty body, so the portal's reachability check passes; add the paths to `run_worker_first`; tests.
 - [x] 3. After the release pipeline deploys it: read live that `https://dino.elinsoft.co.uk/sonos/v2` returns 200 on GET and that `POST /sonos/v2/timePlayed` with an empty body returns 400 (as on the old host).
-- [ ] 4. Sonos portal (integration a6BPs000000qWNBMA2): set the Reporting Endpoint to `https://dino.elinsoft.co.uk/sonos/v2`, and move the integration's other Dino URLs (SMAPI endpoint, images, AppLink) to `dino.elinsoft.co.uk` where the portal holds them; in the owner's signed-in Chrome, or one owner step with its direct portal link if the portal needs their sign-in; read the saved values back.
+- [x] 4. Sonos portal (integration a6BPs000000qWNBMA2): set the Reporting Endpoint to `https://dino.elinsoft.co.uk/sonos/v2`, and move the integration's other Dino URLs (SMAPI endpoint, images, AppLink) to `dino.elinsoft.co.uk` where the portal holds them; in the owner's signed-in Chrome, or one owner step with its direct portal link if the portal needs their sign-in; read the saved values back.
 - [x] 5. `worker/CLAUDE.md` and `docs/DEPLOYING.md`: the new host and the endpoint paths.
 
 ## Not yet verified
 
 - Item 3 checked live 2026-11-28 02:50Z after release-dino `629a006d` (success): `GET` and `HEAD https://dino.elinsoft.co.uk/sonos/v2` answered 200, `POST /sonos/v2/timePlayed` with `{}` answered 400.
-- [chrome] Item 4 (Sonos portal values), recorded in `docs/plan/unverified.md`.
+- Item 4 set in the Sonos portal 2026-11-28 in the owner's signed-in Chrome and read back after a reload: SMAPI Endpoint `https://dino.elinsoft.co.uk/sonos` (was `https://dinoreader.sirous.uk/sonos`; both hosts answer the same SOAP fault to a bad getAppLink), Reporting Endpoint `https://dino.elinsoft.co.uk/sonos/v2` (version 2.3; was empty). Brand Assets, Integration Capabilities, Image Replacement and General Information hold no Dino URL; Service Configuration is a request tester, not a stored value.
 
 #### From review
 

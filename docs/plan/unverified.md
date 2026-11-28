@@ -100,7 +100,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] Windows VM run: `OpenContext` is now reached from a `Task.Run` pool thread (`WaitForWindowAsync` -> `ContextWithRetryAsync`) and touches `Application.Current.Windows`, `Handler.PlatformView`, `InitializeWithWindow` and writes `_context` unlocked; a wrong-thread COMException would be caught as Failure=null, end the poll early and report `store_failed` with no recovery (`src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs:149`; `reviews/s460/pr-1428-check5.md` #3, unconfirmed, not run on a device).
 
 ### Slice 467: Dino: Sonos on dino.elinsoft.co.uk, and a Reporting Endpoint the portal can reach ([slice](slices/467-dino-sonos-on-dino-elinsoft.md))
-- [chrome] Sonos Developer Portal, integration a6BPs000000qWNBMA2 (item 4): set the Reporting Endpoint to `https://dino.elinsoft.co.uk/sonos/v2` and move the integration's other Dino URLs (SMAPI endpoint, images, AppLink) to `dino.elinsoft.co.uk` where the portal holds them, in the owner's signed-in Chrome; read the saved values back. Needs the deploy above first. If the portal asks for the owner's sign-in, hand them the one step with the portal link.
 
 ### Slice 439: Dino: a linked Sonos home with an active Dino subscription plays the paid books ([slice](slices/439-dino-sonos-owned-books.md))
 - [session] C3 clips (a render run with the narrator voices, then an upload to R2 `dinoreader/sonos/subscribe-<lang>.m4a`; nothing was rendered or uploaded; C3 stays open on this wait): the 15 texts are `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`; steps in `docs/DEPLOYING.md`, *The subscription proof column and the spoken message*. The render script is outside Slice 439's Touches and is not written (planned row: C3 in Slice 439).
@@ -182,7 +181,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [session] Windows head: record a page on the Dino Windows head with the switch off (`PartTakes.Enabled = false`) behaves as before (not run).
 
 ### Slice 436: Dino: Sonos counts only real plays and shows new books within 5 minutes ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
-- [owner] **You:** Sonos Reporting Endpoint (item A4) | Sonos Dev Portal > Dashboard > Dino Book Reader integration (a6BPs000000qWNBMA2) > Sonos Music API > Reporting Endpoint = the Slice 467 address on `dino.elinsoft.co.uk` (the old `dinoreader.sirous.uk/sonos/v2.0` is wrong, see Slice 467), Save. Link: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos (the integration's case; the Dashboard link is not recorded).
 - [owner] Whether Sonos sends `/timePlayed` reports to an anonymous (no-login) service: the docs are silent. After A4, a real play should show a `reported` row (`analytics-query`); if none arrive, Sonos plays show 0 rather than invented hours, and that result goes back to the owner as one question.
 - [cloud] After the release, a new store book shows in the Sonos browse within 5 minutes.
 - [session] Whether the 5-then-8 count came from the hour-long cache (not reproduced 2026-11-24).
@@ -226,7 +224,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [owner] **You:** switch the Sonos integration's auth to AppLink once 438 merges | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (same case link as 436: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
 ### Slice 436: Dino: Sonos counts only real plays and shows new books quickly ([slice](slices/436-dino-sonos-real-plays-and-browse.md))
-- [owner] **You:** set the Sonos Reporting Endpoint to the A2 URL (item A4) | Sonos Developer Portal, integration a6BPs000000qWNBMA2 (the integration page link is not recorded yet; the open case is https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos)
 
 ### Slice 453: Dino first-books picker: a cancelled or failed list load must not say "Connect to the internet" ([slice](slices/453-dino-first-books-cancelled-load-copy.md))
 - [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again. (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
