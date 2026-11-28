@@ -375,7 +375,11 @@ public partial class StorePage : ContentView, ICornerTabView
 	private CancellationTokenSource _lifetime = new();
 	private CancellationTokenSource? _restoreRun; // the one restore run of this visit: a new run or Disappearing cancels it, and a cancelled run never shows a result message (Slice 364 review)
 	private CancellationTokenSource? _messageTimer; // the 5 second life of the result message (Slice 396); a new message or leaving the tab ends it
+#if DEBUG
+	private const int MessageSeconds = 30; // Debug only (Slice 465): Maestro's slow screen dumps (3-12 s, slower on a phone) outlast the 5 s life, so the flows' asserts after the message appeared found it gone
+#else
 	private const int MessageSeconds = 5;
+#endif
 	private bool _loaded;
 	private bool _loading;
 

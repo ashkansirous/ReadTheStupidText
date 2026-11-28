@@ -1127,7 +1127,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		}
 
 #if DEBUG
-		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf columns={columns} grownUp={_mode.IsGrownUp}"); // the subscription flow pins the mock's 3 columns on a phone held upright (SB6)
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Subscription] shelf columns={columns} grownUp={_mode.IsGrownUp}"); // the subscription flow pins the 2 columns of a phone held upright (Slice 465; Slice 418 made it 2); written once per layout key (ApplyShapeOnce), so the flow relies on the first layout of its clearState launch being inside the captured log window
 #endif
 		SetResourceIfChanged(TileWidthKey, -1.0);
 		SetResourceIfChanged(TileTitleLinesKey, 2);

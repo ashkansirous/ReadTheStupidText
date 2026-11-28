@@ -112,6 +112,7 @@ public class ShelfTitleRulesTests
     [InlineData(393, 852, 2)] // K2
     [InlineData(440, 956, 2)] // K3
     [InlineData(412, 915, 2)] // K4
+    [InlineData(360, 800, 2)] // the S21 (Slice 465: the subscription flow expected 3 columns on a phone; phone portrait is always 2)
     [InlineData(852, 393, 4)] // KL1
     [InlineData(640, 360, 2)]
     [InlineData(820, 1180, 3)] // KT1

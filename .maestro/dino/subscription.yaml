@@ -28,7 +28,8 @@
 # expect-log: [Subscription] shelf total=4 shown=4 lapsed=0 grownUp=False
 # Slice 398 (mock SB6 to SB8): the Books tab's "why" banner and the locked tile's two pills while the book is locked, the child's shelf with neither, and the calm offline notice (hook fake-offline) that is never a lock. Against the old
 # behaviour (a plain greyed tile with a caption, no banner, no offline notice) the banner, the lock badge, the price pill and the notice all fail. Written, not yet run.
-# expect-log: [Subscription] shelf columns=3 grownUp=True
+# Slice 465: a phone held upright draws 2 columns since Slice 418 (ShelfTitleRules.Columns); the marker is written once, when the layout is first built (grownUp=False then), so neither 3 nor grownUp=True is ever logged on a phone.
+# expect-log: [Subscription] shelf columns=2
 # expect-log: [Subscription] banners locked=1 offline=none
 # expect-log: HOOK fake-offline ok on
 # expect-log: [Subscription] banners locked=0 offline=shown

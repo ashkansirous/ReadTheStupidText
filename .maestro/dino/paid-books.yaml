@@ -92,8 +92,10 @@ onFlowComplete:
     text: 'Buy .*\$0\.99.*'
 # Restore purchases re-reads the store and says so in the dark message above the tab bar (Slice 396): the bought book is already on the shelf, so the green message says "On the shelf" (not "Nothing bought")
 # and holds no Redeem a code action (that one is checked in store-restore.yaml, where the account owns nothing).
+# waitToSettleTimeoutMs: 500 (Slice 465): on the S21 a tap waits 10 s for the screen to settle by default, longer than the 5 s the message lives.
 - tapOn:
     id: StoreRestorePurchases
+    waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible:
       id: StoreRestoreResult

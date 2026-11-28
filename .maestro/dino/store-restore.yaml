@@ -70,8 +70,10 @@ onFlowComplete:
     id: StoreRedeemCode
 - assertNotVisible: "Bought books before?"
 # RR3: nothing found: the dark message names the store account and holds the Redeem a code action.
+# waitToSettleTimeoutMs: 500 (Slice 465): on the S21 a tap waits 10 s for the screen to settle by default, longer than the 5 s the message lives, so the wait below started after it was gone.
 - tapOn:
     id: StoreRestorePurchases
+    waitToSettleTimeoutMs: 500
 # The message lives 5 seconds and every assert is a slow screen dump (about 3-12 s on the emulator), so the wait for the message text is the only step before the tap: tapping proves the action is there.
 - extendedWaitUntil:
     visible: 'Nothing bought with this .* yet\.'
@@ -98,6 +100,7 @@ onFlowComplete:
       buy: ok
 - tapOn:
     id: StoreRestorePurchases
+    waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible: '2 books restored.*'
     timeout: 60000
@@ -111,8 +114,8 @@ onFlowComplete:
       text: "On the shelf"
       index: 1
     timeout: 30000
-# The message goes by itself after 5 seconds.
+# The message goes by itself after 5 seconds in a release build; the Debug build the flows run keeps it 30 seconds (StorePage MessageSeconds, Slice 465) so the asserts above see it.
 - extendedWaitUntil:
     notVisible:
       id: StoreRestoreResult
-    timeout: 12000
+    timeout: 45000
