@@ -223,6 +223,10 @@ jobs:
       - name: Store screenshots self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-store-screenshots.ps1
 
+      # Slice 445: the Microsoft Store targets of store-size-check.ps1 (screenshot range, thumbnail, trailer).
+      - name: Store size check self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-store-size-check.ps1
+
       - name: Dino language reset self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-reset-dino-language.ps1
 
