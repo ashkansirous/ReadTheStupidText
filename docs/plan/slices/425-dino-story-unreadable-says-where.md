@@ -3,7 +3,7 @@
 
 *Planned 2026-11-20. User, 2026-11-20, asked whether to add a slice that makes the "story unreadable" event say which part of the app sent it and which book: "yes".*
 
-*Built 2026-11-28 (wave 2026-11-28), draft PR, not merged. Emulator flow passed; Windows VM launch and the post-release check not yet run.*
+*Built 2026-11-28 (wave 2026-11-28), merged as PR #1457 (a6373abb). Emulator flow passed; Windows VM launch and the post-release check not yet run.*
 
 **Touches:** `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `src/Dino/DinoReader.Core/FileStoryLibrary.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/OwnBooksCleanupRun.cs`, `src/Dino/DinoReader.App/BackupPage.xaml.cs`, `src/Dino/DinoReader.App/DinoFallbackSink.cs`, `worker/events.ts`, `worker/events.test.mjs`, `worker/CLAUDE.md` (the reason list it documents), `src/Dino/DinoReader.Core/FallbackUsage.cs` (a `Detail(area, reason, book)` overload), `src/Dino/DinoReader.App/UsageCounter.cs` (a book-aware general-fallback entry, its tally key and repeats), `src/Shared/Sirous.Reading.Application/Usage/IBookFallbackSink.cs` (new: a separate book-aware sink, so `IFallbackSink` and its callers stay unchanged), `tests/Dino/DinoReader.Tests/`, `tests/Shared/Shared.Tests/` (fallback list tests), `.maestro/dino/usage-fallback-swallowed.yaml`, this slice file.
 
@@ -64,7 +64,7 @@ Production data: 6 events since retention began (2026-10-27): 5 on 2026-11-11 (W
 - Once per (reason, book) per launch; the pair is not used up while no sink is set.
 - Site 3 sends one of `shelf_rebuild_{timeout,cancelled,io,layout,library,other}`; NullReference, KeyNotFound and ObjectDisposed map to `other`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-28)
 
 - (`src/Dino/DinoReader.Core/CLAUDE.md`) A fallback that names a store book uses `FallbackUsage.Detail(area, reason, book)`, which sends the id only for a catalogue id. (Slice 425: docs/plan/slices/425-dino-story-unreadable-says-where.md)
 

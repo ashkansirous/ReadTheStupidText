@@ -5,7 +5,7 @@
 
 *Planned 2026-11-27 (index pass, from Slice 448's S21 run 4: 1 of Slice 396's 4 flows passed, these 3 failed).*
 
-*Built 2026-11-28 (PR #1456); all three flows pass on the S21 (run 2, build key 1eb1333ce861); not run on emulator-5554 this wave.*
+*Built 2026-11-28, merged as PR #1456 (c9fdc8c7); all three flows pass on the S21 (run 2, build key 1eb1333ce861); not run on emulator-5554 this wave.*
 
 **Premise check (coordinator, wave 2026-11-28):** the run 4 logs say, for `store-restore` and `paid-books`, that `Tap on id: StoreRestorePurchases` COMPLETED and then the result (`Nothing bought with this .* yet\.`, id `StoreRestoreResult`) was not visible; for `subscription`, every step COMPLETED and only the log marker `[Subscription] shelf columns=3 grownUp=True` was missing. That marker is written at `GalleryPage.xaml.cs:1130` inside `#if DEBUG` and only on the path that lays out shelf columns, so the phone's column count or build may differ. The debug screenshots and hierarchies in the run 4 folder decide which; read them before choosing a fix. A parked worktree (Slice 403's s403) has uncommitted edits in StorePage.xaml.cs near lines 507-728 and DinoTestCommands.cs near 219: keep edits there to the minimum the fix needs.
 
