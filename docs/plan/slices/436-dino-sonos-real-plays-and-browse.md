@@ -83,7 +83,7 @@ Sonos documentation read 2026-11-24 (web-research):
 - [x] A3. Sonos fault visibility: an unplayable request (unknown item, paid book reached by id) writes a fallback event
       (`FallbackArea.` pattern of Slice 273 on the Worker side, or the Worker's existing fallback row), so a failure shows
       up in `dino_usage`.
-- [ ] A4. Owner step: fill the **Reporting Endpoint** field of the Dino sandbox integration (463879) with exactly
+- [x] A4. (Done through Slice 467: the address is now `https://dino.elinsoft.co.uk/sonos/v2`, set in the Sonos portal 2026-11-28 in the owner's signed-in Chrome and read back after a reload: SMAPI Endpoint `https://dino.elinsoft.co.uk/sonos` (was `https://dinoreader.sirous.uk/sonos`; both hosts answer the same SOAP fault to a bad getAppLink), Reporting Endpoint `https://dino.elinsoft.co.uk/sonos/v2` (version 2.3; was empty). Brand Assets, Integration Capabilities, Image Replacement and General Information hold no Dino URL; Service Configuration is a request tester, not a stored value.) Owner step: fill the **Reporting Endpoint** field of the Dino sandbox integration (463879) with exactly
       `https://dinoreader.sirous.uk/sonos/v2.0` (Sonos requires the version number in the URL and players POST `/timePlayed` under it, so
       the Worker serves `https://dinoreader.sirous.uk/sonos/v2.0/timePlayed`; host read from the `routes` custom domain `dinoreader.sirous.uk`
       in `wrangler.jsonc` and `worker/CLAUDE.md` line 12; version rule from `reviews/pr-1391-add-reporting-raw.md` lines 31-34) in the
@@ -138,7 +138,6 @@ The rollup's stale Sonos days (third round, one design instead of patches). A da
 
 ## Not yet verified
 
-- **You:** Sonos Reporting Endpoint | Sonos Dev Portal > Dashboard > Dino Book Reader integration (a6BPs000000qWNBMA2) > Sonos Music API > Reporting Endpoint = `https://dinoreader.sirous.uk/sonos/v2.0`, Save. Link: https://developer.sonos.com/s/case/500Ps00001uDPr5IAG/sandbox-content-integration-463879-dino-book-reader-wasnt-added-on-add-to-sonos (the integration's case; the Dashboard link is not recorded). This is item A4.
 - [owner] Whether Sonos sends `/timePlayed` reports to an anonymous (no-login) service: the docs are silent. After A4, a real play should show a `reported` row (`analytics-query`); if none arrive, Sonos plays show 0 rather than invented hours, and that result goes back to the owner as one question.
 - [cloud] After the release, a new store book shows in the Sonos browse within 5 minutes.
 - [session] Whether the 5-then-8 count came from the hour-long cache (not reproduced 2026-11-24).
