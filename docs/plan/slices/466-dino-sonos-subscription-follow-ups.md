@@ -37,3 +37,5 @@ Slice 439 shipped with review findings it judged low (no crash, data loss, secur
 ## Not yet verified
 
 (Nothing built yet.)
+
+- Park note (moved back to `planned` by the night 2026-11-27-0154 feedback loop, so the next night retries it): parked: the review gate did not converge after high, medium and check passes 1-5 (wave 8, 2026-11-27); next is one design where every write result has one owner (a failed write keeps the old copy, nothing cleared before a read-back), then the S21 and iPhone check; reviewed work uncommitted in worktree s466 (32 changed paths on 2026-11-28), PR #1437.
