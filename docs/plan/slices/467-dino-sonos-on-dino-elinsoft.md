@@ -1,6 +1,8 @@
 # Slice 467 — Dino: Sonos on dino.elinsoft.co.uk, and a Reporting Endpoint the portal can reach
 **Product:** Dino
 
+*Plan cleanup check 2026-11-28: verdict close. All five items are ticked and done: this check read live `GET https://dino.elinsoft.co.uk/sonos/v2` = 200 and `POST /sonos/v2/timePlayed` with `{}` = 400; the portal values were read back after a reload (see Not yet verified). The two review follow-ups (move `site/dino/sonos-link.html` links to `location.origin`; name `dino.elinsoft.co.uk` in `site/dino/privacy.html` and `PRIVACY.md`) are not this slice's work and moved to a proposed new slice (body `plan-cleanup/467-new-1.md`).*
+
 *Built 2026-11-27 (items 1, 2, 5), merged as PR #1453 (90cb5a8d). Items 3 (live read after the release) and 4 (Sonos portal) are open.*
 
 *Changed while building:* the `run_worker_first` entries are exact paths (no wildcard), so the trailing-slash forms (`/sonos/v2/`, `/sonos/v2.0/`) are listed as their own entries. The wrangler forms were checked on developers.cloudflare.com (custom-domains page; static-assets binding page) because the context7 quota was out.

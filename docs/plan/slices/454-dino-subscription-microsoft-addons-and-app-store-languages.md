@@ -2,6 +2,8 @@
 **Product:** Dino
 **Touches:** `.github/scripts/store-products.mjs`, `.github/scripts/store-products.test.mjs`, `docs/store-listings/dino/subscription-listings.md`, this file
 
+*Plan cleanup check 2026-11-28, verdict keep open (item 2 only).* Read live today with an App Store Connect GET (read-only): group 22582310 localizations = `en-US` only; `sub.monthly` and `sub.yearly` APPROVED, each with `en-US` only. So item 2 is still not applied; the 14 locales are the slice's own work and the live apply is due now, run by the next builder in an interactive session (the night denial is not an outside wait). Items 1 and 3 stay done. Moved out: the three low review follow-ups below (script nits) become one *Outstanding work* line; the Microsoft certification read-back and the 14 Microsoft listing languages are a *Watch* line / unverified, not this slice's closing condition.
+
 *Built (wave 2026-11-27), merged as PR #1417 (fdb2114c). Items 1 and 3 built in code; item 2 built and unit-tested but its live App Store apply has not run, so item 2 stays open. Planned 2026-11-25 (moved out of Slice 384).*
 
 Moved out of Slice 384 (built, #1174) by the plan cleanup of 2026-11-25. Read live that day: App Store Connect group 22582310 has both subscriptions (`uk.sirous.dinoreader.sub.monthly`, `.sub.yearly`) APPROVED, but their group and subscription localizations hold en-US only; Partner Center product 9N9VHRLCZXN5 lists 12 add-ons, all `Durable` books (`uk.sirous.dinoreader.book.*`), no subscription add-on. Links: [App Store Connect subscriptions](https://appstoreconnect.apple.com/apps/6825053435/distribution/subscriptions), [Partner Center, Dino `9N9VHRLCZXN5`](https://partner.microsoft.com/en-us/dashboard/products/9N9VHRLCZXN5/overview).

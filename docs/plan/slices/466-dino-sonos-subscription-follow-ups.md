@@ -1,6 +1,8 @@
 # Slice 466 — Dino: Sonos subscription follow-ups from Slice 439's review
 **Product:** Dino
 
+*Plan-cleanup 2026-11-28 (origin/main d3cb55e4): verdict keep open, all 11 items are own work and none is on main. `git grep SecureStorage` and `previous_token` on origin/main find nothing in the Dino purchases or worker code; PR #1437 is an open draft (`gh pr view 1437`); worktree s466 has 32 uncommitted paths and its newest commit is only the claim (`git -C ... status/log`). Nothing waits on an outside event. Slice 439's low follow-ups are moved here as items 1-11. The 5 `ALTER` lines in `docs/DEPLOYING.md` are a `[session]` step after the build, not slice work. The S21 and iPhone checks (items 1, 3, 6, 10) belong in `unverified.md`, not in this slice's open items.*
+
 *Planned 2026-11-27 in the docs index pass, from [Slice 439](439-dino-sonos-owned-books.md)'s *Low follow-ups* list and its *From review* follow-ups. Not started.*
 
 **Depends on:** Slice 439 (merged as PR #1421). Its C3 clips are not part of this slice.

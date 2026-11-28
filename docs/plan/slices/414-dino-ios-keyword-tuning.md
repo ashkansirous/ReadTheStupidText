@@ -8,7 +8,9 @@ Source: phone scope "Dino: store name, subtitle and keywords that parents search
 
 Starts 4 weeks after Slice 412's English App Store name and subtitle go live; finish by week 6.
 
-*Watch:* Slice 412's English App Store name went live 2026-11-24 (Slice 412). The slice starts about 2026-12-22 (4 weeks later) and finishes by about 2027-01-05 (week 6). Until then there is nothing to do: this is a date wait, not the slice's own work.
+**Starts after:** 2026-12-22 (4 weeks after Slice 412's English App Store name went live 2026-11-24); finish by about 2027-01-05. This is a start condition, not a wait inside the work.
+
+*Plan cleanup 2026-11-28:* Slice 412 is built and closed 2026-11-24 (slices-done.md row 412 on origin/main), so the start date holds; 24 days to the start. Nothing is started; all three work items are the slice's own work. Verdict: keep open (not started). The old Watch wording is replaced by the Starts after line.
 
 ## Work items
 

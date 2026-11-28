@@ -2,6 +2,8 @@
 
 **Product:** Dino
 
+*Plan cleanup check 2026-11-28: verdict keep open, not started. Read `origin/main`: no `addedAt`, `NewBooks/` or banner mock in `docs/design/` (only dino-reader, rtst-phone, sonos). The mocks are a start condition (`Starts after`), not a wait inside the work; no other claim in this file was stale. The user's own words (2026-11-28 12:45) match the Decisions.*
+
 *Planned 2026-11-28 from the owner's RefineScope answers (this session). **Starts after:** the owner's Claude Design mocks of the banner for 1, 2, 3, 4 and 5 books (owner: "I will design a banner for 1,2,3,4,5 books with claude design before starting to implement it"). When the mock arrives, `import-claude-design` copies it into `docs/design/` and the mock decides the banner's look and words.*
 
 **Touches:** `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `worker/stories*.test.mjs`, `src/Dino/DinoReader.Core/StoreCatalog.cs`, `src/Dino/DinoReader.App/App.xaml.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/NewBooks/` (new), `src/Dino/DinoReader.App/Testing/`, `tests/Dino/DinoReader.Tests/`, `tools/dino/` (the banner flow), `docs/design/` (the mock).

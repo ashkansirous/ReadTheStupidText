@@ -1,6 +1,8 @@
 # Slice 463 — Dino: a small "quick" first-book package for slow internet, replaced by the full one in the background
 **Product:** Dino
 
+
+*Plan cleanup check 2026-11-28: verdict keep open, one own-work item left: item 2 (build the owner side-by-side page; the owner pick after it is a [owner] unverified line). Live: no `quickBytes` in `https://dinoreader.sirous.uk/api/stories` and no `content/dino/*/quick` on origin/main, so nothing ships a quick copy yet. F2 settled by design (metered upgrade intended). F4, F8 and F10-F16 are review follow-ups and a device-run side finding, not this slice's promised work: moved to one proposed slice. The user never reported on quick packages (user-says: no match).*
 *Items 1, 3, 4, 5 built 2026-11-27 (night wave 9), merged as PR #1444 (844603a9). Open: item 2 (the owner's side-by-side page, an Artifact, needs an interactive session). No quick packages exist yet (no `content/dino/*/quick` folders), so nothing ships a quick copy until the quick pictures and clips are made after the owner's pick. The slow-link switch was not reached on a device (see Not yet verified).*
 
 *Follow-ups F1, F3, F5, F6, F7, F9 built 2026-11-27 (wave 2026-11-27, merged as PR #1448 (8c854575)), not yet verified on a device flow that reaches the switch (see Not yet verified). F2, F4, F8 and item 2 stay open. Items 1, 3, 4, 5 merged in #1444. Planned 2026-11-27 from the owner's answer on the 2026-11-26 usage analysis.*
@@ -96,13 +98,13 @@ Findings files read to the last finding: high 9 of 9, medium 7 of 7, check 1 9 o
 
 **Follow-ups (not built):**
 - [x] F1 (`reviews/pr-1444-check-3.md` #1): `AudioPackStore.InstalledVersion` takes `_swapLock` only inside `RecoverInterruptedSwaps()` and lists the folder after release; between the two renames of `SwapInPlace` a reader can see no pack or an older version (a few ms). Enumerate under `_swapLock` or fall back to the `.old` copy.
-- [ ] F2 (check-3 #2): the quick-to-standard upgrade runs on any connection, metered data included, with no opt-out (`HighResUpgradeRunner.cs`). Confirm that is intended, else gate on `PictureNetwork.Unmetered`.
+- [x] F2 (settled by design, 2026-11-28 check: the Design says "metered links included"; HighResUpgradeRunner.cs:106 gates only the high-res swap on Unmetered, so no change) (check-3 #2): the quick-to-standard upgrade runs on any connection, metered data included, with no opt-out (`HighResUpgradeRunner.cs`). Confirm that is intended, else gate on `PictureNetwork.Unmetered`.
 - [x] F3 (check-3 #3): `StoreClient.UpgradeQuickPackAsync` calls `packs.InstallAsync` with `CancellationToken.None`, so a cancelled pass can sit behind `_gate` held by another pack download. Pass `cancel` once the zip is local (same area as the check 2 #6 follow-up).
-- [ ] F4 (check-3 #4): `SlowLinkWatch` is built with the standard size (`item.Bytes`) even when the high-size package (`HdBytes`) is fetched; past the standard size `Decide` returns Keep, so a slow high-res fetch may never switch to quick. Pass `item.BytesFor(size)`.
+- [~] F4 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (check-3 #4): `SlowLinkWatch` is built with the standard size (`item.Bytes`) even when the high-size package (`HdBytes`) is fetched; past the standard size `Decide` returns Keep, so a slow high-res fetch may never switch to quick. Pass `item.BytesFor(size)`.
 - [x] F5 (check-3 #5): `worker/stories.ts` `serveAudio` handles `size=quick` but treats `size=hd` as the standard pack (200 instead of 400). Accept only standard and quick for audio.
 - [x] F6 (check-3 #6): `AudioPacks.BuildQuick` returns null on an incomplete `quick/` set without deleting a stale `.quick.zip` from an earlier build; the publisher can upload it unlisted, or list it if meta.json later lists `quickBytes`. Delete the old zip when returning null.
 - [x] F7: `StoreClient.SwapHighResAsync`'s catch (already on `main`) counts any non-IO exception as a bad package, the same fault check pass 2 #5 fixed in the standard-over-quick swap.
-- [ ] F8 (device run): the first-books store list timed out twice under an `umts` slow link, so the switch was never judged. Check whether the list timeout is too short for a slow link; plan a slice if confirmed.
+- [~] F8 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (device run): the first-books store list timed out twice under an `umts` slow link, so the switch was never judged. Check whether the list timeout is too short for a slow link; plan a slice if confirmed.
 - [x] F9: commit the draft flow `reviews/s463-device/s463-quick-wait.yaml` as `.maestro/dino/first-book-slow-link.yaml`.
 - Skipped #5 (`reviews/pr-1448-medium.md`): "serveAudio now answers size=hd with 400; before it served standard audio." - F5's own text says "Accept only standard and quick for audio", so 400 for size=hd is the asked behaviour.
 - High #4 (`reviews/pr-1448-high.md`) was first skipped, then fixed by medium #2/#3 (`reviews/pr-1448-medium.md`): deletes now happen after the lock (rename to trash under it). F3's "pass `cancel` once the zip is local" is reversed by medium #4: the token goes only to the download.
@@ -125,13 +127,13 @@ Findings files read to the last finding: high 9 of 9, medium 7 of 7, check 1 9 o
 *Review of PR #1448:* review read: `reviews/pr-1448-high.md` 7 of 7 (3 fixed, 4 skipped, high #4 first skipped then fixed), `reviews/pr-1448-medium.md` 6 of 6 (5 fixed, 1 skipped), `reviews/pr-1448-check-1.md` 6 of 6 (2 fixed, 4 follow-ups), `reviews/pr-1448-check-2.md` 4 of 4 (4 follow-ups, no code reopened).
 
 **Follow-ups from PR #1448 (not built):**
-- [ ] F10 (`reviews/pr-1448-check-1.md` #3): classify a staged-package fault as transient only for IO, Unauthorized, Cancelled and ShelfRace, the rest bad, so a corrupt zip that throws NotSupportedException or FormatException reaches the 3-failure give-up (`StagedBookUpdates.cs:301`).
-- [ ] F11 (`reviews/pr-1448-check-1.md` #4, `reviews/pr-1448-check-2.md` #1): `AudioPackStore.MoveToTrash` returns bool, falls back to `DeleteFolder`, and logs removed and drops `_opened` only on success.
-- [ ] F12 (`reviews/pr-1448-check-1.md` #5): `DeleteBookAsync` clears `_opened` entries of the book's versions so open handles do not block the trash delete.
-- [ ] F13 (`reviews/pr-1448-check-1.md` #6): dedupe the leftover trash paths a failed recovery pass re-queues on every call.
-- [ ] F14 (`reviews/pr-1448-check-2.md` #2): `UpgradeQuickPackAsync` re-checks cancel after the install gate wait.
-- [ ] F15 (`reviews/pr-1448-check-2.md` #3): `AudioPackStore.Open` runs `EmptyTrash` on the caller thread after a kill; move it to `Task.Run`.
-- [ ] F16 (`reviews/pr-1448-check-2.md` #4): the `.trash-<guid>` suffix adds about 39 characters and could reach MAX_PATH; use a short suffix.
+- [~] F10 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-1.md` #3): classify a staged-package fault as transient only for IO, Unauthorized, Cancelled and ShelfRace, the rest bad, so a corrupt zip that throws NotSupportedException or FormatException reaches the 3-failure give-up (`StagedBookUpdates.cs:301`).
+- [~] F11 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-1.md` #4, `reviews/pr-1448-check-2.md` #1): `AudioPackStore.MoveToTrash` returns bool, falls back to `DeleteFolder`, and logs removed and drops `_opened` only on success.
+- [~] F12 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-1.md` #5): `DeleteBookAsync` clears `_opened` entries of the book's versions so open handles do not block the trash delete.
+- [~] F13 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-1.md` #6): dedupe the leftover trash paths a failed recovery pass re-queues on every call.
+- [~] F14 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-2.md` #2): `UpgradeQuickPackAsync` re-checks cancel after the install gate wait.
+- [~] F15 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-2.md` #3): `AudioPackStore.Open` runs `EmptyTrash` on the caller thread after a kill; move it to `Task.Run`.
+- [~] F16 (moved 2026-11-28 to the proposed follow-up slice "Dino quick-package follow-ups") (`reviews/pr-1448-check-2.md` #4): the `.trash-<guid>` suffix adds about 39 characters and could reach MAX_PATH; use a short suffix.
 - [ ] F17: the `pack-failure-corrupt` Maestro flow fails (`ShelfAudioFailed-sv` never visible) on `origin/main` build 9ea9d6bd too; now Slice 468 (docs/plan/slices/468-dino-pack-failure-corrupt-flow-never-shows-failed-chip.md).
 
 #### For CLAUDE.md (lifted 2026-11-27)

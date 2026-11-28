@@ -149,7 +149,9 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 - Skipped #6 (`reviews/pr-935-check2.md`): "Accepted as best effort (no server state)" (low, double-counting on retry)
 - Skipped #1-#5 (`reviews/pr-935-check3.md`): "Skipped 2, 4, 5, 6: no new failure path"; all five findings are low and were left unapplied (#1 is about one second of silence at a resume just under the end, low; #5 is the pre-existing logging question in Outstanding)
 
-*Outstanding (pre-existing, not this slice):* `wrangler.jsonc` has observability enabled for every route while the Sonos and Alexa privacy paragraphs say the receiving server may log and "Dino Reader itself does not receive or keep" that log. Check what Workers Logs record and make the text true, or switch logging off for those routes (raised by the medium, check 2 and check 3 reviews).
+*Resolved 2026-11-28 (plan-cleanup): `site/dino/privacy.html` on origin/main now has Sonos (line 141) and Alexa (line 165) paragraphs and a "Server request log" section (line 185) saying Cloudflare keeps a short request log for every request; the quoted "does not receive or keep" phrase is no longer in the file. Observability stays on. Not this slice's work either way.*
+
+*Outstanding (pre-existing, not this slice; resolved above):* `wrangler.jsonc` has observability enabled for every route while the Sonos and Alexa privacy paragraphs say the receiving server may log and "Dino Reader itself does not receive or keep" that log. Check what Workers Logs record and make the text true, or switch logging off for those routes (raised by the medium, check 2 and check 3 reviews).
 
 #### For CLAUDE.md (lifted 2026-11-07)
 
