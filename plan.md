@@ -44,6 +44,7 @@ Open slices only. Finished slices (448 rows) are in [slices-done](docs/plan/note
 | 474 | Dino: quick-package follow-ups (review findings and slow-link list timeout) | planned | | | [474-dino-quick-package-follow-ups.md](docs/plan/slices/474-dino-quick-package-follow-ups.md) |
 | 475 | Dino: name dino.elinsoft.co.uk on the Sonos link page and in the privacy text | planned | | | [475-dino-name-dino-elinsoft-on-sonos-link-page-and-privacy.md](docs/plan/slices/475-dino-name-dino-elinsoft-on-sonos-link-page-and-privacy.md) |
 | 476 | Dino: fix the Farsi (fa) premade-audio pack alignment (text_mismatch) | planned | | | [476-dino-farsi-pack-text-mismatch.md](docs/plan/slices/476-dino-farsi-pack-text-mismatch.md) |
+| 477 | Dino: a book keeps reading through a long lock, on battery, on every phone | planned | | | [477-dino-long-locked-read.md](docs/plan/slices/477-dino-long-locked-read.md) |
 
 ### Shared
 
