@@ -1,9 +1,13 @@
 # Slice 465 — Dino: the store-restore, paid-books and subscription flows pass on a real phone
 **Product:** Dino
 
-**Touches:** `.maestro/dino/store-restore.yaml`, `.maestro/dino/paid-books.yaml`, `.maestro/dino/subscription.yaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/Testing/**`, `tests/Dino/DinoReader.Tests/**`
+**Touches:** `.maestro/dino/store-restore.yaml`, `.maestro/dino/paid-books.yaml`, `.maestro/dino/subscription.yaml`, `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/StorePage.xaml` (the `StoreRestoreResult` label, :432), `src/Dino/DinoReader.App/GalleryPage.xaml.cs` (only the `[Subscription] shelf columns=` marker block near :1130), `src/Dino/DinoReader.App/Testing/**`, `tests/Dino/DinoReader.Tests/**`, this slice file. `tools/phone/run-flows.ps1` is run, not edited.
 
 *Planned 2026-11-27 (index pass, from Slice 448's S21 run 4: 1 of Slice 396's 4 flows passed, these 3 failed).*
+
+*In progress (wave 2026-11-28), draft PR.*
+
+**Premise check (coordinator, wave 2026-11-28):** the run 4 logs say, for `store-restore` and `paid-books`, that `Tap on id: StoreRestorePurchases` COMPLETED and then the result (`Nothing bought with this .* yet\.`, id `StoreRestoreResult`) was not visible; for `subscription`, every step COMPLETED and only the log marker `[Subscription] shelf columns=3 grownUp=True` was missing. That marker is written at `GalleryPage.xaml.cs:1130` inside `#if DEBUG` and only on the path that lays out shelf columns, so the phone's column count or build may differ. The debug screenshots and hierarchies in the run 4 folder decide which; read them before choosing a fix. A parked worktree (plan-not-needed: 403) has uncommitted edits in StorePage.xaml.cs near lines 507-728 and DinoTestCommands.cs near 219: keep edits there to the minimum the fix needs.
 
 ## Why
 Slice 448 made `tools/phone/run-flows.ps1` run the `.maestro/dino` flows on the leased S21 (docs/plan/slices/448-tools-phone-runs-maestro-dino-flows.md). Its run 4 passed one flow and failed these three, each inside the store flows. Until they pass, a real-phone run cannot check buying, restoring or the subscription shelf.
