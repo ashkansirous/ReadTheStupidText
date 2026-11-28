@@ -2,7 +2,7 @@
 **Product:** Dino
 **Touches:** `tools/dino/promo/store-landscape/**`, `docs/store-listings/screenshots/dino/windows/**`, `docs/store-listings/**`, `tools/emulator/store-size-check.ps1`, `tools/emulator/test-store-size-check.ps1`, `.github/workflows/tools-selftests.yml`, `docs/plan/notes/2026-11-23-dino-store-screenshots-and-video.md`
 
-*Items 1 and 2 built 2026-11-28 (PR #1459, not merged). Items 3-5 not done: the coordinator runs them after the merge through the `store-listing` agent.*
+*Built and closed 2026-11-28: merged as PR #1459 (6ee83ce2, items 1-2); items 3-5 done after the merge through the `store-listing` agent. One check left: the live Microsoft Store page after certification (docs/plan/unverified.md).*
 
 **Design (coordinator, wave 2026-11-28):** Slice 433 is built and closed, so this slice can start. Item 1 first needs a Microsoft Store target in `store-size-check.ps1`. Microsoft's rules (https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/screenshots-and-images) are: desktop screenshots are PNG, landscape or portrait, "1366 x 768 pixels or larger", up to 3840 x 2160, at most 50 MB, up to 10 of them per listing language (the checker only warns above 10 per language and exits 0; it does not fail). The trailer is MP4 (H.264 High, AAC-LC 48 kHz) or MOV, exactly 1920 x 1080 and under 2 GB, 60 s or less recommended. The trailer thumbnail is a 1920 x 1080 PNG. So the Windows screenshot target is a range check (a minimum and a maximum per side, either orientation), not an exact size. It allows alpha: all eight PNGs are RGBA 1920 x 1080, and Microsoft does not forbid alpha. The trailer and its thumbnail are exact 1920 x 1080 targets. Add a self-test, `tools/emulator/test-store-size-check.ps1`, which runs in `tools-selftests.yml` like `test-store-screenshots.ps1`. Write the new rows into the Sizes table of the 2026-11-23 notes file too. Items 3 and 4 (the store pushes) run after the merge, through the `store-listing` agent in apply mode (the user's standing rule, 2026-11-15).
 
@@ -16,9 +16,9 @@ Verification: the live Microsoft Store page shows the set and trailer; the Play 
 
 - [x] 1. `store-size-check.ps1` now has three Windows targets: `windows-screenshot` (range 1366 x 768 to 3840 x 2160, either orientation, PNG, 50 MB; more than 10 files per language is a warning with exit 0), `windows-thumbnail` (exactly 1920 x 1080 PNG) and `windows-trailer` (exactly 1920 x 1080, H.264 High, AAC-LC 48 kHz, under 2 GB; over 60 s is a warning). New self-test `tools/emulator/test-store-size-check.ps1`, run in `tools-selftests.yml`. All eight Windows PNGs pass. The Sizes table in the 2026-11-23 notes file has the new rows.
 - [x] 2. A 20 s landscape trailer rendered from `tools/dino/promo/store-landscape/` (433's storyboard beats) with footage from Slice 434's run13 and a silent AAC track added. Files are in the git-ignored `tools/dino/promo/store-landscape/renders/` of the s445 worktree: `dino-microsoft-store-trailer.mp4`, `-thumbnail.png` and the frame at 4.5 s. The record shot's caption moved so it covers no control.
-- [ ] 3. Push screenshots, captions, trailer and thumbnail to the Microsoft Store and read them back: after the merge, through the `store-listing` agent.
-- [ ] 4. YouTube upload and Play preview URL read back: after the merge.
-- [ ] 5. Record per store in Slice 291's file and tick Slice 404 item 5: after 3 and 4.
+- [x] 3. Microsoft Store 9N9VHRLCZXN5, submission 1152921505702529774, committed, in Certification (2026-11-28, `store-listing` agent). 8 screenshots in each of 15 languages with captions from `docs/store-listings/screenshots/captions.json` (machine-draft translations, no native read); trailer and thumbnail in all 15; listing text and package 1.78.1 untouched; read back as Uploaded. The trailer title is the live en-us title "Dino Book Reader".
+- [x] 4. YouTube unlisted made-for-kids video `5-XsKgwvaA4` ("Dino: Kids Books & Stories - trailer"). Google Play `uk.sirous.dinoreader` en-GB (the default; no en-US listing): preview video set to https://www.youtube.com/watch?v=5-XsKgwvaA4, edit 07883521755651161072, read back. A first en-US attempt committed an empty edit, 09936688700657630554, that changed nothing.
+- [x] 5. Recorded per store in docs/plan/slices/291-store-listings-and-screenshots.md (Dino Microsoft Store media and Play video block); Slice 404 item 5 carries the done note (it was already ticked). Render copies: `D:/ReadTheStupidText-worktrees/reviews/w13-s445/`.
 
 #### For CLAUDE.md
 
@@ -26,8 +26,7 @@ None for this pass.
 
 #### Not yet verified
 
-- [session] Push the Microsoft Store screenshots, captions, trailer and thumbnail, then read them back (item 3).
-- [session] YouTube upload through 435's script and the Play preview video URL read back (item 4).
+- [cloud] After certification, the live Microsoft Store page for 9N9VHRLCZXN5 shows the 8 screenshots and the trailer.
 
 #### Follow-ups
 

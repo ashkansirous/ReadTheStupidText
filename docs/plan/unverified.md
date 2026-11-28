@@ -234,9 +234,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [phone] Emulator: open the first-run picker, Cancel during the list load: the cancelled copy shows with Try again. (live check 2026-11-27: unreachable: no scripted flow stalls the list load, follow-up in Slice 453)
 
 ### Slice 445: Dino: Microsoft Store trailer, Partner Center push and Play video link ([slice](slices/445-dino-microsoft-store-trailer-and-play-video-link.md))
-- [session] Render the 1920 x 1080 landscape cut and push the Microsoft Store screenshots, captions and trailer, then read them back (Slice 433 is closed; its storyboard in `tools/dino/promo/store/`).
-- [session] The first real upload in Slice 435 is done (unlisted, video `Fjo-TUF3EoU`, 2026-11-27; script `tools/dino/promo/youtube/upload.mjs`); the Play video URL and the YouTube upload of the landscape cut can go ahead.
-- [session] Run `store-size-check.ps1` on the eight Windows PNGs (Slice 433 is closed). (live check 2026-11-27: unreachable: store-size-check.ps1 has no Windows target, follow-up in Slice 445)
+- [cloud] After certification, the live Microsoft Store page for 9N9VHRLCZXN5 shows the 8 screenshots and the trailer (submission 1152921505702529774, in Certification 2026-11-28).
 
 ### Slice 433: Dino: new-look store screenshots, App Store previews, Play feature graphic ([slice](slices/433-dino-store-screenshots-video-play-appstore.md))
 - [owner] **You:** a native read of the machine-drafted screenshot captions (14 languages other than English, `docs/store-listings/screenshots/captions.json`), live on Play since 2026-11-25.
