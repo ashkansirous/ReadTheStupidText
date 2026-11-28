@@ -76,6 +76,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 466: Dino: Sonos subscription follow-ups from Slice 439's review ([slice](slices/466-dino-sonos-subscription-follow-ups.md))
+- [phone] **Device:** item 1, on the S21 and the iPhone: a home linked without a proof gets one when the grown-up subscribes later, and the renew finds the home with no relink (nothing built yet; the check runs after the build).
+- [phone] **Device:** item 3, on the S21 and the iPhone: the stored proof moves from Preferences to SecureStorage (Keystore, Keychain) and the old value is migrated, not lost.
+- [phone] **Device:** item 6, on the S21 and the iPhone: a 403 `subscription_inactive` on the first confirm tells the grown-up the home was linked free-only.
+- [phone] **Device:** item 10, on the iPhone: `owned.Subscription(now)` returns a non-null `None` when nothing is owned.
+
 ### Slice 465: Dino: the store flows pass on a real phone ([slice](slices/465-dino-store-flows-pass-on-a-real-phone.md))
 - [session] The three changed flows (`store-restore`, `paid-books`, `subscription`) still pass on emulator-5554; only the S21 was run in the wave.
 
@@ -98,8 +104,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [cloud] iOS simulator run of the same first-run and offline checks in `dinoreader-ios-sim.yml`. (live check 2026-11-27: unreachable: no Claude Code cloud session and no iOS simulator run in this unattended run)
 - [phone] On the S21 a first run shows no `store_failed` row from the purchase read (`BookPurchases.ReportReadProblems`); the emulator's rows came from having no Play Billing, which is likely but not proven. (live check 2026-11-27: unreachable: no scripted S21 first run with real store reads, follow-up in Slice 460)
 - [session] Windows VM run: `OpenContext` is now reached from a `Task.Run` pool thread (`WaitForWindowAsync` -> `ContextWithRetryAsync`) and touches `Application.Current.Windows`, `Handler.PlatformView`, `InitializeWithWindow` and writes `_context` unlocked; a wrong-thread COMException would be caught as Failure=null, end the poll early and report `store_failed` with no recovery (`src/Dino/DinoReader.App/Platforms/Windows/Purchases/WindowsPurchases.cs:149`; `reviews/s460/pr-1428-check5.md` #3, unconfirmed, not run on a device).
-
-### Slice 467: Dino: Sonos on dino.elinsoft.co.uk, and a Reporting Endpoint the portal can reach ([slice](slices/467-dino-sonos-on-dino-elinsoft.md))
 
 ### Slice 439: Dino: a linked Sonos home with an active Dino subscription plays the paid books ([slice](slices/439-dino-sonos-owned-books.md))
 - [session] C3 clips (a render run with the narrator voices, then an upload to R2 `dinoreader/sonos/subscribe-<lang>.m4a`; nothing was rendered or uploaded; C3 stays open on this wait): the 15 texts are `SUBSCRIBE_MESSAGES` in `worker/sonos-labels.ts`; steps in `docs/DEPLOYING.md`, *The subscription proof column and the spoken message*. The render script is outside Slice 439's Touches and is not written (planned row: C3 in Slice 439).

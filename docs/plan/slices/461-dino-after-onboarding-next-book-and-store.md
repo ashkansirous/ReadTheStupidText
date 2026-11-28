@@ -1,6 +1,8 @@
 # Slice 461 — Dino: after onboarding a new parent sees a book to play, and the store doesn't look empty
 **Product:** Dino
 
+*Plan-cleanup check 2026-11-28: keep open, nothing built yet. Slice 453 is built (plan.md row 453, PR #1390), so the start condition is met. No highlight-first-book, large Play or free-first store ordering code exists on origin/main (git grep of GalleryPage, StorePage, OnboardingSteps.Route). The post-release Ninjalog share check is moved out of this slice as a Watch line (it waits on a release reaching users).*
+
 *Planned 2026-11-27 from the 2026-11-26 usage analysis (Ninjalog `ashkan-sirous/dino-book-reader`, index `dino_usage`, 19-26 Nov).*
 
 **Starts after:** [Slice 453](453-dino-first-books-cancelled-load-copy.md) (both edit `AppResources*.resx`).
@@ -36,4 +38,4 @@
 **Verification:**
 - Unit tests for the store ordering and for the loading and failed states.
 - Scripted device flows on Android, iOS and the Windows VM show the shelf highlight and the store order on a fresh install.
-- Ninjalog, after release, for first-launch real sessions that finished the intro: the share that opens a book within 2 minutes (`index=dino_usage event=book_opened` within 120 s of `onboarding_done`, by session), against the 19-26 Nov baseline of 15 of 21. Also the share that leaves right after `corner_store`, against 5 of 9.
+- (Moved to a Watch line 2026-11-28, not slice work) Ninjalog, after release, for first-launch real sessions that finished the intro: the share that opens a book within 2 minutes (`index=dino_usage event=book_opened` within 120 s of `onboarding_done`, by session), against the 19-26 Nov baseline of 15 of 21. Also the share that leaves right after `corner_store`, against 5 of 9.

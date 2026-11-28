@@ -14,6 +14,14 @@ price and period are still the owner's choice, asked when D starts (`user-says` 
 owner 2026-11-26 ("agree" to the suggestion): the same as the app, £1.99 a month or £14.99 a year, no free trial** (Decision 7
 below). Free and locked books on Alexa are worded by Slice 457 until D is built.
 
+**Plan-cleanup check 2026-11-28:** verdict keep open, Alexa item D only. Checked on origin/main: `alexa/skill-package/skill.json`
+still has `"allowsPurchases": false` and `worker/alexa.ts` has no In-Skill Purchasing or entitlement code, so D is not built.
+Slice 438 is `built` (#1416); Slice 439 is `planned` (its own work). Items F and G are now part of D: the Alexa kid skill has
+no account linking and no link store (Q-B answer), so the link-storing privacy text of F does not apply to Alexa. F is
+rewritten below as the Alexa purchase privacy line (Amazon holds the purchase, we store nothing new), G as the Alexa skill
+description (still says "nothing to buy" in both locales). The Sonos halves of F and G belong to Slices 438 and 439. The UK
+test is part of D's build, not an outside wait.
+
 **Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/sonos.test.mjs`, `worker/alexa.ts`, `worker/alexa*.test.mjs`,
 `worker/speaker-link.ts` (new), `worker/speaker-link.test.mjs` (new), `worker/index.ts`, `worker/schema/stats.sql` (the
 link table), `alexa/skill-package/skill.json`,
@@ -158,10 +166,10 @@ subscriptions!". This slice keeps Alexa (D) and the Alexa parts of F and G.
       confirms with the subscription proof; shows the linked Sonos home and an Unlink button. Only offered while a
       subscription is active. Windows: not in scope unless the user asks (the subscription is sold there too; noted
       for the user).
-- [ ] **F. Privacy text**: `PRIVACY.md` and `site/dino/privacy.html` say what a link stores (a hashed speaker id and
-      the subscription proof key, nothing about the listener) and how to remove it.
-- [ ] **G. Store texts**: the Alexa skill description and the Sonos service text stop saying "nothing to buy" once
-      paid books are reachable there.
+- [ ] **F. Privacy text (Alexa part, part of D; rewritten 2026-11-28)**: `PRIVACY.md` and `site/dino/privacy.html` say the
+      Alexa purchase is made and held by Amazon and that we store nothing new for it. (Sonos link-storage text: Slices 438, 439.)
+- [ ] **G. Store texts (Alexa part, part of D; rewritten 2026-11-28)**: the Alexa skill description (`skill.json`, en-GB and
+      en-US) stops saying "nothing to buy" once paid books are reachable there. (Sonos service text: Slices 438, 439.)
 
 ## Verification
 

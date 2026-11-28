@@ -2,6 +2,8 @@
 
 **Product:** Shared
 
+*Plan-cleanup check 2026-11-28: verdict keep open, nothing built yet. Live reads: PR #1430 (feat/403-fold-layouts) and #1437 (fix/466-sonos-followups) are OPEN; worktrees s403 (30 paths), s466 (32) and s433 (42) are still uncommitted, so item 4 is fully open. Item 12: `sync-docs.mjs` still has `GIT_DEADLINE_MS = 30000` and no `git cat-file --batch`. Item 2: ClaudeSkills `skills/feedback-loop/question-stop.mjs` has no bare-label rule. Item 11: `.claude/live-checks.local.json` is absent. Item 6: `tools/CLAUDE.md` line 6 already states the Release build rule; ClaudeSkills `implement-slice.md` and `fix-review-findings.md` mention `Build-TestPackage.ps1` only conditionally, `run-wave` briefs not at all. Items 1, 2, 6-12 are ClaudeSkills or board-repo chore branches, not this repo's code.*
+
 *Planned 2026-11-28 by the night 2026-11-27-0154 feedback loop (`docs/plan/notes/2026-11-27-0154-feedback-loop.md`). Each item names the digest entry it came from; the repo it changes is named where it is not this one. Items in another repo are built there on a `chore/` branch and ticked here with the PR.*
 
 **Touches:** `tools/` (item 3), `docs/plan/` (items 4, 5), ClaudeSkills `skills/`, `agents/`, `hooks/` (items 1, 2, 6-11), agent-progress-board `plugin/scripts/sync-docs.mjs` (item 12).

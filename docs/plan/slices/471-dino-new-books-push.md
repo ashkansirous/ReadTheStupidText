@@ -4,6 +4,8 @@
 
 *Planned 2026-11-28 from the owner's RefineScope answers (this session). **Starts after:** Slice 470, which provides the banner the notification opens.*
 
+*Plan-cleanup check 2026-11-28: keep open, not started. `git grep -i firebase origin/main -- src/Dino .github tools/dino` finds nothing, so none of items 1-8 is built, and no build PR exists. Start condition Slice 470 is still `planned` on `origin/main` (it waits for the owner's banner mocks; that is 470's own record). No item waits on an outside event, and the owner's words are already under Decisions.*
+
 **Touches:** `src/Dino/DinoReader.App/DinoReader.App.csproj`, `src/Dino/DinoReader.App/Platforms/Android/` (manifest, `MainActivity.cs`, `google-services.json` (new)), `src/Dino/DinoReader.App/Platforms/iOS/` (`Info.plist`, `Entitlements.plist`, `AppDelegate.cs`, `GoogleService-Info.plist` (new)), `src/Dino/DinoReader.App/NewBooks/` (new, Slice 470; the push parts), `src/Dino/DinoReader.App/StorePage.xaml.cs`, `src/Dino/DinoReader.App/SettingsPage.cs`, `src/Dino/DinoReader.App/SettingsRows.cs`, `src/Dino/DinoReader.App/Resources/`, `.github/workflows/dino-new-books-push.yml` (new), `tools/dino/new-books-push/` (new), `PRIVACY.md`, `site/dino/privacy.html`, `tests/Dino/DinoReader.Tests/`.
 
 ## Why

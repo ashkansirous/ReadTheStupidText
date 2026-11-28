@@ -323,6 +323,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 465 | Dino: the store-restore, paid-books and subscription flows pass on a real phone | built (S21 run 2 passed; emulator check in unverified.md) | #1456 | | [465-dino-store-flows-pass-on-a-real-phone.md](../slices/465-dino-store-flows-pass-on-a-real-phone.md) |
 | 445 | Dino: Microsoft Store trailer, Partner Center push and Play video link | built, closed (items 1-2 PR #1459; Microsoft Store pushed and Play video set 2026-11-28; the live-page check is in unverified.md) | #1459 | | [445-dino-microsoft-store-trailer-and-play-video-link.md](../slices/445-dino-microsoft-store-trailer-and-play-video-link.md) |
 | 425 | Dino: the "story unreadable" fallback says which part of the app sent it, why, and which store book (once per book per launch) | built (Windows VM launch and post-release check in unverified.md) | #1457 | | [425-dino-story-unreadable-says-where.md](../slices/425-dino-story-unreadable-says-where.md) |
+| 467 | Dino: Sonos on dino.elinsoft.co.uk, a Reporting Endpoint the portal can reach | built, closed 2026-11-28 (release-dino 629a006d; Sonos portal set and read back; review follow-ups are Slice 475) | #1453 | | [467-dino-sonos-on-dino-elinsoft.md](../slices/467-dino-sonos-on-dino-elinsoft.md) |
 
 ## Shared
 

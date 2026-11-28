@@ -3,6 +3,8 @@
 
 *Planned 2026-11-24. Corrected the same day (owner: "no fucking owned books! sonos only works with subscriptions!").*
 
+*Plan-cleanup 2026-11-28 (origin/main d3cb55e4): C1, C2, C4, C5, C6 built (PR #1421 merged). Only C3 is own work left: no render script exists in `tools/` (`git ls-tree origin/main` finds none), and `curl https://dinoreader.app/sonos/subscribe/en.m4a` answers 404, so no clip is uploaded. Verdict: keep open on C3 only. The *Low follow-ups* and *From review* items below are moved to Slice 466 (planned, PR #1437); the D1 `ALTER TABLE` is a `[session]` line in `unverified.md`, not slice work; the S21/Sonos, iOS and native-speaker checks stay in `unverified.md`.*
+
 *Plan-cleanup 2026-11-25 (origin/main 1a8bf725): not started. `worker/sonos-link.ts` does not exist, `worker/sonos.ts` has no subscription check, no open Sonos PR, Slice 438 is still `planned`. The Why claims hold (`proof.ts`, `subscription.ts` exist). Verdict: keep open, C1-C6 all remain, nothing to move out.*
 
 **Starts after:** Slice 438 merges (a start condition, not a wait inside the work).
@@ -94,7 +96,7 @@ Checked this wave: worker tests 646, Dino 5199, Shared 1745, all pass; the Dino 
 - A home with an active (or grace) subscription sees paid books as playable, subtitle without the access word, and every linked home's paid book answers `getMediaURI` with the Worker's media URL plus the home's own Sonos token as `httpHeaders` (see Decisions, after review 1); the media route streams the story for an active subscription and the spoken message (`/sonos/subscribe/<language>.m4a`'s file) otherwise.
 - Known: a home linked without a subscription needs a relink after the grown-up subscribes (the renew needs the old proof to find the home).
 
-#### Low follow-ups (for the plan index pass to turn into a follow-up slice)
+#### Low follow-ups (moved to Slice 466, 2026-11-28; they never keep this slice open)
 
 - A home linked without a subscription needs a relink after the grown-up subscribes.
 - Accept the previous token on `/sonos/media` during a token refresh.

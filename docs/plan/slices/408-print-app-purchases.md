@@ -3,6 +3,8 @@
 
 *Planned.*
 
+**Check 2026-11-28 (plan-cleanup-check):** re-read live. `git grep -i "printProductId|PRINT_PACKAGE_ID|print-access|printthedamnbook" origin/main -- worker site` finds nothing; no open or merged PR carries this work (PR 1264 is the plan only). print-the-damn-book `origin/main` plan row for Slice 24 still reads "parked: skipped by the user 2026-11-18"; `user-says` shows no later message un-parking it. Verdict: keep open, not started; every item below is own work and unbuilt. The Partner Center step stays a *Watch* line in plan.md, not a wait in this slice.
+
 **Check 2026-11-25 (plan-cleanup):** nothing of this slice is built: `git grep -i "printProductId|PRINT_PACKAGE_ID|print-access" origin/main -- worker site` finds nothing, and no PR carries the work. The only client, print-the-damn-book Slice 24, is **parked** in that repo's plan ("skipped by the user 2026-11-18; comes back only when the user asks in an interactive session"), so the Worker side has no caller. Verdict: keep open, not started; **Starts after:** print-the-damn-book Slice 24 is un-parked by the user. The Partner Center step under *Human steps* is an owner step that cannot start until the print app is reserved (id unknown), so it is not a wait inside this slice's code work; it is a *Watch* line in plan.md.
 
 **Touches:** `worker/products.ts`, `worker/stories.ts`, `worker/index.ts`, `worker/entitlements/gate.ts`, `worker/entitlements/microsoft.ts`, `worker/entitlements/types.ts`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs`, `worker/CLAUDE.md`, `site/dino/privacy.html`

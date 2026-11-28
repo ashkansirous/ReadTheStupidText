@@ -1,6 +1,8 @@
 # Slice 458 — Dino: count trial conversions, renewals, cancellations and refunds from the stores' server notifications
 **Product:** Dino
 
+*Plan cleanup check 2026-11-28: keep open. Items 4 and 6 are the slice's own work and both still open. Read live: `git grep STORE_DEDUP|STORE_GOOGLE origin/main -- wrangler.jsonc wrangler.workers-dev.jsonc` finds nothing (KV namespace and both vars still unset); `POST https://dinoreader.sirous.uk/api/store/apple` with `{}` answers 400 and `/api/store/google` answers 401 (the routes are deployed; Google 401 is expected until the vars are set). No tool script for the App Store Connect notification URL or the Pub/Sub topic exists in `tools/` or `.github`. The user's words on this (`user-says`, terms 458, server notification, Pub/Sub, RTDN): none, nothing is settled by the user. The follow-ups under *From review* are tuning against real notifications and do not hold the slice: they belong to the first-notification check after item 4.*
+
 *Built items 1, 2, 3, 5 (wave 2026-11-27), merged as PR #1449 (5c4cfca2); items 4 (console wiring) and 6 (Partner Center research) are open. Code written by a cloud session at 33f44bc9 (run cse_012UYzYUZFozXBxTHrqxPhPQ) and fixed locally.*
 
 **Touches:** `worker/index.ts`, `worker/store-notifications/**` (new), `worker/store-notifications.test.mjs` (new), `worker/entitlements/apple-jws.ts`, `worker/events.ts`, `worker/events.test.mjs`, `wrangler.jsonc` (repo root; there is no `worker/wrangler.jsonc`), `wrangler.workers-dev.jsonc` (kept level with `wrangler.jsonc` by `check-configs.mjs`; widened by the coordinator after the cloud build), `STORE.md`, `site/dino/privacy.html`
