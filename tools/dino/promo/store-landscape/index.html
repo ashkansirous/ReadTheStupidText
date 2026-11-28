@@ -15,6 +15,8 @@
         position: absolute; left: 120px; bottom: 90px; padding: 14px 36px; border-radius: 40px;
         font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 64px; color: #ffffff; background: var(--accent);
       }
+      /* The record page has its controls (Skip, Record, Next) along the bottom, so its caption sits in the empty column left of the picture and covers no control. */
+      .cap.cap-side { left: 40px; bottom: auto; top: 400px; width: 440px; font-size: 46px; line-height: 1.15; text-align: center; padding: 20px 28px; border-radius: 48px; }
       #end { position: absolute; inset: 0; background: var(--ground); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
       #end-name { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 140px; color: var(--ink); }
       #end-sub { font-family: "Fredoka", sans-serif; font-weight: 500; font-size: 56px; color: #5a5470; }
@@ -31,7 +33,7 @@
 
       <div id="c-page" class="clip cap" data-start="0.3" data-duration="2.6" data-track-index="2">Stories read aloud</div>
       <div id="c-voices" class="clip cap" data-start="3.3" data-duration="2.6" data-track-index="2">A voice for every character</div>
-      <div id="c-record" class="clip cap" data-start="6.3" data-duration="3.6" data-track-index="2">Record Grandma as the wolf</div>
+      <div id="c-record" class="clip cap cap-side" data-start="6.3" data-duration="3.6" data-track-index="2">Record Grandma as the wolf</div>
       <div id="c-langs" class="clip cap" data-start="10.3" data-duration="2.6" data-track-index="2">Stories in 15 languages</div>
       <div id="c-shelf" class="clip cap" data-start="13.3" data-duration="2.6" data-track-index="2">New books on the shelf</div>
 
