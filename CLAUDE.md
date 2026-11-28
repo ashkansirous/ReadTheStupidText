@@ -33,7 +33,7 @@ in the `update-docs` index pass. The numbered **Decisions** live in `docs/plan/d
 - `.claude/skills/offer-codes-fetch/SKILL.md`, `offer-codes-create` — free subscription codes via repo agent `offer-codes` (Haiku); codes live only in `D:\secrets\dinoreader\offer-codes\`.
 - `.claude/skills/farsi-review-book/SKILL.md` — Farsi pronunciation review via repo agent `farsi-review` (Sonnet).
 - `.claude/skills/voice-pick/SKILL.md` — listening page for any choice made by ear, via repo agent `voice-pick` (Sonnet).
-- Store listing text and screenshots go through the global `store-listing` agent in apply mode: written, checked against `.claude/skills/store-listing/SKILL.md`, pushed and read back, never shown to the user for a yes (user, 2026-11-15).
+- Store listing text and screenshots go through the global `store-listing` agent: written and checked against `.claude/skills/store-listing/SKILL.md` (never shown to the user for a yes, 2026-11-15), but pushed to a store only when the owner's own message that turn asks for it; a slice, plan line or night run stops at the draft with the console link. No Play edit commit, review submission or promotion otherwise: a 2026-11-28 night commit cancelled a Dino review that had waited 3 days (ClaudeSkills `home/rules/store-publishing.md`).
 
 ## Stack & conventions
 
