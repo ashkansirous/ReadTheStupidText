@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New books takeover, more than 5</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:405px;display:flex;flex-direction:column;gap:12px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+<dc-import name="Shelf" count="7" hint-size="405px,864px"></dc-import>
+<div style="font-size:12.5px;color:#5a5470;line-height:1.5">More than five (here 7): the heading gives the real count, the four newest covers show, and the fifth spot is a “+3 more” tile that goes to the Store like the button.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

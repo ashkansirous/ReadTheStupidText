@@ -1042,6 +1042,31 @@ Also read these files the selection imports:
 Implement: the selected files
 ```
 
+## New books takeover — `2026-11-28-new-books/project/` ("Dino Reader 2026-11-28 New Books Banner")
+
+- **Source:** claude.ai Design canvas <https://claude.ai/artifact/ENmccZt7apABFALnDMyZoG>, version 1795872318-4545.
+- **Copied:** 2026-11-28, verbatim by the main thread (`Artifact read` of each `project/` file, saved straight to this
+  folder). `support.js` only renders the canvas and is not copied; open the files in a text editor.
+- **Covers:** Slice 470 (`docs/plan/slices/470-dino-new-books-banner.md`, its Design section) and the tap target of Slice 471.
+- **The mock trumps the plan** (owner, 2026-11-28): it overrides the earlier banner decisions in Slice 470.
+- **Covers in the mock are stand-ins** (`/_blob/...` uploads of the starter covers); they are not copied. The app shows the real
+  store covers from the catalog.
+- `canvas.json` is the index: frame titles and the two notes ("How it behaves", "The takeover is one component").
+
+| # | Board (file) | Feeds |
+|---|---|---|
+| — | `canvas.json` note `rules`: how it behaves (trigger, once per batch, lock rules, push tap) | 470 Decisions, 471 |
+| NB1 | `Main.dc.html`: 1 new book, one big cover | 470 takeover page |
+| NB2 | `Books2.dc.html`: 2 books side by side | 470 takeover page |
+| NB3 | `Books3.dc.html`: 3 books, two on top, one centred | 470 takeover page |
+| NB4 | `Books4.dc.html`: 4 books, two by two | 470 takeover page |
+| NB5 | `Books5.dc.html`: 5 books, three on top, two below | 470 takeover page |
+| NB6+ | `Books6.dc.html`: more than 5 (7): 4 covers + "+N more" tile | 470 takeover page |
+| NB7 | `StoreNew.dc.html`: the Store with the "Just arrived" group on top | 470 Store group |
+| Component | `Shelf.dc.html`: the takeover itself (all sizes, colours, words; `count` prop) | every NB board |
+
+Refresh: `Artifact read` each `project/` file again with `out_dir` set to this folder, then re-run `design-to-plan`.
+
 ## 2026-11-13 mocks (Slices 362, 363, 359, 357, 358, 360)
 
 Two mocks from 2026-11-13: onboarding redone as one guided path of six steps, and the screens for states that had no

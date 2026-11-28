@@ -2,7 +2,7 @@
 
 **Product:** Dino
 
-*Planned 2026-11-28 from the owner's RefineScope answers (this session). **Starts after:** Slice 470, which provides the banner the notification opens.*
+*Planned 2026-11-28 from the owner's RefineScope answers (this session). **Starts after:** Slice 470, which provides the full-screen new-books takeover the notification opens (the owner's 2026-11-28 mock turned the earlier "banner" into a takeover, Slice 470's Decisions; every "banner" below means that takeover).*
 
 *Plan-cleanup check 2026-11-28: keep open, not started. `git grep -i firebase origin/main -- src/Dino .github tools/dino` finds nothing, so none of items 1-8 is built, and no build PR exists. Start condition Slice 470 is still `planned` on `origin/main` (it waits for the owner's banner mocks; that is 470's own record). No item waits on an outside event, and the owner's words are already under Decisions.*
 
@@ -16,25 +16,25 @@ Families should hear about new books even when they don't open the app. The owne
 
 - **Firebase push** (owner: "firebase push"). This was chosen over a free daily check inside the app after being told that the privacy page and the store privacy forms would need updating.
 - **Ask only inside the grown-up area** (owner: "agreed"). There is one gentle offer the first time a grown-up opens the Store, and a "Tell me about new books" switch in Settings that turns it off at any time. The phone's own permission pop-up appears only after the grown-up says yes, so a child never sees it.
-- **Opening the notification always shows the banner** of the books it announced: from a cold start, from a warm start, and even if that banner was already seen (owner: "clicking on push notification should still open the banner even if visited once").
-- Android and iOS. The Windows head gets the banner only (owner: agreed in RefineScope Q1).
+- **Opening the notification always shows the takeover** (Slice 470's full-screen new-books page, no grown-up lock) for the books it announced: from a cold start, from a warm start, and even if it was already seen (owner: "clicking on push notification should still open the banner even if visited once"; the owner's 2026-11-28 mock made that banner a full-screen takeover, and the mock supersedes the word "banner").
+- Android and iOS. The Windows head gets the takeover only (owner: agreed in RefineScope Q1).
 
 Decided by this session (not the owner's words):
 
 - Phones join a **topic**, so the server keeps no list of phone tokens and Decision 140's "no per-device profile on our side" holds. There is one topic per app language, `dino-new-books-<lang>`, and the app moves to the new topic when the app language changes. That way the notification is in the app's own language.
 - The owner sends a notification by running a GitHub workflow by hand, with the release time of the batch as its input. The words come from a 15-language strings file in the repo.
-- The notification carries that release time, and tapping it opens Slice 470's "banner for books since <time>".
+- The notification carries that release time, and tapping it opens Slice 470's takeover "for books since <time>" (that entry point ignores "last shown").
 
 ## Work
 
 - [ ] 1. **Policy check before code.** Run `web-research` on two questions: (a) Google Play Families policy for Firebase Cloud Messaging in a children's app (is FCM on the self-certified Families SDK list, and what does the Data safety form need), and (b) Apple's rules for push in an app for children. Write the answers here. If either one forbids it, stop and ask the owner one plain question.
 - [ ] 2. **Firebase project.** Create the Firebase project and the Android and iOS apps by tool (`firebase` or `gcloud` CLI), and commit the two config files. Upload the existing Apple push key (the Lets-Call-Mom Apple setup, `reference-apple-and-asc`) to Firebase. Store the service-account key used for sending through `manage-secrets`, and add it as a GitHub secret. Any step no tool can do goes to the owner as one step with its deep link.
-- [ ] 3. **App side, Android.** Add the Firebase Messaging binding for .NET 11 MAUI (check with context7 first). Subscribe to the topic only after a yes. Add the notification channel "New books". A tap opens `MainActivity` with the release time, cold or warm, and shows the banner.
-- [ ] 4. **App side, iOS.** The same as Android: APNs entitlement, permission asked only after the yes, topic subscription, and the tap handled in `AppDelegate`, cold or warm, showing the banner.
+- [ ] 3. **App side, Android.** Add the Firebase Messaging binding for .NET 11 MAUI (check with context7 first). Subscribe to the topic only after a yes. Add the notification channel "New books". A tap opens `MainActivity` with the release time, cold or warm, and shows Slice 470's takeover.
+- [ ] 4. **App side, iOS.** The same as Android: APNs entitlement, permission asked only after the yes, topic subscription, and the tap handled in `AppDelegate`, cold or warm, showing the takeover.
 - [ ] 5. **The ask and the switch.** On the first Store open, show a gentle one-time offer (words from the app, in the app language; "no" is final until the switch is used). The Settings switch "Tell me about new books" subscribes or unsubscribes and deletes the Firebase token when turned off. If the phone permission is denied, the switch explains how to turn notifications on in the phone settings.
 - [ ] 6. **Sender.** `dino-new-books-push.yml` (`workflow_dispatch`, input: the batch release time, default the newest `addedAt` in the live `/api/stories`). It sends one message per language topic through the FCM HTTP v1 API, with a dry-run option. Add a `tools/dino/new-books-push/` script plus the strings file.
 - [ ] 7. **Privacy.** Update `PRIVACY.md` and `site/dino/privacy.html`: what Firebase receives (a device token held by Google, the topic) and nothing else. Update the Play Data safety form and the App Store privacy answers by API where one exists, else name each console page with its deep link. Keep the AndroidManifest and Info.plist comments in step with this.
-- [ ] 8. **Tests and flows.** Unit tests for the tap-to-banner hand-off and the switch state. Add a Debug hook that fakes a notification tap, and a scripted flow `new-books-push-tap` (cold and warm, the banner shows even after it was seen).
+- [ ] 8. **Tests and flows.** Unit tests for the tap-to-takeover hand-off and the switch state. Add a Debug hook that fakes a notification tap, and a scripted flow `new-books-push-tap` (cold and warm, the takeover shows even after it was seen).
 
 ## Verification
 
