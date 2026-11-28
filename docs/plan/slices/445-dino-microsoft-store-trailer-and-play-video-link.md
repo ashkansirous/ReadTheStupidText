@@ -1,8 +1,10 @@
 # Slice 445 — Dino: Microsoft Store trailer, Partner Center push and Play video link
 **Product:** Dino
-**Touches:** `tools/dino/promo/store-landscape/**`, `docs/store-listings/screenshots/dino/windows/**`, `docs/store-listings/**`
+**Touches:** `tools/dino/promo/store-landscape/**`, `docs/store-listings/screenshots/dino/windows/**`, `docs/store-listings/**`, `tools/emulator/store-size-check.ps1`, `tools/emulator/test-store-size-check.ps1`, `.github/workflows/tools-selftests.yml`, `docs/plan/notes/2026-11-23-dino-store-screenshots-and-video.md`
 
-*Planned 2026-11-25 (plan-cleanup of that day; not built).*
+*In progress (wave 2026-11-28), draft PR.*
+
+**Design (coordinator, wave 2026-11-28):** Slice 433 is built and closed, so this slice can start. Item 1 first needs a Microsoft Store target in `store-size-check.ps1`. Microsoft's rules (https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/screenshots-and-images) are: desktop screenshots are PNG, landscape or portrait, "1366 x 768 pixels or larger", up to 3840 x 2160, at most 50 MB, up to 10 of them. The trailer is MP4 (H.264 High, AAC-LC 48 kHz) or MOV, exactly 1920 x 1080 and under 2 GB, 60 s or less recommended. The trailer thumbnail is a 1920 x 1080 PNG. So the Windows screenshot target is a range check (a minimum and a maximum per side, either orientation), not an exact size. It allows alpha: all eight PNGs are RGBA 1920 x 1080, and Microsoft does not forbid alpha. The trailer and its thumbnail are exact 1920 x 1080 targets. Add a self-test, `tools/emulator/test-store-size-check.ps1`, which runs in `tools-selftests.yml` like `test-store-screenshots.ps1`. Write the new rows into the Sizes table of the 2026-11-23 notes file too. Items 3 and 4 (the store pushes) run after the merge, through the `store-listing` agent in apply mode (the user's standing rule, 2026-11-15).
 
 **Starts after:** Slice 433 merges (storyboard in `tools/dino/promo/store/`, `store-size-check.ps1`); the YouTube and Play-link part also after Slice 435's first real upload (its upload script merged in #1423, `tools/dino/promo/youtube/upload.mjs`).
 
