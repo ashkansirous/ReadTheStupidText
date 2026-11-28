@@ -76,6 +76,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 465: Dino: the store flows pass on a real phone ([slice](slices/465-dino-store-flows-pass-on-a-real-phone.md))
+- [session] The three changed flows (`store-restore`, `paid-books`, `subscription`) still pass on emulator-5554; only the S21 was run in the wave.
+
+### Slice 425: Dino: the "story unreadable" fallback says where ([slice](slices/425-dino-story-unreadable-says-where.md))
+- [session] Dino Windows launch on the VM with a planted bad book logs `[Usage] fallback library:story_invalid` (not run: 3.6 GB free, the VM needs 8 GB).
+- [session] After release, `dino_usage` shows the new reasons (`blob9 LIKE 'library:%'`) and no new `story_unreadable` from builds after this slice.
+
 ### Slice 458: Dino: store server notifications ([slice](slices/458-dino-store-server-notifications.md))
 - [cloud] Apple trial-to-paid detection (`isTrialConversion`: previous period at most 8 days) and the Google trial/conversion heuristic were built on synthetic fixtures; confirm on the first real notifications after item 4 (console wiring).
 
@@ -784,9 +791,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - [cloud] The `ios-sim-*.sh` and `dinoreader-ios-sim.yml` changes (budget guard, `kill_driver`, settle seconds, 1080 s step budget) run on the CI Mac: check the next iOS simulator workflow run. (live check 2026-11-27: unreachable: dinoreader-ios-sim.yml is manual and has no run since the change)
 - [session] `reset-dino-language.ps1` exit 2 path (Dino dev app not installed) has not been run.
 - [session] `store-screenshots.ps1` demo-mode early stop and exit 8 on an emulator that will not start have not been run.
-
-### Slice 448: tools/phone runs the .maestro/dino flows on a real phone ([slice](slices/448-tools-phone-runs-maestro-dino-flows.md))
-- [phone] The three failing store flows (`store-restore`, `paid-books`, `subscription`) pass on the S21 after Slice 465 (S21 run 4: 1 of 4 passed). (live check 2026-11-27: failed, follow-up in Slice 448)
 
 ### Slice 343: Listening page: four Farsi voices ([slice](slices/343-four-farsi-voices.md))
 - [owner] **You:** ear check of the built comma fix (ganji-2, gyro-2, gyro-3) on a listening page after it ships.
