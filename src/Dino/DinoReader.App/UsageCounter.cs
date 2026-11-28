@@ -308,6 +308,31 @@ public sealed class UsageCounter
 		}
 	}
 
+	/// <summary>
+	/// Slice 425: counts a fallback about a store book without a <see cref="Story"/> at hand (an unreadable stored book, a backup entry that could not be applied): the detail ends with the catalogue id
+	/// (<see cref="FallbackUsage.Detail(string, string, string?)"/>), the count is about no book, and the tally key holds the book so two books are two kinds. Same once-per-session rule as <see cref="RecordGeneralFallback"/>.
+	/// </summary>
+	public void RecordBookFallback(string area, string reason, string book, string? language = null)
+	{
+		string? storeBook = FallbackUsage.CatalogueBookOf(book, StarterStories.IsCatalogueId); // only a store book's id is ever sent; an imported own package's id is not one
+		string? detail = FallbackUsage.Detail(area, reason, storeBook);
+		if (detail is null)
+		{
+			return;
+		}
+
+		string readIn = NormalisedLanguage(language);
+		int times = _fallbacks.Note(area, reason, storeBook ?? string.Empty, readIn);
+		bool first = FallbackTally.IsFirst(times);
+#if DEBUG
+		Sirous.Reading.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
+#endif
+		if (first)
+		{
+			RecordGeneral(UsageEventName.Fallback, readIn.Length == 0 ? UsageEvent.NoLanguage : readIn, detail, times);
+		}
+	}
+
 	// The tally key and the event use one language code ("en-US" and "en" are one kind): the primary subtag, else the text as given.
 	private static string NormalisedLanguage(string? language) =>
 		Sirous.Reading.Application.Usage.UsageEvents.Language(language) ?? language ?? string.Empty;
@@ -317,9 +342,9 @@ public sealed class UsageCounter
 	{
 		foreach (FallbackTotal total in _fallbacks.TakeRepeats())
 		{
-			if (total.Book.Length == 0)
+			if (total.Book.Length == 0 || FallbackUsage.NamesStoreBook(total.Reason)) // Slice 425: a store-book reason names its book in the detail, so its repeat row is a count about no book too
 			{
-				if (FallbackUsage.Detail(total.Area, total.Reason) is { } general)
+				if (FallbackUsage.Detail(total.Area, total.Reason, total.Book) is { } general)
 				{
 					RecordGeneral(UsageEventName.Fallback, total.Language.Length == 0 ? UsageEvent.NoLanguage : total.Language, general, total.Count);
 				}

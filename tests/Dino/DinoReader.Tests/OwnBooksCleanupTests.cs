@@ -181,7 +181,7 @@ public class OwnBooksCleanupTests : IDisposable
         Assert.False(keys.Done);
         Assert.Equal(1, keys.FailedStarts);
         Assert.Equal([poisoned], (await inner.ListOwnFoldersAsync()).Ids);
-        Assert.Equal([(FallbackArea.Library, FallbackReason.StoryUnreadable)], sink.Reports);
+        Assert.Equal([(FallbackArea.Library, FallbackReason.OwnBookDeleteFailed)], sink.Reports);
 
         library.FailOn = null;
         int second = await OwnBooksCleanupRun.RunOnceAsync(library, keys, new RecordingSink());

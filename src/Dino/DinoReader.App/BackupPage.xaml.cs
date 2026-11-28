@@ -4,7 +4,8 @@ using DinoReader.Resources.Strings;
 using Sirous.Reading.Application.Reading;
 using FallbackArea = Sirous.Reading.Application.Usage.FallbackArea;
 using FallbackReason = Sirous.Reading.Application.Usage.FallbackReason;
-using IFallbackSink = Sirous.Reading.Application.Usage.IFallbackSink;
+using BookFallbackSinks = Sirous.Reading.Application.Usage.BookFallbackSinks;
+using IFallbackSink =Sirous.Reading.Application.Usage.IFallbackSink;
 using Sirous.Reading.Mobile.Shared.Waiting;
 using RoundRectangle = Microsoft.Maui.Controls.Shapes.RoundRectangle;
 
@@ -495,7 +496,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		catch (Exception ex) when (ex is StoryBackupException or IOException)
 		{
 			Debug.WriteLine($"Dino Reader could not apply the backup to {bookId}: {ex.Message}");
-			_sink.Report(FallbackArea.Library, FallbackReason.StoryUnreadable);
+			BookFallbackSinks.ReportBook(_sink, FallbackArea.Library, FallbackReason.BackupBookUnapplied, bookId); // Slice 425: a store book, so its catalogue id rides along
 		}
 	}
 

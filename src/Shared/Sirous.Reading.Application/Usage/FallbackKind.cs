@@ -216,6 +216,55 @@ public static class FallbackReason
     /// <summary>Dino Reader (area "library"): a stored book could not be read and is left off the shelf.</summary>
     public const string StoryUnreadable = "story_unreadable";
 
+    // Slice 425: story_unreadable is no longer sent by the app (the Worker still accepts it for old builds and for a speaker's fault); each site has its own reason. Area "library".
+    /// <summary>Dino Reader: a stored book's id differs from its folder name; it is left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryIdMismatch = "story_id_mismatch";
+
+    /// <summary>Dino Reader: a stored book's file is empty; left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryEmpty = "story_empty";
+
+    /// <summary>Dino Reader: a stored book's file is not valid; left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryInvalid = "story_invalid";
+
+    /// <summary>Dino Reader: a stored book's file is from a newer version or has no valid id; left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryNewerVersion = "story_newer_version";
+
+    /// <summary>Dino Reader: a stored book has a back cover but no pages; left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryNoPages = "story_no_pages";
+
+    /// <summary>Dino Reader: a stored book's file is missing required fields; left off the shelf. Names the store book when it is one.</summary>
+    public const string StoryMissingFields = "story_missing_fields";
+
+    /// <summary>Dino Reader: the optional part-file listing of a book failed (Slice 464).</summary>
+    public const string StoryListingCleanupFailed = "story_listing_cleanup_failed";
+
+    /// <summary>Dino Reader: the shelf rebuild failed because a store call ran out of time.</summary>
+    public const string ShelfRebuildTimeout = "shelf_rebuild_timeout";
+
+    /// <summary>Dino Reader: the shelf rebuild was cancelled part-way.</summary>
+    public const string ShelfRebuildCancelled = "shelf_rebuild_cancelled";
+
+    /// <summary>Dino Reader: the shelf rebuild failed on a file or network error.</summary>
+    public const string ShelfRebuildIo = "shelf_rebuild_io";
+
+    /// <summary>Dino Reader: the shelf rebuild failed building its screen.</summary>
+    public const string ShelfRebuildLayout = "shelf_rebuild_layout";
+
+    /// <summary>Dino Reader: the shelf rebuild failed reading a book, package or backup.</summary>
+    public const string ShelfRebuildLibrary = "shelf_rebuild_library";
+
+    /// <summary>Dino Reader: the shelf rebuild failed for another reason.</summary>
+    public const string ShelfRebuildOther = "shelf_rebuild_other";
+
+    /// <summary>Dino Reader: listing the own-book folders or the own-book cleanup pass failed.</summary>
+    public const string OwnBooksCleanupFailed = "own_books_cleanup_failed";
+
+    /// <summary>Dino Reader: deleting one own book failed; it stays and the next start tries again.</summary>
+    public const string OwnBookDeleteFailed = "own_book_delete_failed";
+
+    /// <summary>Dino Reader: one store book from a backup could not be applied. Names the store book.</summary>
+    public const string BackupBookUnapplied = "backup_book_unapplied";
+
     /// <summary>Read The Stupid Text (area "translation"): the text's language could not be detected, so no translation is offered.</summary>
     public const string LanguageDetectFailed = "language_detect_failed";
 
@@ -333,6 +382,9 @@ public static class FallbackReason
         BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, DownloadRefused, PurchaseNotValid, OnboardingTryNotDeleted,
         StoreTimeout, StoreNoNetwork, StoreDns, StoreTls, StoreHttp5xx, StoreHttp4xx, StoreNotAssociated, StoreNoWindow, StoreSettleTimeout,
         QuickUpgradeFailed,
+        StoryIdMismatch, StoryEmpty, StoryInvalid, StoryNewerVersion, StoryNoPages, StoryMissingFields, StoryListingCleanupFailed,
+        ShelfRebuildTimeout, ShelfRebuildCancelled, ShelfRebuildIo, ShelfRebuildLayout, ShelfRebuildLibrary, ShelfRebuildOther,
+        OwnBooksCleanupFailed, OwnBookDeleteFailed, BackupBookUnapplied,
     ];
 }
 

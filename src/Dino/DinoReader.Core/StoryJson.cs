@@ -4,8 +4,21 @@ using Sirous.Reading.Domain.Reading;
 
 namespace DinoReader.Core;
 
-/// <summary>Raised when a story file is not valid story JSON or comes from a newer schema.</summary>
-public sealed class StoryFormatException(string message, Exception? inner = null) : Exception(message, inner);
+/// <summary>Slice 425: why a story file could not be read, a closed list; the shelf reports the matching fallback reason (<see cref="FallbackUsage.ReasonOf(StoryFormatError)"/>).</summary>
+public enum StoryFormatError
+{
+    Invalid,
+    Empty,
+    NewerVersion,
+    NoPages,
+    MissingFields,
+}
+
+/// <summary>Raised when a story file is not valid story JSON or comes from a newer schema; <see cref="Error"/> says which.</summary>
+public sealed class StoryFormatException(string message, Exception? inner = null, StoryFormatError error = StoryFormatError.Invalid) : Exception(message, inner)
+{
+    public StoryFormatError Error { get; } = error;
+}
 
 /// <summary>
 /// The versioned <c>story.json</c> format. Reading ignores fields it does not know and fills
@@ -45,13 +58,41 @@ public static class StoryJson
 
     public static Story Deserialize(string json) => Deserialize(json, out _);
 
+    /// <summary>Slice 425: the store book's catalogue id a (possibly unreadable) story file names, in its stored form (32 lower-case hex digits); null for an own book (no <c>sourceId</c>), a damaged id or text that is not a JSON object. Never throws.</summary>
+    public static string? CatalogueIdOf(string rawStoryJson)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(rawStoryJson);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            foreach (JsonProperty property in doc.RootElement.EnumerateObject())
+            {
+                if (string.Equals(property.Name, "sourceId", StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind == JsonValueKind.String)
+                {
+                    return UsageEvent.ShelfId(property.Value.GetString());
+                }
+            }
+
+            return null;
+        }
+        catch (JsonException)
+        {
+            // no-fallback: a peek for an id at a file the caller already reports as unreadable; no id is the answer
+            return null;
+        }
+    }
+
     /// <summary>As <see cref="Deserialize(string)"/>; <paramref name="migrated"/> is true when the file held recordings made before Slice 286, now filed under the main language: the library saves the book so it happens once.</summary>
     public static Story Deserialize(string json, out bool migrated, string? mainLanguage = null)
     {
         try
         {
             StoryFile file = JsonSerializer.Deserialize<StoryFile>(json, Options)
-                ?? throw new StoryFormatException("The story file is empty.");
+                ?? throw new StoryFormatException("The story file is empty.", error: StoryFormatError.Empty);
             bool legacy = NeedsRecordingMigration(file);
             string? known = legacy && (mainLanguage ?? MainLanguageOf()) is { Length: > 0 } main ? UiLanguage.Resolve(main) : null;
             migrated = known is not null;
@@ -59,7 +100,7 @@ public static class StoryJson
         }
         catch (JsonException ex)
         {
-            throw new StoryFormatException("The story file is not valid.", ex);
+            throw new StoryFormatException("The story file is not valid.", ex, StoryFormatError.Invalid);
         }
     }
 
@@ -98,9 +139,14 @@ public static class StoryJson
 
     private static Story FromFile(StoryFile f, string? migrateTo)
     {
-        if (f.Version > CurrentVersion || !StoryIds.IsValid(f.Id))
+        if (f.Version > CurrentVersion)
         {
-            throw new StoryFormatException("The story file is from a newer version or has no valid id.");
+            throw new StoryFormatException("The story file is from a newer version.", error: StoryFormatError.NewerVersion);
+        }
+
+        if (!StoryIds.IsValid(f.Id))
+        {
+            throw new StoryFormatException("The story file has no valid id.", error: StoryFormatError.Invalid);
         }
 
         RequireFields(f);
@@ -140,7 +186,7 @@ public static class StoryJson
 
         if (lastIndex == 0)
         {
-            throw new StoryFormatException("The story file has a back cover but no story pages.");
+            throw new StoryFormatException("The story file has a back cover but no story pages.", error: StoryFormatError.NoPages);
         }
 
         return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month, file.Picture ?? OlderFilePicture(pages[lastIndex].ImageFile), file.NamesByLanguage));
@@ -450,7 +496,7 @@ public static class StoryJson
             && f.Cast.All(c => c is { CharacterId: not null, Name: not null, VoiceId: not null });
         if (!complete)
         {
-            throw new StoryFormatException("The story file is missing required fields.");
+            throw new StoryFormatException("The story file is missing required fields.", error: StoryFormatError.MissingFields);
         }
     }
 

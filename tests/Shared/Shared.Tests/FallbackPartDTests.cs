@@ -14,6 +14,10 @@ public sealed class FallbackPartDTests
             FallbackReason.StorytellerPackMissing, FallbackReason.AnimalClipUnplayable, FallbackReason.ClipUnplayable, FallbackReason.ClipSpeedUnset, FallbackReason.InAppUpdateFailed,
             FallbackReason.WindowFrameFailed, FallbackReason.DisplaysUnreadable, FallbackReason.SavedPositionMoved, FallbackReason.DpiDefaulted,            FallbackReason.FontFallback,FallbackReason.ShelfOrderUnreadable, FallbackReason.StoryUnreadable, FallbackReason.LanguageDetectFailed,
             FallbackReason.PageReadFailed, FallbackReason.IntroStateReset,
+            // Slice 425: one reason per unreadable-book site
+            FallbackReason.StoryIdMismatch, FallbackReason.StoryEmpty, FallbackReason.StoryInvalid, FallbackReason.StoryNewerVersion, FallbackReason.StoryNoPages, FallbackReason.StoryMissingFields,
+            FallbackReason.StoryListingCleanupFailed, FallbackReason.ShelfRebuildTimeout, FallbackReason.ShelfRebuildCancelled, FallbackReason.ShelfRebuildIo, FallbackReason.ShelfRebuildLayout,
+            FallbackReason.ShelfRebuildLibrary, FallbackReason.ShelfRebuildOther, FallbackReason.OwnBooksCleanupFailed, FallbackReason.OwnBookDeleteFailed, FallbackReason.BackupBookUnapplied,
         ];
 
         Assert.All(areas, area => Assert.Contains(area, FallbackArea.All));

@@ -988,3 +988,21 @@ test("the part C fallbacks (packs, OCR, documents, store, config, UI language) a
     assert.ok(parseRtstEvent(rtst("fallback", { fallbackArea: area, fallbackReason: reason, count: 1 })), `${area}:${reason} rtst`);
   }
 });
+
+test("Slice 425: each unreadable-story site has its own reason; story_unreadable stays; only a store-book reason takes a catalogue id as a third part", () => {
+  const own = ["story_id_mismatch", "story_empty", "story_invalid", "story_newer_version", "story_no_pages", "story_missing_fields", "story_listing_cleanup_failed",
+    "shelf_rebuild_timeout", "shelf_rebuild_cancelled", "shelf_rebuild_io", "shelf_rebuild_layout", "shelf_rebuild_library", "shelf_rebuild_other",
+    "own_books_cleanup_failed", "own_book_delete_failed", "backup_book_unapplied", "story_unreadable"];
+  for (const reason of own) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `library:${reason}` })?.detail, `library:${reason}`, reason);
+    assert.ok(parseRtstEvent(rtst("fallback", { fallbackArea: "library", fallbackReason: reason, count: 1 })), `${reason} rtst`);
+  }
+  const id = "0123456789abcdef0123456789abcdef";
+  for (const reason of ["story_id_mismatch", "story_empty", "story_invalid", "story_newer_version", "story_no_pages", "story_missing_fields", "backup_book_unapplied"]) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `library:${reason}:${id}` })?.detail, `library:${reason}:${id}`, reason);
+  }
+  for (const detail of [`library:story_unreadable:${id}`, `library:own_book_delete_failed:${id}`, `library:shelf_rebuild_io:${id}`, `store:store_timeout:${id}`,
+    "library:story_empty:short", "library:story_empty:0123456789ABCDEF0123456789ABCDEF", `library:story_empty:${id}:x`, "library:story_empty:", "library:story_bogus"]) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail })?.detail, undefined, detail);
+  }
+});
