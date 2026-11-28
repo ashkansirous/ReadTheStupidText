@@ -3,7 +3,20 @@
 
 *Planned 2026-11-20. User, 2026-11-20, asked whether to add a slice that makes the "story unreadable" event say which part of the app sent it and which book: "yes".*
 
-**Touches:** `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `src/Dino/DinoReader.Core/FileStoryLibrary.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/OwnBooksCleanupRun.cs`, `src/Dino/DinoReader.App/BackupPage.xaml.cs`, `src/Dino/DinoReader.App/DinoFallbackSink.cs`, `worker/events.ts`, `worker/events.test.mjs`, `tests/Dino/DinoReader.Tests/`, `tests/Shared/Shared.Tests/` (fallback list tests), `.maestro/dino/usage-fallback-swallowed.yaml`, this slice file.
+*In progress (wave 2026-11-28), draft PR.*
+
+**Touches:** `src/Shared/Sirous.Reading.Application/Usage/FallbackKind.cs`, `src/Dino/DinoReader.Core/FileStoryLibrary.cs`, `src/Dino/DinoReader.Core/StoryJson.cs`, `src/Dino/DinoReader.App/GalleryPage.xaml.cs`, `src/Dino/DinoReader.App/OwnBooksCleanupRun.cs`, `src/Dino/DinoReader.App/BackupPage.xaml.cs`, `src/Dino/DinoReader.App/DinoFallbackSink.cs`, `worker/events.ts`, `worker/events.test.mjs`, `worker/CLAUDE.md` (the reason list it documents), `tests/Dino/DinoReader.Tests/`, `tests/Shared/Shared.Tests/` (fallback list tests), `.maestro/dino/usage-fallback-swallowed.yaml`, this slice file.
+
+## Design (coordinator, wave 2026-11-28, from the premise check of origin/main 618b339b)
+
+The premise check found three gaps; this design closes them and the builder builds it.
+
+- **Line numbers moved:** site 1 and 2 are now `FileStoryLibrary.cs:582` and `:587`; the others hold (GalleryPage `:363`, OwnBooksCleanupRun `:41` and `:115`, BackupPage `:498`).
+- **A seventh site:** `FileStoryLibrary.cs:611` (Slice 464's optional listing cleanup) also reports `story_unreadable`. It gets its own reason, `story_listing_cleanup_failed`. (plan-not-needed: 464)
+- **Site 3's kind goes into the reason, not a new field:** the Worker's `fallbackDetail` (`worker/events.ts:294`) takes exactly `area:reason`. So instead of one `shelf_rebuild_failed` plus a kind, site 3 sends one of six reasons: `shelf_rebuild_timeout`, `shelf_rebuild_cancelled`, `shelf_rebuild_io`, `shelf_rebuild_layout`, `shelf_rebuild_library`, `shelf_rebuild_other`. One pure, unit-tested function maps the caught exception to that reason.
+- **The store book id rides as an optional third part of the detail:** `library:<reason>:<catalogue id>`. Fallback events have no book field (their `sources` are `shelf`/`own`/`none`, `worker/events.ts:26-28`), so the Worker's `fallbackDetail` accepts two parts (every reason, as today) or three parts only for the reasons that name a store book (sites 1, 2 and 6), with the third part checked against the catalogue id format the Worker already uses for store book ids (find it in `worker/`; if none exists, a strict lower-case id pattern written once as a named constant). Anything else is refused. Own books never send a third part. Old builds' two-part `library:story_unreadable` stays accepted.
+- **The Worker's own speaker fault** (`worker/speaker-usage.ts:23`, `:80`, Slice 436) keeps sending `library:story_unreadable`; "no longer sent" in the Decisions means the app only. (plan-not-needed: 436)
+- **Once per book per launch:** one process-wide set of reported (reason, book) pairs, owned by the reporting site in `FileStoryLibrary`, cleared only by a new launch.
 
 ## Why
 
